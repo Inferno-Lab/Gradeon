@@ -108,12 +108,12 @@ class _PasswordScreen extends StatelessWidget {
                       index: 2,
                       child: Field(
                         controller: controller.email,
-                        label: 'auth.school_email',
+                        label: 'auth.email_or_phone',
                         icon: PhosphorIconsRegular.envelopeSimple,
-                        keyboard: TextInputType.emailAddress,
+                        keyboard: TextInputType.text,
                         autofillHints: const [AutofillHints.email, AutofillHints.username],
                         textInputAction: TextInputAction.next,
-                        validator: Validators.email,
+                        validator: Validators.emailOrPhone,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -204,10 +204,7 @@ class _PasswordFieldState extends State<_PasswordField> {
               ),
             ),
             GestureDetector(
-              onTap: () {
-                widget.controller.useOtp.value = true;
-                widget.controller.otp.clear();
-              },
+              onTap: () => unawaited(widget.controller.requestCode()),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text('auth.use_code'.tr, style: anek(13, 650, height: 1.2, color: c.mariText)),
@@ -428,7 +425,10 @@ class _OtpScreenState extends State<_OtpScreen> {
                                     style: context.type.cap,
                                   )
                                 : GestureDetector(
-                                    onTap: _startTimer,
+                                    onTap: () {
+                                      _startTimer();
+                                      unawaited(widget.controller.resend());
+                                    },
                                     child: Text('auth.resend'.tr, style: anek(13, 650, height: 1.3, color: c.mariText)),
                                   ),
                           ),

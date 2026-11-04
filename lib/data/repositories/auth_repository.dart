@@ -9,6 +9,9 @@ abstract class AuthRepository {
 
   Future<AppUser> loginWithOtp({required String email, required String otp});
 
+  /// Sends a sign-in code to a family's phone or email, with no password. Always ends in [OtpRequired].
+  Future<Never> requestCode(String identifier);
+
   Future<AppUser> loginAs(UserRole role);
 }
 
@@ -29,6 +32,14 @@ class MockAuthRepository implements AuthRepository {
         throw const AppException('errors.bad_otp');
       }
       return _match(email);
+    });
+  }
+
+  @override
+  Future<Never> requestCode(String identifier) {
+    return _ds.guard<Never>(() {
+      _match(identifier);
+      throw OtpRequired(identifier, demoCode: AppConfig.demoOtp);
     });
   }
 
@@ -104,6 +115,13 @@ class RemoteAuthRepository implements AuthRepository {
     final json = await _remote.post('/v1/auth/verify', {'challengeId': challenge, 'code': otp, 'client': 'mobile'});
     _challenge = null;
     return _enter(Map<String, dynamic>.from(json as Map));
+  }
+
+  @override
+  Future<Never> requestCode(String identifier) async {
+    final challenge = Map<String, dynamic>.from(await _remote.post('/v1/auth/code', {'identifier': identifier.trim(), 'client': 'mobile'}) as Map);
+    _challenge = challenge['challengeId'] as String;
+    throw OtpRequired(challenge['maskedTo'] as String? ?? '', demoCode: challenge['demoCode'] as String?);
   }
 
   @override

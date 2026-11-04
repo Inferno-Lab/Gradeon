@@ -37,6 +37,7 @@ class LoginController extends GetxController {
       );
       return;
     }
+    _codeOnly = false;
     await _enter(
       () => Get.find<AuthRepository>().login(
         email: email.text,
