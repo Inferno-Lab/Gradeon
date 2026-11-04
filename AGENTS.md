@@ -1,12 +1,12 @@
-# EduNest — guide for coding agents and new developers
+# Gradeon — guide for coding agents and new developers
 
-EduNest is a school platform: a TypeScript backend, a school admin, a console and the original Flutter school app (students, parents, teachers) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
+Gradeon is a school platform: a TypeScript backend, a school admin, a console and the original Flutter school app (students, parents, teachers) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
 
-Branch work happens on feature branches off `main`; the Render test deployment builds from `main`, so a change reaches `https://edunest-0c6x.onrender.com` only after it is merged (or pushed) to `main`. The Chalk & Glass redesign of the app was merged to `main`; `redesign/chalk-glass` and `apple_glass` remain on GitHub as history.
+Branch work happens on feature branches off `main`; the Render test deployment builds from `main`, so a change reaches `https://gradeon.onrender.com` only after it is merged (or pushed) to `main`. The Chalk & Glass redesign of the app was merged to `main`; `redesign/chalk-glass` and `apple_glass` remain on GitHub as history.
 
 ## The platform (admin, console, backend) lives next to the app
 
-This repository is also a TypeScript monorepo: `apps/admin` (school admin), `apps/console` (EduNest control room), `apps/api` + `apps/console-api` + `apps/server` (NestJS backend, one PostgreSQL database per school), `packages/*` (contracts, config engine, db, security, tenancy, api-client, web-ui). **Read [`docs/HANDOFF.md`](docs/HANDOFF.md) first for anything outside `lib/`**: what exists, why it is built that way, how to run and verify it, how it is deployed (`https://edunest-0c6x.onrender.com`), and what is left with step-by-step instructions. The look of admin and console is in [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards in [`design/`](design/README.md); the Chalk & Glass rules below apply to the Flutter app only.
+This repository is also a TypeScript monorepo: `apps/admin` (school admin), `apps/console` (Gradeon control room), `apps/api` + `apps/console-api` + `apps/server` (NestJS backend, one PostgreSQL database per school), `packages/*` (contracts, config engine, db, security, tenancy, api-client, web-ui). **Read [`docs/HANDOFF.md`](docs/HANDOFF.md) first for anything outside `lib/`**: what exists, why it is built that way, how to run and verify it, how it is deployed (`https://gradeon.onrender.com`), and what is left with step-by-step instructions. The look of admin and console is in [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards in [`design/`](design/README.md); the Chalk & Glass rules below apply to the Flutter app only.
 
 Platform commands (Node 24, pnpm 10):
 
@@ -14,8 +14,8 @@ Platform commands (Node 24, pnpm 10):
 pnpm install && pnpm build          # once
 pnpm typecheck && pnpm test         # types and tests (API tests start a real PostgreSQL)
 bash tools/dev-reset.sh &           # local PostgreSQL + server + Greenfield demo school (run in the background)
-pnpm --filter @edunest/admin dev    # http://localhost:5173/s/greenfield
-pnpm --filter @edunest/console dev  # http://localhost:5174
+pnpm --filter @gradeon/admin dev    # http://localhost:5173/s/greenfield
+pnpm --filter @gradeon/console dev  # http://localhost:5174
 node tools/audit-ui.mjs             # every page, 4 widths, light/dark: errors, overflow, clipping
 node tools/e2e-flows.mjs            # 38 browser flows (re-run dev-reset first; it changes data)
 node tools/scan-gaps.mjs            # columns ending unevenly; also scan-fit.mjs (tabs, pills) and scan-scroll.mjs (scroll areas)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, EmptyCard, Shell, tintFor } from '@edunest/web-ui';
+import { Dialog, EmptyCard, Shell, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useChrome } from '../../app/useChrome';

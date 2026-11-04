@@ -22,13 +22,13 @@ async function adminSession() {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  return [`edunest.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  return [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
 }
 async function consoleSession() {
-  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@edunest.app', password: 'nest2026' });
+  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
   const list = await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${t.accessToken}` } })).json();
-  return { key: ['edunest.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })], school: list.find((s) => s.slug === slug)?.id };
+  return { key: ['gradeon.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })], school: list.find((s) => s.slug === slug)?.id };
 }
 
 const adminPaths = ['', '/students', '/timetable', '/settings', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/design', '/nope'];

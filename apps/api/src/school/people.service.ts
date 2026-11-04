@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
+import { newId } from '@gradeon/db';
 import {
   PERMISSIONS, ROLE_TEMPLATES, initials,
   type EnquiryCreate, type EnquiryEnrol, type EnquiryPatch, type EnquiryRow, type EnquiryStage, type RoleRow, type RoleSave, type StaffCreate, type StaffPatch, type StaffRow, type StudentDetail,
-} from '@edunest/contracts';
-import { hashPassword, randomToken } from '@edunest/security';
-import { ApiError, forbidden, notFound } from '@edunest/nest-kit';
+} from '@gradeon/contracts';
+import { hashPassword, randomToken } from '@gradeon/security';
+import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuthService } from '../auth/auth.service.js';
 import { StudentsService } from './students.service.js';

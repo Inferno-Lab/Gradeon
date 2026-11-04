@@ -1,9 +1,9 @@
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/status.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/datasources/mock_writes.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/models/academics.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/datasources/mock_writes.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/models/academics.dart';
 
 abstract class AttendanceRepository {
   Future<List<AttendanceDay>> forStudent(String studentId);

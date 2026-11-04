@@ -1,18 +1,18 @@
 import 'dart:async';
 
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/formatters.dart';
-import 'package:edunest/core/utils/status.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:edunest/features/dashboard/views/dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/formatters.dart';
+import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 

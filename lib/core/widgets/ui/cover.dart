@@ -1,7 +1,7 @@
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/widgets/ui/labels.dart';
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/widgets/ui/labels.dart';
 
 /// Notebook cover: bound on the left, subject pigment, short label at the bottom.
 class Cover extends StatelessWidget {

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { HttpError } from '@edunest/api-client';
-import { closeModules, contrastRatio } from '@edunest/config-engine';
-import { WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@edunest/contracts';
-import { Field, SelectField, useShake } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { closeModules, contrastRatio } from '@gradeon/config-engine';
+import { WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
+import { Field, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';

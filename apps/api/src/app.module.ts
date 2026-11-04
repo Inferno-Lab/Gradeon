@@ -1,10 +1,10 @@
 import { Inject, Injectable, Module, type DynamicModule, type OnApplicationShutdown } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { PoolManager, Registry } from '@edunest/tenancy';
+import { PoolManager, Registry } from '@gradeon/tenancy';
 import { AuthController, MeController } from './auth/auth.controller.js';
 import { AuthService } from './auth/auth.service.js';
 import { AuthGuard, PermissionsGuard } from './auth/guards.js';
-import { ApiExceptionFilter } from '@edunest/nest-kit';
+import { ApiExceptionFilter } from '@gradeon/nest-kit';
 import { MetricsInterceptor, MetricsService } from './common/metrics.js';
 import { ENV, type Env } from './env.js';
 import { ApprovalsService } from './school/approvals.service.js';

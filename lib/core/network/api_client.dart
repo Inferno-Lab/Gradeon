@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/utils/app_exception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
 
 /// Talks to the school's API. Every call names the school, carries the signed-in person's token and, when the token
 /// has expired, asks for a new one once and repeats the call. Family routes live under `/v1/f`; the sign-in routes

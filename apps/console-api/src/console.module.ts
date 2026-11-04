@@ -1,7 +1,7 @@
 import { Inject, Injectable, Module, type DynamicModule, type OnApplicationShutdown } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { ApiExceptionFilter } from '@edunest/nest-kit';
-import { PoolManager, Registry } from '@edunest/tenancy';
+import { ApiExceptionFilter } from '@gradeon/nest-kit';
+import { PoolManager, Registry } from '@gradeon/tenancy';
 import { Actions, ActionsController, Builds } from './actions.js';
 import { Compliance, ComplianceController } from './compliance.js';
 import { AuthController, ConsoleAuth } from './auth.js';

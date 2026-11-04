@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Creates the Greenfield demo school through the console API, the same way the new-school wizard does.
 // Usage: node tools/provision-demo.mjs [apiBase] [email] [password] [code]
-const [base = 'http://localhost:4000', email = 'kaushal@edunest.app', password = 'nest2026', code = '424242'] = process.argv.slice(2);
+const [base = 'http://localhost:4000', email = 'kaushal@gradeon.app', password = 'nest2026', code = '424242'] = process.argv.slice(2);
 
 async function call(path, body, token) {
   const res = await fetch(`${base}${path}`, {

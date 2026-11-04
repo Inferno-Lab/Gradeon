@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { EmptyCard } from '@edunest/web-ui';
-import type { MigrationRow } from '@edunest/contracts';
+import { EmptyCard } from '@gradeon/web-ui';
+import type { MigrationRow } from '@gradeon/contracts';
 import { Card, Page } from '../../app/Page';
 import { useApp } from '../../app/context';
 

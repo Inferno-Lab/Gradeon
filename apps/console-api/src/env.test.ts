@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadEnv } from './env.js';
 
 const secrets = {
-  REGISTRY_DATABASE_URL: 'postgres://edunest:edunest@127.0.0.1:5432/registry',
+  REGISTRY_DATABASE_URL: 'postgres://gradeon:gradeon@127.0.0.1:5432/registry',
   SECRETS_KEY: 's'.repeat(32),
   JWT_SECRET: 'j'.repeat(32),
 };

@@ -1,9 +1,9 @@
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/loadable.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/loadable.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 
 class ResultsController extends GetxController with Loadable {
   final examIndex = 0.obs;

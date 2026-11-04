@@ -1,4 +1,4 @@
-import { addDays, istToday } from '@edunest/contracts';
+import { addDays, istToday } from '@gradeon/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 

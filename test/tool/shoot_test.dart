@@ -4,20 +4,20 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_pages.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/translations/app_translations.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/features/shell/shell_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_pages.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/translations/app_translations.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/shell/shell_controller.dart';
 
 import '../support/harness.dart';
 

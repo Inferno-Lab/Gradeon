@@ -1,9 +1,9 @@
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
 
 /// Squash-on-press wrapper used by cards, rows and buttons.
 class Pressable extends StatefulWidget {

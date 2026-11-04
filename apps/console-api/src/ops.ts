@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Logger, Param, Post, Put, Query, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
 import { POOLS } from './tokens.js';
-import { MODULES } from '@edunest/config-engine';
-import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@edunest/contracts';
-import { migrate, newId, pg } from '@edunest/db';
-import { topUpDemo } from '@edunest/db/seed';
-import { ApiError, ZodPipe, notFound } from '@edunest/nest-kit';
-import { hashPassword, signJwt, unseal } from '@edunest/security';
-import type { PoolManager } from '@edunest/tenancy';
+import { MODULES } from '@gradeon/config-engine';
+import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
+import { migrate, newId, pg } from '@gradeon/db';
+import { topUpDemo } from '@gradeon/db/seed';
+import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { hashPassword, signJwt, unseal } from '@gradeon/security';
+import type { PoolManager } from '@gradeon/tenancy';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';
 import { adminUrlFor } from './provisioning/drivers.js';
@@ -100,7 +100,7 @@ export class Support {
     await this.db.pool.query("insert into support_sessions (id, school_id, school_name, reason, status, expires_at, started_by) values ($1,$2,$3,$4,'active',$5,$6)", [id, school.id, school.name, reason.trim(), expires, user.email]);
     await this.db.audit(user.email, 'support.started', 'school', school.id, { reason: reason.trim() });
     const perms = ['students.read', 'attendance.read', 'fees.read', 'notices.read', 'approvals.read', 'timetable.read', 'settings.read', 'staff.read', 'reports.read'];
-    const token = signJwt({ sub: `support:${user.id}`, aud: school.slug, sid: id, name: `${user.name} (EduNest support)`, perms, support: true }, this.env.JWT_SECRET, 30 * 60);
+    const token = signJwt({ sub: `support:${user.id}`, aud: school.slug, sid: id, name: `${user.name} (Gradeon support)`, perms, support: true }, this.env.JWT_SECRET, 30 * 60);
     const row = (await this.db.query<typeof reg.supportSessions.$inferSelect>('select * from support_sessions where id = $1', [id])).rows[0]!;
     return { token, adminUrl: adminUrlFor(this.env, school.slug, school.addressing, school.customDomain), expiresAt: expires.toISOString(), session: this.row(row) };
   }
@@ -267,7 +267,7 @@ export class Bootstrap implements OnApplicationBootstrap {
       data: { start: 'demo' },
     });
     this.log.log('creating the Greenfield demo school');
-    const system: ConsoleUser = { id: 'system', name: 'EduNest', email: 'system@edunest.app', roles: ['super_admin'], permissions: [...CONSOLE_PERMISSIONS], sid: 'system' };
+    const system: ConsoleUser = { id: 'system', name: 'Gradeon', email: 'system@gradeon.app', roles: ['super_admin'], permissions: [...CONSOLE_PERMISSIONS], sid: 'system' };
     await this.wizard.launch(system, payload, { dryRun: false });
   }
 }

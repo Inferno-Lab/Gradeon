@@ -1,4 +1,4 @@
-import type { SchoolRow } from '@edunest/contracts';
+import type { SchoolRow } from '@gradeon/contracts';
 
 export type Tone = 'g' | 'a' | 'b' | 'r' | 'n';
 

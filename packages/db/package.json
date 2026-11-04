@@ -1,5 +1,5 @@
 {
-  "name": "@edunest/db",
+  "name": "@gradeon/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -39,8 +39,8 @@
   "dependencies": {
     "drizzle-orm": "^0.45.0",
     "pg": "^8.16.0",
-    "@edunest/contracts": "workspace:*",
-    "@edunest/security": "workspace:*"
+    "@gradeon/contracts": "workspace:*",
+    "@gradeon/security": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

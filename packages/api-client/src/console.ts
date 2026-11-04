@@ -2,7 +2,7 @@ import type {
   ActionRequest, ActionRow, AuditRow, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview,
-} from '@edunest/contracts';
+} from '@gradeon/contracts';
 import type { Http } from './http';
 
 export interface CellRow { key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean }

@@ -1,5 +1,5 @@
 import { Catch, HttpException, Logger, type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
-import type { ApiErrorBody, ErrorCode } from '@edunest/contracts';
+import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 const BY_STATUS: Record<number, ErrorCode> = {

@@ -1,11 +1,11 @@
 import { Inject, Injectable, SetMetadata, createParamDecorator, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { verifyJwt } from '@edunest/security';
-import { MODULES, closeModules } from '@edunest/config-engine';
-import type { AccessClaims, Permission } from '@edunest/contracts';
+import { verifyJwt } from '@gradeon/security';
+import { MODULES, closeModules } from '@gradeon/config-engine';
+import type { AccessClaims, Permission } from '@gradeon/contracts';
 import type { FastifyRequest } from 'fastify';
 import { ENV, type Env } from '../env.js';
-import { ApiError } from '@edunest/nest-kit';
+import { ApiError } from '@gradeon/nest-kit';
 import type { AuthedUser } from '../tenancy/tenant.js';
 import { AuthService } from './auth.service.js';
 
@@ -62,7 +62,7 @@ export class PermissionsGuard implements CanActivate {
       if (!KNOWN_MODULES.has(mod)) throw new Error(`Unknown module ${mod}`);
       const entitled = closeModules(req.tenant!.info.entitlement.modules);
       if (!entitled.includes(mod)) throw new ApiError('locked', 'This feature is not part of your school’s plan.');
-      if (req.tenant!.info.flags[`kill.${mod}`] === true) throw new ApiError('locked', 'EduNest has paused this feature for now. It will be back shortly.');
+      if (req.tenant!.info.flags[`kill.${mod}`] === true) throw new ApiError('locked', 'Gradeon has paused this feature for now. It will be back shortly.');
     }
     if (needed?.length) {
       const have = req.user?.permissions ?? [];

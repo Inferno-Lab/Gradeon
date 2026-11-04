@@ -22,7 +22,7 @@ As built: `POST /v1/auth/login` `{ "identifier", "password", "client"? }` answer
 
 The phone app (`client: "mobile"`) gets `refreshToken` in the body, keeps both tokens in secure storage, and renews with `POST /v1/auth/refresh` `{ "refreshToken" }`. Each renewal returns a new refresh token; reusing an old one ends every session for that person and writes `auth.refresh_replayed`. Sessions last at most 30 days (14 idle).
 
-The websites (`client: "web"`) keep the refresh token in an httpOnly cookie (`en_rt_<slug>` locally, `__Secure-en_rt_<slug>` in production, `Path=/v1/auth`, `SameSite=Strict`). The body has no refresh token. Refresh and logout send that cookie, an allowed `Origin`, and `x-csrf` matching the readable `en_csrf` cookie. Web sessions last 7 days. `POST /v1/auth/logout-all` ends every session for that person.
+The websites (`client: "web"`) keep the refresh token in an httpOnly cookie (`gd_rt_<slug>` locally, `__Secure-gd_rt_<slug>` in production, `Path=/v1/auth`, `SameSite=Strict`). The body has no refresh token. Refresh and logout send that cookie, an allowed `Origin`, and `x-csrf` matching the readable `gd_csrf` cookie. Web sessions last 7 days. `POST /v1/auth/logout-all` ends every session for that person.
 
 Every later request sends `Authorization: Bearer <accessToken>` and `X-School: <slug>`. The access JWT is 15 minutes, bound to the school (`aud`), and carries `sid` and `ver` (`users.token_version`). A revoked session, a role change, deactivation, or logout-all is refused on the next request (cached about 30 seconds). The app then reads the person from `GET /v1/f/me`. The table below is the demo app's original shape; the mock still uses it.
 

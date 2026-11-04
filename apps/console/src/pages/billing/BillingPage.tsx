@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard } from '@edunest/web-ui';
-import type { InvoiceRowC } from '@edunest/contracts';
+import { EmptyCard } from '@gradeon/web-ui';
+import type { InvoiceRowC } from '@gradeon/contracts';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { rupees } from '../../app/format';

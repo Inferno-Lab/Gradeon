@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { dayLabel, inr, istToday, type StudentRow } from '@edunest/contracts';
-import { EmptyCard, Pop, Shell, rollDigits, tintFor } from '@edunest/web-ui';
-import type { StudentListQuery } from '@edunest/api-client';
+import { dayLabel, inr, istToday, type StudentRow } from '@gradeon/contracts';
+import { EmptyCard, Pop, Shell, rollDigits, tintFor } from '@gradeon/web-ui';
+import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { AddStudentDialog, AssignFeeDialog, CollectFeeDialog, ImportDialog, MessageDialog } from './StudentDialogs';

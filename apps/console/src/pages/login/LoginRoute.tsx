@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { LoginPage } from '@edunest/web-ui';
+import { LoginPage } from '@gradeon/web-ui';
 import { makeClient, session } from '../../app/client';
 
 const client = makeClient(() => undefined);
@@ -10,11 +10,11 @@ export function LoginRoute() {
   return (
     <LoginPage
       controller={{
-        product: 'console', schoolName: 'EduNest Console', shortName: 'console', demoMode: !!import.meta.env.VITE_DEMO_LOGIN, goName: 'the console',
-        initialEmail: (() => { try { return localStorage.getItem('edunest.console.email') ?? ''; } catch { return ''; } })(),
+        product: 'console', schoolName: 'Gradeon Console', shortName: 'console', demoMode: !!import.meta.env.VITE_DEMO_LOGIN, goName: 'the console',
+        initialEmail: (() => { try { return localStorage.getItem('gradeon.console.email') ?? ''; } catch { return ''; } })(),
         submitCredentials: async (email, password) => {
           const res = await client.api.login({ identifier: email, password });
-          try { localStorage.setItem('edunest.console.email', email); } catch { /* ignore */ }
+          try { localStorage.setItem('gradeon.console.email', email); } catch { /* ignore */ }
           if (res.step === 'otp') return res.challenge;
           session.write({ user: res.tokens.user });
           session.setAccess(res.tokens.accessToken);

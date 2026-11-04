@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/session_bus.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/core/utils/date_seed.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/models/student.dart';
-import 'package:edunest/data/models/user.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/session_bus.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/utils/date_seed.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/models/student.dart';
+import 'package:gradeon/data/models/user.dart';
 
 class MockJsonDataSource {
   final _random = Random();

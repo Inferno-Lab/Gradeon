@@ -1,8 +1,8 @@
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/data/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/data/models/user.dart';
 
 class AuthMiddleware extends GetMiddleware {
   @override

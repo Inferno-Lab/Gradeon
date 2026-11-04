@@ -2,16 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:edunest/core/network/api_client.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gradeon/core/network/api_client.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
 
 /// A stand-in for the school's API that records what the app sends and answers with the shapes the real one does.
 class _Fake {

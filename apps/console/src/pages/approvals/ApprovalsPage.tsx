@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard } from '@edunest/web-ui';
-import type { ActionRow } from '@edunest/contracts';
+import { EmptyCard } from '@gradeon/web-ui';
+import type { ActionRow } from '@gradeon/contracts';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

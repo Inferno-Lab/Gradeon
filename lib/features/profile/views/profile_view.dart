@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/states.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/features/profile/controllers/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/states.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/profile/controllers/profile_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 

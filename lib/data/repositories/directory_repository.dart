@@ -1,7 +1,7 @@
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/models/student.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/models/student.dart';
 
 abstract class DirectoryRepository {
   Future<Student> student(String id);

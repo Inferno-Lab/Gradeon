@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { HttpError } from '@edunest/api-client';
-import { STEP_LABELS, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@edunest/contracts';
-import { Dialog, EmptyCard, Shell, useShake } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { STEP_LABELS, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Shell, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useChrome } from '../../app/useChrome';

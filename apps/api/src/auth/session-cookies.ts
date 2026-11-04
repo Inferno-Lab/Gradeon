@@ -10,4 +10,4 @@ export {
   schoolRefreshCookie,
   setConsoleRefreshCookie,
   setSchoolRefreshCookie,
-} from '@edunest/nest-kit';
+} from '@gradeon/nest-kit';

@@ -19,8 +19,8 @@ async function launch(slug: string) {
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@edunest.app', roles: ['super_admin'], password: 'another-long-pass' } });
-  second = await h.signIn('second@edunest.app', 'another-long-pass');
+  await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+  second = await h.signIn('second@gradeon.app', 'another-long-pass');
   expect((await launch('moveme')).status).toBe('succeeded');
 }, 240_000);
 afterAll(async () => {
@@ -41,8 +41,8 @@ describe('cells', () => {
     expect((await h.c('PUT', '/console/v1/cells/nope', { token: t, body: { maxSchools: 4 } })).status).toBe(404);
   });
   it('only people who may change policy can create cells', async () => {
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@edunest.app', roles: ['support'], password: 'long-enough-pass' } });
-    const sam = await h.signIn('sam@edunest.app', 'long-enough-pass');
+    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'], password: 'long-enough-pass' } });
+    const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
     expect((await h.c('POST', '/console/v1/cells', { token: sam, body: { key: 'sneaky', target: 'local', region: 'x1', maxSchools: 3 } })).status).toBe(403);
   });
   it('moves a school to another cell of the same kind after a second person approves, and refuses closed or different cells', async () => {
@@ -101,8 +101,8 @@ describe('compliance desk', () => {
     expect(list.subprocessors.length).toBeGreaterThan(0);
   });
   it('lets only the compliance and super admin roles write', async () => {
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Aud Itor', email: 'aud@edunest.app', roles: ['auditor'], password: 'long-enough-pass' } });
-    const aud = await h.signIn('aud@edunest.app', 'long-enough-pass');
+    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Aud Itor', email: 'aud@gradeon.app', roles: ['auditor'], password: 'long-enough-pass' } });
+    const aud = await h.signIn('aud@gradeon.app', 'long-enough-pass');
     expect((await h.c('GET', '/console/v1/compliance', { token: aud })).status).toBe(200);
     expect((await h.c('POST', '/console/v1/compliance', { token: aud, body: { schoolId: 'x', kind: 'breach', title: 'Not allowed' } })).status).toBe(403);
   });

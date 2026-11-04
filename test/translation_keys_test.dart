@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:edunest/core/translations/app_translations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gradeon/core/translations/app_translations.dart';
 
 /// Every literal `'area.key'.tr` / `.trp(` in lib must exist in English, or families see raw keys.
 void main() {

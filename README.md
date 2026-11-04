@@ -1,19 +1,19 @@
-# EduNest
+# Gradeon
 
-EduNest is a school platform with four parts that work together:
+Gradeon is a school platform with four parts that work together:
 
 | Part | What it is | Where |
 | --- | --- | --- |
 | **School admin** | The website a school's office and principal use: dashboard, students, attendance, fees, notices, timetable, settings. | `apps/admin` |
-| **Console** | EduNest's own control room: onboard a school, set up its database and address, roll out releases, watch health, give support, bill, manage the team. | `apps/console` |
+| **Console** | Gradeon's own control room: onboard a school, set up its database and address, roll out releases, watch health, give support, bill, manage the team. | `apps/console` |
 | **Backend** | Two NestJS APIs (one for schools, one for the console) in one process, with a PostgreSQL database per school. | `apps/api`, `apps/console-api`, `apps/server`, `packages/*` |
 | **Mobile app** | A Flutter app for students, parents and teachers ("Chalk & Glass" look). Built for a school (`SCHOOL` and `API_BASE_URL`), it signs in for real and reads that school's data through the family API (`/v1/f/*`); built without them, it runs on demo content. | `lib/`, `android/`, `ios/` |
 
 Start here depending on who you are:
 
 - **New developer or coding agent:** [`AGENTS.md`](AGENTS.md) (rules and commands), then [`docs/HANDOFF.md`](docs/HANDOFF.md) (what was built, why, what is left and how to do it).
-- **Want to see it running on the internet:** [`docs/deploy-free-test.md`](docs/deploy-free-test.md). The current test deployment is `https://edunest-0c6x.onrender.com` (admin at `/`, console at `/console/`).
-- **The design:** the concept is [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards are in [`design/`](design/README.md). The long-term plan is [`docs/superpowers/specs/2026-10-14-edunest-platform-design.md`](docs/superpowers/specs/2026-10-14-edunest-platform-design.md).
+- **Want to see it running on the internet:** [`docs/deploy-free-test.md`](docs/deploy-free-test.md). The current test deployment is `https://gradeon.onrender.com` (admin at `/`, console at `/console/`).
+- **The design:** the concept is [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards are in [`design/`](design/README.md). The long-term plan is [`docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`](docs/superpowers/specs/2026-10-14-gradeon-platform-design.md).
 
 ## How it fits together
 
@@ -22,7 +22,7 @@ Start here depending on who you are:
  Browser: console (React)       ─┼─►  apps/server  ─────────┤
  Phone: Flutter app             ─┘   (NestJS, Fastify)      └─ one registry database (the list of schools)
                                       ├─ school API   /v1/*          (tenant chosen by the X-School header)
-                                      ├─ console API  /console/v1/*  (EduNest staff only)
+                                      ├─ console API  /console/v1/*  (Gradeon staff only)
                                       └─ serves the admin at / and the console at /console/
 ```
 
@@ -39,8 +39,8 @@ Needs Node 24 and pnpm 10 (`corepack enable`). No Docker: a throwaway PostgreSQL
 pnpm install
 pnpm build                          # once, builds the shared packages
 bash tools/dev-reset.sh &           # starts PostgreSQL (port 54329), the server (4000) and creates the Greenfield demo school; takes ~1 minute
-pnpm --filter @edunest/admin dev    # http://localhost:5173/s/greenfield
-pnpm --filter @edunest/console dev  # http://localhost:5174
+pnpm --filter @gradeon/admin dev    # http://localhost:5173/s/greenfield
+pnpm --filter @gradeon/console dev  # http://localhost:5174
 ```
 
 Sign in:
@@ -48,10 +48,10 @@ Sign in:
 | Where | Address | Credentials |
 | --- | --- | --- |
 | School admin (demo school) | `http://localhost:5173/s/greenfield` | `neha.menon@greenfield.edu.in` / `nest2026`, then press "Type the demo code" (`424242`) |
-| Console | `http://localhost:5174` | `kaushal@edunest.app` / `nest2026`, code `424242` |
+| Console | `http://localhost:5174` | `kaushal@gradeon.app` / `nest2026`, code `424242` |
 | Phone app on the demo school | a build with `SCHOOL=greenfield` | parent `priya.sharma@example.com`, teacher `kavita.iyer@greenfield.edu.in`; password `nest2026`, code `424242` |
 
-On the hosted test track (`https://edunest-0c6x.onrender.com`) the school logins are the same. The console there uses `BOOTSTRAP_PASSWORD` and `DEMO_CODE` from Render's Environment page.
+On the hosted test track (`https://gradeon.onrender.com`) the school logins are the same. The console there uses `BOOTSTRAP_PASSWORD` and `DEMO_CODE` from Render's Environment page.
 
 Texts and emails are never sent for real: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear.
 
@@ -107,7 +107,7 @@ The original demo app (students, parents, teachers; Chalk & Glass; mock JSON in 
 
 ```bash
 flutter pub get && flutter run          # demo content, no backend needed
-flutter run --dart-define=SCHOOL=greenfield --dart-define=API_BASE_URL=https://edunest-0c6x.onrender.com   # the demo school's real data (password nest2026, code 424242)
+flutter run --dart-define=SCHOOL=greenfield --dart-define=API_BASE_URL=https://gradeon.onrender.com   # the demo school's real data (password nest2026, code 424242)
 ```
 
 Demo accounts on demo content (password `demo123`, OTP `123456`): parent Priya Sharma, teacher Kavita Iyer. On a school build the same people sign in with `nest2026` and code `424242`. Students do not sign in.

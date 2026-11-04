@@ -47,10 +47,10 @@ const expectVisible = async (loc, what, timeout = 8000) => { await loc.first().w
 const h = { 'x-school': slug };
 const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
 const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-const adminStore = [`edunest.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
-const ca = await post('/console/v1/auth/login', { identifier: 'kaushal@edunest.app', password: 'nest2026' });
+const adminStore = [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+const ca = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
 const ct = await post('/console/v1/auth/verify', { challengeId: ca.challenge.challengeId, code: '424242' });
-const consoleStore = ['edunest.console', JSON.stringify({ accessToken: ct.accessToken, refreshToken: ct.refreshToken, user: ct.user })];
+const consoleStore = ['gradeon.console', JSON.stringify({ accessToken: ct.accessToken, refreshToken: ct.refreshToken, user: ct.user })];
 const school = (await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${ct.accessToken}` } })).json()).find((s) => s.slug === slug);
 
 // ── admin ────────────────────────────────────────────────────────────────
@@ -206,7 +206,7 @@ await flow('admin: phone dock navigates', { storage: adminStore, context: { view
 // ── console ──────────────────────────────────────────────────────────────
 await flow('console: wrong password shakes, right password and code sign in', {}, async (p) => {
   await p.goto(`${CONSOLE}/login`, { waitUntil: 'networkidle' });
-  await p.getByLabel('Work email').fill('kaushal@edunest.app');
+  await p.getByLabel('Work email').fill('kaushal@gradeon.app');
   await p.locator('#lg-pw').fill('nope');
   await p.getByRole('button', { name: /^Continue/ }).click();
   await expectVisible(p.getByRole('alert'), 'the wrong-password message');
@@ -254,7 +254,7 @@ await flow('console: team add validates, then adds', { storage: consoleStore }, 
   await p.getByRole('button', { name: 'Add', exact: true }).click();
   await expectVisible(p.getByText('Enter their name.'), 'the name error');
   await p.getByLabel('Name', { exact: true }).fill('Test Person');
-  await p.getByLabel('Work email').fill(`tp${Date.now() % 100000}@edunest.app`);
+  await p.getByLabel('Work email').fill(`tp${Date.now() % 100000}@gradeon.app`);
   await p.getByLabel('First password').fill('long-enough-password');
   await p.getByRole('button', { name: 'Add', exact: true }).click();
   await expectVisible(p.getByText('Test Person'), 'the new person');

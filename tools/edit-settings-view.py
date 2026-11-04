@@ -9,7 +9,7 @@ def rep(a, b, count=1):
     s = s.replace(a, b)
 
 
-s = s.replace('import { Import, Shell } from "@edunest/web-ui";', 'import { Shell } from "@edunest/web-ui";')
+s = s.replace('import { Import, Shell } from "@gradeon/web-ui";', 'import { Shell } from "@gradeon/web-ui";')
 rep('<p>How Greenfield looks and behaves, for staff, families and students.</p>', '<p>How {v.shortName} looks and behaves, for staff, families and students.</p>')
 rep('Saved. The app updates within a minute.', '{v.toastText}')
 rep('<button className="btn v" disabled={v.clean} onClick={v.save}>', '<button className={`btn v ${v.shakeSave}`} disabled={v.clean} onClick={v.save}>')
@@ -70,8 +70,8 @@ rep('''                    <small>Families and staff sign in here.</small>
                   <label className="in2">
                     <span className="pre">https://</span>
                     <input value={v.slug} onChange={v.onSlug} aria-label="Address" />
-                    <span className="pre">.edunest.app</span>
-                  </label>''', '''                    <small>Families and staff sign in here. To change it, ask EduNest.</small>
+                    <span className="pre">.gradeon.app</span>
+                  </label>''', '''                    <small>Families and staff sign in here. To change it, ask Gradeon.</small>
                   </div>
                   <div className="in2">
                     <input value={v.address} readOnly aria-label="Address" />
@@ -87,13 +87,13 @@ rep('<input value="GIS-PUNE-0412" readOnly={v.yes} aria-label="School code"', '<
 rep('<textarea onChange={v.onAbout} value={v.about} aria-label="About the school" maxLength={240}></textarea>', '<textarea onChange={v.onAbout} value={v.about} aria-label="About the school" maxLength={240}></textarea>')
 rep('<small>Rules that apply to everyone at Greenfield.</small>', '<small>Rules that apply to everyone at {v.shortName}.</small>')
 rep('<div className="tgl">\n                  <div>\n                    <b>Who approves notices</b>', '<div className="tgl">\n                  <div>\n                    <b>Who approves notices</b>')
-rep('''                      EduNest Complete
-                    </div>''', '''                      EduNest {v.plan.name}
+rep('''                      Gradeon Complete
+                    </div>''', '''                      Gradeon {v.plan.name}
                     </div>''')
 rep('Next invoice, 1 Nov 2026', '{v.plan.next}')
 rep('''                    <button className="btn sm wht" style={{ alignSelf: "flex-start" } as CSSProperties}>
                       Manage billing
-                    </button>''', '''                    <a className="btn sm wht" href="mailto:billing@edunest.app?subject=Billing" style={{ alignSelf: "flex-start" } as CSSProperties}>
+                    </button>''', '''                    <a className="btn sm wht" href="mailto:billing@gradeon.app?subject=Billing" style={{ alignSelf: "flex-start" } as CSSProperties}>
                       Manage billing
                     </a>''')
 rep('''                    <span className="chip a" style={{ alignSelf: "flex-start" } as CSSProperties}>

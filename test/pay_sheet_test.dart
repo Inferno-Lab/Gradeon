@@ -1,9 +1,9 @@
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/features/fees/controllers/fees_controller.dart';
-import 'package:edunest/features/fees/views/fees_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/fees/controllers/fees_controller.dart';
+import 'package:gradeon/features/fees/views/fees_view.dart';
 
 import 'support/harness.dart';
 

@@ -63,7 +63,7 @@ describe('createHttp', () => {
   });
 
   it('sends cookies, CSRF, and client=web when cookieRefresh is on', async () => {
-    vi.stubGlobal('document', { cookie: 'en_csrf=tok' });
+    vi.stubGlobal('document', { cookie: 'gd_csrf=tok' });
     let init: RequestInit | undefined;
     const http = createHttp({
       baseUrl: 'http://api.test', refreshPath: '/v1/auth/refresh', cookieRefresh: true,

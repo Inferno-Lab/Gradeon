@@ -1,8 +1,8 @@
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/models/user.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/models/user.dart';
 
 abstract class AuthRepository {
   Future<AppUser> login({required String email, required String password});

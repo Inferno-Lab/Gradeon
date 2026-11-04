@@ -2,16 +2,16 @@
 
 Written 2026-10-18 and updated 2026-10-19 for whoever continues this work (a person, or another Claude account with no memory of the earlier sessions). Read it top to bottom once, then use it as a reference. It says what was asked, what was built, **how and why it was built that way**, what is left, and **how to do each remaining part**.
 
-Related files: [`README.md`](../README.md) (overview and run commands), [`AGENTS.md`](../AGENTS.md) (rules for the Flutter app and agent workflow), [`docs/platform-status.md`](platform-status.md) (short status table), [`docs/deploy-free-test.md`](deploy-free-test.md) (deploying), [`design/README.md`](../design/README.md) (the design boards), [`docs/superpowers/specs/2026-10-14-edunest-platform-design.md`](superpowers/specs/2026-10-14-edunest-platform-design.md) (the full plan, 1,150 lines; section numbers below refer to it).
+Related files: [`README.md`](../README.md) (overview and run commands), [`AGENTS.md`](../AGENTS.md) (rules for the Flutter app and agent workflow), [`docs/platform-status.md`](platform-status.md) (short status table), [`docs/deploy-free-test.md`](deploy-free-test.md) (deploying), [`design/README.md`](../design/README.md) (the design boards), [`docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`](superpowers/specs/2026-10-14-gradeon-platform-design.md) (the full plan, 1,150 lines; section numbers below refer to it).
 
 ---
 
 ## 1. The brief, as the owner gave it
 
-The owner (Kaushal) runs EduNest. In order, over several sessions:
+The owner (Kaushal) runs Gradeon. In order, over several sessions:
 
 1. Built a Flutter school app (students, parents, teachers) on mock JSON, redesigned as "Chalk & Glass". Done on branch `redesign/chalk-glass`.
-2. Asked for a plan for a platform around it: an **admin panel** (school staff), a **console** (EduNest developers/staff), a **backend**, all in **one repository**, role-based access, a configurable app so features can be shown/hidden without code changes. The result is the 1,150-line plan.
+2. Asked for a plan for a platform around it: an **admin panel** (school staff), a **console** (Gradeon developers/staff), a **backend**, all in **one repository**, role-based access, a configurable app so features can be shown/hidden without code changes. The result is the 1,150-line plan.
 3. Designed the admin and console in a design canvas ("Nest" language), then said: the design is "crazy and impeccable" but **replace the childish parts** (pencil-shaped columns, the fee jars, the bird mascot "Nesti") — **in the build, not in the canvas**. Also: onboarding a school and deploying for it must be done **from the console and be configurable** (blueprints, deploy targets). The test deployment must be **hosted free** and all three (app, admin, console) must work together there.
 4. Final instruction: "implement the entire plan end to end", design **byte-identical to the canvas** except the childish items, jars become filled bars, **no UI bugs** ("I do not want to go through the debugging arc, so test thoroughly"), **deploy on Render** (it is fine if it shuts down), keep it **free**, ask for step-by-step instructions when something needs the owner (accounts), and **bars must not be thin**.
 5. After the first deploy the owner reported a black screen. That was two real bugs (section 8.4), fixed.
@@ -26,7 +26,7 @@ What "the entire plan" means in practice: the plan's build order (section 24) ha
 
 ### 2.1 Running system
 
-- **Deployed test track:** `https://edunest-0c6x.onrender.com` (Render free web service `edunest`, Neon Postgres). Admin at `/`, console at `/console/`. Demo school at `/s/greenfield`. See section 8.
+- **Deployed test track:** `https://gradeon.onrender.com` (Render free web service `gradeon`, Neon Postgres). Admin at `/`, console at `/console/`. Demo school at `/s/greenfield`. See section 8.
 - **Local:** `bash tools/dev-reset.sh` plus the two Vite dev servers (README).
 
 ### 2.2 Code by area
@@ -100,7 +100,7 @@ Saved in the repository at `design/canvas/` and described in [`design/README.md`
 Commands are in the README. Practical notes learned the hard way:
 
 - `bash tools/dev-reset.sh` **hangs in the foreground of some shells**: run it in the background and poll `/tmp/reset.log` for "Greenfield is live".
-- The dev server (`tsx src/main.ts`) imports `@edunest/api` and `@edunest/console-api` **from their `dist/`**. After changing either, run `pnpm --filter @edunest/api build` (or `console-api`) and restart, or you are testing old code.
+- The dev server (`tsx src/main.ts`) imports `@gradeon/api` and `@gradeon/console-api` **from their `dist/`**. After changing either, run `pnpm --filter @gradeon/api build` (or `console-api`) and restart, or you are testing old code.
 - Editing frontend files while `audit-ui.mjs` runs triggers Vite hot reload and produces false "hook order" errors. Finish edits, then audit.
 - `e2e-flows.mjs` changes demo data (approves, publishes, adds a student). Re-run `dev-reset.sh` before the next full run; `ONLY="text"` runs matching flows.
 - Git Bash rewrites values starting with `/` (`CONSOLE_BASE=/console/` becomes a Windows path): prefix `MSYS_NO_PATHCONV=1`. Large quote-heavy heredocs in some tool shells fail: write files with an editor tool.
@@ -120,7 +120,7 @@ Commands are in the README. Practical notes learned the hard way:
 
 ### 8.1 What runs
 
-One Render web service `edunest` (free, Singapore, auto-deploys from `main`; work on a branch only reaches the live site once merged to `main`) runs `node apps/server/dist/main.js`. Build command (in `render.yaml`): `corepack pnpm install --frozen-lockfile --prod=false && CONSOLE_BASE=/console/ corepack pnpm exec turbo run build --concurrency=2` (avoid `corepack enable` — it tries to write shims under `/usr/bin` and fails with EROFS on Render). Neon (free) holds the registry and each school's database.
+One Render web service `gradeon` (free, Singapore, auto-deploys from `main`; work on a branch only reaches the live site once merged to `main`) runs `node apps/server/dist/main.js`. Build command (in `render.yaml`): `corepack pnpm install --frozen-lockfile --prod=false && CONSOLE_BASE=/console/ corepack pnpm exec turbo run build --concurrency=2` (avoid `corepack enable` — it tries to write shims under `/usr/bin` and fails with EROFS on Render). Neon (free) holds the registry and each school's database.
 
 ### 8.2 Environment variables (set in Render → Environment)
 
@@ -141,7 +141,7 @@ Sleeps after 15 minutes idle; the first request takes about a minute (the pages 
 
 ### 8.4 The first-deploy black screen (fixed) and what it teaches
 
-Two independent bugs: (1) `CONSOLE_BASE` never reached the console build because **Turborepo strips environment variables it is not told about**; the console's assets were requested from `/assets/` (admin's folder) and 404'd, leaving a blank page. `turbo.json` now lists `CONSOLE_BASE` and `VITE_*` in the build task's `env`. (2) The admin treated the first part of any host name with three parts (`edunest-0c6x.onrender.com`) as a school address, asked for school `edunest-0c6x`, got "not found", and showed that message in black on the dark page. Host-based schools now only count under `VITE_BASE_DOMAIN`, and the not-found screen is a styled card. Lesson: test the **production build served the way production serves it** (`node apps/server/dist/main.js`, assets under the real base) and with a host name that is not `localhost`/`127.0.0.1`. `tools/audit-ui.mjs` can target it with `API=… ADMIN=… CONSOLE=…`.
+Two independent bugs: (1) `CONSOLE_BASE` never reached the console build because **Turborepo strips environment variables it is not told about**; the console's assets were requested from `/assets/` (admin's folder) and 404'd, leaving a blank page. `turbo.json` now lists `CONSOLE_BASE` and `VITE_*` in the build task's `env`. (2) The admin treated the first part of any host name with three parts (`gradeon.onrender.com`) as a school address, asked for school `gradeon`, got "not found", and showed that message in black on the dark page. Host-based schools now only count under `VITE_BASE_DOMAIN`, and the not-found screen is a styled card. Lesson: test the **production build served the way production serves it** (`node apps/server/dist/main.js`, assets under the real base) and with a host name that is not `localhost`/`127.0.0.1`. `tools/audit-ui.mjs` can target it with `API=… ADMIN=… CONSOLE=…`.
 
 ### 8.5 Redeploying and troubleshooting
 
@@ -172,7 +172,7 @@ All built (`apps/admin/src/pages/settings/panels.tsx`). Roles and access edits `
 
 Done: the family API (`apps/api/src/school/family.{service,controller}.ts`, `/v1/f/*`, tested in `apps/api/test/family.test.ts`) answers in the shapes the app's models already parse, scoped to the signed-in parent or teacher. `lib/core/network/api_client.dart` is the real client (tests in `test/remote_api_test.dart`); `RemoteAuthRepository` signs in with password then code (`OtpRequired`), and the demo cards work against a demo school because it hands out its code. `test/tool/live_probe_test.dart` reads every screen's data from a running school and parses it with the app's models (run it after `dev-reset.sh`, see its header). Demo family on Greenfield: parent Priya (children Aarav and Ananya) and teacher Kavita; password `nest2026`, code `424242`. Students do not sign in.
 
-Not done: the Flutter shell does not hide tabs for modules the school switched off (it should read `/v1/config`, `app.dock`); library (only loans, no catalogue or reservations), gallery (empty), transport (route only, no stops or live position), assistant, push registration, offline store, deep links; moving `lib/` to `apps/mobile`, the EduNest picker app, store pipelines and code push (plan section 19). A real phone and the liquid glass shader were not checked.
+Not done: the Flutter shell does not hide tabs for modules the school switched off (it should read `/v1/config`, `app.dock`); library (only loans, no catalogue or reservations), gallery (empty), transport (route only, no stops or live position), assistant, push registration, offline store, deep links; moving `lib/` to `apps/mobile`, the Gradeon picker app, store pipelines and code push (plan section 19). A real phone and the liquid glass shader were not checked.
 
 ### 9.4 Hosting and production (plan sections 5–11, 18–22)
 
@@ -180,9 +180,9 @@ Everything here needs paid or owner-owned services: AWS accounts and OpenTofu fo
 
 ### 9.5 Security hardening before real schools
 
-Done: access JWT (15 min, HS256, `iss`/`aud`/`alg`/`typ` checked, key derived per audience, `JWT_SECRET_PREVIOUS` for rotation). Web refresh tokens are httpOnly `SameSite=Strict` cookies with CSRF double-submit (`en_csrf` + `x-csrf`) and Origin check; the phone keeps the refresh token in the body and in `flutter_secure_storage`. Admin and console keep the access token in memory (a leftover `accessToken` in `localStorage` is still read so older tabs and e2e keep working). `AuthGuard` checks `sid` and `users.token_version` on every request (about 30 s cache). `POST /v1/auth/logout-all`. Helmet (HSTS, CSP, Referrer-Policy, Permissions-Policy), production refuses `CORS_ORIGINS=*`, `@fastify/rate-limit` (300/min) plus stricter login/verify/refresh limits, 256 KB body limit (2 MB on CSV import), scrypt N=32768 with rehash, school indexes and daily OTP/session sweep, pool `statement_timeout` / `idle_in_transaction_session_timeout`, `TENANT_MAX_POOLS` × `TENANT_PER_POOL`. Deploying this signs everyone out once (new keys and cookies).
+Done: access JWT (15 min, HS256, `iss`/`aud`/`alg`/`typ` checked, key derived per audience, `JWT_SECRET_PREVIOUS` for rotation). Web refresh tokens are httpOnly `SameSite=Strict` cookies with CSRF double-submit (`gd_csrf` + `x-csrf`) and Origin check; the phone keeps the refresh token in the body and in `flutter_secure_storage`. Admin and console keep the access token in memory (a leftover `accessToken` in `localStorage` is still read so older tabs and e2e keep working). `AuthGuard` checks `sid` and `users.token_version` on every request (about 30 s cache). `POST /v1/auth/logout-all`. Helmet (HSTS, CSP, Referrer-Policy, Permissions-Policy), production refuses `CORS_ORIGINS=*`, `@fastify/rate-limit` (300/min) plus stricter login/verify/refresh limits, 256 KB body limit (2 MB on CSV import), scrypt N=32768 with rehash, school indexes and daily OTP/session sweep, pool `statement_timeout` / `idle_in_transaction_session_timeout`, `TENANT_MAX_POOLS` × `TENANT_PER_POOL`. Deploying this signs everyone out once (new keys and cookies).
 
-Still open: passkeys and TOTP; SSO (the sign-in buttons are disabled placeholders); password reset flow ("Forgot it?" currently tells the person to ask the principal/EduNest); CSP nonces, Trusted Types and SRI; DPDP consent and data-export/erasure flows; penetration test.
+Still open: passkeys and TOTP; SSO (the sign-in buttons are disabled placeholders); password reset flow ("Forgot it?" currently tells the person to ask the principal/Gradeon); CSP nonces, Trusted Types and SRI; DPDP consent and data-export/erasure flows; penetration test.
 
 Remove the public demo credentials from any environment with real data; keep `DEMO_CODE`/`SEED_DEMO` off (production refuses them unless `ALLOW_DEMO=true`).
 

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark';
-const KEY = 'edunest.theme';
+const KEY = 'gradeon.theme';
 const listeners = new Set<() => void>();
 
 function read(): Theme {

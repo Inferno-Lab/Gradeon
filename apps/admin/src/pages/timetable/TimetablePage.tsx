@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, parseDay, weekday, type SlotRow, type TimetableView as TT } from '@edunest/contracts';
-import { Dialog, EmptyCard, Shell, tintFor } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, parseDay, weekday, type SlotRow, type TimetableView as TT } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Shell, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { TimetableView } from './timetable.view';

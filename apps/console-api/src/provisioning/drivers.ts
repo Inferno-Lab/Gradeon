@@ -1,10 +1,10 @@
 import dns from 'node:dns/promises';
-import { closeModules } from '@edunest/config-engine';
-import type { DeployTarget, StepKey, WizardPayload } from '@edunest/contracts';
-import { migrate, pg } from '@edunest/db';
-import { seedSchool } from '@edunest/db/seed';
-import { hashPassword, randomToken, seal, unseal } from '@edunest/security';
-import type { Registry } from '@edunest/tenancy';
+import { closeModules } from '@gradeon/config-engine';
+import type { DeployTarget, StepKey, WizardPayload } from '@gradeon/contracts';
+import { migrate, pg } from '@gradeon/db';
+import { seedSchool } from '@gradeon/db/seed';
+import { hashPassword, randomToken, seal, unseal } from '@gradeon/security';
+import type { Registry } from '@gradeon/tenancy';
 import type { Db, reg } from '../core.js';
 import type { Env } from '../env.js';
 import type { Sandbox } from '../sandbox.js';
@@ -109,7 +109,7 @@ async function createNeonProject(ctx: StepCtx): Promise<{ url: string; name: str
   const res = await ctx.fetch('https://console.neon.tech/api/v2/projects', {
     method: 'POST',
     headers: { authorization: `Bearer ${ctx.env.NEON_API_KEY}`, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ project: { name: `edunest-${ctx.school.slug}`, region_id: ctx.env.NEON_REGION } }),
+    body: JSON.stringify({ project: { name: `gradeon-${ctx.school.slug}`, region_id: ctx.env.NEON_REGION } }),
   });
   if (!res.ok) throw new Error(`Neon refused to create the project (${res.status}): ${(await res.text()).slice(0, 200)}`);
   const body = (await res.json()) as { project: { id: string }; connection_uris: { connection_uri: string }[] };
@@ -119,7 +119,7 @@ async function createNeonProject(ctx: StepCtx): Promise<{ url: string; name: str
 }
 
 const database: Driver = {
-  describe: (c) => (c.target === 'free-test' && c.env.NEON_API_KEY ? `A Neon project of its own, edunest-${c.slug}` : `${dbName(c.slug)} with its own role and password`),
+  describe: (c) => (c.target === 'free-test' && c.env.NEON_API_KEY ? `A Neon project of its own, gradeon-${c.slug}` : `${dbName(c.slug)} with its own role and password`),
   run: async (c) => {
     if (c.school.dbUrlSealed) {
       const existing = unseal(c.school.dbUrlSealed, c.env.SECRETS_KEY);
@@ -220,9 +220,9 @@ const admin: Driver = {
       await pool.query('update users set password_hash = $2 where lower(email) = lower($1)', [p.admin.email, await hashPassword(password)]);
       const url = adminUrlFor(c.env, school.slug, school.addressing, school.customDomain);
       const text = demo
-        ? `Welcome to ${p.basics.shortName} on EduNest. Sign in at ${url} with ${p.admin.email} and the password ${password}. The demo sign-in code is 424242.`
-        : `Welcome to ${p.basics.shortName} on EduNest. Sign in at ${url} with ${p.admin.email} and the temporary password ${password}. Change it after you sign in.`;
-      if (p.admin.invite !== 'sms') await c.sandbox.put({ schoolSlug: school.slug, channel: 'email', to: p.admin.email, subject: `Your ${p.basics.shortName} admin on EduNest`, body: text });
+        ? `Welcome to ${p.basics.shortName} on Gradeon. Sign in at ${url} with ${p.admin.email} and the password ${password}. The demo sign-in code is 424242.`
+        : `Welcome to ${p.basics.shortName} on Gradeon. Sign in at ${url} with ${p.admin.email} and the temporary password ${password}. Change it after you sign in.`;
+      if (p.admin.invite !== 'sms') await c.sandbox.put({ schoolSlug: school.slug, channel: 'email', to: p.admin.email, subject: `Your ${p.basics.shortName} admin on Gradeon`, body: text });
       if (p.admin.invite !== 'email') await c.sandbox.put({ schoolSlug: school.slug, channel: 'sms', to: p.admin.phone, body: text });
     } finally {
       await pool.end();
@@ -233,7 +233,7 @@ const admin: Driver = {
 };
 
 export function profileYaml(env: Env, school: SchoolRecord, payload: WizardPayload): string {
-  const bundle = `in.edunest.${school.slug.replace(/-/g, '')}`;
+  const bundle = `in.gradeon.${school.slug.replace(/-/g, '')}`;
   return [
     `slug: ${school.slug}`,
     `name: "${payload.basics.name}"`,
@@ -258,7 +258,7 @@ const buildProfile: Driver = {
     }
     const path = `schools/${school.slug}/school.yaml`;
     const api = `https://api.github.com/repos/${c.env.GITHUB_REPO}/contents/${path}`;
-    const headers = { authorization: `Bearer ${c.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'edunest-console' };
+    const headers = { authorization: `Bearer ${c.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'gradeon-console' };
     const existing = await c.fetch(`${api}?ref=${c.env.GITHUB_BRANCH}`, { headers });
     const sha = existing.ok ? ((await existing.json()) as { sha: string }).sha : undefined;
     const put = await c.fetch(api, { method: 'PUT', headers, body: JSON.stringify({ message: `chore(schools): build profile for ${school.slug}`, content: Buffer.from(yaml).toString('base64'), branch: c.env.GITHUB_BRANCH, sha }) });

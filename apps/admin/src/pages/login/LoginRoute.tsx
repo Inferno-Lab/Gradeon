@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
-import { EmptyCard, LoginPage } from '@edunest/web-ui';
+import { EmptyCard, LoginPage } from '@gradeon/web-ui';
 import { session } from '../../app/client';
 
 /** Signs in to the school named in the address: password first, then the code. */
@@ -13,11 +13,11 @@ export function LoginRoute() {
   return (
     <LoginPage
       controller={{
-        product: 'admin', schoolName: b?.name ?? 'EduNest', shortName: b?.shortName ?? 'school', demoMode: !!b?.demoMode, goName: 'the dashboard',
-        initialEmail: (() => { try { return localStorage.getItem(`edunest.admin.${slug}.email`) ?? ''; } catch { return ''; } })(),
+        product: 'admin', schoolName: b?.name ?? 'Gradeon', shortName: b?.shortName ?? 'school', demoMode: !!b?.demoMode, goName: 'the dashboard',
+        initialEmail: (() => { try { return localStorage.getItem(`gradeon.admin.${slug}.email`) ?? ''; } catch { return ''; } })(),
         submitCredentials: async (email, password) => {
           const res = await client.api.login({ identifier: email, password });
-          try { localStorage.setItem(`edunest.admin.${slug}.email`, email); } catch { /* ignore */ }
+          try { localStorage.setItem(`gradeon.admin.${slug}.email`, email); } catch { /* ignore */ }
           if (res.step === 'otp') return res.challenge;
           session.write(slug, { user: res.tokens.user });
           session.setAccess(slug, res.tokens.accessToken);

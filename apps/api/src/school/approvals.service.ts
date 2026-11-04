@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
-import { initials, type ApprovalDecision, type ApprovalKind, type ApprovalRow, type NoticeCreate, type NoticeRow, type Permission } from '@edunest/contracts';
-import { ApiError, forbidden, notFound } from '@edunest/nest-kit';
+import { newId } from '@gradeon/db';
+import { initials, type ApprovalDecision, type ApprovalKind, type ApprovalRow, type NoticeCreate, type NoticeRow, type Permission } from '@gradeon/contracts';
+import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AttendanceService } from './attendance.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';

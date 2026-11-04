@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { EmptyCard, Select } from '@edunest/web-ui';
+import { EmptyCard, Select } from '@gradeon/web-ui';
 import { Card, Page } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

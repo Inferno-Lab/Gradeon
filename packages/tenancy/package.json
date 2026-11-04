@@ -1,5 +1,5 @@
 {
-  "name": "@edunest/tenancy",
+  "name": "@gradeon/tenancy",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,9 +17,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@edunest/contracts": "workspace:*",
-    "@edunest/db": "workspace:*",
-    "@edunest/security": "workspace:*",
+    "@gradeon/contracts": "workspace:*",
+    "@gradeon/db": "workspace:*",
+    "@gradeon/security": "workspace:*",
     "pg": "^8.16.0",
     "drizzle-orm": "^0.45.0"
   },

@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/Main.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, Shell } from "@edunest/web-ui";
+import { Illustration, Roll, Shell } from "@gradeon/web-ui";
 import "./dashboard.css";
 
 export function DashboardView({ v }: { v: any }) {

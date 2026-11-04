@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ENQUIRY_STAGES, addDays, istToday, type EnquiryRow, type EnquiryStage } from '@edunest/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@edunest/web-ui';
+import { ENQUIRY_STAGES, addDays, istToday, type EnquiryRow, type EnquiryStage } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';

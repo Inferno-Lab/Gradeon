@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/services/session_bus.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/core/utils/view_state.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/session_bus.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/utils/view_state.dart';
 
 mixin Loadable on GetxController {
   final state = ViewState.loading.obs;

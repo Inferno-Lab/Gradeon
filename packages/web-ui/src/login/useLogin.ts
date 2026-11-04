@@ -51,7 +51,7 @@ export function useLogin(c: LoginController, themeCls: string) {
   const [otpErr, setOtpErr] = useState(false);
   const [otpMsg, setOtpMsg] = useState('');
   const [lang, setLang] = useState(() => {
-    try { const i = LANGS.findIndex((l) => l[1] === localStorage.getItem('edunest.lang')); return i < 0 ? 0 : i; } catch { return 0; }
+    try { const i = LANGS.findIndex((l) => l[1] === localStorage.getItem('gradeon.lang')); return i < 0 ? 0 : i; } catch { return 0; }
   });
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [name, setName] = useState('');
@@ -67,7 +67,7 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   const next = async () => {
     if (busy) return;
-    if (!email.trim()) return bad(() => setEmErr(cons ? 'Enter your EduNest email to continue.' : 'Enter your school email to continue.'));
+    if (!email.trim()) return bad(() => setEmErr(cons ? 'Enter your Gradeon email to continue.' : 'Enter your school email to continue.'));
     if (!pw) return bad(() => { setPwErr(true); setPwMsg('Enter your password to continue.'); });
     setBusy(true);
     try {
@@ -106,17 +106,17 @@ export function useLogin(c: LoginController, themeCls: string) {
     cardB: cons ? 'Release 2026.10.3' : 'Fees this month', bN: cons ? 'Wave 3' : '₹18.4L', bU: cons ? 'of 6' : '', bChip: cons ? 'Healthy' : '+8.7%', bChip2: cons ? '141 updated' : '62% of due',
     toastT: cons ? 'Wave 3 passed every check' : 'Attendance sent for 8 A',
     headline: cons ? 'Run every school from one calm board.' : 'Everything the school office needs, in one calm place.',
-    subline: cons ? 'Releases, cells, support and billing for the whole EduNest fleet.' : 'Attendance, fees, exams and every message to families.',
-    langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('edunest.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
+    subline: cons ? 'Releases, cells, support and billing for the whole Gradeon fleet.' : 'Attendance, fees, exams and every message to families.',
+    langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('gradeon.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
     isCred: step === 'cred', isOtp: step === 'otp', isOk: step === 'ok',
-    title: cons ? 'Console sign in' : 'Welcome back', sub: cons ? 'EduNest team members only. Every sign-in is recorded.' : `Sign in to the ${c.shortName} staff room.`, cta: cons ? 'Continue' : 'Sign in',
+    title: cons ? 'Console sign in' : 'Welcome back', sub: cons ? 'Gradeon team members only. Every sign-in is recorded.' : `Sign in to the ${c.shortName} staff room.`, cta: cons ? 'Continue' : 'Sign in',
     email, onEmail: (e: { target: { value: string } }) => { setEmail(e.target.value); setEmErr(''); },
-    emailPh: cons ? 'you@edunest.app' : 'you@school.edu.in',
+    emailPh: cons ? 'you@gradeon.app' : 'you@school.edu.in',
     pw, onPw: (e: { target: { value: string } }) => { setPw(e.target.value); setPwErr(false); },
     pwType: show ? 'text' : 'password', eyeD: show ? EYE_OFF : EYE_ON, eyeLabel: show ? 'Hide password' : 'Show password', toggleEye: () => setShow((s) => !s),
     emCls: emErr ? 'err shake' : '', emInv: emErr ? 'true' : 'false', emErr: !!emErr, emMsg: emErr, pwCls: pwErr ? 'err shake' : '', pwInv: pwErr ? 'true' : 'false', pwErr, pwMsg,
     showDemo: c.demoMode, fillDemo: () => { setPw('nest2026'); setPwErr(false); },
-    forgot: () => setForgotNote('Ask your principal to reset it in Settings, or contact EduNest support at support@edunest.app.'), forgotNote,
+    forgot: () => setForgotNote('Ask your principal to reset it in Settings, or contact Gradeon support at support@gradeon.app.'), forgotNote,
     busy, notBusy: !busy,
     next: () => void next(),
     sentTo: challenge?.maskedTo ?? email, sentBy: challenge?.channel === 'sms' ? 'text message' : 'email', validFor: Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60)), back: () => { setStep('cred'); setCode(''); setOtpErr(false); },

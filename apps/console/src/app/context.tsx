@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ConsoleTokens } from '@edunest/contracts';
+import type { ConsoleTokens } from '@gradeon/contracts';
 import type { Client } from './client';
 
 export interface AppCtx {

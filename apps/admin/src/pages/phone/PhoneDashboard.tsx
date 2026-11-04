@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { lakhs, type ApprovalRow } from '@edunest/contracts';
-import { EmptyCard, Shell, TONES } from '@edunest/web-ui';
+import { lakhs, type ApprovalRow } from '@gradeon/contracts';
+import { EmptyCard, Shell, TONES } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { PhoneView } from './phone.view';

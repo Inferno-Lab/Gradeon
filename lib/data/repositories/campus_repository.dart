@@ -1,8 +1,8 @@
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/datasources/mock_writes.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/models/student.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/datasources/mock_writes.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/models/student.dart';
 
 abstract class FeeRepository {
   Future<FeeAccount?> forStudent(String studentId);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type ApprovalRow, type DashboardData } from '@edunest/contracts';
-import { Dialog, EmptyCard, IC, Shell, TONES, rollDigits, tintFor, useIsPhone } from '@edunest/web-ui';
+import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
+import { Dialog, EmptyCard, IC, Shell, TONES, rollDigits, tintFor, useIsPhone } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { DashboardView } from './dashboard.view';
@@ -44,8 +44,8 @@ function DashboardDesktop() {
   const [tab, setTab] = useState(0);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [widgets, setWidgets] = useState(false);
-  const [hidden, setHidden] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(`edunest.dash.hidden.${app.user.id}`) ?? '[]') as string[]; } catch { return []; } });
-  const setHide = (id: string, off: boolean) => setHidden((h) => { const n = off ? [...new Set([...h, id])] : h.filter((x) => x !== id); try { localStorage.setItem(`edunest.dash.hidden.${app.user.id}`, JSON.stringify(n)); } catch { /* private window: the choice lasts until the page closes */ } return n; });
+  const [hidden, setHidden] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(`gradeon.dash.hidden.${app.user.id}`) ?? '[]') as string[]; } catch { return []; } });
+  const setHide = (id: string, off: boolean) => setHidden((h) => { const n = off ? [...new Set([...h, id])] : h.filter((x) => x !== id); try { localStorage.setItem(`gradeon.dash.hidden.${app.user.id}`, JSON.stringify(n)); } catch { /* private window: the choice lasts until the page closes */ } return n; });
   const [toast, setToast] = useState<{ text: string; id: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const days = RANGES[range]![1];

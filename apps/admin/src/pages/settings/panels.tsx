@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { APP_CATALOG } from '@edunest/config-engine';
-import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, type DataRequestRow, type Permission, type RoleRow, type SettingsResponse } from '@edunest/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { APP_CATALOG } from '@gradeon/config-engine';
+import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, type DataRequestRow, type Permission, type RoleRow, type SettingsResponse } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Ico, problem } from '../../app/kit';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { Clash, CoverRequest, PeriodDef, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView } from '@edunest/contracts';
-import { ApiError, notFound } from '@edunest/nest-kit';
+import type { Clash, CoverRequest, PeriodDef, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView } from '@gradeon/contracts';
+import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger } from './support.js';
 

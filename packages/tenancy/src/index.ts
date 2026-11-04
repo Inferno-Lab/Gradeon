@@ -1,9 +1,9 @@
-import type { EntitlementDoc } from '@edunest/contracts';
-import { pg } from '@edunest/db';
-import { schools } from '@edunest/db/registry';
+import type { EntitlementDoc } from '@gradeon/contracts';
+import { pg } from '@gradeon/db';
+import { schools } from '@gradeon/db/registry';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { and, eq, isNull } from 'drizzle-orm';
-import { unseal } from '@edunest/security';
+import { unseal } from '@gradeon/security';
 
 export interface TenantInfo {
   id: string;
@@ -46,7 +46,7 @@ export class Registry {
       max: opts.max ?? 8,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
-      application_name: 'edunest-registry',
+      application_name: 'gradeon-registry',
       options: PG_OPTIONS,
     });
     this.db = drizzle(this.pool);
@@ -128,7 +128,7 @@ export class PoolManager {
       max: this.opts.perPool ?? 5,
       idleTimeoutMillis: 20_000,
       connectionTimeoutMillis: 15_000,
-      application_name: `edunest-${slug}`.slice(0, 63),
+      application_name: `gradeon-${slug}`.slice(0, 63),
       options: PG_OPTIONS,
     });
     pool.on('error', () => undefined); // a dropped idle connection must not crash the process

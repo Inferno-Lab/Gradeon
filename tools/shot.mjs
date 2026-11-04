@@ -13,14 +13,14 @@ const slug = val('--school') ?? 'greenfield';
 
 async function tokens() {
   if (flag('--console')) {
-    const a = await (await fetch(`${api}/console/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ identifier: 'kaushal@edunest.app', password: 'nest2026' }) })).json();
+    const a = await (await fetch(`${api}/console/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ identifier: 'kaushal@gradeon.app', password: 'nest2026' }) })).json();
     const t = await (await fetch(`${api}/console/v1/auth/verify`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ challengeId: a.challenge.challengeId, code: '424242' }) })).json();
-    return { key: 'edunest.console', value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
+    return { key: 'gradeon.console', value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
   }
   const h = { 'content-type': 'application/json', 'x-school': slug };
   const a = await (await fetch(`${api}/v1/auth/login`, { method: 'POST', headers: h, body: JSON.stringify({ identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }) })).json();
   const t = await (await fetch(`${api}/v1/auth/verify`, { method: 'POST', headers: h, body: JSON.stringify({ challengeId: a.challenge.challengeId, code: '424242' }) })).json();
-  return { key: `edunest.admin.${slug}`, value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
+  return { key: `gradeon.admin.${slug}`, value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
 }
 
 const browser = await chromium.launch();

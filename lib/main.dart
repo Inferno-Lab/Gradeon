@@ -1,13 +1,13 @@
-import 'package:edunest/app.dart';
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/services/connectivity_service.dart';
-import 'package:edunest/core/services/school_profile_service.dart';
-import 'package:edunest/core/services/session_bus.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/services/theme_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/app.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/connectivity_service.dart';
+import 'package:gradeon/core/services/school_profile_service.dart';
+import 'package:gradeon/core/services/session_bus.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/services/theme_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
@@ -23,5 +23,5 @@ Future<void> main() async {
   Get.put(auth, permanent: true);
   Get.put(ConnectivityService(), permanent: true);
   Get.put(SessionBus(), permanent: true);
-  runApp(const EduNestApp());
+  runApp(const GradeonApp());
 }

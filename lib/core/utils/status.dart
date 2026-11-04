@@ -1,6 +1,6 @@
-import 'package:edunest/core/utils/formatters.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
+import 'package:gradeon/core/utils/formatters.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
 
 enum MoneyStatus { paid, due, overdue, upcoming }
 

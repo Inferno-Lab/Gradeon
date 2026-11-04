@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:edunest/core/config/app_config.dart';
+import 'package:gradeon/core/config/app_config.dart';
 
 /// Reads the school's own name and tagline from its API at start-up, so the app follows what the school sets in its admin.
 /// Without a build profile (`SCHOOL` and `API_BASE_URL`) nothing happens and the demo values stay. A slow or failed call

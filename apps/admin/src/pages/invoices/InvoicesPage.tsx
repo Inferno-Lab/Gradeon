@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type InvoiceListQuery, type ReceiptRow, type StudentDetail } from '@edunest/contracts';
-import { Dialog, EmptyCard, Segmented, Select } from '@edunest/web-ui';
+import { inr, lakhs, type InvoiceListQuery, type ReceiptRow, type StudentDetail } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Segmented, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel } from '../../app/kit';

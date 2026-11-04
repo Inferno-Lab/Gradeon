@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Inject, Injectable, Param, Patch, Query } from '@nestjs/common';
 import { REGISTRY, POOLS } from './tokens.js';
-import { closeModules } from '@edunest/config-engine';
-import { type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@edunest/contracts';
-import { notFound, ApiError } from '@edunest/nest-kit';
-import type { PoolManager, Registry } from '@edunest/tenancy';
-import { unseal } from '@edunest/security';
+import { closeModules } from '@gradeon/config-engine';
+import { type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
+import { notFound, ApiError } from '@gradeon/nest-kit';
+import type { PoolManager, Registry } from '@gradeon/tenancy';
+import { unseal } from '@gradeon/security';
 import { adminUrlFor } from './provisioning/drivers.js';
 import { Provisioner } from './provisioning/provisioner.js';
 import { Db, Needs, Me, type ConsoleUser, type reg } from './core.js';
@@ -14,7 +14,7 @@ type SchoolRecord = typeof reg.schools.$inferSelect;
 
 const CHECKLIST_LABELS: Record<string, string> = {
   apple_org: 'Apple: the school’s organisation account',
-  apple_key: 'Apple: EduNest invited, API key received',
+  apple_key: 'Apple: Gradeon invited, API key received',
   play_verify: 'Google Play: the school’s account is verified',
   first_build: 'First build to TestFlight and Play testing',
 };

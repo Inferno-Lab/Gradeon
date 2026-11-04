@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 class AppConfig {
   const AppConfig._();
 
-  static const appName = 'EduNest';
+  static const appName = 'Gradeon';
 
   /// Which school this build is for, and where its API lives. Override with
   /// `--dart-define=SCHOOL=<slug> --dart-define=API_BASE_URL=<address>`; the console's build workflow does.
@@ -13,7 +13,7 @@ class AppConfig {
   static const schoolSlug = String.fromEnvironment('SCHOOL', defaultValue: 'greenfield');
   static const apiBase = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://edunest-0c6x.onrender.com',
+    defaultValue: 'https://gradeon.onrender.com',
   );
   static const live = schoolSlug != '' && apiBase != '';
 

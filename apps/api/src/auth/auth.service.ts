@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
-import { initials, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@edunest/contracts';
-import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@edunest/security';
+import { newId } from '@gradeon/db';
+import { initials, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@gradeon/security';
 import { ENV, type Env } from '../env.js';
-import { ApiError } from '@edunest/nest-kit';
+import { ApiError } from '@gradeon/nest-kit';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { AuditService, Messenger, SettingsService } from '../school/support.js';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -102,8 +102,8 @@ export class AuthService {
     const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';
     await t.pool.query('insert into otp_challenges (id, user_id, code_hash, channel, expires_at) values ($1,$2,$3,$4,$5)', [id, user.id, sha256(`${id}:${code}`), channel, new Date(Date.now() + OTP_MINUTES * 60_000)]);
     await this.messenger.send(t, {
-      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? 'Your EduNest sign-in code' : undefined,
-      body: `Your EduNest sign-in code for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
+      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? 'Your Gradeon sign-in code' : undefined,
+      body: `Your Gradeon sign-in code for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
     });
     const challenge: LoginChallenge = {
       challengeId: id, channel, maskedTo: channel === 'sms' ? maskPhone(user.phone!) : maskEmail(user.email!),

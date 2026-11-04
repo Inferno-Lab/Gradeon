@@ -2,10 +2,10 @@ import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs
 import { REGISTRY } from '../tokens.js';
 import {
   STEP_KEYS, STEP_LABELS, stepOrderProblem, type BlueprintInput, type BlueprintRow, type DeployTarget, type ProvisionRunRow, type RunStepRow, type StepKey, type WizardPayload,
-} from '@edunest/contracts';
-import { newId } from '@edunest/db';
-import { ApiError, notFound } from '@edunest/nest-kit';
-import type { Registry } from '@edunest/tenancy';
+} from '@gradeon/contracts';
+import { newId } from '@gradeon/db';
+import { ApiError, notFound } from '@gradeon/nest-kit';
+import type { Registry } from '@gradeon/tenancy';
 import { Db, type reg } from '../core.js';
 import { ENV, type Env } from '../env.js';
 import { Sandbox } from '../sandbox.js';

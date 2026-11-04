@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/data/models/user.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/data/models/user.dart';
 
 class AuthService extends GetxService {
   AuthService(this._storage);

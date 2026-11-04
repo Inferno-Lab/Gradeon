@@ -1,17 +1,17 @@
-import 'package:edunest/core/bindings/initial_binding.dart';
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_pages.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/translations/app_translations.dart';
-import 'package:edunest/core/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/bindings/initial_binding.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_pages.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/translations/app_translations.dart';
+import 'package:gradeon/core/widgets/toast.dart';
 
-class EduNestApp extends StatelessWidget {
-  const EduNestApp({super.key});
+class GradeonApp extends StatelessWidget {
+  const GradeonApp({super.key});
 
   @override
   Widget build(BuildContext context) {

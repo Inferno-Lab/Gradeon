@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError, type CellRow } from '@edunest/api-client';
-import type { SchoolRow } from '@edunest/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@edunest/web-ui';
+import { HttpError, type CellRow } from '@gradeon/api-client';
+import type { SchoolRow } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';

@@ -1,4 +1,4 @@
-import 'package:edunest/core/network/api_client.dart';
+import 'package:gradeon/core/network/api_client.dart';
 
 /// Same calls a real backend will expose. See docs/API_CONTRACT.md.
 class RemoteDataSource {

@@ -1,7 +1,7 @@
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
 
 class Avatar extends StatelessWidget {
   const Avatar(this.name, {this.size = 40, this.background, this.foreground, this.ring, this.initials, super.key});

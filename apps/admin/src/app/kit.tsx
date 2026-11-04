@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { tintFor } from '@edunest/web-ui';
-import { HttpError } from '@edunest/api-client';
+import { tintFor } from '@gradeon/web-ui';
+import { HttpError } from '@gradeon/api-client';
 
 export const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={d}></path></svg>;
 export const PLUS = 'M12 5v14M5 12h14';

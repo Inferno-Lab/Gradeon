@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Injectable, Put } from '@nestjs/common';
-import { ACTIONS, type ConsoleRole, type PolicyDoc } from '@edunest/contracts';
-import { ApiError } from '@edunest/nest-kit';
+import { ACTIONS, type ConsoleRole, type PolicyDoc } from '@gradeon/contracts';
+import { ApiError } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 
 export const DEFAULT_POLICY: PolicyDoc = {
@@ -12,7 +12,7 @@ export const DEFAULT_POLICY: PolicyDoc = {
   ],
   halt: { errorRatePct: 2, p95Ms: 1500 },
   freeze: false,
-  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'in.edunest.' },
+  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'in.gradeon.' },
   maintenanceWindow: 'Sun 01:00–03:00 IST',
 };
 

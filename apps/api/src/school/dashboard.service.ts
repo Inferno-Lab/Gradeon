@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   addDays, dayLabel, dayMonth, dayName, istMinutes, istNow, istToday, latestSchoolDay, schoolDaysEnding,
   type DashboardData, type SearchHit, type ShellData,
-} from '@edunest/contracts';
+} from '@gradeon/contracts';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';
 import { AttendanceService } from './attendance.service.js';
@@ -66,7 +66,7 @@ export class DashboardService {
     const goalH = Number(v['homework.goalPct'] ?? 85);
     const days = schoolDaysEnding(last, count, OFF_DAYS);
     return {
-      greetingName: me.rows[0]?.name ?? user.name, roleLabel: me.rows[0]?.role_name ?? (user.id.startsWith('support:') ? 'EduNest support' : ''), schoolName: String(v['school.name'] ?? t.info.name),
+      greetingName: me.rows[0]?.name ?? user.name, roleLabel: me.rows[0]?.role_name ?? (user.id.startsWith('support:') ? 'Gradeon support' : ''), schoolName: String(v['school.name'] ?? t.info.name),
       day: { date: last, label: dayLabel(last), isToday, clock },
       term: { name: String(v['term.name'] ?? 'Term 1'), examsLabel: `Exams start ${dayMonth(examsStart)}`, daysToGo, progress: Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))) },
       subtitle: { marked: Number(classCount.rows[0]!.n) - unmarked.length, classes: Number(classCount.rows[0]!.n) },

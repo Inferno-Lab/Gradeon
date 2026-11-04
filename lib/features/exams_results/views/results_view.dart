@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/sheets.dart';
-import 'package:edunest/core/widgets/states.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/features/dashboard/views/dashboard_view.dart';
-import 'package:edunest/features/exams_results/controllers/results_controller.dart';
-import 'package:edunest/core/widgets/empty_art.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
+import 'package:gradeon/core/widgets/states.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/exams_results/controllers/results_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ResultsView extends GetView<ResultsController> {

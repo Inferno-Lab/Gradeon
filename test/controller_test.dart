@@ -1,19 +1,19 @@
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/view_state.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/features/auth/controllers/login_controller.dart';
-import 'package:edunest/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:edunest/features/fees/controllers/fees_controller.dart';
-import 'package:edunest/features/homework/controllers/homework_controller.dart';
-import 'package:edunest/features/teacher_tools/controllers/teacher_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/view_state.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/features/auth/controllers/login_controller.dart';
+import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:gradeon/features/fees/controllers/fees_controller.dart';
+import 'package:gradeon/features/homework/controllers/homework_controller.dart';
+import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
 
 import 'support/harness.dart';
 

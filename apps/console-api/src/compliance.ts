@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Injectable, Param, Post, Put } from '@nestjs/common';
-import { ComplianceCreate, ComplianceUpdate, SUBPROCESSORS, type ComplianceRow, type PublicStatus } from '@edunest/contracts';
-import { newId } from '@edunest/db';
-import { ApiError, ZodPipe, notFound } from '@edunest/nest-kit';
+import { ComplianceCreate, ComplianceUpdate, SUBPROCESSORS, type ComplianceRow, type PublicStatus } from '@gradeon/contracts';
+import { newId } from '@gradeon/db';
+import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';
 
 interface ItemSql {
@@ -53,7 +53,7 @@ export class Compliance {
     await this.db.pool.query("update compliance_items set status = $2, note = case when $3 <> '' then $3 else note end, closed_at = case when $2 in ('closed','signed') then now() else closed_at end where id = $1", [id, body.status, body.note]);
     if (cur.kind === 'breach' && body.status === 'notified') {
       await this.db.pool.query("insert into sandbox_messages (id, school_slug, channel, to_addr, subject, body) values ($1,$2,'email',$3,$4,$5)",
-        [newId('msg'), cur.slug, cur.contact?.email ?? 'the school contact', `Security notice: ${cur.title}`, `EduNest has recorded an incident that may affect ${cur.school_name}: ${cur.title}. ${body.note || cur.note}\nYou can use this to meet your 72-hour notification duty.`]);
+        [newId('msg'), cur.slug, cur.contact?.email ?? 'the school contact', `Security notice: ${cur.title}`, `Gradeon has recorded an incident that may affect ${cur.school_name}: ${cur.title}. ${body.note || cur.note}\nYou can use this to meet your 72-hour notification duty.`]);
     }
     await this.db.audit(user.email, `compliance.${cur.kind}.${body.status}`, 'school', cur.school_id, { title: cur.title });
     return this.row(await this.one(id));

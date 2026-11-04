@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, Shell, Toast } from '@edunest/web-ui';
+import { EmptyCard, Shell, Toast } from '@gradeon/web-ui';
 import { useChrome } from './useChrome';
 import { url } from './base';
 

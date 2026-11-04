@@ -4,9 +4,9 @@ import {
   ThreadCreate, ThreadPatch, ThreadReply,
   type DataRequestRow, type EnquiryRow, type EventRow, type ExamMarksView, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
   type ReceiptRow, type ReportData, type ReportInfo, type RoleRow, type StaffRow, type StudentDetail, type ThreadDetail, type ThreadRow,
-} from '@edunest/contracts';
+} from '@gradeon/contracts';
 import { z } from 'zod';
-import { ZodPipe } from '@edunest/nest-kit';
+import { ZodPipe } from '@gradeon/nest-kit';
 import { CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { LearningService } from './learning.service.js';

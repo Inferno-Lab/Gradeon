@@ -1,5 +1,5 @@
-import 'package:edunest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 
 /// Anek Latin + Anek Devanagari (one family, three languages). The width axis
 /// carries the hierarchy: wide and heavy for numbers and headings.

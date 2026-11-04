@@ -59,7 +59,7 @@ packages/*/dist/
 .env
 .env.*
 !.env.example
-.edunest-data/
+.gradeon-data/
 playwright-report/
 test-results/
 .shots/

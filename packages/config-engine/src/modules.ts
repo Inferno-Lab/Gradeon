@@ -1,4 +1,4 @@
-import type { Permission } from '@edunest/contracts';
+import type { Permission } from '@gradeon/contracts';
 
 export interface ModuleNav {
   label: string;

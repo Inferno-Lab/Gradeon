@@ -1,5 +1,5 @@
-import 'package:edunest/core/translations/en_redesign.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/translations/en_redesign.dart';
 
 class AppTranslations extends Translations {
   @override
@@ -28,7 +28,7 @@ const _en = <String, String>{
   'common.call': 'Call driver',
   'common.search': 'Search',
   'common.done': 'Done',
-  'shell.exit_title': 'Leave EduNest?',
+  'shell.exit_title': 'Leave Gradeon?',
   'shell.exit_body': 'You stay signed in and can open the app again where you left off.',
   'shell.exit_confirm': 'Leave',
   'common.pay_now': 'Pay now',
@@ -206,7 +206,7 @@ const _en = <String, String>{
   'profile.guardian': 'Guardian',
   'profile.photo': 'Photo updated for this session',
   'settings.title': 'Settings',
-  'settings.subtitle': 'Make EduNest yours',
+  'settings.subtitle': 'Make Gradeon yours',
   'settings.theme': 'Theme',
   'settings.light': 'Light',
   'settings.dark': 'Dark',
@@ -226,7 +226,7 @@ const _en = <String, String>{
   'settings.motion': 'Reduce motion',
   'settings.errors': 'Simulate errors',
   'settings.errors_help': 'Shows the error state on the next load, so you can demo retry.',
-  'settings.logout_title': 'Log out of EduNest?',
+  'settings.logout_title': 'Log out of Gradeon?',
   'settings.logout_body': 'You can sign back in with a demo card.',
   'about.title': 'About the school',
   'help.title': 'Help and contact',

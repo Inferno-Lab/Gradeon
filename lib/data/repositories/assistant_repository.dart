@@ -1,4 +1,4 @@
-import 'package:edunest/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
 
 /// One message in an assistant conversation.
 class AssistantTurn {

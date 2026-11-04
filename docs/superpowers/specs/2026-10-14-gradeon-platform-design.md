@@ -1,7 +1,7 @@
-# EduNest platform: architecture, backend, admin panel, console and design
+# Gradeon platform: architecture, backend, admin panel, console and design
 
 Status: draft for review · 2026-10-14, revised 2026-10-18 (new design language, console-driven onboarding and deployment, free testing of all three products together)
-Replaces: `2026-10-10-edunest-platform-monorepo-design.md` (deleted; it is in git history).
+Replaces: `2026-10-10-gradeon-platform-monorepo-design.md` (deleted; it is in git history).
 Scope: this is the plan. What has been built from it, and how the build differs (Render + Neon instead of Oracle for the test track, plain CSS instead of Tailwind/Radix, permission strings instead of CASL, hand-written clients instead of generated ones), is in `docs/HANDOFF.md` and `docs/platform-status.md`.
 
 **How to read this document.** Every part described here is in scope for the first production launch. Nothing is parked for a later stage. The build order in section 24 only says what gets built first, because each step depends on the one before it. Where something cannot be finished by code alone (a lawyer's sign-off, a store account, a payment-gateway KYC), section 27 lists it as gating work with its own owner.
@@ -10,12 +10,12 @@ Scope: this is the plan. What has been built from it, and how the build differs 
 
 ## 1. Intent
 
-EduNest today is one Flutter app that reads mock JSON. It becomes a product that many schools buy, built so that 500 schools are an operating detail rather than a rebuild:
+Gradeon today is one Flutter app that reads mock JSON. It becomes a product that many schools buy, built so that 500 schools are an operating detail rather than a rebuild:
 
-- Each school gets its **own branded mobile app** for families, students and teachers. It is published in the stores under the school's name from the school's own developer accounts. There is also an **EduNest app** where a family picks its school.
+- Each school gets its **own branded mobile app** for families, students and teachers. It is published in the stores under the school's name from the school's own developer accounts. There is also an **Gradeon app** where a family picks its school.
 - Each school gets its **own admin panel** where its staff run the school.
 - Each school's **data lives in its own database**, encrypted with its own keys. It is never mixed with another school's data.
-- We (the EduNest team) get one **console** to onboard schools, set what each one can use, ship releases in waves, watch health, and handle support and billing.
+- We (the Gradeon team) get one **console** to onboard schools, set what each one can use, ship releases in waves, watch health, and handle support and billing.
 
 Day-to-day change happens through **configuration, not code**: adding a school, turning a module on, renaming a tab, changing grading rules or a fee rule is a setting, not a release. Everything lives in **this one repo**: app, admin, console, backend, infrastructure and docs.
 
@@ -33,7 +33,7 @@ These are design targets, not current load. The architecture is built and load-t
 | Admin | Interaction to Next Paint under 200 ms on an Intel Core i3 laptop with 8 GB and Chrome at 1366 × 768 |
 | Mobile | Cold start under 2.5 s on a mid-range Android phone; works offline for the last synced day |
 | Recovery | Any one school restorable to any second in the last 35 days (RPO 5 min, RTO 1 h for one school, 4 h for a whole region) |
-| Onboarding | A new school is live, with its admin panel and the EduNest app, the same day it signs. Its own store apps follow once the stores approve. |
+| Onboarding | A new school is live, with its admin panel and the Gradeon app, the same day it signs. Its own store apps follow once the stores approve. |
 
 ## 3. Goals, product boundaries, anti-goals
 
@@ -129,21 +129,21 @@ Considered and rejected:
 │ Valkey (keys and queues namespaced per school)            │
 │ S3 cell bucket: /gis/* (KMS key gis) · /sra/* (key sra) … │
 └──────────────────────────────▲───────────────────────────┘
-                               │ HTTPS  gis.edunest.app  ·  erp.greenfield.edu.in (custom)
+                               │ HTTPS  gis.gradeon.app  ·  erp.greenfield.edu.in (custom)
                      CloudFront SaaS Manager tenant per school ─ WAF
           ┌────────────────────┼─────────────────────────┐
-   Greenfield app        EduNest app (school picker)    Greenfield admin (static SPA, same origin)
+   Greenfield app        Gradeon app (school picker)    Greenfield admin (static SPA, same origin)
 ```
 
 - **Cell.** The unit of capacity and blast radius: about 100 schools sharing one stateless API deployment, one realtime service, workers, a renderer, PgBouncer, one RDS cluster holding each school's separate database, one Valkey and one S3 bucket. A cell failing affects at most its schools. Cells are identical and created from the same Helm chart and OpenTofu module.
 - **Control plane.** Our console and its API, in a separate AWS account. It stores facts *about* schools, never their students, marks or fees. It talks to cells only through a signed management API.
-- **Edge.** Each school has a platform hostname (`<slug>.edunest.app`, a placeholder until the real domain is registered) and can add its own domain. The admin SPA is served from the CDN on the same origin as the API (`/api/v1`), so the admin uses secure cookies and needs no CORS.
+- **Edge.** Each school has a platform hostname (`<slug>.gradeon.app`, a placeholder until the real domain is registered) and can add its own domain. The admin SPA is served from the CDN on the same origin as the API (`/api/v1`), so the admin uses secure cookies and needs no CORS.
 
 ### 6.2 Tenancy and isolation
 
 The **school is the database**, not a column.
 
-1. A request arrives at the cell. The **tenant router** reads the `Host` header and looks it up in the routing table pushed by the control plane and cached in Valkey: `host → { slug, status, dbRef, kmsKeyId, bucketPrefix, plan, configVersion }`. The mobile white-label apps have their host built in. The EduNest app gets it when the family picks the school.
+1. A request arrives at the cell. The **tenant router** reads the `Host` header and looks it up in the routing table pushed by the control plane and cached in Valkey: `host → { slug, status, dbRef, kmsKeyId, bucketPrefix, plan, configVersion }`. The mobile white-label apps have their host built in. The Gradeon app gets it when the family picks the school.
 2. An unknown, suspended or moving school is rejected before any business code runs.
 3. The router hands the request a **school context**: a Drizzle instance on that school's connection pool, the school's KMS key reference, its bucket prefix, its Valkey key prefix and its queue names. Business code never sees a slug it can swap. There is no API that takes a school id as a parameter.
 4. Each school database has **its own Postgres role and password**, held in Secrets Manager. A pool can only open its own database. A bug that swaps pools fails authentication instead of reading another school's data.
@@ -170,7 +170,7 @@ The **school is the database**, not a column.
 ### 7.1 Layout
 
 ```
-edunest/
+gradeon/
 ├─ apps/
 │  ├─ mobile/            Flutter app (today's lib/ moves here; Chalk & Glass)
 │  ├─ api/               NestJS school API (one image, pooled per cell)
@@ -193,9 +193,9 @@ edunest/
 │  ├─ i18n/              message catalogs (en, hi, mr), ICU formatting, string-override loader
 │  ├─ eslint-config/ tsconfig/ testing/   shared tooling
 │  └─ dart/
-│     ├─ edunest_api/      generated Dart client
-│     ├─ edunest_core/     config runtime, ModuleRegistry, auth, networking, offline store
-│     ├─ edunest_ui/       Chalk & Glass design system + liquid-glass shader
+│     ├─ gradeon_api/      generated Dart client
+│     ├─ gradeon_core/     config runtime, ModuleRegistry, auth, networking, offline store
+│     ├─ gradeon_ui/       Chalk & Glass design system + liquid-glass shader
 │     └─ features/         one package per module: attendance/, fees/, homework/, …
 ├─ schools/              public per-school build profiles (no secrets)
 ├─ infra/
@@ -214,7 +214,7 @@ edunest/
 - **One command:** `pnpm turbo run <task>` lints, tests, builds and generates across TS and Dart. Each Dart package has a tiny `package.json` that calls `melos`/`flutter`, so Turborepo orders and caches Dart too.
 - **Affected-only CI** from the Turborepo graph. **Remote cache** in S3 (self-hosted turborepo-remote-cache).
 - **One version per dependency:** pnpm catalogs (TS) and the pub workspace's single resolution (Dart). Renovate opens grouped weekly PRs.
-- **Boundaries enforced:** apps import packages; packages never import apps; apps never import each other. TS uses `eslint-plugin-boundaries` and package `exports`. Dart uses `custom_lint` rules so `features/*` import only `edunest_core`, `edunest_ui` and `edunest_api`.
+- **Boundaries enforced:** apps import packages; packages never import apps; apps never import each other. TS uses `eslint-plugin-boundaries` and package `exports`. Dart uses `custom_lint` rules so `features/*` import only `gradeon_core`, `gradeon_ui` and `gradeon_api`.
 - **Generated code** lives in `generated/`, is never hand-edited, and CI fails if it is stale.
 - **Conventional Commits + Changesets**, **CODEOWNERS** per folder, **ADRs** for every change to this document.
 - Pinned toolchains: `.nvmrc` (Node 24), `packageManager` (pnpm 10), `.fvmrc` (Flutter stable at build start).
@@ -226,7 +226,7 @@ edunest/
 packages/contracts (Zod 4)
   ├─► OpenAPI 3.1 (served at /api/docs via Scalar, and committed as docs/openapi.json)
   │       ├─► packages/api-client          (orval: typed fetch + TanStack Query hooks + zod)
-  │       ├─► packages/dart/edunest_api    (openapi-generator dart-dio)
+  │       ├─► packages/dart/gradeon_api    (openapi-generator dart-dio)
   │       └─► Bruno collection             (generated, for manual API work)
   ├─► JSON Schema: app-config.json  ─► Dart config models + runtime validation in the app
   ├─► permission catalog            ─► authz (TS) + permission keys (Dart)
@@ -460,7 +460,7 @@ Provisioning is data, not code. A **blueprint** is a versioned, editable list of
 1. **Database:** choose the cell and create the school's database, Postgres role and pool secret (`database`).
 2. **Keys and storage:** the encryption key, bucket prefix policy, cache namespace, queue registrations and routing-table entry (`keys-storage`).
 3. **Migrations and defaults:** run the latest migrations and seed defaults (role templates, statuses, vocabularies, templates, layouts), or the demo data if the wizard asked for it (`migrate-seed`).
-4. **Domain:** the edge entry for the school's address (`<slug>.edunest.app`, or a path in test), plus the custom domain with certificate validation if the school has one (`domain`).
+4. **Domain:** the edge entry for the school's address (`<slug>.gradeon.app`, or a path in test), plus the custom domain with certificate validation if the school has one (`domain`).
 5. **First admin:** push the entitlement document and create the first school admin, who gets an invite (`admin`). On the test track the invite lands in the console's test inbox.
 6. **App build profile:** write the school's build profile (`schools/<slug>/school.yaml`) through the console's GitHub App as a signed commit to a protected path, which runs validation (`build-profile`, optional).
 7. **Store checklist:** open the store-onboarding checklist for the school's Apple and Google accounts and queue the first app build (section 19.3) (`store-checklist`, optional).
@@ -874,8 +874,8 @@ Contrast in both themes · focus visible on every control · keyboard-only run o
 ## 19. Mobile app
 
 ### 19.1 Restructure
-- `lib/` moves to `apps/mobile`. Shared code splits into `edunest_core` (config runtime, `ModuleRegistry`, auth, networking with `dio`, offline store), `edunest_ui` (Chalk & Glass, unchanged design) and one package per feature.
-- **Remote repositories** implement today's repository interfaces on top of the generated `edunest_api` client, mapping DTOs to the existing models, so views and controllers do not change.
+- `lib/` moves to `apps/mobile`. Shared code splits into `gradeon_core` (config runtime, `ModuleRegistry`, auth, networking with `dio`, offline store), `gradeon_ui` (Chalk & Glass, unchanged design) and one package per feature.
+- **Remote repositories** implement today's repository interfaces on top of the generated `gradeon_api` client, mapping DTOs to the existing models, so views and controllers do not change.
 - `MockJsonDataSource` stays as the **demo school** profile for sales demos, screenshots and tests.
 - The app's runtime config (`/app-config`) drives the dock, home sections, quick actions, terminology, string overrides, branding colours, modules and flags, with the current built-in layout as the fallback when no config has ever been fetched.
 - **Offline:** a local SQLite store (drift) caches today's timetable, homework, notices, fees and the last 30 days of attendance; queued writes (attendance marking, homework submission) sync when back online, with conflict prompts.
@@ -886,7 +886,7 @@ Contrast in both themes · focus visible on every control · keyboard-only run o
 
 ### 19.2 Two ways to get the app
 - **School-branded apps:** one per school, in that school's Apple and Google accounts, built from `schools/<slug>/school.yaml` (bundle id, name, icon, splash, API host, Firebase project).
-- **The EduNest app:** our own listing. A family finds its school by code, QR poster or search, and can hold several schools (several children) in one app. It is built from the same code with one extra build profile and is live from day one. It is also the answer if a store rejects a school-branded app: Apple's 4.2.6 guidance points template providers to exactly this "picker" model.
+- **The Gradeon app:** our own listing. A family finds its school by code, QR poster or search, and can hold several schools (several children) in one app. It is built from the same code with one extra build profile and is live from day one. It is also the answer if a store rejects a school-branded app: Apple's 4.2.6 guidance points template providers to exactly this "picker" model.
 
 ### 19.3 Store compliance
 - Apple 4.2.6 rejects template-built apps unless **the content provider submits them**. Each school is therefore the account holder, and **the school's own account owner presses "Submit for Review"**.
@@ -898,7 +898,7 @@ Contrast in both themes · focus visible on every control · keyboard-only run o
 ### 19.4 Release train
 - One app version for every school.
 - **Wave builds:** CI builds per school in parallel on EC2 Mac (iOS) and Linux (Android) runners and uploads to each school's TestFlight and Play internal track. Then it promotes to phased release, in the console's wave order.
-- **Shorebird** patches Dart-only fixes to every school app and the EduNest app without a store review, rolled out in the same waves.
+- **Shorebird** patches Dart-only fixes to every school app and the Gradeon app without a store review, rolled out in the same waves.
 - Most changes never need a release, because the app reads config at runtime.
 
 ### 19.5 Preview build
@@ -968,7 +968,7 @@ Card data never touches our servers (Razorpay Checkout). Webhook secrets are per
 - **OpenTelemetry** traces, metrics and logs from API, workers, realtime, renderer, PgBouncer and RDS, all labelled with the school and cell. They feed Grafana LGTM, with dashboards per school, cell and fleet.
 - **SLOs** per school (availability, latency, push delivery, job lag), with burn-rate alerts to Grafana OnCall and a runbook link on every alert.
 - **Sentry** (self-hosted) for app, admin, console and API errors, with release tracking per wave.
-- **Status page** per school (`status.edunest.app/<slug>`) and for the fleet, updated from the console.
+- **Status page** per school (`status.gradeon.app/<slug>`) and for the fleet, updated from the console.
 - **Incident process:** severity levels, an incident channel, a timeline in the console, school notification templates, and blameless post-mortems as ADR-linked docs.
 
 ## 23. Testing and quality gates
@@ -1008,7 +1008,7 @@ Every step below is part of the launch. The order exists because each step needs
 | **6. Operations and assistant** | Transport with live tracking, library, gallery with photo consent, leave, gate and pickup, assistant module. | All app modules run on the real API; the mock path survives only as the demo school. |
 | **7. Admin experience complete** | Setup flow, setup checklist, year-end rollover, live app preview (Flutter web), config center with drafts, approvals, history and rollback, roles matrix with diff, custom fields, vocabularies, string overrides, reports builder and schedules, guided tours, What's new, all illustrations and every signature component and motion in 16.6–16.9. | Every admin area has passed its impeccable finish review and the 16.12 checklist; DESIGN.md written for the admin. |
 | **8. Console complete** | New-school wizard, blueprint and target editors, deploy actions with approvals and dry runs, cells and move-school, releases and waves with auto-halt, migration orchestrator, mobile builds matrix, catalog with update offers, flags and kill switches, health and status pages, support access, billing, compliance desk, team. | A full release goes through staging waves with an injected failure that halts and rolls back by itself; DESIGN.md written for the console. |
-| **9. Mobile distribution** | Build-profile injection, the EduNest picker app, wave build pipeline on EC2 Mac and Linux, fastlane per school, Shorebird, store checklists, offline store, deep links, push categories. | Demo school apps in TestFlight and Play internal; the EduNest app is in review; a Shorebird patch reaches test devices. |
+| **9. Mobile distribution** | Build-profile injection, the Gradeon picker app, wave build pipeline on EC2 Mac and Linux, fastlane per school, Shorebird, store checklists, offline store, deep links, push categories. | Demo school apps in TestFlight and Play internal; the Gradeon app is in review; a Shorebird patch reaches test devices. |
 | **10. Production readiness** | Production cells, DR in Hyderabad, region-failover drill, k6 at 1.5× peak on the 500-school fleet, penetration test and fixes, DPDP readiness review, runbooks, on-call rota, status pages. | All SLOs met under load; the pen test has no open high-severity findings; the lawyer has signed off; the restore drill is green. **Pilot schools go live.** |
 
 ## 25. What we are not taking from the pasted prompt, and why
@@ -1034,7 +1034,7 @@ These are the only items not taken, each for a reason in the design, not for tim
 | Counters and charts re-animating on every page visit | Moving numbers are unreadable for the duration of the animation | Numbers roll when they change; the morning assembly runs once a day |
 | Flutter integration as the last phase | The app should talk to the real API from the first slice | Step 2 vertical slice |
 | Pause for "continue" after every phase | A working-style choice, not architecture | Exit checks per step (section 24); you can still ask to pause |
-| Hand-written Dart API calls | Drift from the API | Generated `edunest_api` client under the existing repository interfaces |
+| Hand-written Dart API calls | Drift from the API | Generated `gradeon_api` client under the existing repository interfaces |
 
 ## 26. What we adopted from the prompt
 
@@ -1050,8 +1050,8 @@ Each item has an owner and must be done before the pilot. None of it is optional
 | Item | Owner | Why |
 | --- | --- | --- |
 | Lawyer review of DPDP obligations, our DPA, privacy notices and consent flows | You + counsel | Children's data; Rules apply from May 2027, pilots start before that, so we build to them now |
-| EduNest legal entity, GST registration, platform domain | You | Billing schools; the EduNest app's store listing |
-| Apple Developer Program (organisation, D-U-N-S) and Google Play organisation account for EduNest | You | The EduNest app |
+| Gradeon legal entity, GST registration, platform domain | You | Billing schools; the Gradeon app's store listing |
+| Apple Developer Program (organisation, D-U-N-S) and Google Play organisation account for Gradeon | You | The Gradeon app |
 | Each pilot school: its own Apple and Google organisation accounts and API keys for us | School, guided by the console checklist | 4.2.6: the school submits its own app |
 | DLT registration (entity, sender IDs, templates) for SMS | You (platform), schools (their sender ID) | Indian SMS rules |
 | WhatsApp Business verification and template approvals | You | WhatsApp channel |
@@ -1065,7 +1065,7 @@ Each item has an owner and must be done before the pilot. None of it is optional
 
 - **Size.** This is a large platform: three web apps, five services, an app restructure and a cloud foundation. Built fully before pilot, it is many months of work for a small team, even with agents. The order in section 24 keeps something demonstrable working from step 2 onward.
 - **Cost before revenue.** EKS, RDS Multi-AZ per cell, observability and DR cost money from day one: roughly a few thousand US dollars a month for staging + one production cell (an estimate, not a quote). The synthetic 500-school staging fleet is the costliest test environment, and it is the only way to prove the scaling claims before real schools arrive.
-- **Stores.** 4.2.6 and Play's equivalent depend on reviewers. The EduNest picker app protects every school if a branded app is rejected.
+- **Stores.** 4.2.6 and Play's equivalent depend on reviewers. The Gradeon picker app protects every school if a branded app is rejected.
 - **Effects on old office PCs.** The effect-rich design is budgeted for an i3 laptop. Any effect that misses 60 fps there gets simplified before it ships, never shipped as is.
 
 ## 29. Calls I made (please check)
@@ -1074,7 +1074,7 @@ Each item has an owner and must be done before the pilot. None of it is optional
 2. AWS Mumbai with Hyderabad DR; EKS, RDS PostgreSQL 18, Valkey, CloudFront SaaS Manager.
 3. Drizzle instead of Prisma.
 4. Each school is its own Razorpay merchant.
-5. Both delivery paths built: school-branded apps (the school submits) and the EduNest picker app.
+5. Both delivery paths built: school-branded apps (the school submits) and the Gradeon picker app.
 6. The admin and console follow one design language of our own (section 15); the canvas shows it, with the mascot, pencil columns and fee jars replaced in the build (15.3).
 7. Fonts: Bricolage Grotesque and Manrope, with Noto Sans Devanagari for Hindi and Marathi.
 8. Motion stack: Motion, GSAP, View Transitions, NumberFlow, ECharts, dnd-kit; Lenis and Lottie rejected.

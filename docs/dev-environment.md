@@ -2,12 +2,12 @@
 
 These are the paths on the lead's Windows machine; adjust for yours.
 
-- Flutter 3.47.x / Dart 3.13 at `D:\dev\flutter`, JDK 21 at `D:\dev\jdk21`, Android SDK at `D:\dev\android-sdk`, emulator AVD `edunest` (x86_64).
+- Flutter 3.47.x / Dart 3.13 at `D:\dev\flutter`, JDK 21 at `D:\dev\jdk21`, Android SDK at `D:\dev\android-sdk`, emulator AVD `gradeon` (x86_64).
 - Git Bash: `export PATH=/d/dev/flutter/bin:/d/dev/jdk21/bin:$PATH`. adb: `/d/dev/android-sdk/platform-tools/adb.exe`.
 
 ## Emulator
 
-- Start with the host GPU: `emulator -avd edunest -gpu host -no-snapshot-save`. Software GPU modes crash when Impeller runs the glass shader.
+- Start with the host GPU: `emulator -avd gradeon -gpu host -no-snapshot-save`. Software GPU modes crash when Impeller runs the glass shader.
 - Launch it as a **detached process** (PowerShell `Start-Process`); an emulator started inside a tool shell dies when that shell call ends.
 - The emulator, Gradle and an IDE together exhaust memory on 16 GB machines. Symptoms: PowerShell `OutOfMemoryException`, "Unable to determine engine version", `adb shell` hanging. Close the emulator before release builds.
 

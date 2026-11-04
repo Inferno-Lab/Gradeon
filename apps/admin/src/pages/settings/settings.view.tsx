@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminSettings.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, Shell } from "@edunest/web-ui";
+import { Select, Shell } from "@gradeon/web-ui";
 import "./settings.css";
 
 export function SettingsView({ v }: { v: any }) {
@@ -177,7 +177,7 @@ export function SettingsView({ v }: { v: any }) {
                 <div className="rw2">
                   <div>
                     <b>Public address</b>
-                    <small>Families and staff sign in here. To change it, ask EduNest.</small>
+                    <small>Families and staff sign in here. To change it, ask Gradeon.</small>
                   </div>
                   <div className="in2">
                     <input value={v.address} readOnly aria-label="Address" />
@@ -251,7 +251,7 @@ export function SettingsView({ v }: { v: any }) {
                 <div className="tkt">
                   <div className="l">
                     <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em" } as CSSProperties}>
-                      EduNest {v.plan.name}
+                      Gradeon {v.plan.name}
                     </div>
                     <div className="tl2">
                       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -265,7 +265,7 @@ export function SettingsView({ v }: { v: any }) {
                       </svg>
                       Renews yearly
                     </div>
-                    <a className="btn sm wht" href="mailto:billing@edunest.app?subject=Billing" style={{ alignSelf: "flex-start" } as CSSProperties}>
+                    <a className="btn sm wht" href="mailto:billing@gradeon.app?subject=Billing" style={{ alignSelf: "flex-start" } as CSSProperties}>
                       Manage billing
                     </a>
                   </div>

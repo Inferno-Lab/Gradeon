@@ -1,7 +1,7 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { ENV, type Env } from '../env.js';
 import { POOLS, REGISTRY } from '../tenancy/tenant.js';
-import type { PoolManager, Registry } from '@edunest/tenancy';
+import type { PoolManager, Registry } from '@gradeon/tenancy';
 
 const DAY = 24 * 60 * 60 * 1000;
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { STEP_LABELS, type BlueprintRow, type PolicyDoc, type StepKey } from '@edunest/contracts';
-import { Dialog, EmptyCard, Field, Select, SelectField, useShake } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { STEP_LABELS, type BlueprintRow, type PolicyDoc, type StepKey } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

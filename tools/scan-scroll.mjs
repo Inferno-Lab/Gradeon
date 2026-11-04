@@ -18,13 +18,13 @@ if (only !== 'console') {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  const key = [`edunest.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  const key = [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
   for (const p of ['', '/students', '/timetable', '/attendance', '/fees', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/settings']) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
-  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@edunest.app', password: 'nest2026' });
+  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
-  const key = ['edunest.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  const key = ['gradeon.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
   for (const p of ['/', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key });
 }
 

@@ -1,20 +1,20 @@
 import 'dart:async';
 
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/dock.dart';
-import 'package:edunest/core/widgets/lazy_stack.dart';
-import 'package:edunest/features/auth/views/welcome_overlay.dart';
-import 'package:edunest/features/chat/controllers/chat_controller.dart';
-import 'package:edunest/features/chat/views/chat_list_view.dart';
-import 'package:edunest/features/dashboard/views/academics_view.dart';
-import 'package:edunest/features/dashboard/views/dashboard_view.dart';
-import 'package:edunest/features/fees/views/fees_view.dart';
-import 'package:edunest/features/notices/views/notices_view.dart';
-import 'package:edunest/features/profile/views/profile_view.dart';
-import 'package:edunest/features/shell/shell_controller.dart';
-import 'package:edunest/features/teacher_tools/views/teacher_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/dock.dart';
+import 'package:gradeon/core/widgets/lazy_stack.dart';
+import 'package:gradeon/features/auth/views/welcome_overlay.dart';
+import 'package:gradeon/features/chat/controllers/chat_controller.dart';
+import 'package:gradeon/features/chat/views/chat_list_view.dart';
+import 'package:gradeon/features/dashboard/views/academics_view.dart';
+import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/fees/views/fees_view.dart';
+import 'package:gradeon/features/notices/views/notices_view.dart';
+import 'package:gradeon/features/profile/views/profile_view.dart';
+import 'package:gradeon/features/shell/shell_controller.dart';
+import 'package:gradeon/features/teacher_tools/views/teacher_home_view.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ShellView extends StatefulWidget {

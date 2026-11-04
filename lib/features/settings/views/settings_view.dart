@@ -1,24 +1,24 @@
 import 'dart:async';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/haptics.dart';
-import 'package:edunest/core/widgets/glass_controls.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/sheets.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/student.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
-import 'package:edunest/features/chat/controllers/chat_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/glass_controls.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/student.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/features/chat/controllers/chat_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -457,7 +457,7 @@ class _AboutViewState extends State<AboutView> {
                       'about.licences',
                       () => showLicensePage(
                         context: context,
-                        applicationName: 'EduNest',
+                        applicationName: 'Gradeon',
                         applicationVersion: AppConfig.version,
                       ),
                     ),
@@ -687,7 +687,7 @@ class _HelpViewState extends State<HelpView> {
                   Uri(
                     scheme: 'mailto',
                     path: s.email,
-                    query: 'subject=${Uri.encodeComponent('EduNest ${AppConfig.version}: problem report')}',
+                    query: 'subject=${Uri.encodeComponent('Gradeon ${AppConfig.version}: problem report')}',
                   ),
                 ),
         ),

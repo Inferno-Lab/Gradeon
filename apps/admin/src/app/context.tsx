@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { SessionUser } from '@edunest/contracts';
+import type { SessionUser } from '@gradeon/contracts';
 import type { Client } from './client';
 
 export interface AppCtx {

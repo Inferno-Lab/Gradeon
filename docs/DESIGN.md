@@ -1,10 +1,10 @@
-# EduNest "Nest" design concept
+# Gradeon "Nest" design concept
 
 The design language of the **school admin** and the **console**. (The mobile app keeps its own "Chalk & Glass" language: `docs/design-system.md`.) This file is written so it can be turned into a skill: it states the idea, the tokens, every component, the motion, the states, the page recipes and the checks, with the reasons. The source of truth for exact values is `packages/web-ui/src/nest.css` (copied verbatim from `design/canvas/nest.css`); the approved boards are in `design/canvas/` (see `design/README.md`).
 
 ## 1. The idea
 
-A calm, bright, rounded workspace for people who run a school all day: office staff, principals, and the small EduNest team behind them. It should feel like a well-made modern SaaS product, not a school and not a toy.
+A calm, bright, rounded workspace for people who run a school all day: office staff, principals, and the small Gradeon team behind them. It should feel like a well-made modern SaaS product, not a school and not a toy.
 
 - **One floating frame.** The whole product sits in a large rounded "frame" lifted off a soft violet-tinted page. Inside: a quiet menu on the left and the page on the right. It feels like an object, not a full-bleed web page.
 - **Soft violet as the voice, warm amber and coral as the accents.** Violet marks what is active and primary; amber draws the eye to the one number that matters; coral and red say "look at this"; green says "done/healthy".
@@ -18,7 +18,7 @@ Why: the owner wanted admin and console to look like one consistent, premium pro
 
 ## 2. Tokens
 
-All tokens are CSS variables on `.nest` (light) and `.nest.dark` (dark). **Never hard-code colours in components; use the variables.** The theme follows the device (`prefers-color-scheme`) unless the person chose one from the account menu (`localStorage edunest.theme`); the root gets the `dark` class.
+All tokens are CSS variables on `.nest` (light) and `.nest.dark` (dark). **Never hard-code colours in components; use the variables.** The theme follows the device (`prefers-color-scheme`) unless the person chose one from the account menu (`localStorage gradeon.theme`); the root gets the `dark` class.
 
 ### Colour (light / dark)
 
@@ -106,7 +106,7 @@ page background (flat)
 | **Drawer** | Right panel that slides in (student detail). |
 | **Toast** | Dark pill, bottom centre, green check or red cross circle + one sentence; auto-hides after ~4 s; never the only place an error appears. |
 | **Save bar** | Floating dark pill "You have unsaved changes · Discard · Save" when a form is dirty. |
-| **Support frame** | Red inset frame around the window plus a red pill "EduNest support in <school> · read-only · mm:ss left · End session". |
+| **Support frame** | Red inset frame around the window plus a red pill "Gradeon support in <school> · read-only · mm:ss left · End session". |
 | **Avatar** `.av` | 34–76 px circle, initials, tint pair; stacks overlap by 8 px with a ring. |
 | **Illustration** | 12 flat object scenes (register, noticeboard, receipt, notebooks, search-paper, checklist, plug, padlock, torn-page, envelope, map-pin, calendar): thick near-black outline, flat violet/amber/coral/green fills, soft ellipse shadow, strokes draw in once. **No faces, characters, animals, mascots.** Colours follow the theme. |
 | **Empty card** `EmptyCard` | Header (title, chip with the zero, a ghost placeholder pill), centred illustration, 22 px display heading, 14.5 px body, 1–2 actions. Variants: empty, error (red chip, "Try again"), not found (404 tile with the big "4 0 4" and "This page skipped class."). |

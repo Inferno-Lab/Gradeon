@@ -1,11 +1,11 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { DEFAULT_PLANS } from '@edunest/config-engine';
-import { migrate, newId, pg } from '@edunest/db';
-import { ensureDatabase, startDevPostgres, type DevPostgres } from '@edunest/db/dev';
-import { seedSchool } from '@edunest/db/seed';
-import { hashPassword, seal } from '@edunest/security';
+import { DEFAULT_PLANS } from '@gradeon/config-engine';
+import { migrate, newId, pg } from '@gradeon/db';
+import { ensureDatabase, startDevPostgres, type DevPostgres } from '@gradeon/db/dev';
+import { seedSchool } from '@gradeon/db/seed';
+import { hashPassword, seal } from '@gradeon/security';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createApp } from '../src/app.js';
 import { loadEnv } from '../src/env.js';
@@ -24,7 +24,7 @@ export interface Harness {
 }
 
 export async function startHarness(port?: number): Promise<Harness> {
-  const server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'edunest-api-')), 'data'), port, fresh: true });
+  const server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-api-')), 'data'), port, fresh: true });
   const regUrl = await ensureDatabase(server.url, 'registry');
   const registry = new pg.Pool({ connectionString: regUrl, max: 4 });
   await migrate(registry, 'registry');

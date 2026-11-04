@@ -1,5 +1,5 @@
 {
-  "name": "@edunest/api",
+  "name": "@gradeon/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,11 +18,11 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@edunest/config-engine": "workspace:*",
-    "@edunest/contracts": "workspace:*",
-    "@edunest/db": "workspace:*",
-    "@edunest/security": "workspace:*",
-    "@edunest/tenancy": "workspace:*",
+    "@gradeon/config-engine": "workspace:*",
+    "@gradeon/contracts": "workspace:*",
+    "@gradeon/db": "workspace:*",
+    "@gradeon/security": "workspace:*",
+    "@gradeon/tenancy": "workspace:*",
     "@fastify/cors": "^11.0.0",
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
@@ -32,7 +32,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.0",
     "zod": "^4.1.0",
-    "@edunest/nest-kit": "workspace:*"
+    "@gradeon/nest-kit": "workspace:*"
   },
   "devDependencies": {
     "@swc/core": "^1.16.18",

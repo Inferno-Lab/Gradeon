@@ -1,7 +1,7 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { latestSchoolDay, istToday } from '@edunest/contracts';
+import { latestSchoolDay, istToday } from '@gradeon/contracts';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureDatabase, startDevPostgres, type DevPostgres } from '../dev.js';
@@ -13,7 +13,7 @@ let pool: pg.Pool;
 const q = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await pool.query(sql, params)).rows as T[];
 
 beforeAll(async () => {
-  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'edunest-seed-')), 'data'), port: 54402, fresh: true });
+  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-seed-')), 'data'), port: 54402, fresh: true });
   pool = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_seed'), max: 4 });
   await migrate(pool, 'school');
   await seedSchool(pool, {

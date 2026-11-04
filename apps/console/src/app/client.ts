@@ -1,8 +1,8 @@
-import { consoleApi, createHttp, type Tokens } from '@edunest/api-client';
-import type { ConsoleTokens } from '@edunest/contracts';
+import { consoleApi, createHttp, type Tokens } from '@gradeon/api-client';
+import type { ConsoleTokens } from '@gradeon/contracts';
 
 const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
-const KEY = 'edunest.console';
+const KEY = 'gradeon.console';
 
 export interface Stored {
   user: ConsoleTokens['user'];

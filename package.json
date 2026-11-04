@@ -1,5 +1,5 @@
 {
-  "name": "edunest",
+  "name": "gradeon",
   "private": true,
   "version": "0.0.0",
   "packageManager": "pnpm@10.34.7",
@@ -10,7 +10,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "dev:db": "pnpm --filter @edunest/db dev:db",
+    "dev:db": "pnpm --filter @gradeon/db dev:db",
     "dev": "turbo run dev --parallel",
     "verify": "pnpm typecheck && pnpm test"
   },

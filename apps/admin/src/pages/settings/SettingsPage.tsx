@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { closeModules, contrastRatio, dependents } from '@edunest/config-engine';
-import { istToday, type SettingsResponse } from '@edunest/contracts';
-import { EmptyCard, Shell } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
+import { istToday, type SettingsResponse } from '@gradeon/contracts';
+import { EmptyCard, Shell } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { SettingsView } from './settings.view';

@@ -766,7 +766,7 @@ packages:
       path: "packages/phosphor_flutter"
       relative: true
     source: path
-    version: "2.1.0+edunest"
+    version: "2.1.0+gradeon"
   platform:
     dependency: transitive
     description:

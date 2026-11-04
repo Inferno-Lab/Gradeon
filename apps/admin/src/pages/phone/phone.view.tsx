@@ -2,7 +2,7 @@
 // Markup from design/canvas/AdminPhone.dc.html: classes and structure are the design's. The mascot and pencil columns are replaced
 // by an object illustration and filled bars. Values come from PhoneDashboard.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration } from "@edunest/web-ui";
+import { Illustration } from "@gradeon/web-ui";
 import "./phone.css";
 
 export function PhoneView({ v }: { v: any }) {

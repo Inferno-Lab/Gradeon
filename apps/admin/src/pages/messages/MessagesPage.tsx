@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ThreadDetail, ThreadRow } from '@edunest/contracts';
-import { Dialog, EmptyCard, Field, Segmented, useShake } from '@edunest/web-ui';
+import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, Segmented, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, Ico, problem, stamp } from '../../app/kit';

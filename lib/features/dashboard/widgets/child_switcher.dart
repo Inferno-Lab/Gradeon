@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/haptics.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/student.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/student.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Loads the parent's children once; shared by the capsule and the popover.

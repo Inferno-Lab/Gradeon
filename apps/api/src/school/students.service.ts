@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
+import { newId } from '@gradeon/db';
 import {
   addDays, dayLabel, initials, istToday, latestSchoolDay, schoolDaysEnding,
   type AssignFee, type AttendanceStatus, type ContactReveal, type FeeStatus, type ImportResult, type MessageRequest,
   type Paged, type StudentCreate, type StudentDetail, type StudentQuery, type StudentRow, type StudentSummary, type StudentViews,
-} from '@edunest/contracts';
-import { maskPhone } from '@edunest/security';
-import { ApiError, notFound } from '@edunest/nest-kit';
+} from '@gradeon/contracts';
+import { maskPhone } from '@gradeon/security';
+import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
@@ -226,7 +226,7 @@ export class StudentsService {
     if (!cls.rows[0]) throw new ApiError('validation', 'Choose a class from the list.', { fields: { classId: 'Choose a class from the list.' } });
     const limit = t.info.entitlement.limits.students;
     const count = Number((await t.pool.query<{ n: string }>('select count(*) n from students')).rows[0]!.n);
-    if (count >= limit) throw new ApiError('locked', `Your plan allows ${limit} students. Ask EduNest to raise the limit.`);
+    if (count >= limit) throw new ApiError('locked', `Your plan allows ${limit} students. Ask Gradeon to raise the limit.`);
     const year = new Date().getUTCFullYear();
     const seq = Number((await t.pool.query<{ n: string }>("select count(*) n from students where admission_no like $1", [`${year}/%`])).rows[0]!.n) + 501;
     const id = newId('stu');

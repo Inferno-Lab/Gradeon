@@ -1,4 +1,4 @@
-package com.edunest.edunest
+package com.gradeon.app
 
 import io.flutter.embedding.android.FlutterActivity
 

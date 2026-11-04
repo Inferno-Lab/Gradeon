@@ -1,10 +1,10 @@
 import { Inject, Injectable, SetMetadata, createParamDecorator, type CanActivate, type ExecutionContext, type OnApplicationShutdown } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import * as reg from '@edunest/db/registry';
-import { newId, pg } from '@edunest/db';
-import { consolePermissions, type ConsolePermission, type ConsoleRole } from '@edunest/contracts';
-import { ApiError } from '@edunest/nest-kit';
-import { verifyJwt } from '@edunest/security';
+import * as reg from '@gradeon/db/registry';
+import { newId, pg } from '@gradeon/db';
+import { consolePermissions, type ConsolePermission, type ConsoleRole } from '@gradeon/contracts';
+import { ApiError } from '@gradeon/nest-kit';
+import { verifyJwt } from '@gradeon/security';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { FastifyRequest } from 'fastify';
 import { ENV, type Env } from './env.js';
@@ -39,7 +39,7 @@ export class Db implements OnApplicationShutdown {
       max: 8,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
-      application_name: 'edunest-console',
+      application_name: 'gradeon-console',
       options: '-c statement_timeout=15000 -c idle_in_transaction_session_timeout=10000',
     });
     this.pool.on('error', () => undefined);

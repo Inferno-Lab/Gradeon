@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
-import { ZodPipe } from '@edunest/nest-kit';
+import { ZodPipe } from '@gradeon/nest-kit';
 import { CurrentUser } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { FamilyService } from './family.service.js';

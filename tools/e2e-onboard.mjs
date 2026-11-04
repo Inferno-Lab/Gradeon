@@ -13,13 +13,13 @@ const ADMIN = process.env.ADMIN ?? 'http://127.0.0.1:5173';
 const slug = `brs${String(Date.now()).slice(-6)}`;
 const post = async (path, body) => (await fetch(`${API}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json();
 
-const a = await post('/console/v1/auth/login', { identifier: 'kaushal@edunest.app', password: 'nest2026' });
+const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
 const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
 const stored = JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user });
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
-await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['edunest.console', stored]);
+await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['gradeon.console', stored]);
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));

@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Headers, HttpCode, Inject, Injectable, Param, Post } from '@nestjs/common';
 import { POOLS, REGISTRY } from './tokens.js';
-import { closeModules } from '@edunest/config-engine';
-import { ActionRequest, type ActionRow, type BuildRow, type ConsoleRole } from '@edunest/contracts';
-import { migrate, newId, pg, pendingMigrations } from '@edunest/db';
-import { ApiError, ZodPipe, notFound } from '@edunest/nest-kit';
-import { constantTimeEqual, unseal } from '@edunest/security';
-import type { PoolManager, Registry } from '@edunest/tenancy';
+import { closeModules } from '@gradeon/config-engine';
+import { ActionRequest, type ActionRow, type BuildRow, type ConsoleRole } from '@gradeon/contracts';
+import { migrate, newId, pg, pendingMigrations } from '@gradeon/db';
+import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { constantTimeEqual, unseal } from '@gradeon/security';
+import type { PoolManager, Registry } from '@gradeon/tenancy';
 import dns from 'node:dns/promises';
 import { Db, Me, Needs, Public, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';
@@ -33,7 +33,7 @@ export class Builds {
     else if (this.env.GITHUB_TOKEN && this.env.GITHUB_REPO) {
       const res = await this.fetchImpl(`https://api.github.com/repos/${this.env.GITHUB_REPO}/actions/workflows/mobile-build.yml/dispatches`, {
         method: 'POST',
-        headers: { authorization: `Bearer ${this.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'edunest-console' },
+        headers: { authorization: `Bearer ${this.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'gradeon-console' },
         body: JSON.stringify({ ref: this.env.GITHUB_BRANCH, inputs: { school: slug, build_id: id } }),
       });
       status = res.ok ? 'queued' : 'failed';

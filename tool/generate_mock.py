@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate EduNest mock JSON. Dates are relative to today (today-N / today+N)."""
+"""Generate Gradeon mock JSON. Dates are relative to today (today-N / today+N)."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ users = [
         "id": "usr_aarav",
         "role": "student",
         "name": "Aarav Sharma",
-        "email": "aarav.sharma@edunest.app",
+        "email": "aarav.sharma@gradeon.app",
         "phone": "+91 98220 11001",
         "avatarUrl": avatar(12),
         "password": "demo123",
@@ -76,7 +76,7 @@ users = [
         "id": "usr_ananya",
         "role": "student",
         "name": "Ananya Sharma",
-        "email": "ananya.sharma@edunest.app",
+        "email": "ananya.sharma@gradeon.app",
         "phone": "+91 98220 11003",
         "avatarUrl": avatar(32),
         "password": "demo123",
@@ -87,7 +87,7 @@ users = [
         "id": "usr_priya",
         "role": "parent",
         "name": "Priya Sharma",
-        "email": "priya.sharma@edunest.app",
+        "email": "priya.sharma@gradeon.app",
         "phone": "+91 98220 11002",
         "avatarUrl": avatar(48),
         "password": "demo123",
@@ -97,7 +97,7 @@ users = [
         "id": "usr_kavita",
         "role": "teacher",
         "name": "Kavita Iyer",
-        "email": "kavita.iyer@edunest.app",
+        "email": "kavita.iyer@gradeon.app",
         "phone": "+91 98220 44110",
         "avatarUrl": avatar(49),
         "password": "demo123",
@@ -625,7 +625,7 @@ dump(
             "time": "09:00",
             "venue": "Classrooms",
             "category": "academic",
-            "imageUrl": photo("edunest-ptm", 1200, 800),
+            "imageUrl": photo("gradeon-ptm", 1200, 800),
             "rsvps": [{"userId": "usr_priya", "status": "going"}],
         },
         {
@@ -636,7 +636,7 @@ dump(
             "time": "17:00",
             "venue": "School auditorium",
             "category": "cultural",
-            "imageUrl": photo("edunest-annual", 1200, 800),
+            "imageUrl": photo("gradeon-annual", 1200, 800),
             "rsvps": [],
         },
         {
@@ -647,7 +647,7 @@ dump(
             "time": "11:00",
             "venue": "Science block lawn",
             "category": "academic",
-            "imageUrl": photo("edunest-science", 1200, 800),
+            "imageUrl": photo("gradeon-science", 1200, 800),
             "rsvps": [{"userId": "usr_aarav", "status": "going"}],
         },
         {
@@ -658,7 +658,7 @@ dump(
             "time": "15:30",
             "venue": "Main ground",
             "category": "sports",
-            "imageUrl": photo("edunest-football", 1200, 800),
+            "imageUrl": photo("gradeon-football", 1200, 800),
             "rsvps": [],
         },
         {
@@ -669,7 +669,7 @@ dump(
             "time": "09:30",
             "venue": "Library foyer",
             "category": "general",
-            "imageUrl": photo("edunest-books", 1200, 800),
+            "imageUrl": photo("gradeon-books", 1200, 800),
             "rsvps": [],
         },
     ],

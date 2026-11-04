@@ -1,21 +1,21 @@
 import 'dart:io';
 
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/features/auth/controllers/login_controller.dart';
-import 'package:edunest/features/auth/views/login_view.dart';
-import 'package:edunest/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:edunest/features/dashboard/views/dashboard_view.dart';
-import 'package:edunest/features/fees/controllers/fees_controller.dart';
-import 'package:edunest/features/fees/views/fees_view.dart';
-import 'package:edunest/features/settings/views/settings_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/auth/controllers/login_controller.dart';
+import 'package:gradeon/features/auth/views/login_view.dart';
+import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/fees/controllers/fees_controller.dart';
+import 'package:gradeon/features/fees/views/fees_view.dart';
+import 'package:gradeon/features/settings/views/settings_view.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'support/harness.dart';
@@ -34,7 +34,7 @@ class _MockClient extends Mock implements HttpClient {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = _OfflineHttp();
-  setUpAll(() => registerFallbackValue(Uri.parse('https://edunest.app')));
+  setUpAll(() => registerFallbackValue(Uri.parse('https://gradeon.app')));
 
   setUp(() async {
     await bootMock();

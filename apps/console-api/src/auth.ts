@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, type OnModuleInit } from '@nestjs/common';
-import { LoginRequest, RefreshRequest, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@edunest/contracts';
-import { newId } from '@edunest/db';
-import { ApiError, Limiter, ZodPipe } from '@edunest/nest-kit';
-import { constantTimeEqual, hashPassword, maskEmail, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword } from '@edunest/security';
+import { LoginRequest, RefreshRequest, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
+import { newId } from '@gradeon/db';
+import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
+import { constantTimeEqual, hashPassword, maskEmail, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword } from '@gradeon/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@edunest/nest-kit';
+import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@gradeon/nest-kit';
 import { Db, Me, Public, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { Sandbox } from './sandbox.js';
@@ -57,7 +57,7 @@ export class ConsoleAuth implements OnModuleInit {
     const code = this.env.DEMO_CODE ?? randomCode(6);
     const id = newId('cot');
     await this.db.pool.query('insert into console_otp (id, user_id, code_hash, expires_at) values ($1,$2,$3,$4)', [id, u.id, sha256(`${id}:${code}`), new Date(Date.now() + 10 * 60_000)]);
-    await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your EduNest console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
+    await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
     return { step: 'otp', challenge: { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, // The code is only handed back in development, so a hosted test track keeps it as a second step the password alone cannot skip.
       ...(this.env.DEMO_CODE && this.env.NODE_ENV !== 'production' ? { demoCode: this.env.DEMO_CODE } : {}) } };
   }

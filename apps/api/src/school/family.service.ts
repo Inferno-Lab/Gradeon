@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
-import { addDays, istToday, type AttendanceStatus } from '@edunest/contracts';
-import { ApiError, forbidden, notFound } from '@edunest/nest-kit';
-import type { Registry } from '@edunest/tenancy';
+import { newId } from '@gradeon/db';
+import { addDays, istToday, type AttendanceStatus } from '@gradeon/contracts';
+import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import type { Registry } from '@gradeon/tenancy';
 import { REGISTRY, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { AttendanceService } from './attendance.service.js';
 import { ApprovalsService } from './approvals.service.js';

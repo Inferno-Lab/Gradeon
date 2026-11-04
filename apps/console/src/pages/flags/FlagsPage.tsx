@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MODULES } from '@edunest/config-engine';
-import { EmptyCard, Field, SelectField, useShake } from '@edunest/web-ui';
+import { MODULES } from '@gradeon/config-engine';
+import { EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

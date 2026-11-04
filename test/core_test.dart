@@ -1,20 +1,20 @@
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/core/utils/status.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 
 import 'support/harness.dart';
 
@@ -55,7 +55,7 @@ void main() {
   test('auth, fees, homework, notices, and chat repositories', () async {
     final auth = Get.find<AuthRepository>();
     final parent = await auth.login(
-      email: 'priya.sharma@edunest.app',
+      email: 'priya.sharma@gradeon.app',
       password: 'demo123', // the mock content's own; AppConfig.demoPassword follows the build's school
     );
     expect(parent.role, UserRole.parent);

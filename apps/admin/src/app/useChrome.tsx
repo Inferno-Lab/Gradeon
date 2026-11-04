@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dock, IC, MoreSheet, Palette, SchoolHeader, Sidebar, tintFor, useTheme, type DockTab, type PaletteHit } from '@edunest/web-ui';
+import { Dock, IC, MoreSheet, Palette, SchoolHeader, Sidebar, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import { adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 
-const COLLAPSE_KEY = 'edunest.admin.menu.collapsed';
+const COLLAPSE_KEY = 'gradeon.admin.menu.collapsed';
 
 /** What every page shares: the theme, the menu, the shortcuts and the search box. Merge it into the page's values. */
 export function useChrome(active: string) {
@@ -47,7 +47,7 @@ export function useChrome(active: string) {
   const close = () => { setOpen(false); setQ(''); };
   const pick = (h: PaletteHit) => {
     close();
-    if (h.href.startsWith('action:')) { window.dispatchEvent(new CustomEvent('edunest:action', { detail: h.href.slice(7) })); return; }
+    if (h.href.startsWith('action:')) { window.dispatchEvent(new CustomEvent('gradeon:action', { detail: h.href.slice(7) })); return; }
     goRef.current(h.href);
   };
 

@@ -2,7 +2,7 @@
 # Connect this repository in Render (New > Blueprint) and fill in the values marked "sync: false" when asked. Steps: docs/deploy-free-test.md
 services:
   - type: web
-    name: edunest
+    name: gradeon
     runtime: node
     plan: free
     region: singapore
@@ -30,7 +30,7 @@ services:
         generateValue: true
       # How you sign in to the console. The password is generated; read it under Environment once the service exists.
       - key: BOOTSTRAP_EMAIL
-        value: kaushal@edunest.app
+        value: kaushal@gradeon.app
       - key: BOOTSTRAP_PASSWORD
         generateValue: true
       # The six-digit code the console asks for after the password. There is no email service on the test track, so you choose it.
@@ -43,4 +43,4 @@ services:
         value: "true"
       # Production refuses "*". Admin and console are served from this same address; browsers still send it as Origin.
       - key: CORS_ORIGINS
-        value: "https://edunest-0c6x.onrender.com"
+        value: "https://gradeon.onrender.com"

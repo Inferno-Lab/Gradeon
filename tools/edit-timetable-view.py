@@ -9,7 +9,7 @@ def rep(a, b, count=1):
     s = s.replace(a, b)
 
 
-s = s.replace('import { Import, Shell } from "@edunest/web-ui";', 'import { Shell } from "@edunest/web-ui";')
+s = s.replace('import { Import, Shell } from "@gradeon/web-ui";', 'import { Shell } from "@gradeon/web-ui";')
 rep('''              Class 8 A · Term 1 · version 3, <span style={{ color: "var(--aD)", fontWeight: "800" } as CSSProperties}>draft</span>''',
     '''              Class {v.className} · {v.term} · version {v.version},{" "}
               <span style={{ color: v.isDraft ? "var(--aD)" : "var(--gD)", fontWeight: "800" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>''')

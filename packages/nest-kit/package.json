@@ -1,5 +1,5 @@
 {
-  "name": "@edunest/nest-kit",
+  "name": "@gradeon/nest-kit",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@edunest/contracts": "workspace:*",
-    "@edunest/security": "workspace:*",
+    "@gradeon/contracts": "workspace:*",
+    "@gradeon/security": "workspace:*",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.0.0",
     "@fastify/helmet": "^13.0.2",

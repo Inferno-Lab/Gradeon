@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/loadable.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/data/models/student.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/loadable.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/data/models/student.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileController extends GetxController with Loadable {

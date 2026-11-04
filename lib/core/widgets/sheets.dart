@@ -1,9 +1,9 @@
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Opens a paper sheet over a scrim (content sheets are solid, never glass).

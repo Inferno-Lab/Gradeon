@@ -176,6 +176,6 @@ fs.writeFileSync(path.join(outDir, `${page}.logic.txt`), logic);
 if (asideJsx) fs.writeFileSync(path.join(outDir, `${page}.aside.txt`), asideJsx);
 fs.writeFileSync(
   path.join(outDir, `${page}.view.tsx`),
-  `/* eslint-disable */\n// Markup converted from design/canvas/${board}.dc.html. Keep the markup and class names as designed.\nimport { Fragment, type CSSProperties } from 'react';\nimport { Import, Shell } from '@edunest/web-ui';\nimport './${page}.css';\n\nexport function ${page[0].toUpperCase() + page.slice(1)}View({ v }: { v: any }) {\n  return (\n${jsx}\n  );\n}\n`,
+  `/* eslint-disable */\n// Markup converted from design/canvas/${board}.dc.html. Keep the markup and class names as designed.\nimport { Fragment, type CSSProperties } from 'react';\nimport { Import, Shell } from '@gradeon/web-ui';\nimport './${page}.css';\n\nexport function ${page[0].toUpperCase() + page.slice(1)}View({ v }: { v: any }) {\n  return (\n${jsx}\n  );\n}\n`,
 );
 console.log(`${board} -> ${outDir}/${page}.{view.tsx,css,logic.txt}`);

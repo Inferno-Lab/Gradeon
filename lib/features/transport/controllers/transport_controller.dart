@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/loadable.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/loadable.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TransportController extends GetxController with Loadable {

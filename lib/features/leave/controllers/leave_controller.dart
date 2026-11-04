@@ -1,20 +1,20 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/haptics.dart';
-import 'package:edunest/core/utils/loadable.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/utils/loadable.dart';
+import 'package:gradeon/core/utils/schedule.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:edunest/core/utils/schedule.dart';
 
 DateTime dayOnly(DateTime d) => DateUtils.dateOnly(d);
 

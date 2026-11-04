@@ -1,16 +1,16 @@
-import { constantTimeEqual, randomToken } from '@edunest/security';
+import { constantTimeEqual, randomToken } from '@gradeon/security';
 import { ApiError } from './errors.js';
 
-export const CSRF_COOKIE = 'en_csrf';
+export const CSRF_COOKIE = 'gd_csrf';
 export const CSRF_HEADER = 'x-csrf';
 
 export function schoolRefreshCookie(slug: string, production: boolean): string {
   const safe = slug.replace(/[^a-z0-9-]/g, '');
-  return production ? `__Secure-en_rt_${safe}` : `en_rt_${safe}`;
+  return production ? `__Secure-gd_rt_${safe}` : `gd_rt_${safe}`;
 }
 
 export function consoleRefreshCookie(production: boolean): string {
-  return production ? '__Secure-en_crt' : 'en_crt';
+  return production ? '__Secure-gd_crt' : 'gd_crt';
 }
 
 export interface CookieFlags {

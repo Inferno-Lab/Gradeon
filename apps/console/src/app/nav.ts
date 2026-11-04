@@ -1,4 +1,4 @@
-import { IC, type NavGroup } from '@edunest/web-ui';
+import { IC, type NavGroup } from '@gradeon/web-ui';
 import { url } from './base';
 
 interface Def { id: string; label: string; icon: keyof typeof IC; keys: string; to: string }

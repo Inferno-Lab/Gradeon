@@ -1,4 +1,4 @@
-import type { ApiErrorBody, ErrorCode } from '@edunest/contracts';
+import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
 
 /** A failed call, with what the server said. `message` is always safe to show a person. */
 export class HttpError extends Error {
@@ -49,7 +49,7 @@ export interface Http {
   restore(): Promise<boolean>;
 }
 
-const CSRF_COOKIE = 'en_csrf';
+const CSRF_COOKIE = 'gd_csrf';
 const CSRF_HEADER = 'x-csrf';
 
 function readCookie(name: string): string | null {

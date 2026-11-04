@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { registerHttp } from '@edunest/nest-kit';
-import { migrate, pg } from '@edunest/db';
-import type { PoolManager, Registry } from '@edunest/tenancy';
+import { registerHttp } from '@gradeon/nest-kit';
+import { migrate, pg } from '@gradeon/db';
+import type { PoolManager, Registry } from '@gradeon/tenancy';
 import { ConsoleModule } from './console.module.js';
 import { loadEnv, type Env } from './env.js';
 

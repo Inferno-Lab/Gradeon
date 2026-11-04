@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/network/api_client.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/datasources/remote_datasource.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/assistant_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/network/api_client.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/assistant_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 
 class InitialBinding extends Bindings {
   @override

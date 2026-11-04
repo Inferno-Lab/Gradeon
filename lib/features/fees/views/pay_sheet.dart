@@ -1,21 +1,21 @@
 import 'dart:async';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/formatters.dart';
-import 'package:edunest/core/utils/haptics.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/sheets.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/features/fees/controllers/fees_controller.dart';
-import 'package:edunest/features/fees/views/receipt_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/formatters.dart';
+import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/features/fees/controllers/fees_controller.dart';
+import 'package:gradeon/features/fees/views/receipt_view.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Payment sheet with slide-to-pay so a payment never happens by accident.

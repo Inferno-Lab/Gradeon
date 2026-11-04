@@ -1,12 +1,12 @@
-import 'package:edunest/core/bindings/initial_binding.dart';
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/bindings/initial_binding.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 
 void main() {
   tearDown(() {

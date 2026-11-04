@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
+import { newId } from '@gradeon/db';
 import {
   istToday,
   type ExamCreate, type ExamMarksPut, type ExamMarksView, type ExamResults, type ExamRow, type HomeworkCreate, type HomeworkDetail, type HomeworkMarks, type HomeworkRow,
-} from '@edunest/contracts';
-import { ApiError, notFound } from '@edunest/nest-kit';
+} from '@gradeon/contracts';
+import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger } from './support.js';
 
@@ -272,7 +272,7 @@ export class LearningService {
 
   async deleteExam(t: TenantCtx, user: User, id: string): Promise<void> {
     const e = await this.exam(t, id);
-    if (e.status === 'published') throw new ApiError('conflict', 'Published results cannot be deleted. Ask EduNest if this exam was created by mistake.');
+    if (e.status === 'published') throw new ApiError('conflict', 'Published results cannot be deleted. Ask Gradeon if this exam was created by mistake.');
     await t.pool.query('delete from exams where id = $1', [id]);
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.removed', entity: 'exam', entityId: id, detail: { name: e.name } });
   }

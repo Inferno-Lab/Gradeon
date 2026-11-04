@@ -1,10 +1,10 @@
-import 'package:edunest/app.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/features/auth/controllers/splash_controller.dart';
-import 'package:edunest/features/auth/views/onboarding_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/app.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/features/auth/controllers/splash_controller.dart';
+import 'package:gradeon/features/auth/views/onboarding_view.dart';
 
 import 'support/harness.dart';
 
@@ -14,11 +14,11 @@ void main() {
   testWidgets('splash advances to onboarding', (tester) async {
     await bootMock();
     Get.testMode = false;
-    await tester.pumpWidget(const EduNestApp());
+    await tester.pumpWidget(const GradeonApp());
     await tester.pump();
     // Plain chalk until the window size settles, then the mark.
     await tester.pump(const Duration(milliseconds: 200));
-    expect(find.text('EduNest'), findsOneWidget);
+    expect(find.text('Gradeon'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 2400));
     await tester.pump(const Duration(milliseconds: 800));
     expect(Get.currentRoute, AppRoutes.onboarding);

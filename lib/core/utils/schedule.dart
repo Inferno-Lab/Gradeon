@@ -1,4 +1,4 @@
-import 'package:edunest/data/models/academics.dart';
+import 'package:gradeon/data/models/academics.dart';
 
 /// Minutes since midnight for "HH:mm".
 int minutesOf(String hhmm) {

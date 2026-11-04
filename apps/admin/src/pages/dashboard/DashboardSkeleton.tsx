@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Shell } from '@edunest/web-ui';
+import { Shell } from '@gradeon/web-ui';
 import './dashboard.css';
 
 /** The page's own shape in grey, shown while the first numbers load. */

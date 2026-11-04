@@ -76,7 +76,7 @@ body{margin:0}
 <div class="fr {{shk}}" style="min-height: 1156px;">
 <div class="app" style="min-height: 1156px;">
   <aside class="sb {{colCls}}" aria-label="Console">
-    <div class="wsw"><span class="lg">E</span><div class="fade"><b>EduNest</b><small><span class="pdot"></span>Production</small></div><button class="colb" onClick="{{toggleCol}}" aria-label="{{colLabel}}"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path class="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg></button></div>
+    <div class="wsw"><span class="lg">G</span><div class="fade"><b>Gradeon</b><small><span class="pdot"></span>Production</small></div><button class="colb" onClick="{{toggleCol}}" aria-label="{{colLabel}}"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path class="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg></button></div>
     <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
       <div class="sl fade">{{g.n}}</div>
       <sc-for list="{{g.items}}" as="n" hint-placeholder-count="4">
@@ -107,7 +107,7 @@ body{margin:0}
       </div>
 
       <div class="s5" style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
-        <div class="tkt rise" style="--d: .2s;"><div class="l"><div class="fd" style="font-size: 23px; letter-spacing: -.03em;">EduNest Complete</div><div class="tl2"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17"></path></svg>First invoice, 1 Nov 2026</div><div class="tl2"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path></svg>Pays by bank transfer</div><button class="btn sm wht" style="align-self: flex-start;">Open in billing</button></div><div class="r"><span class="chip a" style="align-self: flex-start;">Active</span><span>₹4,13,000</span><span>1,500 students</span></div></div>
+        <div class="tkt rise" style="--d: .2s;"><div class="l"><div class="fd" style="font-size: 23px; letter-spacing: -.03em;">Gradeon Complete</div><div class="tl2"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17"></path></svg>First invoice, 1 Nov 2026</div><div class="tl2"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path></svg>Pays by bank transfer</div><button class="btn sm wht" style="align-self: flex-start;">Open in billing</button></div><div class="r"><span class="chip a" style="align-self: flex-start;">Active</span><span>₹4,13,000</span><span>1,500 students</span></div></div>
 
         <div class="card rise" style="--d: .25s;" aria-labelledby="use">
           <div class="ch"><h2 id="use">Usage</h2><span class="chip">this term</span></div>
@@ -122,7 +122,7 @@ body{margin:0}
           <div class="ch"><h2 id="stores">App stores</h2><span class="chip a">2 of 4</span></div>
           <div style="margin-top: 8px;">
             <div class="ck"><i class="d"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M5 12.5l4.5 4.5L19 7.5" style="stroke-width: 3"></path></svg></i>Apple: the school’s organisation account</div>
-            <div class="ck"><i class="d"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M5 12.5l4.5 4.5L19 7.5" style="stroke-width: 3"></path></svg></i>Apple: EduNest invited, API key received</div>
+            <div class="ck"><i class="d"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M5 12.5l4.5 4.5L19 7.5" style="stroke-width: 3"></path></svg></i>Apple: Gradeon invited, API key received</div>
             <div class="ck"><i class="w"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i" d="M12 7v5l3 2" style="stroke-width: 2.6"></path></svg></i>Google Play: waiting for the school to verify</div>
             <div class="ck"><i class="n"></i>First build to TestFlight and Play testing</div>
           </div>
@@ -151,7 +151,7 @@ var NAV = [
   ['Ship', [['app', 'Mobile builds', 'G B', '', '1'], ['flag', 'Flags', 'G L']]],
   ['Care', [['health', 'Health', 'G H'], ['sup', 'Support', 'G S'], ['bill', 'Billing', 'G I'], ['team', 'Team', 'G T']]]
 ];
-var STEPS = [['Database', 'db_brs on cell IN-2 with its own role and password'], ['Keys and storage', 'Encryption key, file prefix, cache space, queues'], ['Migrations and defaults', '214 migrations, then roles, statuses and templates'], ['Domain', 'brs.edunest.app, CDN tenant and certificate'], ['First admin', 'Invite to principal@banyanridge.in'], ['App build profile', 'Pull request #482 with the school’s build file'], ['Store checklist', 'Apple and Google steps for the school']];
+var STEPS = [['Database', 'db_brs on cell IN-2 with its own role and password'], ['Keys and storage', 'Encryption key, file prefix, cache space, queues'], ['Migrations and defaults', '214 migrations, then roles, statuses and templates'], ['Domain', 'brs.gradeon.app, CDN tenant and certificate'], ['First admin', 'Invite to principal@banyanridge.in'], ['App build profile', 'Pull request #482 with the school’s build file'], ['Store checklist', 'Apple and Google steps for the school']];
 var LOGS = ['created db_brs (ap-south-1) · role brs_app', 'kms alias/school-brs · prefix in-2-files/brs/', 'applied 214 migrations · seeded 41 templates', 'certificate validation is waiting for a DNS record', 'entitlements v1 pushed · invite sent', 'opened PR #482 schools/brs/school.yaml', 'store checklist created · 4 steps'];
 var TABS = [['Overview', 98], ['Entitlements', 124], ['Versions', 96], ['Health', 84], ['Audit', 76]];
 function now() { var d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(function (x) { return String(x).padStart(2, '0'); }).join(':'); }
@@ -165,7 +165,7 @@ class Component extends DCLogic {
     this.t = setTimeout(function () {
       var fail = i === 3 && !self.state.failedOnce; var st2 = self.state.st.slice(); var tm = Object.assign({}, self.state.tm);
       st2[i] = fail ? 'fail' : 'done'; tm[i] = (0.6 + Math.random()).toFixed(1) + 's';
-      var line = { t: now(), m: fail ? LOGS[i] : (i === 3 ? 'certificate issued · brs.edunest.app is live' : LOGS[i]), c: fail ? 'bad' : 'ok' };
+      var line = { t: now(), m: fail ? LOGS[i] : (i === 3 ? 'certificate issued · brs.gradeon.app is live' : LOGS[i]), c: fail ? 'bad' : 'ok' };
       self.setState({ st: st2, tm: tm, log: self.state.log.concat([line]).slice(-6), failedOnce: self.state.failedOnce || fail, running: !fail });
       if (!fail) self.step(i + 1);
     }, 950);

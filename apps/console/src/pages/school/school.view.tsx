@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { Shell, Toast } from "@edunest/web-ui";
+import { Shell, Toast } from "@gradeon/web-ui";
 import "./school.css";
 
 export function SchoolView({ v }: { v: any }) {
@@ -138,7 +138,7 @@ export function SchoolView({ v }: { v: any }) {
               <div className="tkt rise" style={{ "--d": ".2s" } as CSSProperties}>
                 <div className="l">
                   <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em" } as CSSProperties}>
-                    EduNest {v.planName}
+                    Gradeon {v.planName}
                   </div>
                   <div className="tl2">
                     <svg viewBox="0 0 24 24" aria-hidden="true">

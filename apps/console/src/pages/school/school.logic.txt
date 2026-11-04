@@ -8,7 +8,7 @@ var NAV = [
   ['Ship', [['app', 'Mobile builds', 'G B', '', '1'], ['flag', 'Flags', 'G L']]],
   ['Care', [['health', 'Health', 'G H'], ['sup', 'Support', 'G S'], ['bill', 'Billing', 'G I'], ['team', 'Team', 'G T']]]
 ];
-var STEPS = [['Database', 'db_brs on cell IN-2 with its own role and password'], ['Keys and storage', 'Encryption key, file prefix, cache space, queues'], ['Migrations and defaults', '214 migrations, then roles, statuses and templates'], ['Domain', 'brs.edunest.app, CDN tenant and certificate'], ['First admin', 'Invite to principal@banyanridge.in'], ['App build profile', 'Pull request #482 with the school’s build file'], ['Store checklist', 'Apple and Google steps for the school']];
+var STEPS = [['Database', 'db_brs on cell IN-2 with its own role and password'], ['Keys and storage', 'Encryption key, file prefix, cache space, queues'], ['Migrations and defaults', '214 migrations, then roles, statuses and templates'], ['Domain', 'brs.gradeon.app, CDN tenant and certificate'], ['First admin', 'Invite to principal@banyanridge.in'], ['App build profile', 'Pull request #482 with the school’s build file'], ['Store checklist', 'Apple and Google steps for the school']];
 var LOGS = ['created db_brs (ap-south-1) · role brs_app', 'kms alias/school-brs · prefix in-2-files/brs/', 'applied 214 migrations · seeded 41 templates', 'certificate validation is waiting for a DNS record', 'entitlements v1 pushed · invite sent', 'opened PR #482 schools/brs/school.yaml', 'store checklist created · 4 steps'];
 var TABS = [['Overview', 98], ['Entitlements', 124], ['Versions', 96], ['Health', 84], ['Audit', 76]];
 function now() { var d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(function (x) { return String(x).padStart(2, '0'); }).join(':'); }
@@ -22,7 +22,7 @@ class Component extends DCLogic {
     this.t = setTimeout(function () {
       var fail = i === 3 && !self.state.failedOnce; var st2 = self.state.st.slice(); var tm = Object.assign({}, self.state.tm);
       st2[i] = fail ? 'fail' : 'done'; tm[i] = (0.6 + Math.random()).toFixed(1) + 's';
-      var line = { t: now(), m: fail ? LOGS[i] : (i === 3 ? 'certificate issued · brs.edunest.app is live' : LOGS[i]), c: fail ? 'bad' : 'ok' };
+      var line = { t: now(), m: fail ? LOGS[i] : (i === 3 ? 'certificate issued · brs.gradeon.app is live' : LOGS[i]), c: fail ? 'bad' : 'ok' };
       self.setState({ st: st2, tm: tm, log: self.state.log.concat([line]).slice(-6), failedOnce: self.state.failedOnce || fail, running: !fail });
       if (!fail) self.step(i + 1);
     }, 950);

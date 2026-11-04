@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, Shell, Toast, tintFor, useShake, type Scene } from '@edunest/web-ui';
+import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, Shell, Toast, tintFor, useShake, type Scene } from '@gradeon/web-ui';
 import { useChrome } from '../app/useChrome';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];

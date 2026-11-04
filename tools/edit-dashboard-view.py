@@ -14,7 +14,7 @@ def rep(a, b, count=1):
 
 s, n = re.subn(r'<span className="roll">\s*\{v\.(\w+)\.map\(.*?\)\)\}\s*</span>', r'<Roll digits={v.\1} />', s, flags=re.S)
 print('rolls', n)
-s = s.replace('import { Import, Shell } from "@edunest/web-ui";', 'import { Illustration, Roll, Shell } from "@edunest/web-ui";')
+s = s.replace('import { Import, Shell } from "@gradeon/web-ui";', 'import { Illustration, Roll, Shell } from "@gradeon/web-ui";')
 
 a = s.index('<div className="pcols">')
 b = s.index('<div className="tile t-p s4')

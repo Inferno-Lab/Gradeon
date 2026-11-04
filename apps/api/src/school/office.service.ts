@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
+import { newId } from '@gradeon/db';
 import {
   addDays, dayMonth, inr, istToday, latestSchoolDay, type DataRequestCreate, type DataRequestDecision, type DataRequestRow, type EventRow, type EventSave, type FeeStatus, type InvoiceListQuery,
   type InvoiceListRow, type InvoiceListSummary, type Paged, type ReceiptRow, type ReportData, type ReportInfo, type ThreadCreate, type ThreadDetail, type ThreadPatch, type ThreadReply, type ThreadRow,
-} from '@edunest/contracts';
-import { ApiError, notFound } from '@edunest/nest-kit';
+} from '@gradeon/contracts';
+import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { gradeOf } from './learning.service.js';
 import { AuditService, Messenger } from './support.js';

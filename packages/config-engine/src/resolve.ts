@@ -4,7 +4,7 @@ import {
   type EntitlementDoc,
   type Permission,
   type SettingsDoc,
-} from '@edunest/contracts';
+} from '@gradeon/contracts';
 import { APP_CATALOG, closeModules, moduleByKey } from './modules.js';
 
 /** Layer 1: platform defaults, taken from the schema so there is one source. */
@@ -98,7 +98,7 @@ export function validateSettingsChanges(
       continue;
     }
     if (locked.includes(key)) {
-      problems.push({ key, message: 'EduNest has fixed this setting for your school.' });
+      problems.push({ key, message: 'Gradeon has fixed this setting for your school.' });
       continue;
     }
     const res = field.safeParse(raw);

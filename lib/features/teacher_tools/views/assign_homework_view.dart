@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/features/teacher_tools/controllers/teacher_controller.dart';
-import 'package:edunest/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
+import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';

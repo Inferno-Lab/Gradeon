@@ -11,7 +11,7 @@ def rep(a, b, count=1):
     s = s.replace(a, b)
 
 
-s = s.replace('import { Import, Shell } from "@edunest/web-ui";', 'import { Illustration, Roll, Shell } from "@edunest/web-ui";')
+s = s.replace('import { Import, Shell } from "@gradeon/web-ui";', 'import { Illustration, Roll, Shell } from "@gradeon/web-ui";')
 rep('<p>1,498 enrolled in 2026–27 across 42 sections</p>', '<p>{v.subtitle}</p>')
 rep('<button className="btn">\n            <svg viewBox="0 0 24 24" aria-hidden="true">\n              <path className="i" d="M12 20V9M7 14l5-5 5 5M5 4h14"></path>', '<button className="btn" onClick={v.openImport}>\n            <svg viewBox="0 0 24 24" aria-hidden="true">\n              <path className="i" d="M12 20V9M7 14l5-5 5 5M5 4h14"></path>')
 rep('<button className="btn">\n            <svg viewBox="0 0 24 24" aria-hidden="true">\n              <path className="i" d="M12 4v11M7 10l5 5 5-5M5 20h14"></path>', '<button className="btn" onClick={v.exportAll}>\n            <svg viewBox="0 0 24 24" aria-hidden="true">\n              <path className="i" d="M12 4v11M7 10l5 5 5-5M5 20h14"></path>')

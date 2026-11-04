@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleFleet.dc.html: classes and structure are the design's. Values come from FleetPage.
 import { Fragment, type CSSProperties } from "react";
-import { EmptyCard, Illustration, Shell } from "@edunest/web-ui";
+import { EmptyCard, Illustration, Shell } from "@gradeon/web-ui";
 import "./fleet.css";
 
 export function FleetView({ v }: { v: any }) {

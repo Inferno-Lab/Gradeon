@@ -1,5 +1,5 @@
 {
-  "name": "@edunest/console",
+  "name": "@gradeon/console",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@edunest/api-client": "workspace:*",
-    "@edunest/config-engine": "workspace:*",
-    "@edunest/contracts": "workspace:*",
-    "@edunest/web-ui": "workspace:*",
+    "@gradeon/api-client": "workspace:*",
+    "@gradeon/config-engine": "workspace:*",
+    "@gradeon/contracts": "workspace:*",
+    "@gradeon/web-ui": "workspace:*",
     "@tanstack/react-query": "^5.90.0",
     "@tanstack/react-router": "^1.130.0",
     "react": "^19.1.0",

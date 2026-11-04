@@ -25,23 +25,23 @@ afterAll(async () => {
 
 describe('console sign-in', () => {
   it('refuses a wrong password and an unknown email without saying which is wrong', async () => {
-    const bad = await h.c('POST', '/console/v1/auth/login', { body: { identifier: 'kaushal@edunest.app', password: 'wrong' } });
+    const bad = await h.c('POST', '/console/v1/auth/login', { body: { identifier: 'kaushal@gradeon.app', password: 'wrong' } });
     expect(bad.status).toBe(401);
-    const nobody = await h.c('POST', '/console/v1/auth/login', { body: { identifier: 'nobody@edunest.app', password: 'x' } });
+    const nobody = await h.c('POST', '/console/v1/auth/login', { body: { identifier: 'nobody@gradeon.app', password: 'x' } });
     expect(nobody.status).toBe(401);
     expect(nobody.json.fields.identifier).toBeDefined();
   });
   it('needs a token, and only super admins can reach the team', async () => {
     expect((await h.c('GET', '/console/v1/fleet')).status).toBe(401);
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@edunest.app', roles: ['support'], password: 'long-enough-pass' } });
-    const sam = await h.signIn('sam@edunest.app', 'long-enough-pass');
+    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'], password: 'long-enough-pass' } });
+    const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
     expect((await h.c('GET', '/console/v1/team', { token: sam })).status).toBe(200);
     expect((await h.c('POST', '/console/v1/team', { token: sam, body: { name: 'X', email: 'x@y.zz', roles: ['support'], password: 'long-enough-pass' } })).status).toBe(403);
     expect((await h.c('POST', '/console/v1/releases', { token: sam, body: { version: '2026.10.9' } })).status).toBe(403);
   });
   it('never lets the last super admin be removed', async () => {
     const team = (await h.c('GET', '/console/v1/team', { token: t })).json;
-    const me = team.find((m: any) => m.email === 'kaushal@edunest.app');
+    const me = team.find((m: any) => m.email === 'kaushal@gradeon.app');
     const r = await h.c('PUT', `/console/v1/team/${me.id}`, { token: t, body: { status: 'disabled' } });
     expect(r.status).toBe(409);
   });
@@ -164,8 +164,8 @@ describe('actions', () => {
     const asked = await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'school.erase', schoolId: id, confirmCode: 'freshschool' } });
     expect(asked.json.status).toBe('pending_approval');
     expect((await h.c('POST', `/console/v1/actions/${asked.json.id}/approve`, { token: t })).status).toBe(403);
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@edunest.app', roles: ['super_admin'], password: 'another-long-pass' } });
-    const second = await h.signIn('second@edunest.app', 'another-long-pass');
+    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+    const second = await h.signIn('second@gradeon.app', 'another-long-pass');
     const done = await h.c('POST', `/console/v1/actions/${asked.json.id}/approve`, { token: second });
     expect(done.json.status).toBe('done');
     expect((await h.s('GET', '/v1/brand', { school: 'freshschool' })).status).toBe(404);
@@ -223,7 +223,7 @@ describe('support and fleet', () => {
     const ok = await h.c('POST', '/console/v1/support', { token: t, body: { schoolId: s.id, reason: 'Checking the fee report with the principal' } });
     expect(ok.status).toBe(200);
     const view = await h.s('GET', '/v1/me', { school: 'demoschool', token: ok.json.token });
-    expect(view.json.roleNames).toEqual(['EduNest support']);
+    expect(view.json.roleNames).toEqual(['Gradeon support']);
     const write = await h.s('PATCH', '/v1/settings', { school: 'demoschool', token: ok.json.token, body: { changes: { 'school.name': 'Nope' } } });
     expect(write.status).toBe(403);
     expect((await h.s('GET', '/v1/me', { school: 'freshschool', token: ok.json.token })).status).toBe(404);

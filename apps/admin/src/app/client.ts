@@ -1,10 +1,10 @@
-import { createHttp, schoolApi, type Tokens } from '@edunest/api-client';
-import type { SessionUser } from '@edunest/contracts';
+import { createHttp, schoolApi, type Tokens } from '@gradeon/api-client';
+import type { SessionUser } from '@gradeon/contracts';
 
 const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
-const profileKey = (slug: string) => `edunest.admin.${slug}`;
-const supportKey = (slug: string) => `edunest.admin.${slug}.support`;
+const profileKey = (slug: string) => `gradeon.admin.${slug}`;
+const supportKey = (slug: string) => `gradeon.admin.${slug}.support`;
 
 export interface Stored {
   user: SessionUser;
@@ -53,7 +53,7 @@ export function readSupportHash(slug: string): boolean {
   const m = /[#&]support=([^&]+)/.exec(window.location.hash);
   if (!m) return false;
   const payload = JSON.parse(atob(m[1]!.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/'))) as { name: string; exp: number; perms: string[] };
-  session.write(slug, { support: { until: payload.exp * 1000 }, user: { id: 'support', name: payload.name, email: null, phone: null, initials: 'ES', roles: ['support'], roleNames: ['EduNest support'], permissions: payload.perms as SessionUser['permissions'] } });
+  session.write(slug, { support: { until: payload.exp * 1000 }, user: { id: 'support', name: payload.name, email: null, phone: null, initials: 'GS', roles: ['support'], roleNames: ['Gradeon support'], permissions: payload.perms as SessionUser['permissions'] } });
   session.setAccess(slug, m[1]!);
   try { sessionStorage.setItem(supportKey(slug), JSON.stringify({ ...session.read(slug), accessToken: m[1]! })); } catch { /* ignore */ }
   history.replaceState(null, '', window.location.pathname + window.location.search);

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { dayLabel, type AttendanceStatus } from '@edunest/contracts';
-import { EmptyCard, Select, tintFor } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { dayLabel, type AttendanceStatus } from '@gradeon/contracts';
+import { EmptyCard, Select, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 

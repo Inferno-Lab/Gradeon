@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/widgets/sheets.dart';
-import 'package:edunest/data/models/user.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
+import 'package:gradeon/data/models/user.dart';
 
 class ShellController extends GetxController {
   final index = 0.obs;

@@ -1,4 +1,4 @@
-import { istToday } from '@edunest/contracts';
+import { istToday } from '@gradeon/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -59,17 +59,17 @@ describe('sign-in', () => {
     const verified = await h.call('POST', '/v1/auth/verify', { body: { challengeId: step1.json.challenge.challengeId, code: '424242', client: 'web' } });
     expect(verified.status).toBe(200);
     expect(verified.json.refreshToken).toBeUndefined();
-    expect(verified.cookies.en_rt_greenfield).toBeTruthy();
-    expect(verified.cookies.en_csrf).toBeTruthy();
+    expect(verified.cookies.gd_rt_greenfield).toBeTruthy();
+    expect(verified.cookies.gd_csrf).toBeTruthy();
     const noCsrf = await h.call('POST', '/v1/auth/refresh', {
       body: { client: 'web' },
-      cookies: { en_rt_greenfield: verified.cookies.en_rt_greenfield, en_csrf: verified.cookies.en_csrf },
+      cookies: { gd_rt_greenfield: verified.cookies.gd_rt_greenfield, gd_csrf: verified.cookies.gd_csrf },
     });
     expect(noCsrf.status).toBe(401);
     const ok = await h.call('POST', '/v1/auth/refresh', {
       body: { client: 'web' },
-      cookies: { en_rt_greenfield: verified.cookies.en_rt_greenfield, en_csrf: verified.cookies.en_csrf },
-      headers: { 'x-csrf': verified.cookies.en_csrf, origin: 'http://localhost:5173' },
+      cookies: { gd_rt_greenfield: verified.cookies.gd_rt_greenfield, gd_csrf: verified.cookies.gd_csrf },
+      headers: { 'x-csrf': verified.cookies.gd_csrf, origin: 'http://localhost:5173' },
     });
     expect(ok.status).toBe(200);
     expect(ok.json.accessToken).toBeTruthy();

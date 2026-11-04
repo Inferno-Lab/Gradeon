@@ -1,11 +1,11 @@
 import { Inject, Injectable, SetMetadata, createParamDecorator, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import * as schema from '@edunest/db/school';
+import * as schema from '@gradeon/db/school';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { PoolManager, Registry, type TenantInfo } from '@edunest/tenancy';
+import { PoolManager, Registry, type TenantInfo } from '@gradeon/tenancy';
 import type { Pool } from 'pg';
 import type { FastifyRequest } from 'fastify';
-import { ApiError } from '@edunest/nest-kit';
+import { ApiError } from '@gradeon/nest-kit';
 
 export type SchoolDb = NodePgDatabase<typeof schema>;
 
@@ -49,7 +49,7 @@ export class TenantService {
     const info = await this.registry.school(slug);
     if (!info) throw new ApiError('not_found', 'We could not find that school. Check the address and try again.');
     if (info.status !== 'live') {
-      const msg = info.status === 'suspended' ? 'This school’s account is paused. Please contact EduNest support.' : 'This school is still being set up. Try again in a few minutes.';
+      const msg = info.status === 'suspended' ? 'This school’s account is paused. Please contact Gradeon support.' : 'This school is still being set up. Try again in a few minutes.';
       throw new ApiError('school_unavailable', msg);
     }
     const pool = this.pools.get(slug, info.dbUrl);

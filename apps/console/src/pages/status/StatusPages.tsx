@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { NotFoundTile } from '@edunest/web-ui';
+import { NotFoundTile } from '@gradeon/web-ui';
 import { AppContext } from '../../app/context';
 import { url } from '../../app/base';
 

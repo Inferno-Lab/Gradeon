@@ -1,9 +1,9 @@
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/data/models/student.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/data/models/student.dart';
 
 extension MockWrites on MockJsonDataSource {
   void submitHomework({

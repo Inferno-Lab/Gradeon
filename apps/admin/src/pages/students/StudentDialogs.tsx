@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { HttpError } from '@edunest/api-client';
-import { inr, istToday, type ClassInfo, type StudentDetail } from '@edunest/contracts';
-import { Dialog, ErrorLine, Field, SelectField, useShake } from '@edunest/web-ui';
+import { HttpError } from '@gradeon/api-client';
+import { inr, istToday, type ClassInfo, type StudentDetail } from '@gradeon/contracts';
+import { Dialog, ErrorLine, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 
 type Done = (message: string, openId?: string) => void;

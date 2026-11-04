@@ -3,10 +3,10 @@ import {
   ApprovalDecision, AssignFee, AttendanceDayPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SettingsPatch, SlotPatch, StudentCreate, StudentImport, StudentQuery,
   type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeSummary, type ImportResult, type InvoiceRow,
   type NoticeRow, type SearchHit, type SettingsDoc, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
-} from '@edunest/contracts';
-import { MODULES, closeModules } from '@edunest/config-engine';
+} from '@gradeon/contracts';
+import { MODULES, closeModules } from '@gradeon/config-engine';
 import { z } from 'zod';
-import { ZodPipe } from '@edunest/nest-kit';
+import { ZodPipe } from '@gradeon/nest-kit';
 import { CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { NoTenant, Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';

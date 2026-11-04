@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/glass_controls.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/features/teacher_tools/controllers/teacher_controller.dart';
-import 'package:edunest/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/glass_controls.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
+import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 
 class PostNoticeView extends GetView<PostNoticeController> {
   const PostNoticeView({super.key});

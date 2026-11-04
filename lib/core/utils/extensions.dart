@@ -1,9 +1,9 @@
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/theme/tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 
 extension AppContext on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;

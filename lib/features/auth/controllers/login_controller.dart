@@ -1,18 +1,18 @@
 import 'dart:async';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/utils/app_exception.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
 
 class LoginController extends GetxController {
   final email = TextEditingController(
-    text: AppConfig.live ? 'priya.sharma@example.com' : 'priya.sharma@edunest.app',
+    text: AppConfig.live ? 'priya.sharma@example.com' : 'priya.sharma@gradeon.app',
   );
   final password = TextEditingController(text: AppConfig.demoPassword);
   final otp = TextEditingController();

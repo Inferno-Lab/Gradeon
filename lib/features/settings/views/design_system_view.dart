@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/glass_controls.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/glass_controls.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Developer page: live glass samples and switches for testing states.

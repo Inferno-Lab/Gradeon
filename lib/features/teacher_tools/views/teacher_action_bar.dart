@@ -1,8 +1,8 @@
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/ui.dart';
 
 /// Glass bar with a line of text and one action, used across teacher tools.
 class TeacherActionBar extends StatelessWidget {

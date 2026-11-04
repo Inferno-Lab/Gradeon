@@ -41,16 +41,16 @@ importers:
 
   apps/admin:
     dependencies:
-      '@edunest/api-client':
+      '@gradeon/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@edunest/config-engine':
+      '@gradeon/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@edunest/web-ui':
+      '@gradeon/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui
       '@tanstack/react-query':
@@ -84,22 +84,22 @@ importers:
 
   apps/api:
     dependencies:
-      '@edunest/config-engine':
+      '@gradeon/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@edunest/db':
+      '@gradeon/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@edunest/nest-kit':
+      '@gradeon/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@edunest/security':
+      '@gradeon/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@edunest/tenancy':
+      '@gradeon/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@fastify/cors':
@@ -154,16 +154,16 @@ importers:
 
   apps/console:
     dependencies:
-      '@edunest/api-client':
+      '@gradeon/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@edunest/config-engine':
+      '@gradeon/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@edunest/web-ui':
+      '@gradeon/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui
       '@tanstack/react-query':
@@ -197,22 +197,22 @@ importers:
 
   apps/console-api:
     dependencies:
-      '@edunest/config-engine':
+      '@gradeon/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@edunest/db':
+      '@gradeon/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@edunest/nest-kit':
+      '@gradeon/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@edunest/security':
+      '@gradeon/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@edunest/tenancy':
+      '@gradeon/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@fastify/cors':
@@ -243,7 +243,7 @@ importers:
         specifier: ^4.1.0
         version: 4.6.7
     devDependencies:
-      '@edunest/api':
+      '@gradeon/api':
         specifier: workspace:*
         version: link:../api
       '@swc/core':
@@ -270,16 +270,16 @@ importers:
 
   apps/server:
     dependencies:
-      '@edunest/api':
+      '@gradeon/api':
         specifier: workspace:*
         version: link:../api
-      '@edunest/console-api':
+      '@gradeon/console-api':
         specifier: workspace:*
         version: link:../console-api
-      '@edunest/nest-kit':
+      '@gradeon/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@edunest/tenancy':
+      '@gradeon/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@fastify/cors':
@@ -316,7 +316,7 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -329,7 +329,7 @@ importers:
 
   packages/config-engine:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:
@@ -358,10 +358,10 @@ importers:
 
   packages/db:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@edunest/security':
+      '@gradeon/security':
         specifier: workspace:*
         version: link:../security
       drizzle-orm:
@@ -395,10 +395,10 @@ importers:
 
   packages/nest-kit:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@edunest/security':
+      '@gradeon/security':
         specifier: workspace:*
         version: link:../security
       '@fastify/cookie':
@@ -450,13 +450,13 @@ importers:
 
   packages/tenancy:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@edunest/db':
+      '@gradeon/db':
         specifier: workspace:*
         version: link:../db
-      '@edunest/security':
+      '@gradeon/security':
         specifier: workspace:*
         version: link:../security
       drizzle-orm:
@@ -481,7 +481,7 @@ importers:
 
   packages/web-ui:
     dependencies:
-      '@edunest/contracts':
+      '@gradeon/contracts':
         specifier: workspace:*
         version: link:../contracts
       react:

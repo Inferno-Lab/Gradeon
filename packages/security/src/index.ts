@@ -6,7 +6,7 @@ const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number, op
 export const SCRYPT = { N: 32768, r: 8, p: 1 } as const;
 const SCRYPT_MEM = 64 * 1024 * 1024;
 
-export const JWT_ISSUER = 'edunest';
+export const JWT_ISSUER = 'gradeon';
 
 /** scrypt hash in the form `scrypt$N$r$p$salt$hash` (all base64url). */
 export async function hashPassword(password: string): Promise<string> {

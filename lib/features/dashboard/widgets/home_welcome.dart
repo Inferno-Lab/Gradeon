@@ -1,12 +1,12 @@
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/widgets/empty_art.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/features/shell/shell_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 List<(IconData, String, String, VoidCallback)> _firstSteps() => [

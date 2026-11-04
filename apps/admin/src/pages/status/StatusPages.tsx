@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { useParams } from '@tanstack/react-router';
-import { EmptyCard, NotFoundTile, Shell } from '@edunest/web-ui';
+import { EmptyCard, NotFoundTile, Shell } from '@gradeon/web-ui';
 import { PAGE_TITLES } from '../../app/nav';
 import { AppContext, useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
@@ -26,7 +26,7 @@ export function ComingSoonPage() {
     <Frame active="" title={title} sub="Not open yet">
       <EmptyCard
         title={title} chip={{ text: 'Soon', tone: 'a' }} scene="calendar" heading={`${title} opens in a coming release`}
-        body="The school's data for it is already safe in EduNest. The screen is still being designed with the same care as the others."
+        body="The school's data for it is already safe in Gradeon. The screen is still being designed with the same care as the others."
         actions={<button className="btn pri" onClick={() => go('/')}>Back to the dashboard</button>}
       />
     </Frame>

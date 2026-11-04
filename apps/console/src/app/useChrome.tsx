@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dock, IC, MoreSheet, Palette, Sidebar, WorkspaceHeader, tintFor, useTheme, type DockTab, type PaletteHit } from '@edunest/web-ui';
+import { Dock, IC, MoreSheet, Palette, Sidebar, WorkspaceHeader, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import { consoleNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 import { path, url } from './base';
 
-const COLLAPSE_KEY = 'edunest.console.menu.collapsed';
+const COLLAPSE_KEY = 'gradeon.console.menu.collapsed';
 const ENV = (import.meta.env.VITE_ENV_LABEL as string | undefined) ?? (/^(localhost|127\.)/.test(window.location.hostname) ? 'Local' : 'Test track');
 
 /** What every console page shares: theme, menu, shortcuts and the search box. Merge it into the page's values. */

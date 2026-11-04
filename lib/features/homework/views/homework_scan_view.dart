@@ -2,18 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/haptics.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/toast.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/academics.dart';
-import 'package:edunest/features/homework/controllers/homework_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/toast.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/features/homework/controllers/homework_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Multi-page homework scanner: live camera, glass controls, a lens shutter.

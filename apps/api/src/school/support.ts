@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { newId } from '@edunest/db';
-import { resolveConfig, validateSettingsChanges } from '@edunest/config-engine';
-import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc, type SettingsPatch } from '@edunest/contracts';
-import type { Registry } from '@edunest/tenancy';
-import { ApiError } from '@edunest/nest-kit';
+import { newId } from '@gradeon/db';
+import { resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
+import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc, type SettingsPatch } from '@gradeon/contracts';
+import type { Registry } from '@gradeon/tenancy';
+import { ApiError } from '@gradeon/nest-kit';
 import { REGISTRY, type TenantCtx } from '../tenancy/tenant.js';
 
 @Injectable()

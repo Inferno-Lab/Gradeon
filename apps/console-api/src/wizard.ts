@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Post, Put } from '@nestjs/common';
-import { DEFAULT_PLANS, closeModules } from '@edunest/config-engine';
-import { BlueprintInput, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@edunest/contracts';
-import { newId } from '@edunest/db';
-import { ApiError, ZodPipe, notFound } from '@edunest/nest-kit';
+import { DEFAULT_PLANS, closeModules } from '@gradeon/config-engine';
+import { BlueprintInput, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@gradeon/contracts';
+import { newId } from '@gradeon/db';
+import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';
 import { driversFor } from './provisioning/drivers.js';

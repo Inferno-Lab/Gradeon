@@ -1,7 +1,7 @@
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/tokens.dart';
-import 'package:edunest/core/utils/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
 
 /// Kept so existing call sites can still ask for a thicker control (a thumb).
 enum GlassKind { sheet, lens }

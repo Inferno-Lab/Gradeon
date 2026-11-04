@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { AppModule, loadEnv as loadApiEnv } from '@edunest/api';
-import { ConsoleModule, loadEnv as loadConsoleEnv, prepareRegistry } from '@edunest/console-api';
-import { ApiExceptionFilter, registerHttp } from '@edunest/nest-kit';
-import { poolManagerFromEnv, Registry } from '@edunest/tenancy';
+import { AppModule, loadEnv as loadApiEnv } from '@gradeon/api';
+import { ConsoleModule, loadEnv as loadConsoleEnv, prepareRegistry } from '@gradeon/console-api';
+import { ApiExceptionFilter, registerHttp } from '@gradeon/nest-kit';
+import { poolManagerFromEnv, Registry } from '@gradeon/tenancy';
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';

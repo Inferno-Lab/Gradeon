@@ -1,30 +1,30 @@
 import 'dart:async';
 
-import 'package:edunest/core/routes/app_routes.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_typography.dart';
-import 'package:edunest/core/utils/extensions.dart';
-import 'package:edunest/core/utils/formatters.dart';
-import 'package:edunest/core/utils/status.dart';
-import 'package:edunest/core/widgets/empty_art.dart';
-import 'package:edunest/core/widgets/glass.dart';
-import 'package:edunest/core/widgets/glass_controls.dart';
-import 'package:edunest/core/widgets/page.dart';
-import 'package:edunest/core/widgets/sheets.dart';
-import 'package:edunest/core/widgets/states.dart';
-import 'package:edunest/core/widgets/ui.dart';
-import 'package:edunest/data/models/campus.dart';
-import 'package:edunest/features/fees/controllers/fees_controller.dart';
-import 'package:edunest/features/fees/views/pay_sheet.dart';
-import 'package:edunest/features/fees/views/receipt_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/utils/formatters.dart';
+import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/glass_controls.dart';
+import 'package:gradeon/core/widgets/page.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
+import 'package:gradeon/core/widgets/states.dart';
+import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/campus.dart';
+import 'package:gradeon/features/fees/controllers/fees_controller.dart';
+import 'package:gradeon/features/fees/views/pay_sheet.dart';
+import 'package:gradeon/features/fees/views/receipt_view.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-export 'package:edunest/features/fees/views/pay_sheet.dart';
-export 'package:edunest/features/fees/views/receipt_view.dart';
+export 'package:gradeon/features/fees/views/pay_sheet.dart';
+export 'package:gradeon/features/fees/views/receipt_view.dart';
 
 class FeesView extends StatefulWidget {
   const FeesView({super.key});

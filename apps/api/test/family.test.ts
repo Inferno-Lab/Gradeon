@@ -26,7 +26,7 @@ describe('who is signed in', () => {
     expect((await f(parent, '/me')).json).toMatchObject({ role: 'parent', name: 'Priya Sharma', childIds: expect.arrayContaining(['stu_aarav']) });
     expect((await f(parent, '/me')).json.childIds).toHaveLength(2);
     expect((await f(teacher, '/me')).json).toMatchObject({ role: 'teacher', name: 'Kavita Iyer' });
-    const blocked = await h.call('POST', '/v1/auth/login', { body: { identifier: 'aarav.sharma@edunest.app', password: 'nest2026' } });
+    const blocked = await h.call('POST', '/v1/auth/login', { body: { identifier: 'aarav.sharma@gradeon.app', password: 'nest2026' } });
     expect(blocked.status === 401 || blocked.status === 403).toBe(true);
     expect(blocked.json?.step).toBeUndefined();
     expect((await h.call('GET', '/v1/f/me')).status).toBe(401);

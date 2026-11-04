@@ -1,23 +1,23 @@
 import 'dart:io';
 
-import 'package:edunest/core/config/app_config.dart';
-import 'package:edunest/core/services/auth_service.dart';
-import 'package:edunest/core/services/session_bus.dart';
-import 'package:edunest/core/services/storage_service.dart';
-import 'package:edunest/core/services/theme_service.dart';
-import 'package:edunest/core/theme/app_colors.dart';
-import 'package:edunest/core/theme/app_theme.dart';
-import 'package:edunest/core/translations/app_translations.dart';
-import 'package:edunest/data/datasources/mock_json_datasource.dart';
-import 'package:edunest/data/models/user.dart';
-import 'package:edunest/data/repositories/academic_repository.dart';
-import 'package:edunest/data/repositories/auth_repository.dart';
-import 'package:edunest/data/repositories/campus_repository.dart';
-import 'package:edunest/data/repositories/directory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/session_bus.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:gradeon/core/translations/app_translations.dart';
+import 'package:gradeon/data/datasources/mock_json_datasource.dart';
+import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/data/repositories/academic_repository.dart';
+import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> bootMock() async {

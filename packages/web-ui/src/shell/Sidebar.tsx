@@ -125,8 +125,8 @@ export function SchoolHeader({ logo, name, place, onToggle, collapsed }: { logo:
 export function WorkspaceHeader({ env, onToggle, collapsed, envClass }: { env: string; onToggle: () => void; collapsed: boolean; envClass?: string }) {
   return (
     <div className="wsw">
-      <span className="lg">E</span>
-      <div className="fade"><b>EduNest</b><small><span className={`pdot ${envClass ?? ''}`}></span>{env}</small></div>
+      <span className="lg">G</span>
+      <div className="fade"><b>Gradeon</b><small><span className={`pdot ${envClass ?? ''}`}></span>{env}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path className="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg>
       </button>

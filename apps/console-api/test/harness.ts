@@ -1,10 +1,10 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { createApp, loadEnv as loadApiEnv } from '@edunest/api';
-import { ensureDatabase, startDevPostgres, type DevPostgres } from '@edunest/db/dev';
-import { pg } from '@edunest/db';
-import { PoolManager, Registry } from '@edunest/tenancy';
+import { createApp, loadEnv as loadApiEnv } from '@gradeon/api';
+import { ensureDatabase, startDevPostgres, type DevPostgres } from '@gradeon/db/dev';
+import { pg } from '@gradeon/db';
+import { PoolManager, Registry } from '@gradeon/tenancy';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createConsoleApp } from '../src/app.js';
 import { loadEnv } from '../src/env.js';
@@ -21,7 +21,7 @@ export interface Harness {
 }
 
 export async function startHarness(extra: Record<string, string> = {}): Promise<Harness> {
-  const server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'edunest-console-')), 'data'), fresh: true });
+  const server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-console-')), 'data'), fresh: true });
   const regUrl = await ensureDatabase(server.url, 'registry');
   const base = { NODE_ENV: 'test', REGISTRY_DATABASE_URL: regUrl, SECRETS_KEY: 'test-secret-key-for-sealing-0123456789', JWT_SECRET: 'jwt-secret-for-tests-0123456789abcd', PORT: '0' };
   const env = loadEnv({ ...base, SHARED_PG_ADMIN_URL: server.url, DEMO_CODE: '424242', STEP_PAUSE_MS: '0', PROBE_SECONDS: '0', ADMIN_BASE_URL: 'http://localhost:5173', ...extra });
@@ -47,7 +47,7 @@ export async function startHarness(extra: Record<string, string> = {}): Promise<
   };
   const c = call(console_) as Harness['c'];
   const s = call(api) as Harness['s'];
-  const signIn = async (email = 'kaushal@edunest.app', password = 'nest2026') => {
+  const signIn = async (email = 'kaushal@gradeon.app', password = 'nest2026') => {
     const a = await c('POST', '/console/v1/auth/login', { body: { identifier: email, password } });
     const b = await c('POST', '/console/v1/auth/verify', { body: { challengeId: a.json.challenge.challengeId, code: '424242' } });
     return b.json.accessToken as string;
