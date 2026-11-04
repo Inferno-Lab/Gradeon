@@ -314,6 +314,16 @@ export class StudentsService {
     return { sent: targets.length };
   }
 
+  /** Asks each family (once, however many children are selected) to install the app and sign in with their phone. */
+  async invite(t: TenantCtx, ids: string[], user: { id: string; name: string }): Promise<{ sent: number }> {
+    const { rows } = await t.pool.query<{ phone: string; name: string }>(
+      `select distinct on (g.phone) g.phone, s.name from student_guardians sg join guardians g on g.id = sg.guardian_id join students s on s.id = sg.student_id
+       where sg.student_id = any($1) and sg.is_primary and g.phone is not null order by g.phone, s.name`, [ids]);
+    const sent = await this.messenger.notify(t, 'family.invite', rows.map((r) => ({ to: r.phone, vars: { student: r.name } })));
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'family.invited', entity: 'student', detail: { families: sent } });
+    return { sent };
+  }
+
   async assignFee(t: TenantCtx, body: AssignFee, user: { id: string; name: string }): Promise<{ created: number }> {
     const rows = body.ids.map((id) => [newId('inv'), id, body.head, body.title, body.amount, body.dueOn]);
     const params: unknown[] = [];

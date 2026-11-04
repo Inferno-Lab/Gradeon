@@ -48,6 +48,7 @@ export function schoolApi(h: Http) {
       exportCsv: (ids?: string[]) => h.text('/v1/students/export', ids?.length ? { ids: ids.join(',') } : undefined),
       message: (b: MessageRequest) => h.post<{ sent: number }>('/v1/students/message', b),
       assignFee: (b: AssignFee) => h.post<{ created: number }>('/v1/students/assign-fee', b),
+      invite: (ids: string[]) => h.post<{ sent: number }>('/v1/students/invite', { ids }),
     },
     attendance: {
       day: (classId: string, date: string) => h.get<AttendanceDay>('/v1/attendance/day', { classId, date }),

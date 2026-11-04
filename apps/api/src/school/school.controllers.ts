@@ -75,6 +75,11 @@ export class StudentsController {
     return this.students.message(t, body, u);
   }
 
+  @Post('invite') @HttpCode(200) @Require('students.write')
+  invite(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ ids: z.array(z.string()).min(1).max(500) }))) body: { ids: string[] }): Promise<{ sent: number }> {
+    return this.students.invite(t, body.ids, u);
+  }
+
   @Post('assign-fee') @HttpCode(200) @Require('fees.collect') @RequireModule('fees')
   assignFee(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(AssignFee)) body: AssignFee): Promise<{ created: number }> {
     return this.students.assignFee(t, body, u);
