@@ -7,7 +7,7 @@ import { ago } from '../../app/format';
 
 const NAME: Record<string, string> = {
   'school.suspend': 'Suspend a school', 'school.resume': 'Bring a school back', 'school.erase': 'Erase a school', 'entitlements.push': 'Send plan changes',
-  'migration.run': 'Run database changes', 'domain.set': 'Change an address', 'build.app': 'Build the app', 'backup.take': 'Take a backup', 'school.move': 'Move a school to another cell',
+  'migration.run': 'Run database changes', 'domain.set': 'Change an address', 'build.app': 'Build the app', 'backup.take': 'Take a backup', 'backup.restore': 'Restore a backup', 'school.move': 'Move a school to another cell',
 };
 const TONE: Record<ActionRow['status'], string> = { pending_approval: 'a', running: 'b', done: 'g', failed: 'r', rejected: 'n' };
 const LABEL: Record<ActionRow['status'], string> = { pending_approval: 'Waiting for approval', running: 'Running', done: 'Done', failed: 'Failed', rejected: 'Rejected' };

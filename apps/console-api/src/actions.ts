@@ -7,6 +7,7 @@ import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { constantTimeEqual, unseal } from '@gradeon/security';
 import type { PoolManager, Registry } from '@gradeon/tenancy';
 import dns from 'node:dns/promises';
+import { Backups } from './backups.js';
 import { Db, Me, Needs, Public, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';
 import { Policy } from './policy.js';
@@ -64,6 +65,7 @@ export class Actions {
     private readonly policy: Policy,
     private readonly schools: Schools,
     private readonly builds: Builds,
+    private readonly backups: Backups,
     @Inject(REGISTRY) private readonly registry: Registry,
     @Inject(POOLS) private readonly pools: PoolManager,
     @Inject(ENV) private readonly env: Env,
@@ -126,7 +128,7 @@ export class Actions {
   private describe(action: ActionRequest['action'], school: string): string {
     return ({
       'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
-      'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'school.move': `Move ${school} to another cell`,
+      'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'school.move': `Move ${school} to another cell`,
     } as const)[action];
   }
 
@@ -213,12 +215,11 @@ export class Actions {
         return b.note;
       }
       case 'backup.take': {
-        if (!school.dbName?.startsWith('neon:')) throw new Error('Backups need a Neon project or pg_dump on the server. This school’s database is on a shared server.');
-        const res = await this.fetchImpl(`https://console.neon.tech/api/v2/projects/${school.dbName.slice(5)}/branches`, {
-          method: 'POST', headers: { authorization: `Bearer ${this.env.NEON_API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ branch: { name: `backup-${new Date().toISOString().slice(0, 16)}` } }),
-        });
-        if (!res.ok) throw new Error(`Neon refused the backup (${res.status}).`);
-        return 'A point-in-time branch of the database was created on Neon.';
+        const b = await this.backups.take(school.id, 'manual', a.requestedBy);
+        return `Backed up ${school.name}: ${Math.max(1, Math.round(b.bytes / 1024))} KB, kept with the daily backups.`;
+      }
+      case 'backup.restore': {
+        return this.backups.restore(school.id, String(params.backupId ?? ''), a.requestedBy);
       }
       default:
         throw new Error(`Unknown action ${a.action}.`);

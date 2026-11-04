@@ -1,5 +1,6 @@
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
@@ -11,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 const at = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 
 export const cells = pgTable('cells', {
   key: text('key').primaryKey(),
@@ -351,4 +353,19 @@ export const errorReports = pgTable(
     lastAt: at('last_at'),
   },
   (t) => [index('error_reports_last_idx').on(t.lastAt)],
+);
+
+/** ponytail: backups live in the registry until object storage exists (plan phase 4); move `data` to a bucket then. */
+export const schoolBackups = pgTable(
+  'school_backups',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    kind: text('kind').notNull(), // daily | manual
+    takenBy: text('taken_by').notNull(),
+    bytes: integer('bytes').notNull(),
+    data: bytea('data').notNull(),
+    takenAt: at('taken_at'),
+  },
+  (t) => [index('school_backups_school_idx').on(t.schoolId, t.takenAt)],
 );

@@ -255,3 +255,16 @@ describe('error reports', () => {
     expect((await h.c('GET', '/console/v1/errors')).status).toBe(401);
   });
 });
+
+describe('backups', () => {
+  it('backs a school up on request, and waits for a second person to put one back', async () => {
+    const school = (await h.c('GET', '/console/v1/schools', { token: t })).json.find((s: { slug: string }) => s.slug === 'demoschool');
+    const took = (await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'backup.take', schoolId: school.id } })).json;
+    expect(took.status).toBe('done');
+    const list = (await h.c('GET', `/console/v1/schools/${school.id}/backups`, { token: t })).json;
+    expect(list[0]).toMatchObject({ kind: 'manual', takenBy: 'kaushal@gradeon.app' });
+    expect(list[0].bytes).toBeGreaterThan(1000);
+    const restore = (await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'backup.restore', schoolId: school.id, params: { backupId: list[0].id } } })).json;
+    expect(restore.status).toBe('pending_approval');
+  });
+});

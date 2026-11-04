@@ -239,7 +239,7 @@ export interface BuildRow {
   createdAt: string;
 }
 
-export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'school.move'] as const;
+export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move'] as const;
 export const ActionKey = z.enum(ACTIONS);
 export type ActionKey = z.infer<typeof ActionKey>;
 
@@ -499,4 +499,12 @@ export interface ErrorGroup {
   count: number;
   firstAt: string;
   lastAt: string;
+}
+
+export interface BackupRow {
+  id: string;
+  kind: 'daily' | 'manual';
+  takenBy: string;
+  bytes: number;
+  takenAt: string;
 }

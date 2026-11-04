@@ -5,6 +5,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureDatabase, startDevPostgres, type DevPostgres } from './dev.js';
 import { loadMigrations, migrate, pendingMigrations } from './migrate.js';
+import { backupDatabase, restoreDatabase } from './backup.js';
 
 let server: DevPostgres;
 beforeAll(async () => {
@@ -46,5 +47,30 @@ describe('migrations', () => {
 
   it('refuses a database name that is not safe', async () => {
     await expect(ensureDatabase(server.url, 'x; drop database postgres')).rejects.toThrow(/Unsafe/);
+  });
+});
+
+describe('backups', () => {
+  it('puts a school back exactly as it was, dates and JSON included', async () => {
+    const pool = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_backup'), max: 2 });
+    try {
+      await migrate(pool, 'school');
+      await pool.query("insert into academic_years (id, label, starts_on, ends_on, current) values ('ay1', '2026-27', '2026-04-01', '2027-03-31', true)");
+      await pool.query("insert into classes (id, year_id, name, grade, section) values ('c8a', 'ay1', 'Class 8 A', 8, 'A')");
+      await pool.query("insert into students (id, admission_no, name, class_id, dob) values ('s1', '2026/0501', 'Tara Joshi', 'c8a', '2013-05-02'), ('s2', '2026/0502', 'Vir Joshi', 'c8a', '2015-01-31')");
+      await pool.query(`insert into settings (key, value) values ('notify.rules', '{"fees.reminder":{"sms":true}}')`);
+      const snap = async () => (await pool.query("select (select json_agg(s order by id) from students s) st, (select json_agg(c) from classes c) cl, (select value from settings where key = 'notify.rules') rules")).rows[0];
+      const before = await snap();
+      const gz = await backupDatabase(pool);
+      await pool.query("delete from students where id = 's2'");
+      await pool.query("update classes set name = 'Renamed'");
+      await pool.query("delete from settings");
+      expect((await snap()).st).toHaveLength(1);
+      const r = await restoreDatabase(pool, gz);
+      expect(r.rows).toBeGreaterThanOrEqual(5);
+      expect(await snap()).toEqual(before);
+    } finally {
+      await pool.end();
+    }
   });
 });
