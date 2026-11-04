@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, ty
 import { LoginRequest, RefreshRequest, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
-import { constantTimeEqual, hashPassword, maskEmail, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword } from '@gradeon/security';
+import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@gradeon/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@gradeon/nest-kit';
 import { Db, Me, Public, type ConsoleUser } from './core.js';
@@ -41,37 +41,67 @@ export class ConsoleAuth implements OnModuleInit {
   }
 
   async login(body: LoginRequest): Promise<ConsoleLoginResponse> {
-    const { rows } = await this.db.pool.query<{ id: string; name: string; email: string; password_hash: string | null; status: string; roles: ConsoleRole[] }>(
-      'select id, name, email, password_hash, status, roles from console_users where lower(email) = $1', [body.identifier.trim().toLowerCase()]);
+    const { rows } = await this.db.pool.query<{ id: string; name: string; email: string; password_hash: string | null; status: string; roles: ConsoleRole[]; totp_secret: string | null; failed_logins: number; locked_until: Date | null }>(
+      'select id, name, email, password_hash, status, roles, totp_secret, failed_logins, locked_until from console_users where lower(email) = $1', [body.identifier.trim().toLowerCase()]);
     const u = rows[0];
+    if (u?.locked_until && u.locked_until > new Date()) {
+      throw new ApiError('locked', `Too many wrong passwords. Try again in ${Math.ceil((u.locked_until.getTime() - Date.now()) / 60_000)} minutes.`);
+    }
     dummy ??= hashPassword('not-a-real-password');
     const ok = await verifyPassword(body.password, u?.password_hash ?? (await dummy));
     if (!u || !ok || u.status !== 'active') {
+      if (u) {
+        const lock = u.failed_logins + 1 >= 5;
+        await this.db.pool.query('update console_users set failed_logins = $2, locked_until = $3 where id = $1', [u.id, lock ? 0 : u.failed_logins + 1, lock ? new Date(Date.now() + 15 * 60_000) : null]);
+        if (lock) throw new ApiError('locked', 'Too many wrong passwords. Try again in 15 minutes.');
+      }
       throw new ApiError('unauthenticated', u ? 'That password isn’t right. Check it, or ask a super admin to reset it.' : 'We couldn’t find a console account with that email.', {
         fields: u ? { password: 'That password isn’t right.' } : { identifier: 'We couldn’t find a console account with that email.' },
       });
     }
+    await this.db.pool.query('update console_users set failed_logins = 0, locked_until = null where id = $1', [u.id]);
     if (passwordNeedsRehash(u.password_hash)) {
       await this.db.pool.query('update console_users set password_hash = $2 where id = $1', [u.id, await hashPassword(body.password)]);
     }
-    const code = this.env.DEMO_CODE ?? randomCode(6);
     const id = newId('cot');
-    await this.db.pool.query('insert into console_otp (id, user_id, code_hash, expires_at) values ($1,$2,$3,$4)', [id, u.id, sha256(`${id}:${code}`), new Date(Date.now() + 10 * 60_000)]);
-    await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
-    return { step: 'otp', challenge: { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, // The code is only handed back in development, so a hosted test track keeps it as a second step the password alone cannot skip.
-      ...(this.env.DEMO_CODE && this.env.NODE_ENV !== 'production' ? { demoCode: this.env.DEMO_CODE } : {}) } };
+    const expires = new Date(Date.now() + 10 * 60_000);
+    // An authenticator app is the second step whenever the person has one: no SMS or email provider is involved.
+    if (u.totp_secret) {
+      await this.db.pool.query("insert into console_otp (id, user_id, code_hash, method, expires_at) values ($1,$2,'',$3,$4)", [id, u.id, 'app', expires]);
+      return { step: 'otp', challenge: { challengeId: id, channel: 'app', maskedTo: 'your authenticator app', expiresInSeconds: 600 } };
+    }
+    // The test track has no email service either: its fixed DEMO_CODE stands in for the emailed code.
+    if (this.env.DEMO_CODE) {
+      const code = this.env.DEMO_CODE;
+      await this.db.pool.query('insert into console_otp (id, user_id, code_hash, expires_at) values ($1,$2,$3,$4)', [id, u.id, sha256(`${id}:${code}`), expires]);
+      await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
+      return { step: 'otp', challenge: { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, // The code is only handed back in development, so a hosted test track keeps it as a second step the password alone cannot skip.
+        ...(this.env.NODE_ENV !== 'production' ? { demoCode: code } : {}) } };
+    }
+    // First sign-in: the person adds a new key to their authenticator, and its first code proves it works.
+    const secret = newTotpSecret();
+    await this.db.pool.query("insert into console_otp (id, user_id, code_hash, method, pending_secret, expires_at) values ($1,$2,'','enroll',$3,$4)", [id, u.id, seal(secret, this.env.SECRETS_KEY), expires]);
+    return { step: 'otp', challenge: { challengeId: id, channel: 'app', maskedTo: 'your authenticator app', expiresInSeconds: 600, enroll: { secret, uri: totpUri(secret, u.email) } } };
   }
 
   async verify(body: VerifyRequest, reply?: FastifyReply): Promise<ConsoleTokens> {
-    const { rows } = await this.db.pool.query<{ id: string; user_id: string; code_hash: string; attempts: number; expires_at: Date; used_at: Date | null }>('select * from console_otp where id = $1', [body.challengeId]);
+    const { rows } = await this.db.pool.query<{ id: string; user_id: string; code_hash: string; method: string; pending_secret: string | null; attempts: number; expires_at: Date; used_at: Date | null; totp_secret: string | null }>(
+      'select o.*, u.totp_secret from console_otp o join console_users u on u.id = o.user_id where o.id = $1', [body.challengeId]);
     const r = rows[0];
     if (!r || r.used_at || r.expires_at < new Date()) throw new ApiError('unauthenticated', 'That code has expired. Go back and sign in again.', { fields: { code: 'That code has expired.' } });
     if (r.attempts >= 3) throw new ApiError('locked', 'Too many wrong codes. Go back and sign in again.');
-    if (!constantTimeEqual(sha256(`${body.challengeId}:${body.code}`), r.code_hash)) {
+    // ponytail: an authenticator code can be replayed inside its 90-second window by someone who also has the password; store the last step used if that matters.
+    const secret = r.method === 'enroll' ? r.pending_secret : r.method === 'app' ? r.totp_secret : null;
+    const good = secret ? verifyTotp(unseal(secret, this.env.SECRETS_KEY), body.code) : constantTimeEqual(sha256(`${body.challengeId}:${body.code}`), r.code_hash);
+    if (!good) {
       await this.db.pool.query('update console_otp set attempts = attempts + 1 where id = $1', [r.id]);
       throw new ApiError('unauthenticated', 'That code isn’t right.', { attemptsLeft: 2 - r.attempts, fields: { code: 'That code isn’t right.' } });
     }
     await this.db.pool.query('update console_otp set used_at = now() where id = $1', [r.id]);
+    if (r.method === 'enroll') {
+      await this.db.pool.query('update console_users set totp_secret = $2 where id = $1', [r.user_id, r.pending_secret]);
+      await this.db.audit(r.user_id, 'auth.authenticator_added', 'user', r.user_id);
+    }
     return this.issue(r.user_id, clientOf(body.client), reply);
   }
 

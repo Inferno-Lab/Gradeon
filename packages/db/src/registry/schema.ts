@@ -212,6 +212,10 @@ export const consoleUsers = pgTable(
     status: text('status').notNull().default('active'),
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
     tokenVersion: integer('token_version').notNull().default(0),
+    /** Sealed with SECRETS_KEY. */
+    totpSecret: text('totp_secret'),
+    failedLogins: integer('failed_logins').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: at('created_at'),
   },
   (t) => [uniqueIndex('console_users_email_uq').on(t.email)],
@@ -237,6 +241,9 @@ export const consoleOtp = pgTable(
     id: text('id').primaryKey(),
     userId: text('user_id').notNull().references(() => consoleUsers.id, { onDelete: 'cascade' }),
     codeHash: text('code_hash').notNull(),
+    /** email: a code we sent; app: the person's authenticator; enroll: first code from a new authenticator (pending_secret, sealed). */
+    method: text('method').notNull().default('email'),
+    pendingSecret: text('pending_secret'),
     attempts: integer('attempts').notNull().default(0),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     usedAt: timestamp('used_at', { withTimezone: true }),

@@ -329,6 +329,8 @@ export interface ConsoleUserRow {
   roles: ConsoleRole[];
   status: 'active' | 'invited' | 'disabled';
   lastSeenAt: string | null;
+  /** Has set up an authenticator app for the second sign-in step. */
+  authenticator: boolean;
 }
 
 export interface ConsoleSession {
@@ -397,7 +399,19 @@ export interface ConsoleTokens {
 }
 
 export type ConsoleLoginResponse =
-  | { step: 'otp'; challenge: { challengeId: string; channel: 'email'; maskedTo: string; expiresInSeconds: number; demoCode?: string } }
+  | {
+    step: 'otp';
+    challenge: {
+      challengeId: string;
+      /** email: we sent a code; app: the code is in the person's authenticator app. */
+      channel: 'email' | 'app';
+      maskedTo: string;
+      expiresInSeconds: number;
+      demoCode?: string;
+      /** First sign-in without an authenticator: add this key to the app, then type its code. */
+      enroll?: { secret: string; uri: string };
+    };
+  }
   | { step: 'done'; tokens: ConsoleTokens };
 
 export interface SupportToken {

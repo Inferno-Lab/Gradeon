@@ -14,7 +14,7 @@ export interface LoginFailure {
 }
 
 /** Where the code went: shown on the code step so the person knows which phone or inbox to check. */
-export interface Challenge { challengeId: string; demoCode?: string; channel?: 'sms' | 'email'; maskedTo?: string; expiresInSeconds?: number }
+export interface Challenge { challengeId: string; demoCode?: string; channel?: 'sms' | 'email' | 'app'; maskedTo?: string; expiresInSeconds?: number; enroll?: { secret: string; uri: string } }
 
 export interface LoginController {
   product: 'admin' | 'console';
@@ -151,7 +151,13 @@ export function useLogin(c: LoginController, themeCls: string) {
     idLabel: cons ? 'Gradeon email' : 'Email or phone number', idType: cons ? 'email' : 'text',
     busy, notBusy: !busy,
     next: () => void next(),
-    sentTo: challenge?.maskedTo ?? email, sentBy: challenge?.channel === 'sms' ? 'text message' : 'email', validFor: Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60)), back: () => { setStep('cred'); setCode(''); setOtpErr(false); setResetting(false); },
+    otpTitle: challenge?.enroll ? 'Set up your authenticator' : challenge?.channel === 'app' ? 'Open your authenticator' : `Check your ${challenge?.channel === 'sms' ? 'messages' : 'inbox'}`,
+    otpSub: challenge?.enroll
+      ? 'Add Gradeon to an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) with the key below, then type the 6-digit code it shows. You’ll use it at every sign-in.'
+      : challenge?.channel === 'app'
+        ? 'Type the 6-digit code your authenticator app shows for Gradeon.'
+        : `We sent a 6-digit code by ${challenge?.channel === 'sms' ? 'text message' : 'email'} to ${challenge?.maskedTo ?? email}. It works for ${Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60))} minutes.${resetting ? ' Type it with your new password.' : ''}`,
+    enroll: challenge?.enroll ?? null, back: () => { setStep('cred'); setCode(''); setOtpErr(false); setResetting(false); },
     boxes, code, otpBad: otpErr ? 'bad shake' : '', otpErr, otpMsg, tries,
     onCode: (e: { target: { value: string } }) => {
       const v = e.target.value.replace(/\D/g, '').slice(0, 6);

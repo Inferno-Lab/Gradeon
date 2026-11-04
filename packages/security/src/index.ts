@@ -132,3 +132,38 @@ export function maskEmail(email: string): string {
   const [u, d] = email.split('@');
   return u && d ? `${u.slice(0, 2)}••••@${d}` : '••••';
 }
+
+// Authenticator-app codes (RFC 6238 TOTP: SHA-1, 6 digits, 30-second steps), so console staff need no SMS or email provider.
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+export function newTotpSecret(): string {
+  let bits = '';
+  for (const b of randomBytes(20)) bits += b.toString(2).padStart(8, '0');
+  return bits.match(/.{5}/g)!.map((c) => B32[parseInt(c, 2)]).join('');
+}
+
+function base32(secret: string): Buffer {
+  const bits = secret.replace(/[\s=-]/g, '').toUpperCase().split('').map((c) => {
+    const i = B32.indexOf(c);
+    if (i < 0) throw new Error('Not a base32 secret');
+    return i.toString(2).padStart(5, '0');
+  }).join('');
+  return Buffer.from(bits.match(/.{8}/g)?.map((b) => parseInt(b, 2)) ?? []);
+}
+
+export function totp(secret: string, at = Date.now()): string {
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(at / 30_000)));
+  const h = createHmac('sha1', base32(secret)).update(counter).digest();
+  const o = h[h.length - 1]! & 15;
+  return String((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).padStart(6, '0');
+}
+
+/** Accepts the current code and the ones either side of it, for clocks a little out. */
+export function verifyTotp(secret: string, code: string, at = Date.now()): boolean {
+  return [-30_000, 0, 30_000].some((d) => constantTimeEqual(totp(secret, at + d), code));
+}
+
+export function totpUri(secret: string, account: string, issuer = 'Gradeon'): string {
+  return `otpauth://totp/${encodeURIComponent(`${issuer}:${account}`)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+}

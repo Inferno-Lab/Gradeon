@@ -21,15 +21,15 @@ export function TeamPage() {
   const [edit, setEdit] = useState<ConsoleUserRow | null>(null);
   const team = useQuery({ queryKey: ['team'], queryFn: app.api.team.list });
   const refresh = () => void qc.invalidateQueries({ queryKey: ['team'] });
-  const change = useMutation({ mutationFn: (b: { id: string; roles?: string[]; status?: string }) => app.api.team.change(b.id, b), onSuccess: () => { refresh(); setEdit(null); say('Saved.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const change = useMutation({ mutationFn: (b: { id: string; roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }) => app.api.team.change(b.id, b), onSuccess: () => { refresh(); setEdit(null); say('Saved.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const rows = team.data ?? [];
   const canWrite = app.can('team.write');
   return (
     <Page active="team" title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a person</button> : undefined}
       overlays={<>
-        {adding && <AddDialog onClose={() => setAdding(false)} onDone={() => { setAdding(false); refresh(); say('Added. They sign in with the password you set and a code sent to their email.'); }} />}
-        {edit && <EditDialog row={edit} self={edit.email === app.user.email} onClose={() => setEdit(null)} onSave={(roles, status) => change.mutate({ id: edit.id, roles, status })} busy={change.isPending} />}
+        {adding && <AddDialog onClose={() => setAdding(false)} onDone={() => { setAdding(false); refresh(); say('Added. At their first sign-in they set up an authenticator app with the password you chose.'); }} />}
+        {edit && <EditDialog row={edit} self={edit.email === app.user.email} onClose={() => setEdit(null)} onSave={(b) => change.mutate({ id: edit.id, ...b })} busy={change.isPending} />}
       </>}>
       {rows.length > 0 && <Tiles items={[
         { label: 'People', value: rows.length, note: `${rows.filter((r) => r.status === 'active').length} active`, tone: 'v' },
@@ -48,7 +48,7 @@ export function TeamPage() {
                     <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none' }}>{initials(r.name)}</span>
                     <span style={{ minWidth: 0 }}><b style={{ display: 'block', font: '700 14px var(--fb)' }}>{r.name}</b><small style={{ color: 'var(--ink3)' }}>{r.email}</small></span>
                   </span>
-                  <span className="tgrow">{r.roles.map((x) => <span key={x} className="chip v">{roleLabel(x)}</span>)}{r.status !== 'active' && <span className="chip a">{r.status}</span>}</span>
+                  <span className="tgrow">{r.roles.map((x) => <span key={x} className="chip v">{roleLabel(x)}</span>)}{r.status !== 'active' && <span className="chip a">{r.status}</span>}{r.status === 'active' && !r.authenticator && <span className="chip i">No authenticator yet</span>}</span>
                   <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)' }}>{ago(r.lastSeenAt)}</span>
                   <span>{canWrite && <button className="btn sm" onClick={() => setEdit(r)}>Change</button>}</span>
                 </div>
@@ -106,7 +106,7 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
     <Dialog title="Add a person" onClose={onClose} width={560} shake={shake.cls}>
       <Field label="Name" value={f.name} onChange={(name) => setF({ ...f, name })} error={err.name} />
       <Field label="Work email" value={f.email} onChange={(email) => setF({ ...f, email })} error={err.email} type="email" />
-      <Field label="First password" value={f.password} onChange={(password) => setF({ ...f, password })} error={err.password} type="password" hint="Share it in person. A code is also sent to their email at every sign-in." />
+      <Field label="First password" value={f.password} onChange={(password) => setF({ ...f, password })} error={err.password} type="password" hint="Share it in person. At their first sign-in they add Gradeon to an authenticator app." />
       <div className="lbl" style={{ margin: '4px 0 8px' }}>Roles</div>
       <RoleChoice value={roles} onChange={(r) => { setRoles(r); setErr({ ...err, roles: '' }); }} />
       {err.roles && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{err.roles}</div>}
@@ -116,9 +116,11 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
   );
 }
 
-function EditDialog({ row, self, onClose, onSave, busy }: { row: ConsoleUserRow; self: boolean; onClose: () => void; onSave: (roles: string[], status: string) => void; busy: boolean }) {
+function EditDialog({ row, self, onClose, onSave, busy }: { row: ConsoleUserRow; self: boolean; onClose: () => void; onSave: (b: { roles: string[]; status: string; password?: string; resetAuthenticator?: boolean }) => void; busy: boolean }) {
   const [roles, setRoles] = useState<string[]>(row.roles);
   const [status, setStatus] = useState<string>(row.status);
+  const [password, setPassword] = useState('');
+  const [resetAuth, setResetAuth] = useState(false);
   return (
     <Dialog title={row.name} onClose={onClose} width={560}>
       <RoleChoice value={roles} onChange={setRoles} />
@@ -126,7 +128,15 @@ function EditDialog({ row, self, onClose, onSave, busy }: { row: ConsoleUserRow;
         <button className={`btn ${status === 'disabled' ? 'dng' : ''}`} disabled={self} title={self ? 'You can’t switch yourself off' : undefined} onClick={() => setStatus(status === 'disabled' ? 'active' : 'disabled')}>{status === 'disabled' ? 'Switched off · tap to switch on' : 'Switch this person off'}</button>
       </div>
       {self && <div className="help" style={{ marginTop: 8 }}>You can’t switch yourself off or remove your own super admin role in one go.</div>}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" disabled={busy || !roles.length} onClick={() => onSave(roles, status)}>Save</button></div>
+      <div style={{ marginTop: 16 }}>
+        <Field label="New password" value={password} onChange={setPassword} type="password" hint="Leave empty to keep theirs. At least 10 characters; share it in person." error={password && password.length < 10 ? 'At least 10 characters.' : undefined} />
+      </div>
+      {row.authenticator && (
+        <div className="tgrow" style={{ marginTop: 4 }}>
+          <button className={`btn ${resetAuth ? 'dng' : ''}`} aria-pressed={resetAuth} onClick={() => setResetAuth(!resetAuth)}>{resetAuth ? 'Authenticator will be reset · tap to keep it' : 'Reset their authenticator (lost phone)'}</button>
+        </div>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" disabled={busy || !roles.length || (!!password && password.length < 10)} onClick={() => onSave({ roles, status, ...(password ? { password } : {}), ...(resetAuth ? { resetAuthenticator: true } : {}) })}>Save</button></div>
     </Dialog>
   );
 }
