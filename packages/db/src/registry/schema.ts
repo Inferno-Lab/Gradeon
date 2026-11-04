@@ -369,3 +369,46 @@ export const schoolBackups = pgTable(
   },
   (t) => [index('school_backups_school_idx').on(t.schoolId, t.takenAt)],
 );
+
+export const configVersions = pgTable(
+  'config_versions',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    version: integer('version').notNull(),
+    values: jsonb('values').$type<Record<string, unknown>>().notNull(),
+    changes: jsonb('changes').$type<{ key: string; from: unknown; to: unknown }[]>().notNull(),
+    note: text('note').notNull().default(''),
+    by: text('by').notNull(),
+    at: at('at'),
+  },
+  (t) => [index('config_versions_school_idx').on(t.schoolId, t.at)],
+);
+
+export const configTemplates = pgTable('config_templates', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  values: jsonb('values').$type<Record<string, unknown>>().notNull(),
+  roles: jsonb('roles').$type<{ key: string; name: string; description: string; permissions: string[] }[]>().notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: at('created_at'),
+});
+
+export const changeRequests = pgTable(
+  'change_requests',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    schoolSlug: text('school_slug').notNull(),
+    schoolName: text('school_name').notNull(),
+    area: text('area').notNull(),
+    message: text('message').notNull(),
+    requestedBy: text('requested_by').notNull(),
+    status: text('status').notNull().default('open'), // open | done | declined
+    answer: text('answer').notNull().default(''),
+    answeredBy: text('answered_by'),
+    createdAt: at('created_at'),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+  },
+  (t) => [index('change_requests_status_idx').on(t.status, t.createdAt)],
+);

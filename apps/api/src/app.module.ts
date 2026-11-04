@@ -23,7 +23,7 @@ import { PeopleService } from './school/people.service.js';
 import { StudentsService } from './school/students.service.js';
 import { AuditService, Messenger, SettingsService } from './school/support.js';
 import { SweepService } from './school/sweep.service.js';
-import { ErrorReports, ErrorsController } from './school/errors.js';
+import { ChangeRequestsController, ErrorReports, ErrorsController } from './school/errors.js';
 import { TimetableService } from './school/timetable.service.js';
 import { POOLS, REGISTRY, TenantGuard, TenantService } from './tenancy/tenant.js';
 
@@ -54,7 +54,7 @@ export class AppModule {
       module: AppModule,
       controllers: [
         AuthController, MeController, ClassesController, StudentsController, AttendanceController, FeesController, ApprovalsController,
-        TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController,
+        TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController, ChangeRequestsController,
       ],
       providers: [
         { provide: ENV, useValue: env },

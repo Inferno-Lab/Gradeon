@@ -11,7 +11,7 @@ const REQUIRED = ['database', 'migrate-seed', 'admin'];
 const TARGET: Record<string, string> = { local: 'This computer', 'free-test': 'Free test track', 'aws-cell': 'AWS cell' };
 const ACTION: Record<string, string> = {
   'school.suspend': 'Suspend a school', 'school.resume': 'Bring a school back', 'school.erase': 'Erase a school', 'entitlements.push': 'Send plan changes',
-  'migration.run': 'Run database changes', 'domain.set': 'Change an address', 'build.app': 'Build the app', 'backup.take': 'Take a backup', 'backup.restore': 'Restore a backup', 'school.move': 'Move a school to another cell',
+  'migration.run': 'Run database changes', 'domain.set': 'Change an address', 'build.app': 'Build the app', 'backup.take': 'Take a backup', 'backup.restore': 'Restore a backup', 'config.apply': 'Change a risky setting', 'school.move': 'Move a school to another cell',
 };
 const WAVE_KINDS = [['internal', 'Our own schools'], ['pilot', 'Pilot schools'], ['rest', 'Everyone else']] as const;
 

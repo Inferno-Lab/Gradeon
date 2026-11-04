@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RESERVED_SLUGS, SLUG_RE } from './common.js';
 
-export const CONSOLE_ROLES = ['super_admin', 'support', 'release_manager', 'finance', 'compliance', 'auditor'] as const;
+export const CONSOLE_ROLES = ['super_admin', 'implementation', 'support', 'release_manager', 'finance', 'compliance', 'auditor'] as const;
 export const ConsoleRole = z.enum(CONSOLE_ROLES);
 export type ConsoleRole = z.infer<typeof ConsoleRole>;
 
@@ -239,7 +239,7 @@ export interface BuildRow {
   createdAt: string;
 }
 
-export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move'] as const;
+export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply'] as const;
 export const ActionKey = z.enum(ACTIONS);
 export type ActionKey = z.infer<typeof ActionKey>;
 
@@ -374,11 +374,14 @@ export interface InvoiceRowC {
 export const CONSOLE_PERMISSIONS = [
   'schools.read', 'schools.write', 'schools.danger', 'blueprints.write', 'releases.write', 'builds.write', 'flags.write',
   'support.access', 'billing.read', 'billing.write', 'team.write', 'audit.read', 'policy.write', 'sandbox.read', 'compliance.write',
+  // Set up a school: its configuration, roles, who is in which role, and the requests schools send.
+  'schools.configure',
 ] as const;
 export type ConsolePermission = (typeof CONSOLE_PERMISSIONS)[number];
 
 export const CONSOLE_ROLE_PERMISSIONS: Record<ConsoleRole, readonly ConsolePermission[]> = {
   super_admin: CONSOLE_PERMISSIONS,
+  implementation: ['schools.read', 'schools.configure', 'sandbox.read', 'audit.read'],
   support: ['schools.read', 'support.access', 'sandbox.read', 'audit.read'],
   release_manager: ['schools.read', 'releases.write', 'builds.write', 'flags.write', 'sandbox.read'],
   finance: ['schools.read', 'billing.read', 'billing.write'],
@@ -507,4 +510,49 @@ export interface BackupRow {
   takenBy: string;
   bytes: number;
   takenAt: string;
+}
+
+/** A school's configuration as the console edits it. */
+export interface SchoolConfig {
+  version: number;
+  values: Record<string, unknown>;
+  /** Modules the plan allows: the most "Switched on" may hold. */
+  entitled: string[];
+  roles: RoleDef[];
+  classes: { id: string; name: string }[];
+  staff: { id: string; name: string; designation: string; roleId: string | null }[];
+  versions: ConfigVersionRow[];
+}
+
+export interface RoleDef { id: string; key: string; name: string; description: string; permissions: string[]; locked: boolean; people: number }
+
+export interface ConfigVersionRow { id: string; version: number; changes: { key: string; from: unknown; to: unknown }[]; note: string; by: string; at: string }
+
+export const ConfigPatch = z.object({
+  expectedVersion: z.number().int(),
+  /** null puts a setting back to the platform default. */
+  changes: z.record(z.string(), z.unknown()),
+  note: z.string().trim().max(200).default(''),
+});
+export type ConfigPatch = z.infer<typeof ConfigPatch>;
+
+export const RoleDefSave = z.object({
+  name: z.string().trim().min(2, 'Give the role a name').max(40),
+  description: z.string().trim().max(160).default(''),
+  permissions: z.array(z.string()).max(60),
+});
+export type RoleDefSave = z.infer<typeof RoleDefSave>;
+
+export interface ConfigTemplateRow { id: string; name: string; keys: number; roles: number; createdBy: string; createdAt: string }
+
+/** What a school asks Gradeon to change (the admin's "Ask Gradeon to change this"). */
+export const ChangeRequestCreate = z.object({
+  area: z.string().trim().min(2).max(60),
+  message: z.string().trim().min(5, 'Say what you would like changed').max(1000),
+});
+export type ChangeRequestCreate = z.infer<typeof ChangeRequestCreate>;
+
+export interface ChangeRequestRow {
+  id: string; schoolId: string; schoolSlug: string; schoolName: string; area: string; message: string; requestedBy: string;
+  status: 'open' | 'done' | 'declined'; answer: string; answeredBy: string | null; createdAt: string; closedAt: string | null;
 }

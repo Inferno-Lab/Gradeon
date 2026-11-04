@@ -2,9 +2,9 @@ import { Controller, Get, Inject, Injectable, Param, type OnModuleInit } from '@
 import type { BackupRow } from '@gradeon/contracts';
 import { backupDatabase, newId, pg, restoreDatabase } from '@gradeon/db';
 import { notFound } from '@gradeon/nest-kit';
-import { unseal } from '@gradeon/security';
 import { Db, Needs } from './core.js';
 import { ENV, type Env } from './env.js';
+import { withSchoolDb } from './school-db.js';
 
 const KEEP = 14;
 
@@ -27,11 +27,8 @@ export class Backups implements OnModuleInit {
     for (const s of rows) await this.take(s.id, 'daily', 'system').catch(() => undefined);
   }
 
-  private async withPool<T>(schoolId: string, fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
-    const s = (await this.db.pool.query<{ db_url_sealed: string | null }>('select db_url_sealed from schools where id = $1 and deleted_at is null', [schoolId])).rows[0];
-    if (!s?.db_url_sealed) throw notFound('That school’s database');
-    const pool = new pg.Pool({ connectionString: unseal(s.db_url_sealed, this.env.SECRETS_KEY), max: 2 });
-    try { return await fn(pool); } finally { await pool.end(); }
+  private withPool<T>(schoolId: string, fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
+    return withSchoolDb(this.db, this.env.SECRETS_KEY, schoolId, fn);
   }
 
   async take(schoolId: string, kind: 'daily' | 'manual', by: string): Promise<BackupRow> {

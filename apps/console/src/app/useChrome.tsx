@@ -112,5 +112,5 @@ export function useChrome(active: string) {
 }
 
 export function roleLabel(role: string | undefined): string {
-  return ({ super_admin: 'Super admin', support: 'Support', release_manager: 'Release manager', finance: 'Finance', compliance: 'Compliance', auditor: 'Auditor' } as Record<string, string>)[role ?? ''] ?? 'Team';
+  return ({ super_admin: 'Super admin', implementation: 'Implementation', support: 'Support', release_manager: 'Release manager', finance: 'Finance', compliance: 'Compliance', auditor: 'Auditor' } as Record<string, string>)[role ?? ''] ?? 'Team';
 }

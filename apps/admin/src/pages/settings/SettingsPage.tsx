@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
 import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
 import { istToday, type SettingsResponse } from '@gradeon/contracts';
-import { EmptyCard, Shell } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, ErrorLine, Shell, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useChrome } from '../../app/useChrome';
 import { SettingsView } from './settings.view';
@@ -39,19 +38,6 @@ function draftOf(doc: SettingsResponse): Draft {
   };
 }
 
-function changesOf(a: Draft, b: Draft): Record<string, unknown> {
-  const c: Record<string, unknown> = {};
-  if (b.name.trim() !== a.name) c['school.name'] = b.name.trim();
-  if (b.logo !== a.logo) c['brand.logoText'] = b.logo;
-  if (b.about !== a.about) c['school.tagline'] = b.about;
-  if (b.brand !== a.brand) c['brand.color'] = b.brand;
-  if (b.notify !== a.notify) c['attendance.notifyParents'] = b.notify;
-  if (b.notice !== a.notice) c['approvals.notice'] = b.notice ? 'required' : 'off';
-  if (b.twoFactor !== a.twoFactor) c['security.twoFactor'] = b.twoFactor;
-  if (b.waiver !== a.waiver) c['approvals.feeWaiver'] = b.waiver;
-  if (b.modules.join() !== a.modules.join()) c['modules.enabled'] = b.modules;
-  return c;
-}
 
 /** First of next month, in the school's time zone: the day the next invoice goes out. */
 function nextInvoice(): string {
@@ -87,19 +73,7 @@ export function SettingsPage() {
     setErr({});
   }, [data]);
 
-  const save = useMutation({
-    mutationFn: (b: { expectedVersion: number; changes: Record<string, unknown> }) => app.api.settings.patch(b),
-    onSuccess: () => {
-      void qc.invalidateQueries({ predicate: (q) => ['settings', 'shell', 'brand', 'config'].includes(String(q.queryKey[0])) });
-      setToast('Saved. The app updates within a minute.'); later(() => setToast(''), 3600);
-    },
-    onError: (e) => {
-      const f = e instanceof HttpError ? e.fields : {};
-      setErr({ name: f['school.name'] ?? '', _: e instanceof HttpError && e.code === 'conflict' ? 'Someone else changed these settings a moment ago. Reload to see their changes.' : (e as Error).message });
-      setShk((n) => n + 1);
-      if (e instanceof HttpError && e.code === 'conflict') void doc.refetch();
-    },
-  });
+  const [asking, setAsking] = useState(false);
 
   const usage = data?.usage;
   const smsTarget = usage && usage.smsLimit ? Math.min(100, Math.round((usage.smsUsed / usage.smsLimit) * 100)) : 0;
@@ -124,10 +98,8 @@ export function SettingsPage() {
     );
   }
 
-  const saved = draftOf(data);
-  const changes = changesOf(saved, draft);
-  const dirty = Object.keys(changes).length > 0;
-  const canWrite = app.user.permissions.includes('settings.write');
+  // Gradeon sets the school up from the console; this page shows the setup and asks for changes.
+  const canWrite = false;
   const lock = (k: string) => !canWrite || data.locked.includes(k);
   const set = (p: Partial<Draft>) => { setDraft({ ...draft, ...p }); setErr({}); };
   const shortName = str(data.values['school.shortName'], draft.name);
@@ -136,11 +108,6 @@ export function SettingsPage() {
   const ratio = contrastRatio(draft.brand, '#FFFFFF');
   const copy = (key: string, text: string) => { void navigator.clipboard?.writeText(text).catch(() => undefined); setCopied(key); later(() => setCopied(''), 1800); };
   const address = `${window.location.host}${app.base}`;
-  const doSave = () => {
-    if (!dirty || save.isPending) return;
-    if (draft.name.trim().length < 2) { setErr({ name: 'Use at least 2 letters for the school name.' }); setShk((n) => n + 1); return; }
-    save.mutate({ expectedVersion: data.version, changes });
-  };
   const toggle = (key: 'notify' | 'notice' | 'twoFactor', n: string, d: string, setting: string) => ({
     n, d, on: draft[key] ? 'on' : '', sel: draft[key] ? 'true' : 'false', locked: lock(setting), flip: () => set({ [key]: !draft[key] } as Partial<Draft>),
   });
@@ -180,8 +147,8 @@ export function SettingsPage() {
     toggleAp: (e: React.MouseEvent) => { e.stopPropagation(); if (!lock('approvals.feeWaiver')) setApOpen((o) => !o); },
     aps: WAIVERS.map((w, i) => ({ n: w[1], on: w[0] === draft.waiver, d: 50 + i * 45, pick: () => { set({ waiver: w[0] }); setApOpen(false); } })),
     ticks: Array.from({ length: TICKS }, (_, k) => ({ c: k < (used / 100) * TICKS ? 'on' : '' })),
-    dirtyOn: dirty && !save.isPending ? 'on' : '', clean: !dirty || save.isPending || !canWrite, saving: save.isPending, shakeSave: err._ ? 'shake' : '',
-    discard: () => { setDraft(saved); setErr({}); }, save: doSave, toast: !!toast, toastText: toast,
+    ask: () => setAsking(true), toast: !!toast, toastText: toast,
+    askDialog: asking ? <AskDialog area={TABS[tab]![0]} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Gradeon. You will see the answer here.'); }} /> : null,
   };
   return <SettingsView v={v} />;
 }
@@ -234,5 +201,47 @@ function AuditPanel() {
         ))}
       </div>
     </section>
+  );
+}
+
+/** "Ask Gradeon to change this": the request lands in the console, and the answer shows here. */
+function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => void; onDone: () => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const [message, setMessage] = useState('');
+  const [err, setErr] = useState('');
+  const shake = useShake();
+  const mine = useQuery({ queryKey: ['change-requests'], queryFn: app.api.changeRequests.list });
+  const send = useMutation({
+    mutationFn: () => app.api.changeRequests.create({ area, message: message.trim() }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['change-requests'] }); onDone(); },
+    onError: (e) => { setErr((e as Error).message); shake.hit(); },
+  });
+  return (
+    <Dialog title="Ask Gradeon to change this" tag={{ text: area, tone: 'v' }} onClose={onClose} width={560} shake={shake.cls}>
+      <div className="fld">
+        <label htmlFor="ask-msg">What would you like changed?</label>
+        <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto' }}>
+          <textarea id="ask-msg" value={message} onChange={(e) => { setMessage(e.target.value); setErr(''); }} maxLength={1000} aria-invalid={!!err} placeholder="For example: put Fees in the app’s bottom tabs."
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14.5px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
+        </div>
+        {err && <ErrorLine>{err}</ErrorLine>}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+        <button className="btn" onClick={onClose}>Cancel</button>
+        <button className="btn pri" disabled={send.isPending} onClick={() => { if (message.trim().length < 5) { setErr('Say what you would like changed.'); shake.hit(); } else send.mutate(); }}>{send.isPending ? 'Sending…' : 'Send to Gradeon'}</button>
+      </div>
+      {(mine.data ?? []).length > 0 && (
+        <div style={{ marginTop: 18 }}>
+          <div className="lbl" style={{ marginBottom: 6 }}>Your requests</div>
+          {(mine.data ?? []).slice(0, 5).map((r) => (
+            <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>
+              <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{r.area}</b> · {r.message}{r.answer && <small style={{ display: 'block', color: 'var(--ink3)' }}>Gradeon: {r.answer}</small>}</span>
+              <b><span className={`chip ${r.status === 'open' ? 'a' : r.status === 'done' ? 'g' : 'r'}`}>{r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Done' : 'Declined'}</span></b>
+            </div>
+          ))}
+        </div>
+      )}
+    </Dialog>
   );
 }

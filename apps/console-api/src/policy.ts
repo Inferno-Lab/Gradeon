@@ -4,7 +4,7 @@ import { ApiError } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 
 export const DEFAULT_POLICY: PolicyDoc = {
-  approvals: Object.fromEntries(ACTIONS.map((a) => [a, { needed: a === 'school.erase' || a === 'school.move' || a === 'backup.restore', roles: ['super_admin'] as ConsoleRole[] }])),
+  approvals: Object.fromEntries(ACTIONS.map((a) => [a, { needed: a === 'school.erase' || a === 'school.move' || a === 'backup.restore' || a === 'config.apply', roles: ['super_admin'] as ConsoleRole[] }])),
   waves: [
     { name: 'Internal', matches: 'internal', batch: 1 },
     { name: 'Pilot', matches: 'pilot', batch: 5 },

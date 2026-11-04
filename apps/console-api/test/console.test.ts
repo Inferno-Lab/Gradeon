@@ -224,7 +224,7 @@ describe('support and fleet', () => {
     expect(ok.status).toBe(200);
     const view = await h.s('GET', '/v1/me', { school: 'demoschool', token: ok.json.token });
     expect(view.json.roleNames).toEqual(['Gradeon support']);
-    const write = await h.s('PATCH', '/v1/settings', { school: 'demoschool', token: ok.json.token, body: { changes: { 'school.name': 'Nope' } } });
+    const write = await h.s('POST', '/v1/notices', { school: 'demoschool', token: ok.json.token, body: { title: 'Not from support', body: 'Support sessions are read-only.', audience: 'everyone', publish: false } });
     expect(write.status).toBe(403);
     expect((await h.s('GET', '/v1/me', { school: 'freshschool', token: ok.json.token })).status).toBe(404);
     const audit = (await h.c('GET', '/console/v1/audit', { token: t })).json;

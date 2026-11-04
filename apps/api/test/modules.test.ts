@@ -109,19 +109,15 @@ describe('staff and roles', () => {
     const off = await send('PATCH', `/v1/staff/${pooja.id}`, { status: 'inactive', designation: 'Maths teacher' });
     expect(off.json).toMatchObject({ status: 'inactive', designation: 'Maths teacher' });
   });
-  it('creates a custom role, refuses to give away what the author lacks, and protects the built-in roles', async () => {
-    const made = await send('POST', '/v1/roles', { name: 'Exam cell', description: 'Marks and results', permissions: ['exams.read', 'exams.write', 'students.read'] });
-    expect(made.status).toBe(201);
-    expect(made.json).toMatchObject({ key: 'custom_exam_cell', locked: false, people: 0 });
-    expect((await send('POST', '/v1/roles', { name: 'Exam cell', permissions: [] })).status).toBe(400);
-    const principal = (await get('/v1/roles')).json.find((r: any) => r.key === 'principal');
-    expect(principal.locked).toBe(true);
-    expect((await send('PUT', `/v1/roles/${principal.id}`, { name: 'Principal', permissions: [] })).status).toBe(409);
-    expect((await send('DELETE', '/v1/roles/role_teacher')).status).toBe(409);
-    // A teacher cannot read or create roles that carry permissions they do not hold.
-    const teacher = await h.login('kavita.iyer@greenfield.edu.in');
-    expect((await h.call('POST', '/v1/roles', { token: teacher, body: { name: 'Sneaky', permissions: ['fees.waive'] } })).status).toBe(403);
-    expect((await send('DELETE', `/v1/roles/${made.json.id}`)).status).toBe(204);
+  it('shows the roles Gradeon made, and lets the school put staff in them only while the console allows it', async () => {
+    const roles = (await get('/v1/roles')).json;
+    expect(roles.find((r: any) => r.key === 'principal')).toMatchObject({ locked: true });
+    expect((await send('POST', '/v1/roles', { name: 'Exam cell', permissions: [] })).status).toBe(404);
+    const pooja = (await get('/v1/staff?query=Pooja')).json[0];
+    expect((await send('PATCH', '/v1/staff/' + pooja.id, { roleId: 'role_office' })).status).toBe(200);
+    await h.setSettings({ 'staff.schoolAssignsRoles': false });
+    expect((await send('PATCH', '/v1/staff/' + pooja.id, { roleId: 'role_teacher' })).status).toBe(403);
+    await h.setSettings({ 'staff.schoolAssignsRoles': true });
   }, 30_000);
 });
 
@@ -228,21 +224,19 @@ describe('privacy and templates', () => {
   });
   it('sends school messages with the wording and channels the school chose', async () => {
     const stu = (await get('/v1/students?query=Anika%20Rao&limit=1')).json.items[0];
-    const patched = await send('PATCH', '/v1/settings', { changes: {
+    await h.setSettings({
       'templates.messages': { 'fees.reminder': 'Hello! {student} has a fee waiting. Please pay soon. {school}' },
       'notify.rules': { 'fees.reminder': { push: false, sms: true, email: false } },
-    } });
-    expect(patched.status).toBe(200);
+    });
     const before = Number((await h.registry.query("select count(*) n from sandbox_messages where school_slug = 'greenfield'")).rows[0].n);
     const r = await send('POST', '/v1/fees/reminders', { ids: [stu.id] });
     expect(r.json.sent).toBe(1);
     const rows = (await h.registry.query("select channel, body from sandbox_messages where school_slug = 'greenfield' order by created_at desc limit 1")).rows;
     expect(rows[0]).toMatchObject({ channel: 'sms', body: 'Hello! Anika Rao has a fee waiting. Please pay soon. Greenfield' });
     expect(Number((await h.registry.query("select count(*) n from sandbox_messages where school_slug = 'greenfield'")).rows[0].n)).toBe(before + 1);
-    expect((await send('PATCH', '/v1/settings', { changes: { 'notify.quietFrom': '9pm' } })).status).toBe(400);
   });
   it('puts the app layout and console flags into the config the apps fetch', async () => {
-    await send('PATCH', '/v1/settings', { changes: { 'app.dock': ['home', 'fees', 'nonsense'], 'app.quick': ['payFees'] } });
+    await h.setSettings({ 'app.dock': ['home', 'fees', 'nonsense'], 'app.quick': ['payFees'] });
     const cfg = (await get('/v1/config')).json;
     expect(cfg.app.dock).toEqual(['home', 'fees']);
     expect(cfg.app.quick).toEqual(['payFees']);

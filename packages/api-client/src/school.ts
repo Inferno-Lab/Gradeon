@@ -1,9 +1,9 @@
 import type {
-  DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
-  HomeworkCreate, HomeworkDetail, HomeworkMarks, HomeworkRow, InvoiceListQuery, InvoiceListRow, InvoiceListSummary, ReceiptRow, ReportData, ReportInfo, RoleRow, RoleSave, StaffCreate, StaffPatch, StaffRow,
+  ChangeRequestCreate, ChangeRequestRow, DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
+  HomeworkCreate, HomeworkDetail, HomeworkMarks, HomeworkRow, InvoiceListQuery, InvoiceListRow, InvoiceListSummary, ReceiptRow, ReportData, ReportInfo, RoleRow, StaffCreate, StaffPatch, StaffRow,
   ThreadCreate, ThreadDetail, ThreadPatch, ThreadReply, ThreadRow,
   AttendanceDayPut, ApprovalDecision, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeSummary, ImportResult, InvoiceRow,
-  LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsDoc, SettingsPatch, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
+  LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
 } from '@gradeon/contracts';
 import type { Http, Query } from './http';
@@ -109,9 +109,6 @@ export function schoolApi(h: Http) {
     },
     roles: {
       list: () => h.get<RoleRow[]>('/v1/roles'),
-      create: (b: RoleSave) => h.post<RoleRow>('/v1/roles', b),
-      save: (id: string, b: RoleSave) => h.put<RoleRow>(`/v1/roles/${id}`, b),
-      remove: (id: string) => h.del<void>(`/v1/roles/${id}`),
     },
     invoices: {
       list: (q: Partial<InvoiceListQuery>) => h.get<Paged<InvoiceListRow> & { summary: InvoiceListSummary }>('/v1/fees/invoice-list', q as Query),
@@ -140,9 +137,13 @@ export function schoolApi(h: Http) {
       create: (b: DataRequestCreate) => h.post<DataRequestRow>('/v1/privacy/requests', b),
       decide: (id: string, b: DataRequestDecision) => h.post<DataRequestRow>(`/v1/privacy/requests/${id}/decision`, b),
     },
+    /** The school asks Gradeon to change its setup. */
+    changeRequests: {
+      list: () => h.get<ChangeRequestRow[]>('/v1/change-requests'),
+      create: (b: ChangeRequestCreate) => h.post<ChangeRequestRow[]>('/v1/change-requests', b),
+    },
     settings: {
       get: () => h.get<SettingsResponse>('/v1/settings'),
-      patch: (b: SettingsPatch) => h.patch<SettingsDoc>('/v1/settings', b),
       audit: () => h.get<AuditRow[]>('/v1/settings/audit'),
     },
   };

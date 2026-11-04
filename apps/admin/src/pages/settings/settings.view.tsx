@@ -13,18 +13,7 @@ export function SettingsView({ v }: { v: any }) {
       overlays={
         <>
           {v.palette}
-          <div className={`save ${v.dirtyOn ?? ""}`} role="region" aria-label="Unsaved changes">
-            <span
-              style={{ width: "9px", height: "9px", borderRadius: "50%", background: "var(--a)", boxShadow: "none" } as CSSProperties}
-            ></span>
-            You have unsaved changes
-            <button className="btn sm ghost" style={{ color: "#fff" } as CSSProperties} onClick={v.discard}>
-              Discard
-            </button>
-            <button className="btn sm wht" onClick={v.save}>
-              Save
-            </button>
-          </div>
+          {v.askDialog}
           {v.toast && (
             <>
               <div className="toast toast" role="status">
@@ -47,17 +36,12 @@ export function SettingsView({ v }: { v: any }) {
       <main className={`mn ${v.shk}`}>
         <header className="hd rise">
           <div>
-            <h1>Settings</h1>
-            <p>How {v.shortName} looks and behaves, for staff, families and students.</p>
+            <h1>School setup</h1>
+            <p>How Gradeon has set up {v.shortName} for staff, families and students.</p>
           </div>
           <span className="grow"></span>
-          <button className={`btn v ${v.shakeSave}`} disabled={v.clean} onClick={v.save}>
-            {v.saving && (
-              <>
-                <span className="spin" aria-hidden="true"></span>
-              </>
-            )}
-            Save changes
+          <button className="btn v" onClick={v.ask}>
+            Ask Gradeon to change this
           </button>
         </header>
         {v.err._ && (

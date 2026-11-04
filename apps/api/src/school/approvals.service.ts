@@ -77,6 +77,13 @@ export class ApprovalsService {
     const r = rows[0];
     if (!r) throw notFound('That request');
     if (!NEEDS[r.kind].every((p) => user.permissions.includes(p))) throw forbidden('You are not allowed to decide this kind of request.');
+    if (r.kind === 'fee_waiver' && body.decision !== 'undo') {
+      // Who may approve a waiver is the school's rule, set by Gradeon in the console.
+      const rule = await this.settings.value<string>(t, 'approvals.feeWaiver', 'principal');
+      const keys = (await t.pool.query<{ key: string }>('select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = $1', [user.id])).rows.map((x) => x.key);
+      const allowed = rule === 'anyone' || keys.includes('principal') || (rule === 'office' && keys.includes('office'));
+      if (!allowed) throw forbidden(rule === 'office' ? 'Only the principal or the office can decide fee waivers at your school.' : 'Only the principal can decide fee waivers at your school.');
+    }
     if (body.decision === 'undo' ? r.status === 'pending' : r.status !== 'pending') throw new ApiError('conflict', body.decision === 'undo' ? 'That request is still open.' : 'Someone has already decided this request.');
     const next = body.decision === 'approve' ? 'approved' : body.decision === 'reject' ? 'rejected' : 'pending';
     const client = await t.pool.connect();

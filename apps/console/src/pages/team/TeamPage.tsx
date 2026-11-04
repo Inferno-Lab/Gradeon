@@ -9,7 +9,7 @@ import { initials, ago } from '../../app/format';
 import { roleLabel } from '../../app/useChrome';
 
 const ROLE_HELP: Record<ConsoleRole, string> = {
-  super_admin: 'Everything, including team and policy', support: 'Look inside schools, read-only', release_manager: 'Releases, migrations and builds',
+  super_admin: 'Everything, including team and policy', implementation: 'Set schools up: configuration, roles and requests', support: 'Look inside schools, read-only', release_manager: 'Releases, migrations and builds',
   finance: 'Billing and invoices', compliance: 'Erasure and data requests', auditor: 'Read everything, change nothing',
 };
 

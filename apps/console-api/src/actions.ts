@@ -71,6 +71,13 @@ export class Actions {
     @Inject(ENV) private readonly env: Env,
   ) {}
 
+  /** Actions owned by other services (config.apply), registered at start-up so this file does not import them. */
+  private readonly handlers = new Map<string, (schoolId: string, params: Record<string, unknown>, by: string) => Promise<string>>();
+
+  handle(action: string, fn: (schoolId: string, params: Record<string, unknown>, by: string) => Promise<string>): void {
+    this.handlers.set(action, fn);
+  }
+
   private row(r: ActionRecord): ActionRow {
     return {
       id: r.id, action: r.action as ActionRow['action'], schoolId: r.schoolId, schoolName: r.schoolName, status: r.status as ActionRow['status'], requestedBy: r.requestedBy, approvedBy: r.approvedBy,
@@ -128,7 +135,7 @@ export class Actions {
   private describe(action: ActionRequest['action'], school: string): string {
     return ({
       'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
-      'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'school.move': `Move ${school} to another cell`,
+      'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'config.apply': `Change risky settings for ${school}`, 'school.move': `Move ${school} to another cell`,
     } as const)[action];
   }
 
@@ -221,8 +228,11 @@ export class Actions {
       case 'backup.restore': {
         return this.backups.restore(school.id, String(params.backupId ?? ''), a.requestedBy);
       }
-      default:
-        throw new Error(`Unknown action ${a.action}.`);
+      default: {
+        const handler = this.handlers.get(a.action);
+        if (!handler) throw new Error(`Unknown action ${a.action}.`);
+        return handler(school.id, params, a.requestedBy);
+      }
     }
   }
 

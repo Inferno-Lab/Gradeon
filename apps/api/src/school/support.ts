@@ -1,9 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
-import { resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc, type SettingsPatch } from '@gradeon/contracts';
+import { resolveConfig } from '@gradeon/config-engine';
+import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc } from '@gradeon/contracts';
 import type { Registry } from '@gradeon/tenancy';
-import { ApiError } from '@gradeon/nest-kit';
 import { REGISTRY, type TenantCtx } from '../tenancy/tenant.js';
 
 @Injectable()
@@ -26,7 +25,7 @@ export class AuditService {
 export class SettingsService {
   private readonly cache = new Map<string, { at: number; doc: SettingsDoc }>();
 
-  constructor(private readonly audit: AuditService) {}
+  // Read-only here: only the console writes a school's settings.
 
   async doc(t: TenantCtx): Promise<SettingsDoc> {
     const hit = this.cache.get(t.info.slug);
@@ -49,38 +48,6 @@ export class SettingsService {
   async value<T>(t: TenantCtx, key: string, fallback: T): Promise<T> {
     const v = (await this.doc(t)).values[key];
     return (v === undefined ? fallback : v) as T;
-  }
-
-  async patch(t: TenantCtx, user: { id: string; name: string }, patch: SettingsPatch): Promise<SettingsDoc> {
-    const current = await this.doc(t);
-    if (patch.expectedVersion !== undefined && patch.expectedVersion !== current.version) {
-      throw new ApiError('conflict', 'Someone else changed these settings a moment ago. Reload to see their changes.');
-    }
-    const checked = validateSettingsChanges(patch.changes, current.locked);
-    if (!checked.ok) {
-      const fields = Object.fromEntries(checked.problems.map((p) => [p.key, p.message]));
-      throw new ApiError('validation', checked.problems[0]!.message, { fields });
-    }
-    const client = await t.pool.connect();
-    try {
-      await client.query('begin');
-      for (const [k, v] of Object.entries(checked.values)) {
-        await client.query(
-          'insert into settings (key, value, updated_by, updated_at) values ($1,$2,$3,now()) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()',
-          [k, JSON.stringify(v), user.id],
-        );
-      }
-      await client.query("update meta set value = to_jsonb((value)::int + 1) where key = 'settings.version'");
-      await client.query('commit');
-    } catch (err) {
-      await client.query('rollback').catch(() => undefined);
-      throw err;
-    } finally {
-      client.release();
-    }
-    this.cache.delete(t.info.slug);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'settings.changed', entity: 'settings', detail: { keys: Object.keys(checked.values).join(', ') } });
-    return this.doc(t);
   }
 
   async effective(t: TenantCtx, permissions?: string[]): Promise<EffectiveConfig> {

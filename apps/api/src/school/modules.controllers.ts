@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
-  DataRequestCreate, DataRequestDecision, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EventSave, ExamCreate, ExamMarksPut, HomeworkCreate, HomeworkMarks, InvoiceListQuery, RoleSave, StaffCreate, StaffPatch,
+  DataRequestCreate, DataRequestDecision, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EventSave, ExamCreate, ExamMarksPut, HomeworkCreate, HomeworkMarks, InvoiceListQuery, StaffCreate, StaffPatch,
   ThreadCreate, ThreadPatch, ThreadReply,
   type DataRequestRow, type EnquiryRow, type EventRow, type ExamMarksView, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
   type ReceiptRow, type ReportData, type ReportInfo, type RoleRow, type StaffRow, type StudentDetail, type ThreadDetail, type ThreadRow,
@@ -130,20 +130,7 @@ export class PeopleController {
     return this.people.roles(t);
   }
 
-  @Post('roles') @Require('roles.manage')
-  createRole(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(RoleSave)) b: RoleSave): Promise<RoleRow> {
-    return this.people.saveRole(t, u, null, b);
-  }
-
-  @Put('roles/:id') @Require('roles.manage')
-  saveRole(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(RoleSave)) b: RoleSave): Promise<RoleRow> {
-    return this.people.saveRole(t, u, id, b);
-  }
-
-  @Delete('roles/:id') @HttpCode(204) @Require('roles.manage')
-  async deleteRole(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<void> {
-    await this.people.deleteRole(t, u, id);
-  }
+  // Roles are made and changed only from the console (Gradeon); the school sees them and, if allowed, puts its staff into them.
 }
 
 @Controller('v1')
@@ -225,12 +212,12 @@ export class OfficeController {
     return this.office.dataRequests(t);
   }
 
-  @Post('privacy/requests') @Require('settings.write')
+  @Post('privacy/requests') @Require('privacy.manage')
   createDataRequest(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(DataRequestCreate)) b: DataRequestCreate): Promise<DataRequestRow> {
     return this.office.createDataRequest(t, u, b);
   }
 
-  @Post('privacy/requests/:id/decision') @HttpCode(200) @Require('settings.write')
+  @Post('privacy/requests/:id/decision') @HttpCode(200) @Require('privacy.manage')
   decideDataRequest(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(DataRequestDecision)) b: DataRequestDecision): Promise<DataRequestRow> {
     return this.office.decideDataRequest(t, u, id, b);
   }

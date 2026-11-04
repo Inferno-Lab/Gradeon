@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
 import {
-  PERMISSIONS, ROLE_TEMPLATES, initials,
-  type EnquiryCreate, type EnquiryEnrol, type EnquiryPatch, type EnquiryRow, type EnquiryStage, type RoleRow, type RoleSave, type StaffCreate, type StaffPatch, type StaffRow, type StudentDetail,
+  PERMISSIONS, initials,
+  type EnquiryCreate, type EnquiryEnrol, type EnquiryPatch, type EnquiryRow, type EnquiryStage, type RoleRow, type StaffCreate, type StaffPatch, type StaffRow, type StudentDetail,
 } from '@gradeon/contracts';
 import { hashPassword, randomToken } from '@gradeon/security';
 import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuthService } from '../auth/auth.service.js';
 import { StudentsService } from './students.service.js';
-import { AuditService, Messenger } from './support.js';
+import { AuditService, Messenger, SettingsService } from './support.js';
 
 type User = { id: string; name: string };
 
@@ -25,7 +25,13 @@ export class PeopleService {
     private readonly messenger: Messenger,
     private readonly students: StudentsService,
     private readonly auth: AuthService,
+    private readonly settings: SettingsService,
   ) {}
+
+  /** The console decides whether the school may put its own staff into roles (the roles themselves are always Gradeon's). */
+  private async schoolAssignsRoles(t: TenantCtx): Promise<boolean> {
+    return (await this.settings.value<boolean>(t, 'staff.schoolAssignsRoles', true)) !== false;
+  }
 
   // Staff
 
@@ -51,7 +57,9 @@ export class PeopleService {
   }
 
   async createStaff(t: TenantCtx, user: User, body: StaffCreate): Promise<StaffRow> {
-    const role = (await t.pool.query<{ id: string; name: string }>('select id, name from roles where id = $1', [body.roleId])).rows[0];
+    // When only Gradeon assigns roles, a new person starts with none (and sees nothing) until Gradeon gives them one.
+    const assigns = await this.schoolAssignsRoles(t);
+    const role = assigns ? (await t.pool.query<{ id: string; name: string }>('select id, name from roles where id = $1', [body.roleId])).rows[0] : { id: '', name: 'none yet' };
     if (!role) throw new ApiError('validation', 'Choose a role from the list.', { fields: { roleId: 'Choose a role from the list.' } });
     const dup = await t.pool.query('select 1 from users where lower(email) = $1', [body.email]);
     if (dup.rowCount) throw new ApiError('validation', 'Someone already uses that email.', { fields: { email: 'Someone already uses that email.' } });
@@ -64,7 +72,7 @@ export class PeopleService {
       await client.query("insert into users (id, kind, name, email, phone, password_hash) values ($1,'staff',$2,$3,$4,$5)", [id, body.name, body.email, body.phone, await hashPassword(temp)]);
       await client.query('insert into staff (user_id, designation, department, joined_on) values ($1,$2,$3,current_date)', [id, body.designation, body.department ?? null]);
       for (const s of known) await client.query('insert into staff_subjects (user_id, subject_id) values ($1,$2)', [id, s]);
-      await client.query('insert into user_roles (user_id, role_id) values ($1,$2)', [id, role.id]);
+      if (role.id) await client.query('insert into user_roles (user_id, role_id) values ($1,$2)', [id, role.id]);
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -83,6 +91,7 @@ export class PeopleService {
     if (me && (body.roleId || body.status === 'inactive')) throw forbidden('You cannot change your own role or switch yourself off. Ask another administrator.');
     const cur = (await t.pool.query<{ designation: string }>('select designation from staff where user_id = $1', [id])).rows[0];
     if (!cur) throw notFound('That person');
+    if (body.roleId && !(await this.schoolAssignsRoles(t))) throw forbidden('Gradeon assigns roles at your school. Ask Gradeon to change this person’s role.');
     const client = await t.pool.connect();
     try {
       await client.query('begin');
@@ -178,36 +187,5 @@ export class PeopleService {
       'select r.id, r.key, r.name, r.description, r.permissions, r.locked, (select count(*) from user_roles ur where ur.role_id = r.id) people from roles r order by r.locked desc, r.name');
     const known = new Set<string>(PERMISSIONS);
     return rows.map((r) => ({ id: r.id, key: r.key, name: r.name, description: r.description, permissions: r.permissions.filter((p) => known.has(p)) as RoleRow['permissions'], locked: r.locked, people: Number(r.people) }));
-  }
-
-  async saveRole(t: TenantCtx, user: User & { permissions: string[] }, id: string | null, body: RoleSave): Promise<RoleRow> {
-    // Nobody can hand out a permission they do not hold themselves.
-    const missing = body.permissions.filter((p) => !user.permissions.includes(p));
-    if (missing.length) throw forbidden(`You cannot give a role something you do not have yourself (${missing[0]}).`);
-    let key: string;
-    if (id) {
-      const cur = (await t.pool.query<{ key: string; locked: boolean }>('select key, locked from roles where id = $1', [id])).rows[0];
-      if (!cur) throw notFound('That role');
-      if (cur.locked) throw new ApiError('conflict', 'The principal role always has everything and cannot be changed.');
-      key = cur.key;
-      await t.pool.query('update roles set name = $2, description = $3, permissions = $4 where id = $1', [id, body.name, body.description, JSON.stringify(body.permissions)]);
-    } else {
-      key = `custom_${body.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
-      id = `role_${key}`;
-      if ((await t.pool.query('select 1 from roles where id = $1 or lower(name) = lower($2)', [id, body.name])).rowCount) throw new ApiError('validation', 'There is already a role with that name.', { fields: { name: 'There is already a role with that name.' } });
-      await t.pool.query('insert into roles (id, key, name, description, permissions, locked) values ($1,$2,$3,$4,$5,false)', [id, key, body.name, body.description, JSON.stringify(body.permissions)]);
-    }
-    await this.auth.bumpVersionForRole(t, id);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'role.saved', entity: 'role', entityId: id, detail: { name: body.name, permissions: body.permissions.length } });
-    return (await this.roles(t)).find((r) => r.id === id)!;
-  }
-
-  async deleteRole(t: TenantCtx, user: User, id: string): Promise<void> {
-    const r = (await this.roles(t)).find((x) => x.id === id);
-    if (!r) throw notFound('That role');
-    if (r.locked || ROLE_TEMPLATES.some((x) => x.key === r.key)) throw new ApiError('conflict', 'The roles every school starts with cannot be deleted. Change what they allow instead.');
-    if (r.people) throw new ApiError('conflict', `${r.people} ${r.people === 1 ? 'person has' : 'people have'} this role. Move them to another role first.`);
-    await t.pool.query('delete from roles where id = $1', [id]);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'role.removed', entity: 'role', entityId: id, detail: { name: r.name } });
   }
 }

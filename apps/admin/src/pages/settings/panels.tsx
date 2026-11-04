@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
-import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, type DataRequestRow, type Permission, type RoleRow, type SettingsResponse } from '@gradeon/contracts';
+import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, type DataRequestRow, type SettingsResponse } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Ico, problem } from '../../app/kit';
@@ -13,37 +12,21 @@ interface PanelProps { doc: SettingsResponse; say: Say }
 const dflt = (k: string): unknown => (SchoolSettingsSchema.shape as Record<string, { safeParse: (v: unknown) => { data?: unknown } }>)[k]!.safeParse(undefined).data;
 
 /** A few settings edited together: shows the saved value or the platform default, keeps edits until saved, and saves only what changed. */
-function useKeys(doc: SettingsResponse, keys: string[], say: Say) {
-  const app = useApp();
-  const qc = useQueryClient();
+function useKeys(doc: SettingsResponse, keys: string[], _say: Say) {
   const [edits, setEdits] = useState<Record<string, unknown>>({});
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
-  const canWrite = app.user.permissions.includes('settings.write');
+  // Gradeon sets the school up from the console; here every setting is shown, none is changed.
+  const canWrite = false;
   const saved = (k: string): unknown => (doc.values[k] !== undefined ? doc.values[k] : dflt(k));
   const get = <T,>(k: string): T => (k in edits ? edits[k] : saved(k)) as T;
   const changed = keys.filter((k) => k in edits && JSON.stringify(edits[k]) !== JSON.stringify(saved(k)));
-  const save = useMutation({
-    mutationFn: () => app.api.settings.patch({ expectedVersion: doc.version, changes: Object.fromEntries(changed.map((k) => [k, edits[k]])) }),
-    onSuccess: () => { setEdits({}); setErr({}); void qc.invalidateQueries({ predicate: (q) => ['settings', 'shell', 'config'].includes(String(q.queryKey[0])) }); say('Saved. The app picks this up within a minute.'); },
-    onError: (e) => { setErr(e instanceof HttpError && e.code === 'conflict' ? { _: 'Someone else changed settings a moment ago. Reload to see their changes.' } : problem(e)); shake.hit(); },
-  });
   const locked = (k: string) => !canWrite || doc.locked.includes(k);
-  return { get, set: (k: string, v: unknown) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }, changed, save, err, shake, canWrite, locked, discard: () => { setEdits({}); setErr({}); } };
+  return { get, set: (k: string, v: unknown) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }, changed, err, shake, canWrite, locked, discard: () => { setEdits({}); setErr({}); } };
 }
 
-function SaveRow({ s }: { s: ReturnType<typeof useKeys> }) {
-  if (!s.canWrite) return <div className="help" style={{ marginTop: 16 }}>You can look at these settings but not change them. Ask the principal.</div>;
-  return (
-    <div className={s.shake.cls} style={{ marginTop: 18 }}>
-      {s.err._ && <div className="emsg" role="alert" style={{ marginBottom: 10 }}>{s.err._}</div>}
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
-        {s.changed.length > 0 && <span className="help" style={{ marginRight: 'auto' }}>{s.changed.length} {s.changed.length === 1 ? 'change' : 'changes'} not saved yet.</span>}
-        <button className="btn" disabled={!s.changed.length || s.save.isPending} onClick={s.discard}>Discard</button>
-        <button className="btn pri" disabled={!s.changed.length || s.save.isPending} onClick={() => s.save.mutate()}>{s.save.isPending ? 'Saving…' : 'Save'}</button>
-      </div>
-    </div>
-  );
+function SaveRow(_: { s: ReturnType<typeof useKeys> }) {
+  return <div className="help" style={{ marginTop: 16 }}>Gradeon sets this up for your school. To change something, use “Ask Gradeon to change this” at the top.</div>;
 }
 
 const Sw = ({ on, label, disabled, onClick }: { on: boolean; label: string; disabled?: boolean; onClick: () => void }) => <button className={`sw ${on ? 'on' : ''}`} role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={onClick}></button>;
@@ -51,10 +34,9 @@ const Head = ({ title, sub }: { title: string; sub: string }) => <h2 className="
 
 // Roles and access
 
-export function RolesPanel({ say }: Pick<PanelProps, 'say'>) {
+export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const app = useApp();
-  const qc = useQueryClient();
-  const canManage = app.user.permissions.includes('roles.manage');
+  const canManage = false;
   const roles = useQuery({ queryKey: ['roles'], queryFn: app.api.roles.list });
   const [sel, setSel] = useState<string | 'new'>('');
   const [perms, setPerms] = useState<Set<string>>(new Set());
@@ -69,20 +51,11 @@ export function RolesPanel({ say }: Pick<PanelProps, 'say'>) {
   useEffect(() => { if (cur) { setPerms(new Set(cur.permissions)); setName(cur.name); setDesc(cur.description); setErr({}); setConfirm(false); } }, [cur?.id, roles.dataUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
   const groups = useMemo(() => [...new Set(PERMISSION_CATALOG.map((p) => p.area))].map((a) => ({ area: a, items: PERMISSION_CATALOG.filter((p) => p.area === a) })), []);
   const readOnly = !canManage || (cur?.locked ?? false);
-  const done = (r: RoleRow, m: string) => { void qc.invalidateQueries({ queryKey: ['roles'] }); void qc.invalidateQueries({ queryKey: ['staff'] }); setSel(r.id); say(m); };
-  const save = useMutation({
-    mutationFn: () => { const b = { name: name.trim(), description: desc.trim(), permissions: [...perms] as Permission[] }; return sel === 'new' ? app.api.roles.create(b) : app.api.roles.save(sel, b); },
-    onSuccess: (r) => done(r, sel === 'new' ? `${r.name} was created.` : `${r.name} was saved. People get the change the next time they sign in.`),
-    onError: (e) => { setErr(problem(e)); shake.hit(); },
-  });
-  const remove = useMutation({ mutationFn: () => app.api.roles.remove(sel), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['roles'] }); setSel(''); say('Role deleted.'); }, onError: (e) => { setConfirm(false); setErr(problem(e)); shake.hit(); } });
-  const startNew = () => { setSel('new'); setPerms(new Set(['students.read'])); setName(''); setDesc(''); setErr({}); };
-  const dirty = sel === 'new' || (cur && (name !== cur.name || desc !== cur.description || [...perms].sort().join() !== [...cur.permissions].sort().join()));
   if (roles.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 26 }} />;
   if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   return (
     <section className="rise">
-      <Head title="Roles and access" sub="Decide what each kind of person can see and do. Changes reach people the next time they sign in." />
+      <Head title="Roles and access" sub="What each kind of person can see and do. Gradeon makes and changes roles for your school." />
       <div className="rls">
         <div className="rlc" role="tablist" aria-label="Roles">
           {list.map((r) => (
@@ -91,7 +64,6 @@ export function RolesPanel({ say }: Pick<PanelProps, 'say'>) {
             </button>
           ))}
           {sel === 'new' && <button role="tab" aria-selected className="rlb on"><b>{name.trim() || 'New role'}</b><small>Not saved yet</small></button>}
-          {canManage && sel !== 'new' && <button className="rlb add" onClick={startNew}><Ico d="M12 5v14M5 12h14" />New role</button>}
         </div>
         <div className={`rlm ${shake.cls}`}>
           {(cur || sel === 'new') && <>
@@ -114,18 +86,7 @@ export function RolesPanel({ say }: Pick<PanelProps, 'say'>) {
               ))}
             </div>
             {err._ && <div className="emsg" role="alert" style={{ marginTop: 12 }}>{err._}</div>}
-            {!readOnly && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
-                {cur && cur.key.startsWith('custom_') && cur.people === 0 ? (confirm
-                  ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Delete this role?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, delete</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
-                  : <button className="btn dng" onClick={() => setConfirm(true)}>Delete role</button>) : <span className="help">{cur && cur.people ? `${cur.people} ${cur.people === 1 ? 'person has' : 'people have'} this role.` : ''}</span>}
-                <span style={{ display: 'flex', gap: 10 }}>
-                  {sel === 'new' && <button className="btn" onClick={() => setSel(list[0]?.id ?? '')}>Cancel</button>}
-                  <button className="btn pri" disabled={!dirty || save.isPending} onClick={() => { if (name.trim().length < 3) { setErr({ name: 'Name the role.' }); shake.hit(); } else save.mutate(); }}>{save.isPending ? 'Saving…' : 'Save role'}</button>
-                </span>
-              </div>
-            )}
-            {!canManage && <div className="help" style={{ marginTop: 14 }}>You can look at roles but not change them. Ask the principal.</div>}
+            {!canManage && <div className="help" style={{ marginTop: 14 }}>Gradeon makes and changes roles. To change one, use “Ask Gradeon to change this” at the top.</div>}
           </>}
         </div>
       </div>

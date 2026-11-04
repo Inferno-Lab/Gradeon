@@ -178,7 +178,7 @@ describe('access', () => {
   it('stops a teacher from opening fees or settings', async () => {
     const tt = await h.login('sunita.desai@greenfield.edu.in');
     expect((await h.call('GET', '/v1/fees/summary', { token: tt })).status).toBe(403);
-    expect((await h.call('PATCH', '/v1/settings', { token: tt, body: { changes: { 'school.name': 'Hacked school' } } })).status).toBe(403);
+    expect((await h.call('PATCH', '/v1/settings', { token: tt, body: { changes: { 'school.name': 'Hacked school' } } })).status).toBe(404);
     expect((await h.call('GET', '/v1/students?limit=2', { token: tt })).status).toBe(200);
   });
   it('closes modules the plan does not include', async () => {
@@ -291,26 +291,27 @@ describe('timetable', () => {
 });
 
 describe('settings', () => {
-  it('saves changes, bumps the version and refuses a stale write', async () => {
+  it('shows the school its setup, and gives the school no way to change it (only the console can)', async () => {
     const before = (await h.call('GET', '/v1/settings', { token })).json;
     expect(before.usage.students).toBeGreaterThan(0);
     expect(before.usage.studentLimit).toBeGreaterThanOrEqual(before.usage.students);
-    const ok = await h.call('PATCH', '/v1/settings', { token, body: { expectedVersion: before.version, changes: { 'fees.lateFeePct': 2, 'brand.color': '#0EA5E9' } } });
-    expect(ok.status).toBe(200);
-    expect(ok.json.version).toBe(before.version + 1);
-    const stale = await h.call('PATCH', '/v1/settings', { token, body: { expectedVersion: before.version, changes: { 'fees.lateFeePct': 3 } } });
-    expect(stale.status).toBe(409);
-    const bad = await h.call('PATCH', '/v1/settings', { token, body: { changes: { 'brand.color': 'blue' } } });
-    expect(bad.status).toBe(400);
-    expect(bad.json.fields['brand.color']).toBeDefined();
-    const cfg = (await h.call('GET', '/v1/config', { token })).json;
-    expect(cfg.school.color).toBe('#0EA5E9');
+    expect((await h.call('PATCH', '/v1/settings', { token, body: { changes: { 'school.name': 'Changed by the school' } } })).status).toBe(404);
+    expect((await h.call('POST', '/v1/roles', { token, body: { name: 'Mine', permissions: [] } })).status).toBe(404);
+    expect((await h.call('PUT', '/v1/roles/role_teacher', { token, body: { name: 'Mine', permissions: [] } })).status).toBe(404);
+    expect((await h.call('GET', '/v1/me', { token })).json.permissions).not.toContain('settings.write');
   });
-  it('does not let a school turn on a module outside its plan', async () => {
-    const r = await h.call('PATCH', '/v1/settings', { token, body: { changes: { 'modules.enabled': ['people', 'attendance'] } } });
-    expect(r.status).toBe(200);
+  it('follows what the console sets: colour, and modules only within the plan', async () => {
+    await h.setSettings({ 'brand.color': '#0E7490', 'modules.enabled': ['people', 'attendance'] });
     const cfg = (await h.call('GET', '/v1/config', { token })).json;
+    expect(cfg.school.color).toBe('#0E7490');
     expect(cfg.modules).toEqual(['people', 'attendance']);
     expect(cfg.nav.map((n: any) => n.label)).not.toContain('Fees');
+    await h.setSettings({ 'modules.enabled': [] });
+  }, 30_000);
+  it('lets the school ask Gradeon for a change', async () => {
+    const r = await h.call('POST', '/v1/change-requests', { token, body: { area: 'App layout', message: 'Please put Fees in the bottom tabs.' } });
+    expect(r.status).toBe(201);
+    expect(r.json[0]).toMatchObject({ area: 'App layout', status: 'open', requestedBy: 'Neha Menon' });
+    expect((await h.call('POST', '/v1/change-requests', { token, body: { area: 'x', message: 'no' } })).status).toBe(400);
   });
 });
