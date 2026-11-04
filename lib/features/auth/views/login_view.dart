@@ -131,22 +131,33 @@ class _PasswordScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 26),
-                    Rise(
-                      index: 5,
-                      child: Row(
-                        children: [
-                          const Expanded(child: Hr()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Overline('auth.or_demo'.tr),
-                          ),
-                          const Expanded(child: Hr()),
-                        ],
-                      ),
+                    // Demo cards only where there is something to demo: sample content or a demo school.
+                    Obx(
+                      () => !AppConfig.demoSchool.value
+                          ? const SizedBox.shrink()
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 26),
+                                Rise(
+                                  index: 5,
+                                  child: Row(
+                                    children: [
+                                      const Expanded(child: Hr()),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                        child: Overline('auth.or_demo'.tr),
+                                      ),
+                                      const Expanded(child: Hr()),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Rise(index: 6, child: _DemoCard(controller: controller)),
+                              ],
+                            ),
                     ),
-                    const SizedBox(height: 14),
-                    Rise(index: 6, child: _DemoCard(controller: controller)),
                     const SizedBox(height: 30),
                     Center(
                       child: GestureDetector(

@@ -24,6 +24,7 @@ class SchoolProfileService {
       final tagline = json['tagline'];
       if (name is String && name.trim().isNotEmpty) AppConfig.schoolName = name.trim();
       if (tagline is String && tagline.trim().isNotEmpty) AppConfig.schoolTagline = tagline.trim();
+      AppConfig.demoSchool.value = json['demoMode'] == true;
     } on Object {
       // shortcut: any failure keeps the built-in values, retrying at the next start; add a cached copy when offline use matters.
     } finally {
