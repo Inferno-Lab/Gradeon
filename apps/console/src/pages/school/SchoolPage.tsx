@@ -274,8 +274,8 @@ function SupportDialog({ school, onClose, onStarted }: { school: SchoolDetail; o
     start.mutate();
   };
   return (
-    <Dialog title={`Look inside ${school.shortName}?`} tag={{ text: 'Read-only · one hour', tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
-      <p>You will see the school’s admin exactly as its staff do, but nothing can be changed. The session ends by itself after an hour.</p>
+    <Dialog title={`Look inside ${school.shortName}?`} tag={{ text: 'Read-only · 30 minutes', tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
+      <p>You will see the school’s admin exactly as its staff do, but nothing can be changed. The session ends by itself after 30 minutes.</p>
       <div className="fld">
         <label htmlFor="sup-r">Why do you need to look?</label>
         <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto' }}>
