@@ -18,7 +18,7 @@ let passed = 0;
 async function flow(name, ctxOpts, fn) {
   if (process.env.ONLY && !name.includes(process.env.ONLY)) return;
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', ...ctxOpts.context });
-  if (ctxOpts.storage) await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ctxOpts.storage);
+  if (ctxOpts.storage) await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ctxOpts.storage); if (ctxOpts.storage?.[2]) await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${ctxOpts.storage[2]}` });
   const page = await ctx.newPage();
   const seen = [];
   page.on('pageerror', (e) => seen.push(`pageerror ${e.message}`));
@@ -47,18 +47,18 @@ const expectVisible = async (loc, what, timeout = 8000) => { await loc.first().w
 const h = { 'x-school': slug };
 const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
 const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-const adminStore = [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+const adminStore = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
 const ca = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
 const ct = await post('/console/v1/auth/verify', { challengeId: ca.challenge.challengeId, code: '424242' });
-const consoleStore = ['gradeon.console', JSON.stringify({ accessToken: ct.accessToken, refreshToken: ct.refreshToken, user: ct.user })];
+const consoleStore = ['gradeon.console', JSON.stringify({ user: ct.user }), ct.accessToken];
 const school = (await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${ct.accessToken}` } })).json()).find((s) => s.slug === slug);
 
 // ── admin ────────────────────────────────────────────────────────────────
 await flow('admin: wrong password shows an error, then the demo code signs in', {}, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: /^Sign in/ }).click();
-  await expectVisible(p.getByText('Enter your school email to continue').or(p.getByText('Enter your password to continue')), 'an empty-form error');
-  await p.getByLabel('Work email').fill('neha.menon@greenfield.edu.in');
+  await expectVisible(p.getByText('Enter your email or phone number to continue').or(p.getByText('Enter your password to continue')), 'an empty-form error');
+  await p.getByLabel('Email or phone number').fill('neha.menon@greenfield.edu.in');
   await p.locator('#lg-pw').fill('wrong-password');
   await p.getByRole('button', { name: /^Sign in/ }).click();
   await expectVisible(p.getByRole('alert'), 'the wrong-password message');
@@ -202,7 +202,7 @@ await flow('admin: search opens on every page and the menu collapses', { storage
 // Sign-out revokes its session on the server, so this flow gets a session of its own and the flows after it keep theirs.
 const so = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
 const st = await post('/v1/auth/verify', { challengeId: so.challenge.challengeId, code: '424242' }, h);
-const signOutStore = [adminStore[0], JSON.stringify({ accessToken: st.accessToken, refreshToken: st.refreshToken, user: st.user })];
+const signOutStore = [adminStore[0], JSON.stringify({ user: st.user }), st.accessToken];
 await flow('admin: sign out returns to the sign-in page', { storage: signOutStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/`, { waitUntil: 'networkidle' });
   await p.locator('.mebtn').click();

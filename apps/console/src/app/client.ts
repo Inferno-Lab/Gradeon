@@ -20,12 +20,9 @@ export const session = {
       else { localStorage.removeItem(KEY); access = null; }
     } catch { /* storage can be blocked */ }
   },
+  /** In memory only: a reload gets a new one from the httpOnly refresh cookie. */
   access(): string | null {
-    if (access) return access;
-    try {
-      const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as { accessToken?: string } | null;
-      return stored?.accessToken ?? null;
-    } catch { return null; }
+    return access;
   },
   setAccess(token: string | null): void {
     access = token;
