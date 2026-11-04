@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main, 'feat/**', 'redesign/**']
+    branches: [main, 'feat/**', 'fix/**', 'chore/**', 'redesign/**']
   pull_request:
 
 concurrency:
