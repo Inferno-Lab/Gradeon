@@ -3,7 +3,7 @@ import { EmptyCard, tintFor } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
-import { initials, statusOf } from '../../app/format';
+import { ago, initials, statusOf } from '../../app/format';
 
 export function HealthPage() {
   const app = useApp();
@@ -11,6 +11,7 @@ export function HealthPage() {
   const { toast, say } = useToast();
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => app.api.schools(), refetchInterval: 20_000 });
   const fleet = useQuery({ queryKey: ['fleet'], queryFn: app.api.fleet });
+  const errors = useQuery({ queryKey: ['errors'], queryFn: () => app.api.errors(7), refetchInterval: 60_000 });
   const probe = useMutation({ mutationFn: app.api.probe, onSuccess: (r) => { void qc.invalidateQueries({ predicate: (q) => ['schools', 'fleet'].includes(String(q.queryKey[0])) }); say(`Checked ${r.probed} ${r.probed === 1 ? 'school' : 'schools'}.`); }, onError: (e) => say((e as Error).message, 'bad') });
   const rows = (schools.data ?? []).filter((s) => s.status !== 'archived');
   const order = { down: 0, degraded: 1, unknown: 2, ok: 3 } as const;
@@ -54,6 +55,23 @@ export function HealthPage() {
           </div></div>
         </Card>
       )}
+      <Card title="Errors in the last 7 days" style={{ padding: 0 }}>
+        {errors.isError ? <div className="help" style={{ padding: 18 }}>{(errors.error as Error).message}</div>
+          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 18 }}>Nothing has gone wrong in the APIs, the admin, the console or the app.</div>
+          : (errors.data ?? []).map((e) => (
+            <details key={e.fingerprint} className="rw" style={{ display: 'block', height: 'auto', padding: '12px 18px' }}>
+              <summary style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', listStyle: 'none', minWidth: 0 }}>
+                <span className="chip">{e.source}</span>
+                {e.schoolSlug && <span className="chip v">{e.schoolSlug}</span>}
+                <b style={{ flex: 1, minWidth: 0, font: '700 13.5px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.message}>{e.message}</b>
+                <span className="num" style={{ font: '700 13px var(--fb)' }}>{e.count}×</span>
+                <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(e.lastAt)}</span>
+              </summary>
+              <div className="help" style={{ marginTop: 8 }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}</div>
+              {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 12, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
+            </details>
+          ))}
+      </Card>
     </Page>
   );
 }

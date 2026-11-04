@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { reportErrors } from '@gradeon/web-ui';
 import { Outlet, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useRouter } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { AppContext, type AppCtx } from './app/context';
@@ -67,7 +68,8 @@ const routeTree = root.addChildren([
 ]);
 
 export function makeRouter() {
-  const router = createRouter({ routeTree, basepath: BASE || '/', defaultPreload: 'intent', defaultPendingMs: 400 });
+  const report = reportErrors(`${(import.meta.env.VITE_API_URL as string | undefined) ?? ''}/console/v1/errors`, 'console', undefined, String(import.meta.env.VITE_RELEASE ?? ''));
+  const router = createRouter({ routeTree, basepath: BASE || '/', defaultPreload: 'intent', defaultPendingMs: 400, defaultOnCatch: (err) => report(err) });
   client = makeClient(() => void router.navigate({ to: '/login' }));
   return router;
 }

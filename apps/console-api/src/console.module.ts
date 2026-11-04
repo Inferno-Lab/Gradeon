@@ -15,6 +15,7 @@ import { Sandbox, SandboxController } from './sandbox.js';
 import { Schools, SchoolsController } from './schools.js';
 import { POOLS, REGISTRY } from './tokens.js';
 import { Wizard, WizardController } from './wizard.js';
+import { ErrorBook, ErrorsController } from './errors.js';
 
 const OWNS = Symbol('OWNS');
 
@@ -41,10 +42,10 @@ export class ConsoleModule {
     const pools = shared?.pools ?? new PoolManager({ maxPools: env.TENANT_MAX_POOLS, perPool: env.TENANT_PER_POOL });
     return {
       module: ConsoleModule,
-      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, OpsController, ComplianceController],
+      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, OpsController, ComplianceController, ErrorsController],
       providers: [
         { provide: ENV, useValue: env }, { provide: REGISTRY, useValue: registry }, { provide: POOLS, useValue: pools }, { provide: OWNS, useValue: !shared }, Shutdown,
-        Db, Sandbox, ConsoleAuth, Policy, Blueprints, Provisioner, Schools, Wizard, Builds, Actions, Releases, Health, Support, Admin, Bootstrap, Compliance,
+        Db, Sandbox, ConsoleAuth, Policy, Blueprints, Provisioner, Schools, Wizard, Builds, Actions, Releases, Health, Support, Admin, Bootstrap, Compliance, ErrorBook,
         { provide: APP_GUARD, useClass: ConsoleAuthGuard },
         { provide: APP_FILTER, useClass: ApiExceptionFilter },
       ],

@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { reportErrors } from '@gradeon/web-ui';
 import { Outlet, createRootRouteWithContext, createRoute, createRouter, redirect, useRouter, lazyRouteComponent } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { AppContext, type AppCtx } from './app/context';
@@ -79,9 +80,11 @@ const routeTree = root.addChildren([
 ]);
 
 export function makeRouter(slug: string, basepath: string) {
+  const report = reportErrors(`${(import.meta.env.VITE_API_URL as string | undefined) ?? ''}/v1/errors`, 'admin', () => ({ 'x-school': slug }), String(import.meta.env.VITE_RELEASE ?? ''));
   const router = createRouter({
     routeTree, basepath: basepath || '/', defaultPreload: 'intent', defaultPendingMs: 400,
     context: { slug, client: undefined as never },
+    defaultOnCatch: (err) => report(err),
   });
   const client = makeClient(slug, () => void router.navigate({ to: '/login' }));
   router.update({ context: { slug, client } });

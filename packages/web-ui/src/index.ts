@@ -25,3 +25,4 @@ export * from './Tip';
 export * from './EvenRows';
 export * from './shell/Dock';
 export * from './useMedia';
+export * from './reportErrors';

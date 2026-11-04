@@ -1,6 +1,7 @@
 import { Catch, HttpException, Logger, type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
 import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { errorSink } from './error-reports.js';
 
 const BY_STATUS: Record<number, ErrorCode> = {
   400: 'validation', 401: 'unauthenticated', 403: 'forbidden', 404: 'not_found', 409: 'conflict', 423: 'locked', 429: 'rate_limited', 503: 'school_unavailable',
@@ -24,6 +25,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
       else body = { code: BY_STATUS[status] ?? 'internal', message: status === 404 ? 'That was not found.' : typeof res === 'string' ? res : err.message };
     } else {
       this.log.error(`${req.method} ${req.url}: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
+      const school = req.headers['x-school'];
+      errorSink.report?.({
+        source: req.url.startsWith('/console/') ? 'console-api' : 'api', schoolSlug: typeof school === 'string' ? school : null,
+        message: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : null, url: `${req.method} ${req.url.split('?')[0]}`,
+      });
     }
     body.requestId = req.id;
     if (body.retryAfter) void reply.header('retry-after', String(body.retryAfter));

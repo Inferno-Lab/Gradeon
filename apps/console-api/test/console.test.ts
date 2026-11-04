@@ -243,3 +243,15 @@ describe('support and fleet', () => {
     expect((await h.c('POST', '/console/v1/billing/generate', { token: t, body: { period: '2026-10' } })).json.created).toBe(0);
   });
 });
+
+describe('error reports', () => {
+  it('groups what the admin and the app report, and shows it on the console', async () => {
+    const body = { source: 'admin', message: 'Cannot read properties of undefined (reading "rows")', stack: 'TypeError: x\n    at DashboardPage (dashboard.tsx:12:3)', url: '/s/greenfield/' };
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body })).status).toBe(204);
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body })).status).toBe(204);
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body: { source: 'nobody', message: 'x' } })).status).toBe(400);
+    const list = (await h.c('GET', '/console/v1/errors', { token: t })).json;
+    expect(list.find((e: { message: string }) => e.message === body.message)).toMatchObject({ source: 'admin', schoolSlug: 'greenfield', count: 2 });
+    expect((await h.c('GET', '/console/v1/errors')).status).toBe(401);
+  });
+});

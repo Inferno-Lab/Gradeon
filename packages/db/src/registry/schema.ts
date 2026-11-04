@@ -334,3 +334,21 @@ export const complianceItems = pgTable('compliance_items', {
   deadlineAt: timestamp('deadline_at', { withTimezone: true }),
   closedAt: timestamp('closed_at', { withTimezone: true }),
 });
+
+/** One row per distinct problem (fingerprint of where it came from and what it said), counted. */
+export const errorReports = pgTable(
+  'error_reports',
+  {
+    fingerprint: text('fingerprint').primaryKey(),
+    source: text('source').notNull(), // api | console-api | admin | console | app
+    schoolSlug: text('school_slug'),
+    message: text('message').notNull(),
+    stack: text('stack'),
+    url: text('url'),
+    release: text('release'),
+    count: integer('count').notNull().default(1),
+    firstAt: at('first_at'),
+    lastAt: at('last_at'),
+  },
+  (t) => [index('error_reports_last_idx').on(t.lastAt)],
+);

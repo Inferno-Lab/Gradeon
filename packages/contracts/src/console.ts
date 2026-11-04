@@ -477,3 +477,26 @@ export interface PublicStatus {
   schools: { name: string; state: 'ok' | 'degraded' | 'down' }[];
   incidents: { id: string; title: string; open: boolean; startedAt: string; resolvedAt: string | null }[];
 }
+
+/** What the admin, the console and the app send when something breaks in the browser or on the phone. */
+export const ClientError = z.object({
+  source: z.enum(['admin', 'console', 'app']),
+  message: z.string().trim().min(1).max(500),
+  stack: z.string().max(4000).optional(),
+  url: z.string().max(300).optional(),
+  release: z.string().max(40).optional(),
+});
+export type ClientError = z.infer<typeof ClientError>;
+
+export interface ErrorGroup {
+  fingerprint: string;
+  source: 'api' | 'console-api' | 'admin' | 'console' | 'app';
+  schoolSlug: string | null;
+  message: string;
+  stack: string | null;
+  url: string | null;
+  release: string | null;
+  count: number;
+  firstAt: string;
+  lastAt: string;
+}

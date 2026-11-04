@@ -1,5 +1,5 @@
 import type {
-  ActionRequest, ActionRow, AuditRow, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
+  ActionRequest, ActionRow, AuditRow, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview,
 } from '@gradeon/contracts';
@@ -17,6 +17,7 @@ export function consoleApi(h: Http) {
     logout: () => h.post<void>(`${base}/auth/logout`),
     logoutAll: () => h.post<void>(`${base}/auth/logout-all`),
     fleet: () => h.get<FleetSummary>(`${base}/fleet`),
+    errors: (days = 7) => h.get<ErrorGroup[]>(`${base}/errors`, { days }),
     cells: () => h.get<CellRow[]>(`${base}/cells`),
     createCell: (b: CellCreate) => h.post<{ key: string; note: string }>(`${base}/cells`, b),
     patchCell: (key: string, b: CellPatch) => h.put<{ ok: true }>(`${base}/cells/${key}`, b),
