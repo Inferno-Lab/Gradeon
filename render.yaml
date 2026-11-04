@@ -9,7 +9,7 @@ services:
     autoDeploy: true
     healthCheckPath: /health
     # corepack enable writes shims to /usr/bin (EROFS on Render). Use `corepack pnpm` instead.
-    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && CONSOLE_BASE=/console/ corepack pnpm exec turbo run build --concurrency=2
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && CONSOLE_BASE=/console/ corepack pnpm exec turbo run build --concurrency=2 --env-mode=loose
     startCommand: node apps/server/dist/main.js
     envVars:
       - key: NODE_VERSION
@@ -41,6 +41,5 @@ services:
       # Production refuses SEED_DEMO and DEMO_CODE unless this says the service is a demo/test track.
       - key: ALLOW_DEMO
         value: "true"
-      # Production refuses "*". Admin and console are served from this same address; browsers still send it as Origin.
-      - key: CORS_ORIGINS
-        value: "https://gradeon.onrender.com"
+      # No CORS_ORIGINS here: the server always allows its own Render address (RENDER_EXTERNAL_URL), whatever the service is called.
+      # Add CORS_ORIGINS in Render only for other origins, such as a custom domain.
