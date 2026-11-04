@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
-import { LoginRequest, RefreshRequest, VerifyRequest, type EffectiveConfig, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, LoginRequest, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { SettingsService } from '../school/support.js';
@@ -33,6 +33,24 @@ export class AuthController {
   ): Promise<TokenPair> {
     loginLimit.check(`${t.info.slug}|${req.ip}|v`);
     return this.auth.verify(t, body.challengeId, body.code, req.headers['user-agent'], body.client, reply);
+  }
+
+  @Public() @Post('code') @HttpCode(200)
+  code(@Tenant() t: TenantCtx, @Body(new ZodPipe(CodeRequest)) body: CodeRequest, @Req() req: FastifyRequest): Promise<LoginChallenge> {
+    loginLimit.check(`${t.info.slug}|${req.ip}|c`);
+    return this.auth.requestCode(t, body.identifier);
+  }
+
+  @Public() @Post('reset/start') @HttpCode(200)
+  resetStart(@Tenant() t: TenantCtx, @Body(new ZodPipe(ResetStart)) body: ResetStart, @Req() req: FastifyRequest): Promise<LoginChallenge> {
+    loginLimit.check(`${t.info.slug}|${req.ip}|rs`);
+    return this.auth.resetStart(t, body.identifier);
+  }
+
+  @Public() @Post('reset/finish') @HttpCode(204)
+  async resetFinish(@Tenant() t: TenantCtx, @Body(new ZodPipe(ResetFinish)) body: ResetFinish, @Req() req: FastifyRequest): Promise<void> {
+    loginLimit.check(`${t.info.slug}|${req.ip}|rf`);
+    await this.auth.resetFinish(t, body.challengeId, body.code, body.password);
   }
 
   @Public() @Post('refresh') @HttpCode(200)

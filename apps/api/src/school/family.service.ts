@@ -45,8 +45,9 @@ export class FamilyService {
     if (u.kind === 'student') throw forbidden('Students sign in through a parent account.');
     let children: string[] = [];
     let guardianIds: string[] = [];
-    if (u.kind === 'guardian') {
-      guardianIds = (await t.pool.query<{ id: string }>('select id from guardians where user_id = $1', [u.id])).rows.map((g) => g.id);
+    // A teacher can be a parent at the same school: their children come with their account either way.
+    guardianIds = (await t.pool.query<{ id: string }>('select id from guardians where user_id = $1', [u.id])).rows.map((g) => g.id);
+    if (guardianIds.length) {
       children = (await t.pool.query<{ student_id: string }>('select distinct student_id from student_guardians where guardian_id = any($1)', [guardianIds])).rows.map((r) => r.student_id);
     }
     return { id: u.id, kind: u.kind, name: u.name, phone: u.phone, email: u.email, children, guardianIds, perms: user.permissions };

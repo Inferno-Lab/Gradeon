@@ -94,6 +94,7 @@ export const otpChallenges = pgTable(
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     codeHash: text('code_hash').notNull(),
     channel: text('channel').notNull(),
+    purpose: text('purpose').notNull().default('sign_in'),
     attempts: integer('attempts').notNull().default(0),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     usedAt: timestamp('used_at', { withTimezone: true }),

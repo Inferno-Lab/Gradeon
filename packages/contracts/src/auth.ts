@@ -33,6 +33,23 @@ export const VerifyRequest = z.object({
 });
 export type VerifyRequest = z.infer<typeof VerifyRequest>;
 
+/** Families sign in with a code alone: no password to forget. Staff always need their password first. */
+export const CodeRequest = z.object({
+  identifier: z.string().trim().min(3, 'Enter your phone number or email').max(120),
+  client: ClientKind.optional(),
+});
+export type CodeRequest = z.infer<typeof CodeRequest>;
+
+export const ResetStart = z.object({ identifier: z.string().trim().min(3, 'Enter your email or phone').max(120) });
+export type ResetStart = z.infer<typeof ResetStart>;
+
+export const ResetFinish = z.object({
+  challengeId: z.string().min(1),
+  code: z.string().regex(/^\d{6}$/, 'The code is 6 digits'),
+  password: z.string().min(8, 'Use at least 8 characters').max(200),
+});
+export type ResetFinish = z.infer<typeof ResetFinish>;
+
 export const RefreshRequest = z.object({
   refreshToken: z.string().min(20).optional(),
   client: ClientKind.optional(),
@@ -68,4 +85,6 @@ export interface AccessClaims {
   /** users.token_version at issue time. A bump (role, password, logout-all) ends the token. */
   ver?: number;
   support?: boolean;
+  /** "guardian" tokens may only use the family app's routes. Absent on older tokens and console tokens. */
+  kind?: 'staff' | 'guardian' | 'student';
 }
