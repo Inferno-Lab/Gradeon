@@ -3,7 +3,7 @@ import type {
   HomeworkCreate, HomeworkDetail, HomeworkMarks, HomeworkRow, InvoiceListQuery, InvoiceListRow, InvoiceListSummary, ReceiptRow, ReportData, ReportInfo, RoleRow, RoleSave, StaffCreate, StaffPatch, StaffRow,
   ThreadCreate, ThreadDetail, ThreadPatch, ThreadReply, ThreadRow,
   AttendanceDayPut, ApprovalDecision, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeSummary, ImportResult, InvoiceRow,
-  LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsDoc, SettingsPatch, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
+  LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsDoc, SettingsPatch, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
 } from '@gradeon/contracts';
 import type { Http, Query } from './http';
@@ -29,6 +29,8 @@ export function schoolApi(h: Http) {
     brand: () => h.get<BrandInfo>('/v1/brand'),
     login: (b: LoginRequest) => h.post<LoginResponse>('/v1/auth/login', b),
     verify: (b: VerifyRequest) => h.post<TokenPair>('/v1/auth/verify', b),
+    resetStart: (identifier: string) => h.post<LoginChallenge>('/v1/auth/reset/start', { identifier }),
+    resetFinish: (b: { challengeId: string; code: string; password: string }) => h.post<void>('/v1/auth/reset/finish', b),
     logout: () => h.post<void>('/v1/auth/logout'),
     logoutAll: () => h.post<void>('/v1/auth/logout-all'),
     me: () => h.get<SessionUser>('/v1/me'),

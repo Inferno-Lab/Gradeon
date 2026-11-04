@@ -72,6 +72,23 @@ await flow('admin: wrong password shows an error, then the demo code signs in', 
   await expectVisible(p.getByRole('heading', { name: 'Dashboard' }), 'the dashboard');
 });
 
+await flow('admin: a forgotten password is replaced with a code, then signs in by phone number', {}, async (p) => {
+  await p.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Forgot it?' }).click();
+  await expectVisible(p.getByText('Type your email or phone number first'), 'a request for the email first');
+  await p.getByLabel('Email or phone number').fill('kavita.iyer@greenfield.edu.in');
+  await p.getByRole('button', { name: 'Forgot it?' }).click();
+  await expectVisible(p.getByText('Type it with your new password'), 'the reset step');
+  await p.getByLabel('New password').fill('kavita-new-2026');
+  await p.getByRole('button', { name: /Type the demo code/ }).click();
+  await expectVisible(p.getByText('Your password is changed'), 'the changed-password note');
+  const phone = (await (await fetch(`${API}/v1/staff`, { headers: { ...h, authorization: `Bearer ${t.accessToken}` } })).json()).find((s) => s.email === 'kavita.iyer@greenfield.edu.in').phone;
+  await p.getByLabel('Email or phone number').fill(phone);
+  await p.locator('#lg-pw').fill('kavita-new-2026');
+  await p.getByRole('button', { name: /^Sign in/ }).click();
+  await expectVisible(p.getByText('Verify and sign in'), 'the code step');
+});
+
 await flow('admin: dashboard approval, then undo', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Needs you'), 'the needs-you card');
@@ -206,7 +223,7 @@ await flow('admin: phone dock navigates', { storage: adminStore, context: { view
 // ── console ──────────────────────────────────────────────────────────────
 await flow('console: wrong password shakes, right password and code sign in', {}, async (p) => {
   await p.goto(`${CONSOLE}/login`, { waitUntil: 'networkidle' });
-  await p.getByLabel('Work email').fill('kaushal@gradeon.app');
+  await p.getByLabel('Gradeon email').fill('kaushal@gradeon.app');
   await p.locator('#lg-pw').fill('nope');
   await p.getByRole('button', { name: /^Continue/ }).click();
   await expectVisible(p.getByRole('alert'), 'the wrong-password message');
