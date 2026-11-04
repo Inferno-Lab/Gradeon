@@ -4,6 +4,8 @@
 set -e
 cd "$(dirname "$0")/.."
 powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -like '*${PWD##*/}*' -and \$_.Name -in 'postgres.exe','node.exe' -and \$_.CommandLine -notlike '*vite*' -and \$_.CommandLine -notlike '*claude*' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" >/dev/null 2>&1 || true
+# Linux and macOS (CI): the same stop, by command line.
+command -v powershell.exe >/dev/null 2>&1 || { pkill -f "tsx src/dev-cli.ts"; pkill -f "tsx src/main.ts"; pkill -x postgres; } >/dev/null 2>&1 || true
 sleep 2
 rm -rf .gradeon-data
 [ -f .env ] || cp .env.example .env

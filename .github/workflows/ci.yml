@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main, 'feat/**', 'redesign/**']
+    branches: [main, 'feat/**', 'fix/**', 'chore/**', 'redesign/**']
   pull_request:
 
 concurrency:
@@ -15,16 +15,51 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: node tools/check-name.mjs
+      - run: node tools/check-migrations.mjs origin/main
       - run: pnpm install --frozen-lockfile
       - run: CONSOLE_BASE=/console/ pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+
+  browser:
+    name: Browser flows and page audit (admin, console)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Start the database, the server and the demo school
+        run: bash tools/dev-reset.sh
+      - name: Start the admin and the console
+        run: |
+          nohup pnpm --filter @gradeon/admin dev --host 127.0.0.1 > /tmp/admin.log 2>&1 &
+          nohup pnpm --filter @gradeon/console dev --host 127.0.0.1 > /tmp/console.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:5173/ >/dev/null && curl -sf http://127.0.0.1:5174/ >/dev/null && exit 0; sleep 2; done; exit 1
+      - run: node tools/e2e-flows.mjs /tmp/e2e
+      - name: Page audit on fresh data
+        run: bash tools/dev-reset.sh && node tools/audit-ui.mjs
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failures
+          path: |
+            /tmp/e2e
+            /tmp/*.log
 
   flutter:
     name: Flutter app (analyze, test)
