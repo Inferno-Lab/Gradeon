@@ -20,6 +20,7 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
+      - run: node tools/check-name.mjs
       - run: pnpm install --frozen-lockfile
       - run: CONSOLE_BASE=/console/ pnpm build
       - run: pnpm typecheck
