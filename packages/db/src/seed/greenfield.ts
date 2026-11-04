@@ -330,7 +330,8 @@ async function seedFees(ctx: Ctx, students: StudentRow[]): Promise<void> {
   let receipt = 8000;
   const nextReceipt = (): string => { receipt++; if (receipt === 8812) receipt++; return `RCPT-2026-${String(receipt).padStart(5, '0')}`; };
   const days = schoolDaysEnding(last, 12, OFF_DAYS);
-  const overdueDay = addDays(monthStart, 4);
+  // Relative to the last school day, not the month: "the 5th" is still ahead on the 1st to 4th, and then nothing was overdue.
+  const overdueDay = addDays(last, -6);
   const dueDay = addDays(last, 6);
   const termOne = addDays(monthStart, -170);
   const named = new Set(students.filter((s) => s.named).map((s) => s.id));
