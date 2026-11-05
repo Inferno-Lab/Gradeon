@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/core/widgets/toast.dart';
@@ -93,6 +94,7 @@ class ChatListController extends GetxController with Loadable {
   }, isEmpty: () => threads.isEmpty && suggested.isEmpty);
 
   Future<void> startWith(Teacher teacher) async {
+    if (!SchoolConfig.allows('chat.familyChat')) return;
     final userId = me;
     if (userId == null) return;
     try {

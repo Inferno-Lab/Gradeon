@@ -17,6 +17,7 @@ class ApiClient {
     String? base,
     String? school,
     this.onSignedOut,
+    this.onLocked,
     Duration timeout = const Duration(seconds: 20),
   }) : _storage = storage ?? Get.find<StorageService>(),
        _base = (base ?? AppConfig.apiBase).replaceAll(RegExp(r'/$'), ''),
@@ -30,6 +31,9 @@ class ApiClient {
 
   /// Called when the session cannot be renewed, so the app can show the sign-in screen.
   final void Function()? onSignedOut;
+
+  /// Called when the school answers 423: a module or feature was taken away, so the app reloads what the school has.
+  final void Function()? onLocked;
 
   Future<String?>? _refreshing;
 
@@ -92,6 +96,7 @@ class ApiClient {
         await clearTokens();
         onSignedOut?.call();
       }
+      if (res.statusCode == 423) onLocked?.call();
       final message = json is Map && json['message'] is String ? json['message'] as String : 'errors.network';
       throw AppException(message);
     } on AppException {

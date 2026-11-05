@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
@@ -480,4 +481,8 @@ class _TimelineRow extends StatelessWidget {
   }
 }
 
-Future<void> openPaySheet(Installment item) => showSheet<void>(PaySheet(item: item));
+Future<void> openPaySheet(Installment item) async {
+  // The school takes fees at the office only: say so instead of opening a payment the server would refuse.
+  if (!SchoolConfig.allows('fees.onlinePayment')) return;
+  await showSheet<void>(PaySheet(item: item));
+}

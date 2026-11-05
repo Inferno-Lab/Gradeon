@@ -12,6 +12,7 @@ const enRedesign = <String, String>{
   'common.logout': 'Sign out',
   'errors.cant_open': "Couldn't open that on this phone",
   'errors.didnt_load': "This didn't load",
+  'plan.not_included': "This isn't part of your school's plan. Ask the school office.",
   'time.today': 'today',
   'time.today_cap': 'Today',
   'time.one_day': '1 day',

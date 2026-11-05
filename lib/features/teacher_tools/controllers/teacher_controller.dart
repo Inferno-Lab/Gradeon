@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/haptics.dart';
 import 'package:gradeon/core/utils/loadable.dart';
@@ -237,6 +238,7 @@ class MarkAttendanceController extends GetxController with Loadable {
   int get present => students.length - absent - late;
 
   Future<void> submit() async {
+    if (!SchoolConfig.allows('attendance.teacherApp')) return;
     if (saving.value) return;
     saving.value = true;
     try {
@@ -446,6 +448,7 @@ class GradingController extends GetxController with Loadable {
     required int marks,
     required String feedback,
   }) async {
+    if (!SchoolConfig.allows('homework.grading')) return false;
     try {
       await Get.find<HomeworkRepository>().grade(
         homeworkId: homework.id,
@@ -634,6 +637,7 @@ class PostNoticeController extends GetxController {
   };
 
   Future<void> submit() async {
+    if (!SchoolConfig.allows('notices.teacherPosts')) return;
     if (saving.value) return;
     if (title.text.trim().isEmpty) {
       ToastHelper.show('teacher.need_title', kind: ToastKind.error);
