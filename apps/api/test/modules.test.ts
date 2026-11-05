@@ -119,6 +119,15 @@ describe('staff and roles', () => {
     expect((await send('PATCH', '/v1/staff/' + pooja.id, { roleId: 'role_teacher' })).status).toBe(403);
     await h.setSettings({ 'staff.schoolAssignsRoles': true });
   }, 30_000);
+  it('lets the school edit its own timetable until the console locks it, and still lets it cover a lesson', async () => {
+    const slot = (await get('/v1/timetable?classId=cls_8a')).json.slots[0];
+    expect((await send('PATCH', '/v1/timetable/slots/' + slot.id, { room: 'R-12' })).status).toBe(204);
+    await h.setSettings({ 'timetable.schoolEdits': false });
+    const locked = await send('PATCH', '/v1/timetable/slots/' + slot.id, { room: 'R-13' });
+    expect(locked.status).toBe(403);
+    expect(locked.json.message).toMatch(/Ask Gradeon/);
+    await h.setSettings({ 'timetable.schoolEdits': true });
+  }, 30_000);
 });
 
 describe('admissions', () => {

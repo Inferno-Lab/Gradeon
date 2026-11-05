@@ -55,6 +55,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'privacy.retentionMonths': { group: 'Privacy', label: 'Keep records of students who left for (months)', kind: 'number', min: 12, max: 120, risky: true, notUsedYet: 'Nothing deletes old records yet.' },
   'privacy.photoConsent': { group: 'Privacy', label: 'Ask for photo consent', kind: 'bool', notUsedYet: 'The gallery is not live yet.' },
   'privacy.consentRequired': { group: 'Privacy', label: 'Families must consent before using the app', kind: 'bool', notUsedYet: 'The app does not ask yet.' },
+  'timetable.schoolEdits': { group: 'Academic year', label: 'The school may edit its own timetable', kind: 'bool', help: 'Off: the timetable is locked and only Gradeon changes it. Covering an absent teacher for a day is always allowed.' },
   'staff.schoolAssignsRoles': { group: 'People', label: 'The school may put its staff into roles', kind: 'bool', help: 'Roles themselves are always made here. Off: only Gradeon assigns roles to people.' },
   'vocab.student': { group: 'People', label: 'What the school calls a student', kind: 'text', notUsedYet: 'The screens do not use it yet.' },
   'vocab.class': { group: 'People', label: 'What the school calls a class', kind: 'text', notUsedYet: 'The screens do not use it yet.' },

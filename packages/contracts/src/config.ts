@@ -34,6 +34,9 @@ export const SchoolSettingsSchema = z.object({
   'security.appSessionDays': z.number().int().min(1).max(90).default(30),
   // Whether the school may put its own staff into the roles Gradeon made for it. Roles themselves are set from the console only.
   'staff.schoolAssignsRoles': z.boolean().default(true),
+  // The school's own data (its timetable today; classes, terms, holidays and fee structures as their screens arrive) stays with the
+  // school, inside limits set here: each area has a switch that can lock it so only Gradeon changes it.
+  'timetable.schoolEdits': z.boolean().default(true),
   // Receipt numbers: {year} becomes the year. The start lets a school arriving from another system keep its numbering.
   'fees.receiptPrefix': z.string().trim().min(1).max(20).default('RCPT-{year}-'),
   'fees.receiptStart': z.number().int().min(1).max(99_999_999).default(9001),
