@@ -7,6 +7,7 @@ const DEFS: { name: string; items: Def[] }[] = [
   { name: 'Operate', items: [
     { id: 'fleet', label: 'Fleet', icon: 'fleet', keys: 'G F', to: '/' },
     { id: 'onb', label: 'Onboarding', icon: 'onb', keys: 'G O', to: '/onboarding' },
+    { id: 'mod', label: 'Modules', icon: 'mod', keys: 'G E', to: '/modules' },
     { id: 'cells', label: 'Cells', icon: 'cells', keys: 'G C', to: '/cells' },
     { id: 'rel', label: 'Releases', icon: 'rel', keys: 'G R', to: '/releases' },
     { id: 'mig', label: 'Migrations', icon: 'mig', keys: 'G M', to: '/migrations' },

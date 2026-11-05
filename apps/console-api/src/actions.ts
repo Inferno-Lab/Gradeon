@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, HttpCode, Inject, Injectable, Param, Post } from '@nestjs/common';
 import { POOLS, REGISTRY } from './tokens.js';
-import { closeModules } from '@gradeon/config-engine';
-import { ActionRequest, type ActionRow, type BuildRow, type ConsoleRole } from '@gradeon/contracts';
+import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
+import { ActionRequest, type ActionRow, type BuildRow, type ConsoleRole, type EntitlementDoc } from '@gradeon/contracts';
 import { migrate, newId, pg, pendingMigrations } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { constantTimeEqual, unseal } from '@gradeon/security';
@@ -99,11 +99,19 @@ export class Actions {
     if (body.action === 'school.erase' && !body.dryRun && body.confirmCode?.trim() !== school.slug) {
       throw new ApiError('validation', 'That does not match. Nothing was erased.', { fields: { confirmCode: `Type ${school.slug} exactly.` } });
     }
-    const needs = pol.approvals[body.action]?.needed && !body.dryRun;
+    let needs = pol.approvals[body.action]?.needed && !body.dryRun;
+    let summary = this.describe(body.action, school.name);
+    if (body.action === 'entitlements.push') {
+      // Checked now, so a bad change never waits for approval; taking anything away from a school always needs a second person.
+      const c = await this.entitlementChange(school, body.params);
+      if (c.problems.length) throw new ApiError('validation', c.problems.join(' '));
+      if (c.removed.length && !body.dryRun) needs = true;
+      summary = `${school.name}: ${[c.added.length ? `adds ${c.added.map(catalogueName).join(', ')}` : '', c.removed.length ? `takes away ${c.removed.map(catalogueName).join(', ')}` : ''].filter(Boolean).join('; ') || 'limits, dates or locks only'}`;
+    }
     const id = newId('act');
     await this.db.pool.query(
       'insert into actions (id, action, school_id, school_name, params, status, requested_by, dry_run, summary) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-      [id, body.action, school.id, school.name, JSON.stringify(body.params), needs ? 'pending_approval' : 'running', user.email, body.dryRun, this.describe(body.action, school.name)]);
+      [id, body.action, school.id, school.name, JSON.stringify(body.params), needs ? 'pending_approval' : 'running', user.email, body.dryRun, summary]);
     await this.db.audit(user.email, `action.${body.action}.requested`, 'school', school.id, { dryRun: body.dryRun, needsApproval: !!needs });
     if (!needs) await this.run(id);
     return this.get(id);
@@ -171,15 +179,15 @@ export class Actions {
         this.pools.evict(school.slug);
         return `${school.name} was erased: its database is dropped and its record archived.`;
       case 'entitlements.push': {
-        const ent = school.entitlement;
-        const modules = Array.isArray(params.modules) ? closeModules(params.modules as string[]) : ent.modules;
-        const locks = Array.isArray(params.locks) ? (params.locks as string[]) : ent.locks;
-        const plan = typeof params.plan === 'string' ? params.plan : school.plan;
-        const limits = (await this.db.pool.query<{ limits: typeof ent.limits }>('select limits from plans where key = $1', [plan])).rows[0]?.limits;
-        if (!limits) throw new Error(`Plan “${plan}” does not exist.`);
-        await this.db.pool.query('update schools set plan = $2, entitlement = $3, config_version = config_version + 1 where id = $1', [school.id, plan, JSON.stringify({ modules, locks, limits, overrides: (params.overrides as Record<string, unknown> | undefined) ?? ent.overrides, version: ent.version + 1 })]);
+        // Applied to the entitlement as it is now, not as it was when the request was made.
+        const c = await this.entitlementChange(school, params);
+        if (c.problems.length) throw new Error(c.problems.join(' '));
+        const next = { ...c.next, overrides: (params.overrides as Record<string, unknown> | undefined) ?? c.next.overrides };
+        const { plan: _plan, ...doc } = next;
+        await this.db.pool.query('update schools set plan = $2, entitlement = $3, config_version = config_version + 1 where id = $1', [school.id, next.plan, JSON.stringify(doc)]);
         done();
-        return `Plan ${plan}, ${modules.length} modules and ${locks.length} locks pushed. They apply within 15 seconds.`;
+        const what = [c.added.length ? `added ${c.added.map(catalogueName).join(', ')}` : '', c.removed.length ? `took away ${c.removed.map(catalogueName).join(', ')}` : ''].filter(Boolean).join('; ');
+        return `${next.plan} plan pushed${what ? `: ${what}` : ''}. It applies within 15 seconds; the school's data is kept either way.`;
       }
       case 'domain.set': {
         const custom = String(params.customDomain ?? '').trim().toLowerCase();
@@ -234,6 +242,18 @@ export class Actions {
         return handler(school.id, params, a.requestedBy);
       }
     }
+  }
+
+  /** The change a push would make, read from its parameters. A new plan brings its limits unless limits are given too. */
+  private async entitlementChange(school: { plan: string; entitlement: Omit<EntitlementDoc, 'plan'> }, params: Record<string, unknown>) {
+    const change = params as EntitlementChange;
+    let planLimits: EntitlementDoc['limits'] | undefined;
+    if (change.plan && change.plan !== school.plan) {
+      planLimits = (await this.db.pool.query<{ limits: EntitlementDoc['limits'] }>('select limits from plans where key = $1', [change.plan])).rows[0]?.limits;
+      if (!planLimits) return { next: { ...school.entitlement, plan: school.plan }, removed: [], added: [], problems: [`Plan “${change.plan}” does not exist.`] };
+    }
+    const cur = { ...school.entitlement, plan: school.plan, locks: school.entitlement.locks ?? [], overrides: school.entitlement.overrides ?? {} };
+    return changeEntitlement(cur, change, planLimits);
   }
 
   async recordMigration(tag: string, kind: string, schoolId: string, state: string, ms: number | null, error: string | null): Promise<void> {

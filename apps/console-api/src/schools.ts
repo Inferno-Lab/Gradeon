@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Inject, Injectable, Param, Patch, Query } from '@nestjs/common';
 import { REGISTRY, POOLS } from './tokens.js';
-import { closeModules } from '@gradeon/config-engine';
+import { activeModules, closeModules } from '@gradeon/config-engine';
 import { type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
 import { notFound, ApiError } from '@gradeon/nest-kit';
 import type { PoolManager, Registry } from '@gradeon/tenancy';
@@ -69,7 +69,10 @@ export class Schools {
     const ent = r.entitlement;
     return {
       ...this.row(r),
-      contact: r.contact, gstin: r.gstin, entitlement: { modules: closeModules(ent.modules), limits: ent.limits, locks: ent.locks, version: ent.version },
+      contact: r.contact, gstin: r.gstin, entitlement: {
+        plan: r.plan, modules: closeModules(ent.modules), active: activeModules(ent), features: ent.features ?? {}, dates: ent.dates ?? {}, trialUntil: ent.trialUntil ?? null,
+        limits: ent.limits, locks: ent.locks, version: ent.version,
+      },
       usage: { students: r.studentsCount, storageGb: 0, sms: Number(sms.rows[0]?.n ?? 0), staff },
       checklist: Object.entries(CHECKLIST_LABELS).map(([key, label]) => ({ key, label, state: (r.checklist[key] as 'done' | 'waiting' | 'todo' | undefined) ?? 'todo' })),
       runs, builds: builds.rows.map((b) => ({ id: b.id, schoolId: b.school_id, platform: b.platform, version: b.version, status: b.status, url: b.url, note: b.note, createdAt: b.created_at.toISOString() })),

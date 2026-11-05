@@ -54,7 +54,7 @@ export function FlagsPage() {
           {canWrite && (
             <Card title="Pause a feature" chip={<span className={`chip ${paused.length ? 'r' : 'g'}`}>{paused.length} paused</span>}>
               <div className="help" style={{ marginBottom: 12 }}>A kill switch takes a feature away from the app and refuses its requests within seconds. Lift it by switching the flag off.</div>
-              <SelectField label="Feature" value={kill.module} onChange={(module) => setKill({ ...kill, module })} options={MODULES.filter((m) => !m.core).map((m) => ({ value: m.key, label: m.name }))} />
+              <SelectField label="Feature" value={kill.module} onChange={(module) => setKill({ ...kill, module })} options={MODULES.filter((m) => !m.core && m.state !== 'planned').map((m) => ({ value: m.key, label: m.name }))} />
               <SelectField label="For" value={kill.school} onChange={(school) => setKill({ ...kill, school })} options={[{ value: '', label: 'Every school' }, ...(schools.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
               <button className="btn dngf" style={{ marginTop: 14 }} disabled={set.isPending} onClick={() => set.mutate({ key: `kill.${kill.module}`, enabled: true, schoolId: kill.school || null, label: `${MODULES.find((m) => m.key === kill.module)?.name ?? kill.module} paused` }, { onSuccess: () => say('Paused. It takes effect within a few seconds.') })}>Pause it</button>
             </Card>

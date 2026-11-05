@@ -118,3 +118,46 @@ describe('configuration from the console', () => {
     expect((await h.s('PATCH', '/v1/settings', { school: 'cfgschool', token: school, body: { changes: { 'school.tagline': 'x' } } })).status).toBe(404);
   });
 });
+
+describe('modules per school', () => {
+  const push = (params: object) => h.c('POST', '/console/v1/actions', { token: t, body: { action: 'entitlements.push', schoolId: id, params } });
+  const row = async () => (await h.c('GET', '/console/v1/entitlements', { token: t })).json.find((r: { id: string }) => r.id === id);
+
+  it('gives a module at once, and takes anything away only after a second person approves', async () => {
+    const before = await row();
+    expect(before.active).not.toContain('library');
+    const give = await push({ modules: [...before.modules, 'library'], dates: { library: { until: '2099-12-31' } } });
+    expect(give.json.status).toBe('done');
+    expect(give.json.summary).toMatch(/added Library/);
+    const take = await push({ features: { 'fees.onlinePayment': false } });
+    expect(take.json.status).toBe('pending_approval');
+    expect(take.json.summary).toMatch(/takes away Fees: Families pay in the app/);
+    expect((await h.c('POST', `/console/v1/actions/${take.json.id}/approve`, { token: t })).status).toBe(403);
+    expect((await h.c('POST', `/console/v1/actions/${take.json.id}/approve`, { token: second })).json.status).toBe('done');
+    const after = (await h.c('GET', `/console/v1/schools/${id}`, { token: t })).json.entitlement;
+    expect(after.active).toContain('library');
+    expect(after.features).toEqual({ 'fees.onlinePayment': false });
+    expect(after.dates.library).toEqual({ until: '2099-12-31' });
+    // The school's own API follows: paying in the app is refused, the rest of Fees still works.
+    const paid = await h.s('POST', '/v1/f/fees/x/pay', { school: 'cfgschool', token: school, body: {} });
+    expect(paid.status).toBe(423);
+    expect((await h.s('GET', '/v1/fees/summary', { school: 'cfgschool', token: school })).status).toBe(200);
+  }, 60_000);
+
+  it('refuses a module that is not built yet, before anyone approves anything', async () => {
+    const r = await push({ modules: ['people', 'fees', 'hostel'] });
+    expect(r.status).toBe(400);
+    expect(r.json.message).toMatch(/not built yet/);
+  });
+
+  it('bills the plan plus each module added on top of it, and nothing during a trial', async () => {
+    await h.c('POST', '/console/v1/billing/generate', { token: t, body: { period: '2030-01' } });
+    const inv = (await h.c('GET', '/console/v1/billing/invoices', { token: t })).json.find((i: { schoolId: string; period: string }) => i.schoolId === id && i.period === '2030-01');
+    expect(inv.lines.map((l: { label: string }) => l.label)).toEqual([expect.stringMatching(/plan/), 'Library (added)']);
+    expect(inv.amount).toBe(inv.lines.reduce((a: number, l: { amount: number }) => a + l.amount, 0));
+    expect((await push({ trialUntil: '2031-12-31' })).json.status).toBe('done');
+    await h.c('POST', '/console/v1/billing/generate', { token: t, body: { period: '2031-06' } });
+    const none = (await h.c('GET', '/console/v1/billing/invoices', { token: t })).json.filter((i: { schoolId: string; period: string }) => i.schoolId === id && i.period === '2031-06');
+    expect(none).toEqual([]);
+  }, 60_000);
+});

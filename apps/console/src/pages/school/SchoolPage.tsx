@@ -11,6 +11,7 @@ import { ago, count, rupees, statusOf, when } from '../../app/format';
 import { SchoolView } from './school.view';
 import { ConfigTab } from './ConfigTab';
 import { RolesTab } from './RolesTab';
+import { PlanEditor } from '../modules/ModulesPage';
 
 const TABS = ['Overview', 'Entitlements', 'Configuration', 'Roles', 'Versions', 'Health', 'Audit'];
 const DESC: Record<string, string> = {
@@ -110,7 +111,7 @@ export function SchoolPage() {
   const lines = (run?.steps ?? []).flatMap((s) => s.log).sort((a, b) => a.at.localeCompare(b.at)).slice(-6);
   const done = d.checklist.filter((c) => c.state === 'done').length;
 
-  const extra: ReactNode = tab === 1 ? <Entitlements d={d} planName={planName} onPush={() => act.mutate({ action: 'entitlements.push' })} busy={act.isPending} />
+  const extra: ReactNode = tab === 1 ? <PlanEditor key={d.entitlement.version} d={d} say={say} />
     : tab === 2 ? <ConfigTab schoolId={d.id} say={say} />
       : tab === 3 ? <RolesTab schoolId={d.id} say={say} />
         : tab === 4 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
@@ -157,36 +158,6 @@ function Card({ title, chip, children, span = 's6' }: { title: string; chip?: Re
       <div className="ch"><h2>{title}</h2>{chip}</div>
       <div style={{ marginTop: 12 }}>{children}</div>
     </div>
-  );
-}
-
-function Entitlements({ d, planName, onPush, busy }: { d: SchoolDetail; planName: string; onPush: () => void; busy: boolean }) {
-  const app = useApp();
-  const cat = useQuery({ queryKey: ['catalog'], queryFn: app.api.catalog, staleTime: 10 * 60_000 });
-  const name = (k: string) => cat.data?.modules.find((m) => m.key === k)?.name ?? k;
-  const lim = d.entitlement.limits;
-  return (
-    <section className="grid">
-      <Card title="Modules" chip={<span className="chip">{d.entitlement.modules.length} on</span>} span="s12">
-        <div className="tgrow">{d.entitlement.modules.map((m) => <span key={m} className="chip v">{name(m)}</span>)}</div>
-        <div className="help" style={{ marginTop: 14 }}>Modules come from the {planName} plan plus anything added at onboarding. Which of them are switched on is set under Configuration.</div>
-      </Card>
-      <Card title="Limits" span="s12">
-        <div className="rolh2">
-          <div className="kv">Students<b>{count(lim.students)}</b></div>
-          <div className="kv">File storage<b>{lim.storageGb} GB</b></div>
-          <div className="kv">SMS a month<b>{count(lim.smsPerMonth)}</b></div>
-          <div className="kv">Settings locked<b>{d.entitlement.locks.length ? d.entitlement.locks.join(', ') : 'None'}</b></div>
-          <div className="kv">Version<b>{d.entitlement.version}</b></div>
-        </div>
-      </Card>
-      <Card title="Send to the school" span="s12">
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="help" style={{ flex: 1, minWidth: 220 }}>Pushes these entitlements to the school’s database now. Its admin and app pick them up within a minute.</div>
-          <button className="btn pri" onClick={onPush} disabled={busy || !app.can('schools.write')}>Push entitlements</button>
-        </div>
-      </Card>
-    </section>
   );
 }
 
