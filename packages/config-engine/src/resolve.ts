@@ -5,7 +5,7 @@ import {
   type Permission,
   type SettingsDoc,
 } from '@gradeon/contracts';
-import { APP_CATALOG, closeModules, moduleByKey } from './modules.js';
+import { APP_CATALOG, activeFeatures, activeModules, closeModules, moduleByKey } from './modules.js';
 
 /** Layer 1: platform defaults, taken from the schema so there is one source. */
 export function platformDefaults(): Record<string, unknown> {
@@ -36,7 +36,7 @@ export function resolveConfig({ settings, entitlement, audience, flags }: Resolv
   for (const [k, v] of Object.entries(entitlement.overrides)) merged[k] = v;
   for (const k of locked) if (k in entitlement.overrides) merged[k] = entitlement.overrides[k];
 
-  const entitled = closeModules(entitlement.modules);
+  const entitled = activeModules(entitlement);
   const chosen = Array.isArray(merged['modules.enabled']) && (merged['modules.enabled'] as string[]).length
     ? (merged['modules.enabled'] as string[])
     : entitled;
@@ -69,6 +69,7 @@ export function resolveConfig({ settings, entitlement, audience, flags }: Resolv
       tagline: str('school.tagline'),
     },
     modules: enabled,
+    features: activeFeatures(entitlement, enabled),
     nav,
     settings: merged,
     vocabulary: { student: str('vocab.student', 'Student'), class: str('vocab.class', 'Class') },

@@ -56,10 +56,14 @@ export const schools = pgTable(
     entitlement: jsonb('entitlement')
       .$type<{
         modules: string[];
-        limits: { students: number; storageGb: number; smsPerMonth: number };
+        limits: { students: number; staff?: number; storageGb: number; smsPerMonth: number };
         locks: string[];
         overrides: Record<string, unknown>;
         version: number;
+        /** Phase 2B: features taken away, per-module dates and the trial end (see EntitlementDoc in contracts). */
+        features?: Record<string, boolean>;
+        dates?: Record<string, { from?: string; until?: string }>;
+        trialUntil?: string;
       }>()
       .notNull(),
     contact: jsonb('contact').$type<{ name: string; phone: string; email: string }>().notNull(),

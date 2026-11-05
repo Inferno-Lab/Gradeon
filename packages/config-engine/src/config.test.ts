@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { closeModules, contrastRatio, dependents, resolveConfig, validateSettingsChanges, DEFAULT_PLANS } from './index.js';
+import { activeFeatures, activeModules, changeEntitlement, closeModules, contrastRatio, dependents, resolveConfig, validateSettingsChanges, DEFAULT_PLANS, MODULES } from './index.js';
 
 const entitlement = (modules: string[], locks: string[] = [], overrides = {}) => ({
   plan: 'standard', modules, limits: { students: 100, storageGb: 1, smsPerMonth: 10 }, locks, overrides, version: 1,
@@ -15,6 +15,20 @@ describe('modules', () => {
   });
   it('every plan resolves to itself (no unknown modules)', () => {
     for (const p of DEFAULT_PLANS) expect(closeModules(p.modules)).toEqual(expect.arrayContaining(p.modules));
+  });
+  it('a module counts only within its dates', () => {
+    const ent = { modules: ['fees', 'library'], dates: { library: { until: '2026-11-30' }, fees: { from: '2026-12-01' } } };
+    expect(activeModules(ent, '2026-11-05')).toEqual(['people', 'library']);
+    expect(activeModules(ent, '2026-12-01')).toEqual(['people', 'fees']);
+  });
+  it('built features are on unless taken away, planned ones never', () => {
+    expect(activeFeatures({}, ['fees'])).toEqual(['fees.onlinePayment', 'fees.reminders']);
+    expect(activeFeatures({ features: { 'fees.onlinePayment': false, 'fees.lateFines': true } }, ['fees'])).toEqual(['fees.reminders']);
+  });
+  it('every catalogue key is unique and every feature is named after its module', () => {
+    const keys = [...MODULES.map((m) => m.key), ...MODULES.flatMap((m) => m.features.map((f) => f.key))];
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const m of MODULES) for (const f of m.features) expect(f.key.startsWith(m.key + '.')).toBe(true);
   });
 });
 
@@ -51,5 +65,22 @@ describe('contrastRatio', () => {
   it('matches known values', () => {
     expect(contrastRatio('#000000', '#FFFFFF')).toBeCloseTo(21, 0);
     expect(contrastRatio('#6A4CF5', '#FFFFFF')).toBeGreaterThan(4.5);
+  });
+});
+
+describe('changeEntitlement', () => {
+  const cur = { plan: 'standard', modules: ['people', 'fees', 'chat'], limits: { students: 100, storageGb: 1, smsPerMonth: 10 }, locks: [], overrides: {}, version: 3 };
+  it('lists what a push takes away and adds, and keeps only real differences', () => {
+    const r = changeEntitlement(cur, { modules: ['fees', 'library'], features: { 'fees.onlinePayment': false, 'fees.reminders': true } });
+    expect(r.problems).toEqual([]);
+    expect(r.removed).toEqual(['chat', 'fees.onlinePayment']);
+    expect(r.added).toEqual(['library']);
+    expect(r.next).toMatchObject({ modules: ['people', 'fees', 'library'], features: { 'fees.onlinePayment': false }, version: 4 });
+  });
+  it('refuses what is not built, bad dates and the core module', () => {
+    expect(changeEntitlement(cur, { modules: ['hostel'] }).problems[0]).toMatch(/not built yet/);
+    expect(changeEntitlement(cur, { features: { 'fees.lateFines': true } }).problems[0]).toMatch(/not built yet/);
+    expect(changeEntitlement(cur, { dates: { fees: { from: '2026-12-01', until: '2026-11-01' } } }).problems[0]).toMatch(/ends before it starts/);
+    expect(changeEntitlement(cur, { dates: { fees: { until: '2020-01-01' } } }).removed).toEqual(['fees']);
   });
 });

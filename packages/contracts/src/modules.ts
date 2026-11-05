@@ -348,19 +348,21 @@ export interface MessageEvent {
   defaults: { push: boolean; sms: boolean; email: boolean };
   /** Sent even in quiet hours. */
   urgent?: boolean;
+  /** Not sent at all while the school does not have this module or feature (a catalogue key). */
+  needs?: string;
 }
 
 export const MESSAGE_EVENTS: MessageEvent[] = [
-  { key: 'attendance.absent', label: 'Child marked absent or late', to: 'families', vars: ['student', 'status', 'school'], text: '{student} was marked {status} today at {school}.', defaults: { push: true, sms: true, email: false }, urgent: true },
-  { key: 'attendance.reminder', label: 'Teacher has not marked attendance', to: 'staff', vars: ['teacher'], text: 'Hi {teacher}, please mark attendance for your class today.', defaults: { push: true, sms: true, email: false } },
-  { key: 'fees.reminder', label: 'Fee reminder', to: 'families', vars: ['student', 'school'], text: 'Reminder: fees for {student} are due. Pay in the Gradeon app to get an instant receipt.', defaults: { push: true, sms: true, email: false } },
-  { key: 'fees.receipt', label: 'Payment received', to: 'families', vars: ['receipt', 'amount', 'title'], text: 'Receipt {receipt}: {amount} received for {title}. Thank you.', defaults: { push: true, sms: true, email: true } },
-  { key: 'timetable.published', label: 'Timetable changed', to: 'staff', vars: ['school'], text: 'The timetable was updated. Open the Gradeon app to see your new periods.', defaults: { push: true, sms: true, email: false } },
-  { key: 'homework.new', label: 'New homework', to: 'families', vars: ['student', 'subject', 'title', 'due'], text: 'New {subject} homework for {student}: {title}, due {due}.', defaults: { push: true, sms: false, email: false } },
-  { key: 'exam.results', label: 'Results published', to: 'families', vars: ['student', 'exam'], text: 'Results for {exam} are out. See how {student} did in the Gradeon app.', defaults: { push: true, sms: true, email: false } },
-  { key: 'notice.published', label: 'New notice', to: 'families', vars: ['title', 'school'], text: 'New notice from {school}: {title}. Read it in the Gradeon app.', defaults: { push: true, sms: false, email: false } },
-  { key: 'event.created', label: 'New event', to: 'families', vars: ['title', 'date'], text: '{title} on {date}. Tell us if you can come in the Gradeon app.', defaults: { push: true, sms: false, email: false } },
-  { key: 'admissions.offer', label: 'Admission offer', to: 'families', vars: ['child', 'school'], text: 'Good news: {child} has been offered a place at {school}. Please visit the office to complete admission.', defaults: { push: false, sms: true, email: true } },
+  { key: 'attendance.absent', label: 'Child marked absent or late', to: 'families', vars: ['student', 'status', 'school'], text: '{student} was marked {status} today at {school}.', defaults: { push: true, sms: true, email: false }, urgent: true, needs: 'attendance.parentAlerts' },
+  { key: 'attendance.reminder', label: 'Teacher has not marked attendance', to: 'staff', vars: ['teacher'], text: 'Hi {teacher}, please mark attendance for your class today.', defaults: { push: true, sms: true, email: false }, needs: 'attendance' },
+  { key: 'fees.reminder', label: 'Fee reminder', to: 'families', vars: ['student', 'school'], text: 'Reminder: fees for {student} are due. Pay in the Gradeon app to get an instant receipt.', defaults: { push: true, sms: true, email: false }, needs: 'fees.reminders' },
+  { key: 'fees.receipt', label: 'Payment received', to: 'families', vars: ['receipt', 'amount', 'title'], text: 'Receipt {receipt}: {amount} received for {title}. Thank you.', defaults: { push: true, sms: true, email: true }, needs: 'fees' },
+  { key: 'timetable.published', label: 'Timetable changed', to: 'staff', vars: ['school'], text: 'The timetable was updated. Open the Gradeon app to see your new periods.', defaults: { push: true, sms: true, email: false }, needs: 'timetable' },
+  { key: 'homework.new', label: 'New homework', to: 'families', vars: ['student', 'subject', 'title', 'due'], text: 'New {subject} homework for {student}: {title}, due {due}.', defaults: { push: true, sms: false, email: false }, needs: 'homework' },
+  { key: 'exam.results', label: 'Results published', to: 'families', vars: ['student', 'exam'], text: 'Results for {exam} are out. See how {student} did in the Gradeon app.', defaults: { push: true, sms: true, email: false }, needs: 'exams' },
+  { key: 'notice.published', label: 'New notice', to: 'families', vars: ['title', 'school'], text: 'New notice from {school}: {title}. Read it in the Gradeon app.', defaults: { push: true, sms: false, email: false }, needs: 'notices' },
+  { key: 'event.created', label: 'New event', to: 'families', vars: ['title', 'date'], text: '{title} on {date}. Tell us if you can come in the Gradeon app.', defaults: { push: true, sms: false, email: false }, needs: 'events' },
+  { key: 'admissions.offer', label: 'Admission offer', to: 'families', vars: ['child', 'school'], text: 'Good news: {child} has been offered a place at {school}. Please visit the office to complete admission.', defaults: { push: false, sms: true, email: true }, needs: 'people.admissions' },
   { key: 'leave.decided', label: 'Leave request answered', to: 'families', vars: ['who', 'from', 'to', 'status'], text: 'Leave for {who} from {from} to {to} was {status}.', defaults: { push: true, sms: true, email: false } },
   { key: 'family.invite', label: 'Invite a family to the app', to: 'families', vars: ['student', 'school'], text: '{school} now uses Gradeon. Install the Gradeon app and sign in with this phone number to follow {student}’s day.', defaults: { push: false, sms: true, email: false }, urgent: true },
   { key: 'staff.invite', label: 'Staff invite', to: 'staff', vars: ['name', 'school', 'password'], text: 'Welcome to {school}, {name}. Sign in with your email and the temporary password {password}, then choose your own.', defaults: { push: false, sms: false, email: true }, urgent: true },
