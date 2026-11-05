@@ -27,7 +27,6 @@ class AppConfig {
   /// The school's name and tagline. The demo values stand until `SchoolProfileService` has the school's own from the API.
   static String schoolName = 'Greenfield International School';
   static String schoolTagline = 'Curiosity first. Kindness always.';
-  static const logoAsset = 'assets/images/logo.svg';
   static const version = '2.0.6';
   static const build = 216;
 

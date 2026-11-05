@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/ui.dart';
@@ -107,15 +106,4 @@ Future<bool> confirmSheet({
     ),
   );
   return result ?? false;
-}
-
-/// Status colour helpers shared by stamps and tiles.
-extension StatusColors on AppColors {
-  Color tone(String status) => switch (status) {
-    'ok' => AppColors.ok,
-    'bad' => badText,
-    'late' => lateText,
-    'mari' => mariText,
-    _ => AppColors.off,
-  };
 }
