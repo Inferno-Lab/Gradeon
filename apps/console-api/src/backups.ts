@@ -1,0 +1,67 @@
+import { Controller, Get, Inject, Injectable, Param, type OnModuleInit } from '@nestjs/common';
+import type { BackupRow } from '@gradeon/contracts';
+import { backupDatabase, newId, pg, restoreDatabase } from '@gradeon/db';
+import { notFound } from '@gradeon/nest-kit';
+import { Db, Needs } from './core.js';
+import { ENV, type Env } from './env.js';
+import { withSchoolDb } from './school-db.js';
+
+const KEEP = 14;
+
+/** Every live school is backed up once a day; the console can take one on demand and put one back (with a second approver). */
+@Injectable()
+export class Backups implements OnModuleInit {
+  constructor(
+    private readonly db: Db,
+    @Inject(ENV) private readonly env: Env,
+  ) {}
+
+  onModuleInit(): void {
+    if (this.env.NODE_ENV === 'test') return;
+    const timer = setInterval(() => void this.daily(), 24 * 60 * 60 * 1000);
+    timer.unref();
+  }
+
+  async daily(): Promise<void> {
+    const { rows } = await this.db.pool.query<{ id: string }>("select id from schools where status = 'live' and deleted_at is null and db_url_sealed is not null");
+    for (const s of rows) await this.take(s.id, 'daily', 'system').catch(() => undefined);
+  }
+
+  private withPool<T>(schoolId: string, fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
+    return withSchoolDb(this.db, this.env.SECRETS_KEY, schoolId, fn);
+  }
+
+  async take(schoolId: string, kind: 'daily' | 'manual', by: string): Promise<BackupRow> {
+    const data = await this.withPool(schoolId, backupDatabase);
+    const id = newId('bak');
+    await this.db.pool.query('insert into school_backups (id, school_id, kind, taken_by, bytes, data) values ($1,$2,$3,$4,$5,$6)', [id, schoolId, kind, by, data.length, data]);
+    await this.db.pool.query(
+      'delete from school_backups where school_id = $1 and id not in (select id from school_backups where school_id = $1 order by taken_at desc limit $2)', [schoolId, KEEP]);
+    return (await this.list(schoolId)).find((b) => b.id === id)!;
+  }
+
+  async list(schoolId: string): Promise<BackupRow[]> {
+    const { rows } = await this.db.pool.query<{ id: string; kind: BackupRow['kind']; taken_by: string; bytes: number; taken_at: Date }>(
+      'select id, kind, taken_by, bytes, taken_at from school_backups where school_id = $1 order by taken_at desc', [schoolId]);
+    return rows.map((r) => ({ id: r.id, kind: r.kind, takenBy: r.taken_by, bytes: r.bytes, takenAt: r.taken_at.toISOString() }));
+  }
+
+  /** Takes a fresh backup first, so even a restore can be undone. */
+  async restore(schoolId: string, backupId: string, by: string): Promise<string> {
+    const b = (await this.db.pool.query<{ data: Buffer; taken_at: Date }>('select data, taken_at from school_backups where id = $1 and school_id = $2', [backupId, schoolId])).rows[0];
+    if (!b) throw notFound('That backup');
+    await this.take(schoolId, 'manual', `${by} (before restoring)`);
+    const r = await this.withPool(schoolId, (pool) => restoreDatabase(pool, b.data));
+    return `Restored ${r.rows} rows in ${r.tables} tables from the backup of ${b.taken_at.toISOString().slice(0, 16).replace('T', ' ')} UTC. A backup of the data just before is kept.`;
+  }
+}
+
+@Controller('console/v1/schools')
+export class BackupsController {
+  constructor(private readonly backups: Backups) {}
+
+  @Get(':id/backups') @Needs('schools.read')
+  list(@Param('id') id: string): Promise<BackupRow[]> {
+    return this.backups.list(id);
+  }
+}

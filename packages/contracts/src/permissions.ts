@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-/** Every action a role can be allowed to do. The admin hides UI and the API refuses requests from this one list. */
+/**
+ * Every action a role can be allowed to do. The admin hides UI and the API refuses requests from this one list.
+ * Nothing here changes the school's configuration or roles: only Gradeon does that, from the console.
+ */
 export const PERMISSIONS = [
   'students.read',
   'students.write',
@@ -18,8 +21,7 @@ export const PERMISSIONS = [
   'timetable.edit',
   'timetable.publish',
   'settings.read',
-  'settings.write',
-  'roles.manage',
+  'privacy.manage',
   'staff.read',
   'staff.write',
   'audit.read',
@@ -65,9 +67,8 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'timetable.read', area: 'Timetable', label: 'See the timetable' },
   { key: 'timetable.edit', area: 'Timetable', label: 'Edit periods and cover' },
   { key: 'timetable.publish', area: 'Timetable', label: 'Publish the timetable' },
-  { key: 'settings.read', area: 'Settings', label: 'See school settings' },
-  { key: 'settings.write', area: 'Settings', label: 'Change school settings', sensitive: true },
-  { key: 'roles.manage', area: 'Settings', label: 'Change roles and access', sensitive: true },
+  { key: 'settings.read', area: 'Settings', label: 'See how Gradeon has set up the school' },
+  { key: 'privacy.manage', area: 'Settings', label: 'Log and answer families’ data requests', sensitive: true },
   { key: 'audit.read', area: 'Settings', label: 'Read the audit log' },
   { key: 'reports.read', area: 'Reports', label: 'See reports' },
   { key: 'homework.read', area: 'Homework', label: 'See homework' },

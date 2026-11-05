@@ -85,10 +85,26 @@ export class FeesService {
     const outstanding = inv.amount - inv.waived - Number(inv.paid);
     if (outstanding <= 0) throw new ApiError('conflict', 'That invoice is already paid.');
     if (body.amount > outstanding) throw new ApiError('validation', `The most that can be paid on this invoice is ₹${outstanding.toLocaleString('en-IN')}.`, { fields: { amount: 'That is more than is due.' } });
-    const seq = Number((await t.pool.query<{ n: string }>('select count(*) n from payments')).rows[0]!.n) + 9001;
-    const receiptNo = `RCPT-${istToday().slice(0, 4)}-${String(seq).padStart(5, '0')}`;
-    await t.pool.query('insert into payments (id, invoice_id, amount, method, reference, receipt_no, paid_on, recorded_by) values ($1,$2,$3,$4,$5,$6,$7,$8)',
-      [newId('pay'), inv.id, body.amount, body.method, body.reference ?? null, receiptNo, istToday(), user.id]);
+    // Receipt numbers follow the school's own series (set from the console), one at a time so two payments never share a number.
+    const v = (await this.settings.doc(t)).values;
+    const prefix = String(v['fees.receiptPrefix'] ?? 'RCPT-{year}-').replace('{year}', istToday().slice(0, 4));
+    const start = Number(v['fees.receiptStart'] ?? 9001);
+    const client = await t.pool.connect();
+    let receiptNo: string;
+    try {
+      await client.query('begin');
+      await client.query("select pg_advisory_xact_lock(hashtext('receipts'))");
+      const n = Number((await client.query<{ n: string }>('select count(*) n from payments where starts_with(receipt_no, $1)', [prefix])).rows[0]!.n);
+      receiptNo = `${prefix}${String(start + n).padStart(5, '0')}`;
+      await client.query('insert into payments (id, invoice_id, amount, method, reference, receipt_no, paid_on, recorded_by) values ($1,$2,$3,$4,$5,$6,$7,$8)',
+        [newId('pay'), inv.id, body.amount, body.method, body.reference ?? null, receiptNo, istToday(), user.id]);
+      await client.query('commit');
+    } catch (err) {
+      await client.query('rollback').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'payment.recorded', entity: 'invoice', entityId: inv.id, detail: { amount: body.amount, receipt: receiptNo } });
     const g = await t.pool.query<{ phone: string | null }>('select g.phone from student_guardians sg join guardians g on g.id = sg.guardian_id where sg.student_id = $1 and sg.is_primary', [body.studentId]);
     if (g.rows[0]?.phone) await this.messenger.notify(t, 'fees.receipt', [{ to: g.rows[0].phone, vars: { receipt: receiptNo, amount: `₹${body.amount.toLocaleString('en-IN')}`, title: inv.title } }]);

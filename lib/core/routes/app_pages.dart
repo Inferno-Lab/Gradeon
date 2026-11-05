@@ -64,7 +64,12 @@ class ShellBinding extends Bindings {
       Get
         ..lazyPut(DashboardController.new, fenix: true)
         ..lazyPut(AcademicsController.new, fenix: true)
-        ..lazyPut(FeesController.new, fenix: true);
+        ..lazyPut(FeesController.new, fenix: true)
+        // Screens a school may put in the family tabs (console → The app).
+        ..lazyPut(EventsController.new, fenix: true)
+        ..lazyPut(LibraryController.new, fenix: true)
+        ..lazyPut(TransportController.new, fenix: true)
+        ..lazyPut(GalleryController.new, fenix: true);
     }
   }
 }

@@ -248,3 +248,14 @@ New scan scripts (need running servers, like the audit):
 - `tools/scan-scroll.mjs`: frame times while each scroll area scrolls, and column titles that scroll away.
 
 Traps from these sessions: Vite on this machine binds `localhost` (IPv6) unless started with `--host 127.0.0.1`, and the tools use `127.0.0.1`; `dev-reset.sh` stops every Node process of the repository, including the Vite servers, so start them again after it.
+
+## 14. Phase 1 and 2A (2026-11-04/05): what changed and what to know
+
+The plan is `docs/production-plan.md` (its Status section lists what is done). The rules that now hold:
+
+- **Schools configure nothing.** The school API has no settings or role writes; `settings.write` and `roles.manage` are gone (migration `0006_roles_config_to_console`). The console API owns configuration (`apps/console-api/src/config.ts`): `GET/PATCH /console/v1/schools/:id/config` (stale version → 409; keys marked `risky` go through Approvals as `config.apply`), rollback, roles, staff roles, templates, preview and the requests schools send. **A new setting** goes into `SchoolSettingsSchema` and `SETTINGS_META` (`packages/contracts/src/settings-meta.ts`); the console's Configuration tab renders it with no new screen. Mark it `notUsedYet` until something acts on it.
+- **Accounts.** Family logins are made when a student is added, imported or enrolled (`students.service.ts` `create`); families sign in with `POST /v1/auth/code`; `POST /v1/auth/reset/start|finish` resets a password (codes carry a purpose, migration `0005`). Tokens carry `kind`; family tokens only reach `/v1/f`, `/v1/auth`, `/v1/me`, `/v1/config`, `/v1/brand`, `/v1/errors` (`guards.ts`). Console staff use an authenticator app unless `DEMO_CODE` is set (test track).
+- **Operations.** Errors: `error_reports` in the registry, fed by the exception filter and `POST /v1/errors` / `POST /console/v1/errors`; listed on the console's Health page. Backups: `packages/db/src/backup.ts` (gzipped JSON of every table, any PostgreSQL), daily per live school, kept 14, restore needs a second approver. Receipt numbers are taken under an advisory lock.
+- **Browser tools** send their token as a request header (`setExtraHTTPHeaders`); the admin and console keep tokens in memory only and come back from the refresh cookie.
+- **App.** `SchoolConfig` (`lib/core/services/school_config.dart`) loads `/v1/config` when the shell opens; family tabs come from `app.dock` and `ShellController.showTab('chat')` takes a tab key. A release build needs `SCHOOL` and `API_BASE_URL`.
+- **Checks**: `pnpm typecheck && pnpm test`, `tools/audit-ui.mjs`, `tools/e2e-flows.mjs`, `tool/verify.sh`; CI runs all of them, plus `tools/check-name.mjs` and `tools/check-migrations.mjs`.

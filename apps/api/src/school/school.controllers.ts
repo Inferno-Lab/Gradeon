@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
-  ApprovalDecision, AssignFee, AttendanceDayPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SettingsPatch, SlotPatch, StudentCreate, StudentImport, StudentQuery,
+  ApprovalDecision, AssignFee, AttendanceDayPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentQuery,
   type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeSummary, type ImportResult, type InvoiceRow,
-  type NoticeRow, type SearchHit, type SettingsDoc, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
+  type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
 } from '@gradeon/contracts';
 import { MODULES, closeModules } from '@gradeon/config-engine';
 import { z } from 'zod';
@@ -73,6 +73,11 @@ export class StudentsController {
   @Post('message') @HttpCode(200) @Require('students.read')
   message(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(MessageRequest)) body: MessageRequest): Promise<{ sent: number }> {
     return this.students.message(t, body, u);
+  }
+
+  @Post('invite') @HttpCode(200) @Require('students.write')
+  invite(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ ids: z.array(z.string()).min(1).max(500) }))) body: { ids: string[] }): Promise<{ sent: number }> {
+    return this.students.invite(t, body.ids, u);
   }
 
   @Post('assign-fee') @HttpCode(200) @Require('fees.collect') @RequireModule('fees')
@@ -255,10 +260,7 @@ export class SettingsController {
     return { ...doc, usage, modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, core: !!m.core, backend: m.backend, entitled: entitled.includes(m.key) })) };
   }
 
-  @Patch() @Require('settings.write')
-  async patch(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(SettingsPatch)) body: SettingsPatch): Promise<SettingsDoc> {
-    return this.settings.patch(t, u, body);
-  }
+  // No write route: a school's configuration changes only from the console (Gradeon staff). See ConfigService in the console API.
 
   @Get('audit') @Require('audit.read')
   auditLog(@Tenant() t: TenantCtx): Promise<AuditRow[]> {

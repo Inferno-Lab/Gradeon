@@ -1,5 +1,5 @@
 import type {
-  ActionRequest, ActionRow, AuditRow, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
+  ActionRequest, ActionRow, AuditRow, BackupRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview,
 } from '@gradeon/contracts';
@@ -17,6 +17,25 @@ export function consoleApi(h: Http) {
     logout: () => h.post<void>(`${base}/auth/logout`),
     logoutAll: () => h.post<void>(`${base}/auth/logout-all`),
     fleet: () => h.get<FleetSummary>(`${base}/fleet`),
+    errors: (days = 7) => h.get<ErrorGroup[]>(`${base}/errors`, { days }),
+    backups: (schoolId: string) => h.get<BackupRow[]>(`${base}/schools/${schoolId}/backups`),
+    config: {
+      get: (schoolId: string) => h.get<SchoolConfig>(`${base}/schools/${schoolId}/config`),
+      patch: (schoolId: string, b: ConfigPatch) => h.patch<SchoolConfig | { pending: true; actionId: string }>(`${base}/schools/${schoolId}/config`, b),
+      rollback: (schoolId: string, versionId: string) => h.post<SchoolConfig>(`${base}/schools/${schoolId}/config/rollback`, { versionId }),
+      preview: (schoolId: string, roleId: string) => h.get<Pick<EffectiveConfig, 'nav' | 'app' | 'modules' | 'school'>>(`${base}/schools/${schoolId}/config/preview`, { roleId }),
+      createRole: (schoolId: string, b: RoleDefSave) => h.post<RoleDef[]>(`${base}/schools/${schoolId}/roles`, b),
+      saveRole: (schoolId: string, roleId: string, b: RoleDefSave) => h.put<RoleDef[]>(`${base}/schools/${schoolId}/roles/${roleId}`, b),
+      deleteRole: (schoolId: string, roleId: string) => h.del<RoleDef[]>(`${base}/schools/${schoolId}/roles/${roleId}`),
+      setStaffRole: (schoolId: string, userId: string, roleId: string) => h.put<void>(`${base}/schools/${schoolId}/staff/${userId}/role`, { roleId }),
+      templates: () => h.get<ConfigTemplateRow[]>(`${base}/config-templates`),
+      saveTemplate: (schoolId: string, name: string) => h.post<ConfigTemplateRow[]>(`${base}/config-templates`, { schoolId, name }),
+      applyTemplate: (templateId: string, schoolIds: string[]) => h.post<{ applied: number }>(`${base}/config-templates/${templateId}/apply`, { schoolIds }),
+    },
+    changeRequests: {
+      list: (status: 'open' | 'all' = 'open') => h.get<ChangeRequestRow[]>(`${base}/change-requests`, { status }),
+      answer: (id: string, b: { status: 'done' | 'declined'; answer: string }) => h.post<void>(`${base}/change-requests/${id}/answer`, b),
+    },
     cells: () => h.get<CellRow[]>(`${base}/cells`),
     createCell: (b: CellCreate) => h.post<{ key: string; note: string }>(`${base}/cells`, b),
     patchCell: (key: string, b: CellPatch) => h.put<{ ok: true }>(`${base}/cells/${key}`, b),
@@ -81,7 +100,7 @@ export function consoleApi(h: Http) {
     team: {
       list: () => h.get<ConsoleUserRow[]>(`${base}/team`),
       add: (b: { name: string; email: string; roles: string[]; password: string }) => h.post<void>(`${base}/team`, b),
-      change: (id: string, b: { roles?: string[]; status?: string }) => h.put<void>(`${base}/team/${id}`, b),
+      change: (id: string, b: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }) => h.put<void>(`${base}/team/${id}`, b),
     },
     audit: (school?: string) => h.get<AuditRow[]>(`${base}/audit`, { school }),
   };

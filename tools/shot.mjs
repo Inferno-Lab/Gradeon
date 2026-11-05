@@ -15,12 +15,12 @@ async function tokens() {
   if (flag('--console')) {
     const a = await (await fetch(`${api}/console/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ identifier: 'kaushal@gradeon.app', password: 'nest2026' }) })).json();
     const t = await (await fetch(`${api}/console/v1/auth/verify`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ challengeId: a.challenge.challengeId, code: '424242' }) })).json();
-    return { key: 'gradeon.console', value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
+    return { key: 'gradeon.console', value: JSON.stringify({ user: t.user }), token: t.accessToken };
   }
   const h = { 'content-type': 'application/json', 'x-school': slug };
   const a = await (await fetch(`${api}/v1/auth/login`, { method: 'POST', headers: h, body: JSON.stringify({ identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }) })).json();
   const t = await (await fetch(`${api}/v1/auth/verify`, { method: 'POST', headers: h, body: JSON.stringify({ challengeId: a.challenge.challengeId, code: '424242' }) })).json();
-  return { key: `gradeon.admin.${slug}`, value: JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user }) };
+  return { key: `gradeon.admin.${slug}`, value: JSON.stringify({ user: t.user }), token: t.accessToken };
 }
 
 const browser = await chromium.launch();
@@ -28,6 +28,7 @@ const ctx = await browser.newContext({ viewport: { width: Number(w), height: Num
 if (!flag('--anon')) {
   const t = await tokens();
   await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, [t.key, t.value]);
+  await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: t.token, expiresInSeconds: 900 } }));
 }
 const page = await ctx.newPage();
 const errors = [];

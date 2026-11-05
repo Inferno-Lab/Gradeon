@@ -29,6 +29,8 @@ export function LoginRoute() {
           session.setAccess(slug, t.accessToken);
           return t.user.name;
         },
+        resetStart: (identifier) => client.api.resetStart(identifier),
+        resetFinish: async (challengeId, code, password) => { await client.api.resetFinish({ challengeId, code, password }); },
         enter: () => void navigate({ to: '/' }),
       }}
     />

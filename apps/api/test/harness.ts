@@ -20,6 +20,8 @@ export interface Harness {
   call: (method: string, url: string, opts?: { token?: string; body?: unknown; school?: string; headers?: Record<string, string>; cookies?: Record<string, string> }) => Promise<{ status: number; json: any; text: string; cookies: Record<string, string>; headers: Record<string, string | string[] | undefined> }>;
   login: (identifier?: string, password?: string) => Promise<string>;
   close: () => Promise<void>;
+  /** Writes a school's settings straight into its database, as the console does (schools cannot). */
+  setSettings: (changes: Record<string, unknown>, slug?: string) => Promise<void>;
   addSchool: (slug: string, o: { plan: string; data: 'demo' | 'empty'; demoMode?: boolean; status?: string }) => Promise<void>;
 }
 
@@ -87,8 +89,18 @@ export async function startHarness(port?: number): Promise<Harness> {
     const step2 = await call('POST', '/v1/auth/verify', { body: { challengeId: step1.json.challenge.challengeId, code: '424242' } });
     return step2.json.accessToken as string;
   };
+  const setSettings: Harness['setSettings'] = async (changes, school = slug) => {
+    const dbName = (await registry.query<{ db_name: string }>('select db_name from schools where slug = $1', [school])).rows[0]!.db_name;
+    const pool = new pg.Pool({ connectionString: await ensureDatabase(server.url, dbName), max: 1 });
+    for (const [k, v] of Object.entries(changes)) {
+      await pool.query('insert into settings (key, value) values ($1,$2) on conflict (key) do update set value = excluded.value', [k, JSON.stringify(v)]);
+    }
+    await pool.query("update meta set value = to_jsonb((value)::int + 1) where key = 'settings.version'");
+    await pool.end();
+    await new Promise((r) => setTimeout(r, 5_100)); // the API caches a school's settings for five seconds
+  };
   return {
-    app, server, registry, slug, call, login, addSchool,
+    app, server, registry, slug, call, login, addSchool, setSettings,
     close: async () => { await app.close(); await registry.end(); await server.stop(); },
   };
 }

@@ -14,6 +14,7 @@ export function useChrome(active: string) {
   const theme = useTheme();
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => api.schools(), staleTime: 20_000 });
   const actions = useQuery({ queryKey: ['actions'], queryFn: api.actions.list, staleTime: 20_000 });
+  const requests = useQuery({ queryKey: ['change-requests', 'open'], queryFn: () => api.changeRequests.list('open'), staleTime: 20_000 });
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } });
   const [open, setOpen] = useState(false);
   const [more, setMore] = useState(false);
@@ -21,7 +22,8 @@ export function useChrome(active: string) {
 
   const pending = (actions.data ?? []).filter((a) => a.status === 'pending_approval').length;
   const onboarding = (schools.data ?? []).filter((s) => s.status === 'onboarding').length;
-  const groups = useMemo(() => consoleNav({ onboarding, approvals: pending }), [onboarding, pending]);
+  const asked = (requests.data ?? []).length;
+  const groups = useMemo(() => consoleNav({ onboarding, approvals: pending, requests: asked }), [onboarding, pending, asked]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
   const goRef = useRef(go);
   goRef.current = go;
@@ -112,5 +114,5 @@ export function useChrome(active: string) {
 }
 
 export function roleLabel(role: string | undefined): string {
-  return ({ super_admin: 'Super admin', support: 'Support', release_manager: 'Release manager', finance: 'Finance', compliance: 'Compliance', auditor: 'Auditor' } as Record<string, string>)[role ?? ''] ?? 'Team';
+  return ({ super_admin: 'Super admin', implementation: 'Implementation', support: 'Support', release_manager: 'Release manager', finance: 'Finance', compliance: 'Compliance', auditor: 'Auditor' } as Record<string, string>)[role ?? ''] ?? 'Team';
 }

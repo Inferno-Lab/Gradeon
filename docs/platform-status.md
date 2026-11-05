@@ -1,4 +1,4 @@
-# Platform build status (2026-10-19, after the UI fix sessions)
+# Platform build status (2026-10-19, after the UI fix sessions; Phase 1 and 2A of docs/production-plan.md since)
 
 Merged to `main` (work branch `feat/platform`). The plan is `docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`; this file says what of it exists.
 Deploying the free test track: `docs/deploy-free-test.md`. The full hand-off (decisions, how to continue, what is left) is `docs/HANDOFF.md`; the design concept is `docs/DESIGN.md`. Live test deployment: `https://gradeon.onrender.com` (admin `/`, console `/console/`).
@@ -26,7 +26,7 @@ UI checks, all repeatable:
 
 ## Not done, on purpose or not yet
 
-- **Mobile**: the shell does not yet hide tabs for modules a school switched off (needs `/v1/config`), library catalogue and reservations, gallery, transport stops and live position, assistant, push registration, offline store, deep links; moving `lib/` to `apps/mobile`, the Gradeon picker app, store pipelines and code push (plan section 19). A real phone and the liquid glass shader were not checked.
+- **Mobile**: library catalogue and reservations, gallery, transport stops and live position, assistant, push registration, offline store, deep links; moving `lib/` to `apps/mobile`, the Gradeon picker app, store pipelines and code push (plan section 19). A real phone and the liquid glass shader were not checked.
 - **Admin**: none of the new pages has had the owner's design review (no canvas boards exist for them); no Hindi or Marathi for admin text; quiet hours only mark sandbox messages as held.
 - **Console**: a data-copying move between servers (aws-cell), catalog update offers, real backups beyond Neon, release deployment that does more than record versions, Razorpay and GST invoices.
 - **Hosting and security**: only the free test track; tokens are still in `localStorage` (plan section 17 asks for cookies, CSP, passkeys, TOTP, rate limits per IP, a password reset flow); AWS, Razorpay and SMS providers need the owner's accounts.

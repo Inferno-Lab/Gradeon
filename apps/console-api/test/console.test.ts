@@ -224,7 +224,7 @@ describe('support and fleet', () => {
     expect(ok.status).toBe(200);
     const view = await h.s('GET', '/v1/me', { school: 'demoschool', token: ok.json.token });
     expect(view.json.roleNames).toEqual(['Gradeon support']);
-    const write = await h.s('PATCH', '/v1/settings', { school: 'demoschool', token: ok.json.token, body: { changes: { 'school.name': 'Nope' } } });
+    const write = await h.s('POST', '/v1/notices', { school: 'demoschool', token: ok.json.token, body: { title: 'Not from support', body: 'Support sessions are read-only.', audience: 'everyone', publish: false } });
     expect(write.status).toBe(403);
     expect((await h.s('GET', '/v1/me', { school: 'freshschool', token: ok.json.token })).status).toBe(404);
     const audit = (await h.c('GET', '/console/v1/audit', { token: t })).json;
@@ -241,5 +241,30 @@ describe('support and fleet', () => {
     const a = await h.c('POST', '/console/v1/billing/generate', { token: t, body: { period: '2026-10' } });
     expect(a.json.created).toBeGreaterThanOrEqual(1);
     expect((await h.c('POST', '/console/v1/billing/generate', { token: t, body: { period: '2026-10' } })).json.created).toBe(0);
+  });
+});
+
+describe('error reports', () => {
+  it('groups what the admin and the app report, and shows it on the console', async () => {
+    const body = { source: 'admin', message: 'Cannot read properties of undefined (reading "rows")', stack: 'TypeError: x\n    at DashboardPage (dashboard.tsx:12:3)', url: '/s/greenfield/' };
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body })).status).toBe(204);
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body })).status).toBe(204);
+    expect((await h.s('POST', '/v1/errors', { school: 'greenfield', body: { source: 'nobody', message: 'x' } })).status).toBe(400);
+    const list = (await h.c('GET', '/console/v1/errors', { token: t })).json;
+    expect(list.find((e: { message: string }) => e.message === body.message)).toMatchObject({ source: 'admin', schoolSlug: 'greenfield', count: 2 });
+    expect((await h.c('GET', '/console/v1/errors')).status).toBe(401);
+  });
+});
+
+describe('backups', () => {
+  it('backs a school up on request, and waits for a second person to put one back', async () => {
+    const school = (await h.c('GET', '/console/v1/schools', { token: t })).json.find((s: { slug: string }) => s.slug === 'demoschool');
+    const took = (await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'backup.take', schoolId: school.id } })).json;
+    expect(took.status).toBe('done');
+    const list = (await h.c('GET', `/console/v1/schools/${school.id}/backups`, { token: t })).json;
+    expect(list[0]).toMatchObject({ kind: 'manual', takenBy: 'kaushal@gradeon.app' });
+    expect(list[0].bytes).toBeGreaterThan(1000);
+    const restore = (await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'backup.restore', schoolId: school.id, params: { backupId: list[0].id } } })).json;
+    expect(restore.status).toBe('pending_approval');
   });
 });

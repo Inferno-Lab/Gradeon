@@ -156,8 +156,9 @@ export class Admin {
   }
 
   async team(): Promise<ConsoleUserRow[]> {
-    const { rows } = await this.db.pool.query<{ id: string; name: string; email: string; roles: ConsoleRole[]; status: ConsoleUserRow['status']; last_seen_at: Date | null }>('select id, name, email, roles, status, last_seen_at from console_users order by name');
-    return rows.map((r) => ({ id: r.id, name: r.name, email: r.email, roles: r.roles, status: r.status, lastSeenAt: r.last_seen_at?.toISOString() ?? null }));
+    const { rows } = await this.db.pool.query<{ id: string; name: string; email: string; roles: ConsoleRole[]; status: ConsoleUserRow['status']; last_seen_at: Date | null; authenticator: boolean }>(
+      'select id, name, email, roles, status, last_seen_at, totp_secret is not null authenticator from console_users order by name');
+    return rows.map((r) => ({ id: r.id, name: r.name, email: r.email, roles: r.roles, status: r.status, lastSeenAt: r.last_seen_at?.toISOString() ?? null, authenticator: r.authenticator }));
   }
 
   async addMember(user: string, body: { name: string; email: string; roles: string[]; password: string }): Promise<void> {
@@ -171,7 +172,7 @@ export class Admin {
     await this.db.audit(user, 'team.added', 'user', body.email, { roles });
   }
 
-  async setMember(user: string, id: string, patch: { roles?: string[]; status?: string }): Promise<void> {
+  async setMember(user: string, id: string, patch: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }): Promise<void> {
     const { rows } = await this.db.pool.query<{ email: string; roles: ConsoleRole[]; status: string }>('select email, roles, status from console_users where id = $1', [id]);
     const m = rows[0];
     if (!m) throw notFound('That person');
@@ -182,11 +183,15 @@ export class Admin {
       const others = await this.db.pool.query("select count(*) n from console_users where id <> $1 and status = 'active' and roles ? 'super_admin'", [id]);
       if (Number(others.rows[0]!.n) === 0) throw new ApiError('conflict', 'There must always be one active super admin.');
     }
+    if (patch.password !== undefined && patch.password.length < 10) throw new ApiError('validation', 'Use a password of at least 10 characters.', { fields: { password: 'At least 10 characters.' } });
     await this.db.pool.query('update console_users set roles = $2, status = $3, token_version = token_version + 1 where id = $1', [id, JSON.stringify(roles), status]);
-    if (status !== 'active') {
+    // A lost phone or a forgotten password: the person sets up again at their next sign-in, and every open session ends.
+    if (patch.password) await this.db.pool.query('update console_users set password_hash = $2, failed_logins = 0, locked_until = null where id = $1', [id, await hashPassword(patch.password)]);
+    if (patch.resetAuthenticator) await this.db.pool.query('update console_users set totp_secret = null where id = $1', [id]);
+    if (status !== 'active' || patch.password || patch.resetAuthenticator) {
       await this.db.pool.query('update console_sessions set revoked_at = now() where user_id = $1 and revoked_at is null', [id]);
     }
-    await this.db.audit(user, 'team.changed', 'user', id, { roles, status });
+    await this.db.audit(user, 'team.changed', 'user', id, { roles, status, ...(patch.password ? { password: 'reset' } : {}), ...(patch.resetAuthenticator ? { authenticator: 'reset' } : {}) });
   }
 
   async audit(limit = 100, entityId?: string): Promise<AuditRow[]> {
@@ -371,7 +376,7 @@ export class OpsController {
   }
 
   @Put('team/:id') @HttpCode(204) @Needs('team.write')
-  async change(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { roles?: string[]; status?: string }): Promise<void> {
+  async change(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }): Promise<void> {
     await this.admin.setMember(me.email, id, body);
   }
 

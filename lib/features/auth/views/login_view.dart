@@ -108,12 +108,12 @@ class _PasswordScreen extends StatelessWidget {
                       index: 2,
                       child: Field(
                         controller: controller.email,
-                        label: 'auth.school_email',
+                        label: 'auth.email_or_phone',
                         icon: PhosphorIconsRegular.envelopeSimple,
-                        keyboard: TextInputType.emailAddress,
+                        keyboard: TextInputType.text,
                         autofillHints: const [AutofillHints.email, AutofillHints.username],
                         textInputAction: TextInputAction.next,
-                        validator: Validators.email,
+                        validator: Validators.emailOrPhone,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -131,22 +131,33 @@ class _PasswordScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 26),
-                    Rise(
-                      index: 5,
-                      child: Row(
-                        children: [
-                          const Expanded(child: Hr()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Overline('auth.or_demo'.tr),
-                          ),
-                          const Expanded(child: Hr()),
-                        ],
-                      ),
+                    // Demo cards only where there is something to demo: sample content or a demo school.
+                    Obx(
+                      () => !AppConfig.demoSchool.value
+                          ? const SizedBox.shrink()
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 26),
+                                Rise(
+                                  index: 5,
+                                  child: Row(
+                                    children: [
+                                      const Expanded(child: Hr()),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                        child: Overline('auth.or_demo'.tr),
+                                      ),
+                                      const Expanded(child: Hr()),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Rise(index: 6, child: _DemoCard(controller: controller)),
+                              ],
+                            ),
                     ),
-                    const SizedBox(height: 14),
-                    Rise(index: 6, child: _DemoCard(controller: controller)),
                     const SizedBox(height: 30),
                     Center(
                       child: GestureDetector(
@@ -204,10 +215,7 @@ class _PasswordFieldState extends State<_PasswordField> {
               ),
             ),
             GestureDetector(
-              onTap: () {
-                widget.controller.useOtp.value = true;
-                widget.controller.otp.clear();
-              },
+              onTap: () => unawaited(widget.controller.requestCode()),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text('auth.use_code'.tr, style: anek(13, 650, height: 1.2, color: c.mariText)),
@@ -428,7 +436,10 @@ class _OtpScreenState extends State<_OtpScreen> {
                                     style: context.type.cap,
                                   )
                                 : GestureDetector(
-                                    onTap: _startTimer,
+                                    onTap: () {
+                                      _startTimer();
+                                      unawaited(widget.controller.resend());
+                                    },
                                     child: Text('auth.resend'.tr, style: anek(13, 650, height: 1.3, color: c.mariText)),
                                   ),
                           ),

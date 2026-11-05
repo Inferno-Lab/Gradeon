@@ -230,14 +230,30 @@ export class StudentsService {
     const year = new Date().getUTCFullYear();
     const seq = Number((await t.pool.query<{ n: string }>("select count(*) n from students where admission_no like $1", [`${year}/%`])).rows[0]!.n) + 501;
     const id = newId('stu');
-    const gid = newId('gdn');
     const roll = body.rollNo || String(Number((await t.pool.query<{ n: string }>('select count(*) n from students where class_id = $1', [body.classId])).rows[0]!.n) + 1).padStart(2, '0');
+    const digits = body.guardianPhone.replace(/\D/g, '').slice(-10);
+    if (digits.length < 10) throw new ApiError('validation', 'Add the guardian’s 10-digit phone number.', { fields: { guardianPhone: 'Use a 10-digit phone number.' } });
+    const byPhone = "right(regexp_replace(coalesce(phone,''), '\\D', '', 'g'), 10) = $1";
     const client = await t.pool.connect();
     try {
       await client.query('begin');
       await client.query('insert into students (id, admission_no, name, class_id, roll_no, dob, blood_group, address, admitted_on) values ($1,$2,$3,$4,$5,$6,$7,$8, current_date)', [id, `${year}/${String(seq).padStart(4, '0')}`, body.name, body.classId, roll, body.dob, body.bloodGroup ?? null, body.address ?? null]);
-      await client.query("insert into guardians (id, name, phone, relation) values ($1,$2,$3,'Parent')", [gid, body.guardianName, body.guardianPhone]);
-      await client.query('insert into student_guardians (student_id, guardian_id, is_primary) values ($1,$2,true)', [id, gid]);
+      // One family, one guardian: a brother or sister joins the guardian who already has that phone number.
+      let g = (await client.query<{ id: string; user_id: string | null }>(`select id, user_id from guardians where ${byPhone} limit 1`, [digits])).rows[0];
+      if (!g) {
+        g = { id: newId('gdn'), user_id: null };
+        await client.query("insert into guardians (id, name, phone, relation) values ($1,$2,$3,'Parent')", [g.id, body.guardianName, body.guardianPhone]);
+      }
+      await client.query('insert into student_guardians (student_id, guardian_id, is_primary) values ($1,$2,true)', [id, g.id]);
+      // The family's app account: signs in with a code to this phone, no password.
+      if (!g.user_id) {
+        let uid = (await client.query<{ id: string }>(`select id from users where ${byPhone} limit 1`, [digits])).rows[0]?.id;
+        if (!uid) {
+          uid = newId('usr');
+          await client.query("insert into users (id, kind, name, phone) values ($1,'guardian',$2,$3)", [uid, body.guardianName, body.guardianPhone]);
+        }
+        await client.query('update guardians set user_id = $2 where id = $1', [g.id, uid]);
+      }
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -264,10 +280,12 @@ export class StudentsService {
       const classId = byName.get((cells[col('class')] ?? '').replace(/\s+/g, '').toLowerCase());
       const dob = cells[col('dob')] ?? '';
       const name = cells[col('name')] ?? '';
-      const problem = !name ? 'Name is empty.' : !classId ? `Class “${cells[col('class')] ?? ''}” does not exist.` : !/^\d{4}-\d{2}-\d{2}$/.test(dob) ? 'Date of birth should look like 2012-04-18.' : null;
+      const phone = cells[col('phone')] ?? '';
+      const problem = !name ? 'Name is empty.' : !classId ? `Class “${cells[col('class')] ?? ''}” does not exist.` : !/^\d{4}-\d{2}-\d{2}$/.test(dob) ? 'Date of birth should look like 2012-04-18.'
+        : phone.replace(/\D/g, '').length < 10 ? 'The guardian’s phone number is missing or too short.' : null;
       if (problem) { result.skipped++; result.errors.push({ line: i + 2, message: problem }); continue; }
       try {
-        await this.create(t, { name, classId: classId!, dob, guardianName: cells[col('guardian')] || 'Parent or guardian', guardianPhone: cells[col('phone')] || '+91 90000 00000', rollNo: col('roll') >= 0 ? cells[col('roll')] : undefined }, user);
+        await this.create(t, { name, classId: classId!, dob, guardianName: cells[col('guardian')] || 'Parent or guardian', guardianPhone: phone, rollNo: col('roll') >= 0 ? cells[col('roll')] : undefined }, user);
         result.created++;
       } catch (err) {
         result.skipped++;
@@ -294,6 +312,16 @@ export class StudentsService {
     await this.messenger.sendMany(t, targets.map((r) => ({ channel: body.channel, to: r.phone!, body: body.body })));
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'message.sent', entity: 'student', detail: { count: targets.length, channel: body.channel } });
     return { sent: targets.length };
+  }
+
+  /** Asks each family (once, however many children are selected) to install the app and sign in with their phone. */
+  async invite(t: TenantCtx, ids: string[], user: { id: string; name: string }): Promise<{ sent: number }> {
+    const { rows } = await t.pool.query<{ phone: string; name: string }>(
+      `select distinct on (g.phone) g.phone, s.name from student_guardians sg join guardians g on g.id = sg.guardian_id join students s on s.id = sg.student_id
+       where sg.student_id = any($1) and sg.is_primary and g.phone is not null order by g.phone, s.name`, [ids]);
+    const sent = await this.messenger.notify(t, 'family.invite', rows.map((r) => ({ to: r.phone, vars: { student: r.name } })));
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'family.invited', entity: 'student', detail: { families: sent } });
+    return { sent };
   }
 
   async assignFee(t: TenantCtx, body: AssignFee, user: { id: string; name: string }): Promise<{ created: number }> {

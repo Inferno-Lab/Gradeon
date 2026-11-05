@@ -31,6 +31,12 @@ describe('who is signed in', () => {
     expect(blocked.json?.step).toBeUndefined();
     expect((await h.call('GET', '/v1/f/me')).status).toBe(401);
   });
+  it('keeps families out of the staff API', async () => {
+    for (const url of ['/v1/dashboard', '/v1/search?q=a', '/v1/shell', '/v1/students', '/v1/reports']) expect((await h.call('GET', url, { token: parent })).status).toBe(403);
+    expect((await h.call('GET', '/v1/me', { token: parent })).status).toBe(200);
+    expect((await h.call('GET', '/v1/config', { token: parent })).status).toBe(200);
+    expect((await h.call('GET', '/v1/dashboard', { token: admin })).status).toBe(200);
+  });
   it('keeps each family to its own children', async () => {
     expect((await f(parent, '/students/stu_aarav')).status).toBe(200);
     expect((await f(parent, '/students/stu_diya')).status).toBe(403);
@@ -172,5 +178,30 @@ describe('chat, leave and the rest', () => {
     expect((await f(parent, '/students/stu_aarav/transport')).json).toMatchObject({ routeName: 'Route 4', stops: [] });
     expect((await f(parent, '/gallery')).json).toEqual([]);
     expect((await f(parent, '/users/' + (await f(parent, '/me')).json.id)).json.name).toBe('Priya Sharma');
+  });
+});
+
+describe('family accounts', () => {
+  const codeFor = async (identifier: string) => (await h.call('POST', '/v1/auth/code', { body: { identifier } })).json;
+  it('gives a new student’s family an account that signs in with a code, and puts brothers and sisters under it', async () => {
+    const add = (name: string) => h.call('POST', '/v1/students', { token: admin, body: { name, classId: 'cls_8a', dob: '2013-05-02', guardianName: 'Meera Joshi', guardianPhone: '+91 99887 76655' } });
+    expect((await add('Tara Joshi')).status).toBe(201);
+    expect((await add('Vir Joshi')).status).toBe(201);
+    const challenge = await codeFor('99887 76655');
+    expect(challenge.maskedTo).toBeTruthy();
+    const tokens = (await h.call('POST', '/v1/auth/verify', { body: { challengeId: challenge.challengeId, code: '424242', client: 'mobile' } })).json;
+    const me = (await h.call('GET', '/v1/f/me', { token: tokens.accessToken })).json;
+    expect(me).toMatchObject({ role: 'parent', name: 'Meera Joshi' });
+    expect(me.childIds).toHaveLength(2);
+    expect((await h.call('POST', '/v1/auth/login', { body: { identifier: '9988776655', password: 'anything' } })).status).toBe(400);
+  });
+  it('keeps staff on their password, and a reset code only resets', async () => {
+    expect((await h.call('POST', '/v1/auth/code', { body: { identifier: 'kavita.iyer@greenfield.edu.in' } })).status).toBe(400);
+    const reset = (await h.call('POST', '/v1/auth/reset/start', { body: { identifier: 'kavita.iyer@greenfield.edu.in' } })).json;
+    expect((await h.call('POST', '/v1/auth/verify', { body: { challengeId: reset.challengeId, code: '424242' } })).status).toBe(401);
+    const again = (await h.call('POST', '/v1/auth/reset/start', { body: { identifier: 'kavita.iyer@greenfield.edu.in' } })).json;
+    expect((await h.call('POST', '/v1/auth/reset/finish', { body: { challengeId: again.challengeId, code: '424242', password: 'a-new-pass-123' } })).status).toBe(204);
+    expect((await h.call('GET', '/v1/f/me', { token: teacher })).status).toBe(401);
+    expect(await h.login('kavita.iyer@greenfield.edu.in', 'a-new-pass-123')).toBeTruthy();
   });
 });

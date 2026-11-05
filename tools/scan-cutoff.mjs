@@ -18,13 +18,13 @@ async function adminKey() {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  return [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  return [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
 }
 async function consoleKey() {
   const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
   const list = await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${t.accessToken}` } })).json();
-  return { key: ['gradeon.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })], school: list.find((s) => s.slug === slug)?.id };
+  return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
 const jobs = [];
@@ -68,7 +68,7 @@ for (const [w, h] of SIZES) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   for (const j of jobs) {
-    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key);
+    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: j.key[2], expiresInSeconds: 900 } }));
     await page.goto(j.url, { waitUntil: 'networkidle' }).catch(() => {});
     await page.waitForTimeout(400);
     const found = await page.evaluate(scan);

@@ -28,7 +28,7 @@
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-fastify": "^11.1.0",
     "drizzle-orm": "^0.45.0",
-    "fastify": "^5.4.0",
+    "fastify": "^5.12.5",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.0",
     "zod": "^4.1.0",
@@ -41,6 +41,6 @@
     "tsx": "^4.20.0",
     "typescript": "~5.9.3",
     "unplugin-swc": "^2.0.0",
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.12"
   }
 }

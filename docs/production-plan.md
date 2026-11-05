@@ -16,6 +16,17 @@ What matters most, in the owner's words, and where it is in this plan:
 
 **Decided (Nov 4, 2026):** schools change nothing themselves; configuration is console-only. **Open, and not blocking:** one Gradeon app or one app per school, names, hosting, providers, pilot school. The work goes on with working values kept in one place, so each decision later is a change of value, not a rebuild.
 
+## Status (Nov 5, 2026)
+
+**Phase 0** is merged. **Phase 1 and Phase 2A** are on `feat/phase-1-2a`:
+
+- **Blockers fixed:** B1 (family accounts: adding, importing or enrolling a student creates the family's login, siblings share it, families sign in with a code to their phone; "Invite to app" bulk action), B3 (tokens carry the account kind; family accounts are refused on every staff route), B4 (configuration is console-only), B11 ("New notice" message sent; leave answers reach the family or staff member; support-session wording; admin sign-in by phone). B2 and B9 are done for configuration and the app's tabs; module enforcement on every route is Phase 2B.
+- **Safety:** password reset by code (admin and app); console staff use an authenticator app (RFC 6238) with lockout and reset from Team; tokens never read from browser storage; all known dependency vulnerabilities fixed; release app builds refuse to start without a school; demo cards only on demo schools; error tracking for both APIs, admin, console and app (console Health page); daily backups of every school with "Back up now" and restore behind a second approver; CI blocks edits to applied migrations and runs the browser flows and page audit.
+- **Configuration (2A):** the school API has no configuration writes; `SETTINGS_META` describes every setting (group, label, control, risky, "saved, not used yet") and the console builds its Configuration tab from it, with history and rollback, risky changes through Approvals, templates applied to many schools and a per-role preview. Roles and who holds them are set in the console's Roles tab; the school assigns its staff to roles only while the console allows it. Schools ask through "Ask Gradeon to change this"; the console's Requests page answers. A new Implementation console role does the work. New working settings: sign-in length (web, app), shortest password, receipt prefix and start, school assigns roles; the fee-waiver rule is now enforced.
+- **App:** reads the school's configuration at start: family tabs follow the console (Profile always last) and Home shows the timetable ribbon, items due and attendance only when listed and their module is on.
+
+**Still open in these phases, deliberately:** 1.2 test data through the importer needs the Phase 3 importer; production hosting, a staging service of its own and provider-backed alerts need the owner's accounts; the app does not yet follow the brand colour, quick buttons or the order of Home cards (the console labels them "saved, not used yet"); a real-phone check.
+
 ---
 
 ## 0. Where we are today

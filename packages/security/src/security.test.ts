@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { JWT_ISSUER, hashPassword, jwtKey, passwordNeedsRehash, randomCode, seal, signJwt, unseal, verifyJwt, verifyPassword } from './index.js';
+import { JWT_ISSUER, hashPassword, jwtKey, newTotpSecret, passwordNeedsRehash, randomCode, seal, signJwt, totp, unseal, verifyJwt, verifyPassword, verifyTotp } from './index.js';
 
 describe('security', () => {
   it('hashes and verifies passwords, and flags an older cost for a rewrite', async () => {
@@ -46,5 +46,22 @@ describe('security', () => {
   });
   it('makes numeric codes of the right length', () => {
     for (let i = 0; i < 50; i++) expect(randomCode(6)).toMatch(/^\d{6}$/);
+  });
+});
+
+describe('authenticator codes', () => {
+  // RFC 6238 appendix B, SHA-1 secret "12345678901234567890", last six digits.
+  const rfc = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+  it('matches the RFC test vectors', () => {
+    expect(totp(rfc, 59_000)).toBe('287082');
+    expect(totp(rfc, 1_111_111_109_000)).toBe('081804');
+    expect(totp(rfc, 2_000_000_000_000)).toBe('279037');
+  });
+  it('accepts a code one step either side, and nothing further', () => {
+    const s = newTotpSecret();
+    expect(s).toMatch(/^[A-Z2-7]{32}$/);
+    const now = 1_800_000_000_000;
+    expect(verifyTotp(s, totp(s, now - 30_000), now)).toBe(true);
+    expect(verifyTotp(s, totp(s, now - 90_000), now)).toBe(false);
   });
 });

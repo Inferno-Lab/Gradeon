@@ -24,6 +24,15 @@
     "prettier": "^3.9.10",
     "turbo": "^2.5.0",
     "typescript": "~5.9.3",
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "fastify": "^5.12.5",
+      "fast-uri@3": "^3.1.9",
+      "fast-uri@4": "^4.2.3",
+      "seroval": "^1.6.11",
+      "@esbuild-kit/core-utils>esbuild": "^0.25.0"
+    }
   }
 }

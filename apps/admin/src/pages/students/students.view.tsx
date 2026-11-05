@@ -247,6 +247,12 @@ export function StudentsView({ v }: { v: any }) {
           </svg>
           Message
         </button>
+        <button className="bk" onClick={v.bulkInvite}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2"></path>
+          </svg>
+          Invite to app
+        </button>
         <button className="bk" onClick={v.bulkFee}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>

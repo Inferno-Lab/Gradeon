@@ -1,5 +1,6 @@
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
@@ -11,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 const at = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 
 export const cells = pgTable('cells', {
   key: text('key').primaryKey(),
@@ -212,6 +214,10 @@ export const consoleUsers = pgTable(
     status: text('status').notNull().default('active'),
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
     tokenVersion: integer('token_version').notNull().default(0),
+    /** Sealed with SECRETS_KEY. */
+    totpSecret: text('totp_secret'),
+    failedLogins: integer('failed_logins').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: at('created_at'),
   },
   (t) => [uniqueIndex('console_users_email_uq').on(t.email)],
@@ -237,6 +243,9 @@ export const consoleOtp = pgTable(
     id: text('id').primaryKey(),
     userId: text('user_id').notNull().references(() => consoleUsers.id, { onDelete: 'cascade' }),
     codeHash: text('code_hash').notNull(),
+    /** email: a code we sent; app: the person's authenticator; enroll: first code from a new authenticator (pending_secret, sealed). */
+    method: text('method').notNull().default('email'),
+    pendingSecret: text('pending_secret'),
     attempts: integer('attempts').notNull().default(0),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     usedAt: timestamp('used_at', { withTimezone: true }),
@@ -327,3 +336,79 @@ export const complianceItems = pgTable('compliance_items', {
   deadlineAt: timestamp('deadline_at', { withTimezone: true }),
   closedAt: timestamp('closed_at', { withTimezone: true }),
 });
+
+/** One row per distinct problem (fingerprint of where it came from and what it said), counted. */
+export const errorReports = pgTable(
+  'error_reports',
+  {
+    fingerprint: text('fingerprint').primaryKey(),
+    source: text('source').notNull(), // api | console-api | admin | console | app
+    schoolSlug: text('school_slug'),
+    message: text('message').notNull(),
+    stack: text('stack'),
+    url: text('url'),
+    release: text('release'),
+    count: integer('count').notNull().default(1),
+    firstAt: at('first_at'),
+    lastAt: at('last_at'),
+  },
+  (t) => [index('error_reports_last_idx').on(t.lastAt)],
+);
+
+/** ponytail: backups live in the registry until object storage exists (plan phase 4); move `data` to a bucket then. */
+export const schoolBackups = pgTable(
+  'school_backups',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    kind: text('kind').notNull(), // daily | manual
+    takenBy: text('taken_by').notNull(),
+    bytes: integer('bytes').notNull(),
+    data: bytea('data').notNull(),
+    takenAt: at('taken_at'),
+  },
+  (t) => [index('school_backups_school_idx').on(t.schoolId, t.takenAt)],
+);
+
+export const configVersions = pgTable(
+  'config_versions',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    version: integer('version').notNull(),
+    values: jsonb('values').$type<Record<string, unknown>>().notNull(),
+    changes: jsonb('changes').$type<{ key: string; from: unknown; to: unknown }[]>().notNull(),
+    note: text('note').notNull().default(''),
+    by: text('by').notNull(),
+    at: at('at'),
+  },
+  (t) => [index('config_versions_school_idx').on(t.schoolId, t.at)],
+);
+
+export const configTemplates = pgTable('config_templates', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  values: jsonb('values').$type<Record<string, unknown>>().notNull(),
+  roles: jsonb('roles').$type<{ key: string; name: string; description: string; permissions: string[] }[]>().notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: at('created_at'),
+});
+
+export const changeRequests = pgTable(
+  'change_requests',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').notNull(),
+    schoolSlug: text('school_slug').notNull(),
+    schoolName: text('school_name').notNull(),
+    area: text('area').notNull(),
+    message: text('message').notNull(),
+    requestedBy: text('requested_by').notNull(),
+    status: text('status').notNull().default('open'), // open | done | declined
+    answer: text('answer').notNull().default(''),
+    answeredBy: text('answered_by'),
+    createdAt: at('created_at'),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+  },
+  (t) => [index('change_requests_status_idx').on(t.status, t.createdAt)],
+);

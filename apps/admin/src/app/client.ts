@@ -36,11 +36,9 @@ export const session = {
       else localStorage.setItem(profileKey(slug), JSON.stringify({ user: s.user }));
     } catch { /* storage can be blocked */ }
   },
+  /** Access tokens live in memory only; a support session's token is the one exception, kept for that tab alone. */
   access(slug: string): string | null {
-    return access.get(slug)
-      ?? readJson<Stored & { accessToken?: string }>(sessionStorage, supportKey(slug))?.accessToken
-      ?? readJson<Stored & { accessToken?: string }>(localStorage, profileKey(slug))?.accessToken
-      ?? null;
+    return access.get(slug) ?? readJson<Stored & { accessToken?: string }>(sessionStorage, supportKey(slug))?.accessToken ?? null;
   },
   setAccess(slug: string, token: string | null): void {
     if (token) access.set(slug, token);

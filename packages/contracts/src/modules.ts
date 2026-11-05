@@ -361,5 +361,7 @@ export const MESSAGE_EVENTS: MessageEvent[] = [
   { key: 'notice.published', label: 'New notice', to: 'families', vars: ['title', 'school'], text: 'New notice from {school}: {title}. Read it in the Gradeon app.', defaults: { push: true, sms: false, email: false } },
   { key: 'event.created', label: 'New event', to: 'families', vars: ['title', 'date'], text: '{title} on {date}. Tell us if you can come in the Gradeon app.', defaults: { push: true, sms: false, email: false } },
   { key: 'admissions.offer', label: 'Admission offer', to: 'families', vars: ['child', 'school'], text: 'Good news: {child} has been offered a place at {school}. Please visit the office to complete admission.', defaults: { push: false, sms: true, email: true } },
+  { key: 'leave.decided', label: 'Leave request answered', to: 'families', vars: ['who', 'from', 'to', 'status'], text: 'Leave for {who} from {from} to {to} was {status}.', defaults: { push: true, sms: true, email: false } },
+  { key: 'family.invite', label: 'Invite a family to the app', to: 'families', vars: ['student', 'school'], text: '{school} now uses Gradeon. Install the Gradeon app and sign in with this phone number to follow {student}’s day.', defaults: { push: false, sms: true, email: false }, urgent: true },
   { key: 'staff.invite', label: 'Staff invite', to: 'staff', vars: ['name', 'school', 'password'], text: 'Welcome to {school}, {name}. Sign in with your email and the temporary password {password}, then choose your own.', defaults: { push: false, sms: false, email: true }, urgent: true },
 ];

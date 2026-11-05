@@ -29,6 +29,14 @@ export const SchoolSettingsSchema = z.object({
   'students.pinnedClass': z.string().optional(),
   'dashboard.rollClasses': z.array(z.string()).max(8).default([]),
   'security.twoFactor': z.boolean().default(true),
+  'security.passwordMinLength': z.number().int().min(8).max(64).default(8),
+  'security.webSessionDays': z.number().int().min(1).max(30).default(7),
+  'security.appSessionDays': z.number().int().min(1).max(90).default(30),
+  // Whether the school may put its own staff into the roles Gradeon made for it. Roles themselves are set from the console only.
+  'staff.schoolAssignsRoles': z.boolean().default(true),
+  // Receipt numbers: {year} becomes the year. The start lets a school arriving from another system keep its numbering.
+  'fees.receiptPrefix': z.string().trim().min(1).max(20).default('RCPT-{year}-'),
+  'fees.receiptStart': z.number().int().min(1).max(99_999_999).default(9001),
   'demo.mode': z.boolean().default(false),
   'vocab.student': z.string().max(24).default('Student'),
   'vocab.class': z.string().max(24).default('Class'),

@@ -13,11 +13,11 @@ const post = async (p, body, headers = {}) => (await fetch(`${API}${p}`, { metho
 const h = { 'x-school': slug };
 const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
 const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-const key = [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+const key = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, key);
+await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, key); if (key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: key[2], expiresInSeconds: 900 } }));
 const page = await ctx.newPage();
 await page.goto(`${ADMIN}/s/${slug}${path}`, { waitUntil: 'networkidle' });
 if (val('--css')) await page.addStyleTag({ content: val('--css') });

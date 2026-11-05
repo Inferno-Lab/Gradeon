@@ -10,8 +10,8 @@ import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 List<(IconData, String, String, VoidCallback)> _firstSteps() => [
-  (PhosphorIconsRegular.chatCircle, 'home.step_chat', 'home.step_chat_sub', () => Get.find<ShellController>().go(3)),
-  (PhosphorIconsRegular.identificationCard, 'home.step_profile', 'home.step_profile_sub', () => Get.find<ShellController>().go(4)),
+  (PhosphorIconsRegular.chatCircle, 'home.step_chat', 'home.step_chat_sub', () => ShellController.showTab('chat')),
+  (PhosphorIconsRegular.identificationCard, 'home.step_profile', 'home.step_profile_sub', () => ShellController.showTab('profile')),
   (PhosphorIconsRegular.bellRinging, 'home.step_alerts', 'home.step_alerts_sub', () => Get.toNamed<void>(AppRoutes.settings)),
 ];
 

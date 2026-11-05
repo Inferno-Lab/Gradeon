@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -46,7 +47,7 @@ class _DashboardViewState extends State<DashboardView> {
       final parent = auth.role == UserRole.parent;
       final wide = context.isWide;
       // With no classes today there is no ribbon: a slim header and dark controls.
-      final hasDay = data != null && data.periods.isNotEmpty;
+      final hasDay = data != null && data.periods.isNotEmpty && _show('dayRibbon', 'timetable');
       final ribbonH = hasDay ? (parent ? 196.0 : 236.0) : 0.0;
       final controlInk = hasDay ? AppColors.white : context.app.ink;
       final top = MediaQuery.paddingOf(context).top;
@@ -264,6 +265,9 @@ String greeting(String first) => '${Formatters.greetingKey(DateTime.now()).tr},\
 
 String todayLine() => DateFormat('EEEE · d MMMM', Get.locale?.languageCode).format(DateTime.now());
 
+/// Home sections follow what Gradeon set for the school (console → The app → Home screen cards) and its modules.
+bool _show(String card, [String? module]) => SchoolConfig.home.contains(card) && (module == null || SchoolConfig.has(module));
+
 class _StudentBody extends StatelessWidget {
   const _StudentBody({required this.data, required this.scrub});
 
@@ -286,9 +290,9 @@ class _StudentBody extends StatelessWidget {
             index: 2,
             child: NowCard(data: data, scrub: scrub),
           ),
-          Rise(index: 3, child: DueSection(items: data.due)),
+          if (_show('dueStack')) Rise(index: 3, child: DueSection(items: data.due)),
           const SizedBox(height: 12),
-          Rise(index: 5, child: StatsRow(data: data)),
+          if (_show('attendance', 'attendance')) Rise(index: 5, child: StatsRow(data: data)),
         ],
       ],
     );
@@ -335,7 +339,7 @@ class _ParentBody extends StatelessWidget {
               onAction: () => Get.toNamed<void>(AppRoutes.fees),
             ),
           ),
-          Rise(index: 4, child: DueList(items: data.due.take(4).toList(), showChild: true)),
+          if (_show('dueStack')) Rise(index: 4, child: DueList(items: data.due.take(4).toList(), showChild: true)),
           for (final child in quiet)
             Padding(
               padding: const EdgeInsets.only(top: 10),
@@ -380,7 +384,7 @@ class _WideBody extends StatelessWidget {
                 const HomeWelcome(),
               ] else ...[
                 NowCard(data: data, scrub: scrub, large: true),
-                DueSection(items: data.due),
+                if (_show('dueStack')) DueSection(items: data.due),
               ],
             ],
           ),
@@ -393,7 +397,7 @@ class _WideBody extends StatelessWidget {
             children: [
               const SizedBox(height: 22),
               if (!data.isNew) ...[
-                StatsRow(data: data),
+                if (_show('attendance', 'attendance')) StatsRow(data: data),
                 if (data.notices.any((n) => n.pinned)) ...[
                   SectionLabel('home.pinned_notices'.tr),
                   EduCard(

@@ -7,19 +7,17 @@ class AppConfig {
 
   static const appName = 'Gradeon';
 
-  /// Which school this build is for, and where its API lives. Override with
-  /// `--dart-define=SCHOOL=<slug> --dart-define=API_BASE_URL=<address>`; the console's build workflow does.
-  /// Defaults point at the hosted Greenfield test track. Pass empty values to run on mock JSON.
-  static const schoolSlug = String.fromEnvironment('SCHOOL', defaultValue: 'greenfield');
-  static const apiBase = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://gradeon.onrender.com',
-  );
+  /// Which school this build is for, and where its API lives:
+  /// `--dart-define=SCHOOL=<slug> --dart-define=API_BASE_URL=<address>`; the console's build workflow sets both.
+  /// Without them a debug run uses the sample content in assets/mock; a release build refuses to start.
+  static const schoolSlug = String.fromEnvironment('SCHOOL');
+  static const apiBase = String.fromEnvironment('API_BASE_URL');
   static const live = schoolSlug != '' && apiBase != '';
 
-  /// Release builds only talk to https. A clear error is better than leaking tokens over http.
+  /// Release builds only talk to a real school, over https: sample content never reaches a phone in the field.
   static void assertReleaseUrl() {
-    if (!kReleaseMode || !live) return;
+    if (!kReleaseMode) return;
+    if (!live) throw StateError('A release build needs SCHOOL and API_BASE_URL (--dart-define).');
     final uri = Uri.tryParse(apiBase);
     if (uri == null || uri.scheme != 'https') {
       throw StateError('API_BASE_URL must use https in a release build.');
@@ -56,5 +54,8 @@ class AppConfig {
 
   /// The demo password: the demo content's own, or the demo school's when the app is built for one.
   static const demoPassword = live ? 'nest2026' : 'demo123';
+
+  /// Demo sign-in cards show only on sample content or on a school the console marked as a demo.
+  static final demoSchool = (!live).obs;
   static const demoOtp = '123456';
 }

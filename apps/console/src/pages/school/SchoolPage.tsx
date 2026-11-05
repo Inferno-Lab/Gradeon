@@ -9,8 +9,10 @@ import { url } from '../../app/base';
 import { useChrome } from '../../app/useChrome';
 import { ago, count, rupees, statusOf, when } from '../../app/format';
 import { SchoolView } from './school.view';
+import { ConfigTab } from './ConfigTab';
+import { RolesTab } from './RolesTab';
 
-const TABS = ['Overview', 'Entitlements', 'Versions', 'Health', 'Audit'];
+const TABS = ['Overview', 'Entitlements', 'Configuration', 'Roles', 'Versions', 'Health', 'Audit'];
 const DESC: Record<string, string> = {
   database: 'Its own database with its own role and password',
   'keys-storage': 'Encryption key and file space',
@@ -109,9 +111,11 @@ export function SchoolPage() {
   const done = d.checklist.filter((c) => c.state === 'done').length;
 
   const extra: ReactNode = tab === 1 ? <Entitlements d={d} planName={planName} onPush={() => act.mutate({ action: 'entitlements.push' })} busy={act.isPending} />
-    : tab === 2 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
-      : tab === 3 ? <Health d={d} />
-        : tab === 4 ? <Audit id={id} /> : null;
+    : tab === 2 ? <ConfigTab schoolId={d.id} say={say} />
+      : tab === 3 ? <RolesTab schoolId={d.id} say={say} />
+        : tab === 4 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
+          : tab === 5 ? <Health d={d} onAct={(a, p) => act.mutate({ action: a, params: p })} busy={act.isPending} />
+            : tab === 6 ? <Audit id={id} /> : null;
 
   const v = {
     ...chrome, tab, extra, toast: toast?.text, toastTone: toast?.tone,
@@ -165,7 +169,7 @@ function Entitlements({ d, planName, onPush, busy }: { d: SchoolDetail; planName
     <section className="grid">
       <Card title="Modules" chip={<span className="chip">{d.entitlement.modules.length} on</span>} span="s12">
         <div className="tgrow">{d.entitlement.modules.map((m) => <span key={m} className="chip v">{name(m)}</span>)}</div>
-        <div className="help" style={{ marginTop: 14 }}>Modules come from the {planName} plan plus anything added at onboarding. The school can switch these on or off itself under Settings.</div>
+        <div className="help" style={{ marginTop: 14 }}>Modules come from the {planName} plan plus anything added at onboarding. Which of them are switched on is set under Configuration.</div>
       </Card>
       <Card title="Limits" span="s12">
         <div className="rolh2">
@@ -219,10 +223,12 @@ function Versions({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p
   );
 }
 
-function Health({ d }: { d: SchoolDetail }) {
+function Health({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p?: Record<string, unknown>) => void; busy: boolean }) {
   const app = useApp();
   const qc = useQueryClient();
   const probe = useMutation({ mutationFn: app.api.probe, onSuccess: () => void qc.invalidateQueries({ queryKey: ['school'] }) });
+  const backups = useQuery({ queryKey: ['backups', d.id], queryFn: () => app.api.backups(d.id), refetchInterval: busy ? 3000 : false });
+  const [restoring, setRestoring] = useState<string | null>(null);
   const st = statusOf(d);
   return (
     <section className="grid">
@@ -234,6 +240,19 @@ function Health({ d }: { d: SchoolDetail }) {
       </Card>
       <Card title="How it is checked" span="s12">
         <div className="help">The console asks each school’s API for a heartbeat every minute and keeps the answer time. Two failures in a row open an incident on the Fleet page; a clean check closes it.</div>
+      </Card>
+      <Card title="Backups" span="s12" chip={<span className="chip">{(backups.data ?? []).length} kept</span>}>
+        <div className="help">The whole database is backed up every day; the last 14 backups are kept. Putting one back needs a second person to approve, and takes a backup of the data just before.</div>
+        {(backups.data ?? []).map((b) => (
+          <div key={b.id} className="kv">{new Date(b.takenAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · {b.kind === 'daily' ? 'daily' : `by ${b.takenBy}`}
+            <b style={{ display: 'flex', gap: 10, alignItems: 'center' }}>{Math.max(1, Math.round(b.bytes / 1024))} KB
+              {app.can('schools.write') && (restoring === b.id
+                ? <><button className="btn sm dng" disabled={busy} onClick={() => { onAct('backup.restore', { backupId: b.id }); setRestoring(null); }}>Ask to restore</button><button className="btn sm" onClick={() => setRestoring(null)}>Keep</button></>
+                : <button className="btn sm" onClick={() => setRestoring(b.id)}>Restore…</button>)}
+            </b>
+          </div>
+        ))}
+        {app.can('schools.write') && <div style={{ marginTop: 14 }}><button className="btn" disabled={busy} onClick={() => { onAct('backup.take'); setTimeout(() => void qc.invalidateQueries({ queryKey: ['backups', d.id] }), 1500); }}>Back up now</button></div>}
       </Card>
     </section>
   );
@@ -274,8 +293,8 @@ function SupportDialog({ school, onClose, onStarted }: { school: SchoolDetail; o
     start.mutate();
   };
   return (
-    <Dialog title={`Look inside ${school.shortName}?`} tag={{ text: 'Read-only · one hour', tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
-      <p>You will see the school’s admin exactly as its staff do, but nothing can be changed. The session ends by itself after an hour.</p>
+    <Dialog title={`Look inside ${school.shortName}?`} tag={{ text: 'Read-only · 30 minutes', tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
+      <p>You will see the school’s admin exactly as its staff do, but nothing can be changed. The session ends by itself after 30 minutes.</p>
       <div className="fld">
         <label htmlFor="sup-r">Why do you need to look?</label>
         <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto' }}>

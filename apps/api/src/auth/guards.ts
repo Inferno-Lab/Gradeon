@@ -18,6 +18,7 @@ export const RequireModule = (key: string) => SetMetadata('module', key);
 export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionContext): AuthedUser => ctx.switchToHttp().getRequest<FastifyRequest>().user!);
 
 const KNOWN_MODULES = new Set(MODULES.map((m) => m.key));
+const FAMILY_PATHS = /^\/v1\/(f\/|auth\/|me(\?|$)|config(\?|$)|brand(\?|$)|errors(\?|$))/;
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -39,6 +40,10 @@ export class AuthGuard implements CanActivate {
     // A support session opened from the console can look but never change anything.
     if (claims.support && req.method !== 'GET' && req.method !== 'HEAD') {
       throw new ApiError('forbidden', 'This is a read-only support session. Nothing can be changed from here.');
+    }
+    // Families use the app's routes only: the admin API (dashboard, search, reports...) is for staff.
+    if (claims.kind && claims.kind !== 'staff' && !FAMILY_PATHS.test(req.url)) {
+      throw new ApiError('forbidden', 'This part of Gradeon is for school staff.');
     }
     if (!claims.support && req.tenant) {
       await this.auth.assertSession(req.tenant, claims.sid, claims.ver, claims.sub);

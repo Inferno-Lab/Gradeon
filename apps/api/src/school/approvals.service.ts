@@ -77,6 +77,13 @@ export class ApprovalsService {
     const r = rows[0];
     if (!r) throw notFound('That request');
     if (!NEEDS[r.kind].every((p) => user.permissions.includes(p))) throw forbidden('You are not allowed to decide this kind of request.');
+    if (r.kind === 'fee_waiver' && body.decision !== 'undo') {
+      // Who may approve a waiver is the school's rule, set by Gradeon in the console.
+      const rule = await this.settings.value<string>(t, 'approvals.feeWaiver', 'principal');
+      const keys = (await t.pool.query<{ key: string }>('select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = $1', [user.id])).rows.map((x) => x.key);
+      const allowed = rule === 'anyone' || keys.includes('principal') || (rule === 'office' && keys.includes('office'));
+      if (!allowed) throw forbidden(rule === 'office' ? 'Only the principal or the office can decide fee waivers at your school.' : 'Only the principal can decide fee waivers at your school.');
+    }
     if (body.decision === 'undo' ? r.status === 'pending' : r.status !== 'pending') throw new ApiError('conflict', body.decision === 'undo' ? 'That request is still open.' : 'Someone has already decided this request.');
     const next = body.decision === 'approve' ? 'approved' : body.decision === 'reject' ? 'rejected' : 'pending';
     const client = await t.pool.connect();
@@ -94,9 +101,8 @@ export class ApprovalsService {
       client.release();
     }
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: `approval.${body.decision}`, entity: r.kind, entityId: id, detail: { title: r.title } });
-    if (body.decision !== 'undo' && r.kind === 'leave') {
-      await this.messenger.send(t, { channel: 'email', to: `${r.requester_name.toLowerCase().replace(/\s+/g, '.')}@greenfield.edu.in`, subject: 'Your leave request', body: `Your leave request was ${next}.` });
-    }
+    if (body.decision !== 'undo' && r.kind === 'leave') await this.tellLeave(t, r, next);
+    if (body.decision === 'approve' && r.kind === 'notice') await this.announce(t, (r.payload as { noticeId?: string }).noticeId);
     const after = await t.pool.query<Row>('select * from approvals where id = $1', [id]);
     return this.toRow(after.rows[0]!, await this.doneText(t, after.rows[0]!));
   }
@@ -129,6 +135,31 @@ export class ApprovalsService {
     void userId;
   }
 
+  /** Tells whoever asked: the family for a child's leave, the staff member for their own. */
+  async tellLeave(t: TenantCtx, r: { subject_ref: string | null; payload: Record<string, unknown> }, status: string): Promise<void> {
+    if (!r.subject_ref) return;
+    const p = r.payload as { studentLeave?: boolean; from?: string; to?: string };
+    const who = p.studentLeave
+      ? await t.pool.query<{ phone: string | null; email: string | null; name: string }>(
+        'select g.phone, g.email, s.name from students s join student_guardians sg on sg.student_id = s.id join guardians g on g.id = sg.guardian_id where s.id = $1', [r.subject_ref])
+      : await t.pool.query<{ phone: string | null; email: string | null; name: string }>("select phone, email, 'you' as name from users where id = $1", [r.subject_ref]);
+    await this.messenger.notify(t, 'leave.decided', who.rows.filter((w) => w.phone || w.email).map((w) => ({
+      to: w.phone ?? '', email: w.email, vars: { who: w.name, from: p.from ?? '', to: p.to ?? '', status },
+    })));
+  }
+
+  /** A published notice reaches the people it was written for. */
+  private async announce(t: TenantCtx, noticeId: string | undefined): Promise<void> {
+    const n = (await t.pool.query<{ title: string; audience: string; class_id: string | null }>('select title, audience, class_id from notices where id = $1 and status = $2', [noticeId, 'published'])).rows[0];
+    if (!n) return;
+    const families = n.audience === 'staff' ? { rows: [] } : await t.pool.query<{ phone: string }>(
+      `select distinct g.phone from guardians g join student_guardians sg on sg.guardian_id = g.id join students s on s.id = sg.student_id
+       where s.status = 'active' and g.phone is not null and ($1::text is null or s.class_id = $1)`, [n.class_id]);
+    const staff = n.audience === 'parents' || n.class_id ? { rows: [] } : await t.pool.query<{ phone: string }>(
+      "select u.phone from users u join staff s on s.user_id = u.id where u.status = 'active' and u.phone is not null");
+    await this.messenger.notify(t, 'notice.published', [...families.rows, ...staff.rows].map((x) => ({ to: x.phone, vars: { title: n.title } })));
+  }
+
   // Notices
 
   async notices(t: TenantCtx): Promise<NoticeRow[]> {
@@ -150,6 +181,7 @@ export class ApprovalsService {
         [newId('apr'), body.title, `Drafted by ${user.name}`, user.name, id, JSON.stringify({ noticeId: id })]);
     }
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: `notice.${status}`, entity: 'notice', entityId: id, detail: { title: body.title } });
+    if (status === 'published') await this.announce(t, id);
     return (await this.notices(t)).find((n) => n.id === id)!;
   }
 }

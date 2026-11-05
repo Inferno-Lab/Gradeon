@@ -54,6 +54,7 @@ const enRedesign = <String, String>{
   'onboarding.tally_late': '1 late',
   'auth.sign_in': 'Sign in',
   'auth.school_email': 'School email',
+  'auth.email_or_phone': 'Email or phone number',
   'auth.hide_password': 'Hide password',
   'auth.show_password': 'Show password',
   'auth.use_code': 'Use a one-time code',

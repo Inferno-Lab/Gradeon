@@ -16,10 +16,6 @@ const OTP_TRIES = 3;
 const OTP_MINUTES = 10;
 export const DEMO_CODE = '424242';
 
-const LIFE = {
-  web: { maxDays: 7, idleDays: 7 },
-  mobile: { maxDays: 30, idleDays: 14 },
-} as const;
 
 interface UserRow {
   id: string;
@@ -39,8 +35,9 @@ function clientOf(value: ClientKind | undefined): ClientKind {
   return value === 'web' ? 'web' : 'mobile';
 }
 
-function sessionExpiry(created: Date, client: ClientKind): Date {
-  const life = LIFE[client];
+interface Life { maxDays: number; idleDays: number }
+
+function sessionExpiry(created: Date, life: Life): Date {
   return new Date(Math.min(Date.now() + life.idleDays * 86_400_000, created.getTime() + life.maxDays * 86_400_000));
 }
 
@@ -59,22 +56,22 @@ export class AuthService {
     return this.env.NODE_ENV === 'production';
   }
 
+  /** How long a sign-in lasts: set per school from the console (Security). A phone stays signed in while used. */
+  private async life(t: TenantCtx, client: ClientKind): Promise<Life> {
+    const v = (await this.settings.doc(t)).values;
+    if (client === 'web') { const d = Number(v['security.webSessionDays'] ?? 7); return { maxDays: d, idleDays: d }; }
+    const d = Number(v['security.appSessionDays'] ?? 30);
+    return { maxDays: d, idleDays: Math.min(14, d) };
+  }
+
   /** Step one: check the password. Returns a code challenge, or tokens when the school has two-step sign-in off. */
   async login(t: TenantCtx, body: LoginRequest, userAgent?: string, reply?: FastifyReply): Promise<LoginResponse> {
-    const ident = body.identifier.trim();
-    const byEmail = ident.includes('@');
-    const digits = ident.replace(/\D/g, '');
-    const { rows } = await t.pool.query<UserRow>(
-      byEmail
-        ? 'select id, name, email, phone, password_hash, status, failed_logins, locked_until, token_version from users where lower(email) = $1 limit 1'
-        : "select id, name, email, phone, password_hash, status, failed_logins, locked_until, token_version from users where right(regexp_replace(coalesce(phone,''), '\\D', '', 'g'), 10) = right($1, 10) and length($1) >= 8 limit 1",
-      [byEmail ? ident.toLowerCase() : digits],
-    );
-    const user = rows[0];
+    const user = await this.findUser(t, body.identifier);
     if (user?.locked_until && user.locked_until > new Date()) {
       const retryAfter = Math.ceil((user.locked_until.getTime() - Date.now()) / 1000);
       throw new ApiError('locked', `Too many wrong attempts. Try again in ${Math.ceil(retryAfter / 60)} minutes, or reset your password by SMS.`, { retryAfter });
     }
+    if (user && !user.password_hash) throw new ApiError('validation', 'This account has no password. Sign in with a code sent to your phone instead.', { fields: { password: 'Sign in with a code instead.' } });
     dummyHash ??= hashPassword('not-a-real-password');
     const ok = await verifyPassword(body.password, user?.password_hash ?? (await dummyHash));
     if (!user || !ok || user.status !== 'active') {
@@ -96,34 +93,83 @@ export class AuthService {
     if (doc.values['security.twoFactor'] === false) {
       return { step: 'done', tokens: await this.issue(t, user.id, userAgent, clientOf(body.client), reply) };
     }
-    const demo = doc.values['demo.mode'] === true;
-    const code = demo ? DEMO_CODE : randomCode(6);
-    const id = newId('otp');
-    const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';
-    await t.pool.query('insert into otp_challenges (id, user_id, code_hash, channel, expires_at) values ($1,$2,$3,$4,$5)', [id, user.id, sha256(`${id}:${code}`), channel, new Date(Date.now() + OTP_MINUTES * 60_000)]);
-    await this.messenger.send(t, {
-      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? 'Your Gradeon sign-in code' : undefined,
-      body: `Your Gradeon sign-in code for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
-    });
-    const challenge: LoginChallenge = {
-      challengeId: id, channel, maskedTo: channel === 'sms' ? maskPhone(user.phone!) : maskEmail(user.email!),
-      expiresInSeconds: OTP_MINUTES * 60, ...(demo ? { demoCode: DEMO_CODE } : {}),
-    };
-    return { step: 'otp', challenge };
+    return { step: 'otp', challenge: await this.sendCode(t, user, 'sign_in') };
+  }
+
+  /** Families sign in with a code to their phone (or email). Staff are sent back to their password. */
+  async requestCode(t: TenantCtx, identifier: string): Promise<LoginChallenge> {
+    const user = await this.findUser(t, identifier);
+    if (!user || user.status !== 'active') throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
+    if (user.kind === 'staff') throw new ApiError('validation', 'Staff sign in with their password, then a code.', { fields: { identifier: 'Staff sign in with their password.' } });
+    return this.sendCode(t, user, 'sign_in');
+  }
+
+  /** "Forgot it?": a code to the person's phone or email lets them choose a new password. */
+  async resetStart(t: TenantCtx, identifier: string): Promise<LoginChallenge> {
+    const user = await this.findUser(t, identifier);
+    if (!user || user.status !== 'active') throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
+    return this.sendCode(t, user, 'reset');
+  }
+
+  async resetFinish(t: TenantCtx, challengeId: string, code: string, password: string): Promise<void> {
+    const min = Number((await this.settings.doc(t)).values['security.passwordMinLength'] ?? 8);
+    if (password.length < min) throw new ApiError('validation', `Use at least ${min} characters.`, { fields: { password: `At least ${min} characters.` } });
+    const userId = await this.useCode(t, challengeId, code, 'reset');
+    await t.pool.query('update users set password_hash = $2, failed_logins = 0, locked_until = null where id = $1', [userId, await hashPassword(password)]);
+    // A new password ends every session, on every device.
+    await t.pool.query('update sessions set revoked_at = now() where user_id = $1 and revoked_at is null', [userId]);
+    await this.bumpVersion(t, userId);
+    await this.audit.record(t, { actorId: userId, actorName: 'self', action: 'auth.password_reset', entity: 'user', entityId: userId });
   }
 
   async verify(t: TenantCtx, challengeId: string, code: string, userAgent?: string, client?: ClientKind, reply?: FastifyReply): Promise<TokenPair> {
-    const { rows } = await t.pool.query<{ id: string; user_id: string; code_hash: string; attempts: number; expires_at: Date; used_at: Date | null }>(
-      'select id, user_id, code_hash, attempts, expires_at, used_at from otp_challenges where id = $1', [challengeId]);
+    return this.issue(t, await this.useCode(t, challengeId, code, 'sign_in'), userAgent, clientOf(client), reply);
+  }
+
+  private async findUser(t: TenantCtx, identifier: string): Promise<(UserRow & { kind: string }) | undefined> {
+    const ident = identifier.trim();
+    const byEmail = ident.includes('@');
+    const digits = ident.replace(/\D/g, '');
+    if (!byEmail && digits.length < 8) return undefined;
+    const { rows } = await t.pool.query<UserRow & { kind: string }>(
+      byEmail
+        ? 'select id, name, email, phone, password_hash, status, failed_logins, locked_until, token_version, kind from users where lower(email) = $1 limit 1'
+        : "select id, name, email, phone, password_hash, status, failed_logins, locked_until, token_version, kind from users where right(regexp_replace(coalesce(phone,''), '\\D', '', 'g'), 10) = right($1, 10) limit 1",
+      [byEmail ? ident.toLowerCase() : digits],
+    );
+    return rows[0];
+  }
+
+  private async sendCode(t: TenantCtx, user: { id: string; phone: string | null; email: string | null }, purpose: 'sign_in' | 'reset'): Promise<LoginChallenge> {
+    const demo = (await this.settings.doc(t)).values['demo.mode'] === true;
+    const code = demo ? DEMO_CODE : randomCode(6);
+    const id = newId('otp');
+    const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';
+    await t.pool.query('insert into otp_challenges (id, user_id, code_hash, channel, purpose, expires_at) values ($1,$2,$3,$4,$5,$6)', [id, user.id, sha256(`${id}:${code}`), channel, purpose, new Date(Date.now() + OTP_MINUTES * 60_000)]);
+    const what = purpose === 'reset' ? 'code to set a new password' : 'sign-in code';
+    await this.messenger.send(t, {
+      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
+      body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
+    });
+    return {
+      challengeId: id, channel, maskedTo: channel === 'sms' ? maskPhone(user.phone!) : maskEmail(user.email!),
+      expiresInSeconds: OTP_MINUTES * 60, ...(demo ? { demoCode: DEMO_CODE } : {}),
+    };
+  }
+
+  /** Checks a code for one purpose and spends it. Returns the user it belongs to. */
+  private async useCode(t: TenantCtx, challengeId: string, code: string, purpose: 'sign_in' | 'reset'): Promise<string> {
+    const { rows } = await t.pool.query<{ id: string; user_id: string; code_hash: string; attempts: number; expires_at: Date; used_at: Date | null; purpose: string }>(
+      'select id, user_id, code_hash, attempts, expires_at, used_at, purpose from otp_challenges where id = $1', [challengeId]);
     const row = rows[0];
-    if (!row || row.used_at || row.expires_at < new Date()) throw new ApiError('unauthenticated', 'That code has expired. Go back and sign in again.', { fields: { code: 'That code has expired.' } });
-    if (row.attempts >= OTP_TRIES) throw new ApiError('locked', 'Too many wrong codes. Go back and sign in again to get a new one.');
+    if (!row || row.purpose !== purpose || row.used_at || row.expires_at < new Date()) throw new ApiError('unauthenticated', 'That code has expired. Go back and ask for a new one.', { fields: { code: 'That code has expired.' } });
+    if (row.attempts >= OTP_TRIES) throw new ApiError('locked', 'Too many wrong codes. Go back and ask for a new one.');
     if (!constantTimeEqual(sha256(`${challengeId}:${code}`), row.code_hash)) {
       await t.pool.query('update otp_challenges set attempts = attempts + 1 where id = $1', [challengeId]);
       throw new ApiError('unauthenticated', 'That code isn’t right.', { attemptsLeft: OTP_TRIES - row.attempts - 1, fields: { code: 'That code isn’t right.' } });
     }
     await t.pool.query('update otp_challenges set used_at = now() where id = $1', [challengeId]);
-    return this.issue(t, row.user_id, userAgent, clientOf(client), reply);
+    return row.user_id;
   }
 
   async refresh(t: TenantCtx, refreshToken: string | undefined, req: FastifyRequest, reply?: FastifyReply, client?: ClientKind): Promise<TokenPair> {
@@ -137,7 +183,8 @@ export class AuthService {
     const s = rows[0];
     if (!s || !secret || s.revoked_at || s.expires_at < new Date()) throw new ApiError('unauthenticated', 'Your session has ended. Sign in again.');
     const kind = (s.client === 'mobile' ? 'mobile' : 'web') as ClientKind;
-    const maxEnd = s.created_at.getTime() + LIFE[kind].maxDays * 86_400_000;
+    const life = await this.life(t, kind);
+    const maxEnd = s.created_at.getTime() + life.maxDays * 86_400_000;
     if (Date.now() > maxEnd) {
       await t.pool.query('update sessions set revoked_at = now() where id = $1', [s.id]);
       throw new ApiError('unauthenticated', 'Your session has ended. Sign in again.');
@@ -149,7 +196,7 @@ export class AuthService {
       throw new ApiError('unauthenticated', 'Your session has ended. Sign in again.');
     }
     const next = randomToken(32);
-    const expires = sessionExpiry(s.created_at, kind);
+    const expires = sessionExpiry(s.created_at, life);
     await t.pool.query('update sessions set refresh_hash = $2, expires_at = $3 where id = $1', [s.id, sha256(next), expires]);
     this.dropLive(t.info.slug, s.id);
     return this.tokens(t, s.user_id, s.id, `${s.id}.${next}`, kind, reply);
@@ -218,7 +265,7 @@ export class AuthService {
     const created = new Date();
     await t.pool.query(
       'insert into sessions (id, user_id, refresh_hash, user_agent, client, expires_at) values ($1,$2,$3,$4,$5,$6)',
-      [sid, userId, sha256(secret), userAgent?.slice(0, 200) ?? null, client, sessionExpiry(created, client)],
+      [sid, userId, sha256(secret), userAgent?.slice(0, 200) ?? null, client, sessionExpiry(created, await this.life(t, client))],
     );
     await t.pool.query('update users set last_login_at = now() where id = $1', [userId]);
     const pair = await this.tokens(t, userId, sid, `${sid}.${secret}`, client, reply);
@@ -228,14 +275,14 @@ export class AuthService {
 
   private async tokens(t: TenantCtx, userId: string, sid: string, refreshToken: string, client: ClientKind, reply?: FastifyReply): Promise<TokenPair> {
     const user = await this.sessionUser(t, userId);
-    const { rows } = await t.pool.query<{ token_version: number }>('select token_version from users where id = $1', [userId]);
+    const { rows } = await t.pool.query<{ token_version: number; kind: string }>('select token_version, kind from users where id = $1', [userId]);
     const ver = rows[0]?.token_version ?? 0;
     const accessToken = signJwt(
-      { sub: userId, aud: t.info.slug, sid, name: user.name, perms: user.permissions, ver },
+      { sub: userId, aud: t.info.slug, sid, name: user.name, perms: user.permissions, ver, kind: rows[0]?.kind },
       this.env.JWT_SECRET,
       ACCESS_SECONDS,
     );
-    const maxAge = Math.max(60, Math.floor((sessionExpiry(new Date(), client).getTime() - Date.now()) / 1000));
+    const maxAge = Math.max(60, Math.floor((sessionExpiry(new Date(), await this.life(t, client)).getTime() - Date.now()) / 1000));
     if (client === 'web' && reply) {
       setSchoolRefreshCookie(reply, { production: this.production, slug: t.info.slug, token: refreshToken, maxAge });
       return { accessToken, expiresInSeconds: ACCESS_SECONDS, user };

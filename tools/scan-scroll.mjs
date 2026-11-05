@@ -18,13 +18,13 @@ if (only !== 'console') {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  const key = [`gradeon.admin.${slug}`, JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  const key = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
   for (const p of ['', '/students', '/timetable', '/attendance', '/fees', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/settings']) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
-  const key = ['gradeon.console', JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user })];
+  const key = ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken];
   for (const p of ['/', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key });
 }
 
@@ -60,7 +60,7 @@ for (const [w, h] of SIZES) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: 'dark' });
   const page = await ctx.newPage();
   for (const j of jobs) {
-    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key);
+    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: j.key[2], expiresInSeconds: 900 } }));
     await page.goto(j.url, { waitUntil: 'networkidle' }).catch(() => {});
     await page.waitForTimeout(1200);
     const found = await page.evaluate(run);

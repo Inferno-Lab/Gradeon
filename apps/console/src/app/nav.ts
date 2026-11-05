@@ -19,6 +19,7 @@ const DEFS: { name: string; items: Def[] }[] = [
   { name: 'Care', items: [
     { id: 'health', label: 'Health', icon: 'health', keys: 'G H', to: '/health' },
     { id: 'appr', label: 'Approvals', icon: 'appr', keys: 'G A', to: '/approvals' },
+    { id: 'req', label: 'Requests', icon: 'inbox', keys: 'G Q', to: '/requests' },
     { id: 'sup', label: 'Support', icon: 'sup', keys: 'G S', to: '/support' },
     { id: 'inbox', label: 'Test inbox', icon: 'inbox', keys: 'G X', to: '/inbox' },
     { id: 'bill', label: 'Billing', icon: 'bill', keys: 'G I', to: '/billing' },
@@ -28,12 +29,12 @@ const DEFS: { name: string; items: Def[] }[] = [
 ];
 
 /** The console menu. Counts come from the data the page already has. */
-export function consoleNav(counts?: { onboarding?: number; builds?: number; approvals?: number }): NavGroup[] {
+export function consoleNav(counts?: { onboarding?: number; builds?: number; approvals?: number; requests?: number }): NavGroup[] {
   return DEFS.map((g) => ({
     name: g.name,
     items: g.items.map((i) => ({
       id: i.id, label: i.label, icon: IC[i.icon], keys: i.keys, href: url(i.to),
-      count: i.id === 'onb' && counts?.onboarding ? String(counts.onboarding) : i.id === 'app' && counts?.builds ? String(counts.builds) : i.id === 'appr' && counts?.approvals ? String(counts.approvals) : undefined,
+      count: i.id === 'onb' && counts?.onboarding ? String(counts.onboarding) : i.id === 'app' && counts?.builds ? String(counts.builds) : i.id === 'appr' && counts?.approvals ? String(counts.approvals) : i.id === 'req' && counts?.requests ? String(counts.requests) : undefined,
     })),
   }));
 }

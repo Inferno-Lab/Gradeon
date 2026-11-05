@@ -181,6 +181,7 @@ export function StudentsPage() {
     bulkMessage: () => setDialog({ kind: 'message', ids: [...sel], label: `${sel.size} selected ${sel.size === 1 ? 'student' : 'students'}` }),
     bulkFee: () => setDialog({ kind: 'fee', ids: [...sel], label: `${sel.size} selected ${sel.size === 1 ? 'student' : 'students'}` }),
     bulkExport: () => void download([...sel]),
+    bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
     drOn: !!openId, out: closing ? 'out' : '', close: closeDrawer,
     canCollect: app.user.permissions.includes('fees.collect'),
     d: (() => {

@@ -15,11 +15,12 @@ const post = async (path, body) => (await fetch(`${API}${path}`, { method: 'POST
 
 const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
 const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
-const stored = JSON.stringify({ accessToken: t.accessToken, refreshToken: t.refreshToken, user: t.user });
+const stored = JSON.stringify({ user: t.user });
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['gradeon.console', stored]);
+await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: t.accessToken, expiresInSeconds: 900 } }));
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -68,7 +69,7 @@ ap.on('response', (r) => { if (r.status() >= 400 && r.url().includes('/v1/')) er
 ap.on('pageerror', (e) => errors.push(`admin pageerror: ${e.message}`));
 ap.on('console', (m) => { if (m.type() === 'error') errors.push(`admin console: ${m.text()}`); });
 await ap.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
-await ap.getByLabel('Work email').fill('principal@banyanridge.in');
+await ap.getByLabel('Email or phone number').fill('principal@banyanridge.in');
 await ap.locator('#lg-pw').fill(password);
 await ap.getByRole('button', { name: /^Sign in/ }).click();
 await ap.getByText('Verify and sign in').waitFor();

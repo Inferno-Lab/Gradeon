@@ -21,7 +21,7 @@ export function SupportPage() {
   const end = useMutation({ mutationFn: (id: string) => app.api.support.end(id), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['support'] }); say('Session ended.'); } });
   const start = useMutation({
     mutationFn: () => app.api.support.start(schoolId || schools.data![0]!.id, reason.trim()),
-    onSuccess: (r) => { window.open(`${r.adminUrl.replace(/\/$/, '')}/#support=${r.token}`, '_blank', 'noopener'); setReason(''); void qc.invalidateQueries({ queryKey: ['support'] }); say('Session started in a new tab. It is read-only and ends in an hour.'); },
+    onSuccess: (r) => { window.open(`${r.adminUrl.replace(/\/$/, '')}/#support=${r.token}`, '_blank', 'noopener'); setReason(''); void qc.invalidateQueries({ queryKey: ['support'] }); say('Session started in a new tab. It is read-only and ends in 30 minutes.'); },
     onError: (e) => { setErr(e instanceof HttpError ? (e.fields.reason ?? e.message) : (e as Error).message); shake.hit(); },
   });
   if (!app.can('support.access')) {
@@ -38,7 +38,7 @@ export function SupportPage() {
     start.mutate();
   };
   return (
-    <Page active="sup" title="Support" sub="Read-only sessions inside a school. Every one needs a reason and ends by itself after an hour." toast={toast} loading={sessions.isLoading} error={sessions.isError ? { message: (sessions.error as Error).message, retry: () => void sessions.refetch() } : null}>
+    <Page active="sup" title="Support" sub="Read-only sessions inside a school. Every one needs a reason and ends by itself after 30 minutes." toast={toast} loading={sessions.isLoading} error={sessions.isError ? { message: (sessions.error as Error).message, retry: () => void sessions.refetch() } : null}>
       <section className="grid">
         <Card title="Start a session" span="s12">
           <div className={shake.cls} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 16, alignItems: 'start' }}>
