@@ -19,25 +19,25 @@ export function ReleasesPage() {
   const [back, setBack] = useState<ReleaseRow | null>(null);
   const list = useQuery({ queryKey: ['releases'], queryFn: app.api.releases.list, refetchInterval: (q) => (q.state.data?.some((r) => r.status === 'rolling') ? 3000 : 20_000) });
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['releases', 'fleet', 'schools'].includes(String(q.queryKey[0])) });
-  const start = useMutation({ mutationFn: (id: string) => app.api.releases.start(id), onSuccess: () => { refresh(); say('Rolling out in waves. It stops by itself if a wave looks unhealthy.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const start = useMutation({ mutationFn: (id: string) => app.api.releases.start(id), onSuccess: () => { refresh(); say('Checking schools in waves. It stops by itself if a school looks unhealthy.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const pause = useMutation({ mutationFn: (b: { id: string; paused: boolean }) => app.api.releases.pause(b.id, b.paused), onSuccess: refresh, onError: (e) => say((e as Error).message, 'bad') });
-  const rollback = useMutation({ mutationFn: (id: string) => app.api.releases.rollback(id), onSuccess: () => { setBack(null); refresh(); say('Rolled back. Schools returned to their earlier version.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const rollback = useMutation({ mutationFn: (id: string) => app.api.releases.rollback(id), onSuccess: () => { setBack(null); refresh(); say('Marked as rolled back. To undo the code itself, redeploy the earlier version.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const rows = list.data ?? [];
   const canWrite = app.can('releases.write');
   return (
-    <Page active="rel" title="Releases" sub="Each release updates schools in waves: your own first, then a pilot group, then everyone else" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
+    <Page active="rel" title="Releases" sub="Every school runs the code deployed last, and its database is updated when the server starts. A release signs schools off in waves: your own first, then a pilot group, then everyone else" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setCreating(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New release</button> : undefined}
       overlays={<>
         {creating && <CreateDialog onClose={() => setCreating(false)} onDone={() => { setCreating(false); refresh(); say('Release created. Start it when you are ready.'); }} />}
         {back && (
           <Dialog title={`Roll back ${back.version}?`} tag={{ text: 'Goes back one version', tone: 'a' }} onClose={() => setBack(null)} width={460}>
-            <p>Every school already on {back.version} returns to the version it had before. Schools not reached yet stay as they are.</p>
+            <p>Schools already signed off on {back.version} are marked with the version they had before. This does not change the code they run: to undo a code change, redeploy the earlier version.</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setBack(null)}>Keep it</button><button className="btn dngf" disabled={rollback.isPending} onClick={() => rollback.mutate(back.id)}>Roll back</button></div>
           </Dialog>
         )}
       </>}>
       {rows.length === 0 ? (
-        <div><EmptyCard title="Releases" chip={{ text: '0 releases', tone: 'v' }} scene="notebooks" heading="No releases yet" body="A release is a named version. Create one, then start it: schools update in waves and it pauses itself if a wave looks unhealthy." actions={canWrite ? <button className="btn pri" onClick={() => setCreating(true)}>Create the first release</button> : undefined} /></div>
+        <div><EmptyCard title="Releases" chip={{ text: '0 releases', tone: 'v' }} scene="notebooks" heading="No releases yet" body="A release is a named version. Create one after a deploy, then start it: each school's health is checked wave by wave, and it pauses itself if a school looks unhealthy." actions={canWrite ? <button className="btn pri" onClick={() => setCreating(true)}>Create the first release</button> : undefined} /></div>
       ) : [<Tiles key="tiles" items={[
         { label: 'Releases', value: rows.length, note: `${rows.filter((r) => r.status === 'rolling').length} rolling out now`, tone: 'v' },
         { label: 'Latest', value: rows[0]!.version, note: LABEL[rows[0]!.status], tone: 'a' },
