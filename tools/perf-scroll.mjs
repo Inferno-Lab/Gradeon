@@ -17,7 +17,7 @@ const key = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.access
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, key); if (key?.[2]) await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${key[2]}` });
+await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, key); if (key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: key[2], expiresInSeconds: 900 } }));
 const page = await ctx.newPage();
 await page.goto(`${ADMIN}/s/${slug}${path}`, { waitUntil: 'networkidle' });
 if (val('--css')) await page.addStyleTag({ content: val('--css') });

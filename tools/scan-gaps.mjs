@@ -136,7 +136,7 @@ for (const [w, h] of SIZES) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: 'reduce', colorScheme: args.includes('--dark') ? 'dark' : 'light' });
   const page = await ctx.newPage();
   for (const j of jobs) {
-    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${j.key[2]}` });
+    await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: j.key[2], expiresInSeconds: 900 } }));
     await page.goto(j.url.split('?')[0], { waitUntil: 'networkidle' }).catch(() => {});
     if (j.tab) {
       const names = { general: 'General', modules: 'Modules', layout: 'App layout', roles: 'Roles and access', notifications: 'Notifications', templates: 'Message templates', privacy: 'Privacy and consent', audit: 'Audit log' };

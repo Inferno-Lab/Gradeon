@@ -20,7 +20,7 @@ const stored = JSON.stringify({ user: t.user });
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['gradeon.console', stored]);
-await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${t.accessToken}` });
+await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: t.accessToken, expiresInSeconds: 900 } }));
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));

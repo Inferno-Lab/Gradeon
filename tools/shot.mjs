@@ -28,7 +28,7 @@ const ctx = await browser.newContext({ viewport: { width: Number(w), height: Num
 if (!flag('--anon')) {
   const t = await tokens();
   await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, [t.key, t.value]);
-  await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${t.token}` });
+  await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: t.token, expiresInSeconds: 900 } }));
 }
 const page = await ctx.newPage();
 const errors = [];

@@ -39,7 +39,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleSession();
-  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
+  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 
@@ -54,7 +54,7 @@ for (const dark of args.includes('--light') ? [false] : args.includes('--dark') 
       const onErr = (m) => { if (m.type() === 'error') errors.push(m.text()); };
       const onFail = (r) => { if (r.status() >= 400 && r.status() !== 404 || r.status() === 404 && !/\/nope/.test(j.url)) errors.push(`${r.status()} ${r.request().method()} ${r.url().replace(API, '').replace(ADMIN, '').replace(CONSOLE, '')}`); };
       page.on('console', onErr); page.on('response', onFail); page.on('pageerror', (e) => errors.push(`pageerror ${e.message}`));
-      await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${j.key[2]}` });
+      await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: j.key[2], expiresInSeconds: 900 } }));
       await page.goto(j.url, { waitUntil: 'networkidle' }).catch((e) => errors.push(`goto ${e.message}`));
       await page.waitForTimeout(500);
       const over = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));

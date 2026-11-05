@@ -18,7 +18,7 @@ let passed = 0;
 async function flow(name, ctxOpts, fn) {
   if (process.env.ONLY && !name.includes(process.env.ONLY)) return;
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', ...ctxOpts.context });
-  if (ctxOpts.storage) await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ctxOpts.storage); if (ctxOpts.storage?.[2]) await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${ctxOpts.storage[2]}` });
+  if (ctxOpts.storage) await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ctxOpts.storage); if (ctxOpts.storage?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: ctxOpts.storage[2], expiresInSeconds: 900 } }));
   const page = await ctx.newPage();
   const seen = [];
   page.on('pageerror', (e) => seen.push(`pageerror ${e.message}`));
@@ -158,23 +158,19 @@ await flow('admin: fees page lists overdue families and opens a payment', { stor
   await p.keyboard.press('Escape');
 });
 
-await flow('admin: settings change saves, shakes on a bad value', { storage: adminStore }, async (p) => {
+await flow('admin: school setup is read-only, and a change is asked of Gradeon', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/settings`, { waitUntil: 'networkidle' });
-  const name = p.getByLabel('School name');
-  await name.fill('G');
-  await p.getByRole('button', { name: 'Save changes' }).click();
-  await expectVisible(p.getByText(/at least 2 letters/), 'the name error');
-  await name.fill('Greenfield International School');
-  await p.getByRole('radio', { name: 'Orange' }).click();
-  await p.getByRole('button', { name: 'Save changes' }).click();
-  await expectVisible(p.getByText(/Saved\./), 'the saved toast');
-  await p.getByRole('radio', { name: 'Violet' }).click();
-  await p.getByRole('button', { name: 'Save changes' }).click();
-  await expectVisible(p.getByText(/Saved\./), 'the saved toast again');
+  await expectVisible(p.getByRole('heading', { name: 'School setup' }), 'the School setup page');
+  if (await p.getByRole('button', { name: 'Save changes' }).count()) throw new Error('the school can still save settings');
+  if (!(await p.getByLabel('School name').isDisabled().catch(() => false)) && (await p.getByLabel('School name').getAttribute('readonly')) === null) throw new Error('the school name can still be edited');
+  await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
+  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
+  await expectVisible(p.getByText('Say what you would like changed.'), 'the empty-request error');
+  await p.getByLabel('What would you like changed?').fill('Please put Events in the app’s bottom tabs.');
+  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
+  await expectVisible(p.getByText(/Sent to Gradeon/), 'the sent toast');
   await p.getByRole('button', { name: 'Modules' }).click();
   await expectVisible(p.getByText('Always on'), 'the modules list');
-  await p.getByRole('button', { name: 'Audit log' }).click();
-  await expectVisible(p.getByText(/settings.changed/), 'the settings change in the audit log');
 });
 
 await flow('admin: search palette and keyboard shortcuts', { storage: adminStore }, async (p) => {
@@ -301,8 +297,8 @@ await flow('support: a session shows the banner and cannot change anything', {},
   await expectVisible(p.getByText(/read-only/), 'the support banner');
   await expectVisible(p.getByLabel('School name'), 'the name field');
   if (!(await p.getByLabel('School name').evaluate((el) => el.readOnly))) throw new Error('the name field should be read-only');
-  if (!(await p.getByRole('button', { name: 'Save changes' }).isDisabled())) throw new Error('Save should be disabled');
-  const refused = await fetch(`${API}/v1/settings`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-school': slug, authorization: `Bearer ${r.token}` }, body: JSON.stringify({ changes: { 'school.name': 'Hacked' } }) });
+  if (await p.getByRole('button', { name: 'Save changes' }).count()) throw new Error('there should be no Save button');
+  const refused = await fetch(`${API}/v1/notices`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-school': slug, authorization: `Bearer ${r.token}` }, body: JSON.stringify({ title: 'From support', body: 'Support sessions are read-only.', audience: 'everyone', publish: false }) });
   if (refused.status !== 403) throw new Error(`the API should refuse support writes, got ${refused.status}`);
   await p.getByRole('button', { name: 'End session' }).click();
   await p.waitForURL(/\/login/);
@@ -434,31 +430,18 @@ await flow('admin: an event is added, shown on the calendar and removed', { stor
   await expectVisible(p.getByText(/E2E open house was removed/), 'the removed toast');
 });
 
-await flow('admin: settings tabs for roles, notifications, templates and privacy work', { storage: adminStore }, async (p) => {
+await flow('admin: school setup tabs show roles, messages and layout read-only, and data requests still work', { storage: adminStore }, async (p) => {
   await p.goto(A('/settings'), { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Roles and access' }).click();
   await expectVisible(p.getByText('Office staff'), 'the role list');
-  await p.getByRole('button', { name: 'New role' }).click();
-  await p.getByRole('button', { name: 'Save role' }).click();
-  await expectVisible(p.getByText('Name the role.'), 'the role-name error');
-  await p.getByLabel('Role name').fill('E2E role');
-  await p.getByRole('button', { name: 'Save role' }).click();
-  await expectVisible(p.getByText(/E2E role was created/), 'the role created toast');
-  await p.getByRole('button', { name: 'Delete role' }).click();
-  await p.getByRole('button', { name: 'Yes, delete' }).click();
-  await expectVisible(p.getByText('Role deleted.'), 'the role deleted toast');
+  for (const name of ['New role', 'Save role', 'Delete role']) if (await p.getByRole('button', { name }).count()) throw new Error(`the school still has "${name}"`);
+  if (!(await p.getByRole('checkbox').first().isDisabled())) throw new Error('role permissions should be read-only');
   await p.getByRole('button', { name: 'Notifications' }).click();
-  await p.getByRole('switch', { name: /Child marked absent or late by email/ }).click();
-  await expectVisible(p.getByText(/1 change not saved yet/), 'the unsaved note');
-  await p.locator('section.rise').getByRole('button', { name: 'Save', exact: true }).click();
-  await expectVisible(p.getByText(/Saved\. The app picks this up/), 'the saved toast');
+  if (!(await p.getByRole('switch', { name: /Child marked absent or late by email/ }).isDisabled())) throw new Error('notification switches should be read-only');
   await p.getByRole('button', { name: 'Message templates' }).click();
-  await p.getByLabel(/the message$/).fill('{student} is {status} today. {school}');
-  await expectVisible(p.getByText(/Aarav is absent today\. Greenfield/), 'the live preview');
-  await p.locator('section.rise').getByRole('button', { name: 'Save', exact: true }).click();
-  await expectVisible(p.getByText(/Saved\. The app picks this up/).first(), 'the template saved toast');
+  await expectVisible(p.getByText(/Gradeon sets this up for your school/).first(), 'the read-only note');
   await p.getByRole('button', { name: 'App layout' }).click();
-  await expectVisible(p.getByText('Tabs along the bottom'), 'the layout editor');
+  await expectVisible(p.getByText('Tabs along the bottom'), 'the layout');
   await p.getByRole('button', { name: 'Privacy and consent' }).click();
   await p.getByRole('button', { name: 'Log a request' }).click();
   await p.getByRole('dialog').getByRole('button', { name: 'Log request' }).click();
@@ -538,6 +521,24 @@ await flow('console: the bell shows alerts', { storage: consoleStore }, async (p
   await expectVisible(p.getByRole('dialog').getByText('Alerts'), 'the alerts dialog');
 });
 
+
+await flow('console: a school’s request is answered, and its configuration changes with a note', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/requests`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Please put Events in the app’s bottom tabs.'), 'the school’s request');
+  await p.getByRole('button', { name: 'Answer' }).first().click();
+  await p.getByLabel('Your answer').fill('Done: Events is in the tabs.');
+  await p.getByRole('button', { name: 'Mark done' }).click();
+  await expectVisible(p.getByText(/Marked done/), 'the answered toast');
+  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
+  await p.getByRole('tab', { name: 'Configuration' }).click();
+  await p.getByLabel('Tagline').fill('Curious minds, kind hearts');
+  await p.getByLabel('Why (kept in the history)').fill('Browser flow');
+  await p.getByRole('button', { name: 'Save 1 change' }).click();
+  await expectVisible(p.getByText(/Saved\. The school/), 'the saved toast');
+  await expectVisible(p.getByText('Browser flow', { exact: false }), 'the change in the history');
+  await p.getByRole('tab', { name: 'Roles' }).click();
+  await expectVisible(p.getByText('Who has which role'), 'the roles tab');
+});
 
 await flow('console: every menu page opens', { storage: consoleStore }, async (p) => {
   for (const path of ['/', '/onboarding', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) {
