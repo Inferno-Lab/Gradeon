@@ -66,6 +66,7 @@ Other differences, each because a board element did not work in the real product
 - Errors vibrate (the `shk1`/`shk2` classes, `useShake`); the sign-in does it too.
 - Every empty page has an illustration, an honest sentence and a next step (`EmptyCard`).
 - Motion is smooth everywhere and stops under reduced motion.
+- 2026-11: violet, amber and coral replaced by neutral, ink and one blue; contrast fixed (`tools/check-contrast.mjs`). The canvas copy of `nest.css` has the same tokens; the rest of it is not synced.
 
 ## Logo
 
