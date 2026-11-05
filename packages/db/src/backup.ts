@@ -1,10 +1,11 @@
-import { gunzipSync, gzipSync } from 'node:zlib';
+import { once } from 'node:events';
+import { createInterface } from 'node:readline';
+import { Readable } from 'node:stream';
+import { createGunzip, createGzip } from 'node:zlib';
 import type pg from 'pg';
 
 // A school's whole database as gzipped JSON, readable by any PostgreSQL: Postgres itself turns each row into JSON and back,
 // so dates, numbers and JSON columns survive exactly. Provider snapshots (point-in-time recovery) come on top of this, not instead.
-
-interface Dump { version: 1; takenAt: string; migrations: string[]; tables: Record<string, unknown[]> }
 
 async function tables(pool: pg.Pool | pg.PoolClient): Promise<string[]> {
   const { rows } = await pool.query<{ table_name: string }>(
@@ -31,46 +32,96 @@ async function migrationTags(pool: pg.Pool | pg.PoolClient): Promise<string[]> {
   return (await pool.query<{ tag: string }>('select tag from schema_migrations order by tag')).rows.map((r) => r.tag);
 }
 
+/**
+ * Format 2: gzipped JSON lines. A header line, then for each table (parents first) a `#table` line and one line per row.
+ * Rows go through a cursor straight into gzip, so even a school with a million rows never sits in memory whole.
+ */
 export async function backupDatabase(pool: pg.Pool): Promise<Buffer> {
   const client = await pool.connect();
+  const gzip = createGzip();
+  const out: Buffer[] = [];
+  gzip.on('data', (c: Buffer) => out.push(c));
+  const ended = once(gzip, 'end');
+  const write = async (text: string) => { if (!gzip.write(text)) await once(gzip, 'drain'); };
   try {
     // One consistent snapshot of every table.
     await client.query('begin isolation level repeatable read read only');
-    const dump: Dump = { version: 1, takenAt: new Date().toISOString(), migrations: await migrationTags(client), tables: {} };
-    for (const t of await tables(client)) {
-      dump.tables[t] = (await client.query<{ j: unknown }>(`select row_to_json(x) j from "${t}" x`)).rows.map((r) => r.j);
+    await client.query('set local statement_timeout = 0');
+    await write(`${JSON.stringify({ version: 2, takenAt: new Date().toISOString(), migrations: await migrationTags(client) })}\n`);
+    for (const t of await parentsFirst(client, await tables(client))) {
+      await write(`#${t}\n`);
+      await client.query(`declare rows no scroll cursor for select row_to_json(x)::text j from "${t}" x`);
+      for (;;) {
+        const { rows } = await client.query<{ j: string }>('fetch 5000 from rows');
+        if (!rows.length) break;
+        await write(`${rows.map((r) => r.j).join('\n')}\n`);
+      }
+      await client.query('close rows');
     }
     await client.query('commit');
-    return gzipSync(JSON.stringify(dump));
+    gzip.end();
+    await ended;
+    return Buffer.concat(out);
+  } catch (err) {
+    await client.query('rollback').catch(() => undefined);
+    gzip.destroy();
+    throw err;
   } finally {
     client.release();
   }
 }
 
-/** Puts a backup back over the school's current data, in one transaction: all of it or none of it. */
+/** Puts a backup back over the school's current data, in one transaction: all of it or none of it. Streams, like the backup. */
 export async function restoreDatabase(pool: pg.Pool, gz: Buffer): Promise<{ tables: number; rows: number }> {
-  const dump = JSON.parse(gunzipSync(gz).toString('utf8')) as Dump;
+  const lines = createInterface({ input: Readable.from([gz]).pipe(createGunzip()), crlfDelay: Infinity });
   const client = await pool.connect();
+  let names: string[] = [];
+  let table = '';
+  let batch: string[] = [];
+  let rows = 0;
+  const flush = async () => {
+    if (!batch.length) return;
+    await client.query(`insert into "${table}" select * from json_populate_recordset(null::"${table}", $1::json)`, [`[${batch.join(',')}]`]);
+    rows += batch.length;
+    batch = [];
+  };
   try {
-    const now = await migrationTags(client);
-    if (now.join() !== dump.migrations.join()) throw new Error('This backup was taken on a different version of the database. Run the same migrations first.');
-    await client.query('begin');
-    const names = await tables(client);
-    await client.query(`truncate ${names.map((t) => `"${t}"`).join(', ')} cascade`);
-    let rows = 0;
-    for (const t of await parentsFirst(client, names)) {
-      const all = dump.tables[t] ?? [];
-      for (let i = 0; i < all.length; i += 5000) {
-        await client.query(`insert into "${t}" select * from json_populate_recordset(null::"${t}", $1::json)`, [JSON.stringify(all.slice(i, i + 5000))]);
+    for await (const line of lines) {
+      if (!names.length) {
+        const head = JSON.parse(line) as { version: 1 | 2; migrations: string[]; tables?: Record<string, unknown[]> };
+        if ((await migrationTags(client)).join() !== head.migrations.join()) throw new Error('This backup was taken on a different version of the database. Run the same migrations first.');
+        await client.query('begin');
+        await client.query('set local statement_timeout = 0');
+        names = await tables(client);
+        await client.query(`truncate ${names.map((t) => `"${t}"`).join(', ')} cascade`);
+        if (head.version === 1) {
+          // Format 1 (the first backups) is one JSON object holding every table.
+          for (table of await parentsFirst(client, names)) {
+            for (const r of head.tables?.[table] ?? []) { batch.push(JSON.stringify(r)); if (batch.length === 5000) await flush(); }
+            await flush();
+          }
+          await flush();
+          break;
+        }
+        continue;
       }
-      rows += all.length;
+      if (line.startsWith('#')) {
+        await flush();
+        table = line.slice(1);
+        if (!names.includes(table)) throw new Error(`This backup has a table the database does not: ${table}.`);
+        continue;
+      }
+      if (line) batch.push(line);
+      if (batch.length === 5000) await flush();
     }
+    await flush();
     await client.query('commit');
     return { tables: names.length, rows };
   } catch (err) {
     await client.query('rollback').catch(() => undefined);
     throw err;
   } finally {
+    lines.close();
     client.release();
   }
 }

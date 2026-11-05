@@ -8,22 +8,32 @@ What matters most, in the owner's words, and where it is in this plan:
 |---|---|
 | Rename the product to Gradeon, everywhere | Phase 0 (done) |
 | Any school can move to Gradeon easily, from any software or from paper, in every module | Phase 3 |
-| **Schools cannot change anything themselves.** Every configuration is done from the console by Gradeon staff | Phase 2A |
+| **Schools cannot change any configuration.** Every setting and role is done from the console by Gradeon staff; the school's own data (timetable, classes, terms, holidays, fee structures) stays with the school, inside limits the console sets | Phase 2A |
 | **Everything that can be configured is configurable**: colours, branding, features, roles, deployments and the rest | Phase 2A (the full list) |
 | Roles, which modules each role can use, and creating new roles are set from the console | Phase 2A, "Roles" |
 | The console decides which school gets which modules (the biggest one) | Phase 2B |
 | Pending decisions never stop the work | "Decisions" at the end |
 
-**Decided (Nov 4, 2026):** schools change nothing themselves; configuration is console-only. **Open, and not blocking:** one Gradeon app or one app per school, names, hosting, providers, pilot school. The work goes on with working values kept in one place, so each decision later is a change of value, not a rebuild.
+**Decided (Nov 4, 2026):** configuration is console-only. **Decided (Nov 5, 2026):** the school keeps its own data inside console limits; every school runs the deployed code and is migrated at start-up (release waves sign schools off, they do not stage code). **Open, and not blocking:** one Gradeon app or one app per school, names, hosting, providers, pilot school. The work goes on with working values kept in one place, so each decision later is a change of value, not a rebuild.
 
 ## Status (Nov 5, 2026)
 
-**Phase 0** is merged. **Phase 1 and Phase 2A** are on `feat/phase-1-2a`:
+**Phase 0, Phase 1 and Phase 2A** are merged. The hardening before 2B is on `chore/pre-2b-hardening` (below).
 
 - **Blockers fixed:** B1 (family accounts: adding, importing or enrolling a student creates the family's login, siblings share it, families sign in with a code to their phone; "Invite to app" bulk action), B3 (tokens carry the account kind; family accounts are refused on every staff route), B4 (configuration is console-only), B11 ("New notice" message sent; leave answers reach the family or staff member; support-session wording; admin sign-in by phone). B2 and B9 are done for configuration and the app's tabs; module enforcement on every route is Phase 2B.
 - **Safety:** password reset by code (admin and app); console staff use an authenticator app (RFC 6238) with lockout and reset from Team; tokens never read from browser storage; all known dependency vulnerabilities fixed; release app builds refuse to start without a school; demo cards only on demo schools; error tracking for both APIs, admin, console and app (console Health page); daily backups of every school with "Back up now" and restore behind a second approver; CI blocks edits to applied migrations and runs the browser flows and page audit.
 - **Configuration (2A):** the school API has no configuration writes; `SETTINGS_META` describes every setting (group, label, control, risky, "saved, not used yet") and the console builds its Configuration tab from it, with history and rollback, risky changes through Approvals, templates applied to many schools and a per-role preview. Roles and who holds them are set in the console's Roles tab; the school assigns its staff to roles only while the console allows it. Schools ask through "Ask Gradeon to change this"; the console's Requests page answers. A new Implementation console role does the work. New working settings: sign-in length (web, app), shortest password, receipt prefix and start, school assigns roles; the fee-waiver rule is now enforced.
 - **App:** reads the school's configuration at start: family tabs follow the console (Profile always last) and Home shows the timetable ribbon, items due and attendance only when listed and their module is on.
+
+**Before 2B (hardening, Nov 5):** the review of this plan found that it overpromised on scale, backups and releases. Fixed:
+
+- **Deploys:** every school's database is migrated when the server starts, before it takes requests (`Bootstrap.upgradeSchools`); before, new code ran on unmigrated real schools until someone ran a release (Phase 1's sign-in would have broken). A school that fails is logged in the migration runs and skipped. Migrations stay expand-first, because the previous instance keeps serving during a deploy.
+- **Releases:** the console's Releases page and rollout policy now say what they do: the code reaches every school at deploy; a release signs schools off wave by wave with health checks, and "roll back" marks versions (undoing code means redeploying). Real staged deployments come with a second cell.
+- **Timed jobs** (backups, the two sweeps, health probes) are claimed through a `jobs` row in the registry: one server runs each, and a job that fell due while the server slept or restarted runs when it is back. Before, daily backups ran 24 hours after start, so on the free plan (asleep after 15 minutes) they never ran.
+- **Backups** stream table by table (format 2; format 1 still restores). Measured on a full-year 3,000-student-sized school (648,000 rows): backup 2.2 s and 3.2 MB, restore 33 s in one transaction, about 130 MB of memory (before: the whole dump in memory, over 1 GB at that size). `BACKUP_DATABASE_URL` keeps backups in a separate database. Point-in-time recovery still comes from managed hosting.
+- **Connections:** statement and idle-transaction limits moved from the connection string into each database (school 0007, registry 0008), and the migrator's lock is taken per transaction, so a transaction pooler (PgBouncer, or Neon's `-pooler` address) works. Default pools are 20 schools × 3 connections (60, fits a 100-connection database) instead of 40 × 5 (200, which did not).
+- **School data:** `timetable.schoolEdits` (console, Academic year) can lock the school's timetable; covering an absent teacher stays allowed. Each school-owned area gets the same switch when its screens arrive.
+- **Logo:** the fingerprint G is the app icon (Android, adaptive and legacy, and iPhone), the browser icon of the admin and console, and the Gradeon mark in the console menu and Gradeon's sign-in. A school's own sign-in and menu show the school.
 
 **Still open in these phases, deliberately:** 1.2 test data through the importer needs the Phase 3 importer; production hosting, a staging service of its own and provider-backed alerts need the owner's accounts; the app does not yet follow the brand colour, quick buttons or the order of Home cards (the console labels them "saved, not used yet"); a real-phone check.
 
@@ -111,7 +121,7 @@ Why this is better: the migration tool (requirement 1) gets exercised every day 
 ### 1.4 Safety before any real data
 
 - **Backups:** daily full backups and point-in-time recovery per school database, a restore drill each month, and a "restore this school to yesterday" console action with two-person approval.
-- **Hosting:** move off the free tier to an India region (DPDP and latency): managed PostgreSQL with point-in-time recovery, object storage, the API as a container. One cell is enough for the first 50 schools; the existing cell model scales it later. EKS and Argo from the original spec can wait until there are many schools.
+- **Hosting:** move off the free tier to an India region (DPDP and latency): managed PostgreSQL with point-in-time recovery, object storage, the API as a container. A connection pooler (PgBouncer or the provider's) in front of PostgreSQL from day one: without it one server holds about 20 busy schools before it closes and reopens pools in the morning rush; with it, one cell carries the first 50 schools (to be proven by the Phase 6 load test). The existing cell model scales beyond that. EKS and Argo from the original spec can wait until there are many schools.
 - **Observability:** error tracking for the API, admin, console and app (crash reports), structured logs with the school and request ID, uptime checks per school, alerts to the team.
 - **Security:** password reset by phone or email code, phone-number sign-in in the admin, remove the leftover `localStorage` token read (`apps/admin/src/app/client.ts:42`), passkeys or TOTP for console staff, rate limits per account, a penetration test before the pilot.
 - **CI gates on every pull request:** typecheck, API tests, Flutter analyze and tests, UI audit and the browser flows, the rename check, the module-guard check from Phase 2B, and a migration check that refuses edits to applied SQL files.
@@ -145,13 +155,13 @@ Today about 45 settings exist (`packages/contracts/src/config.ts`) and most are 
 | **Roles and access** | See "Roles" below |
 | **The app** | Bottom tabs, home-screen cards and their order, quick buttons, which kinds of people get the app (parents, teachers, students), student sign-in on or off (*new*), languages offered |
 | **The admin** | Which pages and dashboard widgets each role sees, default views and filters (*new*) |
-| **Academic setup** (*new*) | Academic year, terms, working days, holidays, periods and bells, classes and sections, subjects, houses, grading scales, report-card formats |
+| **Academic setup** (*new*) | The school's own data, edited by the school: academic year, terms, working days, holidays, periods and bells, classes and sections, subjects, houses. The console sets the limits: a switch per area that can lock it (`timetable.schoolEdits` today), grading scales and report-card formats |
 | **Rules** | Attendance (who is told, when records lock, late rules); fees (late fines, reminder schedule, receipt numbering, payment methods); approvals (fee waivers, notices, leave); notices |
 | **Messages** | Which message goes on which channel, wording of every message, quiet hours, languages |
 | **Security** | Two-step sign-in, how long sign-ins last, password rules (*new*), sign-in methods (*new*) |
 | **Privacy** | Consent questions, privacy notice, grievance officer, how long records are kept, photo consent |
 | **Integrations** (*new*) | The school's payment gateway account and settlement, SMS sender, WhatsApp number, email domain, Tally export format |
-| **Deployment** | Where the school runs (cell and region), its web address (subdomain or own domain), which release it is on and its rollout wave, maintenance window, backup schedule, how its app is shipped (inside the shared Gradeon app, its own branded app, or both), feature flags |
+| **Deployment** | Where the school runs (cell and region), its web address (subdomain or own domain), which release wave signs it off (the code reaches every school at deploy), maintenance window, backup schedule, how its app is shipped (inside the shared Gradeon app, its own branded app, or both), feature flags |
 | **Dashboard targets** | Daily fee target, attendance and homework goals, classes shown in the roll call |
 
 ### Roles (set from the console)
@@ -326,7 +336,7 @@ Sizes assume one owner plus coding agents, working in parallel where files do no
 
 ## Decisions
 
-**Decided:** schools change nothing themselves; every configuration, roles included, is set from the console by Gradeon staff; everything that can be configured is configurable.
+**Decided:** every configuration, roles included, is set from the console by Gradeon staff; everything that can be configured is configurable; the school's own data stays with the school inside limits the console sets (Nov 5); one process serves every school, so each deploy migrates every school and releases sign schools off rather than stage code (Nov 5).
 
 **Open, and none of them stops the work.** Until the owner decides, the work uses the working value in brackets, kept in one place (configuration or environment), so a later decision is a change of value:
 

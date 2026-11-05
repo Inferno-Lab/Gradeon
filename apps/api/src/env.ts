@@ -14,8 +14,8 @@ const Env = z.object({
   CORS_ORIGINS: z.string().default('*'),
   APP_VERSION: z.string().default('0.1.0'),
   MESSAGING_MODE: z.enum(['sandbox']).default('sandbox'),
-  TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(40),
-  TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(5),
+  TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(20),
+  TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
   /** Lets a hosted test track keep SEED_DEMO / DEMO_CODE while NODE_ENV=production. */
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
 });

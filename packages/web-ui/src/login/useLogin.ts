@@ -133,6 +133,8 @@ export function useLogin(c: LoginController, themeCls: string) {
   return {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
     brand: c.schoolName,
+    // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
+    gradeon: c.product === 'console' || c.schoolName === 'Gradeon',
     cardA: cons ? 'Schools live' : 'Attendance today', aD: rollDigits(cons ? '312' : '94.2'), aU: cons ? '' : '%',
     cardB: cons ? 'Release 2026.10.3' : 'Fees this month', bN: cons ? 'Wave 3' : '₹18.4L', bU: cons ? 'of 6' : '', bChip: cons ? 'Healthy' : '+8.7%', bChip2: cons ? '141 updated' : '62% of due',
     toastT: cons ? 'Wave 3 passed every check' : 'Attendance sent for 8 A',

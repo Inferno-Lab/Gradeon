@@ -108,7 +108,7 @@ export function BlueprintsPage() {
         </Card>
         {pol && (
           <Card title="How a release rolls out" span="s12">
-            <div className="help">A release updates one wave at a time and stops by itself if a wave looks unhealthy. The last wave must be everyone else.</div>
+            <div className="help">A release signs schools off one wave at a time and stops by itself if a school looks unhealthy. The code itself reaches every school at once when it is deployed. The last wave must be everyone else.</div>
             <div className="lscroll" style={{ marginTop: 12 }}>
               {pol.waves.map((w, i) => (
                 <div key={i} className="wvr">

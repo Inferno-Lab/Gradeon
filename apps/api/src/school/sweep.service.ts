@@ -1,6 +1,7 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { ENV, type Env } from '../env.js';
 import { POOLS, REGISTRY } from '../tenancy/tenant.js';
+import { scheduleJob } from '@gradeon/db';
 import type { PoolManager, Registry } from '@gradeon/tenancy';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -8,7 +9,6 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Drops used or expired codes and dead sessions from every school database. */
 @Injectable()
 export class SweepService implements OnModuleInit {
-  private timer: NodeJS.Timeout | undefined;
 
   constructor(
     @Inject(ENV) private readonly env: Env,
@@ -18,9 +18,7 @@ export class SweepService implements OnModuleInit {
 
   onModuleInit(): void {
     if (this.env.NODE_ENV === 'test') return;
-    this.timer = setInterval(() => void this.run(), DAY);
-    this.timer.unref();
-    void this.run();
+    scheduleJob(this.registry.pool, 'school-sweep', DAY, () => this.run(), () => undefined);
   }
 
   async run(): Promise<void> {

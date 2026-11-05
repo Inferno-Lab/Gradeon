@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { Clash, CoverRequest, PeriodDef, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView } from '@gradeon/contracts';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
-import { AuditService, Messenger } from './support.js';
+import { AuditService, Messenger, SettingsService } from './support.js';
 
 interface PeriodRow { idx: number; label: string; starts_at: string; ends_at: string; kind: PeriodDef['kind'] }
 interface SlotQ {
@@ -28,6 +28,7 @@ export class TimetableService {
   constructor(
     private readonly audit: AuditService,
     private readonly messenger: Messenger,
+    private readonly settings: SettingsService,
   ) {}
 
   /** Lessons in order: periods, with the break and lunch slotted where they fall in the day. */
@@ -91,6 +92,7 @@ export class TimetableService {
   }
 
   async patchSlot(t: TenantCtx, user: { id: string; name: string }, id: string, patch: SlotPatch): Promise<void> {
+    if ((await this.settings.value<boolean>(t, 'timetable.schoolEdits', true)) === false) throw forbidden('Gradeon keeps your timetable. Ask Gradeon to change it.');
     const sets: string[] = [];
     const params: unknown[] = [id];
     const add = (col: string, v: unknown) => { params.push(v); sets.push(`${col} = $${params.length}`); };

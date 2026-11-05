@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, type OnModuleInit } from '@nestjs/common';
 import { LoginRequest, RefreshRequest, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
+import { newId, scheduleJob } from '@gradeon/db';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@gradeon/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -35,9 +35,7 @@ export class ConsoleAuth implements OnModuleInit {
 
   onModuleInit(): void {
     if (this.env.NODE_ENV === 'test') return;
-    const timer = setInterval(() => void this.sweep(), 24 * 60 * 60 * 1000);
-    timer.unref();
-    void this.sweep();
+    scheduleJob(this.db.pool, 'console-sweep', 24 * 60 * 60 * 1000, () => this.sweep(), () => undefined);
   }
 
   async login(body: LoginRequest): Promise<ConsoleLoginResponse> {

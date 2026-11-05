@@ -5,6 +5,8 @@ const Env = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().default(4001),
   REGISTRY_DATABASE_URL: z.string().min(10),
+  /** A separate database for school backups (recommended in production); without it they are kept in the registry. */
+  BACKUP_DATABASE_URL: z.string().min(10).optional(),
   SECRETS_KEY: z.string().min(16),
   JWT_SECRET: z.string().min(16),
   JWT_SECRET_PREVIOUS: z.string().min(16).optional(),
@@ -36,8 +38,8 @@ const Env = z.object({
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
   PROBE_SECONDS: z.coerce.number().int().default(60),
   STEP_PAUSE_MS: z.coerce.number().int().default(350),
-  TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(40),
-  TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(5),
+  TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(20),
+  TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
 });
 export type Env = z.infer<typeof Env>;
 

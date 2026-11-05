@@ -43,7 +43,8 @@ export async function loadMigrations(set: MigrationSet): Promise<MigrationFile[]
   return out;
 }
 
-const LOCK_KEY = 727_001; // one advisory lock per database, so two runners never migrate the same school together
+// One lock per database, taken inside each migration's transaction (works through a transaction pooler), so two runners never migrate a school together.
+const LOCK_KEY = 727_001;
 
 async function ensureTable(pool: Pool): Promise<void> {
   await pool.query(`create table if not exists schema_migrations (
@@ -70,18 +71,21 @@ export async function migrate(pool: Pool, set: MigrationSet, opts: { upTo?: stri
   const client = await pool.connect();
   const applied: AppliedMigration[] = [];
   try {
-    await client.query('select pg_advisory_lock($1)', [LOCK_KEY]);
-    const { rows } = await client.query<{ tag: string; checksum: string }>('select tag, checksum from schema_migrations');
-    const done = new Map(rows.map((r) => [r.tag, r.checksum]));
     for (const m of await loadMigrations(set)) {
-      const was = done.get(m.tag);
-      if (was !== undefined) {
-        if (was !== m.checksum) throw new Error(`Migration ${m.tag} was changed after it ran. Add a new migration instead.`);
-        continue;
-      }
       const started = Date.now();
       try {
         await client.query('begin');
+        await client.query('select pg_advisory_xact_lock($1)', [LOCK_KEY]);
+        // Read under the lock: another runner may have just applied it.
+        const was = (await client.query<{ checksum: string }>('select checksum from schema_migrations where tag = $1', [m.tag])).rows[0]?.checksum;
+        if (was !== undefined) {
+          await client.query('commit');
+          if (was !== m.checksum) throw new Error(`Migration ${m.tag} was changed after it ran. Add a new migration instead.`);
+          if (opts.upTo === m.tag) break;
+          continue;
+        }
+        // Databases default to a 15 s statement limit (0007); a migration may legitimately take longer.
+        await client.query('set local statement_timeout = 0');
         await client.query(m.sql);
         const ms = Date.now() - started;
         await client.query('insert into schema_migrations (tag, kind, checksum, ms) values ($1,$2,$3,$4)', [m.tag, m.kind, m.checksum, ms]);
@@ -89,12 +93,12 @@ export async function migrate(pool: Pool, set: MigrationSet, opts: { upTo?: stri
         applied.push({ tag: m.tag, kind: m.kind, ms });
       } catch (err) {
         await client.query('rollback').catch(() => undefined);
+        if ((err as Error).message.includes('was changed after it ran')) throw err;
         throw new Error(`Migration ${m.tag} failed: ${(err as Error).message}`);
       }
       if (opts.upTo === m.tag) break;
     }
   } finally {
-    await client.query('select pg_advisory_unlock($1)', [LOCK_KEY]).catch(() => undefined);
     client.release();
   }
   return applied;
