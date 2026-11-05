@@ -48,6 +48,9 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
     throw new Error(`The console is not configured correctly:\n${lines}`);
   }
   const env = parsed.data;
+  // The service's own address (Render sets RENDER_EXTERNAL_URL) is always allowed: a renamed service or a stale CORS_ORIGINS cannot lock anyone out.
+  const own = source.RENDER_EXTERNAL_URL;
+  if (own) env.CORS_ORIGINS = env.CORS_ORIGINS === '*' ? own : [...new Set([...env.CORS_ORIGINS.split(',').map((o) => o.trim()), own])].join(',');
   if (env.NODE_ENV === 'production') {
     const problems: string[] = [];
     if (env.JWT_SECRET.length < 32) problems.push('JWT_SECRET must be at least 32 characters.');

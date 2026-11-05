@@ -19,6 +19,11 @@ describe('loadEnv in production', () => {
     expect(() => loadEnv({ ...base, JWT_SECRET: base.SECRETS_KEY })).toThrow(/different/);
     expect(() => loadEnv({ ...base, CORS_ORIGINS: '*' })).toThrow(/CORS_ORIGINS/);
   });
+  it('always allows its own Render address, with or without CORS_ORIGINS', () => {
+    const own = 'https://school-test.onrender.com';
+    expect(loadEnv({ ...base, CORS_ORIGINS: undefined, RENDER_EXTERNAL_URL: own }).CORS_ORIGINS).toBe(own);
+    expect(loadEnv({ ...base, CORS_ORIGINS: 'https://old-name.onrender.com', RENDER_EXTERNAL_URL: own }).CORS_ORIGINS.split(',')).toEqual(['https://old-name.onrender.com', own]);
+  });
   it('refuses demo switches unless ALLOW_DEMO is on', () => {
     expect(() => loadEnv({ ...base, SEED_DEMO: 'true' })).toThrow(/SEED_DEMO/);
     expect(() => loadEnv({ ...base, DEMO_CODE: '424242' })).toThrow(/DEMO_CODE/);
