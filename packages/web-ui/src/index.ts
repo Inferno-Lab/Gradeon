@@ -11,6 +11,7 @@ export * from './Import';
 export * from './illustrations/Illustration';
 export * from './shell/Shell';
 export * from './shell/Sidebar';
+export * from './GradeonIcon';
 export * from './login/LoginPage';
 export * from './tints';
 export * from './Palette';

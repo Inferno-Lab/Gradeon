@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { GradeonIcon } from '../GradeonIcon';
 
 export interface NavItem {
   id: string;
@@ -125,7 +126,7 @@ export function SchoolHeader({ logo, name, place, onToggle, collapsed }: { logo:
 export function WorkspaceHeader({ env, onToggle, collapsed, envClass }: { env: string; onToggle: () => void; collapsed: boolean; envClass?: string }) {
   return (
     <div className="wsw">
-      <span className="lg">G</span>
+      <span className="lg" style={{ background: 'none' }}><GradeonIcon /></span>
       <div className="fade"><b>Gradeon</b><small><span className={`pdot ${envClass ?? ''}`}></span>{env}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path className="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg>
