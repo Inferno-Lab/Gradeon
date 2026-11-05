@@ -14,7 +14,6 @@
   .nest .app{min-height:100dvh!important}
   .nest .mn{padding-bottom:120px}
 }
-@media (min-width:901px){.nest .phone-only{display:none}}
 /* Overlays belong to the window, not to the page, so they stay put while a long page scrolls. */
 .nest .scrim,.nest .mod,.nest .drw,.nest .bulk,.nest .save,.nest .toast,.nest .sbar,.nest .glow{position:fixed!important}
 .nest .glow{border-radius:0!important}

@@ -66,7 +66,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       <div className={`card s12 rise ${shake.cls}`}>
         <div className="ch"><h2>{group}</h2></div>
         {keys.map((k) => (
-          <SettingRow key={k} k={k} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} modName={modName}
+          <SettingRow key={k} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} modName={modName}
             onChange={(v) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }} />
         ))}
         {can && (
@@ -88,7 +88,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   );
 }
 
-function SettingRow({ k, meta, value, error, disabled, cfg, modName, onChange }: { k: SettingKey; meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; modName: (k: string) => string; onChange: (v: unknown) => void }) {
+function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; modName: (k: string) => string; onChange: (v: unknown) => void }) {
   const chips = (
     <span style={{ display: 'inline-flex', gap: 6, marginLeft: 8 }}>
       {meta.risky && <span className="chip a">Needs a second person</span>}

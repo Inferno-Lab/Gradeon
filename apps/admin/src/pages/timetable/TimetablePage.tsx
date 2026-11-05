@@ -140,7 +140,7 @@ export function TimetablePage() {
     legend: subjects.map((s) => ({ k: subjectKey(s), n: s.subjectName })),
     days: shownDays.map((d) => ({ n: dayName(dateOf(d), true), d: Number(dateOf(d).slice(8)), today: dateOf(d) === today ? 'today' : '' })),
     rows,
-    list: data.slots.filter((s) => (mode === 2)).sort((a, b) => a.day - b.day || a.period - b.period).map((s) => ({
+    list: data.slots.filter(() => mode === 2).sort((a, b) => a.day - b.day || a.period - b.period).map((s) => ({
       day: dayName(dateOf(s.day), true), n: s.subjectName, t: s.substituteName ?? s.teacherName, time: `${periodDef(s.period)?.starts} to ${periodDef(s.period)?.ends}`,
       k: badIds.has(s.id) && !s.substituteId ? 'bad' : subjectKey(s), pick: () => { setSel({ day: s.day, period: s.period }); setMode(1); },
     })),

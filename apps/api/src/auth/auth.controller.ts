@@ -62,7 +62,7 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<TokenPair> {
     loginLimit.check(`${t.info.slug}|${req.ip}|r`);
-    return this.auth.refresh(t, body.refreshToken, req, reply, body.client);
+    return this.auth.refresh(t, body.refreshToken, req, reply);
   }
 
   @Post('logout') @HttpCode(204)

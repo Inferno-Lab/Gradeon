@@ -7,7 +7,6 @@ import { rng } from './names.js';
 type Db = Pool | PoolClient;
 
 const SUBJECTS_5 = ['sub_maths', 'sub_english', 'sub_science', 'sub_hindi', 'sub_social'];
-const gradeOf = (pct: number) => (pct >= 91 ? 'A1' : pct >= 81 ? 'A2' : pct >= 71 ? 'B1' : pct >= 61 ? 'B2' : pct >= 51 ? 'C1' : 'C2');
 
 const count = async (db: Db, table: string): Promise<number> => Number((await db.query<{ n: string }>(`select count(*) n from ${table}`)).rows[0]!.n);
 

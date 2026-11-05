@@ -31,9 +31,3 @@ export const LAST = ['Sharma', 'Mehta', 'Singh', 'Kapoor', 'Joshi', 'Rao', 'Gupt
 export const HOUSES = ['Emerald', 'Ruby', 'Sapphire', 'Amber'] as const;
 export const BLOOD = ['A+', 'B+', 'O+', 'AB+', 'A-', 'B-', 'O-'] as const;
 export const AREAS = ['Baner', 'Aundh', 'Wakad', 'Balewadi', 'Pashan', 'Kothrud', 'Hinjewadi', 'Sus'] as const;
-
-/** Avatar colours used across the admin: [background, text]. */
-export const TINTS: [string, string][] = [
-  ['#E3EAFE', '#2449C8'], ['#FDECEC', '#B42318'], ['#DFF6EC', '#0B7A53'], ['#FFF3D1', '#8A5A00'], ['#EEEAFF', '#4A31C9'],
-  ['#E0F2FE', '#0369A1'], ['#FCE7F3', '#BE185D'], ['#ECFCCB', '#4D7C0F'], ['#F4F2FA', '#575270'], ['#FFE9E2', '#B8381A'],
-];

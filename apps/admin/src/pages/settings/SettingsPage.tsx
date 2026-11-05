@@ -48,14 +48,12 @@ function nextInvoice(): string {
 export function SettingsPage() {
   const app = useApp();
   const chrome = useChrome('set');
-  const qc = useQueryClient();
   const doc = useQuery({ queryKey: ['settings'], queryFn: app.api.settings.get });
   const data = doc.data;
   const [draft, setDraft] = useState<Draft | null>(null);
   const [tab, setTab] = useState(0);
   const [apOpen, setApOpen] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
-  const [shk, setShk] = useState(0);
   const [toast, setToast] = useState('');
   const [copied, setCopied] = useState('');
   const [used, setUsed] = useState(0);
@@ -128,7 +126,7 @@ export function SettingsPage() {
                 : null;
 
   const v = {
-    ...chrome, tab, extra, shk: shk ? `shk${(shk % 2) + 1}` : '', err, shortName, plan, used,
+    ...chrome, tab, extra, shk: '', err, shortName, plan, used,
     tabs: TABS.map((t, i) => ({ n: t[0], d: t[1], nw: !!t[2], on: i === tab ? 'on' : '', cur: i === tab ? 'page' : 'false', pick: () => setTab(i) })),
     name: draft.name, onName: (e: React.ChangeEvent<HTMLInputElement>) => set({ name: e.target.value }), logoText: draft.logo, onLogo: (e: React.ChangeEvent<HTMLInputElement>) => set({ logo: e.target.value.slice(0, 2) }),
     roName: lock('school.name'), roLogo: lock('brand.logoText'),

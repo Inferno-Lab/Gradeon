@@ -249,7 +249,7 @@ export function FleetView({ v }: { v: any }) {
                     <span>Status</span>
                     <span>p95</span>
                   </div>
-                  {v.rows.map((r: any, $i: number) => (
+                  {v.rows.map((r: any) => (
                     <Fragment key={r.id}>
                       <a
                         className={`grd rw ${r.up ?? ""}`}

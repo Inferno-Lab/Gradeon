@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-export const SettingType = z.enum(['boolean', 'string', 'number', 'enum', 'color', 'json']);
 
 /** Every setting a school can change (config layer 4). Defaults here are the platform defaults (layer 1). */
 export const SchoolSettingsSchema = z.object({

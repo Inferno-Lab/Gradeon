@@ -5,7 +5,6 @@
 --a:#E0A21B;--aS:#FBF0D9;--aD:#8F5400;--c:#B42318;--cS:#FCEBE9;--cD:#B42318;
 --g:#1E7A45;--gS:#E3F2E8;--gD:#1E7A45;--b:#2F5BD3;--bS:#EDF2FD;--r:#B42318;--rS:#FCEBE9;--rF:#B42318;--present:#B9B9B3;
 --ci:#1A1A1C;--sh1:0 1px 2px rgba(26,26,28,.05);--sh2:0 8px 20px -12px rgba(26,26,28,.22);--sh3:0 18px 44px -20px rgba(26,26,28,.34);--scrim:rgba(17,17,19,.42);
---m-body:#DCE5FA;--m-belly:#F6F6F4;--m-wing:#C8D5F6;--m-off:#E0A21B;--m-cap:#1A1A1C;--m-box:#FFFFFF;--m-box2:#F3F3F1;
 --fb:'Manrope',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope',sans-serif;--e:cubic-bezier(.22,1,.36,1);--sp:cubic-bezier(.34,1.56,.64,1);
 font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothing:antialiased;letter-spacing:-.005em;position:relative;box-sizing:border-box}
 .nest *,.nest *::before,.nest *::after{box-sizing:border-box}
@@ -15,7 +14,6 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 --a:#C99419;--aS:#35290F;--aD:#E2B24F;--c:#F0857A;--cS:#3A1D1A;--cD:#F0857A;
 --g:#6CC08E;--gS:#17301F;--gD:#6CC08E;--b:#7C9CF0;--bS:#1E2A47;--r:#F0857A;--rS:#3A1D1A;--rF:#B42318;--present:#5A5A61;
 --ci:#26262A;--sh1:none;--sh2:0 8px 20px -12px rgba(0,0,0,.6);--sh3:0 18px 44px -20px rgba(0,0,0,.75);--scrim:rgba(0,0,0,.62);
---m-body:#2C3A5E;--m-belly:#1E2A47;--m-wing:#22304F;--m-off:#C99419;--m-cap:#0A0A0B;--m-box:#26262A;--m-box2:#1E1E22;
 }
 .nest ::selection{background:color-mix(in srgb,var(--v) 30%,transparent)}
 .nest :focus-visible{outline:2.5px solid var(--ink);outline-offset:3px;border-radius:12px}
@@ -164,7 +162,6 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 @keyframes nRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .nest .pop{animation:nPop .7s var(--sp) both;animation-delay:var(--d,0s)}
 @keyframes nPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
-.nest .fadein{animation:nFade .4s ease-out both}
 @keyframes nFade{from{opacity:0}to{opacity:1}}
 .nest .float{animation:nFloat 5s ease-in-out infinite;animation-delay:var(--d,0s)}
 @keyframes nFloat{50%{transform:translateY(-9px)}}
@@ -203,7 +200,7 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .xb:hover{background:rgba(255,255,255,.2);transform:rotate(90deg)}
 .nest .bulk{position:absolute;left:50%;bottom:30px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);transform:translate(-50%,160%) scale(.9);opacity:0;transition:transform .7s var(--e),opacity .3s}
 .nest .bulk.on{transform:translate(-50%,0);opacity:1}
-.nest .bk{height:38px;padding:0 15px;border-radius:999px;border:0;background:none;color:#fff;font:700 13.5px var(--fb);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
+.nest .bk{white-space:nowrap;flex:none;height:38px;padding:0 15px;border-radius:999px;border:0;background:none;color:#fff;font:700 13.5px var(--fb);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
 .nest .bk:hover{background:rgba(255,255,255,.14)}
 .nest .bk svg{width:16px;height:16px}
 .nest .drw{position:absolute;top:14px;right:14px;bottom:14px;z-index:51;width:480px;max-width:calc(100% - 28px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;animation:nDrw .7s var(--e);border:1px solid var(--line)}
@@ -215,47 +212,6 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .skc{border-radius:12px;background:var(--sunk);position:relative;overflow:hidden}
 .nest .skc::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,color-mix(in srgb,var(--card) 80%,transparent) 50%,transparent 80%);transform:translateX(-100%);animation:nSh 1.4s infinite}
 @keyframes nSh{to{transform:translateX(100%)}}
-/* mascot: Nesti the bird */
-.mc{display:block;width:100%;height:auto;overflow:visible}
-.mc .bob{animation:mBob 3.6s ease-in-out infinite}
-@keyframes mBob{50%{transform:translateY(-5px)}}
-.mc .eye{transform-box:fill-box;transform-origin:center;animation:mBlink 5.5s infinite}
-@keyframes mBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
-.mc .pup{transition:transform .6s var(--e)}
-.mc.s-book .pup{transform:translate(0,3px)}
-.mc.s-coin .pup,.mc.s-lost .pup,.mc.s-notice .pup{transform:translate(3px,1px)}
-.mc .wR{transform-box:view-box;transform-origin:186px 134px}
-.mc .wL{transform-box:view-box;transform-origin:74px 134px}
-.mc.s-wave .wR{transform:rotate(-108deg)}
-.mc.s-party .wR{transform:rotate(-112deg)}
-.mc.s-party .wL{transform:rotate(112deg)}
-.mc.s-wave .wR{animation:mWave 1s ease-in-out infinite alternate}
-@keyframes mWave{from{transform:rotate(-96deg)}to{transform:rotate(-128deg)}}
-.mc.s-party .wR{animation:mCheerR .7s ease-in-out infinite alternate}
-.mc.s-party .wL{animation:mCheerL .7s ease-in-out infinite alternate}
-@keyframes mCheerR{from{transform:rotate(-100deg)}to{transform:rotate(-126deg)}}
-@keyframes mCheerL{from{transform:rotate(100deg)}to{transform:rotate(126deg)}}
-.mc.s-lost .tilt{transform-box:view-box;transform-origin:130px 190px;animation:mTilt 3s ease-in-out infinite}
-@keyframes mTilt{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(4deg)}}
-.mc .q{font:800 30px var(--fd,'Bricolage Grotesque',sans-serif);fill:var(--v);animation:mQ 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-@keyframes mQ{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-8px) rotate(8deg)}}
-.mc .spk{transform-box:fill-box;transform-origin:center;animation:mTw 2.2s ease-in-out infinite;animation-delay:var(--d,0s)}
-@keyframes mTw{0%,100%{transform:scale(.4);opacity:.3}50%{transform:scale(1);opacity:1}}
-.mc .arc{animation:mArc 1.5s ease-in-out infinite;animation-delay:var(--d,0s);opacity:.2}
-@keyframes mArc{50%{opacity:1}}
-.mc .coin{transform-box:fill-box;transform-origin:center;animation:mCoin 2.8s ease-in-out infinite}
-@keyframes mCoin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.25)}}
-.mc .cf{transform-box:fill-box;transform-origin:center;animation:mFall 3.2s linear infinite;animation-delay:var(--d,0s);opacity:0}
-@keyframes mFall{0%{transform:translateY(-30px) rotate(0);opacity:0}12%{opacity:1}85%{opacity:1}100%{transform:translateY(120px) rotate(300deg);opacity:0}}
-.mc .lt{font:800 15px var(--fd,'Bricolage Grotesque',sans-serif);fill:var(--v);animation:mRise 3s ease-in-out infinite;animation-delay:var(--d,0s);opacity:0}
-@keyframes mRise{0%{transform:translateY(8px);opacity:0}30%{opacity:1}100%{transform:translateY(-34px);opacity:0}}
-.mc .bub{transform-box:fill-box;transform-origin:20% 100%;animation:mBub 3.6s var(--e) infinite}
-@keyframes mBub{0%{transform:scale(.3);opacity:0}12%,80%{transform:scale(1);opacity:1}100%{transform:scale(.8);opacity:0}}
-.mc .nope{transform-box:view-box;transform-origin:130px 190px}
-.nope1 .mc .nope{animation:mNopeA .7s linear}
-.nope2 .mc .nope{animation:mNopeB .7s linear}
-@keyframes mNopeA{0%,100%{transform:translateX(0) rotate(0)}12%{transform:translateX(-9px) rotate(-5deg)}27%{transform:translateX(9px) rotate(5deg)}42%{transform:translateX(-7px) rotate(-4deg)}57%{transform:translateX(6px) rotate(3deg)}72%{transform:translateX(-3px)}86%{transform:translateX(2px)}}
-@keyframes mNopeB{0%,100%{transform:translateX(0) rotate(0)}12%{transform:translateX(-9px) rotate(-5deg)}27%{transform:translateX(9px) rotate(5deg)}42%{transform:translateX(-7px) rotate(-4deg)}57%{transform:translateX(6px) rotate(3deg)}72%{transform:translateX(-3px)}86%{transform:translateX(2px)}}
 /* reduce motion */
 .nest.rm *,.nest.rm *::before,.nest.rm *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}
 /* transition: none, not a 1 ms duration: a duration on its own turns on `transition: all` for every element. */

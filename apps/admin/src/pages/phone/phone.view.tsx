@@ -62,7 +62,7 @@ export function PhoneView({ v }: { v: any }) {
                 {v.left} left
               </span>
             </div>
-            {v.items.map((it: any, $i: number) => (
+            {v.items.map((it: any) => (
               <Fragment key={it.id}>
                 <div className={`ap ${it.cls ?? ""}`}>
                   <span className="av" style={{ background: it.bg, color: it.fg } as CSSProperties}>

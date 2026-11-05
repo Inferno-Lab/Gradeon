@@ -58,9 +58,6 @@ export function readSupportHash(slug: string): boolean {
   return true;
 }
 
-export function supportUntil(slug: string): number | null {
-  return session.read(slug)?.support?.until ?? null;
-}
 
 /** One client per school. A 401 refreshes the tokens once, then signs out. */
 export function makeClient(slug: string, onSignedOut: () => void) {

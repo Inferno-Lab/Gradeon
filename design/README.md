@@ -35,7 +35,7 @@ cd design/canvas && python -m http.server 8099
 
 ## How the boards became React
 
-1. `tools/dc-to-tsx.mjs` converted each board into a React view (`*.view.tsx`), a scoped stylesheet (`*.css`, every selector prefixed `.pg-<page>`) and a copy of its script (`*.logic.txt`, kept next to the page as reference for what the board's own logic did). `tools/convert-all.sh` lists the boards it was run on. **It was a first import only.** The views were then edited by hand (small one-time Python scripts in `tools/edit-*.py` did the bulk edits) to take real data, work on phones and drop the retired elements. Never re-run the converter over an edited view.
+1. `tools/dc-to-tsx.mjs` converted each board into a React view (`*.view.tsx`), a scoped stylesheet (`*.css`, every selector prefixed `.pg-<page>`) and a copy of its script (`*.logic.txt`, a reference while porting; the copies were removed in 2026-11, the board itself is the reference). `tools/convert-all.sh` lists the boards it was run on. **It was a first import only.** The views were then edited by hand (small one-time Python scripts did the bulk edits; they were removed once applied) to take real data, work on phones and drop the retired elements. Never re-run the converter over an edited view.
 2. Each page has a hook component (`DashboardPage.tsx`, `StudentsPage.tsx`...) that fetches data with TanStack Query and passes one values object `v` into the view. The view keeps the board's markup and class names.
 3. Markup and class names are the board's. Colours and sizes come from `nest.css` variables, so a change to the design is a change to that file and the boards.
 

@@ -30,7 +30,6 @@ export const session = {
 };
 
 /** The school admin's address for a school, used when a support session opens it. */
-export const ADMIN_URL = (import.meta.env.VITE_ADMIN_URL as string | undefined) ?? '';
 
 /** One client for the console. A 401 refreshes the tokens once, then signs out. */
 export function makeClient(onSignedOut: () => void) {

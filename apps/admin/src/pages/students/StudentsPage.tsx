@@ -49,7 +49,6 @@ export function StudentsPage() {
   const [att, setAtt] = useState<'' | 'low' | 'perfect'>('');
   const [q, setQ] = useState('');
   const [dq, setDq] = useState('');
-  const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
@@ -85,8 +84,8 @@ export function StudentsPage() {
     feeStatus: fee || (active === 2 ? 'overdue' : undefined),
     attendance: att || undefined,
     newThisYear: active === 3 || undefined,
-    sort: 'name', dir: sort, page, limit: PAGE,
-  }), [dq, classId, active, pinned, house, fee, att, sort, page]);
+    sort: 'name', dir: 'asc', page, limit: PAGE,
+  }), [dq, classId, active, pinned, house, fee, att, page]);
 
   const list = useQuery({ queryKey: ['students', filter], queryFn: () => app.api.students.list(filter), placeholderData: keepPreviousData });
   const sum = useQuery({ queryKey: ['student-summary', filter.classId, filter.house], queryFn: () => app.api.students.summary({ classId: filter.classId, house: filter.house }), placeholderData: keepPreviousData, refetchInterval: 30_000 });

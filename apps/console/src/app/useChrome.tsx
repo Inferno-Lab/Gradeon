@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dock, IC, MoreSheet, Palette, Sidebar, WorkspaceHeader, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import { consoleNav, shortcutTargets } from './nav';
 import { useApp } from './context';
-import { path, url } from './base';
+import { path } from './base';
 
 const COLLAPSE_KEY = 'gradeon.console.menu.collapsed';
 const ENV = (import.meta.env.VITE_ENV_LABEL as string | undefined) ?? (/^(localhost|127\.)/.test(window.location.hostname) ? 'Local' : 'Test track');

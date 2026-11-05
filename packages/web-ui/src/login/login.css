@@ -53,8 +53,6 @@
 .pg-login .eye svg{width:19px;height:19px}
 .pg-login .go{height:54px;width:100%;font-size:16px;transition:background .5s,width .6s var(--e),transform .25s var(--e),box-shadow .35s}
 .pg-login .go.ok{background:var(--g);color:var(--card)}
-.pg-login .alt{display:flex;gap:10px}
-.pg-login .alt .btn{flex:1;font-size:13.5px}
 .pg-login .or{display:flex;align-items:center;gap:14px;font:700 12.5px var(--fb);color:var(--ink3)}
 .pg-login .or::before,.pg-login .or::after{content:"";flex:1;height:1px;background:var(--line)}
 .pg-login .otp{position:relative;display:flex;gap:10px;justify-content:space-between}
