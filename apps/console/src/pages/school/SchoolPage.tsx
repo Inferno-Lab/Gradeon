@@ -9,8 +9,10 @@ import { url } from '../../app/base';
 import { useChrome } from '../../app/useChrome';
 import { ago, count, rupees, statusOf, when } from '../../app/format';
 import { SchoolView } from './school.view';
+import { ConfigTab } from './ConfigTab';
+import { RolesTab } from './RolesTab';
 
-const TABS = ['Overview', 'Entitlements', 'Versions', 'Health', 'Audit'];
+const TABS = ['Overview', 'Entitlements', 'Configuration', 'Roles', 'Versions', 'Health', 'Audit'];
 const DESC: Record<string, string> = {
   database: 'Its own database with its own role and password',
   'keys-storage': 'Encryption key and file space',
@@ -109,9 +111,11 @@ export function SchoolPage() {
   const done = d.checklist.filter((c) => c.state === 'done').length;
 
   const extra: ReactNode = tab === 1 ? <Entitlements d={d} planName={planName} onPush={() => act.mutate({ action: 'entitlements.push' })} busy={act.isPending} />
-    : tab === 2 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
-      : tab === 3 ? <Health d={d} onAct={(a, p) => act.mutate({ action: a, params: p })} busy={act.isPending} />
-        : tab === 4 ? <Audit id={id} /> : null;
+    : tab === 2 ? <ConfigTab schoolId={d.id} say={say} />
+      : tab === 3 ? <RolesTab schoolId={d.id} say={say} />
+        : tab === 4 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
+          : tab === 5 ? <Health d={d} onAct={(a, p) => act.mutate({ action: a, params: p })} busy={act.isPending} />
+            : tab === 6 ? <Audit id={id} /> : null;
 
   const v = {
     ...chrome, tab, extra, toast: toast?.text, toastTone: toast?.tone,
@@ -165,7 +169,7 @@ function Entitlements({ d, planName, onPush, busy }: { d: SchoolDetail; planName
     <section className="grid">
       <Card title="Modules" chip={<span className="chip">{d.entitlement.modules.length} on</span>} span="s12">
         <div className="tgrow">{d.entitlement.modules.map((m) => <span key={m} className="chip v">{name(m)}</span>)}</div>
-        <div className="help" style={{ marginTop: 14 }}>Modules come from the {planName} plan plus anything added at onboarding. The school can switch these on or off itself under Settings.</div>
+        <div className="help" style={{ marginTop: 14 }}>Modules come from the {planName} plan plus anything added at onboarding. Which of them are switched on is set under Configuration.</div>
       </Card>
       <Card title="Limits" span="s12">
         <div className="rolh2">

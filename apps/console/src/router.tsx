@@ -59,6 +59,7 @@ const routeTree = root.addChildren([
     page('/blueprints', () => import('./pages/blueprints/BlueprintsPage'), 'BlueprintsPage'),
     page('/health', () => import('./pages/health/HealthPage'), 'HealthPage'),
     page('/approvals', () => import('./pages/approvals/ApprovalsPage'), 'ApprovalsPage'),
+    page('/requests', () => import('./pages/requests/RequestsPage'), 'RequestsPage'),
     page('/support', () => import('./pages/support/SupportPage'), 'SupportPage'),
     page('/inbox', () => import('./pages/support/InboxPage'), 'InboxPage'),
     page('/billing', () => import('./pages/billing/BillingPage'), 'BillingPage'),
