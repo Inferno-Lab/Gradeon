@@ -251,7 +251,8 @@ export function PrivacyPanel({ doc, say }: PanelProps) {
   const reqs = useQuery({ queryKey: ['privacy', 'requests'], queryFn: app.api.privacy.requests });
   const [adding, setAdding] = useState(false);
   const [deciding, setDeciding] = useState<DataRequestRow | null>(null);
-  const canWrite = s.canWrite;
+  // Data requests are the school's daily work (privacy.manage); the privacy settings above are Gradeon's.
+  const canWrite = app.user.permissions.includes('privacy.manage');
   const refresh = () => void qc.invalidateQueries({ queryKey: ['privacy'] });
   return (
     <section className="rise">
