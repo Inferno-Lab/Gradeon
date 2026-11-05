@@ -16,7 +16,6 @@ const NEWS: [string, string, string, string, string][] = [
   ['Mark attendance', 'att', 'N A', '/attendance', 'attendance'], ['Schedule an exam', 'ex', 'N E', '/exams', 'exams'],
 ];
 const WIDGETS: [string, string, string, string][] = [['rolls', 'Class rolls', 'Attendance of each class today', 'attendance'], ['fees', 'Fees by type', 'What each kind of fee has collected', 'fees'], ['day', 'Today at school', 'The timeline of the school day', 'events']];
-const HEAD_COLOUR: Record<string, string> = { tuition: 'var(--v)', transport: 'var(--b)', activities: 'var(--c)', lab: 'var(--a)' };
 const H = 236;
 const UP = 'M7 17L17 7M9 7h8v8';
 const DOWN = 'M7 7l10 10M17 9v8H9';
@@ -91,7 +90,7 @@ function DashboardDesktop() {
         n: dense ? (i % 3 === 0 || p.isToday ? String(Number(p.date.slice(8))) : '') : p.label,
         v: fmt(x), full: kind === 'attendance' ? `${p.date}` : (p as { full: string }).full ?? p.date, prev: prev !== null ? fmt(prev) : '',
         h: Math.max(6, (x / max) * H), gh: prev !== null ? Math.max(6, (prev / max) * H) : 0,
-        c: 'color-mix(in srgb, var(--v) 62%, #fff)', today: p.isToday ? 'today' : '', hover: () => undefined,
+        c: 'var(--v2)', today: p.isToday ? 'today' : '', hover: () => undefined,
       };
     });
     const grid = [0, 1, 2, 3, 4].map((g) => ({ b: 30 + (g / 4) * H, l: kind === 'fees' ? (g === 0 ? '0' : money((max / 4) * g)) : `${(max / 4) * g}%` }));
@@ -165,7 +164,7 @@ function DashboardDesktop() {
         segs: [{ k: 'p', n: r.present }, { k: 'l', n: r.late }, { k: 'a', n: r.absent }, { k: 'u', n: r.unmarked }].filter((s) => s.n > 0),
         aria: `${r.name}: ${r.present} present, ${r.late} late, ${r.absent} absent${r.unmarked ? `, ${r.unmarked} not marked` : ''}`,
       })),
-      heads: d.feeHeads.map((h) => ({ n: h.label, pct: h.pct, fill: h.due ? Math.max(h.pct, 2) : 0, c: HEAD_COLOUR[h.head], amt: h.due ? `${money(h.collected)} of ${money(h.due)}` : 'Nothing due' })),
+      heads: d.feeHeads.map((h) => ({ n: h.label, pct: h.pct, fill: h.due ? Math.max(h.pct, 2) : 0, amt: h.due ? `${money(h.collected)} of ${money(h.due)}` : 'Nothing due' })),
       nowLabel: d.day.isToday ? `Now · ${d.day.clock}` : 'Earlier', prog: d.timelineProgress,
       events: t.map((e) => ({ t: e.time, n: e.title, s: e.subtitle, cls: e.state === 'done' ? 'past' : e.state === 'now' ? 'now' : '' })),
     };

@@ -19,6 +19,8 @@ function isoWeek(day: string): number {
   return Math.ceil(((d.getTime() - y0.getTime()) / 86400000 + 1) / 7);
 }
 
+const SUBJECT_COLOURS = ['maths', 'science', 'english', 'hindi', 'social', 'computer', 'art', 'pe', 'music'];
+
 export function TimetablePage() {
   const app = useApp();
   const chrome = useChrome('tt');
@@ -90,7 +92,11 @@ export function TimetablePage() {
   const badIds = new Set(data.clashes.flatMap((c) => c.slotIds));
   const periodDef = (idx: number) => data.periods.find((p) => p.idx === idx);
   const now = istMinutes();
-  const subjectKey = (s: SlotRow) => s.subjectColor;
+  // The app's subject colours (lib/core/theme/app_colors.dart), so a subject looks the same in the admin and the app; others keep their stored tone.
+  const subjectKey = (s: Pick<SlotRow, 'subjectName' | 'subjectColor'>) => {
+    const k = (s.subjectName.trim().toLowerCase().split(/s+/)[0] ?? '').replace(/^mathematics$/, 'maths').replace(/^physical$/, 'pe');
+    return SUBJECT_COLOURS.includes(k) ? `sub s-${k}` : s.subjectColor;
+  };
   const cellOf = (day: number, p: { idx: number; starts: string; ends: string }, ri: number) => {
     const s = slotAt(day, p.idx);
     const live = week === 0 && dateOf(day) === today && now >= toMin(p.starts) && now < toMin(p.ends);
@@ -131,15 +137,15 @@ export function TimetablePage() {
     prevWeek: () => setWeek((w) => w - 1), nextWeek: () => setWeek((w) => w + 1),
     weekLabel: `${dayMonth(dateOf(1))} – ${dayMonth(dateOf(5))} ${dateOf(5).slice(0, 4)} · W${isoWeek(dateOf(1))}`,
     clashChip: data.clashes.length ? 'r' : 'g', clashText: data.clashes.length ? `${data.clashes.length} ${data.clashes.length === 1 ? 'clash' : 'clashes'} to fix` : 'No clashes',
-    legend: subjects.map((s) => ({ k: s.subjectColor, n: s.subjectName })),
+    legend: subjects.map((s) => ({ k: subjectKey(s), n: s.subjectName })),
     days: shownDays.map((d) => ({ n: dayName(dateOf(d), true), d: Number(dateOf(d).slice(8)), today: dateOf(d) === today ? 'today' : '' })),
     rows,
     list: data.slots.filter((s) => (mode === 2)).sort((a, b) => a.day - b.day || a.period - b.period).map((s) => ({
       day: dayName(dateOf(s.day), true), n: s.subjectName, t: s.substituteName ?? s.teacherName, time: `${periodDef(s.period)?.starts} to ${periodDef(s.period)?.ends}`,
-      k: badIds.has(s.id) && !s.substituteId ? 'bad' : s.subjectColor, pick: () => { setSel({ day: s.day, period: s.period }); setMode(1); },
+      k: badIds.has(s.id) && !s.substituteId ? 'bad' : subjectKey(s), pick: () => { setSel({ day: s.day, period: s.period }); setMode(1); },
     })),
     sel: {
-      k: selBad ? 'r' : cur?.subjectColor ?? 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
+      k: selBad ? 'r' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
       day: `${dayLabel(dateOf(sel.day))}`, time: curDef ? `${curDef.starts} to ${curDef.ends}` : '', len: curDef ? `${toMin(curDef.ends) - toMin(curDef.starts)} min` : '',
       bad: selBad, fixedNow, fine: !!cur && !selBad && !fixedNow, other: clash ? clash.classNames.filter((n) => n !== data.className).join(', ') || 'another class' : '',
       suggest: clash?.suggestion ? clash.suggestion.teacherName.split(' ')[0] : null,

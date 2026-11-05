@@ -42,7 +42,7 @@ export function SchoolView({ v }: { v: any }) {
           <b style={{ color: "var(--ink)" } as CSSProperties}>{v.name}</b>
         </div>
         <header className="hd rise" style={{ "--d": ".05s", gap: "18px", flexWrap: "wrap" } as CSSProperties}>
-          <span className="slogo" style={{ background: `linear-gradient(135deg, ${v.color}, color-mix(in srgb, ${v.color} 70%, #14111F))`, boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
+          <span className="slogo" style={{ background: v.color, boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
             {v.logoText}
           </span>
           <div style={{ minWidth: "0" } as CSSProperties}>

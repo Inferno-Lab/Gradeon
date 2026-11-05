@@ -7,7 +7,6 @@ import { Page, useToast } from '../../app/Page';
 import { CollectFeeDialog } from '../students/StudentDialogs';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${inr(Math.round(n))}`);
-const HEAD: Record<string, string> = { tuition: 'var(--v)', transport: 'var(--b)', activities: 'var(--c)', lab: 'var(--a)' };
 
 export function FeesPage() {
   const app = useApp();
@@ -33,8 +32,8 @@ export function FeesPage() {
       overlays={paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}>
       {s && (
         <section className="grid">
-          <div className="tile t-v s4 rise"><span className="lbl" style={{ color: 'rgba(255,255,255,.7)' }}>Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>
-          <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl" style={{ color: 'rgba(20,17,31,.6)' }}>Still to come in</span><div className="big" style={{ marginTop: 8 }}>{money(s.pending)}</div><div style={{ font: '600 13px var(--fb)', opacity: .75 }}>not yet due or in part</div></div>
+          <div className="tile t-v s4 rise"><span className="lbl">Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>
+          <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Still to come in</span><div className="big" style={{ marginTop: 8 }}>{money(s.pending)}</div><div style={{ font: '600 13px var(--fb)', opacity: .75 }}>not yet due or in part</div></div>
           <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Overdue</span><div className="big" style={{ marginTop: 8, color: 'var(--r)' }}>{money(s.overdue)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</div></div>
           <div className="card s12 rise" style={{ '--d': '.14s' } as React.CSSProperties}>
             <div className="ch"><h2>Collected by type</h2></div>
@@ -42,7 +41,7 @@ export function FeesPage() {
               {s.byHead.map((h) => (
                 <div className="us" key={h.head} data-tip={`${h.label}\n${h.pct}% collected\n${money(h.collected)} of ${money(h.due)}`}>
                   <div className="r">{h.label}<b>{money(h.collected)} of {money(h.due)}</b></div>
-                  <div className="bar" style={{ height: 18 }}><i style={{ width: `${h.pct}%`, background: HEAD[h.head] ?? 'var(--v)' }}></i></div>
+                  <div className="bar" style={{ height: 18 }}><i style={{ width: `${h.pct}%` }}></i></div>
                 </div>
               ))}
               {s.byHead.length === 0 && <div className="help">Fees by type appear once fees are assigned to students.</div>}

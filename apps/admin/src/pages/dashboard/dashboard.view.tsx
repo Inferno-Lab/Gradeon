@@ -160,7 +160,7 @@ export function DashboardView({ v }: { v: any }) {
           {v.has.attendance && (
           <div className="tile t-a s3 lift rise" style={{ "--d": ".1s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(20,17,31,.12)", color: "#14111F" } as CSSProperties}>
+              <span className="chip">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path>
                 </svg>
@@ -193,7 +193,7 @@ export function DashboardView({ v }: { v: any }) {
               <path
                 className="i"
                 d="M4 5h16v15H4zM4 9h16M9 3v4M15 3v4M8.5 14l2 2 4-4"
-                style={{ fill: "none", stroke: "#14111F" } as CSSProperties}
+                style={{ fill: "none", stroke: "var(--ink)" } as CSSProperties}
               ></path>
             </svg>
           </div>
@@ -201,7 +201,7 @@ export function DashboardView({ v }: { v: any }) {
           {v.has.fees && (
           <div className="tile t-v s3 lift rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(255,255,255,.2)", color: "#fff" } as CSSProperties}>
+              <span className="chip">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
                 </svg>
@@ -224,7 +224,7 @@ export function DashboardView({ v }: { v: any }) {
               <Roll digits={v.kFees} />
             </div>
             <div className="statl" style={{ marginTop: "12px" } as CSSProperties}>
-              <span className={`tr ${v.feeTrend.cls}`} style={{ background: "rgba(255,255,255,.2)", color: "#fff" } as CSSProperties}>
+              <span className={`tr ${v.feeTrend.cls}`}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d={v.feeTrend.icon} style={{ strokeWidth: "2.4" } as CSSProperties}></path>
                 </svg>
@@ -236,7 +236,7 @@ export function DashboardView({ v }: { v: any }) {
               <path
                 className="i"
                 d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"
-                style={{ fill: "none", stroke: "#fff" } as CSSProperties}
+                style={{ fill: "none", stroke: "var(--ink)" } as CSSProperties}
               ></path>
             </svg>
           </div>
@@ -339,7 +339,7 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="need" style={{ fontSize: "22px" } as CSSProperties}>
                 Needs you
               </h2>
-              <span className="chip c">{v.leftLabel}</span>
+              <span className={`chip ${v.allDone ? "g" : "a"}`}>{v.leftLabel}</span>
             </div>
             <div className="needl" data-even-scroll="">
             {v.needs.map((n: any, $i: number) => (
@@ -391,7 +391,7 @@ export function DashboardView({ v }: { v: any }) {
                   <i style={{ background: "var(--a)" } as CSSProperties}></i>Late
                 </span>
                 <span>
-                  <i style={{ background: "var(--c)" } as CSSProperties}></i>Absent
+                  <i style={{ background: "var(--r)" } as CSSProperties}></i>Absent
                 </span>
               </span>
             </div>
@@ -423,7 +423,7 @@ export function DashboardView({ v }: { v: any }) {
                 <Fragment key={$i}>
                   <div className="fbar">
                     <div className="trk" role="img" aria-label={`${h.n}: ${h.pct} percent collected`} data-tip={`${h.n}\n${h.pct}% collected · ${h.amt}`}>
-                      <i className="fill" style={{ height: `${h.fill}%`, background: h.c } as CSSProperties}>
+                      <i className="fill" style={{ height: `${h.fill}%` } as CSSProperties}>
                         {h.pct >= 24 && <em>{h.pct}%</em>}
                       </i>
                       {h.pct < 24 && (

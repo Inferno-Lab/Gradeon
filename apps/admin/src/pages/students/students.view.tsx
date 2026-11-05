@@ -305,7 +305,7 @@ export function StudentsView({ v }: { v: any }) {
               </div>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" } as CSSProperties}>
                 <span className={`fs ${v.d.fcls ?? ""}`}>{v.d.fees}</span>
-                {v.d.house && <span className="chip c">{v.d.house} house</span>}
+                {v.d.house && <span className="chip">{v.d.house} house</span>}
                 {v.d.route && <span className="chip b">{v.d.route}</span>}
               </div>
             </div>

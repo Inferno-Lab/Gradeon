@@ -21,7 +21,7 @@ const PILL_ICON = {
   add: 'M12 5v14M5 12h14',
 };
 const fmtFee = (s: StudentRow) => (s.feeStatus === 'paid' ? 'Paid' : s.feeStatus === 'due' ? `Due ₹${inr(s.amountDue)}` : `Overdue ₹${inr(s.amountDue)}`);
-const tickClass = (st: string | null) => (st === 'late' ? 'l' : st === 'present' ? '' : 'a');
+const tickClass = (st: string | null) => (st === 'late' ? 'l' : st === 'present' ? '' : st ? 'a' : 'h');
 
 type Dialog = null | { kind: 'add' } | { kind: 'import' } | { kind: 'message'; ids: string[]; label: string } | { kind: 'fee'; ids: string[]; label: string } | { kind: 'collect' };
 

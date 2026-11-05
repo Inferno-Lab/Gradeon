@@ -1,11 +1,11 @@
 /* Scrolling and fitting: loaded last, so it can fix what the boards left open. Every scroll area gets a visible, themed bar and a soft shadow at the edge that still has more behind it. */
-html{scrollbar-width:thin;scrollbar-color:#B7AAF7 transparent}
-html:has(.nest.dark){color-scheme:dark;scrollbar-color:#4A3E96 transparent}
-.nest *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--v) 42%,transparent) transparent}
+html{scrollbar-width:thin;scrollbar-color:#C4C4BE transparent}
+html:has(.nest.dark){color-scheme:dark;scrollbar-color:#45454B transparent}
+.nest *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ink3) 40%,transparent) transparent}
 .nest *::-webkit-scrollbar{width:12px;height:12px}
 .nest *::-webkit-scrollbar-track{background:transparent}
-.nest *::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--v) 38%,transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box;min-height:48px;min-width:48px}
-.nest *::-webkit-scrollbar-thumb:hover{background:var(--v);background-clip:content-box;border-width:2px}
+.nest *::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink3) 40%,transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box;min-height:48px;min-width:48px}
+.nest *::-webkit-scrollbar-thumb:hover{background:var(--ink3);background-clip:content-box;border-width:2px}
 .nest *::-webkit-scrollbar-corner{background:transparent}
 
 /* A scroll area keeps a plain background: painted-in edge shadows (background-attachment: local) made every scroll frame repaint on the main thread, which is what made lists feel slow. The themed bar shows there is more. */

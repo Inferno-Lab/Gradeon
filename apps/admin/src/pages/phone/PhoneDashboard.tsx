@@ -64,7 +64,7 @@ export function PhoneDashboard() {
     subline: d.modules.includes('attendance') ? `${absent} not marked present · ${d.term.examsLabel}` : d.term.examsLabel,
     left, items, clear: items.length === 0 || left === 0,
     barsTitle: 'Fees collected each day', barsEmpty: peak === 0, barsAlt: `Fees collected over the last ${pts.length} school days`,
-    bars: pts.map((p) => ({ h: Math.max(8, (p.amount / max) * 100), n: p.label.slice(0, 1), c: p.amount === peak && peak > 0 ? 'var(--a)' : 'rgba(255,255,255,.34)' })),
+    bars: pts.map((p) => ({ h: Math.max(8, (p.amount / max) * 100), n: p.label.slice(0, 1), c: p.amount === peak && peak > 0 ? 'var(--v)' : 'rgba(255,255,255,.34)' })),
     toast,
   };
   return <PhoneView v={v} />;

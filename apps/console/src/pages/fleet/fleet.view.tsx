@@ -36,7 +36,7 @@ export function FleetView({ v }: { v: any }) {
         <section className="grid" style={{ alignItems: "stretch" } as CSSProperties}>
           <div className={`tile t-v s5 rise ${v.pausedCls ?? ""}`} style={{ "--d": ".05s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(255,255,255,.2)", color: "#fff" } as CSSProperties}>
+              <span className="chip">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"></path>
                 </svg>
@@ -74,7 +74,7 @@ export function FleetView({ v }: { v: any }) {
 )}
 <div style={{ display: "flex", gap: "8px", marginTop: "18px", flexWrap: "wrap" } as CSSProperties}>
               {v.canPause && (
-                <button className="btn wht sm" onClick={v.pause} disabled={v.busy}>
+                <button className="btn sm" onClick={v.pause} disabled={v.busy}>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path className="i" d={v.pauseIc}></path>
                   </svg>
@@ -82,12 +82,12 @@ export function FleetView({ v }: { v: any }) {
                 </button>
               )}
               {v.canRollback && (
-                <button className="btn sm" style={{ background: "rgba(255,255,255,.14)", borderColor: "transparent", color: "#fff" } as CSSProperties} onClick={v.rollback} disabled={v.busy}>
+                <button className="btn sm" onClick={v.rollback} disabled={v.busy}>
                   Roll back
                 </button>
               )}
               {!v.canPause && !v.canRollback && (
-                <button className="btn wht sm" onClick={v.openReleases}>
+                <button className="btn sm" onClick={v.openReleases}>
                   {v.relCta}
                 </button>
               )}
@@ -95,7 +95,7 @@ export function FleetView({ v }: { v: any }) {
           </div>
           <div className="tile t-a s3 lift rise" style={{ "--d": ".1s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(20,17,31,.12)", color: "#14111F" } as CSSProperties}>
+              <span className="chip">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path>
                 </svg>
@@ -163,16 +163,10 @@ export function FleetView({ v }: { v: any }) {
             </div>
             <div className="chart" onMouseMove={v.cmove} onTouchMove={v.ctouch}>
               <svg viewBox="0 0 600 240" preserveAspectRatio="none" role="img" aria-label={v.chartLabel}>
-                <defs>
-                  <linearGradient id="fa" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" style={{ stopColor: "var(--v)", stopOpacity: ".38" } as CSSProperties}></stop>
-                    <stop offset="1" style={{ stopColor: "var(--v)", stopOpacity: "0" } as CSSProperties}></stop>
-                  </linearGradient>
-                </defs>
                 <line className="gl" x1="0" y1="60" x2="600" y2="60"></line>
                 <line className="gl" x1="0" y1="120" x2="600" y2="120"></line>
                 <line className="gl" x1="0" y1="180" x2="600" y2="180"></line>
-                <path className="area" d={v.pArea} style={{ fill: "url(#fa)" } as CSSProperties}></path>
+                <path className="area" d={v.pArea} style={{ fill: "var(--vS)" } as CSSProperties}></path>
                 <path className="ln2" d={v.p2}></path>
                 <path className="ln" d={v.p1}></path>
               </svg>
