@@ -57,11 +57,11 @@ export function PhoneDashboard() {
   const peak = pts.reduce((m, p) => (p.amount > m ? p.amount : m), 0);
   const absent = Math.max(0, d.present.total - d.present.value);
   const v = {
-    ...chrome, logo: chrome.shell?.school.logoText ?? '', dayLine: d.day.isToday ? d.day.label : `${d.day.label} · last school day`,
+    ...chrome, has: { fees: d.modules.includes('fees'), attendance: d.modules.includes('attendance') }, logo: chrome.shell?.school.logoText ?? '', dayLine: d.day.isToday ? d.day.label : `${d.day.label} · last school day`,
     greeting: `${hello()}, ${app.user.name.split(' ')[0]}`, pending: left, openSearch: chrome.openSearch,
     present: d.present.value, total: d.present.total, feeMonth: d.fees.monthLabel, fees: money(d.fees.collected),
     headline: left ? `${left} ${left === 1 ? 'thing needs' : 'things need'} you` : 'You’re all caught up',
-    subline: `${absent} not marked present · ${d.term.examsLabel}`,
+    subline: d.modules.includes('attendance') ? `${absent} not marked present · ${d.term.examsLabel}` : d.term.examsLabel,
     left, items, clear: items.length === 0 || left === 0,
     barsTitle: 'Fees collected each day', barsEmpty: peak === 0, barsAlt: `Fees collected over the last ${pts.length} school days`,
     bars: pts.map((p) => ({ h: Math.max(8, (p.amount / max) * 100), n: p.label.slice(0, 1), c: p.amount === peak && peak > 0 ? 'var(--a)' : 'rgba(255,255,255,.34)' })),

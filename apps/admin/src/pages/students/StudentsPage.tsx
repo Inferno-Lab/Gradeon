@@ -118,15 +118,20 @@ export function StudentsPage() {
   const allOnPage = rows.length > 0 && rows.every((r) => sel.has(r.id));
   const reset = () => { setQ(''); setClassId(null); setHouse(''); setFee(''); setAtt(''); setView(0); setPage(1); };
 
+  // Fee and attendance columns, filters and actions show only when the school has those modules.
+  const mods = chrome.shell?.modules ?? [];
+  const has = { fees: mods.includes('fees'), attendance: mods.includes('attendance') };
+  const allViews = [
+    { n: 'All', c: inr(allCount), cc: 'v' }, { n: pinned?.name ?? 'My class', c: String(pinned?.count ?? 0), cc: 'g' },
+    { n: 'Fees overdue', c: String(views.data?.overdue ?? 0), cc: 'r' }, { n: 'New this year', c: String(views.data?.newThisYear ?? 0), cc: 'a' },
+  ].map((x, i) => ({ ...x, i }));
+  const shownViews = allViews.filter((x) => has.fees || x.i !== 2);
   const vals = {
-    ...chrome,
+    ...chrome, has,
     subtitle: `${allCount.toLocaleString('en-IN')} enrolled across ${classes.data?.length ?? 0} sections`,
     openImport: () => setDialog({ kind: 'import' }), exportAll: () => void download(), openAdd: () => setDialog({ kind: 'add' }),
-    views: [
-      { n: 'All', c: inr(allCount), cc: 'v' }, { n: pinned?.name ?? 'My class', c: String(pinned?.count ?? 0), cc: 'g' },
-      { n: 'Fees overdue', c: String(views.data?.overdue ?? 0), cc: 'r' }, { n: 'New this year', c: String(views.data?.newThisYear ?? 0), cc: 'a' },
-    ].map((x, i) => ({ ...x, on: i === active ? 'on' : '', sel: i === active ? 'true' : 'false', pick: () => { setView(i); setClassId(null); setHouse(''); setFee(''); setAtt(''); setPage(1); } })),
-    kw: VIEW_W[active], kx: VIEW_W.slice(0, active).reduce((a, b) => a + b, 4),
+    views: shownViews.map((x) => ({ ...x, on: x.i === active ? 'on' : '', sel: x.i === active ? 'true' : 'false', pick: () => { setView(x.i); setClassId(null); setHouse(''); setFee(''); setAtt(''); setPage(1); } })),
+    kw: VIEW_W[active], kx: shownViews.filter((x) => x.i < active).reduce((a, x) => a + VIEW_W[x.i]!, 4),
     pills: (
       <>
         <Pill id="cls" open={pop} setOpen={setPop} on={!!className} icon={PILL_ICON.cls} menu={<>
@@ -137,15 +142,15 @@ export function StudentsPage() {
           <button className={!house ? 'on' : ''} onClick={() => { setHouse(''); setPop(''); setPage(1); }}>Any house</button><hr />
           {HOUSES.map((h) => <button key={h} className={h === house ? 'on' : ''} onClick={() => { setHouse(h); setPop(''); setPage(1); }}>{h}</button>)}
         </>}>House {house && <b>{house}</b>}</Pill>
-        <Pill id="fee" open={pop} setOpen={setPop} on={!!fee} icon={PILL_ICON.fee} menu={<>
+        {has.fees && <Pill id="fee" open={pop} setOpen={setPop} on={!!fee} icon={PILL_ICON.fee} menu={<>
           <button className={!fee ? 'on' : ''} onClick={() => { setFee(''); setPop(''); setPage(1); }}>Any fee state</button><hr />
           {(['paid', 'due', 'overdue'] as const).map((f) => <button key={f} className={f === fee ? 'on' : ''} onClick={() => { setFee(f); setPop(''); setPage(1); }}>{f === 'paid' ? 'Paid up' : f === 'due' ? 'Due soon' : 'Overdue'}</button>)}
-        </>}>Fees {fee && <b>{fee}</b>}</Pill>
-        <Pill id="add" open={pop} setOpen={setPop} on={!!att} icon={PILL_ICON.add} menu={<>
+        </>}>Fees {fee && <b>{fee}</b>}</Pill>}
+        {has.attendance && <Pill id="add" open={pop} setOpen={setPop} on={!!att} icon={PILL_ICON.add} menu={<>
           <button className={!att ? 'on' : ''} onClick={() => { setAtt(''); setPop(''); setPage(1); }}>Any attendance</button><hr />
           <button className={att === 'low' ? 'on' : ''} onClick={() => { setAtt('low'); setPop(''); setPage(1); }}>Below 88% present</button>
           <button className={att === 'perfect' ? 'on' : ''} onClick={() => { setAtt('perfect'); setPop(''); setPage(1); }}>Never absent</button>
-        </>}>{att ? <b>{att === 'low' ? 'Below 88%' : 'Never absent'}</b> : 'Add filter'}</Pill>
+        </>}>{att ? <b>{att === 'low' ? 'Below 88%' : 'Never absent'}</b> : 'Add filter'}</Pill>}
       </>
     ),
     sum: (() => {
@@ -166,7 +171,7 @@ export function StudentsPage() {
       return {
         n: r.name, ini: r.initials, bg: t.bg, fg: t.fg, adm: r.admissionNo, house: r.house ?? '', cls: r.className.replace(' ', ''), roll: r.rollNo, g: r.guardianName,
         att: r.attendancePct, tk: r.attendance10.map((a, k) => ({ k, c: tickClass(a) })),
-        fcls: r.feeStatus === 'paid' ? 'paid' : r.feeStatus === 'due' ? 'due' : 'over', fic: r.feeStatus === 'paid' ? IC_OK : r.feeStatus === 'due' ? IC_CLK : IC_AL, fees: fmtFee(r), pp: '',
+        fcls: r.feeStatus === 'paid' ? 'paid' : r.feeStatus === 'due' ? 'due' : 'over', fic: r.feeStatus === 'paid' ? IC_OK : r.feeStatus === 'due' ? IC_CLK : IC_AL, fees: has.fees ? fmtFee(r) : '–', pp: '',
         sel: sel.has(r.id) ? 'sel' : '', cbOn: sel.has(r.id) ? 'on' : '', checked: sel.has(r.id) ? 'true' : 'false',
         toggle: (e: React.MouseEvent) => { e.stopPropagation(); toggle(r.id); }, open: () => setOpenId(r.id),
         key: (e: React.KeyboardEvent) => { if (e.key === 'Enter' && e.target === e.currentTarget) setOpenId(r.id); },
@@ -183,7 +188,7 @@ export function StudentsPage() {
     bulkExport: () => void download([...sel]),
     bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
     drOn: !!openId, out: closing ? 'out' : '', close: closeDrawer,
-    canCollect: app.user.permissions.includes('fees.collect'),
+    canCollect: has.fees && app.user.permissions.includes('fees.collect'),
     d: (() => {
       const s = detail.data;
       if (!s) return { n: '…', ini: '', bg: 'var(--sunk)', fg: 'var(--ink3)', adm: '', roll: '', cls: '', house: null, route: null, fcls: 'due', fees: '', att: 0, exam: '–', examName: 'Latest test', homework: '–', library: 0, rollTitle: '', rollAria: '', gi: '', g: '', activity: [] as { label: string; sub: string; color: string }[] };

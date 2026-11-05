@@ -22,7 +22,7 @@ const DEFS: { name: string; items: Def[] }[] = [
   { name: 'People', items: [
     { id: 'stu', label: 'Students', icon: 'stu', keys: 'G S', to: '/students', module: 'people' },
     { id: 'staff', label: 'Staff', icon: 'staff', keys: 'G F', to: '/staff', module: 'people' },
-    { id: 'adm', label: 'Admissions', icon: 'adm', keys: 'G M', to: '/admissions', module: 'people' },
+    { id: 'adm', label: 'Admissions', icon: 'adm', keys: 'G M', to: '/admissions', module: 'people.admissions' },
   ] },
   { name: 'Money', items: [
     { id: 'fee', label: 'Fees', icon: 'fee', keys: 'G E', to: '/fees', module: 'fees' },
@@ -51,6 +51,12 @@ export function adminNav(modules: string[], base: string, badges?: { attendance:
         count: i.id === 'att' && badges?.attendance ? String(badges.attendance) : i.id === 'adm' && badges?.admissions ? String(badges.admissions) : i.id === 'msg' && badges?.messages ? String(badges.messages) : undefined,
       })),
   })).filter((g) => g.items.length);
+}
+
+/** The module or feature a page needs, or null for pages every school has. */
+export function moduleForPath(path: string): string | null {
+  const item = DEFS.flatMap((g) => g.items).find((i) => i.to === path);
+  return item && item.module !== 'core' ? item.module : null;
 }
 
 /** `G` then a letter, like the shortcuts on the menu. */
