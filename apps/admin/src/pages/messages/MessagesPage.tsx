@@ -64,7 +64,7 @@ function ThreadItem({ t, on, onOpen }: { t: ThreadRow; on: boolean; onOpen: () =
         <span className="mts" title={t.subject}>{t.subject}</span>
         <span className="mtp">{t.lastFrom === 'staff' ? 'You: ' : ''}{t.lastBody}</span>
       </span>
-      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '800 11.5px var(--fb)', background: 'var(--v)', color: '#fff', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
+      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '800 11.5px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
     </button>
   );
 }

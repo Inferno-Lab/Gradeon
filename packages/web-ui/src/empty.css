@@ -25,7 +25,7 @@
 .nest .es-nf .n{font:800 190px/.9 var(--fd);letter-spacing:-.07em;background:none;color:#fff}
 .nest .es-nf .n span{color:var(--v)}
 .nest .es-nf h3{margin:6px 0 8px;font:700 30px/1.1 var(--fd);letter-spacing:-.03em}
-.nest .es-nf p{margin:0;font:500 15.5px/1.55 var(--fb);color:#B4AFCB;max-width:400px}
+.nest .es-nf p{margin:0;font:500 15.5px/1.55 var(--fb);color:#B8B8BE;max-width:400px}
 .nest .es-err{border-color:color-mix(in srgb,var(--r) 35%,var(--line))}
 .nest .in3{display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);width:300px;transition:border-color .2s,box-shadow .3s var(--e)}
 .nest .in3:focus-within{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
