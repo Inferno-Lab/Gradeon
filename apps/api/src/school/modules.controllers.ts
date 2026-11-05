@@ -7,7 +7,7 @@ import {
 } from '@gradeon/contracts';
 import { z } from 'zod';
 import { ZodPipe } from '@gradeon/nest-kit';
-import { CurrentUser, Require, RequireModule } from '../auth/guards.js';
+import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { LearningService } from './learning.service.js';
 import { OfficeService } from './office.service.js';
@@ -17,6 +17,7 @@ const ClassFilter = z.object({ classId: z.string().optional(), subjectId: z.stri
 const Q = z.object({ query: z.string().trim().max(80).optional() });
 
 @Controller('v1')
+@Core()
 export class LearningController {
   constructor(private readonly learning: LearningService) {}
 
@@ -87,6 +88,7 @@ export class LearningController {
 }
 
 @Controller('v1')
+@Core()
 export class PeopleController {
   constructor(private readonly people: PeopleService) {}
 
@@ -105,22 +107,22 @@ export class PeopleController {
     return this.people.patchStaff(t, u, id, b);
   }
 
-  @Get('admissions') @Require('admissions.read')
+  @Get('admissions') @RequireModule('people.admissions') @Require('admissions.read')
   enquiries(@Tenant() t: TenantCtx): Promise<EnquiryRow[]> {
     return this.people.enquiries(t);
   }
 
-  @Post('admissions') @Require('admissions.write')
+  @Post('admissions') @RequireModule('people.admissions') @Require('admissions.write')
   createEnquiry(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(EnquiryCreate)) b: EnquiryCreate): Promise<EnquiryRow> {
     return this.people.createEnquiry(t, u, b);
   }
 
-  @Patch('admissions/:id') @Require('admissions.write')
+  @Patch('admissions/:id') @RequireModule('people.admissions') @Require('admissions.write')
   patchEnquiry(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(EnquiryPatch)) b: EnquiryPatch): Promise<EnquiryRow> {
     return this.people.patchEnquiry(t, u, id, b);
   }
 
-  @Post('admissions/:id/enrol') @HttpCode(200) @Require('admissions.write', 'students.write')
+  @Post('admissions/:id/enrol') @RequireModule('people.admissions') @HttpCode(200) @Require('admissions.write', 'students.write')
   enrol(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(EnquiryEnrol)) b: EnquiryEnrol): Promise<StudentDetail> {
     return this.people.enrol(t, u, id, b);
   }
@@ -134,6 +136,7 @@ export class PeopleController {
 }
 
 @Controller('v1')
+@Core()
 export class OfficeController {
   constructor(private readonly office: OfficeService) {}
 

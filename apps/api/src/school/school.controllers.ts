@@ -4,10 +4,10 @@ import {
   type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeSummary, type ImportResult, type InvoiceRow,
   type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
 } from '@gradeon/contracts';
-import { MODULES, closeModules } from '@gradeon/config-engine';
+import { MODULES, activeModules } from '@gradeon/config-engine';
 import { z } from 'zod';
 import { ZodPipe } from '@gradeon/nest-kit';
-import { CurrentUser, Require, RequireModule } from '../auth/guards.js';
+import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { NoTenant, Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';
 import { AttendanceService } from './attendance.service.js';
@@ -27,6 +27,7 @@ const IdsQuery = z.object({ ids: z.string().optional() });
 const Summ = StudentQuery.pick({ classId: true, house: true });
 
 @Controller('v1/classes')
+@Core()
 export class ClassesController {
   constructor(private readonly tt: TimetableService) {}
 
@@ -37,6 +38,7 @@ export class ClassesController {
 }
 
 @Controller('v1/students')
+@Core()
 export class StudentsController {
   constructor(private readonly students: StudentsService) {}
 
@@ -142,13 +144,14 @@ export class FeesController {
     return this.fees.pay(t, u, body);
   }
 
-  @Post('reminders') @HttpCode(200) @Require('fees.read')
+  @Post('reminders') @RequireModule('fees.reminders') @HttpCode(200) @Require('fees.read')
   remind(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ ids: z.array(z.string()).min(1).max(500) }))) body: { ids: string[] }): Promise<{ sent: number }> {
     return this.fees.remind(t, u, body.ids);
   }
 }
 
 @Controller('v1')
+@Core()
 export class ApprovalsController {
   constructor(private readonly approvals: ApprovalsService) {}
 
@@ -203,7 +206,7 @@ export class TimetableController {
     await this.tt.patchSlot(t, u, id, body);
   }
 
-  @Post('cover') @HttpCode(204) @Require('timetable.edit')
+  @Post('cover') @RequireModule('timetable.cover') @HttpCode(204) @Require('timetable.edit')
   async cover(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(CoverRequest)) body: CoverRequest): Promise<void> {
     await this.tt.cover(t, u, body);
   }
@@ -215,6 +218,7 @@ export class TimetableController {
 }
 
 @Controller('v1')
+@Core()
 export class DashboardController {
   constructor(
     private readonly dash: DashboardService,
@@ -229,7 +233,7 @@ export class DashboardController {
   @Get('shell')
   async shell(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<ShellData> {
     const cfg = await this.settings.effective(t, u.permissions);
-    return this.dash.shell(t, cfg.modules);
+    return this.dash.shell(t, cfg.modules, cfg.features);
   }
 
   @Get('search')
@@ -240,6 +244,7 @@ export class DashboardController {
 }
 
 @Controller('v1/settings')
+@Core()
 export class SettingsController {
   constructor(
     private readonly settings: SettingsService,
@@ -254,7 +259,7 @@ export class SettingsController {
       t.pool.query<{ students: string; staff: string }>("select (select count(*) from students where status = 'active') students, (select count(*) from staff) staff"),
       this.messenger.smsThisMonth(t.info.slug),
     ]);
-    const entitled = closeModules(t.info.entitlement.modules);
+    const entitled = activeModules(t.info.entitlement);
     const { limits, plan } = t.info.entitlement;
     const usage = { plan, students: Number(counts.rows[0]!.students), staff: Number(counts.rows[0]!.staff), studentLimit: limits.students, smsUsed, smsLimit: limits.smsPerMonth };
     return { ...doc, usage, modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, core: !!m.core, backend: m.backend, entitled: entitled.includes(m.key) })) };
@@ -278,7 +283,7 @@ export class HealthController {
   }
 
   /** Cheap check the console uses to see a school's database answering, and how fast. */
-  @Get('v1/ping')
+  @Core() @Get('v1/ping')
   async ping(@Tenant() t: TenantCtx): Promise<{ ok: true; ms: number; apiVersion: string }> {
     const started = Date.now();
     await t.pool.query('select 1');

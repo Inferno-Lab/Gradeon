@@ -5,7 +5,7 @@ import { Limiter, ZodPipe, errorSink, recordError } from '@gradeon/nest-kit';
 import type { Registry } from '@gradeon/tenancy';
 import type { FastifyRequest } from 'fastify';
 import { NoTenant, REGISTRY, Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
-import { CurrentUser, Public, Require } from '../auth/guards.js';
+import { Core, CurrentUser, Public, Require } from '../auth/guards.js';
 
 const limit = new Limiter(process.env.NODE_ENV === 'test' ? 10_000 : 60, 60_000);
 
@@ -34,6 +34,7 @@ export class ErrorsController {
 
 /** "Ask Gradeon to change this": the school's configuration is Gradeon's, so the school asks and the console answers. */
 @Controller('v1/change-requests')
+@Core()
 export class ChangeRequestsController {
   constructor(@Inject(REGISTRY) private readonly registry: Registry) {}
 

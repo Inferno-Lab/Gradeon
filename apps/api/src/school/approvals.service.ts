@@ -14,6 +14,7 @@ interface Row {
 const TONE: Record<ApprovalKind, ApprovalRow['tone']> = { leave: 'blue', fee_waiver: 'mint', attendance: 'amber', notice: 'violet', admission: 'coral' };
 const ACTION: Record<ApprovalKind, string> = { leave: 'Review', fee_waiver: 'Approve', attendance: 'Remind', notice: 'Publish', admission: 'Approve' };
 /** What a person needs to be allowed to decide each kind. */
+const KIND_NEEDS: Record<ApprovalKind, string | null> = { leave: null, fee_waiver: 'fees', notice: 'notices', admission: 'people.admissions', attendance: 'attendance' };
 const NEEDS: Record<ApprovalKind, Permission[]> = {
   leave: ['approvals.decide'], fee_waiver: ['approvals.decide', 'fees.waive'], notice: ['approvals.decide', 'notices.publish'], admission: ['approvals.decide'], attendance: ['attendance.read'],
 };
@@ -46,11 +47,19 @@ export class ApprovalsService {
   }
 
   /** The queue behind "Needs you": open requests, plus one line for classes that have not marked attendance. */
+/** Request kinds the school has: a fee waiver needs Fees, a notice Notices, an admission the Admissions feature. Leave is always there. */
+  async kinds(t: TenantCtx): Promise<ApprovalKind[]> {
+    const cfg = await this.settings.effective(t);
+    const has = (k: string) => cfg.modules.includes(k) || cfg.features.includes(k);
+    return (Object.entries(KIND_NEEDS) as [ApprovalKind, string | null][]).filter(([, need]) => !need || has(need)).map(([k]) => k);
+  }
+
   async needsYou(t: TenantCtx): Promise<ApprovalRow[]> {
+    const kinds = await this.kinds(t);
     const { rows } = await t.pool.query<Row>(
-      "select * from approvals where status = 'pending' and kind in ('leave','fee_waiver','notice') order by case kind when 'leave' then 1 when 'fee_waiver' then 2 else 3 end, created_at, id limit 8");
+      "select * from approvals where status = 'pending' and kind in ('leave','fee_waiver','notice') and kind = any($1) order by case kind when 'leave' then 1 when 'fee_waiver' then 2 else 3 end, created_at, id limit 8", [kinds]);
     const items = await Promise.all(rows.map(async (r) => this.toRow({ ...r, created_at: r.created_at, decided_at: r.decided_at }, await this.doneText(t, r))));
-    const unmarked = await this.attendance.unmarked(t);
+    const unmarked = kinds.includes('attendance') ? await this.attendance.unmarked(t) : [];
     if (unmarked.length) {
       items.splice(2, 0, {
         id: 'att_reminder', kind: 'attendance', title: `${unmarked.length} ${unmarked.length === 1 ? 'class has' : 'classes have'} not marked`, subtitle: unmarked.map((c) => c.name).join(' · '),
@@ -62,14 +71,20 @@ export class ApprovalsService {
 
   async list(t: TenantCtx, status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending', kind?: ApprovalKind): Promise<ApprovalRow[]> {
     const { rows } = await t.pool.query<Row>(
-      `select * from approvals where ($1 = 'all' or status = $1) and ($2::text is null or kind = $2) order by created_at desc, id limit 200`, [status, kind ?? null]);
+      `select * from approvals where ($1 = 'all' or status = $1) and ($2::text is null or kind = $2) and kind = any($3) order by created_at desc, id limit 200`, [status, kind ?? null, await this.kinds(t)]);
     return Promise.all(rows.map(async (r) => this.toRow(r, await this.doneText(t, r))));
   }
 
   async counts(t: TenantCtx): Promise<{ admissions: number; approvals: number; messages: number }> {
+    const [cfg, kinds] = await Promise.all([this.settings.effective(t), this.kinds(t)]);
     const { rows } = await t.pool.query<{ admissions: string; approvals: string; messages: string }>(
-      "select (select count(*) from enquiries where stage in ('applied','test','offer')) admissions, (select count(*) from approvals where status = 'pending') approvals, (select count(distinct m.thread_id) from thread_messages m join threads x on x.id = m.thread_id where x.status = 'open' and m.from_kind = 'guardian' and m.read_at is null) messages");
-    return { admissions: Number(rows[0]!.admissions), approvals: Number(rows[0]!.approvals), messages: Number(rows[0]!.messages) };
+      "select (select count(*) from enquiries where stage in ('applied','test','offer')) admissions, (select count(*) from approvals where status = 'pending' and kind = any($1)) approvals, (select count(distinct m.thread_id) from thread_messages m join threads x on x.id = m.thread_id where x.status = 'open' and m.from_kind = 'guardian' and m.read_at is null) messages", [kinds]);
+    // A badge for a module the school does not have would point at a page it cannot open.
+    return {
+      admissions: cfg.features.includes('people.admissions') ? Number(rows[0]!.admissions) : 0,
+      approvals: Number(rows[0]!.approvals),
+      messages: cfg.modules.includes('chat') ? Number(rows[0]!.messages) : 0,
+    };
   }
 
   async decide(t: TenantCtx, user: { id: string; name: string; permissions: string[] }, id: string, body: ApprovalDecision): Promise<ApprovalRow> {

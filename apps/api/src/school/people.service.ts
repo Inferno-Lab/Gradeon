@@ -61,6 +61,10 @@ export class PeopleService {
     const assigns = await this.schoolAssignsRoles(t);
     const role = assigns ? (await t.pool.query<{ id: string; name: string }>('select id, name from roles where id = $1', [body.roleId])).rows[0] : { id: '', name: 'none yet' };
     if (!role) throw new ApiError('validation', 'Choose a role from the list.', { fields: { roleId: 'Choose a role from the list.' } });
+    const staffLimit = t.info.entitlement.limits.staff;
+    if (staffLimit && Number((await t.pool.query<{ n: string }>("select count(*) n from users where kind = 'staff' and status = 'active'")).rows[0]!.n) >= staffLimit) {
+      throw new ApiError('locked', `Your plan allows ${staffLimit} staff accounts. Ask Gradeon to raise the limit.`);
+    }
     const dup = await t.pool.query('select 1 from users where lower(email) = $1', [body.email]);
     if (dup.rowCount) throw new ApiError('validation', 'Someone already uses that email.', { fields: { email: 'Someone already uses that email.' } });
     const id = newId('usr');

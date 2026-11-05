@@ -5,11 +5,12 @@ import { Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { SettingsService } from '../school/support.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { AuthService } from './auth.service.js';
-import { CurrentUser, Public } from './guards.js';
+import { Core, CurrentUser, Public } from './guards.js';
 
 const loginLimit = new Limiter(process.env.NODE_ENV === 'test' ? 10_000 : 30, 60_000);
 
 @Controller('v1/auth')
+@Core()
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
@@ -86,6 +87,7 @@ export class AuthController {
 }
 
 @Controller('v1')
+@Core()
 export class MeController {
   constructor(
     private readonly auth: AuthService,
