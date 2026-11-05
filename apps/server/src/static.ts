@@ -17,9 +17,10 @@ export async function serveFrontends(app: NestFastifyApplication): Promise<strin
   const console_ = process.env.CONSOLE_DIST ?? path.resolve(here, '../../console/dist');
   const served: string[] = [];
   const fastify = app.getHttpAdapter().getInstance();
-  const setHeaders = (res: { setHeader: (k: string, v: string) => void }, file: string) => {
+  // @fastify/static 9+ passes Fastify's reply here, not Node's response (the old res.setHeader crashed every page).
+  const setHeaders = (reply: { header: (k: string, v: string) => unknown }, file: string) => {
     // Hashed files never change; the page that points at them must be fetched fresh.
-    res.setHeader('cache-control', /[\\/]assets[\\/]/.test(file) ? 'public, max-age=31536000, immutable' : 'no-cache');
+    reply.header('cache-control', /[\\/]assets[\\/]/.test(file) ? 'public, max-age=31536000, immutable' : 'no-cache');
   };
   let first = true;
   for (const [root, prefix] of [[console_, '/console/'], [admin, '/']] as const) {
