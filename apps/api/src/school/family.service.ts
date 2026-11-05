@@ -53,7 +53,7 @@ export class FamilyService {
     return { id: u.id, kind: u.kind, name: u.name, phone: u.phone, email: u.email, children, guardianIds, perms: user.permissions };
   }
 
-  private async mayStudent(t: TenantCtx, w: Who, studentId: string): Promise<void> {
+  private async mayStudent(w: Who, studentId: string): Promise<void> {
     if (w.kind === 'staff' || w.children.includes(studentId)) return;
     throw forbidden('That student is not yours to look at.');
   }
@@ -99,7 +99,7 @@ export class FamilyService {
 
   async student(t: TenantCtx, user: AuthedUser, id: string) {
     const w = await this.who(t, user);
-    await this.mayStudent(t, w, id);
+    await this.mayStudent(w, id);
     const r = (await t.pool.query(`${this.studentSql} where s.id = $1`, [id])).rows[0];
     if (!r) throw notFound('That student');
     return this.studentJson(r);
@@ -153,7 +153,7 @@ export class FamilyService {
   // Attendance
 
   async attendanceOf(t: TenantCtx, user: AuthedUser, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     const { rows } = await t.pool.query<{ date: string; status: AttendanceStatus }>(
       `select x.date::text date, m.status from attendance_marks m join attendance_sessions x on x.id = m.session_id where m.student_id = $1 and x.date >= $2 order by x.date`, [studentId, addDays(istToday(), -120)]);
     return rows.map((r) => ({ studentId, date: r.date, status: r.status === 'leave' ? 'absent' : r.status }));
@@ -235,7 +235,7 @@ export class FamilyService {
 
   async submitHomework(t: TenantCtx, user: AuthedUser, id: string, studentId: string) {
     const w = await this.who(t, user);
-    await this.mayStudent(t, w, studentId);
+    await this.mayStudent(w, studentId);
     const h = (await t.pool.query<{ due_on: string }>('select due_on::text from homework where id = $1', [id])).rows[0];
     if (!h) throw notFound('That homework');
     await t.pool.query(
@@ -280,12 +280,12 @@ export class FamilyService {
   }
 
   async result(t: TenantCtx, user: AuthedUser, examId: string, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     return this.resultOf(t, examId, studentId);
   }
 
   async resultsOf(t: TenantCtx, user: AuthedUser, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     const ex = await t.pool.query<{ id: string }>("select e.id from exams e join students s on s.class_id = e.class_id where s.id = $1 and e.status = 'published' order by e.starts_on desc", [studentId]);
     const out = [];
     for (const e of ex.rows) { try { out.push(await this.resultOf(t, e.id, studentId)); } catch { /* the student has no marks in this exam */ } }
@@ -317,7 +317,7 @@ export class FamilyService {
   // Fees
 
   async feesOf(t: TenantCtx, user: AuthedUser, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     const inv = await t.pool.query<{ id: string; title: string; amount: number; waived_amount: number; due_on: string; paid: string; last: string | null; method: string | null; reference: string | null }>(
       `select i.id, i.title, i.amount, i.waived_amount, i.due_on::text, coalesce((select sum(amount) from payments p where p.invoice_id = i.id), 0) paid,
          (select paid_on::text from payments p where p.invoice_id = i.id order by paid_on desc limit 1) last, (select method from payments p where p.invoice_id = i.id order by paid_on desc limit 1) method,
@@ -334,7 +334,7 @@ export class FamilyService {
   }
 
   async pay(t: TenantCtx, user: AuthedUser, invoiceId: string, b: { studentId: string; method: string }) {
-    await this.mayStudent(t, await this.who(t, user), b.studentId);
+    await this.mayStudent(await this.who(t, user), b.studentId);
     const inv = (await t.pool.query<{ amount: number; waived_amount: number; paid: string }>(
       'select i.amount, i.waived_amount, coalesce((select sum(amount) from payments p where p.invoice_id = i.id), 0) paid from fee_invoices i where i.id = $1 and i.student_id = $2', [invoiceId, b.studentId])).rows[0];
     if (!inv) throw notFound('That fee');
@@ -387,7 +387,7 @@ export class FamilyService {
 
   // Chat
 
-  private async threadScope(t: TenantCtx, w: Who): Promise<{ where: string; params: unknown[] }> {
+  private async threadScope(w: Who): Promise<{ where: string; params: unknown[] }> {
     return w.kind === 'staff'
       ? { where: '(th.assigned_to = $1 or ($2 and th.assigned_to is null))', params: [w.id, w.perms.includes('messages.read')] }
       : { where: 'th.guardian_id = any($1) and $2::boolean', params: [w.guardianIds.length ? w.guardianIds : ['none'], true] };
@@ -395,7 +395,7 @@ export class FamilyService {
 
   async threads(t: TenantCtx, user: AuthedUser) {
     const w = await this.who(t, user);
-    const sc = await this.threadScope(t, w);
+    const sc = await this.threadScope(w);
     const { rows } = await t.pool.query<{ id: string; subject: string; assigned_to: string | null; staff: string | null; g_user: string | null; guardian: string | null }>(
       `select th.id, th.subject, th.assigned_to, u.name staff, g.user_id g_user, g.name guardian from threads th left join users u on u.id = th.assigned_to left join guardians g on g.id = th.guardian_id where ${sc.where} order by th.last_at desc limit 100`, sc.params);
     return rows.map((r) => ({
@@ -413,7 +413,7 @@ export class FamilyService {
 
   async messages(t: TenantCtx, user: AuthedUser, threadId: string) {
     const w = await this.who(t, user);
-    const sc = await this.threadScope(t, w);
+    const sc = await this.threadScope(w);
     const ok = await t.pool.query(`select 1 from threads th where th.id = $${sc.params.length + 1} and ${sc.where}`, [...sc.params, threadId]);
     if (!ok.rowCount) throw notFound('That conversation');
     const { rows } = await t.pool.query(`${this.msgSql} where m.thread_id = $1 order by m.created_at, m.id`, [threadId]);
@@ -422,7 +422,7 @@ export class FamilyService {
 
   async inbox(t: TenantCtx, user: AuthedUser) {
     const w = await this.who(t, user);
-    const sc = await this.threadScope(t, w);
+    const sc = await this.threadScope(w);
     const { rows } = await t.pool.query(`${this.msgSql} where ${sc.where} order by m.created_at, m.id limit 1000`, sc.params);
     return rows.map((m) => this.msgJson(m));
   }
@@ -480,7 +480,7 @@ export class FamilyService {
   }
 
   async transport(t: TenantCtx, user: AuthedUser, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     const r = (await t.pool.query<{ route: string }>('select route from transport_assignments where student_id = $1', [studentId])).rows[0];
     if (!r) return null;
     // shortcut: only the route is known to the platform; stops, the bus and live position arrive with the transport module.
@@ -493,13 +493,13 @@ export class FamilyService {
   }
 
   async leave(t: TenantCtx, user: AuthedUser, studentId: string) {
-    await this.mayStudent(t, await this.who(t, user), studentId);
+    await this.mayStudent(await this.who(t, user), studentId);
     const { rows } = await t.pool.query("select id, status, payload, created_at, subject_ref from approvals where kind = 'leave' and payload->>'studentLeave' = 'true' and payload->>'studentId' = $1 order by created_at desc", [studentId]);
     return rows.map((r) => this.leaveJson(r));
   }
 
   async applyLeave(t: TenantCtx, user: AuthedUser, b: { studentId: string; from: string; to: string; reason: string }) {
-    await this.mayStudent(t, await this.who(t, user), b.studentId);
+    await this.mayStudent(await this.who(t, user), b.studentId);
     const s = (await t.pool.query<{ name: string }>('select name from students where id = $1', [b.studentId])).rows[0];
     if (!s) throw notFound('That student');
     const from = b.from.slice(0, 10);

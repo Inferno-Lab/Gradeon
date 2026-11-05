@@ -3,39 +3,39 @@
 
 .pg-login .lgrid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);min-height:876px}
 @media (max-width:900px){.pg-login .lgrid{grid-template-columns:minmax(0,1fr)}}
-.pg-login .pnl{position:relative;overflow:hidden;color:#fff;padding:34px 40px 40px;display:flex;flex-direction:column;background:linear-gradient(155deg,#7A5CFF 0%,#5A3FE6 55%,#4A31C9 100%);border-radius:0 0 0 0}
-.pg-login .pnl.cons{background:linear-gradient(155deg,#241B4B 0%,#17141F 60%,#0F0D17 100%)}
+.pg-login .pnl{position:relative;overflow:hidden;color:#fff;padding:34px 40px 40px;display:flex;flex-direction:column;background:var(--ci);border-radius:0 0 0 0}
+.pg-login .pnl.cons{background:#111113}
 .pg-login .orb{position:absolute;border-radius:50%;pointer-events:none}
 .pg-login .o1{width:520px;height:520px;right:-190px;top:-200px;animation:drift1 14s ease-in-out infinite alternate}
 .pg-login .o2{width:460px;height:460px;left:-170px;bottom:-190px;animation:drift2 17s ease-in-out infinite alternate}
 .pg-login .o3{width:300px;height:300px;left:34%;top:30%;animation:drift1 19s ease-in-out infinite alternate-reverse}
-.pg-login .cons .o1{background:radial-gradient(closest-side,rgba(142,120,255,.5),rgba(142,120,255,0))}
+.pg-login .cons .o1{background:radial-gradient(closest-side,rgba(124,156,240,.22),rgba(124,156,240,0))}
 @keyframes drift1{to{transform:translate(-40px,50px) scale(1.12)}}
 @keyframes drift2{to{transform:translate(50px,-40px) scale(1.08)}}
 .pg-login .pb{position:relative;display:flex;align-items:center;gap:12px;font:800 17px var(--fd);letter-spacing:-.02em}
-.pg-login .pb .lg{background:#fff;color:#5A3FE6;box-shadow:none}
-.pg-login .cons .pb .lg{background:var(--v);color:#fff}
+.pg-login .pb .lg{background:#fff;color:#1A1A1C;box-shadow:none}
+.pg-login .cons .pb .lg{background:var(--v);color:var(--onV)}
 .pg-login .stage{position:relative;flex:1;min-height:420px}
-.pg-login .fc{position:absolute;background:#fff;color:#14111F;border-radius:24px;padding:18px 20px;box-shadow:0 30px 60px -24px rgba(20,10,80,.55)}
-.pg-login .fc small{font:700 12.5px var(--fb);color:#8C87A3}
+.pg-login .fc{position:absolute;background:#fff;color:#1A1A1C;border-radius:24px;padding:18px 20px;box-shadow:0 30px 60px -24px rgba(0,0,0,.45)}
+.pg-login .fc small{font:700 12.5px var(--fb);color:#6A6A70}
 .pg-login .fc .n{font:700 40px/1 var(--fd);letter-spacing:-.04em;display:flex;align-items:baseline;margin-top:6px}
 .pg-login .fc .n i{font:700 18px var(--fb);font-style:normal;opacity:.45;margin-left:2px}
-.pg-login .cons .fc{background:#1F1B2E;color:#fff;box-shadow:0 30px 60px -24px rgba(0,0,0,.7);border:1px solid #2E2848}
-.pg-login .cons .fc small{color:#9C97B5}
+.pg-login .cons .fc{background:#19191C;color:#fff;box-shadow:0 30px 60px -24px rgba(0,0,0,.7);border:1px solid #2A2A2E}
+.pg-login .cons .fc small{color:#8E8E96}
 .pg-login .fa{left:0;top:30px;width:236px;rotate:-3deg}
 .pg-login .fb{right:0;top:110px;width:248px;rotate:2.5deg}
 .pg-login .mp{display:flex;align-items:flex-end;gap:5px;height:44px;margin-top:12px}
-.pg-login .mp i{flex:1;border-radius:5px 5px 4px 4px;background:#CDC4FF;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%);animation:grow 1.2s var(--e) both;animation-delay:var(--d)}
-.pg-login .mp i.hi{background:#FFC23D}
+.pg-login .mp i{flex:1;border-radius:5px 5px 4px 4px;background:#C8D5F6;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%);animation:grow 1.2s var(--e) both;animation-delay:var(--d)}
+.pg-login .mp i.hi{background:#2F5BD3}
 @keyframes grow{from{height:0 !important}}
-.pg-login .cons .mp i{background:#4A3E96}
-.pg-login .pr{height:10px;border-radius:5px;background:#EEEAFF;margin-top:14px;overflow:hidden}
-.pg-login .pr b{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6A4CF5,#FFC23D);animation:fillw 1.6s .4s var(--e) both}
+.pg-login .cons .mp i{background:#2C3A5E}
+.pg-login .pr{height:10px;border-radius:5px;background:#EDF2FD;margin-top:14px;overflow:hidden}
+.pg-login .pr b{display:block;height:100%;border-radius:5px;background:#2F5BD3;animation:fillw 1.6s .4s var(--e) both}
 @keyframes fillw{from{width:0 !important}}
-.pg-login .cons .pr{background:#2E2848}
-.pg-login .tst{position:absolute;left:34px;top:300px;display:flex;align-items:center;gap:10px;background:#17141F;color:#fff;border-radius:999px;padding:10px 18px 10px 10px;font:700 13.5px var(--fb);box-shadow:0 20px 40px -16px rgba(0,0,0,.6);animation:lgToast 7s var(--e) infinite;opacity:0}
-.pg-login .cons .tst{background:#fff;color:#14111F}
-.pg-login .tst span{width:28px;height:28px;border-radius:50%;background:#17A673;display:grid;place-items:center}
+.pg-login .cons .pr{background:#2A2A2E}
+.pg-login .tst{position:absolute;left:34px;top:300px;display:flex;align-items:center;gap:10px;background:var(--ci);color:#fff;border-radius:999px;padding:10px 18px 10px 10px;font:700 13.5px var(--fb);box-shadow:0 20px 40px -16px rgba(0,0,0,.6);animation:lgToast 7s var(--e) infinite;opacity:0}
+.pg-login .cons .tst{background:#fff;color:#1A1A1C}
+.pg-login .tst span{width:28px;height:28px;border-radius:50%;background:#1E7A45;display:grid;place-items:center}
 @keyframes lgToast{0%,6%{opacity:0;transform:translateY(16px) scale(.9)}12%,68%{opacity:1;transform:none}78%,100%{opacity:0;transform:translateY(-10px) scale(.96)}}
 .pg-login .bird{position:absolute;left:50%;bottom:-10px;width:250px;margin-left:-70px}
 .pg-login .ph1{position:relative;font:700 38px/1.1 var(--fd);letter-spacing:-.035em;max-width:430px;margin:0}
@@ -52,9 +52,7 @@
 .pg-login .eye:hover{background:var(--sunk);color:var(--ink)}
 .pg-login .eye svg{width:19px;height:19px}
 .pg-login .go{height:54px;width:100%;font-size:16px;transition:background .5s,width .6s var(--e),transform .25s var(--e),box-shadow .35s}
-.pg-login .go.ok{background:var(--g);color:#fff}
-.pg-login .alt{display:flex;gap:10px}
-.pg-login .alt .btn{flex:1;font-size:13.5px}
+.pg-login .go.ok{background:var(--g);color:var(--card)}
 .pg-login .or{display:flex;align-items:center;gap:14px;font:700 12.5px var(--fb);color:var(--ink3)}
 .pg-login .or::before,.pg-login .or::after{content:"";flex:1;height:1px;background:var(--line)}
 .pg-login .otp{position:relative;display:flex;gap:10px;justify-content:space-between}

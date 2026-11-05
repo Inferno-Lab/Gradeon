@@ -141,6 +141,3 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
   },
 ];
 
-export function hasPermission(granted: readonly string[], needed: Permission): boolean {
-  return granted.includes(needed);
-}

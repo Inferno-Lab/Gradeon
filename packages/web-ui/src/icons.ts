@@ -12,4 +12,3 @@ export const IC = {
   team: 'M8 8a3 3 0 1 0 6 0a3 3 0 1 0-6 0M3 20c.7-3.4 3.3-5 7-5s6.3 1.6 7 5M17 4.5a3 3 0 0 1 0 5.8M18.5 14.5c1.6.6 2.6 2.2 3 4.5',
   appr: 'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7z', bp: 'M5 4h14v4H5zM5 10h14v4H5zM5 16h14v4H5z', mod: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM16.5 13v7M13 16.5h7', inbox: 'M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5',
 } as const;
-export type IconName = keyof typeof IC;

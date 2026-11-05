@@ -30,7 +30,7 @@ const dur = (a: string | null, b: string | null) => (a && b ? `${Math.max(0.1, (
 export function SchoolPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const app = useApp();
-  const chrome = useChrome('onb');
+  const chrome = useChrome('fleet');
   const qc = useQueryClient();
   const school = useQuery({
     queryKey: ['school', id], queryFn: () => app.api.school(id),
@@ -304,7 +304,7 @@ function EraseDialog({ school, onClose, onSent }: { school: SchoolDetail; onClos
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: '#fff', borderColor: '#3A3454' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: '#fff', borderColor: 'rgba(255,255,255,.18)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={go} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

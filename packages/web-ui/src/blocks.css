@@ -6,14 +6,14 @@
 .nest .st i{width:7px;height:7px;border-radius:50%;background:currentColor}
 .nest .st.g{background:var(--gS);color:var(--gD)}.nest .st.a{background:var(--aS);color:var(--aD)}.nest .st.b{background:var(--bS);color:var(--b)}.nest .st.r{background:var(--rS);color:var(--r)}.nest .st.n{background:var(--sunk);color:var(--ink3)}
 .nest .bar{height:14px;border-radius:7px;background:var(--sunk);overflow:hidden}
-.nest .bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--v),var(--c));transition:width .7s var(--e)}
-.nest .bar.warn i{background:linear-gradient(90deg,var(--a),var(--r))}
+.nest .bar i{display:block;height:100%;border-radius:7px;background:var(--v);transition:width .7s var(--e)}
+.nest .bar.warn i{background:var(--a)}
 .nest .us{display:flex;flex-direction:column;gap:7px}
 .nest .us .r{display:flex;justify-content:space-between;font:600 13.5px var(--fb);color:var(--ink2)}
 .nest .us .r b{font:800 13px var(--fb);color:var(--ink)}
 .nest .tk3{display:flex;gap:3px;height:24px}
 .nest .tk3 i{flex:1;border-radius:4px;background:var(--sunk);transition:background .4s}
-.nest .tk3 i.on{background:var(--a)}
+.nest .tk3 i.on{background:var(--v)}
 .nest .tbl{overflow:hidden}
 .nest .tbl .grd.rw{min-height:58px;border-top:1px solid var(--line);transition:background .25s}
 .nest .tbl .grd.rw:hover{background:var(--sunk)}
@@ -31,9 +31,7 @@
 .nest .kv:first-child{border-top:0}
 .nest .kv b{color:var(--ink);font-weight:700;text-align:right;min-width:0;overflow-wrap:anywhere}
 .nest .mono{font:600 12.5px/1.6 ui-monospace,Consolas,monospace}
-.nest .tile.t-v .lbl,.nest .tile.t-i .lbl{color:rgba(255,255,255,.7)}
-.nest .tile.t-g .lbl{color:var(--gD)}
-.nest .tile.t-a .lbl{color:rgba(20,17,31,.6)}
+.nest .tile.t-i .lbl{color:rgba(255,255,255,.7)}
 /* Columns that EvenRows lines up keep their own heights; it trims the taller list instead of stretching anything. */
 .nest [data-even]{align-items:start!important}
 .nest .tgrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -44,16 +42,16 @@
 .nest .opt small{display:block;font:500 13px/1.45 var(--fb);color:var(--ink3);margin-top:3px}
 .nest .opt .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);flex:none;display:grid;place-items:center;margin-top:1px;transition:border-color .2s,background .2s}
 .nest .opt.on .rd{border-color:var(--v);background:var(--v)}
-.nest .opt .rd svg{width:12px;height:12px;color:#fff;opacity:0;transition:opacity .2s}
+.nest .opt .rd svg{width:12px;height:12px;color:var(--onV);opacity:0;transition:opacity .2s}
 .nest .opt.on .rd svg{opacity:1}
 .nest .stp{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:start;padding:10px 0}
 .nest .stp::before{content:"";position:absolute;left:16px;top:44px;bottom:-10px;width:2px;background:var(--line2)}
 .nest .stp:last-child::before{display:none}
 .nest .stp.done::before{background:var(--v)}
 .nest .stp .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line2);background:var(--card);position:relative;z-index:1;font:800 13px var(--fb);color:var(--ink3);transition:background .4s,border-color .4s}
-.nest .stp.done .dot{background:var(--v);border-color:var(--v);color:#fff;animation:nPop .6s var(--sp)}
+.nest .stp.done .dot{background:var(--v);border-color:var(--v);color:var(--onV);animation:nPop .6s var(--sp)}
 .nest .stp.run .dot{border-color:var(--v);border-top-color:transparent;animation:nSpin .8s linear infinite;color:transparent}
-.nest .stp.fail .dot{background:var(--r);border-color:var(--r);color:#fff;animation:nPop .6s var(--sp)}
+.nest .stp.fail .dot{background:var(--rF);border-color:var(--r);color:#fff;animation:nPop .6s var(--sp)}
 .nest .stp.skip .dot{background:var(--sunk);color:var(--ink3)}
 .nest .stp b{display:block;font:700 15px var(--fb)}
 .nest .stp small{display:block;font:500 13px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
@@ -65,10 +63,10 @@
 .nest .card>.ch{flex-wrap:wrap;row-gap:10px}
 .nest .card>.ch h2{min-width:min(100%,max-content)}
 /* The red frame and pill that say a support person is looking inside a school, read-only. */
-.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--r);color:#fff;font:700 13.5px var(--fb);box-shadow:none;animation:sbIn .7s var(--e);max-width:calc(100vw - 24px)}
+.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--rF);color:#fff;font:700 13.5px var(--fb);box-shadow:none;animation:sbIn .7s var(--e);max-width:calc(100vw - 24px)}
 @keyframes sbIn{from{opacity:0;transform:translate(-50%,-24px)}to{opacity:1;transform:translateX(-50%)}}
 .nest .sbar .c{font:800 13px var(--fb);padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.22);white-space:nowrap}
-.nest .sbar button{height:32px;padding:0 14px;border:0;border-radius:999px;background:#fff;color:var(--r);font:800 12.5px var(--fb);cursor:pointer;white-space:nowrap}
+.nest .sbar button{height:32px;padding:0 14px;border:0;border-radius:999px;background:#fff;color:var(--rF);font:800 12.5px var(--fb);cursor:pointer;white-space:nowrap}
 .nest .glow{inset:0;z-index:55;pointer-events:none;box-shadow:inset 0 0 0 3px var(--r);animation:nFade .6s}
 @media (max-width:560px){.nest .sbar{flex-wrap:wrap;justify-content:center;border-radius:22px;padding:10px 12px;gap:8px}}
 

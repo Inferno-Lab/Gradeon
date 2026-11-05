@@ -90,13 +90,13 @@ export function AttendancePage() {
           {/* The count and the save button share one tile, so the row above the roll call is one even block. */}
           <div className="tile t-v s12 rise" style={{ '--d': '.08s', order: -1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: '18px 36px', alignItems: 'center' } as React.CSSProperties}>
             <div style={{ minWidth: 0 }}>
-              <span className="lbl" style={{ color: 'rgba(255,255,255,.7)' }}>Present or late</span>
+              <span className="lbl">Present or late</span>
               <div className="big" style={{ marginTop: 8 }}>{counts.present + counts.late}<small style={{ fontSize: 18, opacity: .6 }}> / {marks.length}</small></div>
               <div className="meter" aria-hidden="true">
-                <i style={{ flex: counts.present || 0.001, background: 'var(--g)' }}></i>
+                <i style={{ flex: counts.present || 0.001, background: 'var(--present)' }}></i>
                 <i style={{ flex: counts.late || 0.001, background: 'var(--a)' }}></i>
                 <i style={{ flex: counts.absent || 0.001, background: 'var(--r)' }}></i>
-                <i style={{ flex: counts.none || 0.001, background: 'rgba(255,255,255,.25)' }}></i>
+                <i style={{ flex: counts.none || 0.001, background: 'var(--sunk)' }}></i>
               </div>
               <div className="tgrow" style={{ marginTop: 14, font: '700 13px var(--fb)' }}>
                 <span>{counts.present} present</span><span>{counts.late} late</span><span>{counts.absent} absent</span>{counts.none > 0 && <span>{counts.none} not marked</span>}
@@ -106,8 +106,8 @@ export function AttendancePage() {
               <div style={{ minWidth: 0 }}>
                 <div style={{ font: '600 14px var(--fb)', opacity: .85, marginBottom: 12 }}>{changed ? `${changed} ${changed === 1 ? 'change' : 'changes'} not saved yet.` : 'Tap a name’s status to change it, then save.'}</div>
                 <div className="tgrow">
-                  <button className="btn wht" disabled={!changed || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save roll call'}</button>
-                  {changed > 0 && <button className="btn" style={{ background: 'rgba(255,255,255,.16)', color: '#fff', borderColor: 'transparent' }} onClick={() => setDraft({})}>Discard changes</button>}
+                  <button className="btn pri" disabled={!changed || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save roll call'}</button>
+                  {changed > 0 && <button className="btn" onClick={() => setDraft({})}>Discard changes</button>}
                 </div>
               </div>
             ) : (

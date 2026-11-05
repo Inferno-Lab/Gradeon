@@ -36,8 +36,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mock/
-    - assets/images/
-    - assets/icons/
   fonts:
     - family: AnekLatin
       fonts:

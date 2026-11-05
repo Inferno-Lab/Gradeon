@@ -39,9 +39,9 @@ export function BillingPage() {
         </span>
       ) : undefined}>
       <section className="grid">
-        <div className="tile t-v s4 rise"><span className="lbl" style={{ color: 'rgba(255,255,255,.7)' }}>Invoiced</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(total)}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{rows.length} invoices</div></div>
-        <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl" style={{ color: 'rgba(255,255,255,.75)' }}>Paid</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(paid)}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rows.filter((r) => r.status === 'paid').length} paid</div></div>
-        <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl" style={{ color: 'rgba(20,17,31,.6)' }}>Still to collect</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(total - paid)}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{rows.filter((r) => r.status === 'overdue').length} overdue</div></div>
+        <div className="tile t-v s4 rise"><span className="lbl">Invoiced</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(total)}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{rows.length} invoices</div></div>
+        <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Paid</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(paid)}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rows.filter((r) => r.status === 'paid').length} paid</div></div>
+        <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to collect</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(total - paid)}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{rows.filter((r) => r.status === 'overdue').length} overdue</div></div>
       </section>
       {rows.length === 0 ? (
         <div><EmptyCard title="Invoices" chip={{ text: '0 invoices', tone: 'v' }} scene="receipt" heading="No invoices yet" body="Create the month’s invoices above once a school is live. Running it twice never double-bills." /></div>

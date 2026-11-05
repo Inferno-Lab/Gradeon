@@ -172,7 +172,7 @@ export class AuthService {
     return row.user_id;
   }
 
-  async refresh(t: TenantCtx, refreshToken: string | undefined, req: FastifyRequest, reply?: FastifyReply, client?: ClientKind): Promise<TokenPair> {
+  async refresh(t: TenantCtx, refreshToken: string | undefined, req: FastifyRequest, reply?: FastifyReply): Promise<TokenPair> {
     const cookie = schoolCookieToken(req, t.info.slug, this.production);
     const raw = refreshToken || cookie;
     if (cookie && !refreshToken) checkCookieCsrf(req, this.env.CORS_ORIGINS);

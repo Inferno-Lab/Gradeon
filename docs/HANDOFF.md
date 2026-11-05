@@ -93,8 +93,8 @@ Saved in the repository at `design/canvas/` and described in [`design/README.md`
 
 ## 5. How the code was produced (so you can reason about it)
 
-1. `tools/dc-to-tsx.mjs <Board> <page> <dir>` turned a board into `<page>.view.tsx`, `<page>.css` (scoped), `<page>.logic.txt` (the board's own script, kept as reference) and `<page>.aside.txt` (the board's menu, replaced by the shared `Sidebar`). `tools/convert-all.sh` lists what was converted. **Do not re-run it over edited views.**
-2. `tools/edit-*.py` are the one-time scripts that edited converted views (real values, working controls, extra states). They assert every replacement so they fail loudly if the view drifted. They are kept as a record; they are not part of any build.
+1. `tools/dc-to-tsx.mjs <Board> <page> <dir>` turned a board into `<page>.view.tsx`, `<page>.css` (scoped), `<page>.logic.txt` (the board's own script) and `<page>.aside.txt` (the board's menu, replaced by the shared `Sidebar`): references while porting, removed afterwards; the board in `design/canvas` is the reference. `tools/convert-all.sh` lists what was converted. **Do not re-run it over edited views.**
+2. One-time Python scripts then edited the converted views (real values, working controls, extra states); they were removed in 2026-11 once applied, and git history has them.
 3. Each page has a `<Page>Page.tsx` hook that owns data and state and passes a values object to the view. Pages without a board use `app/Page.tsx` (admin and console each have one) and the shared blocks.
 4. Data comes from TanStack Query with query keys like `['students', ...]`; mutations invalidate by key prefix (`predicate`), so a payment refreshes the fees page, the student list and the dashboard together.
 5. Every write that can fail on the server shows its message through `Field` errors (red, vibrating) or a toast; every list has an `EmptyCard` state; every page has loading and error states.

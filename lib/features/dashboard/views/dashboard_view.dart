@@ -10,7 +10,6 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/utils/status.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -695,4 +694,3 @@ String daysStamp(DateTime date) {
   return 'time.n_days'.trp({'n': '$d'});
 }
 
-MoneyStatus feeTone(DueItem item) => moneyStatus(item.installment!);

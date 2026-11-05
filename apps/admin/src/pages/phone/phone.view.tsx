@@ -58,11 +58,11 @@ export function PhoneView({ v }: { v: any }) {
               <b className="fd" style={{ fontSize: "18px", letterSpacing: "-.02em" } as CSSProperties}>
                 Needs you
               </b>
-              <span className="chip c" style={{ marginLeft: "auto" } as CSSProperties}>
+              <span className="chip a" style={{ marginLeft: "auto" } as CSSProperties}>
                 {v.left} left
               </span>
             </div>
-            {v.items.map((it: any, $i: number) => (
+            {v.items.map((it: any) => (
               <Fragment key={it.id}>
                 <div className={`ap ${it.cls ?? ""}`}>
                   <span className="av" style={{ background: it.bg, color: it.fg } as CSSProperties}>

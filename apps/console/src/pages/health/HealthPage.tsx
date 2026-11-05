@@ -21,7 +21,7 @@ export function HealthPage() {
     <Page active="health" title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={<button className="btn pri" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check everything now'}</button>}>
       {inc && (
-        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 18, borderRadius: 26, background: inc.state === 'resolved' ? 'var(--gS)' : '#1B1826', color: inc.state === 'resolved' ? 'var(--gD)' : '#fff' }}>
+        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 18, borderRadius: 26, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : '#fff' }}>
           <span className={`chip ${inc.state === 'resolved' ? 'g' : 'r'}`}>{inc.state === 'resolved' ? 'Resolved' : `Incident${inc.schoolName ? ` · ${inc.schoolName}` : ''}`}</span>
           <div className="fd" style={{ fontSize: 17, letterSpacing: '-.02em', marginTop: 10 }}>{inc.title}</div>
           <p style={{ margin: '4px 0 0', font: '500 13.5px/1.45 var(--fb)', opacity: .75 }}>{inc.body}</p>

@@ -3,7 +3,7 @@ import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, She
 import { useChrome } from '../app/useChrome';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
-const SWATCHES: [string, string][] = [['Violet', '--v'], ['Coral', '--c'], ['Amber', '--a'], ['Mint', '--g'], ['Blue', '--b'], ['Red', '--r'], ['Ink', '--ink'], ['Ink 3', '--ink3']];
+const SWATCHES: [string, string][] = [['Accent (blue)', '--v'], ['Warning (amber)', '--a'], ['Good (green)', '--g'], ['Bad (red)', '--r'], ['Ink', '--ink'], ['Ink 3', '--ink3'], ['Field border', '--field'], ['Present', '--present']];
 const CHIPS = ['', 'v', 'c', 'a', 'g', 'b', 'r'] as const;
 
 /** A living style guide built from the real components, so it can never drift from what the pages use. Open it at /design. */
@@ -36,7 +36,7 @@ export function DesignPage() {
 
         <Section title="Buttons and chips">
           <div className="tgrow">
-            <button className="btn pri">Primary</button><button className="btn v">Violet</button><button className="btn">Plain</button><button className="btn ghost">Ghost</button><button className="btn dng">Danger</button><button className="btn" disabled>Disabled</button>
+            <button className="btn pri">Primary</button><button className="btn v">Accent</button><button className="btn">Plain</button><button className="btn ghost">Ghost</button><button className="btn dng">Danger</button><button className="btn" disabled>Disabled</button>
             <button className="btn pri sm">Small</button><button className="btn"><span className="spin" aria-hidden="true"></span>Working</button>
           </div>
           <div className="tgrow" style={{ marginTop: 16 }}>{CHIPS.map((c) => <span key={c} className={`chip ${c}`}>{c || 'plain'}</span>)}</div>
@@ -60,7 +60,7 @@ export function DesignPage() {
             {(['t-v', 't-a', 't-g', 't-i', 't-l', 't-p'] as const).map((t) => <div key={t} className={`tile ${t}`} style={{ minHeight: 120 }}><b className="fd" style={{ fontSize: 22 }}>{t}</b><div style={{ font: '600 13px var(--fb)', opacity: .7 }}>A tile</div></div>)}
           </div>
           <div style={{ display: 'grid', gap: 10, marginTop: 18, maxWidth: 520 }}>
-            {[78, 52, 31].map((w) => <div key={w} style={{ height: 22, borderRadius: 11, background: 'var(--sunk)', overflow: 'hidden' }}><i style={{ display: 'block', height: '100%', width: `${w}%`, borderRadius: 11, background: 'linear-gradient(90deg,var(--v),var(--c))' }} /></div>)}
+            {[78, 52, 31].map((w) => <div key={w} style={{ height: 22, borderRadius: 11, background: 'var(--sunk)', overflow: 'hidden' }}><i style={{ display: 'block', height: '100%', width: `${w}%`, borderRadius: 11, background: 'var(--v)' }} /></div>)}
           </div>
           <div className="tgrow" style={{ marginTop: 18 }}>{['Riya Mehta', 'Kabir Singh', 'Meera Nair', 'Kavita Iyer'].map((n) => { const t = tintFor(n); return <span key={n} className="av" style={{ background: t.bg, color: t.fg, width: 44, height: 44, display: "grid", placeItems: "center" }}>{n.split(' ').map((w) => w[0]).join('')}</span>; })}</div>
         </Section>

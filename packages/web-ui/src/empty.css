@@ -19,13 +19,11 @@
 .nest .eb h3{margin:0;font:700 24px/1.15 var(--fd);letter-spacing:-.03em}
 .nest .eb p{margin:0;font:500 14.5px/1.55 var(--fb);color:var(--ink2);max-width:310px}
 .nest .es-act{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center}
-.nest .sug{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:var(--vS);color:var(--vD);font:800 13px var(--fb);border:0;cursor:pointer;transition:transform .35s var(--sp)}
-.nest .sug:hover{transform:scale(1.06)}
 .nest .es-nf{grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:10px;padding:34px 40px;background:var(--ci);color:#fff;border-radius:28px;overflow:hidden;position:relative}
 .nest .es-nf .n{font:800 190px/.9 var(--fd);letter-spacing:-.07em;background:none;color:#fff}
 .nest .es-nf .n span{color:var(--v)}
 .nest .es-nf h3{margin:6px 0 8px;font:700 30px/1.1 var(--fd);letter-spacing:-.03em}
-.nest .es-nf p{margin:0;font:500 15.5px/1.55 var(--fb);color:#B4AFCB;max-width:400px}
+.nest .es-nf p{margin:0;font:500 15.5px/1.55 var(--fb);color:#B8B8BE;max-width:400px}
 .nest .es-err{border-color:color-mix(in srgb,var(--r) 35%,var(--line))}
 .nest .in3{display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);width:300px;transition:border-color .2s,box-shadow .3s var(--e)}
 .nest .in3:focus-within{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}

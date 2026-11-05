@@ -149,4 +149,3 @@ export function schoolApi(h: Http) {
   };
 }
 
-export type SchoolApi = ReturnType<typeof schoolApi>;

@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-export const Id = z.string().min(1).max(64);
 export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2026-10-14');
-export const IsoDateTime = z.string().datetime({ offset: true });
 
 export const Page = z.object({
   page: z.coerce.number().int().min(1).default(1),

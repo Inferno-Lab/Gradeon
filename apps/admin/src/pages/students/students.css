@@ -25,9 +25,10 @@
 .pg-students .who small{font:600 12px var(--fb);color:var(--ink3)}
 .pg-students .cls{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;background:var(--sunk);font:800 12px var(--fb);width:fit-content}
 .pg-students .tk{display:flex;gap:3px}
-.pg-students .tk i{width:7px;height:18px;border-radius:4px;background:var(--v)}
+.pg-students .tk i{width:7px;height:18px;border-radius:4px;background:var(--present)}
 .pg-students .tk i.l{background:var(--a)}
-.pg-students .tk i.a{background:var(--line2)}
+.pg-students .tk i.a{background:var(--r)}
+.pg-students .tk i.h{background:var(--line2)}
 .pg-students .rw:hover .tk i{animation:tkw .5s var(--sp) both;animation-delay:calc(var(--k) * 25ms)}
 @keyframes tkw{50%{transform:scaleY(1.3)}}
 .pg-students .fs{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;font:800 12.5px var(--fb);width:fit-content;white-space:nowrap}
@@ -51,7 +52,7 @@
 .pg-students .fc b{font:700 26px var(--fd);letter-spacing:-.03em}
 .pg-students .db h3{margin:0 0 10px;font:700 15px var(--fd);letter-spacing:-.01em}
 .pg-students .roll24{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
-.pg-students .roll24 i{height:26px;border-radius:5px;background:var(--v);animation:nPop .6s var(--sp) both;animation-delay:var(--d)}
+.pg-students .roll24 i{height:26px;border-radius:5px;background:var(--present);animation:nPop .6s var(--sp) both;animation-delay:var(--d)}
 .pg-students .roll24 i.l{background:var(--a)}.pg-students .roll24 i.a{background:var(--r)}.pg-students .roll24 i.h{background:var(--line2)}
 .pg-students .g{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--sunk)}
 .pg-students .rev{border:0;background:none;color:var(--vD);font:800 12.5px var(--fb);cursor:pointer;text-decoration:underline;text-underline-offset:3px}

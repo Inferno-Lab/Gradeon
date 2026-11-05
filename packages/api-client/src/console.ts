@@ -106,4 +106,3 @@ export function consoleApi(h: Http) {
   };
 }
 
-export type ConsoleApi = ReturnType<typeof consoleApi>;

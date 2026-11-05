@@ -5,9 +5,9 @@
 .pg-dashboard .s3{grid-column:span 3}.pg-dashboard .s4{grid-column:span 4}.pg-dashboard .s6{grid-column:span 6}.pg-dashboard .s8{grid-column:span 8}.pg-dashboard .s9{grid-column:span 9}
 @media (max-width:1100px){.pg-dashboard .s3,.pg-dashboard .s4,.pg-dashboard .s6,.pg-dashboard .s8,.pg-dashboard .s9{grid-column:span 6}}
 .pg-dashboard .tt{display:flex;align-items:center;gap:10px}
-.pg-dashboard .arrow{margin-left:auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.22);color:inherit;border:0;cursor:pointer;transition:transform .35s var(--e),background .2s}
-.pg-dashboard .arrow:hover{transform:rotate(45deg) scale(1.08);background:rgba(255,255,255,.36)}
-.pg-dashboard .t-a .arrow{background:rgba(20,17,31,.12)}
+.pg-dashboard .arrow{margin-left:auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);color:inherit;border:0;cursor:pointer;transition:transform .35s var(--e),background .2s}
+.pg-dashboard .t-i .arrow{background:rgba(255,255,255,.14)}
+.pg-dashboard .arrow:hover{transform:rotate(45deg) scale(1.08);background:var(--line)}
 .pg-dashboard .ghostic{position:absolute;right:-18px;bottom:-22px;width:130px;height:130px;opacity:.16;pointer-events:none}
 .pg-dashboard .ghostic path{stroke-width:1.2}
 .pg-dashboard .big{font:700 46px/1 var(--fd);letter-spacing:-.04em;display:flex;align-items:baseline;gap:4px}
@@ -20,11 +20,11 @@
 .pg-dashboard .quick button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:transform .3s var(--sp),background .2s}
 .pg-dashboard .quick button:hover{transform:translateY(-3px);background:var(--vS);color:var(--vD)}
 .pg-dashboard .quick svg{width:17px;height:17px}
-.pg-dashboard .avl{width:68px;height:68px;border-radius:50%;background:#FDE7D7;color:#9A3412;display:grid;place-items:center;font:800 22px var(--fb);box-shadow:0 0 0 4px var(--card),0 0 0 6px var(--v2)}
+.pg-dashboard .avl{width:68px;height:68px;border-radius:50%;background:var(--sunk);color:var(--ink2);display:grid;place-items:center;font:800 22px var(--fb);box-shadow:0 0 0 4px var(--card),0 0 0 6px var(--v2)}
 .pg-dashboard .plot{position:relative;height:300px;margin-top:6px}
 .pg-dashboard .gl{position:absolute;left:44px;right:0;height:0;border-top:1.5px dashed color-mix(in srgb,var(--ink3) 35%,transparent)}
 .pg-dashboard .gl span{position:absolute;left:-44px;top:-9px;font:700 11.5px var(--fb);color:var(--ink3);width:34px;text-align:right}
-.pg-dashboard .goal{border-top-color:var(--a)}
+.pg-dashboard .goal{border-top-color:var(--ink3)}
 .pg-dashboard .goal b{position:absolute;right:0;top:-12px;font:800 11px var(--fb);background:var(--aS);color:var(--aD);padding:3px 9px;border-radius:999px}
 .pg-dashboard .pcols{position:absolute;left:44px;right:0;bottom:30px;height:236px;display:flex;justify-content:space-around;align-items:flex-end}
 .pg-dashboard .plab{position:absolute;left:44px;right:0;bottom:0;height:26px;display:flex;justify-content:space-around}
@@ -52,7 +52,7 @@
 .pg-dashboard .ev{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;padding-right:10px}
 .pg-dashboard .ev::before{content:"";position:absolute;left:0;top:-30px;width:13px;height:13px;border-radius:50%;background:var(--card);border:3px solid var(--line2)}
 .pg-dashboard .ev.past::before{border-color:var(--v);background:var(--v)}
-.pg-dashboard .ev.now::before{border-color:var(--c);background:var(--c);box-shadow:none;animation:none}
+.pg-dashboard .ev.now::before{border-color:var(--v);background:var(--v);box-shadow:none;animation:none}
 
 .pg-dashboard .ev b{font:700 14px var(--fb)}
 .pg-dashboard .ev small{font:600 12.5px var(--fb);color:var(--ink3)}
@@ -71,12 +71,12 @@
 .pg-dashboard .col2 .fl{position:absolute;bottom:0;width:46%;max-width:16px;border-radius:8px 8px 3px 3px;background:var(--pc);transition:height 1.2s var(--e),filter .3s,width .3s var(--e)}
 .pg-dashboard .col2 .gh{position:absolute;bottom:0;width:78%;max-width:30px;border-radius:10px 10px 4px 4px;background:var(--vS);transition:height 1.2s var(--e)}
 .pg-dashboard .col2:hover .fl,.pg-dashboard .col2:focus-visible .fl{filter:brightness(1.06);width:56%}
-.pg-dashboard .col2.today .fl{background:var(--a)}
+.pg-dashboard .col2.today .fl{background:var(--v)}
 .pg-dashboard .pcols{justify-content:space-around;gap:2px}
 /* Class rolls as one segmented bar per class. */
 .pg-dashboard .sg{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--sunk)}
 .pg-dashboard .sg i{display:block;min-width:0;transition:flex .9s var(--e);border-radius:2px}
-.pg-dashboard .sg i.p{background:var(--v)}
+.pg-dashboard .sg i.p{background:var(--present)}
 .pg-dashboard .sg i.l{background:var(--a)}
 .pg-dashboard .sg i.a{background:var(--c)}
 .pg-dashboard .sg i.u{background:transparent}
@@ -86,8 +86,8 @@
 .pg-dashboard .fbars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
 .pg-dashboard .fbar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .pg-dashboard .fbar .trk{position:relative;width:100%;max-width:96px;height:164px;border-radius:24px;background:var(--sunk);overflow:hidden}
-.pg-dashboard .fbar .fill{position:absolute;left:0;right:0;bottom:0;border-radius:18px 18px 24px 24px;transition:height 1.4s var(--e);display:block;min-height:6px}
-.pg-dashboard .fbar .fill em,.pg-dashboard .fbar .out{position:absolute;left:0;right:0;top:10px;text-align:center;font:800 13px var(--fb);font-style:normal;color:#fff}
+.pg-dashboard .fbar .fill{background:var(--v);position:absolute;left:0;right:0;bottom:0;border-radius:18px 18px 24px 24px;transition:height 1.4s var(--e);display:block;min-height:6px}
+.pg-dashboard .fbar .fill em,.pg-dashboard .fbar .out{position:absolute;left:0;right:0;top:10px;text-align:center;font:800 13px var(--fb);font-style:normal;color:var(--onV)}
 .pg-dashboard .fbar .out{top:auto;color:var(--ink2)}
 .pg-dashboard .fbar:hover .trk{box-shadow:0 0 0 2px var(--v2)}
 .pg-dashboard .fbar b{font:700 14px var(--fb)}

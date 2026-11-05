@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Inject, Injectable, Param, Patch, Query } from '@nestjs/common';
-import { REGISTRY, POOLS } from './tokens.js';
+import { POOLS } from './tokens.js';
 import { activeModules, closeModules } from '@gradeon/config-engine';
 import { type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
 import { notFound, ApiError } from '@gradeon/nest-kit';
-import type { PoolManager, Registry } from '@gradeon/tenancy';
+import type { PoolManager } from '@gradeon/tenancy';
 import { unseal } from '@gradeon/security';
 import { adminUrlFor } from './provisioning/drivers.js';
 import { Provisioner } from './provisioning/provisioner.js';
@@ -24,7 +24,6 @@ export class Schools {
   constructor(
     private readonly db: Db,
     private readonly provisioner: Provisioner,
-    @Inject(REGISTRY) private readonly registry: Registry,
     @Inject(POOLS) private readonly pools: PoolManager,
     @Inject(ENV) private readonly env: Env,
   ) {}

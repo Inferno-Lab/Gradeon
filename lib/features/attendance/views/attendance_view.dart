@@ -249,7 +249,7 @@ class _Tile extends StatelessWidget {
               color: switch (status) {
                 AttendanceStatus.present => AppColors.ok,
                 AttendanceStatus.absent => AppColors.white,
-                AttendanceStatus.lateArrival => c.dark ? const Color(0xFFF6BA45) : AppColors.late,
+                AttendanceStatus.lateArrival => c.lateText,
                 _ => c.ink3,
               },
             ),

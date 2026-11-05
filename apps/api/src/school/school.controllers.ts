@@ -275,8 +275,6 @@ export class SettingsController {
 
 @Controller()
 export class HealthController {
-  constructor(private readonly settings: SettingsService) {}
-
   @NoTenant() @Get('health')
   health(): { ok: true } {
     return { ok: true };

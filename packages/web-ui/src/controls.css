@@ -1,7 +1,7 @@
 /* The dropdown, the tooltip and the switch. Flat and crisp: borders and fills change on hover and focus, nothing glows. */
 
 /* Dropdown button */
-.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:16px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
 .nest .sx:hover:not(:disabled){border-color:var(--ink3)}
 .nest .sx:focus-visible,.nest .sx.open{outline:0;border-color:var(--v)}
 .nest .sx.err{border-color:var(--r)}
@@ -43,5 +43,5 @@
 .nest .sw.on,.nest .sw.on:hover:not(:disabled){background:var(--v)}
 .nest .sw.on::after{transform:translateX(16px)}
 .nest .sw:active::after,.nest .sw.on:active::after{width:16px}
-.nest .sw:focus-visible{outline:2px solid var(--v);outline-offset:2px;border-radius:999px}
+.nest .sw:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:999px}
 .nest .sw:disabled{opacity:.45;cursor:not-allowed}

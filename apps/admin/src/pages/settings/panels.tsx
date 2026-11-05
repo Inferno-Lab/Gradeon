@@ -44,12 +44,11 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
-  const [confirm, setConfirm] = useState(false);
   const shake = useShake();
   const list = roles.data ?? [];
   const cur = list.find((r) => r.id === sel);
   useEffect(() => { if (!sel && list[0]) setSel(list[0].id); }, [list, sel]);
-  useEffect(() => { if (cur) { setPerms(new Set(cur.permissions)); setName(cur.name); setDesc(cur.description); setErr({}); setConfirm(false); } }, [cur?.id, roles.dataUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (cur) { setPerms(new Set(cur.permissions)); setName(cur.name); setDesc(cur.description); setErr({}); } }, [cur?.id, roles.dataUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
   // Only what the school has: a role does not list permissions of modules outside the plan.
   const offered = useMemo(() => PERMISSION_CATALOG.filter((p) => !cfg.data || permissionAvailable(p.key, cfg.data)), [cfg.data]);
   const groups = useMemo(() => [...new Set(offered.map((p) => p.area))].map((a) => ({ area: a, items: offered.filter((p) => p.area === a) })), [offered]);

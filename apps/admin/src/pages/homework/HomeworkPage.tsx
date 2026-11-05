@@ -39,8 +39,8 @@ export function HomeworkPage() {
         <div><EmptyCard title="Homework" chip={{ text: '0 set', tone: 'v' }} scene="notebooks" heading="No homework yet" body="Set homework for a class and it goes to every family in the app. You then tick who has handed it in." actions={canWrite ? <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn> : undefined} /></div>
       ) : (
         <section className="grid">
-          <div className="tile t-v s4 rise"><span className="lbl" style={{ color: 'rgba(255,255,255,.7)' }}>Handed in</span><div className="big" style={{ marginTop: 8 }}>{pct(handed)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.8 }}>{handed} of {total} pieces of work</div></div>
-          <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl" style={{ color: 'rgba(20,17,31,.6)' }}>On time</span><div className="big" style={{ marginTop: 8 }}>{pct(onTime)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>handed in by the due day</div></div>
+          <div className="tile t-v s4 rise"><span className="lbl">Handed in</span><div className="big" style={{ marginTop: 8 }}>{pct(handed)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.8 }}>{handed} of {total} pieces of work</div></div>
+          <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">On time</span><div className="big" style={{ marginTop: 8 }}>{pct(onTime)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>handed in by the due day</div></div>
           <div className="tile t-l s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Homework set</span><div className="big" style={{ marginTop: 8 }}>{rows.length}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{rows.filter((r) => r.dueOn >= today).length} still open</div></div>
           <div className="card tbl s12 rise" style={{ '--d': '.14s', padding: 0 } as React.CSSProperties}>
             <div className="ch" style={{ padding: '22px 22px 14px' }}><h2>All homework</h2><span className="chip v">{rows.length}</span></div>

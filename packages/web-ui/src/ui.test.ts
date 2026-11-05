@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { rollDigits } from './digits';
-import { TINTS, tintFor } from './tints';
+import { tintFor } from './tints';
 import { evenTarget, share } from './EvenRows';
 
 describe('evenTarget', () => {
@@ -41,13 +41,7 @@ describe('rollDigits', () => {
 });
 
 describe('tintFor', () => {
-  it('gives the same person the same colours every time', () => {
-    expect(tintFor('Aarav Sharma')).toEqual(tintFor('Aarav Sharma'));
-  });
-  it('always picks one of the approved pairs', () => {
-    for (const name of ['', 'Neha Menon', 'Kavita Iyer', '🙂', 'x'.repeat(500)]) {
-      const t = tintFor(name);
-      expect(TINTS.some(([bg, fg]) => bg === t.bg && fg === t.fg)).toBe(true);
-    }
+  it('gives everyone the same neutral avatar, from the theme', () => {
+    for (const name of ['', 'Neha Menon', '🙂']) expect(tintFor(name)).toEqual({ bg: 'var(--sunk)', fg: 'var(--ink2)' });
   });
 });

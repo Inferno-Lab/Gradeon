@@ -220,12 +220,8 @@ class DayRibbonState extends State<DayRibbon> {
         ],
       ),
     );
-    if (past) {
-      block = Opacity(
-        opacity: c.dark ? .6 : .55,
-        child: ColorFiltered(colorFilter: const ColorFilter.matrix(_desaturate), child: block),
-      );
-    }
+    // Past periods lose colour but keep full strength: fading them too left white text washed out on a pale card.
+    if (past) block = ColorFiltered(colorFilter: const ColorFilter.matrix(_desaturate), child: block);
     return Positioned(left: left, top: 0, width: width, height: widget.height, child: block);
   }
 }

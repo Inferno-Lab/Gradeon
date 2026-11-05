@@ -23,10 +23,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 /// Category badge text and colours.
 ({String abbr, Color fill, Color on}) _category(BuildContext context, String category) {
   final c = context.app;
-  final late = c.dark ? const Color(0xFFF6BA45) : AppColors.late;
   return switch (category) {
     'sports' => (abbr: 'SPORT', fill: AppColors.subject('pe').fill, on: AppColors.subject('pe').on),
-    'fees' => (abbr: 'FEES', fill: c.lateSoft, on: late),
+    'fees' => (abbr: 'FEES', fill: c.lateSoft, on: c.lateText),
     'holiday' => (abbr: 'HOL', fill: AppColors.subject('art').fill, on: AppColors.subject('art').on),
     'exams' => (abbr: 'EXAM', fill: c.badSoft, on: c.badText),
     'academic' => (abbr: 'ACAD', fill: c.mariSoft, on: c.mariText),
