@@ -48,7 +48,6 @@ function binDir(): string {
  * It is started with `pg_ctl`, which drops administrator rights on Windows (PostgreSQL refuses to run with them).
  */
 export async function startDevPostgres(opts: { dataDir: string; port?: number; fresh?: boolean }): Promise<DevPostgres> {
-  const port = opts.port ?? (await freePort());
   const dataDir = path.resolve(opts.dataDir);
   const bin = binDir();
   const exe = (n: string) => path.join(bin, process.platform === 'win32' ? `${n}.exe` : n);
@@ -65,11 +64,15 @@ export async function startDevPostgres(opts: { dataDir: string; port?: number; f
   }
   const log = path.join(path.dirname(dataDir), `${path.basename(dataDir)}.log`);
   // spawn with ignored stdio: the postgres child would otherwise keep pg_ctl's pipes open and the call would never return
-  const code = await new Promise<number | null>((resolve, reject) => {
+  const start = (port: number) => new Promise<number | null>((resolve, reject) => {
     const child = spawn(exe('pg_ctl'), ['-D', dataDir, '-l', log, '-w', '-t', '60', '-o', `-p ${port} -c listen_addresses=127.0.0.1 -c fsync=off`, 'start'], { stdio: 'ignore', windowsHide: true });
     child.on('error', reject);
     child.on('exit', resolve);
   });
+  // Test servers start in parallel: another one can take a free port before PostgreSQL binds it, so try a fresh port.
+  let port = opts.port ?? (await freePort());
+  let code = await start(port);
+  for (let tries = 1; code !== 0 && opts.port === undefined && tries < 5; tries++) code = await start((port = await freePort()));
   if (code !== 0) {
     const tail = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').slice(-600) : '';
     throw new Error(`PostgreSQL did not start (exit ${code}).

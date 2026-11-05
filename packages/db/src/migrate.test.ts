@@ -9,7 +9,7 @@ import { backupDatabase, restoreDatabase } from './backup.js';
 
 let server: DevPostgres;
 beforeAll(async () => {
-  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-pg-')), 'data'), port: 54401, fresh: true });
+  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-pg-')), 'data'), fresh: true });
 }, 120_000);
 afterAll(async () => { await server?.stop(); });
 

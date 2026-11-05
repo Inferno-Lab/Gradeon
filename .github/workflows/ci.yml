@@ -45,6 +45,9 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Start the database, the server and the demo school
         run: bash tools/dev-reset.sh
+      # The flows use the dev servers; this is how Render serves the built admin and console (a library update broke it once).
+      - name: The server serves the built admin and console
+        run: for u in / /s/greenfield /console/ /console/schools; do curl -sf -o /dev/null http://127.0.0.1:4000$u || { echo "GET $u failed"; tail -20 /tmp/server.log; exit 1; }; done
       - name: Start the admin and the console
         run: |
           nohup pnpm --filter @gradeon/admin dev --host 127.0.0.1 > /tmp/admin.log 2>&1 &

@@ -13,7 +13,7 @@ let pool: pg.Pool;
 const q = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await pool.query(sql, params)).rows as T[];
 
 beforeAll(async () => {
-  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-seed-')), 'data'), port: 54402, fresh: true });
+  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-seed-')), 'data'), fresh: true });
   pool = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_seed'), max: 4 });
   await migrate(pool, 'school');
   await seedSchool(pool, {
