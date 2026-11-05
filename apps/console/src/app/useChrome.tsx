@@ -76,7 +76,7 @@ export function useChrome(active: string) {
             <span className={`chip ${pending ? 'a' : 'g'}`}>{pending ? 'Needs you' : 'All clear'}</span>
           </div>
           <div className="fd" style={{ fontSize: 20, letterSpacing: '-.03em' }}>{pending ? `${pending} ${pending === 1 ? 'request' : 'requests'} to approve` : 'Nothing waiting'}</div>
-          <button className="btn wht sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/approvals')}>{pending ? 'Review' : 'Open approvals'}<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/approvals')}>{pending ? 'Review' : 'Open approvals'}<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
         </div>
       )}
       me={{ initials: user.initials, name: user.name, role: roleLabel(user.roles[0]), bg: t.bg, fg: t.fg }}
