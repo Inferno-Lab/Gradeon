@@ -385,7 +385,7 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="rolls">Class rolls · today</h2>
               <span className="lgd">
                 <span>
-                  <i style={{ background: "var(--v)" } as CSSProperties}></i>Present
+                  <i style={{ background: "var(--present)" } as CSSProperties}></i>Present
                 </span>
                 <span>
                   <i style={{ background: "var(--a)" } as CSSProperties}></i>Late
