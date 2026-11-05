@@ -39,7 +39,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleSession();
-  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
+  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/modules', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 

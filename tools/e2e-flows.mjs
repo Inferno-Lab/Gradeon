@@ -522,6 +522,34 @@ await flow('console: the bell shows alerts', { storage: consoleStore }, async (p
 });
 
 
+await flow('console: the module grid takes a feature from a school only after a review, and sends it for a second person', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/modules`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('table', { name: 'Modules by school' }), 'the module grid');
+  await expectVisible(p.getByText('Not built yet'), 'the planned modules');
+  await p.getByRole('button', { name: 'Take away' }).isDisabled().then((d) => { if (!d) throw new Error('Take away should wait for a chosen school'); });
+  await p.getByLabel(/^Choose Greenfield/).check();
+  await pick(p, p, 'Module or feature', 'Fees: Families pay in the app');
+  await p.getByRole('button', { name: 'Take away' }).click();
+  const review = p.getByRole('dialog');
+  await expectVisible(review.getByText('− Fees: Families pay in the app'), 'the review of what is taken away');
+  await expectVisible(review.getByText(/needs a second person/), 'the approval note');
+  await review.getByRole('button', { name: 'Push' }).click();
+  await expectVisible(p.getByText(/waiting for a second person in Approvals/), 'the waiting toast');
+});
+
+await flow('console: a school’s plan tab edits modules, features, dates and limits, and reviews before pushing', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
+  await p.getByRole('tab', { name: 'Entitlements' }).click();
+  await expectVisible(p.getByText('Plan and limits'), 'the plan card');
+  if (!(await p.getByRole('button', { name: 'Review changes' }).isDisabled())) throw new Error('nothing changed yet, so Review should wait');
+  await p.getByRole('switch', { name: 'Gallery' }).click();
+  await p.getByRole('button', { name: 'Review changes' }).click();
+  await expectVisible(p.getByRole('dialog').getByText('− Gallery'), 'Gallery in the review');
+  await p.getByRole('button', { name: 'Keep editing' }).click();
+  await p.getByRole('switch', { name: 'Gallery' }).click();
+  if (!(await p.getByRole('button', { name: 'Review changes' }).isDisabled())) throw new Error('back to the start, so Review should wait again');
+});
+
 await flow('console: a school’s request is answered, and its configuration changes with a note', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/requests`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Please put Events in the app’s bottom tabs.'), 'the school’s request');
@@ -541,7 +569,7 @@ await flow('console: a school’s request is answered, and its configuration cha
 });
 
 await flow('console: every menu page opens', { storage: consoleStore }, async (p) => {
-  for (const path of ['/', '/onboarding', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) {
+  for (const path of ['/', '/onboarding', '/modules', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) {
     await p.goto(`${CONSOLE}${path}`, { waitUntil: 'networkidle' });
     await expectVisible(p.locator('main h1'), `a title on ${path}`);
   }
