@@ -48,7 +48,7 @@ class AcademicsView extends GetView<AcademicsController> {
             emptyBody: 'academics.empty_body',
             emptyArt: EmptyArt.books,
             emptyHint: 'academics.empty_hint',
-            emptyActions: [EmptyAction('common.ask_teacher', icon: PhosphorIconsRegular.chatCircle, onTap: () => ShellController.showTab(ShellController.chatTab))],
+            emptyActions: [EmptyAction('common.ask_teacher', icon: PhosphorIconsRegular.chatCircle, onTap: () => ShellController.showTab('chat'))],
             child: controller.shelf.isEmpty
                 ? const SizedBox.shrink()
                 : Column(

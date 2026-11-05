@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/dock.dart';
 import 'package:gradeon/core/widgets/lazy_stack.dart';
@@ -10,11 +11,15 @@ import 'package:gradeon/features/chat/controllers/chat_controller.dart';
 import 'package:gradeon/features/chat/views/chat_list_view.dart';
 import 'package:gradeon/features/dashboard/views/academics_view.dart';
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/events/views/events_view.dart';
 import 'package:gradeon/features/fees/views/fees_view.dart';
+import 'package:gradeon/features/gallery/views/gallery_view.dart';
+import 'package:gradeon/features/library/views/library_view.dart';
 import 'package:gradeon/features/notices/views/notices_view.dart';
 import 'package:gradeon/features/profile/views/profile_view.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:gradeon/features/teacher_tools/views/teacher_home_view.dart';
+import 'package:gradeon/features/transport/views/transport_view.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ShellView extends StatefulWidget {
@@ -34,14 +39,18 @@ class _ShellViewState extends State<ShellView> {
     return Obx(() {
       final teacher = controller.isTeacher;
       final unread = chat.unread.value;
+      // Families get the tabs Gradeon set for the school (console → The app), Profile always last.
+      final keys = teacher ? _teacherKeys : [...SchoolConfig.dock.where(_familyTabs.containsKey), 'profile'];
+      controller.tabs = keys;
+      final nav = teacher ? _teacherNav : [for (final k in keys) _familyTabs[k]!.$1];
       final items = [
-        for (final item in teacher ? _teacherNav : _familyNav)
+        for (final item in nav)
           item.label == 'nav.chat'
               ? DockItem(icon: item.icon, activeIcon: item.activeIcon, label: item.label, badge: unread)
               : item,
       ];
-      final pages = teacher ? _teacherPages : _familyPages;
-      final index = controller.index.value;
+      final pages = teacher ? _teacherPages : [for (final k in keys) _familyTabs[k]!.$2];
+      final index = controller.index.value.clamp(0, pages.length - 1);
       final wide = context.isWide;
       return PopScope(
         canPop: false,
@@ -94,13 +103,30 @@ class _ShellViewState extends State<ShellView> {
   }
 }
 
-const _familyNav = [
-  DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'),
-  DockItem(icon: PhosphorIconsRegular.bookOpen, activeIcon: PhosphorIconsBold.bookOpen, label: 'nav.academics'),
-  DockItem(icon: PhosphorIconsRegular.wallet, activeIcon: PhosphorIconsBold.wallet, label: 'nav.fees'),
-  DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'),
-  DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'),
-];
+/// Every tab a school can give families (console → The app → Tabs along the bottom), keyed as in APP_CATALOG.dock.
+const Map<String, (DockItem, Widget)> _familyTabs = {
+  'home': (DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'), DashboardView()),
+  'academics': (
+    DockItem(icon: PhosphorIconsRegular.bookOpen, activeIcon: PhosphorIconsBold.bookOpen, label: 'nav.academics'),
+    AcademicsView(),
+  ),
+  'fees': (DockItem(icon: PhosphorIconsRegular.wallet, activeIcon: PhosphorIconsBold.wallet, label: 'nav.fees'), FeesView()),
+  'notices': (
+    DockItem(icon: PhosphorIconsRegular.megaphone, activeIcon: PhosphorIconsBold.megaphone, label: 'nav.notices'),
+    NoticesView(),
+  ),
+  'chat': (DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'), ChatListView()),
+  'events': (
+    DockItem(icon: PhosphorIconsRegular.calendarBlank, activeIcon: PhosphorIconsBold.calendarBlank, label: 'nav.events'),
+    EventsView(),
+  ),
+  'transport': (DockItem(icon: PhosphorIconsRegular.bus, activeIcon: PhosphorIconsBold.bus, label: 'nav.transport'), TransportView()),
+  'library': (DockItem(icon: PhosphorIconsRegular.books, activeIcon: PhosphorIconsBold.books, label: 'nav.library'), LibraryView()),
+  'gallery': (DockItem(icon: PhosphorIconsRegular.images, activeIcon: PhosphorIconsBold.images, label: 'nav.gallery'), GalleryView()),
+  'profile': (DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'), ProfileView()),
+};
+
+const _teacherKeys = ['home', 'classes', 'notices', 'chat', 'profile'];
 
 const _teacherNav = [
   DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'),
@@ -113,7 +139,5 @@ const _teacherNav = [
   DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'),
   DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'),
 ];
-
-const _familyPages = [DashboardView(), AcademicsView(), FeesView(), ChatListView(), ProfileView()];
 
 const _teacherPages = [TeacherHomeView(), TeacherClassesView(), NoticesView(), ChatListView(), ProfileView()];

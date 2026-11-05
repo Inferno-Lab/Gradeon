@@ -76,7 +76,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                     children: [
                       if (t != null)
                         GlassPress(
-                          onTap: () => Get.find<ShellController>().go(4),
+                          onTap: () => ShellController.showTab('profile'),
                           child: Glass(
                             height: 44,
                             width: 160,

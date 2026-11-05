@@ -4,24 +4,36 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/data/models/user.dart';
 
 class ShellController extends GetxController {
   final index = 0.obs;
 
+  /// The tab keys in dock order, set by the shell: a school chooses its family tabs in the console.
+  List<String> tabs = const ['home', 'academics', 'fees', 'chat', 'profile'];
+
   bool get isTeacher => Get.find<AuthService>().role == UserRole.teacher;
 
-  /// Tab positions shared by both navs (family and teacher).
-  static const chatTab = 3;
-  static const profileTab = 4;
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(SchoolConfig.load());
+  }
 
   void go(int value) => index.value = value;
 
-  /// Brings the shell to [tab] from any screen, e.g. an empty state's button.
-  static void showTab(int tab) {
+  /// Brings the shell to the tab [key] from any screen; opens chat on its own when the school has no chat tab.
+  static void showTab(String key) {
     Get.until((route) => route.settings.name == AppRoutes.shell);
-    Get.find<ShellController>().go(tab);
+    final shell = Get.find<ShellController>();
+    final at = shell.tabs.indexOf(key);
+    if (at >= 0) {
+      shell.go(at);
+    } else if (key == 'chat') {
+      unawaited(Get.toNamed<void>(AppRoutes.chat));
+    }
   }
 
   Future<void> onBack() async {

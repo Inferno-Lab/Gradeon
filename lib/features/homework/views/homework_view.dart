@@ -94,7 +94,7 @@ class HomeworkView extends GetView<HomeworkController> {
           EmptyAction(
             'homework.ask_teacher',
             icon: PhosphorIconsRegular.chatCircle,
-            onTap: () => ShellController.showTab(ShellController.chatTab),
+            onTap: () => ShellController.showTab('chat'),
           ),
         ],
       );
