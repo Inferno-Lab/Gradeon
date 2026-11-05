@@ -64,6 +64,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Bright red used for text on dark grounds, where #C23B2A fails contrast.
   Color get badText => dark ? const Color(0xFFFF8A78) : bad;
 
+  /// Late as text, on paper or on lateSoft: #B06F00 is only 3.49:1 on lateSoft in light, so text is darker there and brighter in dark.
+  Color get lateText => dark ? const Color(0xFFF6BA45) : const Color(0xFF8F5400);
+
   static const subjects = <String, SubjectColor>{
     'maths': SubjectColor(Color(0xFF2F5BD3), white),
     'science': SubjectColor(Color(0xFF23784A), white),

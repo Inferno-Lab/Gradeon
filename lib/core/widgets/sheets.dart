@@ -114,7 +114,7 @@ extension StatusColors on AppColors {
   Color tone(String status) => switch (status) {
     'ok' => AppColors.ok,
     'bad' => badText,
-    'late' => dark ? const Color(0xFFF6BA45) : AppColors.late,
+    'late' => lateText,
     'mari' => mariText,
     _ => AppColors.off,
   };

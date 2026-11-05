@@ -65,7 +65,7 @@ class _DueRow extends StatelessWidget {
           subtitleColor: overdue ? c.badText : null,
           trailing: overdue
               ? Btn('home.pay', small: true, onPressed: () => unawaited(_openFees(item, pay: true)))
-              : Stamp(daysStamp(fee.dueDate), color: c.dark ? const Color(0xFFF6BA45) : AppColors.late),
+              : Stamp(daysStamp(fee.dueDate), color: c.lateText),
           onTap: () => unawaited(_openFees(item)),
         );
       case DueKind.homework:
@@ -75,7 +75,7 @@ class _DueRow extends StatelessWidget {
           title: '${hw.title}$child',
           subtitle:
               '${subjectName(hw.subject)} · ${Formatters.countdown(hw.dueOn).trp({'count': '${Formatters.daysUntil(hw.dueOn)}'}).toLowerCase()}',
-          trailing: Stamp(daysStamp(hw.dueOn), color: c.dark ? const Color(0xFFF6BA45) : AppColors.late),
+          trailing: Stamp(daysStamp(hw.dueOn), color: c.lateText),
           onTap: () => Get.toNamed<void>(AppRoutes.homeworkDetail.replaceFirst(':id', hw.id)),
         );
       case DueKind.event:
@@ -114,7 +114,7 @@ class _MoneyCover extends StatelessWidget {
         color: overdue ? c.badSoft : c.lateSoft,
         borderRadius: BorderRadius.circular(11),
       ),
-      child: Text('₹', style: context.type.h2.copyWith(fontSize: 20, color: overdue ? c.badText : AppColors.late)),
+      child: Text('₹', style: context.type.h2.copyWith(fontSize: 20, color: overdue ? c.badText : c.lateText)),
     );
   }
 }
@@ -293,7 +293,7 @@ Color noticeTone(BuildContext context, String category) {
     'academic' => c.mariText,
     'sports' => AppColors.ok,
     'holiday' => AppColors.subject('social').fill,
-    'fees' => c.dark ? const Color(0xFFF6BA45) : AppColors.late,
+    'fees' => c.lateText,
     _ => c.ink3,
   };
 }

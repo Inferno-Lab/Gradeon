@@ -188,12 +188,8 @@ class _Block extends StatelessWidget {
         ],
       ),
     );
-    if (past) {
-      block = Opacity(
-        opacity: .5,
-        child: ColorFiltered(colorFilter: _gray, child: block),
-      );
-    }
+    // Past periods go grey but keep full strength: fading them too left white text washed out on a pale card.
+    if (past) block = ColorFiltered(colorFilter: _gray, child: block);
     return Semantics(
       label:
           '${subjectName(period.subject)}, ${clockOf(minutesOf(period.start))} – ${clockOf(minutesOf(period.end))}${teacher == null ? '' : ', $teacher'}',
