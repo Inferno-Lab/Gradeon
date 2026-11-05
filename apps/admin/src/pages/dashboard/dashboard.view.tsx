@@ -116,7 +116,7 @@ export function DashboardView({ v }: { v: any }) {
               <div className="ml" role="menu">
                 {v.news.map((r: any, $i: number) => (
                   <Fragment key={$i}>
-                    <button className="mo" role="menuitem" onClick={v.toggleNew} style={{ transitionDelay: `${r.d ?? ""}ms` } as CSSProperties}>
+                    <button className="mo" role="menuitem" onClick={r.go} style={{ transitionDelay: `${r.d ?? ""}ms` } as CSSProperties}>
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path className="i" d={r.ic}></path>
                       </svg>
@@ -157,6 +157,7 @@ export function DashboardView({ v }: { v: any }) {
               <Illustration scene="calendar" />
             </div>
           </div>
+          {v.has.attendance && (
           <div className="tile t-a s3 lift rise" style={{ "--d": ".1s" } as CSSProperties}>
             <div className="tt">
               <span className="chip" style={{ background: "rgba(20,17,31,.12)", color: "#14111F" } as CSSProperties}>
@@ -196,6 +197,8 @@ export function DashboardView({ v }: { v: any }) {
               ></path>
             </svg>
           </div>
+          )}
+          {v.has.fees && (
           <div className="tile t-v s3 lift rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
               <span className="chip" style={{ background: "rgba(255,255,255,.2)", color: "#fff" } as CSSProperties}>
@@ -237,6 +240,7 @@ export function DashboardView({ v }: { v: any }) {
               ></path>
             </svg>
           </div>
+          )}
           <div className="tile t-i s3 lift rise" style={{ "--d": ".2s" } as CSSProperties}>
             <div className="tt">
               <span className="chip" style={{ background: "rgba(255,255,255,.14)", color: "#fff" } as CSSProperties}>
@@ -276,6 +280,7 @@ export function DashboardView({ v }: { v: any }) {
           </div>
         </section>
         <section className="grid" data-even="" style={{ alignItems: "start" } as CSSProperties}>
+          {v.showChart && (
           <div className="tile t-l s8 rise" style={{ "--d": ".25s" } as CSSProperties} aria-labelledby="chtt">
             <div className="ch" style={{ marginBottom: "8px" } as CSSProperties}>
               <h2 id="chtt" style={{ fontSize: "22px" } as CSSProperties}>
@@ -328,6 +333,7 @@ export function DashboardView({ v }: { v: any }) {
               </div>
             </div>
           </div>
+          )}
           <div className="tile t-p s4 rise" style={{ "--d": ".3s" } as CSSProperties} aria-labelledby="need">
             <div className="ch" style={{ marginBottom: "16px" } as CSSProperties}>
               <h2 id="need" style={{ fontSize: "22px" } as CSSProperties}>

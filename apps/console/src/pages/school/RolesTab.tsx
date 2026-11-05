@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { PERMISSION_CATALOG, type RoleDef } from '@gradeon/contracts';
+import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
 import { EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 
@@ -24,7 +24,9 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
   const cur: RoleDef | undefined = roles.find((r) => r.id === sel);
   useEffect(() => { if (!sel && roles[0]) setSel(roles[0].id); }, [roles, sel]);
   useEffect(() => { if (cur) { setName(cur.name); setDesc(cur.description); setPerms(new Set(cur.permissions)); setErr({}); setSure(false); } }, [cur?.id, q.dataUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
-  const groups = useMemo(() => [...new Set(PERMISSION_CATALOG.map((p) => p.area))].map((a) => ({ area: a, items: PERMISSION_CATALOG.filter((p) => p.area === a) })), []);
+  // Only permissions of modules the school has; a role keeps the others (unseen) so they come back with the module.
+  const offered = useMemo(() => PERMISSION_CATALOG.filter((p) => permissionAvailable(p.key, { modules: q.data?.entitled ?? [], features: q.data?.features ?? [] })), [q.data]);
+  const groups = useMemo(() => [...new Set(offered.map((p) => p.area))].map((a) => ({ area: a, items: offered.filter((p) => p.area === a) })), [offered]);
   const after = (m: string, r: RoleDef[], pick?: string) => { qc.setQueryData(['config', schoolId], { ...q.data!, roles: r }); void qc.invalidateQueries({ queryKey: ['config', schoolId] }); if (pick) setSel(pick); say(m); };
   const fail = (e: unknown) => { setErr(e instanceof HttpError && Object.keys(e.fields).length ? e.fields : { _: (e as Error).message }); shake.hit(); };
   const body = () => ({ name: name.trim(), description: desc.trim(), permissions: [...perms] });

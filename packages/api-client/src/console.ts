@@ -1,12 +1,11 @@
 import type {
   ActionRequest, ActionRow, AuditRow, BackupRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
-  WizardPayload, WizardReview,
-} from '@gradeon/contracts';
+  WizardPayload, WizardReview, EntitlementRow } from '@gradeon/contracts';
 import type { Http } from './http';
 
 export interface CellRow { key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean }
-export interface CatalogDoc { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean }[]; roleTemplates: { key: string; name: string; description: string; permissions: string[] }[] }
+export interface CatalogDoc { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean; core: boolean; state: 'live' | 'beta' | 'planned'; addOnPerStudentYear: number; features: { key: string; name: string; state: 'live' | 'beta' | 'planned' }[] }[]; roleTemplates: { key: string; name: string; description: string; permissions: string[] }[] }
 
 /** Every call the console makes. */
 export function consoleApi(h: Http) {
@@ -50,6 +49,7 @@ export function consoleApi(h: Http) {
     setChecklist: (id: string, key: string, state: 'done' | 'waiting' | 'todo') => h.patch<{ ok: true }>(`${base}/schools/${id}/checklist`, { key, state }),
     plans: () => h.get<PlanRow[]>(`${base}/plans`),
     catalog: () => h.get<CatalogDoc>(`${base}/catalog`),
+    entitlements: () => h.get<EntitlementRow[]>(`${base}/entitlements`),
     wizard: {
       drafts: () => h.get<WizardDraftRow[]>(`${base}/wizard/drafts`),
       draft: (id: string) => h.get<WizardDraftRow>(`${base}/wizard/drafts/${id}`),

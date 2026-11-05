@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Logger, Param, Post, Put, Query, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
 import { POOLS } from './tokens.js';
-import { MODULES } from '@gradeon/config-engine';
-import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
+import { MODULES, activeModules, closeModules, moduleByKey } from '@gradeon/config-engine';
+import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
 import { migrate, newId, pg, scheduleJob } from '@gradeon/db';
 import { topUpDemo } from '@gradeon/db/seed';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
@@ -128,20 +128,35 @@ export class Admin {
   }
 
   async invoices(): Promise<InvoiceRowC[]> {
-    const { rows } = await this.db.pool.query<{ id: string; school_id: string; school_name: string; period: string; amount: number; status: InvoiceRowC['status'] }>('select * from invoices order by created_at desc limit 200');
-    return rows.map((r) => ({ id: r.id, schoolId: r.school_id, schoolName: r.school_name, period: r.period, amount: r.amount, status: r.status }));
+    const { rows } = await this.db.pool.query<{ id: string; school_id: string; school_name: string; period: string; amount: number; status: InvoiceRowC['status']; lines: InvoiceRowC['lines'] }>('select * from invoices order by created_at desc limit 200');
+    return rows.map((r) => ({ id: r.id, schoolId: r.school_id, schoolName: r.school_name, period: r.period, amount: r.amount, status: r.status, lines: r.lines ?? [] }));
   }
 
-  /** One invoice per live school for the month: students times the plan's yearly price, divided by twelve. Safe to run twice. */
+  /**
+   * One invoice per live school for the month, from exactly what it has on the month's last day: students times the plan's yearly
+   * price, plus each module added on top of the plan at its add-on price, divided by twelve. A school in its trial pays nothing.
+   * Safe to run twice.
+   */
   async billMonth(user: string, period: string): Promise<number> {
     if (!/^\d{4}-\d{2}$/.test(period)) throw new ApiError('validation', 'Use a month like 2026-10.');
-    const { rows } = await this.db.pool.query<{ id: string; name: string; students_count: number; per: number }>(
-      "select s.id, s.name, s.students_count, p.per_student_year per from schools s join plans p on p.key = s.plan where s.status = 'live' and s.deleted_at is null");
+    const [y, mo] = period.split('-').map(Number) as [number, number];
+    const lastDay = new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10);
+    const { rows } = await this.db.pool.query<{ id: string; name: string; students_count: number; per: number; plan_name: string; plan_modules: string[]; entitlement: EntitlementDoc }>(
+      "select s.id, s.name, s.students_count, s.entitlement, p.per_student_year per, p.name plan_name, p.modules plan_modules from schools s join plans p on p.key = s.plan where s.status = 'live' and s.deleted_at is null");
     let made = 0;
     for (const s of rows) {
+      if (s.entitlement.trialUntil && s.entitlement.trialUntil >= lastDay) continue;
       const exists = await this.db.pool.query('select 1 from invoices where school_id = $1 and period = $2', [s.id, period]);
       if (exists.rowCount) continue;
-      await this.db.pool.query("insert into invoices (id, school_id, school_name, period, amount, status) values ($1,$2,$3,$4,$5,'draft')", [newId('inv'), s.id, s.name, period, Math.round((s.students_count * s.per) / 12)]);
+      const month = (perYear: number) => Math.round((s.students_count * perYear) / 12);
+      const inPlan = closeModules(s.plan_modules);
+      const lines = [
+        { label: `${s.plan_name} plan, ${s.students_count} students`, amount: month(s.per) },
+        ...activeModules(s.entitlement, lastDay).filter((k) => !inPlan.includes(k)).map((k) => moduleByKey(k)!).filter((m) => m.addOnPerStudentYear > 0)
+          .map((m) => ({ label: `${m.name} (added)`, amount: month(m.addOnPerStudentYear) })),
+      ];
+      await this.db.pool.query("insert into invoices (id, school_id, school_name, period, amount, status, lines) values ($1,$2,$3,$4,$5,'draft',$6)",
+        [newId('inv'), s.id, s.name, period, lines.reduce((a, l) => a + l.amount, 0), JSON.stringify(lines)]);
       made++;
     }
     await this.db.audit(user, 'billing.generated', 'invoice', period, { made });
@@ -199,10 +214,25 @@ export class Admin {
     return rows.map((r) => ({ id: r.id, at: r.at.toISOString(), actor: r.actor, action: r.action, entity: r.entity, detail: Object.entries(r.detail).map(([k, v]) => `${k}: ${String(v)}`).join(' · ') }));
   }
 
-  catalog(): { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean }[]; roleTemplates: typeof ROLE_TEMPLATES } {
-    return { modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, backend: m.backend })), roleTemplates: ROLE_TEMPLATES };
+  catalog(): CatalogResponse {
+    return {
+      modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, backend: m.backend, core: !!m.core, state: m.state, addOnPerStudentYear: m.addOnPerStudentYear, features: m.features })),
+      roleTemplates: ROLE_TEMPLATES,
+    };
+  }
+
+  /** Every school against the catalogue, for the module grid. */
+  async entitlements(): Promise<EntitlementRow[]> {
+    const { rows } = await this.db.pool.query<{ id: string; name: string; slug: string; status: string; plan: string; entitlement: EntitlementDoc }>(
+      'select id, name, slug, status, plan, entitlement from schools where deleted_at is null order by name');
+    return rows.map((r) => ({
+      id: r.id, name: r.name, slug: r.slug, status: r.status, plan: r.plan, modules: closeModules(r.entitlement.modules), active: activeModules(r.entitlement),
+      features: r.entitlement.features ?? {}, dates: r.entitlement.dates ?? {}, trialUntil: r.entitlement.trialUntil ?? null, limits: r.entitlement.limits, locks: r.entitlement.locks ?? [],
+    }));
   }
 }
+
+type CatalogResponse = { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean; core: boolean; state: string; addOnPerStudentYear: number; features: { key: string; name: string; state: string }[] }[]; roleTemplates: typeof ROLE_TEMPLATES };
 
 /** First start: the cell, the plans, the setup recipes, and the first super admin. Does nothing the second time. */
 @Injectable()
@@ -397,6 +427,11 @@ export class OpsController {
   @Get('catalog') @Needs('schools.read')
   catalog(): ReturnType<Admin['catalog']> {
     return this.admin.catalog();
+  }
+
+  @Get('entitlements') @Needs('schools.read')
+  entitlements(): Promise<EntitlementRow[]> {
+    return this.admin.entitlements();
   }
 
   @Get('current-release') @Needs('schools.read')

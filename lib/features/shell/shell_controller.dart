@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
@@ -16,10 +17,19 @@ class ShellController extends GetxController {
 
   bool get isTeacher => Get.find<AuthService>().role == UserRole.teacher;
 
+  AppLifecycleListener? _life;
+
   @override
   void onInit() {
     super.onInit();
     unawaited(SchoolConfig.load());
+    _life = AppLifecycleListener(onResume: () => unawaited(SchoolConfig.load()));
+  }
+
+  @override
+  void onClose() {
+    _life?.dispose();
+    super.onClose();
   }
 
   void go(int value) => index.value = value;

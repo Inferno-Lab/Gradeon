@@ -165,7 +165,7 @@ export function WizardPage() {
           </div>
           <div className="lbl" style={{ margin: '20px 0 8px' }}>Modules</div>
           <div className="two">
-            {(catalog.data?.modules ?? []).map((m) => {
+            {(catalog.data?.modules ?? []).filter((m) => m.state !== 'planned').map((m) => {
               const inPlan = plan?.modules.includes(m.key) ?? false;
               const on = mods.includes(m.key);
               return (

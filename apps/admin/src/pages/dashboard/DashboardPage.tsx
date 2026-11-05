@@ -10,11 +10,12 @@ import { PhoneDashboard } from '../phone/PhoneDashboard';
 
 const RANGES: [string, number][] = [['Today', 1], ['This week', 6], ['This term', 24], ['This year', 24]];
 const TABS: [string, 'attendance' | 'fees' | 'homework', number][] = [['Attendance', 'attendance', 104], ['Fees', 'fees', 72], ['Homework', 'homework', 104]];
-const NEWS: [string, string, string, string][] = [
-  ['Add student', 'stu', 'N S', '/students?add=1'], ['Collect a fee', 'fee', 'N F', '/students?pay=1'], ['Post a notice', 'notice', 'N N', '/notices'],
-  ['Mark attendance', 'att', 'N A', '/attendance'], ['Schedule an exam', 'ex', 'N E', '/exams'],
+// The last item of each row is the module it needs: a school without it does not see it.
+const NEWS: [string, string, string, string, string][] = [
+  ['Add student', 'stu', 'N S', '/students?add=1', 'people'], ['Collect a fee', 'fee', 'N F', '/students?pay=1', 'fees'], ['Post a notice', 'notice', 'N N', '/notices', 'notices'],
+  ['Mark attendance', 'att', 'N A', '/attendance', 'attendance'], ['Schedule an exam', 'ex', 'N E', '/exams', 'exams'],
 ];
-const WIDGETS: [string, string, string][] = [['rolls', 'Class rolls', 'Attendance of each class today'], ['fees', 'Fees by type', 'What each kind of fee has collected'], ['day', 'Today at school', 'The timeline of the school day']];
+const WIDGETS: [string, string, string, string][] = [['rolls', 'Class rolls', 'Attendance of each class today', 'attendance'], ['fees', 'Fees by type', 'What each kind of fee has collected', 'fees'], ['day', 'Today at school', 'The timeline of the school day', 'events']];
 const HEAD_COLOUR: Record<string, string> = { tuition: 'var(--v)', transport: 'var(--b)', activities: 'var(--c)', lab: 'var(--a)' };
 const H = 236;
 const UP = 'M7 17L17 7M9 7h8v8';
@@ -72,7 +73,10 @@ function DashboardDesktop() {
   const v = useMemo(() => (d ? build(d) : null), [d, range, tab, rangeOpen, newOpen, done, toast, chrome.shell, chrome.palette, chrome.aside, chrome.dock, hidden, widgets]);
 
   function build(d: DashboardData) {
-    const T = TABS[tab]!;
+    const has = (m: string) => d.modules.includes(m);
+    const tabsOn = TABS.filter((x) => has(x[1]));
+    const T = tabsOn[tab] ?? tabsOn[0] ?? TABS[0]!;
+    const off = WIDGETS.filter((w) => !has(w[3])).map((w) => w[0]);
     const kind = T[1];
     const pts = kind === 'attendance' ? d.charts.attendance.points : kind === 'fees' ? d.charts.fees.points : d.charts.homework.points;
     const values = pts.map((p) => ('pct' in p ? p.pct : p.amount));
@@ -109,13 +113,14 @@ function DashboardDesktop() {
     const me = tintFor(app.user.name);
     const t = d.timeline;
     return {
-      ...chrome, goto: app.go, hidden, openWidgets: () => setWidgets(true),
+      ...chrome, goto: app.go, hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
+      has: { attendance: has('attendance'), fees: has('fees') }, showChart: tabsOn.length > 0,
       showNeeds: () => document.getElementById('need')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
       widgetsDialog: widgets && (
         <Dialog title="Dashboard widgets" onClose={() => setWidgets(false)} width={460}>
           <p className="help" style={{ margin: '0 0 12px' }}>Choose what this dashboard shows for you. Other people keep their own choice.</p>
           <div className="stack">
-            {WIDGETS.map(([id, name, blurb]) => (
+            {WIDGETS.filter((w) => has(w[3])).map(([id, name, blurb]) => (
               <div className="tgl" key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
                 <div style={{ flex: 1 }}><b style={{ font: '700 14.5px var(--fb)' }}>{name}</b><div className="help">{blurb}</div></div>
                 <button className={`sw ${hidden.includes(id) ? '' : 'on'}`} role="switch" aria-checked={!hidden.includes(id)} aria-label={name} onClick={() => setHide(id, !hidden.includes(id))}></button>
@@ -132,7 +137,7 @@ function DashboardDesktop() {
       ranges: RANGES.map((r, i) => ({ t: r[0], on: i === range, sel: i === range ? 'true' : 'false', d: 50 + i * 45, pick: () => { setRange(i); setRangeOpen(false); } })),
       newOpen: newOpen ? 'open' : '', newExp: newOpen ? 'true' : 'false',
       toggleNew: (e: React.MouseEvent) => { e.stopPropagation(); setNewOpen((o) => !o); setRangeOpen(false); },
-      news: NEWS.map((n, i) => ({ t: n[0], ic: IC[n[1] as keyof typeof IC], k: n[2], d: 50 + i * 45 })),
+      news: NEWS.filter((n) => has(n[4])).map((n, i) => ({ t: n[0], ic: IC[n[1] as keyof typeof IC], k: n[2], d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n[3]); } })),
       dayLine: d.day.isToday ? `${d.day.label} · ${d.day.clock}` : `${d.day.label} · last school day`,
       kPresent: rollDigits(inr(d.present.value)), totalStudents: inr(d.present.total),
       presentTrend: trend(d.present.deltaPct), presentVersus: d.present.versus,
@@ -141,8 +146,8 @@ function DashboardDesktop() {
       kLeft: rollDigits(String(left)), avatars: d.approvals.avatars.map((a) => ({ initials: a.initials, ...(TONES[a.tone] ?? TONES.violet!) })), moreAvatars: Math.max(0, d.approvals.count - 3),
       chartTitle: kind === 'attendance' ? `Attendance, last ${pts.length} school ${pts.length === 1 ? 'day' : 'days'}` : kind === 'fees' ? 'Fees collected each day' : 'Homework handed in on time',
       chartAlt: `${T[0]} for the last ${pts.length} school days.`,
-      tabs: TABS.map((x, i) => ({ n: x[0], on: i === tab ? 'on' : '', sel: i === tab ? 'true' : 'false', pick: () => setTab(i) })), kw: T[2],
-      kx: TABS.slice(0, tab).reduce((a, x) => a + x[2], 4),
+      tabs: tabsOn.map((x, i) => ({ n: x[0], on: x === T ? 'on' : '', sel: x === T ? 'true' : 'false', pick: () => setTab(i) })), kw: T[2],
+      kx: tabsOn.slice(0, Math.max(0, tabsOn.indexOf(T))).reduce((a, x) => a + x[2], 4),
       grid, goalB: 30 + (goal / max) * H, goalL: kind === 'fees' ? `Daily target ${money(goal)}` : `Goal ${goal}%`, cols,
       chartEmpty: values.every((x) => x === 0),
       chartEmptyText: kind === 'attendance' ? 'Attendance appears here after the first roll call is marked.' : kind === 'fees' ? 'Payments appear here as fees are collected.' : 'Homework appears here once teachers set it and students hand it in.',

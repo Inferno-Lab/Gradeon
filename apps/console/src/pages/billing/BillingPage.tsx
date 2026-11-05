@@ -52,7 +52,7 @@ export function BillingPage() {
               <div className="grd th" style={{ '--cols': 'minmax(0,2fr) 110px 130px 120px 130px' } as React.CSSProperties}><span>School</span><span>Month</span><span>Amount</span><span>Status</span><span></span></div>
               {rows.map((r) => (
                 <div key={r.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) 110px 130px 120px 130px' } as React.CSSProperties}>
-                  <b style={{ font: '700 14px var(--fb)' }}>{r.schoolName}</b><span>{r.period}</span><span className="num" style={{ font: '700 14px var(--fb)' }}>{rupees(r.amount)}</span>
+                  <b style={{ font: '700 14px var(--fb)' }}>{r.schoolName}</b><span>{r.period}</span><span className="num" style={{ font: '700 14px var(--fb)' }} data-tip={r.lines.length ? r.lines.map((l) => `${l.label}: ${rupees(l.amount)}`).join(' · ') : undefined}>{rupees(r.amount)}</span>
                   <span className={`st ${TONE[r.status]}`}><i></i>{r.status}</span>
                   <span>{canWrite && NEXT_LABEL[r.status] && <button className="btn sm" disabled={set.isPending} onClick={() => set.mutate({ id: r.id, status: NEXT[r.status] })}>{NEXT_LABEL[r.status]}</button>}</span>
                 </div>

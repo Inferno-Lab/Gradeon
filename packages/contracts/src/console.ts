@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { RESERVED_SLUGS, SLUG_RE } from './common.js';
+import type { Limits, ModuleDates } from './config.js';
 
 export const CONSOLE_ROLES = ['super_admin', 'implementation', 'support', 'release_manager', 'finance', 'compliance', 'auditor'] as const;
 export const ConsoleRole = z.enum(CONSOLE_ROLES);
@@ -82,7 +83,7 @@ export interface PlanRow {
   name: string;
   perStudentYear: number;
   modules: string[];
-  limits: { students: number; storageGb: number; smsPerMonth: number };
+  limits: Limits;
 }
 
 export const WizardBasics = z.object({
@@ -217,8 +218,15 @@ export interface SchoolDetail extends SchoolRow {
   contact: { name: string; phone: string; email: string };
   gstin: string;
   entitlement: {
+    plan: string;
+    /** As granted (with what they need), before dates are applied. */
     modules: string[];
-    limits: { students: number; storageGb: number; smsPerMonth: number };
+    /** What the school has today: within dates. */
+    active: string[];
+    features: Record<string, boolean>;
+    dates: Record<string, ModuleDates>;
+    trialUntil: string | null;
+    limits: Limits;
     locks: string[];
     version: number;
   };
@@ -361,12 +369,31 @@ export interface SupportSessionRow {
   startedBy: string;
 }
 
+/** One school's row in the console's module grid. */
+export interface EntitlementRow {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  plan: string;
+  /** As granted, and what the school has today (within dates). */
+  modules: string[];
+  active: string[];
+  features: Record<string, boolean>;
+  dates: Record<string, ModuleDates>;
+  trialUntil: string | null;
+  limits: Limits;
+  locks: string[];
+}
+
 export interface InvoiceRowC {
   id: string;
   schoolId: string;
   schoolName: string;
   period: string;
   amount: number;
+  /** How the amount was worked out: the plan, then each module added on top of it. */
+  lines: { label: string; amount: number }[];
   status: 'draft' | 'sent' | 'paid' | 'overdue';
 }
 
@@ -518,6 +545,8 @@ export interface SchoolConfig {
   values: Record<string, unknown>;
   /** Modules the plan allows: the most "Switched on" may hold. */
   entitled: string[];
+  /** Features the school has inside those modules: roles only offer permissions for what the school has. */
+  features: string[];
   roles: RoleDef[];
   classes: { id: string; name: string }[];
   staff: { id: string; name: string; designation: string; roleId: string | null }[];

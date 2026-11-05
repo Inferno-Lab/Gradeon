@@ -85,10 +85,22 @@ export interface SettingsResponse extends SettingsDoc {
   usage: { plan: string; students: number; staff: number; studentLimit: number; smsUsed: number; smsLimit: number };
 }
 
+/** A school's limits. Staff is optional because older entitlements did not have it (no limit then). */
+export interface Limits { students: number; staff?: number; storageGb: number; smsPerMonth: number }
+
+/** One module's dates for one school, ISO days in IST: a trial (until), a module that starts later (from), a contract end. */
+export interface ModuleDates { from?: string; until?: string }
+
 export interface EntitlementDoc {
   plan: string;
   modules: string[];
-  limits: { students: number; storageGb: number; smsPerMonth: number };
+  /** Features switched away from the catalogue's default for this school (false takes a built feature away). */
+  features?: Record<string, boolean>;
+  /** Per-module dates; a module outside its dates counts as off everywhere. */
+  dates?: Record<string, ModuleDates>;
+  /** The school pays nothing until this day (inclusive). */
+  trialUntil?: string;
+  limits: Limits;
   locks: string[];
   overrides: Record<string, unknown>;
   version: number;
@@ -99,6 +111,8 @@ export interface EffectiveConfig {
   version: number;
   school: { name: string; shortName: string; color: string; logoText: string; language: string; tagline: string };
   modules: string[];
+  /** Features inside those modules the school has (catalogue keys like fees.onlinePayment). */
+  features: string[];
   nav: { module: string; label: string; icon: string; href: string }[];
   settings: Record<string, unknown>;
   vocabulary: Record<string, string>;

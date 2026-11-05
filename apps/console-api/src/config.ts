@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Patch, Post, Put, Query, type OnModuleInit } from '@nestjs/common';
-import { closeModules, contrastRatio, diffSettings, resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
+import { activeFeatures, activeModules, contrastRatio, diffSettings, resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
 import {
   ConfigPatch, PERMISSIONS, RoleDefSave, SETTINGS_META,
   type ChangeRequestRow, type ConfigTemplateRow, type ConfigVersionRow, type EffectiveConfig, type EntitlementDoc, type RoleDef, type SchoolConfig,
@@ -71,7 +71,7 @@ export class ConfigService implements OnModuleInit {
           "select u.id, u.name, s.designation, (select ur.role_id from user_roles ur where ur.user_id = u.id limit 1) role_id from users u join staff s on s.user_id = u.id where u.status = 'active' order by u.name"),
       ]);
       return {
-        ...cur, entitled: closeModules(ent.modules), roles, classes: classes.rows,
+        ...cur, entitled: activeModules(ent), features: activeFeatures(ent, activeModules(ent)), roles, classes: classes.rows,
         staff: staff.rows.map((s) => ({ id: s.id, name: s.name, designation: s.designation, roleId: s.role_id })),
         versions: versions.rows.map((v) => ({ id: v.id, version: v.version, changes: v.changes, note: v.note, by: v.by, at: v.at.toISOString() })),
       };
@@ -92,7 +92,7 @@ export class ConfigService implements OnModuleInit {
     }
     const mods = checked.values['modules.enabled'];
     if (Array.isArray(mods)) {
-      const entitled = closeModules((await this.entitlement(schoolId)).modules);
+      const entitled = activeModules(await this.entitlement(schoolId));
       const outside = (mods as string[]).filter((m) => !entitled.includes(m));
       if (outside.length) throw new ApiError('validation', `Not in this school’s plan: ${outside.join(', ')}. Change the plan under Entitlements first.`, { fields: { 'modules.enabled': 'Outside the plan.' } });
     }
@@ -216,7 +216,7 @@ export class ConfigService implements OnModuleInit {
       'select name, values, roles from config_templates where id = $1', [templateId])).rows[0];
     if (!t) throw notFound('That template');
     for (const schoolId of schoolIds) {
-      const ent = closeModules((await this.entitlement(schoolId)).modules);
+      const ent = activeModules(await this.entitlement(schoolId));
       const values = { ...t.values };
       if (Array.isArray(values['modules.enabled'])) values['modules.enabled'] = (values['modules.enabled'] as string[]).filter((m) => ent.includes(m));
       await this.apply(schoolId, by, { changes: values, note: `Template “${t.name}”` });

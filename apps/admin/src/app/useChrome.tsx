@@ -20,7 +20,7 @@ export function useChrome(active: string) {
   const hits = useQuery({ queryKey: ['search', dq], queryFn: () => api.search(dq), enabled: open, placeholderData: (p) => p });
 
   const data = shell.data;
-  const groups = useMemo(() => adminNav(data?.modules ?? ['people', 'timetable'], base, data?.badges), [data, base]);
+  const groups = useMemo(() => adminNav([...(data?.modules ?? ['people', 'timetable']), ...(data?.features ?? [])], base, data?.badges), [data, base]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
   const goRef = useRef(go);
   goRef.current = go;

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { APP_CATALOG } from '@gradeon/config-engine';
-import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, type DataRequestRow, type SettingsResponse } from '@gradeon/contracts';
+import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, permissionAvailable, type DataRequestRow, type SettingsResponse } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Ico, problem } from '../../app/kit';
@@ -38,6 +38,7 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const app = useApp();
   const canManage = false;
   const roles = useQuery({ queryKey: ['roles'], queryFn: app.api.roles.list });
+  const cfg = useQuery({ queryKey: ['config'], queryFn: app.api.config, staleTime: 60_000 });
   const [sel, setSel] = useState<string | 'new'>('');
   const [perms, setPerms] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
@@ -49,7 +50,9 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const cur = list.find((r) => r.id === sel);
   useEffect(() => { if (!sel && list[0]) setSel(list[0].id); }, [list, sel]);
   useEffect(() => { if (cur) { setPerms(new Set(cur.permissions)); setName(cur.name); setDesc(cur.description); setErr({}); setConfirm(false); } }, [cur?.id, roles.dataUpdatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
-  const groups = useMemo(() => [...new Set(PERMISSION_CATALOG.map((p) => p.area))].map((a) => ({ area: a, items: PERMISSION_CATALOG.filter((p) => p.area === a) })), []);
+  // Only what the school has: a role does not list permissions of modules outside the plan.
+  const offered = useMemo(() => PERMISSION_CATALOG.filter((p) => !cfg.data || permissionAvailable(p.key, cfg.data)), [cfg.data]);
+  const groups = useMemo(() => [...new Set(offered.map((p) => p.area))].map((a) => ({ area: a, items: offered.filter((p) => p.area === a) })), [offered]);
   const readOnly = !canManage || (cur?.locked ?? false);
   if (roles.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 26 }} />;
   if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;

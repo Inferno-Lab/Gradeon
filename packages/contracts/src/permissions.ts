@@ -49,6 +49,25 @@ export interface PermissionInfo {
   sensitive?: boolean;
 }
 
+/** The module (or feature) a permission belongs to. A school without it never sees the permission in a role. The rest are core. */
+export const PERMISSION_NEEDS: Partial<Record<Permission, string>> = {
+  'attendance.read': 'attendance', 'attendance.mark': 'attendance',
+  'fees.read': 'fees', 'fees.collect': 'fees', 'fees.waive': 'fees',
+  'notices.read': 'notices', 'notices.write': 'notices', 'notices.publish': 'notices',
+  'timetable.read': 'timetable', 'timetable.edit': 'timetable', 'timetable.publish': 'timetable',
+  'homework.read': 'homework', 'homework.write': 'homework',
+  'exams.read': 'exams', 'exams.write': 'exams', 'exams.publish': 'exams',
+  'admissions.read': 'people.admissions', 'admissions.write': 'people.admissions',
+  'messages.read': 'chat', 'messages.write': 'chat',
+  'events.read': 'events', 'events.write': 'events',
+};
+
+/** Whether a school with these modules and features can use the permission. */
+export function permissionAvailable(p: string, has: { modules: readonly string[]; features: readonly string[] }): boolean {
+  const need = PERMISSION_NEEDS[p as Permission];
+  return !need || has.modules.includes(need) || has.features.includes(need);
+}
+
 export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'students.read', area: 'People', label: 'See students and guardians' },
   { key: 'students.write', area: 'People', label: 'Add and edit students' },

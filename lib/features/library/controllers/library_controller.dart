@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/core/widgets/toast.dart';
@@ -53,6 +54,7 @@ class LibraryController extends GetxController with Loadable {
   }, isEmpty: () => books.isEmpty);
 
   Future<void> reserve(LibraryBook book) async {
+    if (!SchoolConfig.allows('library.reservations')) return;
     final id = _me;
     if (id == null) return;
     if (mine.length >= limit) {
@@ -68,6 +70,7 @@ class LibraryController extends GetxController with Loadable {
   }
 
   Future<void> renew(LibraryBook book) async {
+    if (!SchoolConfig.allows('library.reservations')) return;
     try {
       await Get.find<LibraryRepository>().renew(book.id);
       ToastHelper.show('library.renewed', kind: ToastKind.success);

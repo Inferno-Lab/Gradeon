@@ -308,6 +308,8 @@ export interface TeacherOption {
 
 // Dashboard
 export interface DashboardData {
+  /** Modules the school has: the dashboard shows only their tiles, charts and actions (their numbers are not sent at all). */
+  modules: string[];
   greetingName: string;
   roleLabel: string;
   schoolName: string;
@@ -337,6 +339,8 @@ export interface ShellData {
   term: DashboardData['term'];
   badges: DashboardData['badges'];
   modules: string[];
+  /** Features inside those modules (like people.admissions): pages and menu items for a missing one are hidden. */
+  features: string[];
 }
 
 // Search (command palette)

@@ -53,7 +53,27 @@ export class StudentsService {
         left join fee on fee.student_id = s.id left join att on att.student_id = s.id`;
   }
 
-  async list(t: TenantCtx, q: StudentQuery): Promise<Paged<StudentRow>> {
+/** Which of the modules a student record draws on the school has: the others' numbers are left out of every answer. */
+  private async has(t: TenantCtx): Promise<Record<'fees' | 'attendance' | 'exams' | 'homework' | 'library' | 'transport', boolean>> {
+    const { modules } = await this.settings.effective(t);
+    return { fees: modules.includes('fees'), attendance: modules.includes('attendance'), exams: modules.includes('exams'), homework: modules.includes('homework'), library: modules.includes('library'), transport: modules.includes('transport') };
+  }
+
+  private mask<T extends StudentRow>(row: T, has: Awaited<ReturnType<StudentsService['has']>>): T {
+    return {
+      ...row,
+      ...(has.fees ? {} : { feeStatus: 'paid' as const, amountDue: 0 }),
+      ...(has.attendance ? {} : { attendance10: row.attendance10.map(() => null), attendancePct: 0 }),
+    };
+  }
+
+  async list(t: TenantCtx, query: StudentQuery): Promise<Paged<StudentRow>> {
+    const has = await this.has(t);
+    // Filters and sorts on a module the school does not have are ignored rather than answered.
+    const q: StudentQuery = {
+      ...query, feeStatus: has.fees ? query.feeStatus : undefined, attendance: has.attendance ? query.attendance : undefined,
+      sort: (!has.fees && query.sort === 'due') || (!has.attendance && query.sort === 'attendance') ? 'name' : query.sort,
+    };
     const { today, days } = this.days();
     const where: string[] = [];
     const params: unknown[] = [today, addDays(today, FEE_HORIZON_DAYS)];
@@ -80,7 +100,7 @@ export class StudentsService {
       `${this.baseSql()} ${where.length ? `where ${where.join(' and ')}` : ''} order by ${order}, s.id limit ${limit} offset ${offset}`, params);
     const ticks = await this.ticks(t, rows.map((r) => r.id), days);
     return {
-      items: rows.map((r) => this.row(r, ticks.get(r.id) ?? days.map(() => null))),
+      items: rows.map((r) => this.mask(this.row(r, ticks.get(r.id) ?? days.map(() => null)), has)),
       total: Number(rows[0]?.total ?? 0), page: q.page, limit: q.limit,
     };
   }
@@ -135,10 +155,19 @@ export class StudentsService {
     const total = Number((await t.pool.query<{ n: string }>('select count(*) n from students')).rows[0]!.n);
     const now = r.a_now ?? 1;
     const prev = r.a_prev ?? now;
-    return {
+    const out: StudentSummary = {
       inView: Number(r.in_view), total, presentToday: Number(r.present), markedToday: Number(r.marked), presentSince: Number(r.since),
       overdueAmount: Number(r.overdue_amt), overdueFamilies: Number(r.overdue_fam), avgAttendance: Math.round(now * 1000) / 10,
       avgDelta: Math.round((now - prev) * 1000) / 10, dayLabel: dayLabel(last),
+    };
+    return this.maskSummary(out, await this.has(t));
+  }
+
+  private maskSummary(out: StudentSummary, has: Awaited<ReturnType<StudentsService['has']>>): StudentSummary {
+    return {
+      ...out,
+      ...(has.fees ? {} : { overdueAmount: 0, overdueFamilies: 0 }),
+      ...(has.attendance ? {} : { presentToday: 0, markedToday: 0, presentSince: 0, avgAttendance: 0, avgDelta: 0 }),
     };
   }
 
@@ -157,7 +186,7 @@ export class StudentsService {
     ]);
     const c = counts.rows[0]!;
     const p = pinned.rows[0];
-    return { all: Number(c.all), pinned: p ? { classId: p.id, name: p.name, count: Number(p.n) } : null, overdue: Number(c.overdue), newThisYear: Number(c.fresh) };
+    return { all: Number(c.all), pinned: p ? { classId: p.id, name: p.name, count: Number(p.n) } : null, overdue: (await this.has(t)).fees ? Number(c.overdue) : 0, newThisYear: Number(c.fresh) };
   }
 
   async detail(t: TenantCtx, id: string): Promise<StudentDetail> {
@@ -176,15 +205,16 @@ export class StudentsService {
       t.pool.query<{ route: string }>('select route from transport_assignments where student_id = $1', [id]),
       this.activity(t, id),
     ]);
-    const base = this.row(r, ticks.get(id)!);
+    const has = await this.has(t);
+    const base = this.mask(this.row(r, ticks.get(id)!), has);
     return {
       ...base, dob: r.dob, bloodGroup: r.blood_group, house: r.house, address: r.address, admittedOn: r.admitted_on,
-      guardianPhone: r.g_phone ? maskPhone(r.g_phone) : null, guardianEmail: r.g_email, routeName: route.rows[0]?.route ?? null,
+      guardianPhone: r.g_phone ? maskPhone(r.g_phone) : null, guardianEmail: r.g_email, routeName: has.transport ? route.rows[0]?.route ?? null : null,
       facts: {
-        attendancePct: base.attendancePct, exam: exam.rows[0] ? { name: exam.rows[0].exam, grade: exam.rows[0].grade, pct: exam.rows[0].pct } : null,
-        homework: { onTime: Number(hw.rows[0]!.on_time), total: Number(hw.rows[0]!.total) }, libraryOut: Number(lib.rows[0]!.n),
+        attendancePct: base.attendancePct, exam: has.exams && exam.rows[0] ? { name: exam.rows[0].exam, grade: exam.rows[0].grade, pct: exam.rows[0].pct } : null,
+        homework: has.homework ? { onTime: Number(hw.rows[0]!.on_time), total: Number(hw.rows[0]!.total) } : { onTime: 0, total: 0 }, libraryOut: has.library ? Number(lib.rows[0]!.n) : 0,
       },
-      chips: { house: r.house }, recentActivity: acts, roll24,
+      chips: { house: r.house }, recentActivity: acts, roll24: has.attendance ? roll24 : roll24.map(() => null),
     };
   }
 

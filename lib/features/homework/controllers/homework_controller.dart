@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/loadable.dart';
@@ -80,6 +81,7 @@ class HomeworkController extends GetxController with Loadable {
       send(homework, 'homework.scan_file'.trp({'n': '$pages'}));
 
   Future<void> send(Homework homework, String fileName) async {
+    if (!SchoolConfig.allows('homework.onlineSubmission')) return;
     final id = studentId ?? Get.find<AuthService>().activeStudentId.value;
     if (id == null) return;
     try {

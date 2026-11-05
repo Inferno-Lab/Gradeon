@@ -26,6 +26,7 @@ export function PhoneView({ v }: { v: any }) {
         </div>
         <div className="sc">
           <div className="two">
+            {v.has.attendance && (
             <div className="bt a" style={{ "--d": ".02s" } as CSSProperties}>
               <small>Present today</small>
               <div className="n num">
@@ -33,10 +34,13 @@ export function PhoneView({ v }: { v: any }) {
                 <span style={{ fontSize: "20px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
               </div>
             </div>
+            )}
+            {v.has.fees && (
             <div className="bt v" style={{ "--d": ".06s" } as CSSProperties}>
               <small>Fees in {v.feeMonth}</small>
               <div className="n num">{v.fees}</div>
             </div>
+            )}
           </div>
           <div className="bt w" style={{ "--d": ".1s", display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px" } as CSSProperties}>
             <div style={{ width: "90px", flex: "none" } as CSSProperties}>
@@ -85,6 +89,7 @@ export function PhoneView({ v }: { v: any }) {
               </div>
             )}
           </div>
+          {v.has.fees && (
           <div className="bt k" style={{ "--d": ".18s" } as CSSProperties}>
             <small>{v.barsTitle}</small>
             {v.barsEmpty ? (
@@ -102,6 +107,7 @@ export function PhoneView({ v }: { v: any }) {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
       {v.dock}

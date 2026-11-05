@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/core/widgets/toast.dart';
@@ -54,6 +55,7 @@ class EventsController extends GetxController with Loadable {
   SchoolEvent? byId(String? id) => items.where((e) => e.id == id).firstOrNull;
 
   Future<void> rsvp(String eventId, RsvpStatus status) async {
+    if (!SchoolConfig.allows('events.rsvp')) return;
     final userId = _me;
     if (userId == null) return;
     pending[eventId] = status;

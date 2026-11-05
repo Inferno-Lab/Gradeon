@@ -9,6 +9,7 @@ import { hashPassword, seal } from '@gradeon/security';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createApp } from '../src/app.js';
 import { loadEnv } from '../src/env.js';
+import { REGISTRY } from '../src/tenancy/tenant.js';
 
 export const SECRET = 'test-secret-key-for-sealing-0123456789';
 
@@ -23,6 +24,8 @@ export interface Harness {
   /** Writes a school's settings straight into its database, as the console does (schools cannot). */
   setSettings: (changes: Record<string, unknown>, slug?: string) => Promise<void>;
   addSchool: (slug: string, o: { plan: string; data: 'demo' | 'empty'; demoMode?: boolean; status?: string }) => Promise<void>;
+  /** Changes a school's entitlement in the registry as the console does (fields given replace the stored ones) and drops the API's cached copy. */
+  entitle: (patch: Record<string, unknown>, slug?: string) => Promise<void>;
 }
 
 export async function startHarness(port?: number): Promise<Harness> {
@@ -99,8 +102,12 @@ export async function startHarness(port?: number): Promise<Harness> {
     await pool.end();
     await new Promise((r) => setTimeout(r, 5_100)); // the API caches a school's settings for five seconds
   };
+  const entitle: Harness['entitle'] = async (patch, school = slug) => {
+    await registry.query('update schools set entitlement = entitlement || $2::jsonb where slug = $1', [school, JSON.stringify(patch)]);
+    app.get<{ invalidate: (s?: string) => void }>(REGISTRY).invalidate(school);
+  };
   return {
-    app, server, registry, slug, call, login, addSchool, setSettings,
+    app, server, registry, slug, call, login, addSchool, setSettings, entitle,
     close: async () => { await app.close(); await registry.end(); await server.stop(); },
   };
 }

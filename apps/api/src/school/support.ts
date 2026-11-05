@@ -89,6 +89,11 @@ export class Messenger {
   async notify(t: TenantCtx, key: string, who: { to: string; email?: string | null; vars: Record<string, string | number> }[]): Promise<number> {
     const ev = MESSAGE_EVENTS.find((e) => e.key === key);
     if (!ev) throw new Error(`Unknown message ${key}`);
+    // A school without the module or feature a message belongs to never gets it (fee reminders without Fees, and so on).
+    if (ev.needs) {
+      const cfg = await this.settings.effective(t);
+      if (!cfg.modules.includes(ev.needs) && !cfg.features.includes(ev.needs)) return 0;
+    }
     const doc = (await this.settings.doc(t)).values;
     const rule = ((doc['notify.rules'] as Record<string, { push: boolean; sms: boolean; email: boolean }> | undefined) ?? {})[key] ?? ev.defaults;
     const custom = ((doc['templates.messages'] as Record<string, string> | undefined) ?? {})[key];

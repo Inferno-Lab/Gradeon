@@ -56,6 +56,7 @@ export function StudentsView({ v }: { v: any }) {
             <div className="v">{v.sum.inView}</div>
             <div className="s">of {v.sum.total}</div>
           </div>
+          {v.has.attendance && (
           <div className="sm">
             <span className="l">Present {v.sum.dayWord}</span>
             <div className="v">
@@ -66,6 +67,8 @@ export function StudentsView({ v }: { v: any }) {
               <span className="tr up">+{v.sum.since}</span>since 09:00
             </div>
           </div>
+          )}
+          {v.has.fees && (
           <div className="sm">
             <span className="l">Fees overdue</span>
             <div className="v">
@@ -76,6 +79,8 @@ export function StudentsView({ v }: { v: any }) {
               <span className="tr dn">{v.sum.families}</span>this term
             </div>
           </div>
+          )}
+          {v.has.attendance && (
           <div className="sm">
             <span className="l">Average attendance</span>
             <div className="v">
@@ -86,6 +91,7 @@ export function StudentsView({ v }: { v: any }) {
               <span className={`tr ${v.sum.deltaCls}`}>{v.sum.delta}</span>vs the 12 days before
             </div>
           </div>
+          )}
         </section>
         <section className="tcard rise" style={{ "--d": ".15s" } as CSSProperties} aria-label="Students table">
           <div className="tcap">
@@ -253,12 +259,14 @@ export function StudentsView({ v }: { v: any }) {
           </svg>
           Invite to app
         </button>
+        {v.has.fees && (
         <button className="bk" onClick={v.bulkFee}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
           </svg>
           Assign fee
         </button>
+        )}
         <button className="bk" onClick={v.bulkExport}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path className="i" d="M12 4v11M7 10l5 5 5-5M5 20h14"></path>
