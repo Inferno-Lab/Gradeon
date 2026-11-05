@@ -33,7 +33,6 @@ const POSITIVE_TTL_MS = 15_000;
 const NEGATIVE_TTL_MS = 5_000;
 
 /** Read access to the school registry for the school API. The console API uses the same database with full rights. */
-const PG_OPTIONS = '-c statement_timeout=15000 -c idle_in_transaction_session_timeout=10000';
 
 export class Registry {
   readonly pool: pg.Pool;
@@ -47,7 +46,6 @@ export class Registry {
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
       application_name: 'gradeon-registry',
-      options: PG_OPTIONS,
     });
     this.db = drizzle(this.pool);
   }
@@ -100,10 +98,13 @@ interface Entry {
  * Keeps a bounded set of pools, one per school database, closing the least recently used.
  * Hundreds of schools share a few connections: each pool is small and idle pools are dropped.
  */
-/** 40 schools × 5 connections = 200, plus the registry pool. Stay under the server's max_connections. */
+/**
+ * 20 schools × 3 connections = 60, plus the registry pool: fits a 100-connection database. Behind a connection pooler (PgBouncer,
+ * or Neon's "-pooler" address) raise TENANT_MAX_POOLS so busy schools stop closing and reopening pools. Limits are set per database (school 0007).
+ */
 export function poolManagerFromEnv(source: NodeJS.ProcessEnv = process.env): PoolManager {
-  const maxPools = Number(source.TENANT_MAX_POOLS) || 40;
-  const perPool = Number(source.TENANT_PER_POOL) || 5;
+  const maxPools = Number(source.TENANT_MAX_POOLS) || 20;
+  const perPool = Number(source.TENANT_PER_POOL) || 3;
   return new PoolManager({ maxPools, perPool });
 }
 
@@ -125,11 +126,10 @@ export class PoolManager {
     if (hit) void hit.pool.end().catch(() => undefined);
     const pool = new pg.Pool({
       connectionString: url,
-      max: this.opts.perPool ?? 5,
+      max: this.opts.perPool ?? 3,
       idleTimeoutMillis: 20_000,
       connectionTimeoutMillis: 15_000,
       application_name: `gradeon-${slug}`.slice(0, 63),
-      options: PG_OPTIONS,
     });
     pool.on('error', () => undefined); // a dropped idle connection must not crash the process
     this.pools.set(slug, { pool, lastUsed: Date.now(), url });
@@ -148,7 +148,7 @@ export class PoolManager {
   }
 
   private evictOverflow(): void {
-    const max = this.opts.maxPools ?? 40;
+    const max = this.opts.maxPools ?? 20;
     while (this.pools.size > max) {
       const oldest = [...this.pools.entries()].sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
       if (!oldest) break;

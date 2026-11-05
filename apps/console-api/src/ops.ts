@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Logger, Pa
 import { POOLS } from './tokens.js';
 import { MODULES } from '@gradeon/config-engine';
 import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
-import { migrate, newId, pg } from '@gradeon/db';
+import { migrate, newId, pg, scheduleJob } from '@gradeon/db';
 import { topUpDemo } from '@gradeon/db/seed';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { hashPassword, signJwt, unseal } from '@gradeon/security';
@@ -12,6 +12,7 @@ import { ENV, type Env } from './env.js';
 import { adminUrlFor } from './provisioning/drivers.js';
 import { Blueprints } from './provisioning/provisioner.js';
 import { Wizard } from './wizard.js';
+import { Actions } from './actions.js';
 import { Policy } from './policy.js';
 import { Releases } from './releases.js';
 import { Schools } from './schools.js';
@@ -22,7 +23,7 @@ type SchoolRecord = typeof reg.schools.$inferSelect;
 @Injectable()
 export class Health implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly log = new Logger('Health');
-  private timer: NodeJS.Timeout | undefined;
+  private stop: (() => void) | undefined;
   private readonly misses = new Map<string, number>();
 
   constructor(
@@ -33,13 +34,11 @@ export class Health implements OnApplicationBootstrap, OnApplicationShutdown {
 
   onApplicationBootstrap(): void {
     if (this.env.NODE_ENV === 'test' || !this.env.PROBE_SECONDS) return;
-    this.timer = setInterval(() => void this.probeAll(), this.env.PROBE_SECONDS * 1000);
-    this.timer.unref();
-    setTimeout(() => void this.probeAll(), 3000).unref();
+    this.stop = scheduleJob(this.db.pool, 'probes', this.env.PROBE_SECONDS * 1000, () => this.probeAll(), () => undefined);
   }
 
   onApplicationShutdown(): void {
-    if (this.timer) clearInterval(this.timer);
+    this.stop?.();
   }
 
   async probeAll(): Promise<number> {
@@ -215,6 +214,7 @@ export class Bootstrap implements OnApplicationBootstrap {
     private readonly wizard: Wizard,
     private readonly blueprints: Blueprints,
     private readonly policy: Policy,
+    private readonly actions: Actions,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -237,23 +237,32 @@ export class Bootstrap implements OnApplicationBootstrap {
       this.log.log(`created the first super admin ${this.env.BOOTSTRAP_EMAIL}`);
     }
     await this.policy.get();
-    if (this.env.SEED_DEMO === 'true') {
-      void this.seedDemo().catch((err) => this.log.error(`could not create the demo school: ${(err as Error).message}`));
-      void this.upgradeDemo().catch((err) => this.log.error(`could not bring the demo school up to date: ${(err as Error).message}`));
-    }
+    await this.upgradeSchools();
+    if (this.env.SEED_DEMO === 'true') void this.seedDemo().catch((err) => this.log.error(`could not create the demo school: ${(err as Error).message}`));
   }
 
-  /** The demo school lives on every redeploy, so it takes new migrations and the sample content of new modules by itself. Real schools wait for a release. */
-  async upgradeDemo(): Promise<void> {
-    const row = (await this.db.pool.query<{ db_url_sealed: string | null }>("select db_url_sealed from schools where slug = 'greenfield' and status = 'live' and deleted_at is null")).rows[0];
-    if (!row?.db_url_sealed) return;
-    const pool = new pg.Pool({ connectionString: unseal(row.db_url_sealed, this.env.SECRETS_KEY), max: 2, connectionTimeoutMillis: 20_000 });
-    try {
-      const applied = await migrate(pool, 'school');
-      const filled = await topUpDemo(pool);
-      if (applied.length || filled.length) this.log.log(`demo school: ${applied.length} migrations applied, sample content added for ${filled.join(', ') || 'nothing'}`);
-    } finally {
-      await pool.end();
+  /**
+   * Every school runs this process's code, so every school's database is brought up to date before the server takes requests
+   * (Nest awaits this hook before listening). Migrations are expand-first, so the previous code still running during a deploy is safe.
+   * A school that fails is logged in the migration runs and skipped, so one broken database cannot keep the others offline.
+   */
+  async upgradeSchools(): Promise<void> {
+    const { rows } = await this.db.pool.query<{ id: string; slug: string; db_url_sealed: string }>(
+      'select id, slug, db_url_sealed from schools where deleted_at is null and db_url_sealed is not null order by slug');
+    for (const s of rows) {
+      const started = Date.now();
+      const pool = new pg.Pool({ connectionString: unseal(s.db_url_sealed, this.env.SECRETS_KEY), max: 2, connectionTimeoutMillis: 20_000 });
+      try {
+        const applied = await migrate(pool, 'school');
+        for (const m of applied) await this.actions.recordMigration(m.tag, m.kind, s.id, 'applied', m.ms, null);
+        const filled = this.env.SEED_DEMO === 'true' && s.slug === 'greenfield' ? await topUpDemo(pool) : [];
+        if (applied.length || filled.length) this.log.log(`${s.slug}: ${applied.length} migrations applied${filled.length ? `, sample content added for ${filled.join(', ')}` : ''}`);
+      } catch (err) {
+        this.log.error(`${s.slug}: could not bring the database up to date: ${(err as Error).message}`);
+        await this.actions.recordMigration('start-up', 'expand', s.id, 'failed', Date.now() - started, (err as Error).message.slice(0, 500)).catch(() => undefined);
+      } finally {
+        await pool.end();
+      }
     }
   }
 
