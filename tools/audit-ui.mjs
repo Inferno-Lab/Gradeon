@@ -31,7 +31,7 @@ async function consoleSession() {
   return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
-const adminPaths = ['', '/students', '/timetable', '/settings', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/design', '/nope'];
+const adminPaths = ['', '/students', '/timetable', '/settings', '/setup', '/moving-in', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/design', '/nope'];
 const jobs = [];
 if (only !== 'console') {
   const key = await adminSession();

@@ -34,7 +34,11 @@ const DEFS: { name: string; items: Def[] }[] = [
     { id: 'msg', label: 'Messages', icon: 'msg', keys: 'G G', to: '/messages', module: 'chat' },
     { id: 'evt', label: 'Events', icon: 'evt', keys: 'G V', to: '/events', module: 'events' },
   ] },
-  { name: 'School', items: [{ id: 'set', label: 'School setup', icon: 'set', keys: 'G ,', to: '/settings', module: 'core' }] },
+  { name: 'School', items: [
+    { id: 'setup', label: 'Classes and calendar', icon: 'cells', keys: 'G Y', to: '/setup', module: 'core' },
+    { id: 'move', label: 'Moving in', icon: 'mig', keys: 'G U', to: '/moving-in', module: 'core' },
+    { id: 'set', label: 'School setup', icon: 'set', keys: 'G ,', to: '/settings', module: 'core' },
+  ] },
 ];
 
 export const PAGE_TITLES: Record<string, string> = Object.fromEntries(DEFS.flatMap((g) => g.items.map((i) => [i.to.replace('/p/', ''), i.label])));

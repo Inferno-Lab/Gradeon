@@ -10,10 +10,11 @@ import { useChrome } from '../../app/useChrome';
 import { ago, count, rupees, statusOf, when } from '../../app/format';
 import { SchoolView } from './school.view';
 import { ConfigTab } from './ConfigTab';
+import { MigrationTab } from './MigrationTab';
 import { RolesTab } from './RolesTab';
 import { PlanEditor } from '../modules/ModulesPage';
 
-const TABS = ['Overview', 'Entitlements', 'Configuration', 'Roles', 'Versions', 'Health', 'Audit'];
+const TABS = ['Overview', 'Entitlements', 'Configuration', 'Roles', 'Migration', 'Versions', 'Health', 'Audit'];
 const DESC: Record<string, string> = {
   database: 'Its own database with its own role and password',
   'keys-storage': 'Encryption key and file space',
@@ -114,9 +115,10 @@ export function SchoolPage() {
   const extra: ReactNode = tab === 1 ? <PlanEditor key={d.entitlement.version} d={d} say={say} />
     : tab === 2 ? <ConfigTab schoolId={d.id} say={say} />
       : tab === 3 ? <RolesTab schoolId={d.id} say={say} />
-        : tab === 4 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
-          : tab === 5 ? <Health d={d} onAct={(a, p) => act.mutate({ action: a, params: p })} busy={act.isPending} />
-            : tab === 6 ? <Audit id={id} /> : null;
+        : tab === 4 ? <MigrationTab schoolId={d.id} say={say} />
+          : tab === 5 ? <Versions d={d} onAct={(a, p, dry) => act.mutate({ action: a, params: p, dryRun: dry })} busy={act.isPending} />
+            : tab === 6 ? <Health d={d} onAct={(a, p) => act.mutate({ action: a, params: p })} busy={act.isPending} />
+              : tab === 7 ? <Audit id={id} /> : null;
 
   const v = {
     ...chrome, tab, extra, toast: toast?.text, toastTone: toast?.tone,

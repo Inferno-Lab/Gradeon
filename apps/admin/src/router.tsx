@@ -75,6 +75,8 @@ const routeTree = root.addChildren([
     page('/messages', () => import('./pages/messages/MessagesPage'), 'MessagesPage'),
     page('/events', () => import('./pages/events/EventsPage'), 'EventsPage'),
     page('/settings', () => import('./pages/settings/SettingsPage'), 'SettingsPage'),
+    page('/setup', () => import('./pages/setup/SetupPage'), 'SetupPage'),
+    page('/moving-in', () => import('./pages/moving-in/MovingInPage'), 'MovingInPage'),
     page('/p/$name', () => import('./pages/status/StatusPages'), 'ComingSoonPage'),
     page('/design', () => import('./design/DesignPage'), 'DesignPage'),
   ]),

@@ -95,10 +95,11 @@ export interface ContactReveal {
   email: string | null;
 }
 
-export const StudentImport = z.object({ csv: z.string().min(10).max(2_000_000) });
+export const StudentImport = z.object({ csv: z.string().min(10).max(25_000_000) });
 export type StudentImport = z.infer<typeof StudentImport>;
 export interface ImportResult {
   created: number;
+  updated: number;
   skipped: number;
   errors: { line: number; message: string }[];
 }
