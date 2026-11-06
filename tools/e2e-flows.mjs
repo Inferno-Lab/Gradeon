@@ -604,6 +604,77 @@ await flow('admin: a dropdown lists every option above the cards and a bar has a
   await expectVisible(p.getByRole('tooltip').getByText(/collected/), 'the tooltip on a fee bar');
 });
 
+await flow('admin: classes and calendar add a holiday, refuse a bad one, and bill a fee to its grade', { storage: adminStore }, async (p) => {
+  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Academic years' }), 'the years card');
+  await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
+  await p.getByLabel('Holiday', { exact: true }).fill('E2E founders day');
+  await p.getByLabel('From', { exact: true }).fill('2027-01-12');
+  await p.getByLabel('To (optional)').fill('2027-01-10');
+  await p.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  await expectVisible(p.getByRole('dialog').getByText(/ends before it starts/), 'the date error');
+  await p.getByLabel('To (optional)').fill('');
+  await p.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  await expectVisible(p.getByText('E2E founders day was saved.'), 'the saved toast');
+  await p.getByRole('button', { name: 'Open E2E founders day' }).click();
+  await p.getByRole('button', { name: 'Remove' }).click();
+  await expectVisible(p.getByText('E2E founders day was removed.'), 'the removed toast');
+  await p.getByRole('tab', { name: 'Classes' }).click();
+  await expectVisible(p.getByRole('button', { name: 'Open 8 A' }), 'class 8 A');
+  await p.getByRole('tab', { name: 'Fees' }).click();
+  await p.locator('section', { has: p.getByRole('heading', { name: 'Fee structures' }) }).getByRole('button', { name: 'Add' }).click();
+  await p.getByLabel('Grade (blank for all)').fill('8');
+  await p.getByLabel('Fee', { exact: true }).fill('E2E science fair');
+  await p.getByLabel('Amount', { exact: true }).fill('750');
+  await p.getByLabel('Due on', { exact: true }).fill('2026-12-15');
+  await p.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  await expectVisible(p.getByText('E2E science fair was saved.'), 'the fee saved');
+  await p.getByRole('button', { name: 'Open E2E science fair' }).click();
+  await p.getByRole('button', { name: 'Add to students’ fees' }).click();
+  await expectVisible(p.getByText(/E2E science fair was added to \d+ students’ fees/), 'the billed toast');
+});
+
+await flow('admin: moving in sends a file to Gradeon, invites a class and prints its letters', { storage: adminStore }, async (p) => {
+  await p.goto(A('/moving-in'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Send us your files' }), 'the files card');
+  await p.locator('input[type=file]').setInputFiles({ name: 'e2e-subjects.csv', mimeType: 'text/csv', buffer: Buffer.from('Subject,Periods a week\nE2E Robotics,2\nE2E Dance,x\n') });
+  await p.getByLabel('What is in it (optional)').fill('Two new subjects');
+  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
+  await expectVisible(p.getByText('Sent to Gradeon. The team will import it and tell you.'), 'the sent toast');
+  await expectVisible(p.getByText('e2e-subjects.csv'), 'the file in the list');
+  const row = p.locator('.rw', { hasText: '8 A' });
+  if (await row.getByRole('button', { name: 'Invite' }).count()) {
+    await row.getByRole('button', { name: 'Invite' }).click();
+    await expectVisible(p.getByText(/Invited \d+ famil/), 'the invited toast');
+  }
+  await p.evaluate(() => { window.print = () => undefined; });
+  const [letters] = await Promise.all([p.waitForEvent('popup'), row.getByRole('button', { name: 'Letters' }).click()]);
+  await letters.waitForFunction(() => document.querySelectorAll('section').length > 0);
+  if (!(await letters.content()).includes('phone number ending')) throw new Error('the letters do not say which phone to sign in with');
+  await letters.close();
+});
+
+await flow('console: migration imports the school’s file after fixing a row in the grid, then undoes it', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
+  await p.getByRole('tab', { name: 'Migration' }).click();
+  await expectVisible(p.getByText('Ready to go live'), 'the readiness card');
+  const file = p.locator('.rw', { hasText: 'e2e-subjects.csv' });
+  await expectVisible(file, 'the file the school sent');
+  await pick(p, p, 'What to import', /Subjects/);
+  await file.getByRole('button', { name: 'Open' }).click();
+  await expectVisible(p.getByText('The school’s own sheet'), 'the source');
+  await expectVisible(p.getByText('1 with problems'), 'the bad row counted');
+  const cell = p.getByLabel('Line 3, Periods a week');
+  await cell.fill('3');
+  await cell.blur();
+  await expectVisible(p.getByText('0 with problems'), 'the row fixed');
+  await p.getByRole('button', { name: /^Import 2 rows/ }).click();
+  await expectVisible(p.getByText(/Imported subjects: 2 added/), 'the imported toast');
+  await expectVisible(p.locator('.rw', { hasText: 'e2e-subjects.csv' }).getByText('Imported'), 'the file marked imported');
+  await p.getByRole('button', { name: 'Undo' }).first().click();
+  await expectVisible(p.getByText(/Undone\./), 'the undone toast');
+});
+
 await browser.close();
 console.log(`\n${passed} flows passed${errors.length ? `, ${errors.length} failed:\n - ${errors.join('\n - ')}` : ''}`);
 process.exit(errors.length ? 1 : 0);
