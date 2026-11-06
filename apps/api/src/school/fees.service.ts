@@ -94,8 +94,10 @@ export class FeesService {
     try {
       await client.query('begin');
       await client.query("select pg_advisory_xact_lock(hashtext('receipts'))");
-      const n = Number((await client.query<{ n: string }>('select count(*) n from payments where starts_with(receipt_no, $1)', [prefix])).rows[0]!.n);
-      receiptNo = `${prefix}${String(start + n).padStart(5, '0')}`;
+      // After the highest number in the series, not start + count: receipts imported from the old system keep their own numbers.
+      const last = (await client.query<{ n: string | null }>(
+        "select max(substring(receipt_no from char_length($1) + 1)::bigint) n from payments where starts_with(receipt_no, $1) and substring(receipt_no from char_length($1) + 1) ~ '^[0-9]+$'", [prefix])).rows[0]!.n;
+      receiptNo = `${prefix}${String(Math.max(start, last === null ? start : Number(last) + 1)).padStart(5, '0')}`;
       await client.query('insert into payments (id, invoice_id, amount, method, reference, receipt_no, paid_on, recorded_by) values ($1,$2,$3,$4,$5,$6,$7,$8)',
         [newId('pay'), inv.id, body.amount, body.method, body.reference ?? null, receiptNo, istToday(), user.id]);
       await client.query('commit');
