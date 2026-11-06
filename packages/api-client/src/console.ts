@@ -1,8 +1,11 @@
 import type {
   ActionRequest, ActionRow, AuditRow, BackupRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
-  WizardPayload, WizardReview, EntitlementRow } from '@gradeon/contracts';
+  WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, UploadRow } from '@gradeon/contracts';
 import type { Http } from './http';
+
+/** What the console sends to preview or import: the file name may be left out. */
+export type ImportInputIn = Omit<ImportInput, 'fileName'> & { fileName?: string };
 
 export interface CellRow { key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean }
 export interface CatalogDoc { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean; core: boolean; state: 'live' | 'beta' | 'planned'; addOnPerStudentYear: number; features: { key: string; name: string; state: 'live' | 'beta' | 'planned' }[] }[]; roleTemplates: { key: string; name: string; description: string; permissions: string[] }[] }
@@ -18,6 +21,17 @@ export function consoleApi(h: Http) {
     fleet: () => h.get<FleetSummary>(`${base}/fleet`),
     errors: (days = 7) => h.get<ErrorGroup[]>(`${base}/errors`, { days }),
     backups: (schoolId: string) => h.get<BackupRow[]>(`${base}/schools/${schoolId}/backups`),
+    migration: {
+      view: (schoolId: string) => h.get<MigrationView>(`${base}/schools/${schoolId}/import`),
+      template: (schoolId: string, kind: string) => h.text(`${base}/schools/${schoolId}/import/template/${kind}`),
+      upload: (schoolId: string, uploadId: string) => h.get<{ fileName: string; content: string }>(`${base}/schools/${schoolId}/import/uploads/${uploadId}`),
+      setAside: (schoolId: string, uploadId: string) => h.post<UploadRow[]>(`${base}/schools/${schoolId}/import/uploads/${uploadId}/set-aside`),
+      preview: (schoolId: string, b: ImportInputIn) => h.post<ImportPreview>(`${base}/schools/${schoolId}/import/preview`, b),
+      commit: (schoolId: string, b: ImportInputIn) => h.post<ImportBatchRow>(`${base}/schools/${schoolId}/import/commit`, b),
+      undo: (schoolId: string, batchId: string) => h.post<ImportBatchRow[]>(`${base}/schools/${schoolId}/import/batches/${batchId}/undo`),
+      exportAll: (schoolId: string) => h.blob(`${base}/schools/${schoolId}/import/export`),
+      sample: (schoolId: string, students: number) => h.post<ImportBatchRow[]>(`${base}/schools/${schoolId}/import/sample`, { students }),
+    },
     config: {
       get: (schoolId: string) => h.get<SchoolConfig>(`${base}/schools/${schoolId}/config`),
       patch: (schoolId: string, b: ConfigPatch) => h.patch<SchoolConfig | { pending: true; actionId: string }>(`${base}/schools/${schoolId}/config`, b),
