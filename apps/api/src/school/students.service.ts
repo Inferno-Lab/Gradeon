@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
+import { commitImport, newId, previewImport } from '@gradeon/db';
 import {
   addDays, dayLabel, initials, istToday, latestSchoolDay, schoolDaysEnding,
   type AssignFee, type AttendanceStatus, type ContactReveal, type FeeStatus, type ImportResult, type MessageRequest,
@@ -295,35 +295,19 @@ export class StudentsService {
     return this.detail(t, id);
   }
 
+  /** The school's own sheet of students, through the same engine as Migration: bad lines are reported, the rest go in as one batch. */
   async importCsv(t: TenantCtx, csv: string, user: { id: string; name: string }): Promise<ImportResult> {
-    const lines = csv.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim());
-    const header = (lines.shift() ?? '').split(',').map((h) => h.trim().toLowerCase());
-    const col = (n: string) => header.indexOf(n);
-    for (const need of ['name', 'class', 'dob', 'guardian', 'phone']) {
-      if (col(need) < 0) throw new ApiError('validation', `The first row must name the columns: name, class, dob, guardian, phone. “${need}” is missing.`);
-    }
-    const classes = await t.pool.query<{ id: string; name: string }>('select id, name from classes');
-    const byName = new Map(classes.rows.map((c) => [c.name.replace(/\s+/g, '').toLowerCase(), c.id]));
-    const result: ImportResult = { created: 0, skipped: 0, errors: [] };
-    for (let i = 0; i < lines.length; i++) {
-      const cells = lines[i]!.split(',').map((c) => c.trim());
-      const classId = byName.get((cells[col('class')] ?? '').replace(/\s+/g, '').toLowerCase());
-      const dob = cells[col('dob')] ?? '';
-      const name = cells[col('name')] ?? '';
-      const phone = cells[col('phone')] ?? '';
-      const problem = !name ? 'Name is empty.' : !classId ? `Class “${cells[col('class')] ?? ''}” does not exist.` : !/^\d{4}-\d{2}-\d{2}$/.test(dob) ? 'Date of birth should look like 2012-04-18.'
-        : phone.replace(/\D/g, '').length < 10 ? 'The guardian’s phone number is missing or too short.' : null;
-      if (problem) { result.skipped++; result.errors.push({ line: i + 2, message: problem }); continue; }
-      try {
-        await this.create(t, { name, classId: classId!, dob, guardianName: cells[col('guardian')] || 'Parent or guardian', guardianPhone: phone, rollNo: col('roll') >= 0 ? cells[col('roll')] : undefined }, user);
-        result.created++;
-      } catch (err) {
-        result.skipped++;
-        result.errors.push({ line: i + 2, message: err instanceof ApiError ? err.message : 'Could not be added.' });
-        if (err instanceof ApiError && (err.getResponse() as { code?: string }).code === 'locked') break;
-      }
-    }
-    return result;
+    const input = { kind: 'students', csv, fileName: 'Students page' };
+    const p = await previewImport(t.pool, input);
+    if (p.missing.length) throw new ApiError('validation', `The first row must name the columns. Nothing is matched to ${p.missing.join(', ')}.`);
+    const limit = t.info.entitlement.limits.students;
+    const count = Number((await t.pool.query<{ n: string }>('select count(*) n from students')).rows[0]!.n);
+    if (count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} students and this sheet would make ${count + p.counts.create}. Ask Gradeon to raise the limit.`);
+    const errors = p.rows.filter((r) => r.errors.length).map((r) => ({ line: r.line, message: r.errors.join(' ') }));
+    if (p.counts.create + p.counts.update === 0) return { created: 0, updated: 0, skipped: errors.length, errors };
+    const batch = await commitImport(t.pool, input, user.name);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'students.imported', entity: 'student', detail: { created: batch.created, updated: batch.updated, skipped: batch.skipped } });
+    return { created: batch.created, updated: batch.updated, skipped: errors.length, errors };
   }
 
   async exportCsv(t: TenantCtx, ids: string[] | null): Promise<string> {
@@ -350,6 +334,8 @@ export class StudentsService {
       `select distinct on (g.phone) g.phone, s.name from student_guardians sg join guardians g on g.id = sg.guardian_id join students s on s.id = sg.student_id
        where sg.student_id = any($1) and sg.is_primary and g.phone is not null order by g.phone, s.name`, [ids]);
     const sent = await this.messenger.notify(t, 'family.invite', rows.map((r) => ({ to: r.phone, vars: { student: r.name } })));
+    await t.pool.query(`update users set invited_at = coalesce(invited_at, now()) where id in
+      (select g.user_id from student_guardians sg join guardians g on g.id = sg.guardian_id where sg.student_id = any($1) and sg.is_primary)`, [ids]);
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'family.invited', entity: 'student', detail: { families: sent } });
     return { sent };
   }

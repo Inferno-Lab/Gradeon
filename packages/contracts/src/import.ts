@@ -41,7 +41,7 @@ export const IMPORT_KINDS: ImportKind[] = [
   { key: 'classes', label: 'Classes and sections', blurb: 'Every class and section, with its class teacher.', module: 'core', matchOn: ['class'],
     columns: [req('class', 'Class', '8 A', ['class name', 'class-section', 'batch', 'standard division']), c('grade', 'Grade', '8', { aliases: ['standard', 'std'] }), c('section', 'Section', 'A', { aliases: ['division', 'div'] }), c('class_teacher', 'Class teacher email', 'kavita@school.in', { aliases: ['class teacher', 'teacher email'] })] },
   { key: 'students', label: 'Students and families', blurb: 'Students with their guardians; brothers and sisters are joined by the guardian’s phone.', module: 'core', matchOn: ['admission_no'],
-    columns: [req('admission_no', 'Admission number', '2019/0412', ['admission no', 'admn no', 'adm no', 'sr no', 'scholar no', 'gr no']), req('name', 'Student name', 'Aarav Sharma', ['student name', 'full name', 'name of student']), req('class', 'Class', '8 A', ['class name', 'class-section', 'batch', 'standard division']), c('roll_no', 'Roll number', '12', { aliases: ['roll', 'roll no'] }), req('dob', 'Date of birth', '2012-04-18', ['date of birth', 'birth date', 'd.o.b']),
+    columns: [c('admission_no', 'Admission number', '2019/0412', { aliases: ['admission no', 'admn no', 'adm no', 'sr no', 'scholar no', 'gr no'] }), req('name', 'Student name', 'Aarav Sharma', ['student name', 'full name', 'name of student']), req('class', 'Class', '8 A', ['class name', 'class-section', 'batch', 'standard division']), c('roll_no', 'Roll number', '12', { aliases: ['roll', 'roll no'] }), req('dob', 'Date of birth', '2012-04-18', ['date of birth', 'birth date', 'd.o.b']),
       c('blood_group', 'Blood group', 'B+'), c('house', 'House', 'Emerald'), c('address', 'Address', '42 Baner Road, Pune'), c('admitted_on', 'Admitted on', '2019-06-10', { aliases: ['admission date', 'date of admission', 'doa'] }), c('status', 'Status', 'active'),
       req('guardian_name', 'Guardian name', 'Priya Sharma', ['father name', "father's name", 'parent name', 'mother name', 'guardian']), req('guardian_phone', 'Guardian phone', '9822011002', ['father mobile', 'parent mobile', 'mobile', 'phone', 'contact no', 'sms mobile']), c('guardian_email', 'Guardian email', 'priya@example.com', { aliases: ['parent email', 'father email', 'email'] }), c('relation', 'Relation', 'Mother'),
       c('guardian2_name', 'Second guardian', 'Rohan Sharma', { aliases: ['mother name', "mother's name"] }), c('guardian2_phone', 'Second guardian phone', '9822011003', { aliases: ['mother mobile'] }), c('guardian2_relation', 'Second relation', 'Father')] },
@@ -72,7 +72,7 @@ export function importKind(key: string): ImportKind | undefined {
 /** The table of a file once read: its header row and data rows, plus how its columns map onto the kind's columns. */
 export const ImportInput = z.object({
   kind: z.string().min(1).max(40),
-  /** CSV text (a sheet saved as CSV, or another system's export) ... */
+  /** CSV text (a sheet saved as CSV, or another system's export), or the file as a data URL (an .xlsx straight from Excel or Sheets) ... */
   csv: z.string().max(25_000_000).optional(),
   /** ... or rows typed into the quick-entry grid, keyed by column. */
   rows: z.array(z.record(z.string(), z.string().max(2000))).max(20_000).optional(),
@@ -130,3 +130,40 @@ export const UploadCreate = z.object({
 export type UploadCreate = z.infer<typeof UploadCreate>;
 
 export interface UploadRow { id: string; fileName: string; note: string; rows: number; uploadedBy: string; at: string; status: 'new' | 'imported' | 'set_aside'; batchId: string | null }
+
+/** What the school edits itself in Classes and calendar: the same kinds and columns as the importers, behind a console lock each. */
+export const SETUP_KINDS = [
+  { key: 'years', lock: 'calendar.schoolEdits' }, { key: 'terms', lock: 'calendar.schoolEdits' }, { key: 'holidays', lock: 'calendar.schoolEdits' },
+  { key: 'classes', lock: 'classes.schoolEdits' }, { key: 'subjects', lock: 'classes.schoolEdits' }, { key: 'periods', lock: 'classes.schoolEdits' },
+  { key: 'fee_structures', lock: 'feeStructures.schoolEdits' },
+] as const;
+
+/** One kind's rows in the template's columns, plus the row id for removing it. */
+export interface SetupSection { kind: string; label: string; locked: boolean; columns: ImportColumn[]; rows: (Record<string, string> & { id: string })[] }
+
+export const SetupSave = z.object({ row: z.record(z.string(), z.string().max(500)) });
+export type SetupSave = z.infer<typeof SetupSave>;
+
+/** Go-live for one class: how many families there are, how many were invited to the app and how many have signed in. */
+export interface ActivationClass { classId: string; className: string; students: number; families: number; invited: number; signedIn: number }
+export interface Activation {
+  staff: { total: number; invited: number; signedIn: number };
+  families: { total: number; invited: number; signedIn: number };
+  classes: ActivationClass[];
+}
+export const FamilyInvite = z.object({ classId: z.string().max(60).optional() });
+export type FamilyInvite = z.infer<typeof FamilyInvite>;
+/** One letter home: which child, and the last digits of the phone the family signs in with (letters travel in school bags). */
+export interface LetterRow { studentId: string; student: string; admissionNo: string; className: string; guardian: string; phoneEnd: string }
+
+/** The console's Migration workspace for one school: what can be imported, what was, what the school sent, and how ready it is to go live. */
+export interface MigrationView {
+  kinds: ImportKind[];
+  batches: ImportBatchRow[];
+  uploads: UploadRow[];
+  readiness: { key: string; label: string; done: boolean; detail: string }[];
+  students: number;
+  studentLimit: number;
+}
+export const SampleLoad = z.object({ students: z.number().int().min(10).max(3000) });
+export type SampleLoad = z.infer<typeof SampleLoad>;

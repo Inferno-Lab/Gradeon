@@ -1,4 +1,5 @@
 import { mkdtempSync } from 'node:fs';
+import { crc32, deflateRawSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import pg from 'pg';
@@ -7,7 +8,7 @@ import { ensureDatabase, startDevPostgres, type DevPostgres } from '../dev.js';
 import { migrate } from '../migrate.js';
 import { seedSchool } from '../seed/greenfield.js';
 import { commitImport, exportAll, listBatches, previewImport, undoBatch } from './engine.js';
-import { parseCsv } from './files.js';
+import { parseCsv, readTable } from './files.js';
 import { classKey, isoDay } from './kinds.js';
 import { sampleSchool } from './sample.js';
 
@@ -37,6 +38,20 @@ describe('reading what people type', () => {
   it('reads quoted CSV with commas, line breaks and a semicolon separator', () => {
     expect(parseCsv('﻿name,address\r\n"Rao, Ira","1 Main Rd\nPune"\r\n')).toEqual([['name', 'address'], ['Rao, Ira', '1 Main Rd\nPune']]);
     expect(parseCsv('a;b\n1;2')).toEqual([['a', 'b'], ['1', '2']]);
+  });
+  it('reads an .xlsx as Excel saves it: shared strings, dates and times by their format, the first sheet, gaps kept', () => {
+    const xlsx = deflatedZip({
+      'xl/workbook.xml': '<workbook><sheets><sheet name="Kids" sheetId="2" r:id="rId7"/><sheet name="Old" sheetId="1" r:id="rId1"/></sheets></workbook>',
+      'xl/_rels/workbook.xml.rels': '<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId7" Type="x" Target="worksheets/sheet3.xml"/></Relationships>',
+      'xl/sharedStrings.xml': '<sst><si><t>name</t></si><si><t>dob</t></si><si><r><t>Rao, </t></r><r><t xml:space="preserve">Ira &amp; co</t></r></si></sst>',
+      'xl/styles.xml': '<styleSheet><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><cellXfs count="3"><xf numFmtId="0"/><xf numFmtId="164" applyNumberFormat="1"/><xf numFmtId="20"/></cellXfs></styleSheet>',
+      'xl/worksheets/sheet1.xml': '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>wrong sheet</t></is></c></row></sheetData></worksheet>',
+      'xl/worksheets/sheet3.xml': '<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="D1" t="inlineStr"><is><t>start</t></is></c></row><row r="2" spans="1:4"/>'
+        + '<row r="3"><c r="A3" t="s"><v>2</v></c><c r="B3" s="1"><v>41017</v></c><c r="C3"><v>9822011002</v></c><c r="D3" s="2"><v>0.33333333333</v></c></row></sheetData></worksheet>',
+    });
+    expect(readTable(`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${xlsx.toString('base64')}`))
+      .toEqual([['name', 'dob', '', 'start'], ['Rao, Ira & co', '2012-04-18', '9822011002', '08:00']]);
+    expect(readTable(`data:text/csv;base64,${Buffer.from('a,b\n1,2').toString('base64')}`)).toEqual([['a', 'b'], ['1', '2']]);
   });
 });
 
@@ -117,4 +132,32 @@ describe('moving a school in', () => {
     expect(p.rows.filter((r) => r.errors.length)).toEqual([]);
     expect(p.counts).toMatchObject({ create: 0, update: school.expect.students });
   }, 60_000);
+
+  it('numbers new children from a sheet without admission numbers, and knows them again by name and birthday', async () => {
+    const csv = 'name,class,dob,guardian,phone\nNew Child,4 A,18/04/2017,Asha Kale,+91 98111 22233\n';
+    const first = await commitImport(pool, { kind: 'students', csv, fileName: 'new.csv' }, 'Office');
+    expect(first.created).toBe(1);
+    const no = (await pool.query<{ admission_no: string }>("select admission_no from students where name = 'New Child'")).rows[0]!.admission_no;
+    expect(no).toMatch(/^\d{4}\/0501$/);
+    const again = await previewImport(pool, { kind: 'students', csv, fileName: 'new.csv' });
+    expect(again.counts).toMatchObject({ create: 0, update: 1 });
+  }, 60_000);
 });
+
+/** A ZIP with deflated entries, the way Excel writes an .xlsx (the export's own ZIP is stored, so this covers the other path). */
+function deflatedZip(files: Record<string, string>): Buffer {
+  const parts: Buffer[] = [], dir: Buffer[] = [];
+  let offset = 0;
+  for (const [n, text] of Object.entries(files)) {
+    const name = Buffer.from(n), raw = Buffer.from(text), data = deflateRawSync(raw);
+    const local = Buffer.alloc(30), head = Buffer.alloc(46);
+    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(8, 8); local.writeUInt32LE(crc32(raw), 14); local.writeUInt32LE(data.length, 18); local.writeUInt32LE(raw.length, 22); local.writeUInt16LE(name.length, 26);
+    head.writeUInt32LE(0x02014b50, 0); head.writeUInt16LE(8, 10); head.writeUInt32LE(crc32(raw), 16); head.writeUInt32LE(data.length, 20); head.writeUInt32LE(raw.length, 24); head.writeUInt16LE(name.length, 28); head.writeUInt32LE(offset, 42);
+    parts.push(local, name, data);
+    dir.push(head, name);
+    offset += 30 + name.length + data.length;
+  }
+  const d = Buffer.concat(dir), end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(dir.length / 2, 8); end.writeUInt16LE(dir.length / 2, 10); end.writeUInt32LE(d.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...parts, d, end]);
+}

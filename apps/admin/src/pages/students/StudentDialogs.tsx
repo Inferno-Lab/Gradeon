@@ -71,7 +71,7 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
   const [csv, setCsv] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ created: number; skipped: number; errors: { line: number; message: string }[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: { line: number; message: string }[] } | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,21 +80,22 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
     try { setResult(await api.students.import(csv)); setBusy(false); } catch (x) { setBusy(false); setErr(messageOf(x)); shake.hit(); }
   };
   if (result) {
+    const done = () => onDone(result.created || result.updated ? `Imported ${result.created + result.updated} students` : '');
     return (
-      <Dialog title={result.created ? `${result.created} ${result.created === 1 ? 'student was' : 'students were'} added` : 'No one was added'} onClose={() => onDone(result.created ? `Imported ${result.created} students` : '')} width={520}>
-        <p>{result.skipped ? `${result.skipped} ${result.skipped === 1 ? 'line was' : 'lines were'} skipped. Fix them and import again.` : 'Every line was imported.'}</p>
+      <Dialog title={result.created ? `${result.created} ${result.created === 1 ? 'student was' : 'students were'} added` : result.updated ? `${result.updated} ${result.updated === 1 ? 'student was' : 'students were'} updated` : 'No one was added'} onClose={done} width={520}>
+        <p>{result.created && result.updated ? `${result.updated} already here ${result.updated === 1 ? 'was' : 'were'} updated. ` : ''}{result.skipped ? `${result.skipped} ${result.skipped === 1 ? 'line was' : 'lines were'} skipped. Fix them and import again.` : 'Every line was imported.'}</p>
         {result.errors.length > 0 && (
           <ul style={{ margin: '0 0 8px', paddingLeft: 18, font: '600 13.5px/1.7 var(--fb)', color: 'var(--ink2)', maxHeight: 180, overflow: 'auto' }}>
             {result.errors.slice(0, 20).map((x) => <li key={x.line}>Line {x.line}: {x.message}</li>)}
           </ul>
         )}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="btn pri" onClick={() => onDone(result.created ? `Imported ${result.created} students` : '')}>Done</button></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="btn pri" onClick={done}>Done</button></div>
       </Dialog>
     );
   }
   return (
     <Dialog title="Import students" onClose={onClose} shake={shake.cls} width={560}>
-      <p>Use a CSV file with the columns <b>name, class, dob, guardian, phone</b> (and <b>roll</b> if you have it). Dates look like 2012-04-18 and classes like 8 A.</p>
+      <p>Use a CSV file with the columns <b>name, class, dob, guardian, phone</b> (and <b>roll</b> or <b>admission number</b> if you have them), or an export from your old system. Dates look like 2012-04-18 or 18/04/2012 and classes like 8 A. A student already here is updated, not added twice.</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div className="fld">
           <label htmlFor="csv">Your sheet</label>

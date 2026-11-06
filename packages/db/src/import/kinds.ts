@@ -107,7 +107,7 @@ const years = kind({
     return [{ table: 'academic_years', pk: ['id'], cols: ['starts_on', 'ends_on', 'current'], rows: out }];
   },
   totals: (rows) => [{ label: 'Years', value: String(rows.length) }, { label: 'Current', value: rows.find((r) => yes(r.current!))?.label ?? 'unchanged' }],
-  async export(db) { return (await db.query<Row>("select label, starts_on::text, ends_on::text, case when current then 'yes' else '' end as current from academic_years order by starts_on")).rows; },
+  async export(db) { return (await db.query<Row>("select id, label, starts_on::text, ends_on::text, case when current then 'yes' else '' end as current from academic_years order by starts_on")).rows; },
 });
 
 type TermLookups = { years: Map<string, string>; terms: Map<string, string> };
@@ -128,7 +128,7 @@ const terms = kind<TermLookups>({
     return { id: l.terms.get(`${year}|${lc(r.name!)}`) ?? newId('trm'), year_id: year, name: r.name, starts_on: isoDay(r.starts_on!), ends_on: isoDay(r.ends_on!) };
   }) }],
   totals: (rows) => [{ label: 'Terms', value: String(rows.length) }],
-  async export(db) { return (await db.query<Row>('select y.label as year, t.name, t.starts_on::text, t.ends_on::text from terms t join academic_years y on y.id = t.year_id order by t.starts_on')).rows; },
+  async export(db) { return (await db.query<Row>('select t.id, y.label as year, t.name, t.starts_on::text, t.ends_on::text from terms t join academic_years y on y.id = t.year_id order by t.starts_on')).rows; },
 });
 
 const holidays = kind<Map<string, string>>({
@@ -147,7 +147,7 @@ const holidays = kind<Map<string, string>>({
   }) }],
   totals: (rows) => [{ label: 'Holidays', value: String(rows.length) }],
   async export(db) {
-    return (await db.query<Row>("select title as name, (starts_at at time zone 'Asia/Kolkata')::date::text as starts_on, (ends_at at time zone 'Asia/Kolkata')::date::text as ends_on from events where kind = 'holiday' order by starts_at")).rows;
+    return (await db.query<Row>("select id, title as name, (starts_at at time zone 'Asia/Kolkata')::date::text as starts_on, (ends_at at time zone 'Asia/Kolkata')::date::text as ends_on from events where kind = 'holiday' order by starts_at")).rows;
   },
 });
 
@@ -164,7 +164,7 @@ const subjects = kind<Map<string, SubjectRow>>({
     }) }];
   },
   totals: (rows) => [{ label: 'Subjects', value: String(rows.length) }],
-  async export(db) { return (await db.query<Row>('select name, per_week::text from subjects order by name')).rows; },
+  async export(db) { return (await db.query<Row>('select id, name, per_week::text from subjects order by name')).rows; },
 });
 
 type ClassLookups = { year: string | null; classes: Map<string, ClassRow>; staff: Map<string, string> };
@@ -189,7 +189,7 @@ const classes = kind<ClassLookups>({
   }) }],
   totals: (rows) => [{ label: 'Classes', value: String(rows.length) }, { label: 'With a class teacher', value: String(rows.filter((r) => r.class_teacher).length) }],
   async export(db) {
-    return (await db.query<Row>("select c.name as class, c.grade::text, c.section, coalesce(u.email, '') as class_teacher from classes c left join users u on u.id = c.class_teacher_id order by c.grade, c.section")).rows;
+    return (await db.query<Row>("select c.id, c.name as class, c.grade::text, c.section, coalesce(u.email, '') as class_teacher from classes c left join users u on u.id = c.class_teacher_id order by c.grade, c.section")).rows;
   },
 });
 
@@ -204,7 +204,7 @@ const periods = kind<Set<number>>({
   },
   writes: (rows) => [{ table: 'periods', pk: ['idx'], cols: ['label', 'starts_at', 'ends_at', 'kind'], rows: rows.map((r) => ({ idx: whole(r.number!), label: r.label, starts_at: hhmm(r.starts_at!), ends_at: hhmm(r.ends_at!), kind: r.kind ? lc(r.kind) : 'period' })) }],
   totals: (rows) => [{ label: 'Periods', value: String(rows.filter((r) => !r.kind || lc(r.kind) === 'period').length) }, { label: 'Breaks', value: String(rows.filter((r) => r.kind && lc(r.kind) !== 'period').length) }],
-  async export(db) { return (await db.query<Row>('select idx::text as number, label, starts_at, ends_at, kind from periods order by idx')).rows; },
+  async export(db) { return (await db.query<Row>('select idx::text as id, idx::text as number, label, starts_at, ends_at, kind from periods order by idx')).rows; },
 });
 
 type UserRow = { id: string; kind: string; name: string; phone: string | null; email: string | null };
@@ -266,7 +266,8 @@ const staff = kind<StaffLookups>({
 });
 
 type GuardianRow = { id: string; user_id: string | null; name: string; phone: string | null; email: string | null; relation: string };
-type StudentLookups = { classes: Map<string, ClassRow>; students: Map<string, Rec & { id: string }>; guardians: Map<string, GuardianRow>; users: Map<string, string>; links: Set<string> };
+type StudentLookups = { classes: Map<string, ClassRow>; students: Map<string, Rec & { id: string }>; people: Map<string, Rec & { id: string }>; next: { year: string; n: number }; guardians: Map<string, GuardianRow>; users: Map<string, string>; links: Set<string> };
+const person = (name: string, dob: string) => `${norm(name)}|${dob}`;
 const STATUS: Record<string, string> = { active: 'active', inactive: 'inactive', left: 'inactive', tc: 'inactive', transferred: 'inactive', passedout: 'inactive' };
 const students = kind<StudentLookups>({
   async load(db) {
@@ -274,8 +275,11 @@ const students = kind<StudentLookups>({
     const gs = (await db.query<GuardianRow>('select id, user_id, name, phone, email, relation from guardians')).rows;
     const us = (await db.query<{ id: string; phone: string }>('select id, phone from users where phone is not null')).rows;
     const links = (await db.query<{ s: string; g: string }>('select student_id s, guardian_id g from student_guardians')).rows;
+    const year = today().slice(0, 4);
+    const last = (await db.query<{ n: number | null }>("select max(substring(admission_no from 6)::int) n from students where admission_no ~ ('^' || $1 || '/[0-9]{1,8}$')", [year])).rows[0]!.n;
     return {
-      classes: await classMap(db), students: new Map(st.map((s) => [lc(s.admission_no), s])),
+      classes: await classMap(db), students: new Map(st.map((s) => [lc(s.admission_no), s])), people: new Map(st.map((s) => [person(String(s.name), String(s.dob)), s])),
+      next: { year, n: Math.max(501, (last ?? 0) + 1) },
       guardians: new Map(gs.filter((g) => g.phone).map((g) => [digits(g.phone!), g])), users: new Map(us.map((u) => [digits(u.phone), u.id])), links: new Set(links.map((x) => `${x.s}|${x.g}`)),
     };
   },
@@ -288,7 +292,9 @@ const students = kind<StudentLookups>({
       ...(r.guardian2_phone && digits(r.guardian2_phone).length < 10 ? ['The second guardian’s phone needs 10 digits.'] : []),
       ...(r.status && !STATUS[norm(r.status)] ? ['Status is active or inactive (left, TC and transferred count as inactive).'] : []),
     ];
-    return ok(lc(r.admission_no!), errors, l.students.has(lc(r.admission_no!)));
+    // No admission number (a sheet of new children): the same child is the same name and date of birth, and Gradeon numbers new ones.
+    if (!r.admission_no) return ok(`new|${person(r.name!, isoDay(r.dob!) ?? '')}`, errors, l.people.has(person(r.name!, isoDay(r.dob!) ?? '')));
+    return ok(lc(r.admission_no), errors, l.students.has(lc(r.admission_no)));
   },
   writes(rows, l) {
     const users: Rec[] = [], guardians = new Map<string, Rec>(), studs: Rec[] = [], links: Rec[] = [];
@@ -308,10 +314,10 @@ const students = kind<StudentLookups>({
       return guardians.get(d)!.id as string;
     };
     for (const r of rows) {
-      const was = l.students.get(lc(r.admission_no!));
+      const was = r.admission_no ? l.students.get(lc(r.admission_no)) : l.people.get(person(r.name!, isoDay(r.dob!)!));
       const id = was?.id ?? newId('stu');
       studs.push({
-        id, admission_no: r.admission_no!.trim(), name: r.name, class_id: l.classes.get(classKey(r.class!))!.id, roll_no: r.roll_no || (was?.roll_no as string) || '', dob: isoDay(r.dob!),
+        id, admission_no: r.admission_no?.trim() || (was?.admission_no as string | undefined) || `${l.next.year}/${String(l.next.n++).padStart(4, '0')}`, name: r.name, class_id: l.classes.get(classKey(r.class!))!.id, roll_no: r.roll_no || (was?.roll_no as string) || '', dob: isoDay(r.dob!),
         blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null,
         status: r.status ? STATUS[norm(r.status)] : was?.status ?? 'active', admitted_on: r.admitted_on ? isoDay(r.admitted_on) : was?.admitted_on ?? null,
       });
@@ -384,7 +390,7 @@ const feeStructures = kind<Map<string, string>>({
     id: l.get(feeKey(r.grade ?? '', r.title!)) ?? newId('fst'), grade: r.grade ? whole(r.grade) : null, head: lc(r.head!), title: r.title, amount: whole(r.amount!), due_on: isoDay(r.due_on!),
   })) }],
   totals: (rows) => [{ label: 'Fees', value: String(rows.length) }, { label: 'Grades', value: String(new Set(rows.map((r) => r.grade || 'all')).size) }],
-  async export(db) { return (await db.query<Row>("select coalesce(grade::text, '') as grade, head, title, amount::text, due_on::text from fee_structures order by grade nulls first, due_on, title")).rows; },
+  async export(db) { return (await db.query<Row>("select id, coalesce(grade::text, '') as grade, head, title, amount::text, due_on::text from fee_structures order by grade nulls first, due_on, title")).rows; },
 });
 
 type InvoiceRow = { id: string; student_id: string; title: string; amount: number; waived_amount: number };

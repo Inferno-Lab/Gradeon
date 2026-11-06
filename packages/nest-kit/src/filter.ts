@@ -23,6 +23,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       const res = err.getResponse();
       if (typeof res === 'object' && res && 'code' in res && 'message' in res) body = res as ApiErrorBody;
       else body = { code: BY_STATUS[status] ?? 'internal', message: status === 404 ? 'That was not found.' : typeof res === 'string' ? res : err.message };
+    } else if (err instanceof Error && err.name === 'ImportError') {
+      // The import engine's own words about a file or a batch (by name: nest-kit does not depend on the database package).
+      status = 400;
+      body = { code: 'validation', message: err.message };
     } else {
       this.log.error(`${req.method} ${req.url}: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
       const school = req.headers['x-school'];

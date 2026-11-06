@@ -45,6 +45,8 @@ export interface Http {
   patch<T>(path: string, body?: unknown): Promise<T>;
   del<T>(path: string): Promise<T>;
   text(path: string, query?: Query): Promise<string>;
+  /** A file to save, such as a ZIP export. */
+  blob(path: string, query?: Query): Promise<Blob>;
   /** Reload the access token from the refresh cookie after a page load. */
   restore(): Promise<boolean>;
 }
@@ -164,6 +166,7 @@ export function createHttp(opts: HttpOptions): Http {
     patch: (path, body) => json('PATCH', path, body ?? {}),
     del: (path) => json('DELETE', path),
     text: async (path, query) => (await send('GET', path, undefined, query, true)).text(),
+    blob: async (path, query) => (await send('GET', path, undefined, query, true)).blob(),
     restore: () => (access ? Promise.resolve(true) : refresh()),
   };
 }

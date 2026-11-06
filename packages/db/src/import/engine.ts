@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { IMPORT_KINDS, importKind, type ImportBatchRow, type ImportInput, type ImportKind, type ImportPreview, type ImportRowCheck } from '@gradeon/contracts';
-import { parseCsv, toCsv, zip } from './files.js';
+import { ImportError, readTable, toCsv, zip } from './files.js';
 import { KINDS, type Impl, type Row, type Write } from './kinds.js';
 
 type Q = pg.Pool | pg.PoolClient;
@@ -26,7 +26,7 @@ function readInput(kind: ImportKind, input: Pick<ImportInput, 'csv' | 'rows'>): 
     const headers = kind.columns.map((c) => c.key);
     return { headers, data: input.rows.map((r) => headers.map((h) => (r[h] ?? '').trim())).filter((r) => r.some(Boolean)) };
   }
-  const [headers = [], ...data] = parseCsv(input.csv ?? '');
+  const [headers = [], ...data] = readTable(input.csv ?? '');
   return { headers, data };
 }
 
@@ -57,7 +57,7 @@ interface Checked { preview: ImportPreview; valid: Row[]; impl: Impl<unknown>; l
 async function check(db: Q, input: ImportInput): Promise<Checked> {
   const kind = importKind(input.kind);
   const impl = KINDS[input.kind] as Impl<unknown> | undefined;
-  if (!kind || !impl) throw new Error(`There is no import for “${input.kind}”.`);
+  if (!kind || !impl) throw new ImportError(`There is no import for “${input.kind}”.`);
   const { headers, data } = readInput(kind, input);
   const source = input.rows ? 'typed' : detectSource(kind, headers);
   const remembered = input.mapping ? null : (await db.query<{ mapping: Record<string, string> }>('select mapping from import_mappings where signature = $1', [signature(kind.key, headers)])).rows[0]?.mapping;
@@ -145,8 +145,8 @@ export async function commitImport(pool: pg.Pool, input: ImportInput, byName: st
     await client.query('set local statement_timeout = 0');
     await client.query(LOCK);
     const { preview, valid, impl, lookups } = await check(client, input);
-    if (preview.missing.length) throw new Error(`Match a column to ${preview.missing.join(', ')} first.`);
-    if (!valid.length) throw new Error('Nothing to import: every row has a problem. Fix them in the grid and check again.');
+    if (preview.missing.length) throw new ImportError(`Match a column to ${preview.missing.join(', ')} first.`);
+    if (!valid.length) throw new ImportError('Nothing to import: every row has a problem. Fix them in the grid and check again.');
     const changes: Change[] = [];
     for (const w of impl.writes(valid, lookups)) changes.push(await apply(client, w));
     const notes = impl.notes ? await impl.notes(client, valid, lookups) : [];
@@ -193,8 +193,8 @@ export async function undoBatch(pool: pg.Pool, id: string): Promise<void> {
     await client.query('set local statement_timeout = 0');
     await client.query(LOCK);
     const batch = (await listBatches(client)).find((b) => b.id === id);
-    if (!batch) throw new Error('That import does not exist.');
-    if (!batch.canUndo) throw new Error(batch.undoneAt ? 'That import was already undone.' : `Only the newest import from the last ${UNDO_DAYS} days can be undone.`);
+    if (!batch) throw new ImportError('That import does not exist.');
+    if (!batch.canUndo) throw new ImportError(batch.undoneAt ? 'That import was already undone.' : `Only the newest import from the last ${UNDO_DAYS} days can be undone.`);
     const changes = (await client.query<{ changes: Change[] }>('select changes from import_batches where id = $1', [id])).rows[0]!.changes;
     for (const c of [...changes].reverse()) {
       const t = ident(c.table);
@@ -222,7 +222,7 @@ export async function undoBatch(pool: pg.Pool, id: string): Promise<void> {
 /** The empty template for a kind: the header row and one example row, so a school can fill it in Excel. */
 export function templateCsv(key: string): string {
   const kind = importKind(key);
-  if (!kind) throw new Error(`There is no import for “${key}”.`);
+  if (!kind) throw new ImportError(`There is no import for “${key}”.`);
   return toCsv([kind.columns.map((c) => c.key), kind.columns.map((c) => c.example)]);
 }
 
@@ -234,4 +234,11 @@ export async function exportAll(db: Q, kinds: string[] = IMPORT_KINDS.map((k) =>
     files.push({ name: `${String(IMPORT_KINDS.indexOf(kind) + 1).padStart(2, '0')}-${kind.key}.csv`, content: toCsv([kind.columns.map((c) => c.key), ...rows.map((r) => kind.columns.map((c) => r[c.key] ?? ''))]) });
   }
   return zip(files);
+}
+
+/** One kind's rows in its template columns (with the row id where the kind has one), for the school's own setup screens. */
+export async function exportRows(db: Q, key: string): Promise<Record<string, string>[]> {
+  const impl = KINDS[key];
+  if (!impl) throw new ImportError(`There is no import for “${key}”.`);
+  return impl.export(db);
 }
