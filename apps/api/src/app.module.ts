@@ -24,6 +24,8 @@ import { StudentsService } from './school/students.service.js';
 import { AuditService, Messenger, SettingsService } from './school/support.js';
 import { SweepService } from './school/sweep.service.js';
 import { ChangeRequestsController, ErrorReports, ErrorsController } from './school/errors.js';
+import { MovingInController, MovingInService } from './school/moving-in.js';
+import { SetupController, SetupService } from './school/setup.js';
 import { TimetableService } from './school/timetable.service.js';
 import { POOLS, REGISTRY, TenantGuard, TenantService } from './tenancy/tenant.js';
 
@@ -54,7 +56,7 @@ export class AppModule {
       module: AppModule,
       controllers: [
         AuthController, MeController, ClassesController, StudentsController, AttendanceController, FeesController, ApprovalsController,
-        TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController, ChangeRequestsController,
+        TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController, ChangeRequestsController, SetupController, MovingInController,
       ],
       providers: [
         { provide: ENV, useValue: env },
@@ -62,7 +64,7 @@ export class AppModule {
         { provide: POOLS, useValue: pools },
         { provide: OWNS, useValue: !shared },
         Shutdown,
-        TenantService, AuthService, AuditService, Messenger, SettingsService, StudentsService, AttendanceService, FeesService, ApprovalsService, TimetableService, DashboardService, MetricsService, LearningService, PeopleService, OfficeService, FamilyService, SweepService, ErrorReports,
+        TenantService, AuthService, AuditService, Messenger, SettingsService, StudentsService, AttendanceService, FeesService, ApprovalsService, TimetableService, DashboardService, MetricsService, LearningService, PeopleService, OfficeService, FamilyService, SweepService, ErrorReports, SetupService, MovingInService,
         // Order matters: find the school, then the person, then what they may do.
         { provide: APP_GUARD, useClass: TenantGuard },
         { provide: APP_GUARD, useClass: AuthGuard },

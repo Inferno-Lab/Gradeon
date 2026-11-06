@@ -37,6 +37,7 @@ export const PERMISSIONS = [
   'messages.write',
   'events.read',
   'events.write',
+  'setup.write',
 ] as const;
 export const Permission = z.enum(PERMISSIONS);
 export type Permission = z.infer<typeof Permission>;
@@ -101,6 +102,7 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'messages.write', area: 'Messages', label: 'Write to families' },
   { key: 'events.read', area: 'Events', label: 'See the calendar' },
   { key: 'events.write', area: 'Events', label: 'Add and change events' },
+  { key: 'setup.write', area: 'School setup', label: 'Edit classes, subjects, periods, terms, holidays and fee structures (where Gradeon allows)' },
 ];
 
 export interface RoleTemplate {
@@ -121,7 +123,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     permissions: [
       'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write',
       'approvals.read', 'timetable.read', 'timetable.edit', 'reports.read', 'admissions.read', 'admissions.write', 'messages.read', 'messages.write',
-      'events.read', 'events.write', 'homework.read', 'exams.read',
+      'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write',
     ],
   },
   {

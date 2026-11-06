@@ -5,6 +5,7 @@ import type {
   AttendanceDayPut, ApprovalDecision, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeSummary, ImportResult, InvoiceRow,
   LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
+  Activation, ImportBatchRow, LetterRow, SetupSection, UploadCreate, UploadRow,
 } from '@gradeon/contracts';
 import type { Http, Query } from './http';
 
@@ -131,6 +132,22 @@ export function schoolApi(h: Http) {
       create: (b: EventSave) => h.post<EventRow>('/v1/events', b),
       save: (id: string, b: EventSave) => h.put<EventRow>(`/v1/events/${id}`, b),
       remove: (id: string) => h.del<void>(`/v1/events/${id}`),
+    },
+    setup: {
+      sections: () => h.get<SetupSection[]>('/v1/setup'),
+      save: (kind: string, row: Record<string, string>) => h.put<SetupSection[]>(`/v1/setup/${kind}`, { row }),
+      remove: (kind: string, id: string) => h.del<SetupSection[]>(`/v1/setup/${kind}/${encodeURIComponent(id)}`),
+      applyFee: (id: string) => h.post<{ created: number }>(`/v1/setup/fee_structures/${id}/apply`),
+    },
+    movingIn: {
+      uploads: () => h.get<UploadRow[]>('/v1/moving-in/uploads'),
+      batches: () => h.get<ImportBatchRow[]>('/v1/moving-in/batches'),
+      upload: (b: UploadCreate) => h.post<UploadRow[]>('/v1/moving-in/uploads', b),
+      activation: () => h.get<Activation>('/v1/moving-in/activation'),
+      inviteFamilies: (classId?: string) => h.post<{ sent: number }>('/v1/moving-in/families/invite', classId ? { classId } : {}),
+      inviteStaff: () => h.post<{ sent: number }>('/v1/moving-in/staff/invite'),
+      letters: (classId?: string) => h.get<LetterRow[]>('/v1/moving-in/letters', classId ? { classId } : undefined),
+      exportAll: () => h.blob('/v1/moving-in/export'),
     },
     privacy: {
       requests: () => h.get<DataRequestRow[]>('/v1/privacy/requests'),

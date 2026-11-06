@@ -217,7 +217,7 @@ const admin: Driver = {
     try {
       const demo = p.data.start === 'demo';
       const password = demo ? 'nest2026' : tempPassword();
-      await pool.query('update users set password_hash = $2 where lower(email) = lower($1)', [p.admin.email, await hashPassword(password)]);
+      await pool.query('update users set password_hash = $2, invited_at = now() where lower(email) = lower($1)', [p.admin.email, await hashPassword(password)]);
       const url = adminUrlFor(c.env, school.slug, school.addressing, school.customDomain);
       const text = demo
         ? `Welcome to ${p.basics.shortName} on Gradeon. Sign in at ${url} with ${p.admin.email} and the password ${password}. The demo sign-in code is 424242.`

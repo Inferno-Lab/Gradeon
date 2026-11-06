@@ -11,6 +11,9 @@ import { AuthService } from '../auth/auth.service.js';
 import { StudentsService } from './students.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
+/** A first password a person can read out and type: they choose their own after signing in. */
+export const tempPassword = () => `${randomToken(6).replace(/[^a-zA-Z0-9]/g, 'k').slice(0, 8)}-${Math.floor(1000 + Math.random() * 9000)}`;
+
 type User = { id: string; name: string };
 
 interface StaffSql {
@@ -68,12 +71,12 @@ export class PeopleService {
     const dup = await t.pool.query('select 1 from users where lower(email) = $1', [body.email]);
     if (dup.rowCount) throw new ApiError('validation', 'Someone already uses that email.', { fields: { email: 'Someone already uses that email.' } });
     const id = newId('usr');
-    const temp = `${randomToken(6).replace(/[^a-zA-Z0-9]/g, 'k').slice(0, 8)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const temp = tempPassword();
     const known = body.subjectIds.length ? (await t.pool.query<{ id: string }>('select id from subjects where id = any($1)', [body.subjectIds])).rows.map((s) => s.id) : [];
     const client = await t.pool.connect();
     try {
       await client.query('begin');
-      await client.query("insert into users (id, kind, name, email, phone, password_hash) values ($1,'staff',$2,$3,$4,$5)", [id, body.name, body.email, body.phone, await hashPassword(temp)]);
+      await client.query("insert into users (id, kind, name, email, phone, password_hash, invited_at) values ($1,'staff',$2,$3,$4,$5,now())", [id, body.name, body.email, body.phone, await hashPassword(temp)]);
       await client.query('insert into staff (user_id, designation, department, joined_on) values ($1,$2,$3,current_date)', [id, body.designation, body.department ?? null]);
       for (const s of known) await client.query('insert into staff_subjects (user_id, subject_id) values ($1,$2)', [id, s]);
       if (role.id) await client.query('insert into user_roles (user_id, role_id) values ($1,$2)', [id, role.id]);
