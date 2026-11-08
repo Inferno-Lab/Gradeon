@@ -31,7 +31,7 @@ export function MessagesPage() {
   const unread = all.filter((t) => t.unread > 0).length;
   useEffect(() => { if (!sel && rows[0] && window.matchMedia('(min-width: 900px)').matches) setSel(rows[0].id); }, [rows, sel]);
   return (
-    <Page active="msg" title="Messages" sub={all.length ? `${unread ? `${unread} waiting for a reply` : 'All caught up'} · ${all.length} conversations` : 'What families write to the school'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Messages" sub={all.length ? `${unread ? `${unread} waiting for a reply` : 'All caught up'} · ${all.length} conversations` : 'What families write to the school'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setStarting(true)}>New message</AddBtn> : undefined}
       overlays={starting && <Start onClose={() => setStarting(false)} onDone={(t) => { setStarting(false); refresh(qc); setFilter('open'); setSel(t.id); say('Message sent. The family gets a notification.'); }} />}>

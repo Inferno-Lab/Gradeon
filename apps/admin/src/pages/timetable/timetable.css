@@ -51,8 +51,6 @@
 .pg-timetable .ring .fg{stroke:var(--v);stroke-dasharray:226;transition:stroke-dashoffset 1.4s var(--e),stroke .4s}
 .pg-timetable .un{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1.5px dashed var(--line2);font:700 13px var(--fb);cursor:grab;transition:border-color .2s,background .2s,transform .3s var(--sp)}
 .pg-timetable .un:hover{border-color:var(--v);background:var(--vL);transform:translateX(4px)}
-.pg-timetable .toast{position:absolute;left:50%;bottom:26px;z-index:40;animation:nToastC .7s var(--e);transform:translateX(-50%)}
-@keyframes nToastC{from{opacity:0;transform:translate(-50%,28px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
 
 /* List view and small screens. */
 .pg-timetable .lst{display:flex;flex-direction:column;gap:6px}
@@ -70,4 +68,4 @@
 .pg-timetable .s-maths{--sc:#2F5BD3}.pg-timetable .s-science{--sc:#23784A}.pg-timetable .s-english{--sc:#C23B2A}.pg-timetable .s-hindi{--sc:#B8306F}.pg-timetable .s-social{--sc:#1C6F80}.pg-timetable .s-computer{--sc:#5E3A9C}.pg-timetable .s-music{--sc:#B8306F}
 .pg-timetable .s-art{--sc:#7CC4E8;--sct:var(--ink)}.pg-timetable .s-pe{--sc:#9BC53D;--sct:var(--ink)}
 .pg-timetable .sub{background:color-mix(in srgb,var(--sc) 12%,var(--card));color:var(--sct,var(--sc))}
-.pg-timetable.dark .sub{background:color-mix(in srgb,var(--sc) 22%,var(--card));color:var(--ink)}
+.dark .pg-timetable .sub{background:color-mix(in srgb,var(--sc) 22%,var(--card));color:var(--ink)}

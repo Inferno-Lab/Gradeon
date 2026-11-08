@@ -240,7 +240,7 @@ export function WizardPage() {
   const last = step === STEPS.length - 1;
   const problems = review.data?.problems ?? [];
   return (
-    <Page active="onb" title="Onboard a school" sub="Seven short steps. Nothing is created until you press Launch." toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
+    <Page title="Onboard a school" sub="Seven short steps. Nothing is created until you press Launch." toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
       <div className="wiz">
         <nav className="wst" aria-label="Steps">
           {STEPS.map((s, i) => (

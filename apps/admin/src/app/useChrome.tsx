@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dock, IC, MoreSheet, Palette, SchoolHeader, Sidebar, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
-import { adminNav, shortcutTargets } from './nav';
+import { useRouterState } from '@tanstack/react-router';
+import { Dock, IC, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
+import { activeNav, adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 
 const COLLAPSE_KEY = 'gradeon.admin.menu.collapsed';
 
-/** What every page shares: the theme, the menu, the shortcuts and the search box. Merge it into the page's values. */
-export function useChrome(active: string) {
+/** What every page shares: the theme, the menu, the shortcuts and the search box. Called once, by the signed-in layout. */
+export function useChrome() {
   const { api, base, user, go, signOut } = useApp();
   const theme = useTheme();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const active = activeNav(base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname);
   const shell = useQuery({ queryKey: ['shell'], queryFn: api.shell, staleTime: 30_000 });
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } });
   const [open, setOpen] = useState(false);
@@ -31,7 +34,7 @@ export function useChrome(active: string) {
       const el = e.target as HTMLElement | null;
       const typing = !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setOpen((o) => !o); return; }
-      if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.key === 'Escape') { setOpen(false); setMore(false); return; }
       if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === '/') { e.preventDefault(); setOpen(true); return; }
       if (Date.now() - armed < 1200) {
@@ -63,27 +66,6 @@ export function useChrome(active: string) {
   ];
   const dockActive = home.includes(active) ? 'home' : people.includes(active) ? 'people' : money.includes(active) ? 'money' : 'more';
 
-  const dock: ReactNode = (
-    <>
-    <Dock tabs={dockTabs} active={dockActive} />
-    {more && (
-      <MoreSheet title="Menu" onClose={() => setMore(false)}>
-        {groups.map((g) => (
-          <div key={g.name}>
-            <div className="sl">{g.name}</div>
-            {g.items.map((n) => (
-              <a key={n.id} className={`nvm ${n.id === active ? 'on' : ''}`} href={n.href} onClick={(e) => { e.preventDefault(); setMore(false); goRef.current(base && n.href.startsWith(base) ? n.href.slice(base.length) || '/' : n.href); }}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={n.icon}></path></svg>{n.label}
-              </a>
-            ))}
-          </div>
-        ))}
-        <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
-      </MoreSheet>
-    )}
-    </>
-  );
-
   const aside: ReactNode = (
     <>
     <Sidebar
@@ -94,25 +76,37 @@ export function useChrome(active: string) {
         <div className="sbc">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}><span className="chip a">{data.term.name}</span>{data.term.examsLabel}</div>
           <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{data.term.daysToGo === 0 ? 'Exams start today' : `${data.term.daysToGo} ${data.term.daysToGo === 1 ? 'day' : 'days'} to go`}</div>
-          <div style={{ height: 10, borderRadius: 5, background: 'var(--sunk)' }}><div style={{ width: `${data.term.progress}%`, height: '100%', borderRadius: 5, background: 'var(--v)', transition: 'width 1.2s var(--e)' }} /></div>
+          <div style={{ height: 10, borderRadius: 5, background: 'var(--sunk)' }}><div style={{ width: `${data.term.progress}%`, height: '100%', borderRadius: 5, background: 'var(--v)' }} /></div>
           <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>Plan the rooms<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
         </div>
       )}
       me={{ initials: user.initials, name: user.name, role: user.roleNames[0] ?? 'Staff', bg: t.bg, fg: t.fg }}
       meMenu={[{ label: theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark', onPress: theme.toggle }, { label: 'Sign out', onPress: signOut }]}
     />
-    {dock}
+    <Dock tabs={dockTabs} active={dockActive} />
     </>
   );
 
-  const palette: ReactNode = open && (
+  const overlays: ReactNode = (
     <>
-      <div className="scrim" onClick={close}></div>
-      <div className="mod" style={{ top: '18%', transform: 'translate(-50%, 0)', width: 'min(560px, calc(100% - 32px))' }}>
-        <Palette hits={hits.data ?? []} query={q} onQuery={setQ} onPick={pick} onClose={close} empty={`No matches for “${q}”. Try a name like Aarav or a class like 8 A.`} />
-      </div>
+      <Presence>{open && <SearchDialog hits={hits.data ?? []} query={q} onQuery={setQ} onPick={pick} onClose={close} empty={`No matches for “${q}”. Try a name like Aarav or a class like 8 A.`} />}</Presence>
+      <Presence>{more && (
+        <MoreSheet title="Menu" onClose={() => setMore(false)}>
+          {groups.map((g) => (
+            <div key={g.name}>
+              <div className="sl">{g.name}</div>
+              {g.items.map((n) => (
+                <a key={n.id} className={`nvm ${n.id === active ? 'on' : ''}`} href={n.href} onClick={(e) => { e.preventDefault(); setMore(false); goRef.current(base && n.href.startsWith(base) ? n.href.slice(base.length) || '/' : n.href); }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={n.icon}></path></svg>{n.label}
+                </a>
+              ))}
+            </div>
+          ))}
+          <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
+        </MoreSheet>
+      )}</Presence>
     </>
   );
 
-  return { themeCls: theme.cls, rmCls: '', aside, dock, palette, openSearch: () => setOpen(true), shell: data };
+  return { themeCls: theme.cls, aside, overlays, openSearch: () => setOpen(true), shell: data };
 }

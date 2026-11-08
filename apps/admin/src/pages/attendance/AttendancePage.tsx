@@ -47,7 +47,7 @@ export function AttendancePage() {
   const err = [classes, today, day].find((q) => q.isError && !q.data);
 
   return (
-    <Page active="att" title="Attendance" sub={date ? `${dayLabel(date)} · ${cls ? `Class ${cls.name}` : ''}` : 'Roll call'} toast={toast} loading={loading}
+    <Page title="Attendance" sub={date ? `${dayLabel(date)} · ${cls ? `Class ${cls.name}` : ''}` : 'Roll call'} toast={toast} loading={loading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
       actions={classes.data?.length ? (
         <Select compact aria-label="Class" value={classId} onChange={setClassId} options={classes.data.map((c) => ({ value: c.id, label: `Class ${c.name}` }))} />

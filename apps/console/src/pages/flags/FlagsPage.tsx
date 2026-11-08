@@ -33,7 +33,7 @@ export function FlagsPage() {
     set.mutate({ key, enabled: false, label: label.trim() || key }, { onSuccess: () => { setKey(''); setLabel(''); say('Flag added, switched off.'); } });
   };
   return (
-    <Page active="flag" title="Flags" sub="Switch a feature on for everyone, or for one school, without shipping anything" toast={toast} loading={flags.isLoading} error={flags.isError ? { message: (flags.error as Error).message, retry: () => void flags.refetch() } : null}>
+    <Page title="Flags" sub="Switch a feature on for everyone, or for one school, without shipping anything" toast={toast} loading={flags.isLoading} error={flags.isError ? { message: (flags.error as Error).message, retry: () => void flags.refetch() } : null}>
       <section className="grid">
         <Card title="Everyone" chip={<span className="chip">{fleet.length}</span>} span="s12">
           {fleet.length === 0 && <EmptyCard title="Flags" chip={{ text: '0 flags', tone: 'v' }} scene="checklist" heading="No flags yet" body="Add a flag to ship a feature switched off, then turn it on for one school before the rest." />}

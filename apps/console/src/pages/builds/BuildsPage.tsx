@@ -24,7 +24,7 @@ export function BuildsPage() {
   const name = (id: string) => schools.data?.find((s) => s.id === id)?.name ?? 'A school';
   const rows = builds.data ?? [];
   return (
-    <Page active="app" title="Mobile builds" sub="Each school gets its own app with its name, colours and address built in" toast={toast} loading={builds.isLoading} error={builds.isError ? { message: (builds.error as Error).message, retry: () => void builds.refetch() } : null}
+    <Page title="Mobile builds" sub="Each school gets its own app with its name, colours and address built in" toast={toast} loading={builds.isLoading} error={builds.isError ? { message: (builds.error as Error).message, retry: () => void builds.refetch() } : null}
       actions={app.can('builds.write') && schools.data?.length ? (
         <span className="tgrow">
           <Select compact aria-label="School" value={schoolId || schools.data[0]!.id} onChange={setSchoolId} options={schools.data.map((s) => ({ value: s.id, label: s.name }))} />

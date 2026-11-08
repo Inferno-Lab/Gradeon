@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { leavingProps, useLeaving, useReturnFocus } from './Presence';
 import './palette.css';
 
 export interface PaletteHit {
@@ -39,7 +40,7 @@ export function Palette({ hits, query, onQuery, onPick, onClose, placeholder = '
     else if (e.key === 'Enter' && hits[at]) onPick(hits[at]!);
   };
   return (
-    <div className="pal" role="dialog" aria-label="Search and commands" onKeyDown={key} style={{ position: 'relative', zIndex: 60 }}>
+    <div className="pal" role="dialog" aria-modal="true" aria-label="Search and commands" onKeyDown={key}>
       <div className="pin">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg>
         <input ref={ref} value={query} onChange={(e) => onQuery(e.target.value)} placeholder={placeholder} aria-label="Search" />
@@ -58,5 +59,22 @@ export function Palette({ hits, query, onQuery, onPick, onClose, placeholder = '
       {hits.length === 0 && <div className="none">{empty ?? `No matches for “${query}”.`}</div>}
       <div className="pf"><span>↑ ↓ move</span><span>Enter opens</span><span style={{ marginLeft: 'auto' }}>Ctrl K anywhere</span></div>
     </div>
+  );
+}
+
+/**
+ * The search box over the page: Ctrl K, / or the search field open it. It sits 18% from the top in a layer that does not
+ * move it, so it opens in place. Render it inside `<Presence>` so it fades out too.
+ */
+export function SearchDialog(props: PaletteProps) {
+  const leaving = useLeaving();
+  useReturnFocus(leaving);
+  return (
+    <>
+      <div className="scrim" onClick={leaving ? undefined : props.onClose} {...leavingProps(leaving)}></div>
+      <div className="mod top" {...leavingProps(leaving)}>
+        <div style={{ width: 'min(560px, 100%)' }}><Palette {...props} /></div>
+      </div>
+    </>
   );
 }

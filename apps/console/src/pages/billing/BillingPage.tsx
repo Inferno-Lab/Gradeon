@@ -21,7 +21,7 @@ export function BillingPage() {
   const set = useMutation({ mutationFn: (b: { id: string; status: string }) => app.api.billing.setStatus(b.id, b.status), onSuccess: refresh, onError: (e) => say((e as Error).message, 'bad') });
   if (!app.can('billing.read')) {
     return (
-      <Page active="bill" title="Billing" sub="Invoices for every school">
+      <Page title="Billing" sub="Invoices for every school">
         <div><EmptyCard title="Billing" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Billing is for the finance team" body="Ask a super admin to add the Finance role if you need to see invoices." /></div>
       </Page>
     );
@@ -31,7 +31,7 @@ export function BillingPage() {
   const paid = rows.filter((r) => r.status === 'paid').reduce((n, r) => n + r.amount, 0);
   const canWrite = app.can('billing.write');
   return (
-    <Page active="bill" title="Billing" sub="One invoice per live school each month: students times the plan’s yearly price, divided by twelve" toast={toast} loading={inv.isLoading} error={inv.isError ? { message: (inv.error as Error).message, retry: () => void inv.refetch() } : null}
+    <Page title="Billing" sub="One invoice per live school each month: students times the plan’s yearly price, divided by twelve" toast={toast} loading={inv.isLoading} error={inv.isError ? { message: (inv.error as Error).message, retry: () => void inv.refetch() } : null}
       actions={canWrite ? (
         <span className="tgrow">
           <label className="inp" style={{ width: 150, height: 44 }}><input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Month" /></label>

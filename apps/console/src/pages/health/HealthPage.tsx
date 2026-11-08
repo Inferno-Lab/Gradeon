@@ -18,7 +18,7 @@ export function HealthPage() {
   rows.sort((a, b) => order[a.health] - order[b.health]);
   const inc = fleet.data?.incident;
   return (
-    <Page active="health" title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
+    <Page title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={<button className="btn pri" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check everything now'}</button>}>
       {inc && (
         <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 18, borderRadius: 26, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : '#fff' }}>

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { Menu } from '../Menu';
 import { GradeonIcon } from '../GradeonIcon';
 
 export interface NavItem {
@@ -40,23 +40,7 @@ const HAS_MODIFIER = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || 
 /** The collapsible menu. Markup and class names are the design's; every item is a link so it works with the keyboard and a new tab. */
 export function Sidebar({ label, collapsed, groups, active, onNavigate, header, promo, me, pushDown, meMenu }: SidebarProps) {
   const [menu, setMenu] = useState(false);
-  const [at, setAt] = useState<{ left: number; bottom: number; width: number } | null>(null);
   const meBtn = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!menu) return;
-    const off = () => setMenu(false);
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(false); };
-    document.addEventListener('click', off);
-    document.addEventListener('keydown', key);
-    window.addEventListener('resize', off);
-    return () => { document.removeEventListener('click', off); document.removeEventListener('keydown', key); window.removeEventListener('resize', off); };
-  }, [menu]);
-  // The account menu is drawn on the page root, beside the button when the menu is collapsed and above it otherwise, so the narrow menu can never clip it.
-  const openMenu = () => {
-    const r = meBtn.current?.getBoundingClientRect();
-    if (r) setAt(collapsed ? { left: r.right + 12, bottom: window.innerHeight - r.bottom - 6, width: 210 } : { left: r.left, bottom: window.innerHeight - r.top + 8, width: Math.max(r.width, 200) });
-    setMenu((o) => !o);
-  };
   return (
     <aside className={`sb ${collapsed ? 'col' : ''}`} aria-label={label}>
       {header}
@@ -87,14 +71,14 @@ export function Sidebar({ label, collapsed, groups, active, onNavigate, header, 
       ))}
       {promo}
       <div className="me" style={{ ...(pushDown ? { marginTop: 'auto' } : {}), position: 'relative' }}>
-        {meMenu && menu && at && createPortal(
-          <div className="popm" role="menu" style={{ position: 'fixed', top: 'auto', zIndex: 120, left: at.left, bottom: at.bottom, width: at.width, minWidth: 0 }} onClick={(e) => e.stopPropagation()}>
+        {/* Beside the button when the menu is collapsed, above it otherwise, so the narrow menu can never clip it. */}
+        {meMenu && (
+          <Menu open={menu} anchor={meBtn} onClose={() => setMenu(false)} side={collapsed ? 'right' : 'auto'} label="Account">
             {meMenu.map((m) => <button key={m.label} role="menuitem" onClick={() => { setMenu(false); m.onPress(); }}>{m.label}</button>)}
-          </div>,
-          (meBtn.current?.closest('.nest') as HTMLElement | null) ?? document.body,
+          </Menu>
         )}
         {meMenu ? (
-          <button ref={meBtn} className="mebtn" aria-haspopup="menu" aria-expanded={menu} data-tip={collapsed && !menu ? `${me.name}\n${me.role}` : undefined} data-tip-side="right" onClick={(e) => { e.stopPropagation(); openMenu(); }}>
+          <button ref={meBtn} className="mebtn" aria-haspopup="menu" aria-expanded={menu} data-tip={collapsed && !menu ? `${me.name}\n${me.role}` : undefined} data-tip-side="right" onClick={() => setMenu((o) => !o)}>
             <span className="av" style={{ background: me.bg, color: me.fg }}>{me.initials}</span>
             <div className="fade"><div style={{ font: '700 14px var(--fb)' }}>{me.name}</div><div style={{ font: '600 12.5px var(--fb)', color: 'var(--ink3)' }}>{me.role}</div></div>
           </button>

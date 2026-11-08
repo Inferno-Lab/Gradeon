@@ -23,7 +23,7 @@ export function StaffPage() {
   const canWrite = app.user.permissions.includes('staff.write');
   const all = list.data ?? [];
   return (
-    <Page active="staff" title="Staff" sub={all.length ? `${all.filter((s) => s.status === 'active').length} active · ${all.length} in all` : 'Teachers and office staff'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Staff" sub={all.length ? `${all.filter((s) => s.status === 'active').length} active · ${all.length} in all` : 'Teachers and office staff'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add staff</AddBtn> : undefined}
       overlays={editing && <StaffDialog person={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onDone={(msg) => { setEditing(null); refresh(qc); say(msg); }} />}>

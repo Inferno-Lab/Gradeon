@@ -1,5 +1,6 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { leavingProps, useExit } from './Presence';
 
 export interface SelectOption {
   value: string;
@@ -39,6 +40,7 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
   const typed = useRef({ text: '', at: 0 });
   const listId = useId();
   const [open, setOpen] = useState(false);
+  const exit = useExit(open);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
@@ -143,8 +145,8 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
         <span className="sxv">{current?.label ?? placeholder ?? ''}</span>
         <span className="sxc" aria-hidden="true"><svg viewBox="0 0 24 24"><path className="i" d="M7 10l5 5 5-5"></path></svg></span>
       </button>
-      {open && box && createPortal(
-        <div ref={pop} className="sxp" style={{ left: box.left, width: box.width, top: box.top, bottom: box.bottom }} onKeyDown={onPopKey}>
+      {exit.shown && box && createPortal(
+        <div ref={pop} className="sxp" {...leavingProps(exit.leaving)} style={{ left: box.left, width: box.width, top: box.top, bottom: box.bottom, transformOrigin: box.top !== undefined ? 'top left' : 'bottom left' }} onKeyDown={onPopKey}>
           {searchable && (
             <label className="sxs">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4"></path></svg>
@@ -164,48 +166,5 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
         root,
       )}
     </>
-  );
-}
-
-/**
- * A menu that opens under (or over) a button, drawn on the page root with fixed coordinates so nothing can clip it or paint over it.
- * The caller owns open and closed; clicks outside call `onClose`.
- */
-export function Pop({ anchor, onClose, children }: { anchor: RefObject<HTMLElement | null>; onClose: () => void; children: ReactNode }) {
-  const [box, setBox] = useState<Box | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const place = () => {
-      const r = anchor.current?.getBoundingClientRect();
-      if (!r) return;
-      const below = window.innerHeight - r.bottom - EDGE;
-      const above = r.top - EDGE;
-      const up = below < 240 && above > below;
-      const maxH = Math.max(150, Math.min(360, (up ? above : below) - GAP));
-      const width = Math.max(r.width, 220);
-      const left = Math.min(Math.max(EDGE, r.left), window.innerWidth - width - EDGE);
-      setBox(up ? { left, width, bottom: window.innerHeight - r.top + GAP, maxH } : { left, width, top: r.bottom + GAP, maxH });
-    };
-    place();
-    const away = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node) && !anchor.current?.contains(e.target as Node)) onClose(); };
-    const key = (e: globalThis.KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('pointerdown', away, true);
-    document.addEventListener('keydown', key);
-    window.addEventListener('resize', place);
-    window.addEventListener('scroll', place, true);
-    return () => {
-      document.removeEventListener('pointerdown', away, true);
-      document.removeEventListener('keydown', key);
-      window.removeEventListener('resize', place);
-      window.removeEventListener('scroll', place, true);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const root = (anchor.current?.closest('.nest') as HTMLElement | null) ?? document.body;
-  if (!box) return null;
-  return createPortal(
-    <div ref={ref} className="popm" role="menu" style={{ position: 'fixed', zIndex: 120, left: box.left, minWidth: box.width, top: box.top, bottom: box.bottom, maxHeight: box.maxH }}>
-      {children}
-    </div>,
-    root,
   );
 }

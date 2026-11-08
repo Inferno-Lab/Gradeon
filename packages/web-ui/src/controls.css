@@ -17,7 +17,10 @@
 /* A dropdown inside a field box takes the box's place */
 .nest .inp>.sx{border:0;height:100%;background:none;padding:0}
 /* Dropdown list: fixed to the window, above everything, so nothing clips it */
-.nest .sxp{position:fixed;z-index:120;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--sh3);padding:6px;animation:nFade .12s ease-out}
+.nest .sxp{position:fixed;z-index:120;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--sh3);padding:6px}
+/* Every popup (dropdown list, menu, calendar) opens and closes the same way: from its button, in --t2, out in --t1. */
+.nest .sxp,.nest .popm{animation:nIn var(--t2) var(--e) both}
+.nest .sxp[data-leaving],.nest .popm[data-leaving]{animation:nOut var(--t1) var(--ei) forwards}
 .nest .sxs{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;margin:2px 2px 6px;border-radius:12px;background:var(--sunk);color:var(--ink3);flex:none}
 .nest .sxs svg{width:16px;height:16px;flex:none}
 .nest .sxs input{flex:1;min-width:0;border:0;outline:0;background:none;font:600 14px var(--fb);color:var(--ink)}

@@ -1,46 +1,17 @@
 /* eslint-disable */
 // Markup converted from design/canvas/Main.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, Shell } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, ToastSlot, Segmented } from "@gradeon/web-ui";
 import "./dashboard.css";
 
 export function DashboardView({ v }: { v: any }) {
   return (
-    <Shell
+    <PageScope
       page="dashboard"
-      theme={v.themeCls}
-      aside={v.aside}
       overlays={
         <>
-          {v.palette}
-          {v.widgetsDialog}
-          {v.toastOn && (
-            <>
-              <div className="toast" role="status">
-                <span
-                  style={
-                    {
-                      width: "30px",
-                      height: "30px",
-                      borderRadius: "50%",
-                      background: "var(--g)",
-                      display: "grid",
-                      placeItems: "center",
-                      flex: "none",
-                    } as CSSProperties
-                  }
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ stroke: "#fff", strokeWidth: "2.6" } as CSSProperties}></path>
-                  </svg>
-                </span>
-                {v.toastText}
-                <button className="btn wht sm" onClick={v.undo}>
-                  Undo
-                </button>
-              </div>
-            </>
-          )}
+          <Presence>{v.widgetsDialog}</Presence>
+          <ToastSlot toast={v.toastOn && { text: v.toastText, action: v.canUndo ? { label: "Undo", onPress: v.undo } : undefined }} />
         </>
       }
     >
@@ -286,16 +257,7 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="chtt" style={{ fontSize: "22px" } as CSSProperties}>
                 {v.chartTitle}
               </h2>
-              <div className="seg" role="tablist" style={{ background: "color-mix(in srgb,var(--v) 12%,transparent)" } as CSSProperties}>
-                <span className="kn" style={{ width: `${v.kw ?? ""}px`, transform: `translateX(${v.kx ?? ""}px)` } as CSSProperties}></span>
-                {v.tabs.map((t: any, $i: number) => (
-                  <Fragment key={$i}>
-                    <button className={t.on} role="tab" aria-selected={t.sel} onClick={t.pick}>
-                      {t.n}
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
+              <Segmented label="Chart" value={String(v.tabs.findIndex((t: any) => t.on))} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ background: "color-mix(in srgb,var(--v) 12%,transparent)" } as CSSProperties} />
             </div>
             <div className={`plot ${v.chartEmpty ? "empty" : ""}`} role="img" aria-label={v.chartAlt}>
               {v.grid.map((g: any, $i: number) => (
@@ -472,6 +434,6 @@ export function DashboardView({ v }: { v: any }) {
           </button>
         </section>
       </main>
-    </Shell>
+    </PageScope>
   );
 }

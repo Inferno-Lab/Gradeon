@@ -23,7 +23,7 @@ export function CellsPage() {
   const canMove = app.can('schools.write');
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['cells', 'schools', 'fleet', 'actions'].includes(String(q.queryKey[0])) });
   return (
-    <Page active="cells" title="Cells" sub="Where schools run. Each cell is one database server and one API, and every school gets its own database inside it." toast={toast} loading={cells.isLoading}
+    <Page title="Cells" sub="Where schools run. Each cell is one database server and one API, and every school gets its own database inside it." toast={toast} loading={cells.isLoading}
       error={cells.isError ? { message: (cells.error as Error).message, retry: () => void cells.refetch() } : null}
       actions={canCells ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a cell</button> : undefined}
       overlays={<>

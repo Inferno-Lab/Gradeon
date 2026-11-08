@@ -117,7 +117,7 @@ export function ModulesPage() {
   };
 
   return (
-    <Page active="mod" title="Modules" sub="Which school has which module and feature. Choose schools, then give or take; every change is reviewed first, and taking away needs a second person." toast={toast}
+    <Page title="Modules" sub="Which school has which module and feature. Choose schools, then give or take; every change is reviewed first, and taking away needs a second person." toast={toast}
       loading={q.isLoading || cat.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
       overlays={review && <ReviewDialog list={review} onClose={() => setReview(null)} onDone={(m) => { setReview(null); setPicked(new Set()); say(m); }} />}>
       {rows.length === 0 ? (

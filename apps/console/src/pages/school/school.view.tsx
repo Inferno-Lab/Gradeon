@@ -1,19 +1,17 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { Shell, Toast } from "@gradeon/web-ui";
+import { PageScope, Presence, ToastSlot, Segmented } from "@gradeon/web-ui";
 import "./school.css";
 
 export function SchoolView({ v }: { v: any }) {
   return (
-    <Shell
+    <PageScope
       page="school"
-      theme={v.themeCls}
-      aside={v.aside}
-      frClass={`${v.shk ?? ""}`}
+      className={`${v.shk ?? ""}`}
       overlays={
         <>
-          {v.palette}
+          
           {v.sup && (
             <>
               <div className="glow" aria-hidden="true"></div>
@@ -26,8 +24,8 @@ export function SchoolView({ v }: { v: any }) {
               </div>
             </>
           )}
-          {v.dialog}
-          {v.toast && <Toast text={v.toast} tone={v.toastTone} />}
+          <Presence>{v.dialog}</Presence>
+          <ToastSlot toast={v.toast && { text: v.toast, tone: v.toastTone }} />
         </>
       }
     >
@@ -67,16 +65,7 @@ export function SchoolView({ v }: { v: any }) {
             </button>
           )}
         </header>
-        <div className="seg rise" style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} role="tablist">
-          <span className="kn" style={{ width: `${v.tw ?? ""}px`, transform: `translateX(${v.tx ?? ""}px)` } as CSSProperties}></span>
-          {v.tabs.map((t: any, $i: number) => (
-            <Fragment key={$i}>
-              <button className={t.on} role="tab" aria-selected={t.sel} onClick={t.pick} ref={t.ref}>
-                {t.n}
-              </button>
-            </Fragment>
-          ))}
-        </div>
+        <Segmented label="School" className="rise" value={String(v.tab)} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} />
         {v.tab !== 0 && v.extra}
         {v.tab === 0 && (
           <section className="grid" data-even="">
@@ -236,6 +225,6 @@ export function SchoolView({ v }: { v: any }) {
           </section>
         )}
       </main>
-    </Shell>
+    </PageScope>
   );
 }

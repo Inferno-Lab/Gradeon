@@ -34,7 +34,7 @@ export function InvoicesPage() {
   const pages = Math.max(1, Math.ceil((inv.data?.total ?? 0) / 25));
   const cur = view === 'invoices' ? inv : rec;
   return (
-    <Page active="inv" title="Invoices" sub="Every fee billed, and every receipt given" toast={toast} loading={cur.isLoading && !cur.data}
+    <Page title="Invoices" sub="Every fee billed, and every receipt given" toast={toast} loading={cur.isLoading && !cur.data}
       error={cur.isError && !cur.data ? { message: (cur.error as Error).message, retry: () => void cur.refetch() } : null}
       actions={<Segmented value={view} onChange={(v) => { setView(v); setPage(1); }} label="Invoices or receipts" options={[{ value: 'invoices', label: 'Invoices' }, { value: 'receipts', label: 'Receipts' }]} />}
       overlays={<>

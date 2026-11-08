@@ -2,13 +2,13 @@
 // Markup from design/canvas/AdminPhone.dc.html: classes and structure are the design's. The mascot and pencil columns are replaced
 // by an object illustration and filled bars. Values come from PhoneDashboard.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration } from "@gradeon/web-ui";
+import { Illustration, PageScope, ToastSlot } from "@gradeon/web-ui";
 import "./phone.css";
 
 export function PhoneView({ v }: { v: any }) {
   return (
-    <div className={`pg-phone nest ${v.themeCls ?? ""}`} style={{ width: "100%" } as CSSProperties}>
-      <div className="ph fr">
+    <PageScope page="phone" overlays={<ToastSlot toast={v.toast ? { text: v.toast } : null} />}>
+      <div className="ph">
         <div className="top">
           <span className="lg" style={{ width: "44px", height: "44px", fontSize: "20px" } as CSSProperties}>
             {v.logo}
@@ -110,9 +110,6 @@ export function PhoneView({ v }: { v: any }) {
           )}
         </div>
       </div>
-      {v.dock}
-      {v.palette}
-      {v.toast && <div className="phtoast" role="status">{v.toast}</div>}
-    </div>
+    </PageScope>
   );
 }

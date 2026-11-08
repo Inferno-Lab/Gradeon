@@ -40,6 +40,13 @@ export function consoleNav(counts?: { onboarding?: number; builds?: number; appr
   }));
 }
 
+/** The menu item a path belongs to: its own, the closest one above it, and Fleet for a school's page. */
+export function activeNav(path: string): string {
+  const items = DEFS.flatMap((g) => g.items);
+  if (path.startsWith('/schools/')) return 'fleet';
+  return items.find((i) => i.to === path)?.id ?? items.filter((i) => i.to !== '/' && path.startsWith(`${i.to}/`)).sort((a, b) => b.to.length - a.to.length)[0]?.id ?? '';
+}
+
 export function shortcutTargets(groups: NavGroup[]): Map<string, string> {
   const m = new Map<string, string>();
   for (const g of groups) for (const i of g.items) m.set(i.keys.replace('G ', '').toLowerCase(), i.href);

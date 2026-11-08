@@ -7,6 +7,7 @@ import { makeClient, session, type Client } from './app/client';
 import { LoginRoute } from './pages/login/LoginRoute';
 import { NotFoundPage } from './pages/status/StatusPages';
 import { BASE } from './app/base';
+import { AppLayout } from './app/Layout';
 
 const root = createRootRoute({ component: Outlet, notFoundComponent: NotFoundPage });
 const login = createRoute({ getParentRoute: () => root, path: '/login', component: LoginRoute });
@@ -36,7 +37,7 @@ const authed = createRoute({
       go: (path) => void router.navigate({ to: path as never }),
     } : null, [user, router, qc]);
     if (!ctx) return null;
-    return <AppContext.Provider value={ctx}><Outlet /></AppContext.Provider>;
+    return <AppContext.Provider value={ctx}><AppLayout><Outlet /></AppLayout></AppContext.Provider>;
   },
 });
 

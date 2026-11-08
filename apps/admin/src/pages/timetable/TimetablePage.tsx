@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, parseDay, weekday, type SlotRow, type TimetableView as TT } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Shell, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, PageScope, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { TimetableView } from './timetable.view';
 
-const VIEWS: [string, number][] = [['Week', 82], ['Day', 70], ['List', 70]];
+const VIEWS = ['Week', 'Day', 'List'];
 const DAYS = [1, 2, 3, 4, 5];
 const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
 
@@ -23,7 +23,7 @@ const SUBJECT_COLOURS = ['maths', 'science', 'english', 'hindi', 'social', 'comp
 
 export function TimetablePage() {
   const app = useApp();
-  const chrome = useChrome('tt');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const [classId, setClassId] = useState('');
   const [clsOpen, setClsOpen] = useState(false);
@@ -58,29 +58,29 @@ export function TimetablePage() {
 
   if (tt.isError && !data) {
     return (
-      <Shell page="timetable" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="timetable">
         <main className="mn"><header className="hd"><div><h1>Timetable</h1></div></header>
           <div><EmptyCard error title="Timetable" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(tt.error as Error).message} actions={<button className="btn pri" onClick={() => void tt.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (classes.isSuccess && classList.length === 0) {
     return (
-      <Shell page="timetable" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="timetable">
         <main className="mn"><header className="hd"><div><h1>Timetable</h1><p>No classes yet</p></div></header>
           <div><EmptyCard title="Timetable" chip={{ text: '0 classes', tone: 'v' }} scene="calendar" heading="Nothing to schedule yet" body="Once your classes and teachers are added, build each week here and publish it to families." actions={<button className="btn pri" onClick={() => app.go('/students')}>Add students first</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!data) {
     return (
-      <Shell page="timetable" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="timetable">
         <main className="mn" aria-busy="true"><header className="hd"><div><h1>Timetable</h1><p>&nbsp;</p></div></header>
           <div className="skc" style={{ height: 620, borderRadius: 28 }} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
 
@@ -130,8 +130,8 @@ export function TimetablePage() {
     clsOpen: clsOpen ? 'open' : '', clsExp: clsOpen ? 'true' : 'false', clsLabel: `Class ${data.className}`,
     toggleCls: (e: React.MouseEvent) => { e.stopPropagation(); setClsOpen((o) => !o); },
     classes: classList.map((c, i) => ({ n: `Class ${c.name}`, on: c.id === classId, sel: c.id === classId ? 'true' : 'false', d: 40 + Math.min(i, 8) * 30, pick: () => { setClassId(c.id); setClsOpen(false); } })),
-    views: VIEWS.map((x, i) => ({ n: x[0], on: i === mode ? 'on' : '', sel: i === mode ? 'true' : 'false', pick: () => setMode(i) })),
-    vw: VIEWS[mode]![1], vx: VIEWS.slice(0, mode).reduce((a, x) => a + x[1], 4), mode: ['week', 'day', 'list'][mode],
+    views: VIEWS.map((x, i) => ({ n: x, on: i === mode ? 'on' : '', sel: i === mode ? 'true' : 'false', pick: () => setMode(i) })),
+    mode: ['week', 'day', 'list'][mode],
     tgStyle: mode === 1 ? { gridTemplateColumns: '78px minmax(0,1fr)' } : undefined,
     publish: () => publish.mutate(),
     prevWeek: () => setWeek((w) => w - 1), nextWeek: () => setWeek((w) => w + 1),

@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { EmptyCard, Shell } from '@gradeon/web-ui';
+import { EmptyCard, PageScope } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
 import { moduleForPath } from '../../app/nav';
 
 /**
@@ -22,14 +21,13 @@ export function PlanGate({ children }: { children: ReactNode }) {
 
 function NotInPlan() {
   const app = useApp();
-  const chrome = useChrome('');
   return (
-    <Shell page="dashboard" theme={chrome.themeCls} aside={chrome.aside}>
+    <PageScope page="dashboard">
       <main className="mn">
         <div><EmptyCard title="Not in your plan" chip={{ text: 'Not included', tone: 'a' }} scene="padlock" heading="This is not part of your school’s plan"
           body="Your school does not have this module right now. Anything it held is kept safely. To add it, ask Gradeon from School setup."
           actions={<button className="btn pri" onClick={() => app.go('/settings')}>Open School setup</button>} /></div>
       </main>
-    </Shell>
+    </PageScope>
   );
 }

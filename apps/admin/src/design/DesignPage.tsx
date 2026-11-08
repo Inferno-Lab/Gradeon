@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, Shell, Toast, tintFor, useShake, type Scene } from '@gradeon/web-ui';
-import { useChrome } from '../app/useChrome';
+import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, PageScope, Toast, tintFor, useShake, type Scene } from '@gradeon/web-ui';
+import { useShellChrome } from '../app/Layout';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
 const SWATCHES: [string, string][] = [['Accent (blue)', '--v'], ['Warning (amber)', '--a'], ['Good (green)', '--g'], ['Bad (red)', '--r'], ['Ink', '--ink'], ['Ink 3', '--ink3'], ['Field border', '--field'], ['Present', '--present']];
@@ -8,7 +8,7 @@ const CHIPS = ['', 'v', 'c', 'a', 'g', 'b', 'r'] as const;
 
 /** A living style guide built from the real components, so it can never drift from what the pages use. Open it at /design. */
 export function DesignPage() {
-  const chrome = useChrome('');
+  const chrome = useShellChrome();
   const [on, setOn] = useState(true);
   const [seg, setSeg] = useState(0);
   const [dlg, setDlg] = useState(false);
@@ -16,7 +16,7 @@ export function DesignPage() {
   const [name, setName] = useState('');
   const shake = useShake();
   return (
-    <Shell page="design" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}{toast && <Toast text="Saved. The app updates within a minute." />}{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'r' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</>}>
+    <PageScope page="design" overlays={<>{toast && <Toast text="Saved. The app updates within a minute." />}{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'r' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</>}>
       <main className="mn">
         <header className="hd rise"><div><h1>Design system</h1><p>The pieces every admin and console page is made of.</p></div><span className="grow"></span><button className="btn" onClick={chrome.openSearch}>Search</button></header>
 
@@ -82,7 +82,7 @@ export function DesignPage() {
           </div>
         </Section>
       </main>
-    </Shell>
+    </PageScope>
   );
 }
 

@@ -25,7 +25,7 @@ export function HomeworkPage() {
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   const today = istToday();
   return (
-    <Page active="hw" title="Homework" sub={classId ? `Class ${classes.data?.find((c) => c.id === classId)?.name ?? ''}` : 'What has been set, and what has come back'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Homework" sub={classId ? `Class ${classes.data?.find((c) => c.id === classId)?.name ?? ''}` : 'What has been set, and what has come back'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={<>
         <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />

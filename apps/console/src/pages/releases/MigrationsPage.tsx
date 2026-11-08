@@ -12,7 +12,7 @@ export function MigrationsPage() {
   const q = useQuery({ queryKey: ['migrations'], queryFn: app.api.releases.migrations, refetchInterval: 15_000 });
   const rows = q.data ?? [];
   return (
-    <Page active="mig" title="Migrations" sub="Database changes, and which schools have them. Each school’s database is changed on its own." loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
+    <Page title="Migrations" sub="Database changes, and which schools have them. Each school’s database is changed on its own." loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
       {rows.length === 0 ? (
         <div><EmptyCard title="Migrations" chip={{ text: 'None', tone: 'v' }} scene="notebooks" heading="No migrations recorded" body="Once a school’s database is created, the changes applied to it are listed here, newest first." /></div>
       ) : rows.map((m) => {

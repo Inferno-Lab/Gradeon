@@ -33,7 +33,7 @@ export function CompliancePage() {
   const agreements = items.filter((i) => i.kind === 'dpa');
   const breaches = items.filter((i) => i.kind === 'breach');
   return (
-    <Page active="comp" title="Compliance" sub="Agreements with each school, and what to do when something goes wrong" toast={toast} loading={q.isLoading}
+    <Page title="Compliance" sub="Agreements with each school, and what to do when something goes wrong" toast={toast} loading={q.isLoading}
       error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
       actions={canWrite ? <><button className="btn" onClick={() => setAdding('dpa')}>Add an agreement</button><button className="btn pri" onClick={() => setAdding('breach')}>Log a breach</button></> : undefined}
       overlays={adding && <Add kind={adding} onClose={() => setAdding(null)} onDone={(m) => { setAdding(null); void qc.invalidateQueries({ queryKey: ['compliance'] }); say(m); }} />}>

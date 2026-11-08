@@ -40,7 +40,7 @@ export function SetupPage() {
   const groups = GROUPS.filter((g) => g.kinds.some((k) => sections.some((s) => s.kind === k)));
   const visible = sections.filter((s) => (GROUPS.find((g) => g.value === group)?.kinds as readonly string[] | undefined)?.includes(s.kind));
   return (
-    <Page active="setup" title="Classes and calendar" sub="The school’s year, classes, subjects, bells and fees. Everything else in Gradeon reads from these." toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Classes and calendar" sub="The school’s year, classes, subjects, bells and fees. Everything else in Gradeon reads from these." toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       overlays={editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
         onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />}>

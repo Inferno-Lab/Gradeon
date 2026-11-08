@@ -47,7 +47,7 @@ export function EventsPage() {
   const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const cells = [...Array.from({ length: first }, () => null), ...Array.from({ length: days }, (_, i) => ymd(new Date(month.getFullYear(), month.getMonth(), i + 1)))];
   return (
-    <Page active="evt" title="Events" sub="The school calendar, and who is coming" toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Events" sub="The school calendar, and who is coming" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add event</AddBtn> : undefined}
       overlays={editing && <EventDialog event={editing === 'new' ? null : editing} defaultDay={day} onClose={() => setEditing(null)} onDone={(m) => { setEditing(null); refresh(qc); say(m); }} />}>

@@ -45,7 +45,7 @@ export function BlueprintsPage() {
   const dirtyPol = pol && policy.data && JSON.stringify(pol) !== JSON.stringify(policy.data);
 
   return (
-    <Page active="bp" title="Blueprints and rules" sub="The recipe every new school is set up with, and the rules for risky changes" toast={toast} loading={bps.isLoading || policy.isLoading} error={bps.isError || policy.isError ? { message: ((bps.error ?? policy.error) as Error).message, retry: () => { void bps.refetch(); void policy.refetch(); } } : null}
+    <Page title="Blueprints and rules" sub="The recipe every new school is set up with, and the rules for risky changes" toast={toast} loading={bps.isLoading || policy.isLoading} error={bps.isError || policy.isError ? { message: ((bps.error ?? policy.error) as Error).message, retry: () => { void bps.refetch(); void policy.refetch(); } } : null}
       actions={canBp ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New blueprint</button> : undefined}
       overlays={<>
         {adding && <NewBlueprint from={rows} onClose={() => setAdding(false)} onDone={(m) => { setAdding(false); void qc.invalidateQueries({ queryKey: ['blueprints'] }); say(m); }} />}

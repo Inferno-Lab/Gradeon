@@ -25,7 +25,7 @@ export function TeamPage() {
   const rows = team.data ?? [];
   const canWrite = app.can('team.write');
   return (
-    <Page active="team" title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
+    <Page title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a person</button> : undefined}
       overlays={<>
         {adding && <AddDialog onClose={() => setAdding(false)} onDone={() => { setAdding(false); refresh(); say('Added. At their first sign-in they set up an authenticator app with the password you chose.'); }} />}

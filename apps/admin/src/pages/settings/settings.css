@@ -56,8 +56,6 @@
 .pg-settings .tk3 i.on{background:var(--v)}
 .pg-settings .billing{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
 @media (max-width:1250px){.pg-settings .billing{grid-template-columns:minmax(0,1fr)}}
-.pg-settings .toast{position:absolute;left:50%;bottom:28px;z-index:40;transform:translateX(-50%);animation:nToastC .7s var(--e)}
-@keyframes nToastC{from{opacity:0;transform:translate(-50%,28px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
 
 .pg-settings .in2.err{border-color:var(--r);background:color-mix(in srgb,var(--rS) 45%,var(--card));box-shadow:0 0 0 1px var(--r)}
 .pg-settings .sw:disabled,.pg-settings .sw5 button:disabled{opacity:.5;cursor:not-allowed}

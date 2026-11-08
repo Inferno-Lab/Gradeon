@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
 import { istToday, type SettingsResponse } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, Shell, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, ErrorLine, PageScope, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { SettingsView } from './settings.view';
 import { AppLayoutPanel, NotificationsPanel, PrivacyPanel, RolesPanel, TemplatesPanel } from './panels';
 
@@ -47,7 +47,7 @@ function nextInvoice(): string {
 
 export function SettingsPage() {
   const app = useApp();
-  const chrome = useChrome('set');
+  const chrome = useShellChrome();
   const doc = useQuery({ queryKey: ['settings'], queryFn: app.api.settings.get });
   const data = doc.data;
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -79,20 +79,20 @@ export function SettingsPage() {
 
   if (doc.isError && !data) {
     return (
-      <Shell page="settings" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="settings">
         <main className="mn"><header className="hd"><div><h1>Settings</h1></div></header>
           <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!data || !draft) {
     return (
-      <Shell page="settings" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="settings">
         <main className="mn" aria-busy="true"><header className="hd"><div><h1>Settings</h1><p>&nbsp;</p></div></header>
           <div className="skc" style={{ height: 520, borderRadius: 28, maxWidth: 780 }} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
 

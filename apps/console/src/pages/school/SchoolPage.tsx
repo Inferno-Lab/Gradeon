@@ -1,12 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { STEP_LABELS, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Shell, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, PageScope, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { ago, count, rupees, statusOf, when } from '../../app/format';
 import { SchoolView } from './school.view';
 import { ConfigTab } from './ConfigTab';
@@ -31,7 +31,7 @@ const dur = (a: string | null, b: string | null) => (a && b ? `${Math.max(0.1, (
 export function SchoolPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const app = useApp();
-  const chrome = useChrome('fleet');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const school = useQuery({
     queryKey: ['school', id], queryFn: () => app.api.school(id),
@@ -43,17 +43,11 @@ export function SchoolPage() {
   const [toast, setToast] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [sup, setSup] = useState<{ id: string; until: number } | null>(null);
   const [left, setLeft] = useState(0);
-  const [knob, setKnob] = useState({ w: 0, x: 0 });
-  const tabEls = useRef<(HTMLButtonElement | null)[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const say = (text: string, tone: 'ok' | 'bad' = 'ok') => { clearTimeout(timer.current); setToast({ text, tone }); timer.current = setTimeout(() => setToast(null), 4200); };
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const d = school.data;
-  useLayoutEffect(() => {
-    const el = tabEls.current[tab];
-    if (el) setKnob({ w: el.offsetWidth, x: el.offsetLeft });
-  }, [tab, d?.id]);
   useEffect(() => {
     if (!sup) return;
     const t = setInterval(() => {
@@ -79,20 +73,20 @@ export function SchoolPage() {
 
   if (school.isError && !d) {
     return (
-      <Shell page="school" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="school">
         <main className="mn"><header className="hd"><div><h1>School</h1></div></header>
           <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!d) {
     return (
-      <Shell page="school" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="school">
         <main className="mn" aria-busy="true"><header className="hd"><div><h1>&nbsp;</h1><p>&nbsp;</p></div></header>
           <div className="skc" style={{ height: 520, borderRadius: 28 }} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
 
@@ -126,7 +120,7 @@ export function SchoolPage() {
     fleetHref: url('/'), toFleet: (e: React.MouseEvent) => { e.preventDefault(); app.go('/'); },
     stChip, stText, canSupport: app.can('support.access') && d.status !== 'archived', canErase: app.can('schools.danger') && d.status !== 'archived',
     openSupport: () => setDlg('support'), openErase: () => setDlg('erase'),
-    tabs: TABS.map((n, i) => ({ n, on: i === tab ? 'on' : '', sel: i === tab ? 'true' : 'false', pick: () => setTab(i), ref: (el: HTMLButtonElement | null) => { tabEls.current[i] = el; } })), tw: knob.w, tx: knob.x,
+    tabs: TABS.map((n, i) => ({ n, on: i === tab ? 'on' : '', sel: i === tab ? 'true' : 'false', pick: () => setTab(i) })),
     provTitle: d.status === 'onboarding' || running ? 'Setting up the school' : 'How this school was set up',
     steps: (run?.steps ?? []).map((s, i) => ({
       n: STEP_LABELS[s.key] ?? s.label, num: i + 1, cls: s.status === 'running' ? 'run' : s.status === 'done' ? 'done' : s.status === 'failed' ? 'fail' : s.status === 'skipped' ? 'skip' : '',

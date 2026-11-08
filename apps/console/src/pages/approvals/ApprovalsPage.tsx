@@ -28,7 +28,7 @@ export function ApprovalsPage() {
   const past = rows.filter((r) => r.status !== 'pending_approval');
   const mayDecide = app.can('schools.danger');
   return (
-    <Page active="appr" title="Approvals" sub={waiting.length ? `${waiting.length} waiting for a second person` : 'Risky changes need a second person to say yes'} toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}>
+    <Page title="Approvals" sub={waiting.length ? `${waiting.length} waiting for a second person` : 'Risky changes need a second person to say yes'} toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}>
       <section className="grid">
         <Card title="Waiting" chip={<span className={`chip ${waiting.length ? 'a' : 'g'}`}>{waiting.length}</span>} span="s12">
           {waiting.length === 0 && (

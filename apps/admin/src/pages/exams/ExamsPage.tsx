@@ -23,7 +23,7 @@ export function ExamsPage() {
   const canWrite = app.user.permissions.includes('exams.write');
   const groups = useMemo(() => (['marking', 'upcoming', 'published'] as const).map((s) => ({ s, items: rows.filter((r) => r.status === s) })).filter((g) => g.items.length), [rows]);
   return (
-    <Page active="ex" title="Exams" sub="Schedules, marks and results" toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Exams" sub="Schedules, marks and results" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={<>
         <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />

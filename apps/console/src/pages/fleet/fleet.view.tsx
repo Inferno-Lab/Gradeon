@@ -1,12 +1,12 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleFleet.dc.html: classes and structure are the design's. Values come from FleetPage.
 import { Fragment, type CSSProperties } from "react";
-import { EmptyCard, Illustration, Shell } from "@gradeon/web-ui";
+import { EmptyCard, Illustration, PageScope, Presence } from "@gradeon/web-ui";
 import "./fleet.css";
 
 export function FleetView({ v }: { v: any }) {
   return (
-    <Shell page="fleet" theme={v.themeCls} aside={v.aside} overlays={<>{v.palette}{v.dialog}{v.alertsDialog}</>}>
+    <PageScope page="fleet" overlays={<><Presence>{v.dialog}</Presence><Presence>{v.alertsDialog}</Presence></>}>
       <main className="mn">
         <header className="hd rise">
           <div>
@@ -326,6 +326,6 @@ export function FleetView({ v }: { v: any }) {
           </div>
         </section>
       </main>
-    </Shell>
+    </PageScope>
   );
 }

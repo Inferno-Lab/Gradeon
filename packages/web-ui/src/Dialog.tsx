@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { leavingProps, useLeaving, useReturnFocus } from './Presence';
 
 export interface DialogProps {
   title: string;
@@ -12,31 +13,39 @@ export interface DialogProps {
   children: ReactNode;
 }
 
-/** A card over a blurred page. Escape and the backdrop close it, and focus stays inside until it does. */
+/**
+ * A card over a blurred page. Escape and the backdrop close it, and focus stays inside until it does.
+ * Render it inside `<Presence>` (Page's `overlays` does) and it fades out instead of vanishing.
+ */
 export function Dialog({ title, tag, dark, onClose, shake, width, children }: DialogProps) {
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const leaving = useLeaving();
+  useReturnFocus(leaving);
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>('input,select,textarea,button:not(.xb)');
+    const first = ref.current?.querySelector<HTMLElement>('input,textarea,button:not(.xb),[tabindex="0"]');
     first?.focus();
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key !== 'Tab' || !ref.current) return;
-      const items = [...ref.current.querySelectorAll<HTMLElement>('input,select,textarea,button,a[href]')].filter((x) => !x.hasAttribute('disabled'));
+      if (!ref.current || ref.current.closest('[data-leaving]')) return;
+      // A popup opened from the dialog (a dropdown, a calendar) takes Escape first.
+      if (e.key === 'Escape' && !e.defaultPrevented) close.current();
+      if (e.key !== 'Tab') return;
+      const items = [...ref.current.querySelectorAll<HTMLElement>('input,textarea,button,a[href],[tabindex="0"]')].filter((x) => !x.hasAttribute('disabled'));
       if (!items.length) return;
       const a = items[0]!, z = items[items.length - 1]!;
       if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
       else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
     };
     document.addEventListener('keydown', key);
-    return () => { document.removeEventListener('keydown', key); prev?.focus(); };
-  }, [onClose]);
+    return () => document.removeEventListener('keydown', key);
+  }, []);
   return (
     <>
-      <div className="scrim" onClick={onClose}></div>
-      <div className="mod">
-        <div ref={ref} className={`dlg ${dark ? 'dk' : ''} ${shake ?? ''}`} role="dialog" aria-modal="true" aria-labelledby={id} style={width ? { width, maxHeight: 'calc(100dvh - 32px)', overflow: 'auto' } : { maxHeight: 'calc(100dvh - 32px)', overflow: 'auto' }}>
+      <div className="scrim" onClick={leaving ? undefined : onClose} {...leavingProps(leaving)}></div>
+      <div className="mod" {...leavingProps(leaving)}>
+        <div ref={ref} className={`dlg ${dark ? 'dk' : ''} ${shake ?? ''}`} role="dialog" aria-modal="true" aria-labelledby={id} style={{ ...(width ? { width } : {}), maxHeight: 'calc(100dvh - 32px)', overflow: 'auto' }}>
           {tag && <span className={`chip ${tag.tone}`}>{tag.text}</span>}
           <h3 id={id}>{title}</h3>
           {children}

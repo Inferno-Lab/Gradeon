@@ -44,7 +44,7 @@ export function AdmissionsPage() {
   const declined = rows.filter((r) => r.stage === 'declined');
   const open = rows.filter((r) => r.stage !== 'enrolled' && r.stage !== 'declined').length;
   return (
-    <Page active="adm" title="Admissions" sub={rows.length ? `${open} open · ${rows.filter((r) => r.stage === 'enrolled').length} enrolled` : 'From first enquiry to first day'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Admissions" sub={rows.length ? `${open} open · ${rows.filter((r) => r.stage === 'enrolled').length} enrolled` : 'From first enquiry to first day'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setAdding(true)}>New enquiry</AddBtn> : undefined}
       overlays={<>

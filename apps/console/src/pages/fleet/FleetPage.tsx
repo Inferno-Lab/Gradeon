@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, EmptyCard, Shell, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, PageScope, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { curve, initials, statusOf } from '../../app/format';
 import { FleetView } from './fleet.view';
 
@@ -12,7 +12,7 @@ const STATE: Record<string, string> = { draft: 'Ready to start', rolling: 'Rolli
 
 export function FleetPage() {
   const app = useApp();
-  const chrome = useChrome('fleet');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const [ci, setCi] = useState(-1);
   const [dismissed, setDismissed] = useState('');
@@ -32,20 +32,20 @@ export function FleetPage() {
 
   if (fleet.isError && !f) {
     return (
-      <Shell page="fleet" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="fleet">
         <main className="mn"><header className="hd"><div><h1>Fleet</h1></div></header>
           <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!f) {
     return (
-      <Shell page="fleet" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="fleet">
         <main className="mn" aria-busy="true"><header className="hd"><div><h1>Fleet</h1><p>&nbsp;</p></div></header>
           <div className="skc" style={{ height: 240, borderRadius: 28 }} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
 

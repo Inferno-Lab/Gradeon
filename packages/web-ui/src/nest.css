@@ -5,7 +5,9 @@
 --a:#E0A21B;--aS:#FBF0D9;--aD:#8F5400;--c:#B42318;--cS:#FCEBE9;--cD:#B42318;
 --g:#1E7A45;--gS:#E3F2E8;--gD:#1E7A45;--b:#2F5BD3;--bS:#EDF2FD;--r:#B42318;--rS:#FCEBE9;--rF:#B42318;--present:#B9B9B3;
 --ci:#1A1A1C;--sh1:0 1px 2px rgba(26,26,28,.05);--sh2:0 8px 20px -12px rgba(26,26,28,.22);--sh3:0 18px 44px -20px rgba(26,26,28,.34);--scrim:rgba(17,17,19,.42);
---fb:'Manrope',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope',sans-serif;--e:cubic-bezier(.22,1,.36,1);--sp:cubic-bezier(.34,1.56,.64,1);
+--fb:'Manrope',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope',sans-serif;--e:cubic-bezier(.22,1,.36,1);--ei:cubic-bezier(.4,0,1,1);
+/* Every timing in the admin and console: press and toggle, popups and menus, dialogs and page changes. Leaving uses the next one down. */
+--t1:120ms;--t2:200ms;--t3:300ms;
 font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothing:antialiased;letter-spacing:-.005em;position:relative;box-sizing:border-box}
 .nest *,.nest *::before,.nest *::after{box-sizing:border-box}
 .nest.dark{--bd:#0A0A0B;--frame:#111113;--card:#19191C;--sunk:#1E1E22;--line:#2A2A2E;--line2:#34343A;--sbg:#111113;--field:#6B6B72;
@@ -158,11 +160,16 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .strip{display:flex;flex-direction:column;transition:transform .5s var(--e)}
 .nest .strip span{display:block;height:1.1em;text-align:center}
 /* motion helpers */
-.nest .rise{animation:nRise .45s var(--e) both;animation-delay:calc(var(--d,0s) * .4)}
-@keyframes nRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.nest .pop{animation:nPop .7s var(--sp) both;animation-delay:var(--d,0s)}
-@keyframes nPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+/* Content arriving: a short rise, the stagger capped so a long page is never kept waiting. */
+.nest .rise{animation:nRise var(--t3) var(--e) both;animation-delay:min(calc(var(--d,0s) * .4),.2s)}
+@keyframes nRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes nFade{from{opacity:0}to{opacity:1}}
+@keyframes nFadeO{to{opacity:0}}
+/* Popups grow from where they open (scale .96, never more) and leave a little faster than they came. */
+@keyframes nIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes nOut{to{opacity:0;transform:scale(.97)}}
+/* Something on its way out (see Presence) cannot be clicked or focused while it fades. */
+.nest [data-leaving]{pointer-events:none}
 .nest .float{animation:nFloat 5s ease-in-out infinite;animation-delay:var(--d,0s)}
 @keyframes nFloat{50%{transform:translateY(-9px)}}
 /* menus that grow out of their button */
@@ -183,18 +190,27 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .mo kbd{margin-left:auto;font:700 11px var(--fb);opacity:.5}
 .nest .mo small{display:block;font:500 12px var(--fb);opacity:.6}
 /* overlays */
-.nest .scrim{position:absolute;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade .3s ease-out}
-.nest .scrim.out{animation:nFadeO .3s forwards}
-@keyframes nFadeO{to{opacity:0}}
-.nest .mod{position:absolute;z-index:51;left:50%;top:50%;transform:translate(-50%,-50%);animation:nMod .6s var(--e)}
-@keyframes nMod{from{opacity:0;transform:translate(-50%,-46%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%)}}
+.nest .scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade var(--t3) var(--e) both}
+.nest .scrim[data-leaving],.nest .scrim.out{animation:nFadeO var(--t2) var(--ei) forwards}
+/* The layer a dialog or the search box sits in. It centres with a grid, not a transform, so the opening animation can never move it. */
+.nest .mod{position:fixed;inset:0;z-index:51;display:grid;place-items:center;padding:16px;pointer-events:none}
+.nest .mod.top{place-items:start center;padding-top:18vh}
+.nest .mod>*{pointer-events:auto;animation:nIn var(--t3) var(--e) both}
+.nest .mod.top>*{transform-origin:top center}
+.nest .mod[data-leaving]>*{pointer-events:none;animation:nOut var(--t2) var(--ei) forwards}
 .nest .dlg{width:460px;max-width:calc(100% - 32px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);padding:28px;border:1px solid var(--line)}
 .nest .dlg.dk{background:var(--ci);color:#fff;border-color:rgba(255,255,255,.1)}
 .nest .dlg h3{margin:14px 0 6px;font:700 24px/1.15 var(--fd);letter-spacing:-.025em}
 .nest .dlg p{margin:0 0 20px;font:500 15px/1.55 var(--fb);color:var(--ink2)}
 .nest .dlg.dk p{color:#B8B8BE}
-.nest .toast{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:26px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14.5px var(--fb);animation:nToast .7s var(--e)}
-@keyframes nToast{from{opacity:0;transform:translateY(28px) scale(.94)}to{opacity:1;transform:none}}
+.nest .toast{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:26px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14.5px var(--fb);animation:nToast var(--t3) var(--e) both}
+@keyframes nToast{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nest .toast[data-leaving]{animation:nToastO var(--t2) var(--ei) forwards}
+@keyframes nToastO{to{opacity:0;transform:translateY(10px)}}
+/* One place for every toast: the bottom middle of the window, centred with margins so the animation's transform cannot move it. */
+.nest .toasts{position:fixed;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom));z-index:80;display:flex;justify-content:center;pointer-events:none;padding:0 16px}
+.nest .toasts>.toast{pointer-events:auto;max-width:100%}
+@media (max-width:900px){.nest .toasts{bottom:calc(92px + env(safe-area-inset-bottom))}}
 .nest .toast .btn{height:38px}
 .nest .xb{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;transition:background .2s,transform .3s var(--e)}
 .nest .xb:hover{background:rgba(255,255,255,.2);transform:rotate(90deg)}
@@ -203,8 +219,8 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .bk{white-space:nowrap;flex:none;height:38px;padding:0 15px;border-radius:999px;border:0;background:none;color:#fff;font:700 13.5px var(--fb);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
 .nest .bk:hover{background:rgba(255,255,255,.14)}
 .nest .bk svg{width:16px;height:16px}
-.nest .drw{position:absolute;top:14px;right:14px;bottom:14px;z-index:51;width:480px;max-width:calc(100% - 28px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;animation:nDrw .7s var(--e);border:1px solid var(--line)}
-.nest .drw.out{animation:nDrwO .35s var(--e) forwards}
+.nest .drw{position:absolute;top:14px;right:14px;bottom:14px;z-index:51;width:480px;max-width:calc(100% - 28px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;animation:nDrw var(--t3) var(--e) both;border:1px solid var(--line)}
+.nest .drw.out,.nest .drw[data-leaving]{animation:nDrwO var(--t2) var(--ei) forwards}
 @keyframes nDrw{from{transform:translateX(108%)}to{transform:none}}
 @keyframes nDrwO{to{transform:translateX(108%)}}
 .nest .save{position:absolute;left:50%;bottom:28px;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 22px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14px var(--fb);transform:translate(-50%,160%);opacity:0;transition:transform .7s var(--e),opacity .3s}

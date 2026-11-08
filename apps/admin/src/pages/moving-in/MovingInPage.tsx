@@ -86,7 +86,7 @@ export function MovingInPage() {
   };
   const a = act.data;
   return (
-    <Page active="move" title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
+    <Page title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
       error={act.isError && !act.data ? { message: (act.error as Error).message, retry: () => void act.refetch() } : null}>
       <div className="stack" style={{ gap: 18 }}>
         {can('setup.write') && (

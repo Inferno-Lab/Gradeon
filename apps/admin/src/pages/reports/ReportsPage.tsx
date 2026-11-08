@@ -30,7 +30,7 @@ export function ReportsPage() {
   };
   const d = data.data;
   return (
-    <Page active="rep" title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={d ? <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button> : undefined}>
       {(list.data?.length ?? 0) === 0 ? (

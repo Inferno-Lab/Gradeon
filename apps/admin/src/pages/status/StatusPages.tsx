@@ -1,19 +1,17 @@
 import { useContext } from 'react';
 import { useParams } from '@tanstack/react-router';
-import { EmptyCard, NotFoundTile, Shell } from '@gradeon/web-ui';
+import { EmptyCard, NotFoundTile, PageScope } from '@gradeon/web-ui';
 import { PAGE_TITLES } from '../../app/nav';
 import { AppContext, useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
 
-function Frame({ active, title, sub, children }: { active: string; title: string; sub: string; children: React.ReactNode }) {
-  const v = useChrome(active);
+function Frame({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
   return (
-    <Shell page="status" theme={v.themeCls} aside={v.aside} overlays={<>{v.palette}</>}>
+    <PageScope page="status">
       <main className="mn">
         <header className="hd rise"><div><h1>{title}</h1><p>{sub}</p></div></header>
         <div>{children}</div>
       </main>
-    </Shell>
+    </PageScope>
   );
 }
 
@@ -23,7 +21,7 @@ export function ComingSoonPage() {
   const { go } = useApp();
   const title = PAGE_TITLES[name] ?? 'This page';
   return (
-    <Frame active="" title={title} sub="Not open yet">
+    <Frame title={title} sub="Not open yet">
       <EmptyCard
         title={title} chip={{ text: 'Soon', tone: 'a' }} scene="calendar" heading={`${title} opens in a coming release`}
         body="The school's data for it is already safe in Gradeon. The screen is still being designed with the same care as the others."

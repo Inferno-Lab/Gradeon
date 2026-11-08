@@ -27,7 +27,7 @@ export function FeesPage() {
   const canPay = app.user.permissions.includes('fees.collect');
   const err = [summary, overdue].find((q) => q.isError && !q.data);
   return (
-    <Page active="fee" title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
+    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
       overlays={paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}>
       {s && (

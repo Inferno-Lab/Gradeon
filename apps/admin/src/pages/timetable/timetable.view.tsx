@@ -1,35 +1,15 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminTimetable.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, Shell } from "@gradeon/web-ui";
+import { Select, PageScope, ToastSlot, Segmented } from "@gradeon/web-ui";
 import "./timetable.css";
 
 export function TimetableView({ v }: { v: any }) {
   return (
-    <Shell
+    <PageScope
       page="timetable"
-      theme={v.themeCls}
-      aside={v.aside}
       overlays={
-        <>
-          {v.palette}
-          {v.toastOn && (
-            <>
-              <div className="toast toast" role="status">
-                <span
-                  style={
-                    { width: "30px", height: "30px", borderRadius: "50%", background: "var(--g)", display: "grid", placeItems: "center", flex: "none" } as CSSProperties
-                  }
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ stroke: "#fff", strokeWidth: "2.6" } as CSSProperties}></path>
-                  </svg>
-                </span>
-                {v.toastText}
-              </div>
-            </>
-          )}
-        </>
+        <ToastSlot toast={v.toastOn && { text: v.toastText }} />
       }
     >
       <main className="mn">
@@ -43,16 +23,7 @@ export function TimetableView({ v }: { v: any }) {
           </div>
           <span className="grow"></span>
           <Select compact aria-label="Class" value={String(Math.max(0, v.classes.findIndex((c: any) => c.on)))} onChange={(i) => v.classes[Number(i)]?.pick()} options={v.classes.map((c: any, i: number) => ({ value: String(i), label: c.n }))} />
-          <div className="seg" role="tablist">
-            <span className="kn" style={{ width: `${v.vw ?? ""}px`, transform: `translateX(${v.vx ?? ""}px)` } as CSSProperties}></span>
-            {v.views.map((v: any, $i: number) => (
-              <Fragment key={$i}>
-                <button className={v.on} role="tab" aria-selected={v.sel} onClick={v.pick}>
-                  {v.n}
-                </button>
-              </Fragment>
-            ))}
-          </div>
+          <Segmented label="Timetable view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n }))} />
           <button className="btn pri" onClick={v.publish}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M4 12l16-8-6 16-3-7z"></path>
@@ -318,6 +289,6 @@ export function TimetableView({ v }: { v: any }) {
           </aside>
         </div>
       </main>
-    </Shell>
+    </PageScope>
   );
 }
