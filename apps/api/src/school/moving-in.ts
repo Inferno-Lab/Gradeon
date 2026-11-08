@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Header, HttpCode, Injectable, Post, Query } from '@nestjs/common';
-import { FamilyInvite, IMPORT_KINDS, UploadCreate, type Activation, type ImportBatchRow, type LetterRow, type UploadRow } from '@gradeon/contracts';
-import { exportAll, listBatches, newId, readTable } from '@gradeon/db';
+import { Body, Controller, Get, Header, HttpCode, Injectable, Param, Post, Query } from '@nestjs/common';
+import { FamilyInvite, IMPORT_KINDS, UploadCreate, importKind, type Activation, type ImportBatchRow, type LetterRow, type UploadRow } from '@gradeon/contracts';
+import { exportAll, listBatches, newId, readTable, templateXlsx } from '@gradeon/db';
 import { hashPassword } from '@gradeon/security';
-import { ZodPipe } from '@gradeon/nest-kit';
+import { ZodPipe, notFound } from '@gradeon/nest-kit';
 import { z } from 'zod';
 import { Core, CurrentUser, Require } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
@@ -154,6 +154,13 @@ export class MovingInController {
   @Post('staff/invite') @HttpCode(200) @Require('staff.write')
   inviteStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<{ sent: number }> {
     return this.moving.inviteStaff(t, u);
+  }
+
+  /** A blank sheet to fill, as the console's: an .xlsx with the columns, an example row and dropdowns. */
+  @Get('template/:kind') @Require('setup.write') @Header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  template(@Param('kind') kind: string): Buffer {
+    if (!importKind(kind)) throw notFound('That kind of import');
+    return templateXlsx(kind);
   }
 
   @Get('letters') @Require('students.read')

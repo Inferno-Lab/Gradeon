@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { IMPORT_KINDS, importKind, type ImportBatchRow, type ImportInput, type ImportKind, type ImportPreview, type ImportRowCheck } from '@gradeon/contracts';
-import { ImportError, readTable, toCsv, zip } from './files.js';
+import { ImportError, readTable, toCsv, xlsx, zip } from './files.js';
 import { KINDS, type Impl, type Row, type Write } from './kinds.js';
 
 type Q = pg.Pool | pg.PoolClient;
@@ -224,6 +224,21 @@ export function templateCsv(key: string): string {
   const kind = importKind(key);
   if (!kind) throw new ImportError(`There is no import for “${key}”.`);
   return toCsv([kind.columns.map((c) => c.key), kind.columns.map((c) => c.example)]);
+}
+
+/**
+ * The template as an .xlsx: the columns by their names with an example row, a dropdown on every column that takes fixed
+ * values, and a second sheet that says what each column is, whether it is needed and what it takes.
+ */
+export function templateXlsx(key: string): Buffer {
+  const kind = importKind(key);
+  if (!kind) throw new ImportError(`There is no import for “${key}”.`);
+  const lists = Object.fromEntries(kind.columns.flatMap((c, i) => (c.options ? [[i, c.options]] : [])));
+  const help = [['Column', 'Needed', 'Example', 'What it takes'], ...kind.columns.map((c) => [c.label, c.required ? 'Yes' : 'No', c.example, c.options ? c.options.join(', ') : c.aliases?.length ? `Also read as: ${c.aliases.join(', ')}` : ''])];
+  return xlsx([
+    { name: kind.label, rows: [kind.columns.map((c) => c.label), kind.columns.map((c) => c.example)], lists, widths: kind.columns.map((c) => Math.max(14, c.label.length + 4)) },
+    { name: 'How to fill', rows: help, widths: [26, 10, 22, 70] },
+  ]);
 }
 
 /** Everything the school has, in the same templates it can be imported from: one CSV per kind in a ZIP. Leaving is easy too. */

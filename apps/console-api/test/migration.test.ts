@@ -39,7 +39,12 @@ describe('the Migration workspace', () => {
     expect(kinds).not.toContain('marks');
     expect(v.readiness.find((r: any) => r.key === 'structure').done).toBe(false);
     const tpl = await h.c('GET', `/console/v1/schools/${id}/import/template/students`, { token: t });
-    expect(String(tpl.json).split('\r\n')[0]).toContain('admission_no,name,class');
+    // An .xlsx (a ZIP) with the columns by name; the admin offers the same sheet.
+    expect(String(tpl.json).startsWith('PK')).toBe(true);
+    expect(String(tpl.json)).toContain('Admission number');
+    const fromAdmin = await h.s('GET', '/v1/moving-in/template/contacts', { school: 'moveschool', token: school });
+    expect(fromAdmin.status).toBe(200);
+    expect(String(fromAdmin.json)).toContain('Family phone numbers');
     expect((await post('/preview', { kind: 'marks', csv: 'a\n1' })).status).toBe(400);
   });
 

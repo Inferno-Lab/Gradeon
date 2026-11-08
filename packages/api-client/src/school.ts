@@ -140,6 +140,7 @@ export function schoolApi(h: Http) {
       inviteFamilies: (classId?: string) => h.post<{ sent: number }>('/v1/moving-in/families/invite', classId ? { classId } : {}),
       inviteStaff: () => h.post<{ sent: number }>('/v1/moving-in/staff/invite'),
       letters: (classId?: string) => h.get<LetterRow[]>('/v1/moving-in/letters', classId ? { classId } : undefined),
+      template: (kind: string) => h.blob(`/v1/moving-in/template/${kind}`),
       exportAll: () => h.blob('/v1/moving-in/export'),
     },
     privacy: {

@@ -55,7 +55,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   const exp = useMutation({ mutationFn: () => app.api.migration.exportAll(schoolId), onSuccess: (b) => save(b, `${schoolId}-export.zip`), onError: fail });
   const mark = useMutation({ mutationFn: (b: ReadinessMark) => app.api.migration.mark(schoolId, b), onSuccess: (next) => qc.setQueryData(['migration', schoolId], next), onError: fail });
   const [oldDues, setOldDues] = useState('');
-  const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (text, k) => save(new Blob([text], { type: 'text/csv' }), `${k}-template.csv`), onError: fail });
+  const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (blob, k) => save(blob, `${k}-template.xlsx`), onError: fail });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
   if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;

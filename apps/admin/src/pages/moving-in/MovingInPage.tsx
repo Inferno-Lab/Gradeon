@@ -5,6 +5,7 @@ import { Field, FilePick, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp } from '../../app/kit';
+import { TypeRows } from './TypeRows';
 
 const STATUS = { new: { label: 'With Gradeon', tone: 'a' }, imported: { label: 'Imported', tone: 'g' }, set_aside: { label: 'Set aside', tone: '' } } as const;
 const save = (blob: Blob, name: string) => {
@@ -14,7 +15,6 @@ const save = (blob: Blob, name: string) => {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
-const csvCell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 const esc = (v: string) => v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
 
@@ -55,6 +55,15 @@ export function MovingInPage() {
     onSuccess: (next) => { qc.setQueryData(['uploads'], next); setPicked(null); setNote(''); say('Sent to Gradeon. The team will import it and tell you.'); },
     onError: (e) => setErr(Object.values(problem(e))[0] ?? ''),
   });
+  const [typing, setTyping] = useState(false);
+  const typed = useMutation({
+    mutationFn: ({ csv, count }: { csv: string; count: number }) => {
+      const k = IMPORT_KINDS.find((x) => x.key === kind)!;
+      return app.api.movingIn.upload({ fileName: `${k.label} (typed).csv`, note: `${count} ${count === 1 ? 'row' : 'rows'} typed in the admin`, content: csv });
+    },
+    onSuccess: (next) => { qc.setQueryData(['uploads'], next); setTyping(false); say('Sent to Gradeon. The team will import it and tell you.'); },
+    onError: fail,
+  });
   const invite = useMutation({
     mutationFn: (classId?: string) => app.api.movingIn.inviteFamilies(classId),
     onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['activation'] }); say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} by SMS.` : 'Every family there has been invited already.'); },
@@ -79,10 +88,9 @@ export function MovingInPage() {
   // The tab opens on the click itself, so the browser does not block it; the letters fill it once they arrive.
   const print = (classId?: string) => { const win = window.open('', '_blank'); if (win) letters.mutate({ classId, win }); else say('Allow pop-ups for this site to print letters.', 'bad'); };
   const exp = useMutation({ mutationFn: app.api.movingIn.exportAll, onSuccess: (b) => { save(b, `${app.slug}-export.zip`); say('Your export is downloading.'); }, onError: fail });
-  const template = () => {
-    const k = IMPORT_KINDS.find((x) => x.key === kind)!;
-    save(new Blob([`﻿${[k.columns.map((c) => c.key), k.columns.map((c) => c.example)].map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n`], { type: 'text/csv' }), `${k.key}-template.csv`);
-  };
+  // An .xlsx with the columns, an example row, dropdowns where the values are fixed, and a sheet that explains each column.
+  const tpl = useMutation({ mutationFn: (k: string) => app.api.movingIn.template(k), onSuccess: (b, k) => save(b, `${k}-template.xlsx`), onError: fail });
+  const template = () => tpl.mutate(kind);
   const a = act.data;
   return (
     <Page title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
@@ -113,8 +121,10 @@ export function MovingInPage() {
             )}
             <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 18 }}>
               <div className="fld" style={{ minWidth: 220, flex: '1 1 220px', maxWidth: 360 }}><label htmlFor="tpl">Blank sheet to fill in</label><Select id="tpl" value={kind} onChange={setKind} options={IMPORT_KINDS.map((k) => ({ value: k.key, label: k.label }))} /></div>
-              <button className="btn" onClick={template}>Download sheet</button>
+              <button className="btn" disabled={tpl.isPending} onClick={template}>{tpl.isPending ? 'Preparing…' : 'Download sheet'}</button>
+              {!typing && <button className="btn" onClick={() => setTyping(true)}>Type it in instead</button>}
             </div>
+            {typing && <TypeRows key={kind} kind={IMPORT_KINDS.find((x) => x.key === kind)!} busy={typed.isPending} onSend={(csv, count) => typed.mutate({ csv, count })} onCancel={() => setTyping(false)} />}
           </Card>
         )}
 

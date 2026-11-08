@@ -91,7 +91,8 @@ export function sampleSchool(students = 300, seed = 7): SampleSchool {
     library_loans: kids.slice(0, Math.ceil(students / 10)).map((k, i) => [k[0]!, ['Wings of Fire', 'Malgudi Days', 'The Jungle Book'][i % 3]!, `${year}-11-${pad(10 + (i % 15))}`, '']),
     transport: kids.filter((_, i) => i % 3 === 0).map((k, i) => [k[0]!, `Route ${1 + (i % 6)} · Baner`]),
   };
-  const files = IMPORT_KINDS.map((kind, i) => ({ name: `${pad(i + 1)}-${kind.key}.csv`, kind: kind.key, csv: toCsv([kind.columns.map((c) => c.key), ...rows[kind.key]!]) }));
+  // Every generated family has a phone, so there is no contact list to bring.
+  const files = IMPORT_KINDS.filter((kind) => rows[kind.key]).map((kind, i) => ({ name: `${pad(i + 1)}-${kind.key}.csv`, kind: kind.key, csv: toCsv([kind.columns.map((c) => c.key), ...rows[kind.key]!]) }));
   const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
   const fedenaStudents = toCsv([
     ['Admission no', 'First name', 'Middle name', 'Last name', 'Batch name', 'Roll number', 'Date of birth', 'Blood group', 'Admission date', 'Father name', 'Father mobile phone'],
