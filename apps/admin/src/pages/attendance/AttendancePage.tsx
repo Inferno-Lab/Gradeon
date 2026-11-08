@@ -57,13 +57,13 @@ export function AttendancePage() {
       ) : (
         <section className="grid">
           <div className="card tbl rcall s12 rise" style={{ padding: 0 }}>
-            <div className="ch" style={{ padding: '22px 22px 14px' }}>
+            <div className="ch" style={{ padding: '24px 24px 16px' }}>
               <h2>Roll call</h2>
               <span className={`chip ${day.data?.submitted ? 'g' : 'a'}`}>{day.data?.submitted ? 'Submitted' : 'Not submitted yet'}</span>
               {canMark && marks.length > 0 && <button className="btn sm" onClick={() => setDraft(Object.fromEntries(marks.filter((m) => statusOf(m.studentId, m.status) !== 'present').map((m) => [m.studentId, 'present' as const])))}>Mark everyone present</button>}
             </div>
-            {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 22px 22px', borderRadius: 20 }} />}
-            {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 22px 22px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
+            {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 20px 20px', borderRadius: 18 }} />}
+            {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 24px 24px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
             {marks.length > 0 && (
               <div className="scroll-x" data-fill="">
                 {marks.map((m) => {
@@ -74,7 +74,7 @@ export function AttendancePage() {
                       <span className="rn num">{m.rollNo || '–'}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                         <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{m.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>
-                        <b style={{ font: '700 14.5px var(--fb)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</b>
+                        <b style={{ font: '700 14px var(--fb)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</b>
                       </span>
                       <span className="mk" role="group" aria-label={`Attendance for ${m.name}`}>
                         {OPTIONS.map((o) => (
@@ -88,17 +88,17 @@ export function AttendancePage() {
             )}
           </div>
           {/* The count and the save button share one tile, so the row above the roll call is one even block. */}
-          <div className="tile t-v s12 rise" style={{ '--d': '.08s', order: -1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: '18px 36px', alignItems: 'center' } as React.CSSProperties}>
+          <div className="tile t-v s12 rise" style={{ '--d': '.08s', order: -1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: '16px 32px', alignItems: 'center' } as React.CSSProperties}>
             <div style={{ minWidth: 0 }}>
               <span className="lbl">Present or late</span>
-              <div className="big" style={{ marginTop: 8 }}>{counts.present + counts.late}<small style={{ fontSize: 18, opacity: .6 }}> / {marks.length}</small></div>
+              <div className="big" style={{ marginTop: 8 }}>{counts.present + counts.late}<small style={{ fontSize: 17, opacity: .6 }}> / {marks.length}</small></div>
               <div className="meter" aria-hidden="true">
                 <i style={{ flex: counts.present || 0.001, background: 'var(--present)' }}></i>
                 <i style={{ flex: counts.late || 0.001, background: 'var(--a)' }}></i>
                 <i style={{ flex: counts.absent || 0.001, background: 'var(--c)' }}></i>
                 <i style={{ flex: counts.none || 0.001, background: 'var(--sunk)' }}></i>
               </div>
-              <div className="tgrow" style={{ marginTop: 14, font: '700 13px var(--fb)' }}>
+              <div className="tgrow" style={{ marginTop: 12, font: '700 13px var(--fb)' }}>
                 <span>{counts.present} present</span><span>{counts.late} late</span><span>{counts.absent} absent</span>{counts.none > 0 && <span>{counts.none} not marked</span>}
               </div>
             </div>

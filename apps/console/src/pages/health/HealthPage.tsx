@@ -23,10 +23,10 @@ export function HealthPage() {
     <Page title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={<button className="btn pri" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check everything now'}</button>}>
       {inc && (
-        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 18, borderRadius: 26, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : 'var(--onCi)' }}>
+        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 20, borderRadius: 24, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : 'var(--onCi)' }}>
           <span className={`chip ${inc.state === 'resolved' ? 'g' : 'c'}`}>{inc.state === 'resolved' ? 'Resolved' : `Incident${inc.schoolName ? ` · ${inc.schoolName}` : ''}`}</span>
           <div className="fd" style={{ fontSize: 17, letterSpacing: '-.02em', marginTop: 10 }}>{inc.title}</div>
-          <p style={{ margin: '4px 0 0', font: '500 13.5px/1.45 var(--fb)', opacity: .75 }}>{inc.body}</p>
+          <p style={{ margin: '4px 0 0', font: '500 13px/1.45 var(--fb)', opacity: .75 }}>{inc.body}</p>
         </div>
       )}
       {rows.length > 0 && (() => {
@@ -58,29 +58,29 @@ export function HealthPage() {
         </Card>
       )}
       <Card title="Errors in the last 7 days" style={{ padding: 0 }}>
-        {errors.isError ? <div className="help" style={{ padding: 18 }}>{(errors.error as Error).message}</div>
-          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 18 }}>Nothing has gone wrong in the APIs, the admin, the console or the app.</div>
+        {errors.isError ? <div className="help" style={{ padding: 20 }}>{(errors.error as Error).message}</div>
+          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 20 }}>Nothing has gone wrong in the APIs, the admin, the console or the app.</div>
           : (errors.data ?? []).map((e) => (
-            <details key={e.fingerprint} className="rw" style={{ display: 'block', height: 'auto', padding: '12px 18px' }}>
+            <details key={e.fingerprint} className="rw" style={{ display: 'block', height: 'auto', padding: '12px 20px' }}>
               <summary style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', listStyle: 'none', minWidth: 0 }}>
                 <span className="chip">{e.source}</span>
                 {e.schoolSlug && <span className="chip v">{e.schoolSlug}</span>}
-                <b style={{ flex: 1, minWidth: 0, font: '700 13.5px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.message}>{e.message}</b>
+                <b style={{ flex: 1, minWidth: 0, font: '700 13px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.message}>{e.message}</b>
                 <span className="num" style={{ font: '700 13px var(--fb)' }}>{e.count}×</span>
                 <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(e.lastAt)}</span>
               </summary>
               <div className="help" style={{ marginTop: 8 }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}</div>
-              {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 12, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
+              {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 14, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
             </details>
           ))}
       </Card>
       <Card title="Restore drills" chip={<button className="btn sm" onClick={() => drill.mutate()} disabled={drill.isPending}>{drill.isPending ? 'Restoring…' : 'Run a drill now'}</button>} style={{ padding: 0 }}>
-        <div className="help" style={{ padding: '0 18px 12px' }}>Once a week a fresh backup of one live school is put back into a scratch database and counted, so we know backups restore. The school is never touched.</div>
-        {!(drills.data ?? []).length ? <div className="help" style={{ padding: '0 18px 18px' }}>No drill has run yet.</div>
+        <div className="help" style={{ padding: '0 20px 12px' }}>Once a week a fresh backup of one live school is put back into a scratch database and counted, so we know backups restore. The school is never touched.</div>
+        {!(drills.data ?? []).length ? <div className="help" style={{ padding: '0 20px 20px' }}>No drill has run yet.</div>
           : (drills.data ?? []).map((d) => (
-            <div key={d.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 52, padding: '10px 18px', flexWrap: 'wrap' }}>
+            <div key={d.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 52, padding: '10px 20px', flexWrap: 'wrap' }}>
               <span className={`chip ${d.ok ? 'g' : 'c'}`}>{d.ok ? 'Restored' : 'Failed'}</span>
-              <b style={{ flex: 1, minWidth: 160, font: '700 13.5px/1.35 var(--fb)' }}>{d.schoolName}</b>
+              <b style={{ flex: 1, minWidth: 160, font: '700 13px/1.35 var(--fb)' }}>{d.schoolName}</b>
               <span className="help" style={{ margin: 0 }} data-tip={d.error ?? undefined}>{d.ok ? `${d.rows.toLocaleString('en-IN')} rows · ${d.students.toLocaleString('en-IN')} students · ${(d.ms / 1000).toFixed(1)} s` : (d.error ?? '').slice(0, 80)}</span>
               <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(d.at)}</span>
             </div>

@@ -166,7 +166,7 @@ export function useLogin(c: LoginController, themeCls: string) {
       ? 'Add Gradeon to an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) with the key below, then type the 6-digit code it shows. You’ll use it at every sign-in.'
       : challenge?.channel === 'app'
         ? 'Type the 6-digit code your authenticator app shows for Gradeon.'
-        : `We sent a 6-digit code by ${challenge?.channel === 'sms' ? 'text message' : 'email'} to ${challenge?.maskedTo ?? email}. It works for ${Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60))} minutes.${resetting ? ' Type it with your new password.' : ''}`,
+        : `We sent a 6-digit code by ${challenge?.channel === 'sms' ? 'text message' : 'email'} to ${(challenge?.maskedTo ?? email).replace(/ /g, '\u00a0')}. It works for ${Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60))} minutes.${resetting ? ' Type it with your new password.' : ''}`,
     enroll: challenge?.enroll ?? null, back: () => { setStep('cred'); setCode(''); setOtpErr(false); setResetting(false); },
     boxes, code, otpBad: otpErr ? 'bad shake' : '', otpErr, otpMsg, tries,
     onCode: (e: { target: { value: string } }) => {

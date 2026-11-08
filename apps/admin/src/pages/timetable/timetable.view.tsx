@@ -9,7 +9,7 @@ export function TimetableView({ v }: { v: any }) {
     <PageScope
       page="timetable"
       overlays={
-        <ToastSlot toast={v.toastOn && { text: v.toastText }} />
+        <ToastSlot toast={v.toast} />
       }
     >
       <main className="mn">
@@ -18,7 +18,7 @@ export function TimetableView({ v }: { v: any }) {
             <h1>Timetable</h1>
             <p>
               Class {v.className} · {v.term} · version {v.version},{" "}
-              <span style={{ color: v.isDraft ? "var(--aD)" : "var(--gD)", fontWeight: "800" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>
+              <span style={{ color: v.isDraft ? "var(--aD)" : "var(--gD)", fontWeight: "700" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>
             </p>
           </div>
           <span className="grow"></span>
@@ -151,12 +151,12 @@ export function TimetableView({ v }: { v: any }) {
           {v.dialog}
           <aside className="side">
             <section className="det" aria-live="polite" aria-label="Selected period">
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" } as CSSProperties}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" } as CSSProperties}>
                 <span className={`sw1 chip ${v.sel.k ?? ""}`} style={{ padding: "0" } as CSSProperties}>
                   {v.sel.ab}
                 </span>
                 <div>
-                  <div className="fd" style={{ fontSize: "21px", letterSpacing: "-.025em" } as CSSProperties}>
+                  <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.025em" } as CSSProperties}>
                     {v.sel.n}
                   </div>
                   <div className="help">
@@ -197,7 +197,7 @@ export function TimetableView({ v }: { v: any }) {
                 {v.sel.bad && (
                   <>
                     {v.sel.suggest && (
-                      <button className="btn v sm" onClick={v.fix}>
+                      <button className="btn pri sm" onClick={v.fix}>
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                           <path className="i" d="M13 3 5 13h6l-1 8 8-10h-6z"></path>
                         </svg>
@@ -227,13 +227,13 @@ export function TimetableView({ v }: { v: any }) {
                 </h2>
                 <span className="chip">this week</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "14px 0 6px" } as CSSProperties}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "12px 0 6px" } as CSSProperties}>
                 <svg className="ring" viewBox="0 0 84 84" aria-hidden="true">
                   <circle className="bg" cx="42" cy="42" r="36"></circle>
                   <circle className="fg" cx="42" cy="42" r="36" style={{ strokeDashoffset: v.ringOff, stroke: v.ringC } as CSSProperties}></circle>
                 </svg>
                 <div>
-                  <div className="fd" style={{ fontSize: "30px", letterSpacing: "-.035em", lineHeight: "1" } as CSSProperties}>
+                  <div className="fd" style={{ fontSize: "28px", letterSpacing: "-.035em", lineHeight: "1" } as CSSProperties}>
                     {v.kLoad}
                     <span className="muted" style={{ font: "700 15px var(--fb)" } as CSSProperties}>
                       {" "}
@@ -259,7 +259,7 @@ export function TimetableView({ v }: { v: any }) {
                     <div className="lb">
                       <i className={l.hot} style={{ width: `${l.p ?? ""}%` } as CSSProperties}></i>
                     </div>
-                    <span className="num" style={{ font: "800 12px var(--fb)", width: "28px", textAlign: "right" } as CSSProperties}>
+                    <span className="num" style={{ font: "700 12px var(--fb)", width: "28px", textAlign: "right" } as CSSProperties}>
                       {l.v}
                     </span>
                   </div>

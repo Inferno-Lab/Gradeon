@@ -37,7 +37,7 @@ export function FeesPage() {
           <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Overdue</span><div className="big" style={{ marginTop: 8, color: 'var(--c)' }}>{money(s.overdue)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</div></div>
           <div className="card s12 rise" style={{ '--d': '.14s' } as React.CSSProperties}>
             <div className="ch"><h2>Collected by type</h2></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(220px,100%),1fr))', gap: '18px 28px', marginTop: 16, alignContent: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(220px,100%),1fr))', gap: '16px 24px', marginTop: 16, alignContent: 'start' }}>
               {s.byHead.map((h) => (
                 <div className="us" key={h.head} data-tip={`${h.label}\n${h.pct}% collected\n${money(h.collected)} of ${money(h.due)}`}>
                   <div className="r">{h.label}<b>{money(h.collected)} of {money(h.due)}</b></div>
@@ -48,13 +48,13 @@ export function FeesPage() {
             </div>
           </div>
           <div className="card tbl s12 rise" style={{ '--d': '.18s', padding: 0 } as React.CSSProperties}>
-            <div className="ch" style={{ padding: '22px 22px 14px' }}>
+            <div className="ch" style={{ padding: '24px 24px 16px' }}>
               <h2>Overdue families</h2>
               <span className="chip c">{overdue.data?.total ?? 0}</span>
               {rows.length > 0 && <button className="btn sm" disabled={remind.isPending} onClick={() => remind.mutate(rows.map((r) => r.id))}>Text everyone on this list</button>}
             </div>
             {rows.length === 0 && !overdue.isLoading && (
-              <div style={{ padding: '0 22px 22px' }}><EmptyCard title="Overdue" chip={{ text: 'None', tone: 'g' }} scene="receipt" heading="Nobody is overdue" body="Families with an unpaid fee past its due date are listed here, largest first." /></div>
+              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Overdue" chip={{ text: 'None', tone: 'g' }} scene="receipt" heading="Nobody is overdue" body="Families with an unpaid fee past its due date are listed here, largest first." /></div>
             )}
             <div className="scroll-x" data-fill="">
               <div style={{ minWidth: 520 }}>

@@ -52,7 +52,7 @@ export function CellsPage() {
                   <div className="r">Schools<b>{c.schools} of {c.maxSchools}</b></div>
                   <div className={`bar ${full > 80 ? 'warn' : ''}`}><i style={{ width: `${full}%` }}></i></div>
                 </div>
-                <div className="kv" style={{ marginTop: 14 }}>Region<b>{c.region}</b></div>
+                <div className="kv" style={{ marginTop: 12 }}>Region<b>{c.region}</b></div>
                 <div className="lbl" style={{ margin: '12px 0 4px' }}>Schools here</div>
                 {here.length === 0 && <div className="help">No schools in this cell yet.</div>}
                 <div className="lscroll" data-even-scroll="" style={{ maxHeight: 260 }}>
@@ -121,7 +121,7 @@ function ManageCell({ cell, onClose, onDone }: { cell: CellRow; onClose: () => v
       <div className="stack">
         <div className="two"><Field label="Region" value={region} onChange={setRegion} error={err.region} /><NumberField label="Most schools" min={Math.max(1, cell.schools)} value={max} onChange={(v) => { setMax(v); setErr({}); }} error={err.maxSchools} hint={`${cell.schools} run here now.`} /></div>
         <div className="tgl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ flex: 1 }}><b style={{ font: '700 14.5px var(--fb)' }}>Accept new schools</b><div className="help">Turn this off to drain a cell. Schools already here keep running.</div></div>
+          <div style={{ flex: 1 }}><b style={{ font: '700 14px var(--fb)' }}>Accept new schools</b><div className="help">Turn this off to drain a cell. Schools already here keep running.</div></div>
           <button className={`sw ${accepting ? 'on' : ''}`} role="switch" aria-checked={accepting} aria-label="Accept new schools" onClick={() => setAccepting(!accepting)}></button>
         </div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}

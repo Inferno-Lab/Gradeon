@@ -98,7 +98,7 @@ export function StudentsView({ v }: { v: any }) {
                     border: "0",
                     outline: "0",
                     background: "none",
-                    font: "600 13.5px var(--fb)",
+                    font: "600 13px var(--fb)",
                     color: "var(--ink)",
                     flex: "1",
                     minWidth: "0",
@@ -210,7 +210,7 @@ export function StudentsView({ v }: { v: any }) {
                 <b className="fd" style={{ fontSize: "22px", letterSpacing: "-.025em" } as CSSProperties}>
                   {v.empty.title}
                 </b>
-                <span className="m2" style={{ font: "500 14.5px var(--fb)" } as CSSProperties}>
+                <span className="m2" style={{ font: "500 14px var(--fb)" } as CSSProperties}>
                   {v.empty.body}
                 </span>
                 <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap", justifyContent: "center" } as CSSProperties}>
@@ -229,7 +229,7 @@ export function StudentsView({ v }: { v: any }) {
         </section>
       </main>
       <div className={`bulk ${v.bulkOn ?? ""}`} role="region" aria-label="Bulk actions">
-        <span style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 12px 0 14px", font: "700 13.5px var(--fb)" } as CSSProperties}>
+        <span style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 12px 0 16px", font: "700 13px var(--fb)" } as CSSProperties}>
           <span className="chip v" style={{ height: "26px" } as CSSProperties}>
             {v.count}
           </span>
@@ -276,10 +276,10 @@ export function StudentsView({ v }: { v: any }) {
                   {v.d.ini}
                 </span>
                 <div>
-                  <div className="fd" style={{ fontSize: "27px", letterSpacing: "-.03em", lineHeight: "1.1" } as CSSProperties}>
+                  <div className="fd" style={{ fontSize: "28px", letterSpacing: "-.03em", lineHeight: "1.1" } as CSSProperties}>
                     {v.d.n}
                   </div>
-                  <div style={{ font: "600 13.5px var(--fb)", color: "var(--ink3)", marginTop: "4px" } as CSSProperties}>
+                  <div style={{ font: "600 13px var(--fb)", color: "var(--ink3)", marginTop: "4px" } as CSSProperties}>
                     Adm {v.d.adm} · Class {v.d.cls} · Roll {v.d.roll}
                   </div>
                 </div>
@@ -332,9 +332,9 @@ export function StudentsView({ v }: { v: any }) {
                   </span>
                   <div style={{ flex: "1" } as CSSProperties}>
                     <b style={{ font: "700 14px var(--fb)" } as CSSProperties}>{v.d.g}</b>
-                    <div style={{ font: "600 12.5px var(--fb)", color: "var(--ink3)" } as CSSProperties}>Primary · may collect from school</div>
+                    <div style={{ font: "600 12px var(--fb)", color: "var(--ink3)" } as CSSProperties}>Primary · may collect from school</div>
                   </div>
-                  <span className="num" style={{ font: "700 12.5px var(--fb)", color: "var(--ink2)" } as CSSProperties}>
+                  <span className="num" style={{ font: "700 12px var(--fb)", color: "var(--ink2)" } as CSSProperties}>
                     {v.phone}
                   </span>
                   <button className="rev" onClick={v.reveal}>
@@ -356,7 +356,7 @@ export function StudentsView({ v }: { v: any }) {
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", gap: "10px", padding: "16px 26px 22px", borderTop: "1px solid var(--line)" } as CSSProperties}>
+            <div style={{ display: "flex", gap: "10px", padding: "16px 24px 24px", borderTop: "1px solid var(--line)" } as CSSProperties}>
               <button className="btn pri" style={{ flex: "1" } as CSSProperties} onClick={v.messageOne}>
                 Message guardians
               </button>

@@ -140,7 +140,7 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
       <RoleChoice value={roles} onChange={(r) => { setRoles(r); setErr({ ...err, roles: '' }); }} />
       {err.roles && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{err.roles}</div>}
       {err._ && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{err._}</div>}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" onClick={go} disabled={add.isPending}>Add</button></div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" onClick={go} disabled={add.isPending}>Add</button></div>
     </Dialog>
   );
 }
@@ -165,7 +165,7 @@ function EditDialog({ row, self, onClose, onSave, busy }: { row: ConsoleUserRow;
           <button className={`btn ${resetAuth ? 'dng' : ''}`} aria-pressed={resetAuth} onClick={() => setResetAuth(!resetAuth)}>{resetAuth ? 'Authenticator will be reset · tap to keep it' : 'Reset their authenticator (lost phone)'}</button>
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" disabled={busy || !roles.length || (!!password && password.length < 10)} onClick={() => onSave({ roles, status, ...(password ? { password } : {}), ...(resetAuth ? { resetAuthenticator: true } : {}) })}>Save</button></div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" disabled={busy || !roles.length || (!!password && password.length < 10)} onClick={() => onSave({ roles, status, ...(password ? { password } : {}), ...(resetAuth ? { resetAuthenticator: true } : {}) })}>Save</button></div>
     </Dialog>
   );
 }

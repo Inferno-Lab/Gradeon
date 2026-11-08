@@ -51,12 +51,12 @@ export function ReleasesPage() {
             <div className="help">{r.notes || 'No notes.'} · by {r.createdBy} · {ago(r.createdAt)}</div>
             {r.haltReason && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{r.haltReason}</div>}
             {all.length > 0 && (
-              <div className="us" style={{ margin: '14px 0 4px' }}>
+              <div className="us" style={{ margin: '12px 0 4px' }}>
                 <div className="r">Schools updated<b>{done} of {all.length}</b></div>
                 <div className="bar"><i style={{ width: `${(done / all.length) * 100}%` }}></i></div>
               </div>
             )}
-            <div className="grid" style={{ marginTop: 14 }}>
+            <div className="grid" style={{ marginTop: 12 }}>
               {r.waves.map((w) => (
                 <div key={w.name} className="s4" style={{ minWidth: 0 }}>
                   <div className="lbl" style={{ marginBottom: 6 }}>{w.name} · {w.status}</div>

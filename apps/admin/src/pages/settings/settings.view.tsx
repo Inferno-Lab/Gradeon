@@ -11,7 +11,7 @@ export function SettingsView({ v }: { v: any }) {
       overlays={
         <>
           <Presence>{v.askDialog}</Presence>
-          <ToastSlot toast={v.toast && { text: v.toastText }} />
+          <ToastSlot toast={v.toast} />
         </>
       }
     >
@@ -22,7 +22,7 @@ export function SettingsView({ v }: { v: any }) {
             <p>How Gradeon has set up {v.shortName} for staff, families and students.</p>
           </div>
           <span className="grow"></span>
-          <button className="btn v" onClick={v.ask}>
+          <button className="btn pri" onClick={v.ask}>
             Ask Gradeon to change this
           </button>
         </header>
@@ -62,7 +62,7 @@ export function SettingsView({ v }: { v: any }) {
                     <b>Name and logo</b>
                     <small>Shown in the app, on receipts and on report cards.</small>
                   </div>
-                  <div style={{ display: "flex", gap: "18px", alignItems: "center" } as CSSProperties}>
+                  <div style={{ display: "flex", gap: "16px", alignItems: "center" } as CSSProperties}>
                     <span className="logo" style={v.brandStyle}>
                       {v.logoText}
                     </span>
@@ -82,8 +82,8 @@ export function SettingsView({ v }: { v: any }) {
                     <b>Brand colour</b>
                     <small>Used for the app’s header and buttons. Contrast is checked for you.</small>
                   </div>
-                  <div style={{ display: "flex", gap: "22px", flexWrap: "wrap", alignItems: "center" } as CSSProperties}>
-                    <div style={{ flex: "1", minWidth: "200px", display: "flex", flexDirection: "column", gap: "14px" } as CSSProperties}>
+                  <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" } as CSSProperties}>
+                    <div style={{ flex: "1", minWidth: "200px", display: "flex", flexDirection: "column", gap: "12px" } as CSSProperties}>
                       <div className="sw5" role="radiogroup" aria-label="Brand colour">
                         {v.swatches.map((w: any, $i: number) => (
                           <Fragment key={$i}>
@@ -120,11 +120,11 @@ export function SettingsView({ v }: { v: any }) {
                             {
                               width: "24px",
                               height: "24px",
-                              borderRadius: "8px",
+                              borderRadius: "10px",
                               background: "color-mix(in srgb,var(--onCi) 28%,transparent)",
                               display: "grid",
                               placeItems: "center",
-                              font: "800 12px var(--fd)",
+                              font: "700 12px var(--fd)",
                             } as CSSProperties
                           }
                         >
@@ -216,7 +216,7 @@ export function SettingsView({ v }: { v: any }) {
               <div className="billing" style={{ marginTop: "16px" } as CSSProperties}>
                 <div className="tkt">
                   <div className="l">
-                    <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em" } as CSSProperties}>
+                    <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em" } as CSSProperties}>
                       Gradeon {v.plan.name}
                     </div>
                     <div className="tl2">

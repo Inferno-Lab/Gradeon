@@ -67,7 +67,7 @@ function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose: () => 
       {takes && <p className="help">Taking something away needs a second person: it waits in Approvals. The school’s data is kept and comes back if the module does.</p>}
       {problems.length > 0 && <ErrorLine>{problems.join(' ')}</ErrorLine>}
       {err && <ErrorLine>{err}</ErrorLine>}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
         <button className="btn" onClick={onClose}>Keep editing</button>
         <button className="btn pri" disabled={push.isPending || problems.length > 0} onClick={() => push.mutate(list)}>{push.isPending ? 'Sending' : 'Push'}</button>
       </div>
@@ -77,7 +77,7 @@ function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose: () => 
 
 const dot = (on: boolean, until?: string) => (
   <span data-tip={on ? (until ? `Until ${until}` : 'On') : 'Off'} aria-label={on ? (until ? `On until ${until}` : 'On') : 'Off'}
-    style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 99, background: on ? (until ? 'var(--a)' : 'var(--g)') : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 2px var(--line)' }} />
+    style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: on ? (until ? 'var(--a)' : 'var(--g)') : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 2px var(--line)' }} />
 );
 
 /** Every school against every module: give or take a module or a feature for many schools at once, with a review before anything is sent. */
@@ -126,7 +126,7 @@ export function ModulesPage() {
         <>
           {can && (
             <Card title="Change many schools" chip={<span className="chip">{picked.size} chosen</span>}>
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: '2 1 240px' }}><SelectField label="Module or feature" value={target} onChange={setTarget} options={[{ value: '', label: 'Choose…' }, ...options]} /></div>
                 <div style={{ flex: '1 1 160px' }}><DateField label="Until (optional, a trial)" value={until} onChange={setUntil} disabled={target.includes('.')} /></div>
                 <div style={{ display: 'flex', gap: 10, paddingBottom: 2 }}>
@@ -140,15 +140,15 @@ export function ModulesPage() {
             <div style={{ overflowX: 'auto' }}>
               <div role="table" aria-label="Modules by school" style={{ display: 'grid', gridTemplateColumns: `40px minmax(190px,1.6fr) repeat(${built.length}, minmax(72px,1fr))`, minWidth: 260 + built.length * 72, alignItems: 'stretch' }}>
                 <div role="row" style={{ display: 'contents' }}>
-                  <span role="columnheader" style={{ padding: '14px 0 14px 18px', display: 'flex', alignItems: 'center' }}>
+                  <span role="columnheader" style={{ padding: '16px 0 16px 20px', display: 'flex', alignItems: 'center' }}>
                     {can && <Checkbox aria-label="Choose every school" checked={all} onChange={() => setPicked(all ? new Set() : new Set(rows.map((r) => r.id)))} />}
                   </span>
-                  <span role="columnheader" className="help" style={{ margin: 0, padding: '14px 8px', fontWeight: 700, display: 'flex', alignItems: 'center' }}>School</span>
-                  {built.map((m) => <span key={m.key} role="columnheader" className="help" style={{ margin: 0, padding: '14px 4px', fontWeight: 700, textAlign: 'center', lineHeight: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{m.name}</span>)}
+                  <span role="columnheader" className="help" style={{ margin: 0, padding: '16px 8px', fontWeight: 700, display: 'flex', alignItems: 'center' }}>School</span>
+                  {built.map((m) => <span key={m.key} role="columnheader" className="help" style={{ margin: 0, padding: '16px 4px', fontWeight: 700, textAlign: 'center', lineHeight: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{m.name}</span>)}
                 </div>
                 {rows.map((r) => (
                   <div key={r.id} role="row" style={{ display: 'contents' }}>
-                    <span role="cell" style={{ padding: '12px 0 12px 18px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center' }}>
+                    <span role="cell" style={{ padding: '12px 0 12px 20px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center' }}>
                       {can && <Checkbox aria-label={`Choose ${r.name}`} checked={picked.has(r.id)} onChange={() => { const n = new Set(picked); if (n.has(r.id)) n.delete(r.id); else n.add(r.id); setPicked(n); }} />}
                     </span>
                     <span role="cell" style={{ padding: '12px 8px', borderTop: '1px solid var(--line)', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -211,7 +211,7 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
     <section className="grid">
       {review && <ReviewDialog list={[{ schoolId: d.id, name: d.name, cur, change }]} onClose={() => setReview(false)} onDone={(m) => { setReview(false); say(m); }} />}
       <Card title="Plan and limits" span="s12" chip={<span className="chip">Version {e.version}</span>}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
           <SelectField label="Plan" value={plan} onChange={choosePlan} disabled={!can} options={(plans.data ?? []).map((p) => ({ value: p.key, label: p.name }))} />
           <Field label="Students" inputMode="numeric" value={limits.students} onChange={(v) => setLimits({ ...limits, students: v })} disabled={!can} />
           <Field label="Staff accounts" inputMode="numeric" placeholder="No limit" value={limits.staff} onChange={(v) => setLimits({ ...limits, staff: v })} disabled={!can} />
@@ -225,11 +225,11 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
         {list.filter((m) => m.state !== 'planned').map((m) => {
           const on = m.core || mods.has(m.key);
           return (
-            <div key={m.key} style={{ padding: '14px 0', borderTop: '1px solid var(--line)' }}>
+            <div key={m.key} style={{ padding: '16px 0', borderTop: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" className={`sw ${on ? 'on' : ''}`} role="switch" aria-checked={on} aria-label={m.name} disabled={!can || m.core}
                   onClick={() => { const n = new Set(mods); if (n.has(m.key)) n.delete(m.key); else n.add(m.key); setMods(n); }} />
-                <span style={{ flex: '1 1 200px', minWidth: 0 }}><b style={{ font: '700 14.5px var(--fb)' }}>{m.name}</b>{m.core && <span className="chip" style={{ marginLeft: 8 }}>Always on</span>}<div className="help" style={{ margin: 0 }}>{m.blurb}</div></span>
+                <span style={{ flex: '1 1 200px', minWidth: 0 }}><b style={{ font: '700 14px var(--fb)' }}>{m.name}</b>{m.core && <span className="chip" style={{ marginLeft: 8 }}>Always on</span>}<div className="help" style={{ margin: 0 }}>{m.blurb}</div></span>
                 {on && !m.core && (
                   <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{ width: 160 }}><DateField label="From" value={dates[m.key]?.from ?? ''} onChange={(v) => setDate(m.key, 'from', v)} disabled={!can} /></span>
@@ -238,12 +238,12 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
                 )}
               </div>
               {on && m.features.length > 0 && (
-                <div className="tgrow" style={{ marginTop: 10, paddingLeft: 52 }}>
+                <div className="tgrow" style={{ marginTop: 10, paddingLeft: 56 }}>
                   {m.features.map((f) => f.state === 'planned'
                     ? <span key={f.key} className="chip" data-tip="Not built yet">{f.name} · planned</span>
                     : (
                       <Fragment key={f.key}>
-                        <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', font: '600 13.5px var(--fb)' }}>
+                        <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', font: '600 13px var(--fb)' }}>
                           <button type="button" className={`sw ${features[f.key] !== false ? 'on' : ''}`} role="switch" aria-checked={features[f.key] !== false} aria-label={f.name} disabled={!can}
                             onClick={() => setFeatures({ ...features, [f.key]: features[f.key] === false })} />
                           {f.name}
@@ -257,7 +257,7 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
         })}
       </Card>
       <Card title="Send to the school" span="s12">
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="help" style={{ flex: 1, minWidth: 220, margin: 0 }}>
             {preview.problems.length ? preview.problems.join(' ') : dirty ? `${preview.added.length} to give, ${preview.removed.length} to take away. Review before it is sent.` : 'Nothing has changed yet.'}
           </div>

@@ -81,12 +81,12 @@ export function Sidebar({ label, collapsed, groups, active, onNavigate, header, 
         {meMenu ? (
           <button ref={meBtn} className="mebtn" aria-haspopup="menu" aria-expanded={menu} data-tip={collapsed && !menu ? `${me.name}\n${me.role}` : undefined} data-tip-side="right" onClick={() => setMenu((o) => !o)}>
             <span className="av" style={{ background: me.bg, color: me.fg }}>{me.initials}</span>
-            <div className="fade"><div style={{ font: '700 14px var(--fb)' }}>{me.name}</div><div style={{ font: '600 12.5px var(--fb)', color: 'var(--ink3)' }}>{me.role}</div></div>
+            <div className="fade"><div style={{ font: '700 14px var(--fb)' }}>{me.name}</div><div style={{ font: '600 12px var(--fb)', color: 'var(--ink3)' }}>{me.role}</div></div>
           </button>
         ) : (
           <>
             <span className="av" style={{ background: me.bg, color: me.fg }}>{me.initials}</span>
-            <div className="fade"><div style={{ font: '700 14px var(--fb)' }}>{me.name}</div><div style={{ font: '600 12.5px var(--fb)', color: 'var(--ink3)' }}>{me.role}</div></div>
+            <div className="fade"><div style={{ font: '700 14px var(--fb)' }}>{me.name}</div><div style={{ font: '600 12px var(--fb)', color: 'var(--ink3)' }}>{me.role}</div></div>
           </>
         )}
       </div>

@@ -44,8 +44,8 @@ export function SetupPage() {
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       overlays={editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
         onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />}>
-      <div style={{ marginBottom: 18 }}><Segmented value={group} onChange={setGroup} label="Part of setup" options={groups.map((g) => ({ value: g.value, label: g.label }))} /></div>
-      <div className="stack" style={{ gap: 18 }}>
+      <div style={{ marginBottom: 16 }}><Segmented value={group} onChange={setGroup} label="Part of setup" options={groups.map((g) => ({ value: g.value, label: g.label }))} /></div>
+      <div className="stack" style={{ gap: 16 }}>
         {visible.map((s) => <SectionCard key={s.kind} section={s} canWrite={canWrite} onOpen={(row) => setEditing({ section: s, row })} />)}
       </div>
     </Page>
@@ -59,19 +59,19 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
   const grid = { '--cols': cols.map((c) => (c.key === 'name' || c.key === 'title' || c.key === 'label' ? 'minmax(0,1.6fr)' : 'minmax(0,1fr)')).join(' ') } as React.CSSProperties;
   return (
     <section className="card tbl rise" style={{ padding: 0 }}>
-      <div className="ch" style={{ padding: '22px 22px 14px', flexWrap: 'wrap', gap: 10 }}>
+      <div className="ch" style={{ padding: '24px 24px 16px', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><h2>{s.label}</h2><span className="chip">{s.rows.length}</span></span>
         {edit && <span style={{ marginLeft: 'auto' }}><AddBtn onClick={() => onOpen(null)}>Add</AddBtn></span>}
       </div>
-      {s.locked && <div className="help" style={{ padding: '0 22px 14px' }}>Gradeon keeps these for your school. To change them, use “Ask Gradeon” on School setup.</div>}
+      {s.locked && <div className="help" style={{ padding: '0 24px 16px' }}>Gradeon keeps these for your school. To change them, use “Ask Gradeon” on School setup.</div>}
       {s.rows.length === 0 ? (
-        <div className="help" style={{ padding: '0 22px 22px' }}>{importKind(s.kind)?.blurb} None yet{edit ? ': add the first, or send Gradeon your sheet from Moving in.' : '.'}</div>
+        <div className="help" style={{ padding: '0 24px 24px' }}>{importKind(s.kind)?.blurb} None yet{edit ? ': add the first, or send Gradeon your sheet from Moving in.' : '.'}</div>
       ) : (
         <div className="scroll-x lscroll">
           <div style={{ minWidth: 120 * cols.length }}>
             <div className="grd th" style={grid}>{cols.map((c) => <span key={c.key}>{c.label.replace(/ \(.*\)$/, '')}</span>)}</div>
             {s.rows.map((r) => {
-              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13.5px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} data-tip={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
+              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} data-tip={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
               return edit
                 ? <button className="rowbtn" key={r.id} onClick={() => onOpen(r)} aria-label={`Open ${nameOf(r)}`}><div className="grd rw" style={grid}>{cells}</div></button>
                 : <div className="grd rw" key={r.id} style={grid}>{cells}</div>;

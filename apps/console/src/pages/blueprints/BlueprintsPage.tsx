@@ -53,7 +53,7 @@ export function BlueprintsPage() {
           onSave={(v) => { const bp = rows.find((b) => b.id === params.bp)!; setDraft({ ...draft, [bp.id]: (draft[bp.id] ?? bp.steps).map((x) => (x.key === params.key ? { ...x, params: v } : x)) }); setParams(null); }} />}
       </>}>
       <section className="grid">
-        <div className="s12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 18, alignItems: 'start', minWidth: 0 }}>
+        <div className="s12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 16, alignItems: 'start', minWidth: 0 }}>
           {rows.length === 0 && <EmptyCard title="Blueprints" chip={{ text: 'None', tone: 'v' }} scene="checklist" heading="No blueprint is active" body="The platform creates one for each place schools can run when it first starts." />}
           {rows.map((bp) => {
             const steps = draft[bp.id] ?? bp.steps;
@@ -69,13 +69,13 @@ export function BlueprintsPage() {
                       return (
                         <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
                           <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--sunk)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
-                          <span style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{STEP_LABELS[s.key]}</b><small style={{ color: 'var(--ink3)', font: '500 12.5px var(--fb)' }}>{must ? 'Always runs' : s.optional ? 'Optional' : 'Runs unless switched off'}{Object.keys(s.params).length ? ` · ${Object.entries(s.params).map(([k, v]) => `${k}: ${String(v)}`).join(', ')}` : ''}</small></span>
+                          <span style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{STEP_LABELS[s.key]}</b><small style={{ color: 'var(--ink3)', font: '500 12px var(--fb)' }}>{must ? 'Always runs' : s.optional ? 'Optional' : 'Runs unless switched off'}{Object.keys(s.params).length ? ` · ${Object.entries(s.params).map(([k, v]) => `${k}: ${String(v)}`).join(', ')}` : ''}</small></span>
                           {canBp && <button className="btn sm" onClick={() => setParams({ bp: bp.id, key: s.key })} aria-label={`Parameters of ${STEP_LABELS[s.key]}`}>Parameters</button>}
                           <button className={`sw ${s.enabled ? 'on' : ''}`} role="switch" aria-checked={s.enabled} aria-label={STEP_LABELS[s.key]} disabled={must || !canBp} onClick={() => setDraft({ ...draft, [bp.id]: steps.map((x) => (x.key === s.key ? { ...x, enabled: !x.enabled } : x)) })}></button>
                         </div>
                       );
                     })}
-                    {canBp && draft[bp.id] && <div className="tgrow" style={{ marginTop: 14 }}><button className="btn pri" disabled={save.isPending} onClick={() => save.mutate(bp)}>Save as a new version</button><button className="btn" onClick={() => setDraft({})}>Discard</button></div>}
+                    {canBp && draft[bp.id] && <div className="tgrow" style={{ marginTop: 12 }}><button className="btn pri" disabled={save.isPending} onClick={() => save.mutate(bp)}>Save as a new version</button><button className="btn" onClick={() => setDraft({})}>Discard</button></div>}
                   </div>
                 )}
               </Card>
@@ -94,7 +94,7 @@ export function BlueprintsPage() {
                 </div>
               ))}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
-                <span style={{ flex: 1 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>Freeze changes</b><small style={{ color: 'var(--ink3)', font: '500 12.5px var(--fb)' }}>Blocks everything except suspending a school</small></span>
+                <span style={{ flex: 1 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>Freeze changes</b><small style={{ color: 'var(--ink3)', font: '500 12px var(--fb)' }}>Blocks everything except suspending a school</small></span>
                 <button className={`sw ${pol.freeze ? 'on' : ''}`} role="switch" aria-checked={pol.freeze} aria-label="Freeze changes" disabled={!canPol} onClick={() => setPol({ ...pol, freeze: !pol.freeze })}></button>
               </div>
               </div>
@@ -121,11 +121,11 @@ export function BlueprintsPage() {
               ))}
             </div>
             {!wavesOk && <div className="emsg" role="alert" style={{ marginTop: 10 }}>The last wave must be “Everyone else”, and every wave needs a name and a batch size.</div>}
-            <div className="two" style={{ marginTop: 14 }}>
+            <div className="two" style={{ marginTop: 12 }}>
               <Field label="Maintenance window" value={pol.maintenanceWindow} onChange={(v) => setPol({ ...pol, maintenanceWindow: v })} disabled={!canPol} hint="Shown to schools. Releases prefer this time." />
               <Field label="App bundle prefix" value={pol.naming.bundlePrefix} onChange={(v) => setPol({ ...pol, naming: { ...pol.naming, bundlePrefix: v.trim() } })} disabled={!canPol} hint="Each school’s app id starts with this." />
             </div>
-            <div className="tgrow" style={{ marginTop: 14 }}>
+            <div className="tgrow" style={{ marginTop: 12 }}>
               {canPol && <button className="btn" onClick={() => setPol({ ...pol, waves: [...pol.waves.slice(0, -1), { name: 'Next group', matches: 'pilot', batch: 5 }, pol.waves.at(-1)!] })}>Add a wave</button>}
               {canPol && <button className="btn pri" disabled={!dirtyPol || !wavesOk || savePolicy.isPending} onClick={() => savePolicy.mutate(pol)}>Save rollout rules</button>}
             </div>

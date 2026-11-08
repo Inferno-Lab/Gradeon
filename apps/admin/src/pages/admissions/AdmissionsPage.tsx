@@ -88,7 +88,7 @@ export function AdmissionsPage() {
           {declined.length > 0 && (
             <section className="card rise">
               <div className="ch"><h2>Declined</h2><span className="chip">{declined.length}</span><button className="btn sm" onClick={() => setShowDeclined(!showDeclined)}>{showDeclined ? 'Hide' : 'Show'}</button></div>
-              {showDeclined && <div className="tgrow" style={{ marginTop: 14 }}>{declined.map((r) => <button key={r.id} className="fp" onClick={() => setDlg({ kind: 'view', row: r })}>{r.childName} · Grade {r.gradeSought}</button>)}</div>}
+              {showDeclined && <div className="tgrow" style={{ marginTop: 12 }}>{declined.map((r) => <button key={r.id} className="fp" onClick={() => setDlg({ kind: 'view', row: r })}>{r.childName} · Grade {r.gradeSought}</button>)}</div>}
             </section>
           )}
           <p className="help" style={{ margin: 0 }}>Stages: {ENQUIRY_STAGES.filter((s) => s !== 'declined').join(' → ')}. Making an offer sends the family a message.</p>

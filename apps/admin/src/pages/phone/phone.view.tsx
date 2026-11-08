@@ -7,10 +7,10 @@ import "./phone.css";
 
 export function PhoneView({ v }: { v: any }) {
   return (
-    <PageScope page="phone" overlays={<ToastSlot toast={v.toast ? { text: v.toast } : null} />}>
+    <PageScope page="phone" overlays={<ToastSlot toast={v.toast} />}>
       <div className="ph">
         <div className="top">
-          <span className="lg" style={{ width: "44px", height: "44px", fontSize: "20px" } as CSSProperties}>
+          <span className="lg" style={{ width: "44px", height: "44px", fontSize: "22px" } as CSSProperties}>
             {v.logo}
           </span>
           <div style={{ flex: "1", minWidth: "0" } as CSSProperties}>
@@ -31,7 +31,7 @@ export function PhoneView({ v }: { v: any }) {
               <small>Present today</small>
               <div className="n num">
                 {v.present}
-                <span style={{ fontSize: "20px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
+                <span style={{ fontSize: "22px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
               </div>
             </div>
             )}
@@ -42,20 +42,20 @@ export function PhoneView({ v }: { v: any }) {
             </div>
             )}
           </div>
-          <div className="bt w" style={{ "--d": ".1s", display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px" } as CSSProperties}>
+          <div className="bt w" style={{ "--d": ".1s", display: "flex", alignItems: "center", gap: "12px", padding: "16px 20px" } as CSSProperties}>
             <div style={{ width: "90px", flex: "none" } as CSSProperties}>
               <Illustration scene="calendar" />
             </div>
             <div>
-              <b className="fd" style={{ fontSize: "18px", letterSpacing: "-.02em" } as CSSProperties}>
+              <b className="fd" style={{ fontSize: "17px", letterSpacing: "-.02em" } as CSSProperties}>
                 {v.headline}
               </b>
-              <p style={{ margin: "4px 0 0", font: "500 13.5px/1.45 var(--fb)", color: "var(--ink2)" } as CSSProperties}>{v.subline}</p>
+              <p style={{ margin: "4px 0 0", font: "500 13px/1.45 var(--fb)", color: "var(--ink2)" } as CSSProperties}>{v.subline}</p>
             </div>
           </div>
           <div className="bt w" style={{ "--d": ".14s" } as CSSProperties}>
             <div style={{ display: "flex", alignItems: "center", marginBottom: "4px" } as CSSProperties}>
-              <b className="fd" style={{ fontSize: "18px", letterSpacing: "-.02em" } as CSSProperties}>
+              <b className="fd" style={{ fontSize: "17px", letterSpacing: "-.02em" } as CSSProperties}>
                 Needs you
               </b>
               <span className="chip a" style={{ marginLeft: "auto" } as CSSProperties}>
@@ -83,7 +83,7 @@ export function PhoneView({ v }: { v: any }) {
                 <div style={{ width: "120px", margin: "0 auto" } as CSSProperties}>
                   <Illustration scene="checklist" />
                 </div>
-                <b className="fd" style={{ fontSize: "18px" } as CSSProperties}>
+                <b className="fd" style={{ fontSize: "17px" } as CSSProperties}>
                   All caught up
                 </b>
               </div>
@@ -93,7 +93,7 @@ export function PhoneView({ v }: { v: any }) {
           <div className="bt k" style={{ "--d": ".18s" } as CSSProperties}>
             <small>{v.barsTitle}</small>
             {v.barsEmpty ? (
-              <p style={{ margin: "12px 0 0", font: "500 13.5px/1.45 var(--fb)", opacity: ".75" } as CSSProperties}>Payments show up here as fees are collected.</p>
+              <p style={{ margin: "12px 0 0", font: "500 13px/1.45 var(--fb)", opacity: ".75" } as CSSProperties}>Payments show up here as fees are collected.</p>
             ) : (
               <div className="bars" role="img" aria-label={v.barsAlt}>
                 {v.bars.map((h: any, $i: number) => (

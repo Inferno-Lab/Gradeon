@@ -11,7 +11,7 @@ export function DashboardView({ v }: { v: any }) {
       overlays={
         <>
           <Presence>{v.widgetsDialog}</Presence>
-          <ToastSlot toast={v.toastOn && { text: v.toastText, action: v.canUndo ? { label: "Undo", onPress: v.undo } : undefined }} />
+          <ToastSlot toast={v.toast} />
         </>
       }
     >
@@ -70,11 +70,11 @@ export function DashboardView({ v }: { v: any }) {
             <div className="avl" style={{ background: v.me.bg, color: v.me.fg } as CSSProperties}>
               {v.me.initials}
             </div>
-            <div style={{ marginTop: "14px", font: "600 14px var(--fb)", color: "var(--ink2)" } as CSSProperties}>{v.greeting},</div>
-            <div className="fd" style={{ fontSize: "27px", letterSpacing: "-.03em", lineHeight: "1.1" } as CSSProperties}>
+            <div style={{ marginTop: "12px", font: "600 14px var(--fb)", color: "var(--ink2)" } as CSSProperties}>{v.greeting},</div>
+            <div className="fd" style={{ fontSize: "28px", letterSpacing: "-.03em", lineHeight: "1.1" } as CSSProperties}>
               {v.me.name}
             </div>
-            <div style={{ font: "600 12.5px var(--fb)", color: "var(--ink3)", margin: "4px 0 14px" } as CSSProperties}>
+            <div style={{ font: "600 12px var(--fb)", color: "var(--ink3)", margin: "4px 0 12px" } as CSSProperties}>
               {v.me.role} · {v.schoolName}
             </div>
             <div className="quick">
@@ -108,10 +108,10 @@ export function DashboardView({ v }: { v: any }) {
                 </svg>
               </button>
             </div>
-            <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em", marginTop: "18px" } as CSSProperties}>
+            <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
               Present today
             </div>
-            <div style={{ font: "600 12.5px var(--fb)", opacity: ".7", marginBottom: "12px" } as CSSProperties}>{v.dayLine}</div>
+            <div style={{ font: "600 12px var(--fb)", opacity: ".7", marginBottom: "12px" } as CSSProperties}>{v.dayLine}</div>
             <div className="big">
               <Roll digits={v.kPresent} />
               <small>/ {v.totalStudents}</small>
@@ -149,10 +149,10 @@ export function DashboardView({ v }: { v: any }) {
                 </svg>
               </button>
             </div>
-            <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em", marginTop: "18px" } as CSSProperties}>
+            <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
               Collected in {v.feeMonth}
             </div>
-            <div style={{ font: "600 12.5px var(--fb)", opacity: ".7", marginBottom: "12px" } as CSSProperties}>
+            <div style={{ font: "600 12px var(--fb)", opacity: ".7", marginBottom: "12px" } as CSSProperties}>
               {v.feePct}% of ₹{v.feeDue} due
             </div>
             <div className="big" style={{ fontSize: "38px" } as CSSProperties}>
@@ -191,15 +191,15 @@ export function DashboardView({ v }: { v: any }) {
                 </svg>
               </button>
             </div>
-            <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em", marginTop: "18px" } as CSSProperties}>
+            <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
               Waiting for you
             </div>
-            <div style={{ font: "600 12.5px var(--fb)", opacity: ".6", marginBottom: "12px" } as CSSProperties}>Leave, concessions, notices</div>
+            <div style={{ font: "600 12px var(--fb)", opacity: ".6", marginBottom: "12px" } as CSSProperties}>Leave, concessions, notices</div>
             <div className="big">
               <Roll digits={v.kLeft} />
               <small>requests</small>
             </div>
-            <div style={{ display: "flex", alignItems: "center", marginTop: "14px" } as CSSProperties}>
+            <div style={{ display: "flex", alignItems: "center", marginTop: "12px" } as CSSProperties}>
               {v.avatars.map((a: any, $i: number) => (
                 <span
                   key={$i}
@@ -210,7 +210,7 @@ export function DashboardView({ v }: { v: any }) {
                 </span>
               ))}
               {v.moreAvatars > 0 && (
-                <span style={{ marginLeft: "10px", font: "700 12.5px var(--fb)", opacity: ".7" } as CSSProperties}>and {v.moreAvatars} more</span>
+                <span style={{ marginLeft: "10px", font: "700 12px var(--fb)", opacity: ".7" } as CSSProperties}>and {v.moreAvatars} more</span>
               )}
             </div>
           </div>
@@ -281,7 +281,7 @@ export function DashboardView({ v }: { v: any }) {
                   </div>
                   {n.open && (
                     <>
-                      <button className="btn sm pri" onClick={n.act}>
+                      <button className="btn sm" onClick={n.act}>
                         {n.a}
                       </button>
                     </>
@@ -295,7 +295,7 @@ export function DashboardView({ v }: { v: any }) {
                   <div style={{ width: "150px" } as CSSProperties}>
                     <Illustration scene="checklist" />
                   </div>
-                  <b className="fd" style={{ fontSize: "18px" } as CSSProperties}>
+                  <b className="fd" style={{ fontSize: "17px" } as CSSProperties}>
                     All caught up
                   </b>
                   <span className="help">Nothing is waiting for you.</span>

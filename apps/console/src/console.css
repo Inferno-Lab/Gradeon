@@ -1,49 +1,49 @@
 /* Shared by every console page: the workspace block in the menu, the 12-column grid, status pills, usage bars and setup steps.
    These are the rules of the Fleet and School boards, kept unscoped so pages composed from the same pieces look the same. */
-.nest .rolh{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:4px 28px}
+.nest .rolh{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:4px 24px}
 .nest .rolh>div{padding:12px 0;border-top:1px solid var(--line)}
 .nest .rolh b{display:block;font:700 14px var(--fb)}
 .nest .rolh small{display:block;font:500 13px/1.45 var(--fb);color:var(--ink3);margin-top:2px}
-.nest .rolh2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));column-gap:44px}
+.nest .rolh2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));column-gap:40px}
 /* Two forms side by side end on one line: the shorter one's button moves down to meet the other's. */
 .nest .fpair{align-items:stretch}
 .nest .fpair>.card{display:flex;flex-direction:column}
 .nest .fpair>.card>div:last-child{flex:1;display:flex;flex-direction:column}
-.nest .fpair>.card>div:last-child>:nth-last-child(2){margin-bottom:14px}
+.nest .fpair>.card>div:last-child>:nth-last-child(2){margin-bottom:12px}
 .nest .fpair>.card>div:last-child>.btn:last-child{margin-top:auto!important;align-self:flex-start}
 .nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:none;animation:none}
 .nest .pdot.safe{background:var(--g);box-shadow:none}
 
 .nest .wsw{display:flex;align-items:center;gap:12px;padding:8px;border-radius:18px;background:var(--card);border:1px solid var(--line);margin-bottom:6px;white-space:nowrap;overflow:hidden}
-.nest .wsw b{display:block;font:700 14.5px var(--fb);line-height:1.2}
-.nest .wsw small{display:flex;align-items:center;gap:7px;font:700 12px var(--fb);color:var(--ink3)}
+.nest .wsw b{display:block;font:700 14px var(--fb);line-height:1.2}
+.nest .wsw small{display:flex;align-items:center;gap:6px;font:700 12px var(--fb);color:var(--ink3)}
 .nest .ck{display:flex;align-items:center;gap:12px;padding:10px 0;font:600 14px var(--fb);text-align:left;width:100%;border:0;background:none;color:inherit;cursor:default}
-.nest button.ck{cursor:pointer;border-radius:12px}
+.nest button.ck{cursor:pointer;border-radius:14px}
 .nest button.ck:hover{background:var(--sunk)}
 .nest .ck i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;font-style:normal}
 .nest .ck i.d{background:var(--gS);color:var(--gD)}.nest .ck i.w{background:var(--aS);color:var(--aD)}.nest .ck i.n{border:2px dashed var(--line2)}
 .nest .ck i svg{width:13px;height:13px}
-.nest .wiz{display:grid;grid-template-columns:230px minmax(0,1fr);gap:34px;align-items:start}
+.nest .wiz{display:grid;grid-template-columns:230px minmax(0,1fr);gap:32px;align-items:start}
 @media (max-width:1100px){.nest .wiz{grid-template-columns:minmax(0,1fr)}}
 .nest .wst{display:flex;flex-direction:column;gap:2px;position:sticky;top:24px}
 @media (max-width:1100px){.nest .wst{flex-direction:row;overflow-x:auto;position:static;padding-bottom:4px}}
-.nest .wst button{display:flex;align-items:center;gap:11px;min-height:42px;padding:0 14px;border-radius:14px;border:0;background:none;color:var(--ink2);font:700 14px var(--fb);cursor:pointer;text-align:left;white-space:nowrap;transition:background var(--t2),color var(--t2)}
+.nest .wst button{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 16px;border-radius:14px;border:0;background:none;color:var(--ink2);font:700 14px var(--fb);cursor:pointer;text-align:left;white-space:nowrap;transition:background var(--t2),color var(--t2)}
 .nest .wst button:hover{background:var(--sunk);color:var(--ink)}
 .nest .wst button.on{background:var(--ci);color:var(--onCi)}
-.nest .wst button i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;font:800 12px var(--fb);font-style:normal;background:var(--sunk);color:var(--ink3)}
+.nest .wst button i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;font:700 12px var(--fb);font-style:normal;background:var(--sunk);color:var(--ink3)}
 .nest .wst button.on i{background:color-mix(in srgb,var(--onCi) 18%,transparent);color:var(--onCi)}
 .nest .wst button.ok i{background:var(--gS);color:var(--gD)}
-.nest .log{margin-top:14px;background:var(--ci);color:color-mix(in srgb,var(--onCi) 72%,transparent);border:1px solid var(--line);border-radius:20px;padding:16px 18px;height:176px;overflow:hidden;font:500 12.5px/1.75 ui-monospace,Consolas,monospace;display:flex;flex-direction:column;justify-content:flex-end}
+.nest .log{margin-top:12px;background:var(--ci);color:color-mix(in srgb,var(--onCi) 72%,transparent);border:1px solid var(--line);border-radius:18px;padding:16px 20px;height:176px;overflow:hidden;font:500 12px/1.75 ui-monospace,Consolas,monospace;display:flex;flex-direction:column;justify-content:flex-end}
 .nest .ll{white-space:pre-wrap;overflow-wrap:anywhere;animation:ln var(--t3) var(--e) both}
 @keyframes ln{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .nest .ll .t{color:color-mix(in srgb,var(--onCi) 55%,transparent)}.nest .ll .ok{color:color-mix(in srgb,var(--g) 55%,var(--onCi))}.nest .ll .bad{color:color-mix(in srgb,var(--c) 55%,var(--onCi))}
-.nest .tkt{position:relative;border-radius:24px;padding:22px 26px;color:var(--onCi);background:var(--ci);-webkit-mask:radial-gradient(circle 15px at 64% 0,transparent 98%,black) top/100% 51% no-repeat,radial-gradient(circle 15px at 64% 100%,transparent 98%,black) bottom/100% 51% no-repeat;mask:radial-gradient(circle 15px at 64% 0,transparent 98%,black) top/100% 51% no-repeat,radial-gradient(circle 15px at 64% 100%,transparent 98%,black) bottom/100% 51% no-repeat;display:grid;grid-template-columns:64% 36%;transition:transform var(--t3) var(--e)}
+.nest .tkt{position:relative;border-radius:24px;padding:24px 24px;color:var(--onCi);background:var(--ci);-webkit-mask:radial-gradient(circle 15px at 64% 0,transparent 98%,black) top/100% 51% no-repeat,radial-gradient(circle 15px at 64% 100%,transparent 98%,black) bottom/100% 51% no-repeat;mask:radial-gradient(circle 15px at 64% 0,transparent 98%,black) top/100% 51% no-repeat,radial-gradient(circle 15px at 64% 100%,transparent 98%,black) bottom/100% 51% no-repeat;display:grid;grid-template-columns:64% 36%;transition:transform var(--t3) var(--e)}
 .nest .tkt:hover{transform:none}
 .nest .tkt .l{padding-right:20px;border-right:2px dashed color-mix(in srgb,var(--onCi) 28%,transparent);display:flex;flex-direction:column;gap:10px}
 .nest .tkt .r{padding-left:20px;display:flex;flex-direction:column;gap:10px;font:600 13px var(--fb);color:color-mix(in srgb,var(--onCi) 82%,transparent)}
-.nest .tkt .tl2{display:flex;align-items:center;gap:8px;font:600 13.5px var(--fb);color:color-mix(in srgb,var(--onCi) 82%,transparent)}
+.nest .tkt .tl2{display:flex;align-items:center;gap:8px;font:600 13px var(--fb);color:color-mix(in srgb,var(--onCi) 82%,transparent)}
 .nest .tkt .tl2 svg{width:16px;height:16px}
-.nest .slogo{width:68px;height:68px;border-radius:22px;display:grid;place-items:center;font:800 30px var(--fd);flex:none}
+.nest .slogo{width:68px;height:68px;border-radius:24px;display:grid;place-items:center;font:700 28px var(--fd);flex:none}
 
 .nest .wvr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
 .nest .wvr:first-child{border-top:0}

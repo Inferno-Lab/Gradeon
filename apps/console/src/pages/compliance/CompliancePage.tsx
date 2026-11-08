@@ -45,7 +45,7 @@ export function CompliancePage() {
             </div>
           )}
         </Card>
-        <div className="s12" style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+        <div className="s12" style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           <Card title="Agreements" chip={<span className="chip">{agreements.filter((a) => a.status === 'open').length} to sign</span>}>
             {agreements.length === 0 ? <div className="help">Add the data processing agreement each school has to sign. It stays here until it is signed.</div> : (
               <div className="lscroll" style={{ maxHeight: 300 }}>

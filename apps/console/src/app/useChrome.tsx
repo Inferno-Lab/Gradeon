@@ -77,7 +77,7 @@ export function useChrome() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className={`chip ${pending ? 'a' : 'g'}`}>{pending ? 'Needs you' : 'All clear'}</span>
           </div>
-          <div className="fd" style={{ fontSize: 20, letterSpacing: '-.03em' }}>{pending ? `${pending} ${pending === 1 ? 'request' : 'requests'} to approve` : 'Nothing waiting'}</div>
+          <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{pending ? `${pending} ${pending === 1 ? 'request' : 'requests'} to approve` : 'Nothing waiting'}</div>
           <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/approvals')}>{pending ? 'Review' : 'Open approvals'}<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
         </div>
       )}
@@ -103,7 +103,7 @@ export function useChrome() {
             ))}
           </div>
         ))}
-        <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
+        <button className="btn" style={{ width: '100%', marginTop: 12 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
       </MoreSheet>
     )}</Presence>
     </>

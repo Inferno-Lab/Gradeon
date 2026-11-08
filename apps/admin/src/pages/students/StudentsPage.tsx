@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dayLabel, inr, istToday, plural, type StudentRow } from '@gradeon/contracts';
-import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor } from '@gradeon/web-ui';
+import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor, useToast } from '@gradeon/web-ui';
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
@@ -53,13 +53,11 @@ export function StudentsPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [pop, setPop] = useState('');
-  const [toast, setToast] = useState('');
+  const { toast, say: show } = useToast();
   const [rev, setRev] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => { const t = setTimeout(() => { setDq(q.trim()); setPage(1); }, 250); return () => clearTimeout(t); }, [q]);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const say = (m: string) => { if (!m) return; clearTimeout(toastTimer.current); setToast(m); toastTimer.current = setTimeout(() => setToast(''), 4500); };
+  const say = (m: string) => { if (m) show(m); };
 
   const views = useQuery({ queryKey: ['student-views'], queryFn: app.api.students.views });
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
@@ -227,7 +225,7 @@ export function StudentsPage() {
   return (
     <>
       <StudentsView v={vals} />
-      <ToastSlot toast={toast && { text: toast }} />
+      <ToastSlot toast={toast} />
     </>
   );
 }

@@ -47,7 +47,7 @@ export function MessagesPage() {
             </div>
           </div>
           <div className="card mst rise" style={{ '--d': '.06s', padding: 0 } as React.CSSProperties}>
-            {sel ? <Conversation key={sel} id={sel} canWrite={canWrite} onBack={() => setSel(null)} onChanged={(m) => { refresh(qc); if (m) say(m); }} /> : <div className="help" style={{ padding: 28, textAlign: 'center' }}>Choose a conversation.</div>}
+            {sel ? <Conversation key={sel} id={sel} canWrite={canWrite} onBack={() => setSel(null)} onChanged={(m) => { refresh(qc); if (m) say(m); }} /> : <div className="help" style={{ padding: 32, textAlign: 'center' }}>Choose a conversation.</div>}
           </div>
         </section>
       )}
@@ -64,7 +64,7 @@ function ThreadItem({ t, on, onOpen }: { t: ThreadRow; on: boolean; onOpen: () =
         <span className="mts" data-tip={t.subject}>{t.subject}</span>
         <span className="mtp">{t.lastFrom === 'staff' ? 'You: ' : ''}{t.lastBody}</span>
       </span>
-      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '800 11.5px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
+      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '700 11px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
     </button>
   );
 }
@@ -93,8 +93,8 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
       <header className="mch">
         <button className="btn sm mback" onClick={onBack} aria-label="Back to the list"><Ico d={BACK} /></button>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <b className="fd" data-tip={t.subject} style={{ display: 'block', fontSize: 18, letterSpacing: '-.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</b>
-          <small style={{ color: 'var(--ink3)', font: '600 12.5px var(--fb)' }}>{t.guardianName}{t.studentName ? ` · ${t.studentName}, Class ${t.className}` : ''}{t.assignedToName ? ` · with ${t.assignedToName}` : ''}</small>
+          <b className="fd" data-tip={t.subject} style={{ display: 'block', fontSize: 17, letterSpacing: '-.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</b>
+          <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{t.guardianName}{t.studentName ? ` · ${t.studentName}, Class ${t.className}` : ''}{t.assignedToName ? ` · with ${t.assignedToName}` : ''}</small>
         </div>
         {canWrite && <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {!t.assignedToName && <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ assignToMe: true })}>Take it</button>}
@@ -147,7 +147,7 @@ function Start({ onClose, onDone }: { onClose: () => void; onDone: (t: ThreadDet
     <Dialog title="New message" onClose={onClose} width={540} shake={shake.cls}>
       <div className="stack">
         {stu ? (
-          <div className="fld"><label>To the family of</label><div className="tgrow"><span className="chip v" style={{ height: 34, padding: '0 14px', fontSize: 13.5 }}>{stu.name} · Class {stu.className}</span><button className="btn sm" onClick={() => { setStu(null); setQ(''); }}>Change</button></div></div>
+          <div className="fld"><label>To the family of</label><div className="tgrow"><span className="chip v" style={{ height: 34, padding: '0 16px', fontSize: 13 }}>{stu.name} · Class {stu.className}</span><button className="btn sm" onClick={() => { setStu(null); setQ(''); }}>Change</button></div></div>
         ) : (
           <div className="fld">
             <Field label="To the family of" value={q} onChange={(v) => { setQ(v); setErr({ ...err, studentId: '' }); }} error={err.studentId} placeholder="Type a student’s name" />

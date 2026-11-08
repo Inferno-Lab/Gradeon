@@ -42,7 +42,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
     onError: (e) => say((e as Error).message, 'bad'),
   });
 
-  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
   if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const readOnly = !can || !!cur?.locked;
   const startNew = () => { setSel('new'); setName(''); setDesc(''); setPerms(new Set(['students.read'])); setErr({}); };
@@ -69,7 +69,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
                 <fieldset key={g.area} style={{ border: 0, padding: 0, margin: '0 0 10px' }}>
                   <legend className="lbl" style={{ marginBottom: 6 }}>{g.area}</legend>
                   {g.items.map((p) => (
-                    <label key={p.key} className="hwc" style={{ display: 'flex', whiteSpace: 'normal', alignItems: 'flex-start', padding: '3px 0' }}>
+                    <label key={p.key} className="hwc" style={{ display: 'flex', whiteSpace: 'normal', alignItems: 'flex-start', padding: '4px 0' }}>
                       <Checkbox checked={perms.has(p.key)} disabled={readOnly} onChange={(c) => { const n = new Set(perms); if (c) n.add(p.key); else n.delete(p.key); setPerms(n); }} />
                       <span>{p.label}{p.sensitive && <span className="chip a" style={{ marginLeft: 6, height: 20, padding: '0 8px' }}>careful</span>}</span>
                     </label>
@@ -79,7 +79,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
             </div>
             {err._ && <ErrorLine>{err._}</ErrorLine>}
             {!readOnly && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
                 {cur && !cur.people ? (sure
                   ? <span style={{ display: 'flex', gap: 8 }}><button className="btn sm dng" onClick={() => remove.mutate()}>Yes, delete</button><button className="btn sm" onClick={() => setSure(false)}>Keep</button></span>
                   : <button className="btn dng" onClick={() => setSure(true)}>Delete role</button>) : <span className="help">{cur?.people ? `${cur.people} ${cur.people === 1 ? 'person has' : 'people have'} this role.` : ''}</span>}

@@ -56,8 +56,8 @@ function ExamCard({ e, onOpen }: { e: ExamRow; onOpen: () => void }) {
   return (
     <button className="exc" onClick={onOpen} aria-label={`Open ${e.name}, Class ${e.className}`}>
       <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span className="chip v">Class {e.className}</span><span className={`st ${TONE[e.status]}`}><i></i>{LABEL[e.status]}</span></span>
-      <b className="fd" style={{ fontSize: 19, letterSpacing: '-.02em', lineHeight: 1.2 }}>{e.name}</b>
-      <small style={{ color: 'var(--ink3)', font: '600 12.5px var(--fb)' }}>{dateLabel(e.startsOn)}{e.endsOn !== e.startsOn ? ` to ${dateLabel(e.endsOn)}` : ''} · {e.subjects.length} subjects</small>
+      <b className="fd" style={{ fontSize: 17, letterSpacing: '-.02em', lineHeight: 1.2 }}>{e.name}</b>
+      <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{dateLabel(e.startsOn)}{e.endsOn !== e.startsOn ? ` to ${dateLabel(e.endsOn)}` : ''} · {e.subjects.length} subjects</small>
       <span className="us" style={{ gap: 6, marginTop: 4 }}>
         <span className="r"><span>Marks entered</span><b>{e.entered} of {e.expected}</b></span>
         <span className="bar" style={{ height: 14 }}><i style={{ width: `${p}%` }}></i></span>
@@ -169,9 +169,9 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
   const editable = canWrite;
   return (
     <Dialog title={ex ? ex.name : 'Exam'} tag={ex ? { text: `Class ${ex.className} · ${LABEL[ex.status]}`, tone: ex.status === 'published' ? 'g' : 'v' } : undefined} onClose={onClose} width={860} shake={shake.cls}>
-      {!m || !ex ? <div className="skc" style={{ height: 280, borderRadius: 20 }} /> : (
+      {!m || !ex ? <div className="skc" style={{ height: 280, borderRadius: 18 }} /> : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '4px 0 14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '4px 0 12px' }}>
             <Segmented value={tab} onChange={setTab} label="Exam view" options={[{ value: 'marks', label: 'Marks' }, { value: 'results', label: 'Results' }]} />
             <span className="chip">{ex.entered} of {ex.expected} marks entered</span>
           </div>
@@ -185,7 +185,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                 {m.students.map((s) => (
                   <div className="mkr" key={s.studentId} style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                     <span className="rn num">{s.rollNo || '–'}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b data-tip={s.name} style={{ font: '700 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b data-tip={s.name} style={{ font: '700 13px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
                     {ex.subjects.map((sub) => {
                       const c = cell(s.studentId, sub.subjectId);
                       const over = c.score !== '' && Number(c.score) > sub.maxMarks;
@@ -203,17 +203,17 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
               </div>
             </div>
           ) : (
-            !results.data ? <div className="skc" style={{ height: 240, borderRadius: 20 }} /> : results.data.rows.length === 0 ? <div className="help" style={{ padding: 16 }}>Results appear here as marks are entered.</div> : (
+            !results.data ? <div className="skc" style={{ height: 240, borderRadius: 18 }} /> : results.data.rows.length === 0 ? <div className="help" style={{ padding: 16 }}>Results appear here as marks are entered.</div> : (
               <>
                 <div className="tgrow" style={{ marginBottom: 10 }}><span className="chip v">Average {results.data.average}%</span><span className="chip g">{results.data.passPct}% passed</span><span className="chip">{results.data.rows.length} students</span></div>
                 <div className="lscroll" style={{ maxHeight: 'min(46dvh,400px)', border: '1px solid var(--line)', borderRadius: 18 }}>
                   <div style={{ minWidth: 520 }}>
                     {results.data.rows.map((r) => (
                       <div className="grd rw" key={r.studentId} style={{ '--cols': '44px minmax(0,1.6fr) 90px 70px 60px' } as React.CSSProperties}>
-                        <b className="num" style={{ font: '800 14px var(--fb)', color: r.rank <= 3 ? 'var(--v)' : 'var(--ink3)' }}>#{r.rank}</b>
+                        <b className="num" style={{ font: '700 14px var(--fb)', color: r.rank <= 3 ? 'var(--v)' : 'var(--ink3)' }}>#{r.rank}</b>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
-                        <span className="num" style={{ font: '600 13.5px var(--fb)' }}>{r.total} / {r.max}</span>
-                        <b className="num" style={{ font: '800 14px var(--fb)' }}>{r.pct}%</b>
+                        <span className="num" style={{ font: '600 13px var(--fb)' }}>{r.total} / {r.max}</span>
+                        <b className="num" style={{ font: '700 14px var(--fb)' }}>{r.pct}%</b>
                         <span className={`chip ${r.pct >= 33 ? 'g' : 'c'}`}>{r.grade}</span>
                       </div>
                     ))}
@@ -223,7 +223,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
             )
           )}
           {err && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{err}</div>}
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {editable ? (confirm === 'remove'
               ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this exam?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep</button></span>
               : ex.status !== 'published' ? <button className="btn dng" onClick={() => setConfirm('remove')}>Remove exam</button> : <span />) : <span />}

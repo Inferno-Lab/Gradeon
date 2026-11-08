@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { lakhs, type ApprovalRow } from '@gradeon/contracts';
-import { EmptyCard, PageScope, TONES } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, TONES, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { PhoneView } from './phone.view';
@@ -15,9 +15,7 @@ export function PhoneDashboard() {
   const chrome = useShellChrome();
   const qc = useQueryClient();
   const [done, setDone] = useState<Record<string, boolean>>({});
-  const [toast, setToast] = useState('');
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  const { toast, say } = useToast();
   const q = useQuery({ queryKey: ['dashboard', 6], queryFn: () => app.api.dashboard(6), refetchInterval: 20_000, placeholderData: keepPreviousData });
   const decide = useMutation({
     mutationFn: async (a: { n: ApprovalRow; decision: 'approve' | 'undo' }) => (a.n.kind === 'attendance' ? app.api.attendance.remind() : app.api.approvals.decide(a.n.id, { decision: a.decision })),
@@ -35,7 +33,7 @@ export function PhoneDashboard() {
     );
   }
   if (!d) {
-    return <PageScope page="phone"><div className="ph" aria-busy="true"><div className="top"><div className="skc" style={{ height: 44, flex: 1, borderRadius: 14 }} /></div><div className="sc"><div className="skc" style={{ height: 120, borderRadius: 26 }} /><div className="skc" style={{ height: 200, borderRadius: 26 }} /></div></div></PageScope>;
+    return <PageScope page="phone"><div className="ph" aria-busy="true"><div className="top"><div className="skc" style={{ height: 44, flex: 1, borderRadius: 14 }} /></div><div className="sc"><div className="skc" style={{ height: 120, borderRadius: 24 }} /><div className="skc" style={{ height: 200, borderRadius: 24 }} /></div></div></PageScope>;
   }
 
   const items = d.needsYou.map((n) => {
@@ -47,7 +45,7 @@ export function PhoneDashboard() {
         const next = !isDone;
         setDone((s) => ({ ...s, [n.id]: next }));
         decide.mutate({ n, decision: next ? 'approve' : 'undo' });
-        if (next) { clearTimeout(timer.current); setToast(n.doneText); timer.current = setTimeout(() => setToast(''), 4000); }
+        if (next) say(n.doneText);
       },
     };
   });

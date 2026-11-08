@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { closeModules, dependents } from '@gradeon/config-engine';
 import { DEFAULT_BRAND, contrast, istToday, readableOn, type SettingsResponse } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, PageScope, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, ErrorLine, PageScope, useShake, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { SettingsView } from './settings.view';
@@ -53,7 +53,7 @@ export function SettingsPage() {
   const [tab, setTab] = useState(0);
   const [apOpen, setApOpen] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
-  const [toast, setToast] = useState('');
+  const { toast, say } = useToast();
   const [copied, setCopied] = useState('');
   const [used, setUsed] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -114,7 +114,6 @@ export function SettingsPage() {
     smsLeft: Math.max(0, (usage?.smsLimit ?? 0) - (usage?.smsUsed ?? 0)).toLocaleString('en-IN'),
   };
 
-  const say = (text: string) => { setToast(text); later(() => setToast(''), 3600); };
   const extra: ReactNode = tab === 1 ? <ModulesPanel doc={data} draft={draft} locked={lock('modules.enabled')} onChange={(m) => set({ modules: m })} />
     : tab === 2 ? <AppLayoutPanel doc={data} say={say} />
       : tab === 3 ? <RolesPanel say={say} />
@@ -144,7 +143,7 @@ export function SettingsPage() {
     toggleAp: (e: React.MouseEvent) => { e.stopPropagation(); if (!lock('approvals.feeWaiver')) setApOpen((o) => !o); },
     aps: WAIVERS.map((w, i) => ({ n: w[1], on: w[0] === draft.waiver, d: 50 + i * 45, pick: () => { set({ waiver: w[0] }); setApOpen(false); } })),
     ticks: Array.from({ length: TICKS }, (_, k) => ({ c: k < (used / 100) * TICKS ? 'on' : '' })),
-    ask: () => setAsking(true), toast: !!toast, toastText: toast,
+    ask: () => setAsking(true), toast,
     askDialog: asking ? <AskDialog area={TABS[tab]![0]} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Gradeon. You will see the answer here.'); }} /> : null,
   };
   return <SettingsView v={v} />;
@@ -182,7 +181,7 @@ function ModulesPanel({ doc, draft, locked, onChange }: { doc: SettingsResponse;
 function AuditPanel() {
   const { api } = useApp();
   const q = useQuery({ queryKey: ['settings-audit'], queryFn: api.settings.audit });
-  if (q.isLoading) return <div className="skc" style={{ height: 260, borderRadius: 26 }} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 260, borderRadius: 24 }} />;
   if (q.isError) return <EmptyCard error title="Audit log" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see this log" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const rows = q.data ?? [];
   if (!rows.length) return <EmptyCard title="Audit log" chip={{ text: '0 entries', tone: 'v' }} scene="checklist" heading="Nothing has been changed yet" body="Every change to settings, fees and approvals is written here, with who made it and when." />;
@@ -220,7 +219,7 @@ function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => voi
         <label htmlFor="ask-msg">What would you like changed?</label>
         <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto' }}>
           <textarea id="ask-msg" value={message} onChange={(e) => { setMessage(e.target.value); setErr(''); }} maxLength={1000} aria-invalid={!!err} placeholder="For example: put Fees in the app’s bottom tabs."
-            style={{ width: '100%', minHeight: 110, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14.5px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
         </div>
         {err && <ErrorLine>{err}</ErrorLine>}
       </div>
@@ -229,7 +228,7 @@ function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => voi
         <button className="btn pri" disabled={send.isPending} onClick={() => { if (message.trim().length < 5) { setErr('Say what you would like changed.'); shake.hit(); } else send.mutate(); }}>{send.isPending ? 'Sending…' : 'Send to Gradeon'}</button>
       </div>
       {(mine.data ?? []).length > 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 16 }}>
           <div className="lbl" style={{ marginBottom: 6 }}>Your requests</div>
           {(mine.data ?? []).slice(0, 5).map((r) => (
             <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>
