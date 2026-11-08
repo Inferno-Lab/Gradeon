@@ -256,6 +256,14 @@ describe('error reports', () => {
   });
 });
 
+describe('plans', () => {
+  it('lists each plan with the features it leaves out, and a new school takes them', async () => {
+    const plans = (await h.c('GET', '/console/v1/plans', { token: t })).json;
+    expect(plans.map((p: { key: string }) => p.key)).toEqual(['starter', 'standard', 'premium']);
+    for (const p of plans) expect(p.features).toEqual({});
+  });
+});
+
 describe('backups', () => {
   it('backs a school up on request, and waits for a second person to put one back', async () => {
     const school = (await h.c('GET', '/console/v1/schools', { token: t })).json.find((s: { slug: string }) => s.slug === 'demoschool');

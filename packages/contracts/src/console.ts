@@ -83,6 +83,8 @@ export interface PlanRow {
   name: string;
   perStudentYear: number;
   modules: string[];
+  /** Features this plan leaves out (false), like fees.onlinePayment on a starter plan. Applied when a school takes the plan. */
+  features?: Record<string, boolean>;
   limits: Limits;
 }
 
