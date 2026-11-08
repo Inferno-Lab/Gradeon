@@ -39,12 +39,13 @@ What matters most, in the owner's words, and where it is in this plan:
 | Alerts reaching people | Needs a webhook from the owner (`ALERT_WEBHOOK_URL`); everything is wired |
 | Penetration test; the bug sweep on real Android phones and an iPhone | Needs a vendor and devices |
 | Retire the Greenfield seed in favour of the importer (1.2) | Decided against: Greenfield holds months of activity (notices, chats, homework, approvals) that no import kind brings in, and 49 browser flows rely on it. Test schools of any size come from the importer (Migration → test school, `tools/generate-school.mjs`) |
+| Moving `assets/mock` and the Mock repositories into `test/` (1.3) | Decided against: plain `flutter run`, the screenshot tool and the widget tests all use the sample content, and what 1.3 is for is already true: release builds refuse to start without a school, compile the sample-content code out, and the build workflow leaves the files out |
 | Settings not used yet: late fee, reminders by date, record retention | The job queue (Phase 4) runs fines and reminders; retention needs leaving dates from year-end (Phase 4) |
 | 2A items not built: fonts, accent and dark-mode colours, app name, icon and splash, logo image, sender names, student sign-in, report-card and certificate headings, grading scales, integrations, deployment settings | Fonts and colours are the owner's design decision; icons, splash and logo need art and file storage; sender names need providers; report cards, certificates and student sign-in are Phase 5; deployment settings follow the hosting choice |
 | Plans with feature differences filled in | The mechanism is in; which plan leaves out what is a pricing decision |
 | Photos, documents and past report-card PDFs in Migration | File storage (Phase 4) |
 | Presets for the other nine ERPs; QR codes on letters; WhatsApp invites; OCR of paper forms; Tally | Real exports from those systems; the app's store link (one app or one per school); a WhatsApp provider; the assistant; accounting |
-| Templates with dropdowns | CSV templates open in Excel and Sheets; dropdowns need an .xlsx writer, left for when a school asks |
+| Templates with dropdowns | Decided against for now: only two columns have fixed choices (period kind, admission stage), the CSV templates open in Excel and Sheets, and the importer checks every row and says what is wrong in plain words before anything is imported. Worth an .xlsx writer when a module brings many fixed-choice columns |
 | Proving a move on a staging school | Needs staging |
 | Owner's design review of pages without boards | The owner's review |
 
