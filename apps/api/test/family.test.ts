@@ -265,3 +265,20 @@ describe('what the console sets reaches families and the office', () => {
     }
   });
 });
+
+describe('the days a school is closed', () => {
+  it('leaves the school’s weekly off days out of the attendance week', async () => {
+    const weekday = (d: string) => new Date(`${d}T00:00:00Z`).getUTCDay();
+    const sundays = (await h.call('GET', '/v1/attendance/week', { token: admin })).json as { date: string }[];
+    expect(sundays.some((p) => weekday(p.date) === 6)).toBe(true);
+    expect(sundays.some((p) => weekday(p.date) === 0)).toBe(false);
+    await h.setSettings({ 'calendar.weeklyOff': ['sun', 'sat'] });
+    try {
+      const week = (await h.call('GET', '/v1/attendance/week', { token: admin })).json as { date: string }[];
+      expect(week).toHaveLength(sundays.length);
+      expect(week.some((p) => [0, 6].includes(weekday(p.date)))).toBe(false);
+    } finally {
+      await h.setSettings({ 'calendar.weeklyOff': ['sun'] });
+    }
+  });
+});

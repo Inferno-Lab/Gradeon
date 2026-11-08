@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/utils/schedule.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 
@@ -61,6 +62,10 @@ abstract final class SchoolConfig {
       }
       consentRequired = settings['privacy.consentRequired'] == true;
       photoConsent = settings['privacy.photoConsent'] == true;
+      const days = {'mon': DateTime.monday, 'tue': DateTime.tuesday, 'wed': DateTime.wednesday, 'thu': DateTime.thursday, 'fri': DateTime.friday, 'sat': DateTime.saturday, 'sun': DateTime.sunday};
+      weeklyOffDays
+        ..clear()
+        ..addAll(List<String>.from((settings['calendar.weeklyOff'] as List?) ?? const ['sun']).map((d) => days[d]).whereType<int>());
       final word = '${(json['vocabulary'] as Map?)?['class'] ?? ''}'.trim();
       classWord = word == 'Class' ? '' : word;
     } on Object {
