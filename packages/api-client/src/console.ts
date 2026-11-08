@@ -1,7 +1,7 @@
 import type {
   ActionRequest, ActionRow, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
-  WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, UploadRow } from '@gradeon/contracts';
+  WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow } from '@gradeon/contracts';
 import type { Http } from './http';
 
 /** What the console sends to preview or import: the file name may be left out. */
@@ -23,6 +23,7 @@ export function consoleApi(h: Http) {
     backups: (schoolId: string) => h.get<BackupRow[]>(`${base}/schools/${schoolId}/backups`),
     migration: {
       view: (schoolId: string) => h.get<MigrationView>(`${base}/schools/${schoolId}/import`),
+      mark: (schoolId: string, b: ReadinessMark) => h.patch<MigrationView>(`${base}/schools/${schoolId}/import/readiness`, b),
       template: (schoolId: string, kind: string) => h.text(`${base}/schools/${schoolId}/import/template/${kind}`),
       upload: (schoolId: string, uploadId: string) => h.get<{ fileName: string; content: string }>(`${base}/schools/${schoolId}/import/uploads/${uploadId}`),
       setAside: (schoolId: string, uploadId: string) => h.post<UploadRow[]>(`${base}/schools/${schoolId}/import/uploads/${uploadId}/set-aside`),

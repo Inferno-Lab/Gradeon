@@ -151,6 +151,13 @@ export interface Activation {
   families: { total: number; invited: number; signedIn: number; consented: number };
   classes: ActivationClass[];
 }
+/** Gradeon's team ticks a go-live item that cannot be counted, or types the old system's total dues to reconcile against. */
+export const ReadinessMark = z.union([
+  z.object({ key: z.enum(['config_reviewed', 'staff_trained']), done: z.boolean() }),
+  z.object({ key: z.literal('old_dues'), amount: z.number().int().min(0).max(10_000_000_000).nullable() }),
+]);
+export type ReadinessMark = z.infer<typeof ReadinessMark>;
+
 export const FamilyInvite = z.object({ classId: z.string().max(60).optional() });
 export type FamilyInvite = z.infer<typeof FamilyInvite>;
 /** One letter home: which child, and the last digits of the phone the family signs in with (letters travel in school bags). */
@@ -161,7 +168,10 @@ export interface MigrationView {
   kinds: ImportKind[];
   batches: ImportBatchRow[];
   uploads: UploadRow[];
-  readiness: { key: string; label: string; done: boolean; detail: string }[];
+  /** Worked out from the school's data; `manual` items are ticked by Gradeon's team; `fees` compares with the old system's total. */
+  readiness: { key: string; label: string; done: boolean; detail: string; manual?: boolean }[];
+  /** The fee dues still open here, and the old system's total the team typed in to compare (null until then). */
+  dues?: { outstanding: number; oldSystem: number | null };
   students: number;
   studentLimit: number;
 }

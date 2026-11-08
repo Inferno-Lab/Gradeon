@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Patch, Post } from '@nestjs/common';
 import { activeFeatures, activeModules } from '@gradeon/config-engine';
-import { IMPORT_KINDS, ImportInput, SampleLoad, importKind, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
+import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
 import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateCsv, undoBatch } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
@@ -14,12 +14,21 @@ const n = async (pool: pg.Pool, sql: string) => Number((await pool.query<{ n: st
 export class Migration {
   constructor(private readonly db: Db, @Inject(ENV) private readonly env: Env) {}
 
-  private async school(id: string): Promise<{ entitlement: EntitlementDoc; kinds: string[] }> {
-    const r = (await this.db.pool.query<{ entitlement: EntitlementDoc }>('select entitlement from schools where id = $1 and deleted_at is null', [id])).rows[0];
+  private async school(id: string): Promise<{ entitlement: EntitlementDoc; kinds: string[]; checklist: Record<string, unknown>; modules: Set<string> }> {
+    const r = (await this.db.pool.query<{ entitlement: EntitlementDoc; checklist: Record<string, unknown> }>('select entitlement, checklist from schools where id = $1 and deleted_at is null', [id])).rows[0];
     if (!r) throw notFound('That school');
     const mods = activeModules(r.entitlement);
     const modules = new Set(['core', ...mods, ...activeFeatures(r.entitlement, mods)]);
-    return { entitlement: r.entitlement, kinds: IMPORT_KINDS.filter((k) => modules.has(k.module)).map((k) => k.key) };
+    return { entitlement: r.entitlement, kinds: IMPORT_KINDS.filter((k) => modules.has(k.module)).map((k) => k.key), checklist: r.checklist ?? {}, modules };
+  }
+
+  /** Go-live items the data cannot show (kept with the school's console checklist), and the old system's dues total. */
+  async mark(user: ConsoleUser, id: string, m: ReadinessMark): Promise<MigrationView> {
+    await this.school(id);
+    const value = m.key === 'old_dues' ? m.amount : m.done;
+    await this.db.pool.query("update schools set checklist = checklist || jsonb_build_object($2::text, $3::jsonb) where id = $1", [id, `golive.${m.key}`, JSON.stringify(value)]);
+    await this.db.audit(user.email, 'migration.readiness', 'school', id, { key: m.key, value });
+    return this.view(id);
   }
 
   private with<T>(id: string, fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
@@ -47,17 +56,28 @@ export class Migration {
         n(pool, "select count(distinct g.id) n from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id join users u on u.id = g.user_id where s.status = 'active' and u.last_login_at is not null"),
         n(pool, 'select count(*) n from fee_invoices'),
       ]);
+      const [slots, outstanding] = await Promise.all([
+        n(pool, 'select count(*) n from timetable_slots'),
+        n(pool, 'select coalesce(sum(i.amount - i.waived_amount - coalesce((select sum(p.amount) from payments p where p.invoice_id = i.id), 0)), 0) n from fee_invoices i'),
+      ]);
+      const oldDues = typeof s.checklist['golive.old_dues'] === 'number' ? (s.checklist['golive.old_dues'] as number) : null;
+      const ticked = (k: string) => s.checklist[`golive.${k}`] === true;
       const fees = s.kinds.includes('fee_dues');
       const readiness = [
         { key: 'structure', label: 'The year and its classes are set up', done: year > 0 && classes > 0, detail: `${classes} classes${year ? '' : ', no current year'}` },
         { key: 'staff', label: 'Staff are in', done: staff > 1, detail: `${staff} staff` },
         { key: 'students', label: 'Every student has a family who can sign in', done: students > 0 && orphans === 0, detail: orphans ? `${orphans} students have no guardian phone` : `${students} students, ${families} families` },
-        ...(fees ? [{ key: 'fees', label: 'Opening fee dues are in and match the old system', done: dues > 0 && batches.some((b) => b.kind === 'fee_dues' && !b.undoneAt), detail: `${dues} fees` }] : []),
+        // Reconciled to the rupee: what is still owed here against the old system's own dues report.
+        ...(fees ? [{ key: 'fees', label: 'Opening fee dues are in and match the old system', done: dues > 0 && oldDues !== null && outstanding === oldDues,
+          detail: oldDues === null ? `₹${inr(outstanding)} owed here; type the old system’s total to compare` : outstanding === oldDues ? `₹${inr(outstanding)}, the same as the old system` : `₹${inr(outstanding)} here, ₹${inr(oldDues)} in the old system` }] : []),
+        ...(s.modules.has('timetable') ? [{ key: 'timetable', label: 'The timetable is in', done: slots > 0, detail: `${slots} lessons a week` }] : []),
+        { key: 'config_reviewed', label: 'Gradeon has reviewed the school’s configuration', done: ticked('config_reviewed'), detail: ticked('config_reviewed') ? 'Ticked' : 'Ticked by the team', manual: true },
+        { key: 'staff_trained', label: 'The school’s staff are trained', done: ticked('staff_trained'), detail: ticked('staff_trained') ? 'Ticked' : 'Ticked by the team', manual: true },
         { key: 'staff_invited', label: 'Staff have their invites', done: staff > 0 && staffInvited === staff, detail: `${staffInvited} of ${staff}` },
         { key: 'families_invited', label: 'Families are invited', done: families > 0 && invited === families, detail: `${invited} of ${families}` },
         { key: 'families_in', label: 'Most families have signed in', done: families > 0 && signed / families >= 0.8, detail: `${signed} of ${families}` },
       ];
-      return { kinds: IMPORT_KINDS.filter((k) => s.kinds.includes(k.key)), batches, uploads, readiness, students, studentLimit: s.entitlement.limits.students };
+      return { kinds: IMPORT_KINDS.filter((k) => s.kinds.includes(k.key)), batches, uploads, readiness, dues: fees ? { outstanding, oldSystem: oldDues } : undefined, students, studentLimit: s.entitlement.limits.students };
     });
   }
 
@@ -141,6 +161,11 @@ export class MigrationController {
   @Get() @Needs('schools.read')
   view(@Param('id') id: string): Promise<MigrationView> {
     return this.migration.view(id);
+  }
+
+  @Patch('readiness') @Needs('schools.configure')
+  mark(@Me() me: ConsoleUser, @Param('id') id: string, @Body(new ZodPipe(ReadinessMark)) body: ReadinessMark): Promise<MigrationView> {
+    return this.migration.mark(me, id, body);
   }
 
   @Get('template/:kind') @Needs('schools.read') @Header('content-type', 'text/csv; charset=utf-8')

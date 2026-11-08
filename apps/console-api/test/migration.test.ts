@@ -96,4 +96,20 @@ describe('the Migration workspace', () => {
     const zip = await h.c('GET', `/console/v1/schools/${id}/import/export`, { token: t });
     expect(zip.status).toBe(200);
   }, 60_000);
+
+  it('reconciles the dues against the old system’s total, and takes the team’s ticks', async () => {
+    const mark = (body: unknown) => h.c('PATCH', `/console/v1/schools/${id}/import/readiness`, { token: t, body });
+    const before = await view();
+    const fees = () => before.readiness.find((r: any) => r.key === 'fees');
+    expect(fees().done).toBe(false);
+    expect(fees().detail).toContain('type the old system');
+    const off = (await mark({ key: 'old_dues', amount: before.dues.outstanding + 1 })).json;
+    expect(off.readiness.find((r: any) => r.key === 'fees').done).toBe(false);
+    const same = (await mark({ key: 'old_dues', amount: before.dues.outstanding })).json;
+    expect(same.readiness.find((r: any) => r.key === 'fees')).toMatchObject({ done: true });
+    expect(same.readiness.find((r: any) => r.key === 'timetable').done).toBe(true);
+    const ticked = (await mark({ key: 'config_reviewed', done: true })).json;
+    expect(ticked.readiness.find((r: any) => r.key === 'config_reviewed')).toMatchObject({ done: true, manual: true });
+    expect((await mark({ key: 'something', done: true })).status).toBe(400);
+  });
 });

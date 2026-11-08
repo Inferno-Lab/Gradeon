@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ImportInputIn } from '@gradeon/api-client';
-import type { ImportBatchRow, ImportKind, ImportPreview, MigrationView } from '@gradeon/contracts';
-import { EmptyCard, Field, FilePick, Select } from '@gradeon/web-ui';
+import type { ImportBatchRow, ImportKind, ImportPreview, MigrationView, ReadinessMark } from '@gradeon/contracts';
+import { EmptyCard, Field, FilePick, NumberField, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
 
@@ -53,6 +53,8 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   });
   const load = useMutation({ mutationFn: () => app.api.migration.sample(schoolId, Number(sample)), onSuccess: (batches) => { refresh({ batches }); say(`A test school of ${sample} students was imported, file by file.`); }, onError: fail });
   const exp = useMutation({ mutationFn: () => app.api.migration.exportAll(schoolId), onSuccess: (b) => save(b, `${schoolId}-export.zip`), onError: fail });
+  const mark = useMutation({ mutationFn: (b: ReadinessMark) => app.api.migration.mark(schoolId, b), onSuccess: (next) => qc.setQueryData(['migration', schoolId], next), onError: fail });
+  const [oldDues, setOldDues] = useState('');
   const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (text, k) => save(new Blob([text], { type: 'text/csv' }), `${k}-template.csv`), onError: fail });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
@@ -69,9 +71,18 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
             <div key={r.key} className="grd rw" style={{ '--cols': '28px minmax(0,1fr) minmax(0,auto)', height: 'auto', padding: '9px 0' } as React.CSSProperties}>
               <span className={`st ${r.done ? 'g' : 'a'}`} aria-label={r.done ? 'Done' : 'Not yet'}><i></i></span>
               <b style={{ font: '700 14px var(--fb)' }}>{r.label}</b>
-              <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', textAlign: 'right' }}>{r.detail}</span>
+              <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                {r.detail}
+                {can && r.manual && <button className="btn sm" disabled={mark.isPending} onClick={() => mark.mutate({ key: r.key as 'config_reviewed' | 'staff_trained', done: !r.done })}>{r.done ? 'Undo' : 'Mark done'}</button>}
+              </span>
             </div>
           ))}
+          {can && v.dues && (
+            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 12 }}>
+              <div style={{ flex: '1 1 220px', maxWidth: 300 }}><NumberField label="The old system’s total dues (₹)" min={0} value={oldDues || (v.dues.oldSystem == null ? '' : String(v.dues.oldSystem))} onChange={setOldDues} hint="From its dues report, to reconcile to the rupee." /></div>
+              <button className="btn sm" disabled={mark.isPending} onClick={() => mark.mutate({ key: 'old_dues', amount: oldDues === '' ? null : Math.round(Number(oldDues)) })}>Compare</button>
+            </div>
+          )}
         </div>
         <div className="help" style={{ marginTop: 8 }}>{v.students} of {v.studentLimit} students on the plan.</div>
       </div>
