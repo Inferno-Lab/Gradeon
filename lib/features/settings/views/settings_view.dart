@@ -66,12 +66,6 @@ class SettingsView extends StatelessWidget {
       final toggles = <(String, String, bool, ValueChanged<bool>)>[
         ('settings.motion', 'settings.motion_hint', theme.reduceMotion.value, (v) => theme.setReduceMotion(value: v)),
         (
-          'settings.transparency',
-          'settings.transparency_hint',
-          theme.reduceTransparency.value,
-          (v) => theme.setReduceTransparency(value: v),
-        ),
-        (
           'settings.hw_reminders',
           'settings.hw_reminders_hint',
           theme.notifyHomework.value,

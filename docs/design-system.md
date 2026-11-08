@@ -23,9 +23,9 @@ A chalkboard classroom in daylight (and at night). Paper cards on a chalk-colour
 
 - Use for: dock, top icon buttons, pills and segmented controls, switches and sliders, sheets, toasts, bottom action bars.
 - Never for: page headers, cards, greetings, ribbons, or any block behind text.
-- `Glass(onPigment: true)` when the backdrop is coloured art (clear lens); the default frosted tint when it sits on text and cards. "Reduce transparency" in Settings swaps glass for solid fills; keep both looks readable.
-- On Impeller the shader receives the **whole window** as its texture (`uTexSize == uScreen`), and `FlutterFragCoord()` is then a **window coordinate**: the shader samples it as is and subtracts the glass origin (`uOrigin`) for the shape. A crop around the glass (other backends) is sampled at the fragment and arrives y-flipped on GLES (`gFlip`). This was verified with a colour-coded debug pass; a plain page hides mapping bugs, so always check glass over colourful art (the stripes card on the design-system screen) on a device or emulator. Headless tests only exercise the blur fallback. "Show refraction maps" draws the displacement field; the screen also prints the live glass-layer count.
-- Keep the number of glass layers on a screen small.
+- `Glass` is a **solid** floating surface: paper on the page, the brand ink with `onPigment: true` (on photos and subject colours), always with a soft shadow. Nothing blurs or refracts, so it scrolls at full speed and looks the same headless, on a device and in every theme. The liquid-glass shaders in `shaders/` are kept for reference but are not loaded.
+- The name stays so call sites did not change. (The "Reduce transparency" switch went with the blur: there is nothing to reduce.)
+- Keep floating controls to the few a screen needs.
 
 ## Empty and loading states
 

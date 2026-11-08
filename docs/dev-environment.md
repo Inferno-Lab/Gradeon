@@ -7,7 +7,7 @@ These are the paths on the lead's Windows machine; adjust for yours.
 
 ## Emulator
 
-- Start with the host GPU: `emulator -avd gradeon -gpu host -no-snapshot-save`. Software GPU modes crash when Impeller runs the glass shader.
+- Start with the host GPU: `emulator -avd gradeon -gpu host -no-snapshot-save` (faster; software GPU modes also work now that no shader runs).
 - Launch it as a **detached process** (PowerShell `Start-Process`); an emulator started inside a tool shell dies when that shell call ends.
 - The emulator, Gradle and an IDE together exhaust memory on 16 GB machines. Symptoms: PowerShell `OutOfMemoryException`, "Unable to determine engine version", `adb shell` hanging. Close the emulator before release builds.
 

@@ -4,10 +4,10 @@ Gradeon is a school platform with four parts that work together:
 
 | Part | What it is | Where |
 | --- | --- | --- |
-| **School admin** | The website a school's office and principal use: dashboard, students, attendance, fees, notices, timetable, settings. | `apps/admin` |
-| **Console** | Gradeon's own control room: onboard a school, set up its database and address, roll out releases, watch health, give support, bill, manage the team. | `apps/console` |
+| **School admin** | The website a school's office and principal use: dashboard, students, attendance, fees, notices, timetable, its classes and calendar, moving in, and a read-only view of how Gradeon set the school up. | `apps/admin` |
+| **Console** | Gradeon's own control room: onboard a school, set its modules, configuration and roles, move its data in, roll out releases, watch health and backups, give support, bill, manage the team. | `apps/console` |
 | **Backend** | Two NestJS APIs (one for schools, one for the console) in one process, with a PostgreSQL database per school. | `apps/api`, `apps/console-api`, `apps/server`, `packages/*` |
-| **Mobile app** | A Flutter app for students, parents and teachers ("Chalk & Glass" look). Built for a school (`SCHOOL` and `API_BASE_URL`), it signs in for real and reads that school's data through the family API (`/v1/f/*`); built without them, it runs on demo content. | `lib/`, `android/`, `ios/` |
+| **Mobile app** | A Flutter app for parents and teachers ("Chalk & Glass" look; students do not sign in). Built for a school (`SCHOOL` and `API_BASE_URL`), it signs in for real and reads that school's data through the family API (`/v1/f/*`); built without them, it runs on demo content. | `lib/`, `android/`, `ios/` |
 
 Start here depending on who you are:
 
@@ -27,9 +27,10 @@ Start here depending on who you are:
 ```
 
 - **One database per school.** The *registry* database lists schools and holds each school's sealed connection string. A request to `/v1/...` names its school in the `X-School` header; the server looks the school up, opens (or reuses) a connection pool to that school's database and answers from it.
-- **Everything configurable lives in data.** A school's modules, plan limits, settings and locks are layered (platform defaults, plan, school settings, platform locks) and resolved by `packages/config-engine`. The admin changes settings; the app and the API read them.
+- **Everything configurable lives in data, and only Gradeon changes it.** A school's modules, features, plan limits, settings and locks are layered (platform defaults, plan, school settings, platform locks) and resolved by `packages/config-engine`. The console changes them (with history, rollback and a second approver for risky ones); the school API has no configuration writes, and the admin and the app only read them. The school's own data (timetable, classes, terms, holidays, fee structures) stays with the school while the console allows it.
+- **Default deny.** Every school route declares the module or feature it belongs to, or says it is core; `apps/api/test/plan.test.ts` fails on any route that does not.
 - **Onboarding is a recipe.** The console's wizard collects the school's details, then a *blueprint* (a versioned list of seven steps: database, keys and storage, migrations and defaults, domain, first admin, app build profile, store checklist) creates the school. Each step is retryable and logged. Where it runs (`local`, `free-test`, `aws-cell`) only changes which driver does the step.
-- **Risky console actions need a second person** (erase, suspend, push plan changes, run migrations...). Support staff can open a school's admin read-only for an hour with a signed token; the school API refuses every write from it.
+- **Risky console actions need a second person** (erase, suspend, push plan changes, run migrations...). Support staff can open a school's admin read-only for 30 minutes with a signed token; the school API refuses every write from it.
 
 ## Run it on your computer
 
@@ -53,14 +54,16 @@ Sign in:
 
 On the hosted test track (`https://gradeon.onrender.com`) the school logins are the same. The console there uses `BOOTSTRAP_PASSWORD` and `DEMO_CODE` from Render's Environment page.
 
-Texts and emails are never sent for real: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear.
+Texts and emails are never sent for real yet: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear. A real SMS provider (with DLT registration) is the step that lets real families sign in; see `docs/production-plan.md`.
+
+Operations: every school is backed up daily and a weekly restore drill puts one back into a scratch database (console → Health). Set `ALERT_WEBHOOK_URL` to a Slack or Discord webhook to hear about new errors, a school not answering, a failed backup or drill.
 
 ## Check that nothing is broken
 
 ```bash
-pnpm typecheck && pnpm test         # types and 132 unit and API tests (the API tests start a real PostgreSQL)
+pnpm typecheck && pnpm test         # types and the unit and API tests (the API tests start a real PostgreSQL)
 node tools/audit-ui.mjs             # every page, 4 widths, light and dark: errors, overflow, clipped text
-node tools/e2e-flows.mjs            # 38 click-through flows in a real browser (run after dev-reset; it changes demo data)
+node tools/e2e-flows.mjs            # 47 click-through flows in a real browser (run after dev-reset; it changes demo data)
 node tools/scan-cutoff.mjs          # text cut by an ellipsis, hidden scrollbars, clipped boxes (the audit does not see these)
 node tools/scan-gaps.mjs            # side-by-side columns that end unevenly, blank inside cards, content short of the edge
 node tools/scan-fit.mjs             # tab knobs off their tab, text wrapping in pills or spilling out, 'undefined' on screen
@@ -68,6 +71,8 @@ node tools/scan-scroll.mjs          # slow scroll areas and table headings that 
 node tools/e2e-onboard.mjs          # onboards a new empty school through the wizard and screenshots every page
 tool/verify.sh                      # Flutter analyzer and tests
 ```
+
+The audit and flows default to `127.0.0.1`; if your dev servers listen on `localhost` only (IPv6), run them with `ADMIN=http://localhost:5173 CONSOLE=http://localhost:5174`.
 
 `tools/shot.mjs <url> out.png [width] [height] [--dark] [--console] [--audit] [--do '[...]']` takes one screenshot while signed in, which is how pages are looked at without a window.
 
@@ -83,10 +88,10 @@ apps/
 packages/
   contracts/      zod schemas and types shared by every app (the API's language)
   config-engine/  modules, plans, layered settings, locks
-  db/             Drizzle schemas, reviewed SQL migrations, migrator, Greenfield demo seed, dev PostgreSQL
+  db/             Drizzle schemas, reviewed SQL migrations, migrator, backups and restore, the import engine, Greenfield demo seed, dev PostgreSQL
   security/       scrypt passwords, AES-GCM sealing, JWT
   tenancy/        registry lookup and bounded pool manager
-  nest-kit/       shared Nest pieces (errors, validation pipe, exception filter)
+  nest-kit/       shared Nest pieces (errors, validation pipe, exception filter, error reports, alerts, rate limits)
   api-client/     typed HTTP client with token refresh
   web-ui/         the "Nest" design language as React: CSS, shell, sidebar, dialogs, forms, illustrations
 design/canvas/    the approved design boards and nest.css (source of truth for how it must look)
@@ -103,7 +108,7 @@ The free test track is one Render web service plus a free Neon database: [`docs/
 
 ## The Flutter app
 
-The original demo app (students, parents, teachers; Chalk & Glass; mock JSON in `assets/mock`) lives at the repository root. How to run it, the demo accounts, its architecture and rules are in [`AGENTS.md`](AGENTS.md); machine setup is in [`docs/dev-environment.md`](docs/dev-environment.md). In short:
+The app (parents and teachers; Chalk & Glass; sample content in `assets/mock` for development only) lives at the repository root. Release builds talk only to a school: they refuse to start without `SCHOOL` and `API_BASE_URL`, and the console's build workflow leaves the sample content out. How to run it, the demo accounts, its architecture and rules are in [`AGENTS.md`](AGENTS.md); machine setup is in [`docs/dev-environment.md`](docs/dev-environment.md). In short:
 
 ```bash
 flutter pub get && flutter run          # demo content, no backend needed

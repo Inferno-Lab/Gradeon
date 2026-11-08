@@ -14,7 +14,6 @@ class ThemeService extends GetxService {
   final mode = AppThemeMode.system.obs;
   final textScale = 1.0.obs;
   final reduceMotion = false.obs;
-  final reduceTransparency = false.obs;
   final locale = const Locale('en').obs;
   final notifyHomework = true.obs;
   final notifyFees = true.obs;
@@ -26,8 +25,6 @@ class ThemeService extends GetxService {
     );
     textScale.value = (_storage.read<num>(StorageKeys.textScale) ?? 1).toDouble();
     reduceMotion.value = _storage.read<bool>(StorageKeys.reduceMotion) ?? false;
-    reduceTransparency.value =
-        _storage.read<bool>(StorageKeys.reduceTransparency) ?? false;
     final code = _storage.read<String>(StorageKeys.locale) ?? 'en';
     locale.value = Locale(code);
     notifyHomework.value = _storage.read<bool>(StorageKeys.notifyHomework) ?? true;
@@ -49,11 +46,6 @@ class ThemeService extends GetxService {
   Future<void> setReduceMotion({required bool value}) async {
     reduceMotion.value = value;
     await _storage.write(StorageKeys.reduceMotion, value);
-  }
-
-  Future<void> setReduceTransparency({required bool value}) async {
-    reduceTransparency.value = value;
-    await _storage.write(StorageKeys.reduceTransparency, value);
   }
 
   Future<void> setLocale(Locale value) async {

@@ -14,17 +14,21 @@ Failures are a JSON object:
 { "message": "errors.bad_login" }
 ```
 
-The real server sends `{ "code", "message" }`, where `message` is a sentence for people (the client shows it as is) and `code` a machine word. HTTP status is 400 for validation, 401 for auth, 403 for a missing permission, 404 for a missing id, 409 for a conflict and 500 for anything else. `ApiClient` turns a non-2xx body into `AppException(message)` and a failed connection into `errors.network`.
+The real server sends `{ "code", "message" }`, where `message` is a sentence for people (the client shows it as is) and `code` a machine word. HTTP status is 400 for validation, 401 for auth, 403 for a missing permission (or a module or feature the school's plan does not include), 404 for a missing id, 409 for a conflict, 423 for a locked account, 429 for too many requests (`retryAfter` in seconds, also the `retry-after` header) and 500 for anything else. `ApiClient` turns a non-2xx body into `AppException(message)` and a failed connection into `errors.network`.
 
 ## Auth
 
 As built: `POST /v1/auth/login` `{ "identifier", "password", "client"? }` answers `{ "step": "otp", "challenge": { "challengeId", "maskedTo", "expiresInSeconds", "demoCode"? } }` (or the tokens when the school switched the code off). `client` is `web` or `mobile` (mobile if omitted). `POST /v1/auth/verify` `{ "challengeId", "code", "client"? }` answers `{ "accessToken", "expiresInSeconds", "user", "refreshToken"? }`.
 
+Families have no password: `POST /v1/auth/code` `{ "identifier" }` (their phone) answers the same challenge, and `POST /v1/auth/verify` signs them in. One account is sent at most five codes (sign-in or reset, `POST /v1/auth/reset/start`) in fifteen minutes; the sixth answers 429. Staff signing in from the app (`client: "mobile"`) are refused with 403 when the school's `app.teachers` setting is off.
+
+Before sign-in, `GET /v1/brand` (public) answers who the school is and its privacy notice: `{ "name", "shortName", "color", "logoText", "tagline", "language", "demoMode", "privacy": { "notice", "officerName", "officerEmail", "officerPhone" } }`. After sign-in, `GET /v1/config` is the school's resolved configuration: modules, features, `app` (`dock`, `home`, `quick`, already limited to modules the school has), `settings` (including `app.languages`, `privacy.consentRequired`, `privacy.photoConsent`) and `vocabulary`.
+
 The phone app (`client: "mobile"`) gets `refreshToken` in the body, keeps both tokens in secure storage, and renews with `POST /v1/auth/refresh` `{ "refreshToken" }`. Each renewal returns a new refresh token; reusing an old one ends every session for that person and writes `auth.refresh_replayed`. Sessions last at most 30 days (14 idle).
 
 The websites (`client: "web"`) keep the refresh token in an httpOnly cookie (`gd_rt_<slug>` locally, `__Secure-gd_rt_<slug>` in production, `Path=/v1/auth`, `SameSite=Strict`). The body has no refresh token. Refresh and logout send that cookie, an allowed `Origin`, and `x-csrf` matching the readable `gd_csrf` cookie. Web sessions last 7 days. `POST /v1/auth/logout-all` ends every session for that person.
 
-Every later request sends `Authorization: Bearer <accessToken>` and `X-School: <slug>`. The access JWT is 15 minutes, bound to the school (`aud`), and carries `sid` and `ver` (`users.token_version`). A revoked session, a role change, deactivation, or logout-all is refused on the next request (cached about 30 seconds). The app then reads the person from `GET /v1/f/me`. The table below is the demo app's original shape; the mock still uses it.
+Every later request sends `Authorization: Bearer <accessToken>` and `X-School: <slug>`. The access JWT is 15 minutes, bound to the school (`aud`), and carries `sid` and `ver` (`users.token_version`). A revoked session, a role change, deactivation, or logout-all is refused on the next request (cached about 30 seconds). The app then reads the person from `GET /v1/f/me`, which also carries `consentedAt` and `photoConsent`; a family consents once with `POST /v1/f/consent` `{ "photos"? }` (answers `{ "consentedAt", "photoConsent" }`; a second call changes nothing but the photo answer). The table below is the demo app's original shape; the mock still uses it.
 
 ## Pagination
 
