@@ -201,7 +201,6 @@ export const APP_CATALOG = {
     { key: 'homework', label: 'Homework to do', module: 'homework' },
     { key: 'notices', label: 'Latest notices', module: 'notices' },
     { key: 'events', label: 'Coming up', module: 'events' },
-    { key: 'busEta', label: 'Bus arrival', module: 'transport' },
   ],
   quick: [
     { key: 'payFees', label: 'Pay fees', module: 'fees' },

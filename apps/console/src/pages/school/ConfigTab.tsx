@@ -110,7 +110,7 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
   const pick = (options: { key: string; label: string }[], max?: number) => box(
     <div className="tgrow">{options.map((o) => {
       const at = list.indexOf(o.key);
-      return <button key={o.key} type="button" className={`chip ${at >= 0 ? 'v' : ''}`} aria-pressed={at >= 0} disabled={disabled} onClick={() => toggle(o.key, max)} style={{ cursor: disabled ? 'default' : 'pointer' }}>{at >= 0 && meta.kind !== 'modules' && meta.kind !== 'classes' ? `${at + 1}. ` : ''}{o.label}</button>;
+      return <button key={o.key} type="button" className={`chip ${at >= 0 ? 'v' : ''}`} aria-pressed={at >= 0} disabled={disabled} onClick={() => toggle(o.key, max)} style={{ cursor: disabled ? 'default' : 'pointer' }}>{at >= 0 && meta.kind !== 'modules' && meta.kind !== 'classes' && meta.kind !== 'multi' ? `${at + 1}. ` : ''}{o.label}</button>;
     })}{max && <span className="help">{list.length} of {max}</span>}</div>,
   );
   switch (meta.kind) {
@@ -126,6 +126,8 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
       return box(<div className={`inp ${error ? 'err' : ''}`} style={{ height: 'auto' }}><textarea value={str} onChange={(e) => onChange(e.target.value)} disabled={disabled} aria-label={meta.label} style={ta} /></div>);
+    case 'multi':
+      return pick((meta.options ?? []).map(([key, l]) => ({ key, label: l })));
     case 'modules':
       return pick(cfg.entitled.map((m) => ({ key: m, label: modName(m) })));
     case 'appDock': return pick(APP_CATALOG.dock.map((c) => ({ key: c.key, label: c.label })), meta.max);

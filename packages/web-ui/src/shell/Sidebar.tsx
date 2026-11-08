@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Menu } from '../Menu';
 import { GradeonIcon } from '../GradeonIcon';
 
@@ -94,16 +94,23 @@ export function Sidebar({ label, collapsed, groups, active, onNavigate, header, 
 }
 
 /** The school block at the top of the admin menu, and the button that collapses the menu. */
-export function SchoolHeader({ logo, name, place, onToggle, collapsed }: { logo: string; name: string; place: string; onToggle: () => void; collapsed: boolean }) {
+export function SchoolHeader({ logo, name, place, color, onToggle, collapsed }: { logo: string; name: string; place: string; color?: string; onToggle: () => void; collapsed: boolean }) {
   return (
     <div className="ws">
-      <span className="lg">{logo}</span>
+      <span className="lg" style={markStyle(color)}>{logo}</span>
       <div className="fade"><b>{name}</b><small>{place}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path className="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg>
       </button>
     </div>
   );
+}
+
+/** A school's mark in its own colour (console: Brand colour), with ink or white letters, whichever reads. */
+export function markStyle(color?: string): CSSProperties | undefined {
+  if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return undefined;
+  const [r, g, b] = [1, 3, 5].map((i) => { const c = parseInt(color.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return { background: color, color: 0.2126 * r! + 0.7152 * g! + 0.0722 * b! > 0.36 ? '#1A1A1C' : '#FFFFFF' };
 }
 
 /** The workspace block at the top of the console menu, with the environment marked. */

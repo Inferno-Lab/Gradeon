@@ -76,6 +76,12 @@ export class FeesService {
     });
   }
 
+  /** The office records only the ways the school takes money (console: Fees → How the office records payments). */
+  async checkMethod(t: TenantCtx, method: string): Promise<void> {
+    const allowed = (await this.settings.value<string[]>(t, 'fees.paymentMethods', ['cash', 'upi', 'card', 'netbanking', 'cheque'])) ?? [];
+    if (!allowed.includes(method)) throw new ApiError('validation', 'The school does not take payments that way.', { fields: { method: 'Choose another way to pay.' } });
+  }
+
   async pay(t: TenantCtx, user: { id: string; name: string }, body: PaymentCreate): Promise<{ receiptNo: string; amount: number; outstanding: number }> {
     const { rows } = await t.pool.query<{ id: string; amount: number; waived: number; paid: string; title: string }>(
       `select i.id, i.amount, i.waived_amount waived, coalesce((select sum(amount) from payments where invoice_id = i.id),0) paid, i.title

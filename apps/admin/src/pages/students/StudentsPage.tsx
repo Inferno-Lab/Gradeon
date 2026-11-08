@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { dayLabel, inr, istToday, type StudentRow } from '@gradeon/contracts';
+import { dayLabel, inr, istToday, plural, type StudentRow } from '@gradeon/contracts';
 import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor } from '@gradeon/web-ui';
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
@@ -124,6 +124,8 @@ export function StudentsPage() {
   const shownViews = allViews.filter((x) => has.fees || x.i !== 2);
   const vals = {
     ...chrome, has,
+    // What the school calls its students (console: People), "Pupils" for "Pupil".
+    heading: plural(chrome.shell?.school.studentWord ?? 'Student'),
     subtitle: `${allCount.toLocaleString('en-IN')} enrolled across ${classes.data?.length ?? 0} sections`,
     openImport: () => setDialog({ kind: 'import' }), exportAll: () => void download(), openAdd: () => setDialog({ kind: 'add' }),
     views: shownViews.map((x) => ({ ...x, on: x.i === active ? 'on' : '', sel: x.i === active ? 'true' : 'false', pick: () => { setView(x.i); setClassId(null); setHouse(''); setFee(''); setAtt(''); setPage(1); } })),

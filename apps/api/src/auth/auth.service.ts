@@ -88,6 +88,9 @@ export class AuthService {
       throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     }
     await t.pool.query('update users set failed_logins = 0, locked_until = null where id = $1', [user.id]);
+    if (clientOf(body.client) === 'mobile' && user.kind === 'staff' && (await this.settings.doc(t)).values['app.teachers'] === false) {
+      throw new ApiError('forbidden', 'Your school uses Gradeon on the web for staff. Sign in to the admin instead.');
+    }
     if (passwordNeedsRehash(user.password_hash)) {
       await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(body.password)]);
     }

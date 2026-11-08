@@ -13,7 +13,7 @@ type Who = { id: string; name: string };
 const ClassQ = z.object({ classId: z.string().max(60).optional() });
 
 /** Primary guardians, one per family, with the class of each child. A family with children in two classes counts in both. */
-const FAMILIES = `select distinct c.id class_id, g.id guardian_id, u.id user_id, u.invited_at, u.last_login_at
+const FAMILIES = `select distinct c.id class_id, g.id guardian_id, u.id user_id, u.invited_at, u.last_login_at, u.consented_at
   from students s join classes c on c.id = s.class_id join student_guardians sg on sg.student_id = s.id and sg.is_primary
   join guardians g on g.id = sg.guardian_id left join users u on u.id = g.user_id where s.status = 'active'`;
 
@@ -43,7 +43,7 @@ export class MovingInService {
   async activation(t: TenantCtx): Promise<Activation> {
     const [classes, fam, staff] = await Promise.all([
       t.pool.query<{ id: string; name: string; students: string }>("select c.id, c.name, count(s.id) students from classes c left join students s on s.class_id = c.id and s.status = 'active' group by c.id order by c.grade, c.section"),
-      t.pool.query<{ class_id: string; guardian_id: string; invited_at: Date | null; last_login_at: Date | null }>(FAMILIES),
+      t.pool.query<{ class_id: string; guardian_id: string; invited_at: Date | null; last_login_at: Date | null; consented_at: Date | null }>(FAMILIES),
       t.pool.query<{ total: string; invited: string; signed: string }>(
         "select count(*) total, count(*) filter (where invited_at is not null or password_hash is not null) invited, count(last_login_at) signed from users where kind = 'staff' and status = 'active'"),
     ]);
@@ -51,10 +51,10 @@ export class MovingInService {
     const s = staff.rows[0]!;
     return {
       staff: { total: Number(s.total), invited: Number(s.invited), signedIn: Number(s.signed) },
-      families: { total: all.size, invited: [...all.values()].filter((r) => r.invited_at).length, signedIn: [...all.values()].filter((r) => r.last_login_at).length },
+      families: { total: all.size, invited: [...all.values()].filter((r) => r.invited_at).length, signedIn: [...all.values()].filter((r) => r.last_login_at).length, consented: [...all.values()].filter((r) => r.consented_at).length },
       classes: classes.rows.map((c) => {
         const mine = fam.rows.filter((r) => r.class_id === c.id);
-        return { classId: c.id, className: c.name, students: Number(c.students), families: mine.length, invited: mine.filter((r) => r.invited_at).length, signedIn: mine.filter((r) => r.last_login_at).length };
+        return { classId: c.id, className: c.name, students: Number(c.students), families: mine.length, invited: mine.filter((r) => r.invited_at).length, signedIn: mine.filter((r) => r.last_login_at).length, consented: mine.filter((r) => r.consented_at).length };
       }),
     };
   }

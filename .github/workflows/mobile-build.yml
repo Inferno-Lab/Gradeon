@@ -31,6 +31,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Leave the sample content out
+        # A school's app only talks to its school; the sample content and its code never ship (InitialBinding drops it in release too).
+        run: sed -i '\#- assets/mock/#d' pubspec.yaml && rm -rf assets/mock && ! grep -q 'assets/mock' pubspec.yaml
       - run: flutter pub get
       - name: Build the school's app
         run: flutter build apk --release --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${API_BASE_URL}

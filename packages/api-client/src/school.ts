@@ -9,15 +9,8 @@ import type {
 } from '@gradeon/contracts';
 import type { Http, Query } from './http';
 
-export interface BrandInfo {
-  name: string;
-  shortName: string;
-  color: string;
-  logoText: string;
-  tagline: string;
-  demoMode: boolean;
-  language: string;
-}
+import type { SchoolBrand } from '@gradeon/contracts';
+export type BrandInfo = SchoolBrand;
 
 export type StudentListQuery = {
   query?: string; classId?: string; house?: string; feeStatus?: 'paid' | 'due' | 'overdue'; attendance?: 'low' | 'perfect'; newThisYear?: boolean;

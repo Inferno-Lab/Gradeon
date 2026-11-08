@@ -218,3 +218,50 @@ describe('family accounts', () => {
     }
   });
 });
+
+describe('what the console sets reaches families and the office', () => {
+  it('records a family’s consent once, with the photo answer, and counts it in Moving in', async () => {
+    expect((await f(parent, '/me')).json.consentedAt).toBeNull();
+    const c = (await post(parent, '/consent', { photos: false })).json;
+    expect(c.photoConsent).toBe(false);
+    const again = (await post(parent, '/consent', {})).json;
+    expect(again).toEqual(c);
+    expect((await f(parent, '/me')).json).toMatchObject({ consentedAt: c.consentedAt, photoConsent: false });
+    expect((await h.call('GET', '/v1/moving-in/activation', { token: admin })).json.families.consented).toBeGreaterThan(0);
+  });
+  it('shows the privacy notice and the grievance officer before sign-in', async () => {
+    await h.setSettings({ 'privacy.notice': 'We keep marks for five years.', 'privacy.officerName': 'R. Kulkarni' });
+    expect((await h.call('GET', '/v1/brand')).json.privacy).toMatchObject({ notice: 'We keep marks for five years.', officerName: 'R. Kulkarni' });
+  });
+  it('keeps teachers off the app when the console says so, but not off the admin', async () => {
+    await h.setSettings({ 'app.teachers': false });
+    try {
+      const app = await h.call('POST', '/v1/auth/login', { body: { identifier: 'kavita.iyer@greenfield.edu.in', password: 'a-new-pass-123', client: 'mobile' } });
+      expect(app.status).toBe(403);
+      const web = await h.call('POST', '/v1/auth/login', { body: { identifier: 'kavita.iyer@greenfield.edu.in', password: 'a-new-pass-123', client: 'web' } });
+      expect(web.status).toBe(200);
+    } finally {
+      await h.setSettings({ 'app.teachers': true });
+    }
+  });
+  it('lets the office record only the ways the school takes money', async () => {
+    await h.setSettings({ 'fees.paymentMethods': ['cash'] });
+    try {
+      // Checked before the invoice is even looked up.
+      const r = await h.call('POST', '/v1/fees/payments', { token: admin, body: { studentId: 'stu_aarav', invoiceId: 'inv_any', amount: 1, method: 'upi' } });
+      expect(r.status).toBe(400);
+      expect(r.json.fields.method).toBeTruthy();
+      expect((await h.call('GET', '/v1/shell', { token: admin })).json.school.paymentMethods).toEqual(['cash']);
+    } finally {
+      await h.setSettings({ 'fees.paymentMethods': ['cash', 'upi', 'card', 'netbanking', 'cheque'] });
+    }
+  });
+  it('names students the school’s way in the admin menu', async () => {
+    await h.setSettings({ 'vocab.student': 'Pupil' });
+    try {
+      expect((await h.call('GET', '/v1/config', { token: admin })).json.nav.map((n: { label: string }) => n.label)).toContain('Pupils');
+    } finally {
+      await h.setSettings({ 'vocab.student': 'Student' });
+    }
+  });
+});

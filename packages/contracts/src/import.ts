@@ -145,10 +145,10 @@ export const SetupSave = z.object({ row: z.record(z.string(), z.string().max(500
 export type SetupSave = z.infer<typeof SetupSave>;
 
 /** Go-live for one class: how many families there are, how many were invited to the app and how many have signed in. */
-export interface ActivationClass { classId: string; className: string; students: number; families: number; invited: number; signedIn: number }
+export interface ActivationClass { classId: string; className: string; students: number; families: number; invited: number; signedIn: number; consented: number }
 export interface Activation {
   staff: { total: number; invited: number; signedIn: number };
-  families: { total: number; invited: number; signedIn: number };
+  families: { total: number; invited: number; signedIn: number; consented: number };
   classes: ActivationClass[];
 }
 export const FamilyInvite = z.object({ classId: z.string().max(60).optional() });

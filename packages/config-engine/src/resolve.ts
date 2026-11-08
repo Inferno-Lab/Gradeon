@@ -1,5 +1,6 @@
 import {
   SchoolSettingsSchema,
+  plural,
   type EffectiveConfig,
   type EntitlementDoc,
   type Permission,
@@ -48,7 +49,8 @@ export function resolveConfig({ settings, entitlement, audience, flags }: Resolv
   for (const key of enabled) {
     for (const n of moduleByKey(key)?.nav ?? []) {
       if (perms && !n.anyOf.some((p: Permission) => perms.has(p))) continue;
-      nav.push({ module: key, label: n.label, icon: n.icon, href: n.href });
+      const student = typeof merged['vocab.student'] === 'string' && (merged['vocab.student'] as string).trim() ? (merged['vocab.student'] as string).trim() : 'Student';
+      nav.push({ module: key, label: n.label === 'Students' ? plural(student) : n.label, icon: n.icon, href: n.href });
     }
   }
 

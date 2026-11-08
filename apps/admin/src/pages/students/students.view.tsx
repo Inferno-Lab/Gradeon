@@ -10,7 +10,7 @@ export function StudentsView({ v }: { v: any }) {
       <main className="mn">
         <header className="hd rise">
           <div>
-            <h1>Students</h1>
+            <h1>{v.heading}</h1>
             <p>{v.subtitle}</p>
           </div>
           <span className="grow"></span>

@@ -75,6 +75,9 @@ export function dayLabel(day: string): string {
 }
 
 /** Indian digit grouping: 1842300 -> "18,42,300". */
+/** "Pupil" becomes "Pupils"; a word that already ends in s is left alone. ponytail: English plurals only; the school's words are English. */
+export const plural = (word: string): string => (/s$/i.test(word) ? word : `${word}s`);
+
 export function inr(n: number): string {
   const x = String(Math.round(Math.abs(n)));
   const last = x.slice(-3);
