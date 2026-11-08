@@ -78,10 +78,13 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
             </div>
           ))}
           {can && v.dues && (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 12 }}>
-              <div style={{ flex: '1 1 220px', maxWidth: 300 }}><NumberField label="The old system’s total dues (₹)" min={0} value={oldDues || (v.dues.oldSystem == null ? '' : String(v.dues.oldSystem))} onChange={setOldDues} hint="From its dues report, to reconcile to the rupee." /></div>
-              <button className="btn sm" disabled={mark.isPending} onClick={() => mark.mutate({ key: 'old_dues', amount: oldDues === '' ? null : Math.round(Number(oldDues)) })}>Compare</button>
-            </div>
+            <>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 12 }}>
+                <div style={{ flex: '1 1 220px', maxWidth: 300 }}><NumberField label="The old system’s total dues (₹)" min={0} value={oldDues || (v.dues.oldSystem == null ? '' : String(v.dues.oldSystem))} onChange={setOldDues} /></div>
+                <button className="btn" disabled={mark.isPending} onClick={() => mark.mutate({ key: 'old_dues', amount: oldDues === '' ? null : Math.round(Number(oldDues)) })}>Compare</button>
+              </div>
+              <div className="help">From the old system’s dues report: go-live waits until what is owed here matches it to the rupee.</div>
+            </>
           )}
         </div>
         <div className="help" style={{ marginTop: 8 }}>{v.students} of {v.studentLimit} students on the plan.</div>

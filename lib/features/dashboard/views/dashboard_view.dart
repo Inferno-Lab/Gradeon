@@ -410,7 +410,10 @@ class _WideBody extends StatelessWidget {
               Overline(todayLine()),
               const SizedBox(height: 8),
               Text(
-                greeting(data.student.name.split(' ').first).replaceAll('\n', ' '),
+                // A parent is greeted by their own name, as on a phone; a student by theirs.
+                greeting(
+                  (parent ? Get.find<AuthService>().user.value?.name ?? '' : data.student.name).split(' ').first,
+                ).replaceAll('\n', ' '),
                 style: context.type.h1.copyWith(fontSize: 40),
               ),
               const SizedBox(height: 18),

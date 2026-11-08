@@ -40,7 +40,7 @@ const _family = [
   '/notices/nt_mid',
   AppRoutes.events,
   '/events/ev_science',
-  '/chat/th_kavita_aarav',
+  '/chat/th_kavita_priya',
   AppRoutes.library,
   AppRoutes.transport,
   AppRoutes.gallery,
@@ -135,5 +135,8 @@ void main() {
       Get.back<void>();
       await _settle(tester);
     }
+    // Let screens' delayed work (toasts, autosave) finish, so the run ends without pending timers.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 10));
   });
 }
