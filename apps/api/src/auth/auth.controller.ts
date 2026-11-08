@@ -113,7 +113,7 @@ export class MeController {
     const cfg = await this.settings.effective(t);
     const s = (k: string) => (typeof cfg.settings[k] === 'string' ? (cfg.settings[k] as string) : '');
     return {
-      ...cfg.school, demoMode: cfg.settings['demo.mode'] === true,
+      ...cfg.school, demoMode: cfg.settings['demo.mode'] === true, theme: (cfg.settings['theme.colors'] ?? {}) as SchoolBrand['theme'],
       privacy: { notice: s('privacy.notice'), officerName: s('privacy.officerName'), officerEmail: s('privacy.officerEmail'), officerPhone: s('privacy.officerPhone') },
     };
   }
