@@ -59,18 +59,18 @@
 .nest .fic svg{width:18px;height:18px}
 .nest .fic+.fic{margin-left:-6px}
 /* Calendar */
-.nest .cal{width:280px;display:flex;flex-direction:column;gap:8px}
-.nest .calh{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.nest .calh b{font:700 15px var(--fb)}
-.nest .calw,.nest .cald{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.nest .calw span{font:700 11px var(--fb);color:var(--ink3);text-align:center;padding:4px 0}
-.nest .cald button{height:36px;border:0;border-radius:10px;background:none;color:var(--ink);font:600 13.5px var(--fb);cursor:pointer;transition:background var(--t1),color var(--t1)}
-.nest .cald button:hover:not(:disabled){background:var(--sunk)}
-.nest .cald button.out{color:var(--ink3)}
-.nest .cald button.now{box-shadow:inset 0 0 0 1.5px var(--line2)}
-.nest .cald button.on,.nest .cald button.on:hover{background:var(--v);color:var(--onV)}
-.nest .cald button:disabled{opacity:.3;cursor:not-allowed}
-.nest .cald button:focus-visible{outline-offset:1px}
+.nest .dpk{width:280px;display:flex;flex-direction:column;gap:8px}
+.nest .dpkh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nest .dpkh b{font:700 15px var(--fb)}
+.nest .dpkw,.nest .dpkd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.nest .dpkw span{font:700 11px var(--fb);color:var(--ink3);text-align:center;padding:4px 0}
+.nest .dpkd button{height:36px;border:0;border-radius:10px;background:none;color:var(--ink);font:600 13.5px var(--fb);cursor:pointer;transition:background var(--t1),color var(--t1)}
+.nest .dpkd button:hover:not(:disabled){background:var(--sunk)}
+.nest .dpkd button.out{color:var(--ink3)}
+.nest .dpkd button.now{box-shadow:inset 0 0 0 1.5px var(--line2)}
+.nest .dpkd button.on,.nest .dpkd button.on:hover{background:var(--v);color:var(--onV)}
+.nest .dpkd button:disabled{opacity:.3;cursor:not-allowed}
+.nest .dpkd button:focus-visible{outline-offset:1px}
 /* Colour swatches */
 .nest .sw5{display:flex;gap:12px;flex-wrap:wrap}
 .nest .sw5 button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;position:relative;transition:transform var(--t2) var(--e);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
@@ -85,3 +85,5 @@
 .nest .inp.sm{height:38px;width:170px;border-radius:12px;padding:0 4px 0 12px;gap:4px}
 .nest .inp.sm input{font-size:14px}
 .nest .inp.sm .fic{width:30px;height:30px;margin-right:0}
+/* A long menu or list scrolls; its rows never squeeze to fit. */
+.nest .popm>*{flex:none}

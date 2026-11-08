@@ -63,14 +63,14 @@ export function Calendar({ value, min, max, onPick }: { value: string; min?: str
   };
   const month = `${LONG[Number(at.slice(5, 7)) - 1]} ${at.slice(0, 4)}`;
   return (
-    <div className="cal">
-      <div className="calh">
+    <div className="dpk">
+      <div className="dpkh">
         <button type="button" className="mini" aria-label="Previous month" onClick={() => go(addMonths(at, -1))}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path className="i" d="M15 6l-6 6 6 6"></path></svg></button>
         <b aria-live="polite">{month}</b>
         <button type="button" className="mini" aria-label="Next month" onClick={() => go(addMonths(at, 1))}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path className="i" d="M9 6l6 6-6 6"></path></svg></button>
       </div>
-      <div className="calw" aria-hidden="true">{['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((w) => <span key={w}>{w}</span>)}</div>
-      <div className="cald" role="grid" aria-label={month} ref={grid} onKeyDown={key}>
+      <div className="dpkw" aria-hidden="true">{['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((w) => <span key={w}>{w}</span>)}</div>
+      <div className="dpkd" role="grid" aria-label={month} ref={grid} onKeyDown={key}>
         {days.map((d) => (
           <button key={d} type="button" data-day={d} tabIndex={d === at ? 0 : -1} disabled={off(d)} aria-pressed={d === value} aria-label={formatDay(d)}
             className={`${d.slice(0, 7) !== at.slice(0, 7) ? 'out' : ''} ${d === today ? 'now' : ''} ${d === value ? 'on' : ''}`}
@@ -129,12 +129,12 @@ export function DateField({ label, value, onChange, error, hint, disabled, min, 
   const inner = (
     <>
       <input id={id} aria-label={compact ? label : undefined} value={t.text} onChange={(e) => t.setText(e.target.value)} onFocus={t.editing} onBlur={t.commit} disabled={disabled} autoComplete="off"
-        placeholder="12 Nov 2026" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
+        placeholder="e.g. 12 Nov 2026" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); t.commit(); } else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); } }} />
-      <button ref={btn} type="button" className="fic" aria-label={`${label}: choose from a calendar`} aria-haspopup="dialog" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
+      <button ref={btn} type="button" className="fic" aria-label="Choose from a calendar" aria-haspopup="dialog" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={CAL}></path></svg>
       </button>
-      <Pop open={open} anchor={box} returnTo={btn} onClose={() => setOpen(false)} label={`${label}: calendar`} minWidth={0} focus="[tabindex='0']">
+      <Pop open={open} anchor={box} returnTo={btn} onClose={() => setOpen(false)} label="Calendar" minWidth={0} focus="[tabindex='0']">
         <Calendar value={value} min={min} max={max} onPick={(d) => { onChange(d); setOpen(false); btn.current?.focus(); }} />
       </Pop>
     </>
@@ -167,9 +167,9 @@ export function TimeField({ label, value, onChange, error, hint, disabled }: Fie
   return (
     <Frame id={id} label={label} error={error} hint={hint} boxRef={box}>
       <input id={id} value={t.text} onChange={(e) => t.setText(e.target.value)} onFocus={t.editing} onBlur={t.commit} disabled={disabled} autoComplete="off" inputMode="numeric"
-        placeholder="08:30" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
+        placeholder="e.g. 08:30" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); t.commit(); } else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); } }} />
-      <button ref={btn} type="button" className="fic" aria-label={`${label}: choose a time`} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
+      <button ref={btn} type="button" className="fic" aria-label="Choose a time" aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={CLOCK}></path></svg>
       </button>
       <Pop open={open} anchor={box} returnTo={btn} onClose={() => setOpen(false)} role="listbox" label={label} className="popm" minWidth={0} focus={`[data-t="${near}"]`}>
@@ -211,8 +211,8 @@ export function NumberField({ label, value, onChange, error, hint, disabled, min
   return (
     <Frame id={id} label={label} error={error} hint={hint}>
       <NumberInput id={id} className="" value={value} onChange={onChange} min={min} max={max} step={step} decimals={decimals} disabled={disabled} aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined} />
-      <button type="button" className="fic" aria-label={`Less ${label.toLowerCase()}`} disabled={disabled || (min !== undefined && Number(value) <= min)} onClick={() => bump(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 12h12"></path></svg></button>
-      <button type="button" className="fic" aria-label={`More ${label.toLowerCase()}`} disabled={disabled || (max !== undefined && Number(value) >= max)} onClick={() => bump(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 6v12M6 12h12"></path></svg></button>
+      <button type="button" className="fic" aria-label="Decrease" disabled={disabled || (min !== undefined && Number(value) <= min)} onClick={() => bump(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 12h12"></path></svg></button>
+      <button type="button" className="fic" aria-label="Increase" disabled={disabled || (max !== undefined && Number(value) >= max)} onClick={() => bump(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 6v12M6 12h12"></path></svg></button>
     </Frame>
   );
 }
@@ -245,7 +245,7 @@ export function ColourField({ label, value, onChange, disabled }: { label: strin
   const [hex, setHex] = useState(value);
   useEffect(() => setHex(value), [value]);
   return (
-    <>
+    <div>
       <button ref={btn} type="button" className="btn" disabled={disabled} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label={`${label}: ${value}`}>
         <span style={{ width: 20, height: 20, borderRadius: '50%', background: value, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.12)' }} />
         <code>{value}</code>
@@ -258,7 +258,7 @@ export function ColourField({ label, value, onChange, disabled }: { label: strin
             onBlur={() => { if (HEX.test(hex)) onChange(hex.toUpperCase()); else setHex(value); }} />
         </div>
       </Pop>
-    </>
+    </div>
   );
 }
 

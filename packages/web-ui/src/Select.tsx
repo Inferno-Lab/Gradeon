@@ -78,7 +78,7 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !box) return; // after the list is placed and drawn, so focus can move into it
     (searchable ? pop.current?.querySelector<HTMLElement>('input') : list.current)?.focus({ preventScroll: true });
     const away = (e: PointerEvent) => {
       const t = e.target as Node;
@@ -93,7 +93,7 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
       window.removeEventListener('scroll', move, true);
       window.removeEventListener('resize', place);
     };
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, !box]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (open) list.current?.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -121,6 +121,7 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
 
   const onBtnKey = (e: KeyboardEvent) => {
     if (['ArrowDown', 'ArrowUp'].includes(e.key)) { e.preventDefault(); setOpen(true); }
+    else if (e.key === 'Escape' && open) { e.stopPropagation(); close(false); }
   };
 
   const root = (btn.current?.closest('.nest') as HTMLElement | null) ?? document.body;

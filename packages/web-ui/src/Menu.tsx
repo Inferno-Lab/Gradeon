@@ -6,7 +6,7 @@ const GAP = 6;
 const EDGE = 12;
 const ITEMS = 'button:not(:disabled),[role=menuitem],a[href]';
 
-interface Box { left: number; minWidth: number; top?: number; bottom?: number; maxH: number; origin: string }
+interface Box { left?: number; right?: number; minWidth: number; top?: number; bottom?: number; maxH: number; origin: string }
 
 /** Where a popup goes: under its button, over it when there is no room below, or beside it (`right`, for the collapsed menu). */
 export function placeBy(anchor: HTMLElement, side: 'auto' | 'right', min = 220): Box {
@@ -17,8 +17,11 @@ export function placeBy(anchor: HTMLElement, side: 'auto' | 'right', min = 220):
   const up = below < 240 && above > below;
   const maxH = Math.max(150, Math.min(420, (up ? above : below) - GAP));
   const minWidth = Math.min(Math.max(r.width, min), window.innerWidth - EDGE * 2);
-  const left = Math.min(Math.max(EDGE, r.left), window.innerWidth - minWidth - EDGE);
-  return up ? { left, minWidth, bottom: window.innerHeight - r.top + GAP, maxH, origin: 'bottom left' } : { left, minWidth, top: r.bottom + GAP, maxH, origin: 'top left' };
+  // Lined up with the button's left edge, or with its right edge when that would run off the window (a button at the right).
+  const fromRight = r.left + minWidth > window.innerWidth - EDGE;
+  const edge = fromRight ? { right: Math.max(EDGE, window.innerWidth - r.right) } : { left: Math.max(EDGE, r.left) };
+  const x = fromRight ? 'right' : 'left';
+  return up ? { ...edge, minWidth, bottom: window.innerHeight - r.top + GAP, maxH, origin: `bottom ${x}` } : { ...edge, minWidth, top: r.bottom + GAP, maxH, origin: `top ${x}` };
 }
 
 export interface PopProps {
@@ -62,7 +65,7 @@ function PopBox({ anchor, onClose, returnTo, side = 'auto', role = 'dialog', lab
     if (leaving || !box) return;
     const start = (focus && ref.current?.querySelector<HTMLElement>(focus)) || ref.current?.querySelector<HTMLElement>(arrows ? ITEMS : 'input,button:not(:disabled)');
     start?.focus({ preventScroll: true });
-    start?.scrollIntoView({ block: 'nearest' });
+    start?.scrollIntoView({ block: 'center' });
     const place = () => { if (anchor.current) setBox(placeBy(anchor.current, side, minWidth)); };
     const away = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node) && !anchor.current?.contains(e.target as Node)) close.current(); };
     document.addEventListener('pointerdown', away, true);
@@ -90,7 +93,7 @@ function PopBox({ anchor, onClose, returnTo, side = 'auto', role = 'dialog', lab
   if (!box) return null;
   return createPortal(
     <div ref={ref} className={className} role={role} aria-label={label} onKeyDown={key} {...leavingProps(leaving)}
-      style={{ position: 'fixed', zIndex: 120, left: box.left, minWidth: box.minWidth, top: box.top ?? 'auto', bottom: box.bottom ?? 'auto', maxHeight: box.maxH, transformOrigin: box.origin }}>
+      style={{ position: 'fixed', zIndex: 120, left: box.left ?? 'auto', right: box.right ?? 'auto', minWidth: box.minWidth, maxWidth: `calc(100vw - ${EDGE * 2}px)`, top: box.top ?? 'auto', bottom: box.bottom ?? 'auto', maxHeight: box.maxH, transformOrigin: box.origin }}>
       {children}
     </div>,
     root,
