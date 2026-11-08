@@ -28,7 +28,7 @@ export function ApprovalsPage() {
   const past = rows.filter((r) => r.status !== 'pending_approval');
   const mayDecide = app.can('schools.danger');
   return (
-    <Page active="appr" title="Approvals" sub={waiting.length ? `${waiting.length} waiting for a second person` : 'Risky changes need a second person to say yes'} toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}>
+    <Page title="Approvals" sub={waiting.length ? `${waiting.length} waiting for a second person` : 'Risky changes need a second person to say yes'} toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}>
       <section className="grid">
         <Card title="Waiting" chip={<span className={`chip ${waiting.length ? 'a' : 'g'}`}>{waiting.length}</span>} span="s12">
           {waiting.length === 0 && (
@@ -44,7 +44,7 @@ export function ApprovalsPage() {
                 </span>
                 <span className="tgrow">
                   <button className="btn sm" disabled={!mayDecide || decide.isPending} onClick={() => decide.mutate({ id: r.id, yes: false })}>Reject</button>
-                  <button className="btn pri sm" disabled={!mayDecide || own || decide.isPending} title={own ? 'A second person has to approve this' : undefined} onClick={() => decide.mutate({ id: r.id, yes: true })}>Approve</button>
+                  <button className="btn pri sm" disabled={!mayDecide || own || decide.isPending} data-tip={own ? 'A second person has to approve this' : undefined} onClick={() => decide.mutate({ id: r.id, yes: true })}>Approve</button>
                   {own && <span className="help" style={{ flexBasis: '100%', textAlign: 'right' }}>You asked for this, so someone else has to approve it.</span>}
                 </span>
               </div>

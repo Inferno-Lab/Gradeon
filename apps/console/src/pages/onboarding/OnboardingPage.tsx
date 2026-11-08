@@ -17,7 +17,7 @@ export function OnboardingPage() {
   const list = drafts.data ?? [];
   const none = !setting.length && !list.length;
   return (
-    <Page active="onb" title="Onboarding" sub="Set a new school up from start to finish: database, address, first admin and app" toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
+    <Page title="Onboarding" sub="Set a new school up from start to finish: database, address, first admin and app" toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Onboard a school</button> : undefined}>
       {none && (
         <div>

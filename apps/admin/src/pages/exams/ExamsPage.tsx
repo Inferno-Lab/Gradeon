@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, dateLabel, problem } from '../../app/kit';
@@ -23,7 +23,7 @@ export function ExamsPage() {
   const canWrite = app.user.permissions.includes('exams.write');
   const groups = useMemo(() => (['marking', 'upcoming', 'published'] as const).map((s) => ({ s, items: rows.filter((r) => r.status === s) })).filter((g) => g.items.length), [rows]);
   return (
-    <Page active="ex" title="Exams" sub="Schedules, marks and results" toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Exams" sub="Schedules, marks and results" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={<>
         <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
@@ -94,8 +94,8 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
         <Field label="Name" value={f.name} onChange={(name) => { setF({ ...f, name }); setErr({ ...err, name: '' }); }} error={err.name} placeholder="Mid-term exams" maxLength={80} />
         <SelectField label="Class" value={f.classId} onChange={(classId) => { setF({ ...f, classId }); setErr({ ...err, classId: '' }); }} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
         <div className="two">
-          <Field label="First day" type="date" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
-          <Field label="Last day" type="date" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />
+          <DateField label="First day" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
+          <DateField label="Last day" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />
         </div>
         <div className="fld">
           <label>Subjects</label>
@@ -104,9 +104,9 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
               const on = picked[s.id];
               return (
                 <div key={s.id} className={`exr ${on ? 'on' : ''}`}>
-                  <label className="hwc"><input type="checkbox" checked={!!on} onChange={() => toggle(s.id)} /><span>{s.name}</span></label>
+                  <Checkbox checked={!!on} onChange={() => toggle(s.id)} label={<span>{s.name}</span>} />
                   {on && <>
-                    <input className="hws wide" type="date" aria-label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(e) => setPicked({ ...picked, [s.id]: { ...on, on: e.target.value } })} />
+                    <DateField compact label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(v) => setPicked({ ...picked, [s.id]: { ...on, on: v } })} />
                     <input className="hws" inputMode="numeric" aria-label={`${s.name} marks out of`} value={on.max} onChange={(e) => setPicked({ ...picked, [s.id]: { ...on, max: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
                     <small>marks</small>
                   </>}
@@ -180,12 +180,12 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
               <div style={{ minWidth: 120 + ex.subjects.length * 96 + 220 }}>
                 <div className="mkh" style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                   <span>Roll</span><span>Student</span>
-                  {ex.subjects.map((s) => <span key={s.subjectId} title={`${s.name}, out of ${s.maxMarks}`} style={{ textAlign: 'center' }}>{s.name}<small>/ {s.maxMarks}</small></span>)}
+                  {ex.subjects.map((s) => <span key={s.subjectId} data-tip={`${s.name}, out of ${s.maxMarks}`} style={{ textAlign: 'center' }}>{s.name}<small>/ {s.maxMarks}</small></span>)}
                 </div>
                 {m.students.map((s) => (
                   <div className="mkr" key={s.studentId} style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                     <span className="rn num">{s.rollNo || '–'}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b title={s.name} style={{ font: '700 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b data-tip={s.name} style={{ font: '700 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
                     {ex.subjects.map((sub) => {
                       const c = cell(s.studentId, sub.subjectId);
                       const over = c.score !== '' && Number(c.score) > sub.maxMarks;
@@ -193,7 +193,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                         <span key={sub.subjectId} className="mkc">
                           <input data-col={sub.subjectId} inputMode="decimal" aria-label={`${s.name}, ${sub.name}`} className={`hws ${over ? 'bad' : ''}`} disabled={!editable || c.absent} placeholder={c.absent ? 'Abs' : '–'} value={c.score}
                             onKeyDown={onKey} onChange={(e) => setDraft({ ...draft, [key(s.studentId, sub.subjectId)]: { score: e.target.value.replace(/[^\d.]/g, '').slice(0, 5), absent: false } })} />
-                          {editable && <button type="button" className={`abs ${c.absent ? 'on' : ''}`} title={c.absent ? 'Marked absent. Click to undo' : 'Mark absent'} aria-label={`Absent: ${s.name}, ${sub.name}`} aria-pressed={c.absent}
+                          {editable && <button type="button" className={`abs ${c.absent ? 'on' : ''}`} data-tip={c.absent ? 'Marked absent. Click to undo' : 'Mark absent'} aria-label={`Absent: ${s.name}, ${sub.name}`} aria-pressed={c.absent}
                             onClick={() => setDraft({ ...draft, [key(s.studentId, sub.subjectId)]: { score: '', absent: !c.absent } })}>A</button>}
                         </span>
                       );
@@ -211,7 +211,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                     {results.data.rows.map((r) => (
                       <div className="grd rw" key={r.studentId} style={{ '--cols': '44px minmax(0,1.6fr) 90px 70px 60px' } as React.CSSProperties}>
                         <b className="num" style={{ font: '800 14px var(--fb)', color: r.rank <= 3 ? 'var(--v)' : 'var(--ink3)' }}>#{r.rank}</b>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b title={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
                         <span className="num" style={{ font: '600 13.5px var(--fb)' }}>{r.total} / {r.max}</span>
                         <b className="num" style={{ font: '800 14px var(--fb)' }}>{r.pct}%</b>
                         <span className={`chip ${r.pct >= 33 ? 'g' : 'r'}`}>{r.grade}</span>

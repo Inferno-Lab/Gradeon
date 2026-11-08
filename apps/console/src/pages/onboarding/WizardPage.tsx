@@ -4,7 +4,7 @@ import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { closeModules, contrastRatio } from '@gradeon/config-engine';
 import { WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { Field, SelectField, useShake } from '@gradeon/web-ui';
+import { Field, SelectField, Swatches, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -29,7 +29,6 @@ const DEFAULTS: Data = {
   admin: { name: '', email: '', phone: '', invite: 'both', roles: ['principal'] },
   data: { start: 'demo' },
 };
-const SWATCHES = ['#6A4CF5', '#8C1D40', '#0F7C86', '#C2410C', '#2F5BEA', '#1F8F5F'];
 const TARGET: Record<string, string> = { local: 'This computer', 'free-test': 'Free test track', 'aws-cell': 'AWS cell' };
 const slugify = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
 /** The contracts carry their own friendly messages; the library's stock ones get a plain replacement. */
@@ -186,12 +185,7 @@ export function WizardPage() {
           <div className="two">{f('branding', 'appName', 'Name in the app', { hint: 'Shown on the home screen' })}{f('branding', 'logoText', 'Logo letters', { maxLength: 2, hint: 'One or two letters' })}</div>
           {f('branding', 'tagline', 'Tagline (optional)')}
           <div className="lbl" style={{ margin: '8px 0' }}>Brand colour</div>
-          <div className="tgrow" role="radiogroup" aria-label="Brand colour">
-            {SWATCHES.map((c) => (
-              <button key={c} type="button" role="radio" aria-checked={c === data.branding.color} aria-label={c} onClick={() => set('branding', 'color', c)}
-                style={{ width: 44, height: 44, borderRadius: '50%', border: 0, background: c, cursor: 'pointer', boxShadow: c === data.branding.color ? `0 0 0 3px var(--card), 0 0 0 5.5px ${c}` : 'inset 0 0 0 2px rgba(255,255,255,.35)', transition: 'box-shadow .3s' }} />
-            ))}
-          </div>
+          <Swatches label="Brand colour" value={String(data.branding.color)} onPick={(c) => set('branding', 'color', c)} />
           {errs['branding.color'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['branding.color']}</div>}
           <div style={{ marginTop: 18, borderRadius: 22, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--sunk)' }} aria-label="App preview">
             <div style={{ padding: '14px 14px 18px', color: '#fff', background: str(data.branding.color), font: '700 13.5px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -240,7 +234,7 @@ export function WizardPage() {
   const last = step === STEPS.length - 1;
   const problems = review.data?.problems ?? [];
   return (
-    <Page active="onb" title="Onboard a school" sub="Seven short steps. Nothing is created until you press Launch." toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
+    <Page title="Onboard a school" sub="Seven short steps. Nothing is created until you press Launch." toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
       <div className="wiz">
         <nav className="wst" aria-label="Steps">
           {STEPS.map((s, i) => (

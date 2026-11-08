@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { lakhs, type ApprovalRow } from '@gradeon/contracts';
-import { EmptyCard, Shell, TONES } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, TONES } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { PhoneView } from './phone.view';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : n >= 1000 ? `₹${Math.round(n / 1000)}k` : `₹${n}`);
@@ -12,7 +12,7 @@ const hello = () => { const h = ((new Date().getUTCHours() * 60 + new Date().get
 /** The phone's home: the day at a glance and what needs you, from the same numbers as the desktop dashboard. */
 export function PhoneDashboard() {
   const app = useApp();
-  const chrome = useChrome('dash');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState('');
@@ -27,15 +27,15 @@ export function PhoneDashboard() {
 
   if (q.isError && !d) {
     return (
-      <Shell page="status" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="status">
         <main className="mn"><header className="hd"><div><h1>Home</h1></div></header>
           <EmptyCard error title="Home" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!d) {
-    return <div className={`pg-phone nest ${chrome.themeCls}`} aria-busy="true"><div className="ph fr"><div className="top"><div className="skc" style={{ height: 44, flex: 1, borderRadius: 14 }} /></div><div className="sc"><div className="skc" style={{ height: 120, borderRadius: 26 }} /><div className="skc" style={{ height: 200, borderRadius: 26 }} />{chrome.dock}</div></div></div>;
+    return <PageScope page="phone"><div className="ph" aria-busy="true"><div className="top"><div className="skc" style={{ height: 44, flex: 1, borderRadius: 14 }} /></div><div className="sc"><div className="skc" style={{ height: 120, borderRadius: 26 }} /><div className="skc" style={{ height: 200, borderRadius: 26 }} /></div></div></PageScope>;
   }
 
   const items = d.needsYou.map((n) => {

@@ -65,7 +65,8 @@ Other differences, each because a board element did not work in the real product
 - Admin and console look like one consistent product (shared menu, tiles, chips, dialogs, motion).
 - Errors vibrate (the `shk1`/`shk2` classes, `useShake`); the sign-in does it too.
 - Every empty page has an illustration, an honest sentence and a next step (`EmptyCard`).
-- Motion is smooth everywhere and stops under reduced motion.
+- Motion is smooth everywhere, never slow (120, 200 or 300 ms: `--t1/2/3`), never bouncy, and stops under reduced motion. One special effect at most per screen; the dashboard menus are ordinary menus like every other.
+- No browser widgets or browser tooltips: dates, times, numbers, colours, ticks and files use the shared fields (enforced by `packages/web-ui/src/rules.test.ts`).
 - 2026-11: violet, amber and coral replaced by neutral, ink and one blue; contrast fixed (`tools/check-contrast.mjs`). The canvas copy of `nest.css` has the same tokens; the rest of it is not synced.
 
 ## Logo

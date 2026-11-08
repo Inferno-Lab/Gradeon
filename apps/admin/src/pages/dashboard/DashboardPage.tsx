@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
-import { Dialog, EmptyCard, IC, Shell, TONES, rollDigits, tintFor, useIsPhone } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, IC, PageScope, TONES, rollDigits, tintFor, useIsPhone } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { DashboardView } from './dashboard.view';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { PhoneDashboard } from '../phone/PhoneDashboard';
@@ -36,7 +36,7 @@ export function DashboardPage() {
 
 function DashboardDesktop() {
   const app = useApp();
-  const chrome = useChrome('dash');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const [range, setRange] = useState(1);
   const [rangeOpen, setRangeOpen] = useState(false);
@@ -52,12 +52,6 @@ function DashboardDesktop() {
 
   const q = useQuery({ queryKey: ['dashboard', days], queryFn: () => app.api.dashboard(days), refetchInterval: 20_000, placeholderData: keepPreviousData });
 
-  // Close the two menus when the page is clicked anywhere else.
-  useEffect(() => {
-    const off = () => { setRangeOpen(false); setNewOpen(false); };
-    const t = setTimeout(() => document.addEventListener('click', off), 0);
-    return () => { clearTimeout(t); document.removeEventListener('click', off); };
-  }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const decide = useMutation({
@@ -69,7 +63,7 @@ function DashboardDesktop() {
   });
 
   const d: DashboardData | undefined = q.data;
-  const v = useMemo(() => (d ? build(d) : null), [d, range, tab, rangeOpen, newOpen, done, toast, chrome.shell, chrome.palette, chrome.aside, chrome.dock, hidden, widgets]);
+  const v = useMemo(() => (d ? build(d) : null), [d, range, tab, rangeOpen, newOpen, done, toast, chrome.shell, hidden, widgets]);
 
   function build(d: DashboardData) {
     const has = (m: string) => d.modules.includes(m);
@@ -131,11 +125,9 @@ function DashboardDesktop() {
       ), me: { name: app.user.name, initials: app.user.initials, role: app.user.roleNames[0] ?? 'Staff', ...me }, schoolName: chrome.shell?.school.shortName ?? d.schoolName,
       greeting: greeting(), subtitle: `${d.term.name} · ${d.subtitle.marked} of ${d.subtitle.classes} classes have marked attendance`,
       hasAlerts: left > 0,
-      rangeOpen: rangeOpen ? 'open' : '', rangeExp: rangeOpen ? 'true' : 'false', rangeLabel: RANGES[range]![0],
-      toggleRange: (e: React.MouseEvent) => { e.stopPropagation(); setRangeOpen((o) => !o); setNewOpen(false); },
+      rangeOpen, rangeLabel: RANGES[range]![0], setRangeOpen: (o: boolean) => { setRangeOpen(o); setNewOpen(false); },
       ranges: RANGES.map((r, i) => ({ t: r[0], on: i === range, sel: i === range ? 'true' : 'false', d: 50 + i * 45, pick: () => { setRange(i); setRangeOpen(false); } })),
-      newOpen: newOpen ? 'open' : '', newExp: newOpen ? 'true' : 'false',
-      toggleNew: (e: React.MouseEvent) => { e.stopPropagation(); setNewOpen((o) => !o); setRangeOpen(false); },
+      newOpen, setNewOpen: (o: boolean) => { setNewOpen(o); setRangeOpen(false); },
       news: NEWS.filter((n) => has(n[4])).map((n, i) => ({ t: n[0], ic: IC[n[1] as keyof typeof IC], k: n[2], d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n[3]); } })),
       dayLine: d.day.isToday ? `${d.day.label} · ${d.day.clock}` : `${d.day.label} · last school day`,
       kPresent: rollDigits(inr(d.present.value)), totalStudents: inr(d.present.total),
@@ -145,8 +137,7 @@ function DashboardDesktop() {
       kLeft: rollDigits(String(left)), avatars: d.approvals.avatars.map((a) => ({ initials: a.initials, ...(TONES[a.tone] ?? TONES.violet!) })), moreAvatars: Math.max(0, d.approvals.count - 3),
       chartTitle: kind === 'attendance' ? `Attendance, last ${pts.length} school ${pts.length === 1 ? 'day' : 'days'}` : kind === 'fees' ? 'Fees collected each day' : 'Homework handed in on time',
       chartAlt: `${T[0]} for the last ${pts.length} school days.`,
-      tabs: tabsOn.map((x, i) => ({ n: x[0], on: x === T ? 'on' : '', sel: x === T ? 'true' : 'false', pick: () => setTab(i) })), kw: T[2],
-      kx: tabsOn.slice(0, Math.max(0, tabsOn.indexOf(T))).reduce((a, x) => a + x[2], 4),
+      tabs: tabsOn.map((x, i) => ({ n: x[0], on: x === T ? 'on' : '', sel: x === T ? 'true' : 'false', pick: () => setTab(i) })),
       grid, goalB: 30 + (goal / max) * H, goalL: kind === 'fees' ? `Daily target ${money(goal)}` : `Goal ${goal}%`, cols,
       chartEmpty: values.every((x) => x === 0),
       chartEmptyText: kind === 'attendance' ? 'Attendance appears here after the first roll call is marked.' : kind === 'fees' ? 'Payments appear here as fees are collected.' : 'Homework appears here once teachers set it and students hand it in.',
@@ -172,13 +163,13 @@ function DashboardDesktop() {
 
   if (q.isError && !d) {
     return (
-      <Shell page="dashboard" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="dashboard">
         <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
           <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
-  if (!v) return <DashboardSkeleton chrome={chrome} />;
+  if (!v) return <DashboardSkeleton />;
   return <DashboardView v={v} />;
 }

@@ -1,46 +1,17 @@
 /* eslint-disable */
 // Markup converted from design/canvas/Main.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, Shell } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, ToastSlot, Segmented, MenuButton } from "@gradeon/web-ui";
 import "./dashboard.css";
 
 export function DashboardView({ v }: { v: any }) {
   return (
-    <Shell
+    <PageScope
       page="dashboard"
-      theme={v.themeCls}
-      aside={v.aside}
       overlays={
         <>
-          {v.palette}
-          {v.widgetsDialog}
-          {v.toastOn && (
-            <>
-              <div className="toast" role="status">
-                <span
-                  style={
-                    {
-                      width: "30px",
-                      height: "30px",
-                      borderRadius: "50%",
-                      background: "var(--g)",
-                      display: "grid",
-                      placeItems: "center",
-                      flex: "none",
-                    } as CSSProperties
-                  }
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ stroke: "#fff", strokeWidth: "2.6" } as CSSProperties}></path>
-                  </svg>
-                </span>
-                {v.toastText}
-                <button className="btn wht sm" onClick={v.undo}>
-                  Undo
-                </button>
-              </div>
-            </>
-          )}
+          <Presence>{v.widgetsDialog}</Presence>
+          <ToastSlot toast={v.toastOn && { text: v.toastText, action: v.canUndo ? { label: "Undo", onPress: v.undo } : undefined }} />
         </>
       }
     >
@@ -70,64 +41,29 @@ export function DashboardView({ v }: { v: any }) {
             </svg>
             {v.hasAlerts && <span className="pip"></span>}
           </button>
-          <div className="anc" style={{ width: "148px", height: "42px" } as CSSProperties}>
-            <div className={`morph ${v.rangeOpen ?? ""}`} style={{ "--w0": "148px", "--w1": "210px", "--h1": "232px" } as CSSProperties}>
-              <button className="mh" onClick={v.toggleRange} aria-expanded={v.rangeExp}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4"></path>
-                </svg>
-                {v.rangeLabel}
-                <svg className="cv" viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M6 9l6 6 6-6"></path>
-                </svg>
+          <MenuButton label={v.rangeLabel} icon="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4" chevron open={!!v.rangeOpen} onOpenChange={v.setRangeOpen} menuLabel="Time range">
+            {v.ranges.map((r: any, $i: number) => (
+              <button key={$i} role="menuitemradio" aria-checked={r.on} className={r.on ? "on" : ""} onClick={r.pick}>
+                {r.t}
+                {r.on && (
+                  <svg className="ck" viewBox="0 0 24 24" aria-hidden="true">
+                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path>
+                  </svg>
+                )}
               </button>
-              <div className="ml" role="listbox">
-                {v.ranges.map((r: any, $i: number) => (
-                  <Fragment key={$i}>
-                    <button
-                      className="mo"
-                      role="option"
-                      aria-selected={r.sel}
-                      onClick={r.pick}
-                      style={{ transitionDelay: `${r.d ?? ""}ms` } as CSSProperties}
-                    >
-                      {r.t}
-                      {r.on && (
-                        <>
-                          <svg className="ck" viewBox="0 0 24 24" aria-hidden="true">
-                            <path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path>
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="anc" style={{ width: "112px", height: "42px" } as CSSProperties}>
-            <div className={`morph dk ${v.newOpen ?? ""}`} style={{ "--w0": "112px", "--w1": "250px", "--h1": "290px" } as CSSProperties}>
-              <button className="mh" onClick={v.toggleNew} aria-expanded={v.newExp}>
+            ))}
+          </MenuButton>
+          <MenuButton label="New" icon="M12 5v14M5 12h14" primary open={!!v.newOpen} onOpenChange={v.setNewOpen} menuLabel="Add something new">
+            {v.news.map((r: any, $i: number) => (
+              <button key={$i} role="menuitem" onClick={r.go}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M12 5v14M5 12h14"></path>
+                  <path className="i" d={r.ic}></path>
                 </svg>
-                New
+                {r.t}
+                <small>{r.k}</small>
               </button>
-              <div className="ml" role="menu">
-                {v.news.map((r: any, $i: number) => (
-                  <Fragment key={$i}>
-                    <button className="mo" role="menuitem" onClick={r.go} style={{ transitionDelay: `${r.d ?? ""}ms` } as CSSProperties}>
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path className="i" d={r.ic}></path>
-                      </svg>
-                      {r.t}
-                      <kbd>{r.k}</kbd>
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
-            </div>
-          </div>
+            ))}
+          </MenuButton>
         </header>
         <section className="grid" aria-label="Today at a glance">
           <div className="tile t-l s3 wl lift rise" style={{ "--d": ".05s", minHeight: "232px" } as CSSProperties}>
@@ -286,16 +222,7 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="chtt" style={{ fontSize: "22px" } as CSSProperties}>
                 {v.chartTitle}
               </h2>
-              <div className="seg" role="tablist" style={{ background: "color-mix(in srgb,var(--v) 12%,transparent)" } as CSSProperties}>
-                <span className="kn" style={{ width: `${v.kw ?? ""}px`, transform: `translateX(${v.kx ?? ""}px)` } as CSSProperties}></span>
-                {v.tabs.map((t: any, $i: number) => (
-                  <Fragment key={$i}>
-                    <button className={t.on} role="tab" aria-selected={t.sel} onClick={t.pick}>
-                      {t.n}
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
+              <Segmented label="Chart" value={String(v.tabs.findIndex((t: any) => t.on))} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ background: "color-mix(in srgb,var(--v) 12%,transparent)" } as CSSProperties} />
             </div>
             <div className={`plot ${v.chartEmpty ? "empty" : ""}`} role="img" aria-label={v.chartAlt}>
               {v.grid.map((g: any, $i: number) => (
@@ -472,6 +399,6 @@ export function DashboardView({ v }: { v: any }) {
           </button>
         </section>
       </main>
-    </Shell>
+    </PageScope>
   );
 }

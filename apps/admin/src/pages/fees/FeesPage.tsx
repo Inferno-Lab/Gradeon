@@ -27,7 +27,7 @@ export function FeesPage() {
   const canPay = app.user.permissions.includes('fees.collect');
   const err = [summary, overdue].find((q) => q.isError && !q.data);
   return (
-    <Page active="fee" title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
+    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
       overlays={paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}>
       {s && (
@@ -64,7 +64,7 @@ export function FeesPage() {
                     <div className="grd rw" key={r.id} style={{ '--cols': 'minmax(0,1.6fr) 70px 110px 110px' } as React.CSSProperties}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                         <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{r.initials}</span>
-                        <span style={{ minWidth: 0 }}><b title={r.name} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.guardianName}</small></span>
+                        <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.guardianName}</small></span>
                       </span>
                       <span className="chip">{r.className}</span>
                       <b className="num" style={{ font: '700 14px var(--fb)', color: 'var(--r)' }}>₹{inr(r.amountDue)}</b>

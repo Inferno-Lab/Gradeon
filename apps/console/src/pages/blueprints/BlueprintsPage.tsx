@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { STEP_LABELS, type BlueprintRow, type PolicyDoc, type StepKey } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, NumberInput, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -45,7 +45,7 @@ export function BlueprintsPage() {
   const dirtyPol = pol && policy.data && JSON.stringify(pol) !== JSON.stringify(policy.data);
 
   return (
-    <Page active="bp" title="Blueprints and rules" sub="The recipe every new school is set up with, and the rules for risky changes" toast={toast} loading={bps.isLoading || policy.isLoading} error={bps.isError || policy.isError ? { message: ((bps.error ?? policy.error) as Error).message, retry: () => { void bps.refetch(); void policy.refetch(); } } : null}
+    <Page title="Blueprints and rules" sub="The recipe every new school is set up with, and the rules for risky changes" toast={toast} loading={bps.isLoading || policy.isLoading} error={bps.isError || policy.isError ? { message: ((bps.error ?? policy.error) as Error).message, retry: () => { void bps.refetch(); void policy.refetch(); } } : null}
       actions={canBp ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New blueprint</button> : undefined}
       overlays={<>
         {adding && <NewBlueprint from={rows} onClose={() => setAdding(false)} onDone={(m) => { setAdding(false); void qc.invalidateQueries({ queryKey: ['blueprints'] }); say(m); }} />}
@@ -99,8 +99,8 @@ export function BlueprintsPage() {
               </div>
               </div>
               <div className="two" style={{ marginTop: 6 }}>
-                <label className="fld"><span className="lbl">Stop a rollout above (error %)</span><span className="inp"><input type="number" min={0} max={100} value={pol.halt.errorRatePct} disabled={!canPol} onChange={(e) => setPol({ ...pol, halt: { ...pol.halt, errorRatePct: Number(e.target.value) } })} /></span></label>
-                <label className="fld"><span className="lbl">…or when p95 passes (ms)</span><span className="inp"><input type="number" min={0} value={pol.halt.p95Ms} disabled={!canPol} onChange={(e) => setPol({ ...pol, halt: { ...pol.halt, p95Ms: Number(e.target.value) } })} /></span></label>
+                <NumberField label="Stop a rollout above (error %)" min={0} max={100} value={String(pol.halt.errorRatePct)} disabled={!canPol} onChange={(v) => setPol({ ...pol, halt: { ...pol.halt, errorRatePct: Number(v) } })} />
+                <NumberField label="…or when p95 passes (ms)" min={0} step={50} value={String(pol.halt.p95Ms)} disabled={!canPol} onChange={(v) => setPol({ ...pol, halt: { ...pol.halt, p95Ms: Number(v) } })} />
               </div>
               {canPol && <button className="btn pri" style={{ marginTop: 16 }} disabled={!dirtyPol || savePolicy.isPending} onClick={() => savePolicy.mutate(pol)}>Save rules</button>}
             </>
@@ -115,7 +115,7 @@ export function BlueprintsPage() {
                   <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--sunk)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
                   <input className="hws wide" style={{ width: 'auto', textAlign: 'left', padding: '0 12px', flex: '1 1 160px' }} aria-label={`Name of wave ${i + 1}`} value={w.name} disabled={!canPol} onChange={(e) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })} />
                   <Select compact aria-label={`Who is in wave ${i + 1}`} value={w.matches} disabled={!canPol} onChange={(v) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, matches: v as 'rest' } : x)) })} options={WAVE_KINDS.map(([value, label]) => ({ value, label }))} />
-                  <label className="hwc" style={{ whiteSpace: 'nowrap' }}>Schools at a time<input className="hws" type="number" min={1} max={100} value={w.batch} disabled={!canPol} onChange={(e) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, batch: Math.max(1, Number(e.target.value) || 1) } : x)) })} /></label>
+                  <label className="hwc" style={{ whiteSpace: 'nowrap' }}>Schools at a time<NumberInput min={1} max={100} value={String(w.batch)} disabled={!canPol} aria-label="Schools at a time" onChange={(v) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, batch: Math.max(1, Number(v) || 1) } : x)) })} /></label>
                   {canPol && <button className="btn sm dng" disabled={pol.waves.length < 2} aria-label={`Remove wave ${i + 1}`} onClick={() => setPol({ ...pol, waves: pol.waves.filter((_, j) => j !== i) })}>Remove</button>}
                 </div>
               ))}

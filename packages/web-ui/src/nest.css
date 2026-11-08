@@ -5,7 +5,9 @@
 --a:#E0A21B;--aS:#FBF0D9;--aD:#8F5400;--c:#B42318;--cS:#FCEBE9;--cD:#B42318;
 --g:#1E7A45;--gS:#E3F2E8;--gD:#1E7A45;--b:#2F5BD3;--bS:#EDF2FD;--r:#B42318;--rS:#FCEBE9;--rF:#B42318;--present:#B9B9B3;
 --ci:#1A1A1C;--sh1:0 1px 2px rgba(26,26,28,.05);--sh2:0 8px 20px -12px rgba(26,26,28,.22);--sh3:0 18px 44px -20px rgba(26,26,28,.34);--scrim:rgba(17,17,19,.42);
---fb:'Manrope',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope',sans-serif;--e:cubic-bezier(.22,1,.36,1);--sp:cubic-bezier(.34,1.56,.64,1);
+--fb:'Manrope',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope',sans-serif;--e:cubic-bezier(.22,1,.36,1);--ei:cubic-bezier(.4,0,1,1);
+/* Every timing in the admin and console: press and toggle, popups and menus, dialogs and page changes. Leaving uses the next one down. */
+--t1:120ms;--t2:200ms;--t3:300ms;
 font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothing:antialiased;letter-spacing:-.005em;position:relative;box-sizing:border-box}
 .nest *,.nest *::before,.nest *::after{box-sizing:border-box}
 .nest.dark{--bd:#0A0A0B;--frame:#111113;--card:#19191C;--sunk:#1E1E22;--line:#2A2A2E;--line2:#34343A;--sbg:#111113;--field:#6B6B72;
@@ -25,26 +27,26 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .fr{background:var(--frame);border-radius:28px;box-shadow:var(--sh3);overflow:hidden;position:relative;border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .nest .app{display:grid;grid-template-columns:auto minmax(0,1fr)}
 @media (max-width:900px){.nest .app{grid-template-columns:minmax(0,1fr)}}
-.nest .sb{width:272px;transition:width .3s var(--e);background:var(--sbg);border-right:1px solid var(--line);padding:18px 14px 16px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.nest .sb{width:272px;transition:width var(--t3) var(--e);background:var(--sbg);border-right:1px solid var(--line);padding:18px 14px 16px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .nest .sb.col{width:88px}
 .nest .ws{display:flex;align-items:center;gap:12px;height:52px;padding:0 6px;white-space:nowrap}
 .nest .lg{width:40px;height:40px;border-radius:14px;background:var(--ink);color:var(--card);display:grid;place-items:center;font:800 18px var(--fd);flex:none;box-shadow:none}
 .nest .ws b{display:block;font:700 15px var(--fb);line-height:1.2}
 .nest .ws small{font:500 12.5px var(--fb);color:var(--ink3)}
-.nest .colb{margin-left:auto;width:32px;height:32px;border-radius:10px;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;flex:none;transition:background .2s,color .2s}
+.nest .colb{margin-left:auto;width:32px;height:32px;border-radius:10px;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;flex:none;transition:background var(--t2),color var(--t2)}
 .nest .colb:hover{background:var(--sunk);color:var(--ink)}
 .nest .col .colb{margin-left:0}
-.nest .fade{transition:opacity .3s,transform .5s var(--e)}
+.nest .fade{transition:opacity var(--t3),transform var(--t3) var(--e)}
 .nest .col .fade{opacity:0;transform:translateX(-8px);pointer-events:none}
 .nest .sl{font:600 12px var(--fb);color:var(--ink3);padding:18px 12px 6px;white-space:nowrap}
-.nest .nv{position:relative;display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;border:0;background:none;color:var(--ink2);font:500 14px var(--fb);cursor:pointer;text-align:left;text-decoration:none;white-space:nowrap;transition:background .25s,color .25s,transform .25s var(--e)}
+.nest .nv{position:relative;display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;border:0;background:none;color:var(--ink2);font:500 14px var(--fb);cursor:pointer;text-align:left;text-decoration:none;white-space:nowrap;transition:background var(--t2),color var(--t2),transform var(--t2) var(--e)}
 .nest .nv:hover{background:var(--sunk);color:var(--ink)}
 .nest .nv:active{transform:scale(.98)}
 .nest .nv.on{background:var(--pri);color:var(--priT);font-weight:600}
 .nest .nv>svg{width:20px;height:20px;flex:none}
 .nest .nv .ct{margin-left:auto;font:600 11.5px var(--fb);background:var(--sunk);color:var(--ink2);border-radius:999px;padding:2px 8px}
 .nest .nv.on .ct{background:color-mix(in srgb,var(--priT) 18%,transparent);color:var(--priT)}
-.nest .nv .kb{margin-left:auto;font:700 11px var(--fb);color:var(--ink3);opacity:0;transform:translateX(4px);transition:opacity .2s,transform .3s var(--e)}
+.nest .nv .kb{margin-left:auto;font:700 11px var(--fb);color:var(--ink3);opacity:0;transform:translateX(4px);transition:opacity var(--t2),transform var(--t3) var(--e)}
 .nest .nv:hover .kb{opacity:1;transform:none}
 .nest .col .nv .kb{display:none}
 .nest .sbc{margin-top:auto;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--ink);padding:16px;display:flex;flex-direction:column;gap:10px;white-space:nowrap;overflow:hidden;position:relative}
@@ -57,9 +59,10 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .hd p{margin:6px 0 0;color:var(--ink2);font:500 15px var(--fb)}
 .nest .grow{flex:1}
 /* buttons */
-.nest .btn{flex:none;height:42px;padding:0 20px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 14px var(--fb);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;text-decoration:none;transition:transform .25s var(--e),background .2s,box-shadow .35s,border-color .2s,color .2s,opacity .2s}
-.nest .btn:hover{background:var(--sunk);transform:translateY(-1px)}
-.nest .btn:active{transform:scale(.96)}
+.nest .btn{flex:none;height:42px;padding:0 20px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 14px var(--fb);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;text-decoration:none;transition:transform var(--t2) var(--e),background var(--t2),box-shadow var(--t3),border-color var(--t2),color var(--t2),opacity var(--t2)}
+.nest .btn:hover{background:var(--sunk)}
+/* Buttons answer a press, quickly; nothing moves on hover. */
+.nest .btn:active,.nest .ibtn:active,.nest .mini:active{transform:scale(.97);transition-duration:var(--t1)}
 .nest .btn svg{width:17px;height:17px;flex:none}
 .nest .btn.pri{background:var(--pri);color:var(--priT);border-color:transparent}
 .nest .btn.pri:hover{box-shadow:none;background:var(--pri)}
@@ -72,23 +75,22 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .btn.dng{background:var(--rS);color:var(--r);border-color:transparent}
 .nest .btn.dngf{background:var(--rF);color:#fff;border-color:transparent}
 .nest .btn[disabled]{opacity:.38;cursor:not-allowed;transform:none;box-shadow:none}
-.nest .ibtn{position:relative;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .25s var(--e),background .2s,color .2s}
-.nest .ibtn:hover{background:var(--sunk);color:var(--ink);transform:translateY(-1px)}
-.nest .ibtn:active{transform:scale(.92)}
+.nest .ibtn{position:relative;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform var(--t2) var(--e),background var(--t2),color var(--t2)}
+.nest .ibtn:hover{background:var(--sunk);color:var(--ink)}
 .nest .ibtn svg{width:19px;height:19px}
 .nest .pip{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2.5px var(--card)}
 .nest .spin{width:16px;height:16px;border-radius:50%;border:2.5px solid color-mix(in srgb,currentColor 28%,transparent);border-top-color:currentColor;animation:nSpin .7s linear infinite}
 @keyframes nSpin{to{transform:rotate(360deg)}}
 /* search, segmented, chips */
-.nest .srch{display:flex;align-items:center;gap:10px;height:42px;padding:0 8px 0 16px;min-width:280px;border-radius:999px;border:1.5px solid var(--field);background:var(--card);color:var(--ink3);font:600 14px var(--fb);cursor:text;transition:border-color .2s,box-shadow .3s var(--e)}
+.nest .srch{display:flex;align-items:center;gap:10px;height:42px;padding:0 8px 0 16px;min-width:280px;border-radius:999px;border:1.5px solid var(--field);background:var(--card);color:var(--ink3);font:600 14px var(--fb);cursor:text;transition:border-color var(--t2),box-shadow var(--t3) var(--e)}
 .nest .srch:hover{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
 .nest .srch svg{width:18px;height:18px;flex:none}
 .nest .kbd{margin-left:auto;font:800 11.5px var(--fb);border-radius:999px;padding:5px 10px;background:var(--sunk);color:var(--ink3)}
 .nest .seg{position:relative;display:inline-flex;padding:4px;border-radius:999px;background:var(--sunk)}
-.nest .seg button{position:relative;z-index:1;height:36px;padding:0 18px;border:0;background:none;border-radius:999px;font:700 13.5px var(--fb);color:var(--ink3);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:color .25s}
+.nest .seg button{position:relative;z-index:1;height:36px;padding:0 18px;border:0;background:none;border-radius:999px;font:700 13.5px var(--fb);color:var(--ink3);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:color var(--t2)}
 .nest .seg button.on{color:var(--ink)}
 .nest .seg button svg{width:16px;height:16px}
-.nest .seg .kn{position:absolute;top:4px;bottom:4px;left:0;border-radius:999px;background:var(--card);box-shadow:var(--sh1),0 0 0 1px var(--line);transition:transform .55s var(--e),width .55s var(--e)}
+.nest .seg .kn{position:absolute;top:4px;bottom:4px;left:0;border-radius:999px;background:var(--card);box-shadow:var(--sh1),0 0 0 1px var(--line);transition:transform var(--t2) var(--e),width var(--t2) var(--e)}
 .nest .chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:999px;background:var(--sunk);color:var(--ink2);font:700 12px var(--fb);white-space:nowrap}
 .nest .chip svg{width:13px;height:13px}
 .nest .chip.v{background:var(--vS);color:var(--vD)}
@@ -104,50 +106,49 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .tr.dn{background:var(--rS);color:var(--r)}
 /* cards and tiles */
 .nest .card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:var(--sh1);min-width:0}
-.nest .tile{border-radius:24px;padding:22px;min-width:0;position:relative;overflow:hidden;transition:transform .25s var(--e)}
+.nest .tile{border-radius:24px;padding:22px;min-width:0;position:relative;overflow:hidden;transition:transform var(--t2) var(--e)}
 .nest .tile.lift:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
 /* One ink tile; every other tile is a card with a hairline, so colour is kept for data and state. */
 .nest .t-v,.nest .t-a,.nest .t-l,.nest .t-p,.nest .t-g{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .nest .t-i{background:var(--ci);color:#fff}
 .nest .ch{display:flex;align-items:center;gap:12px}
 .nest .ch h2{margin:0;font:700 19px var(--fd);letter-spacing:-.02em;flex:1}
-.nest .mini{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .25s var(--e),background .2s}
-.nest .mini:hover{background:var(--sunk);transform:scale(1.06)}
-.nest .mini:active{transform:scale(.9)}
+.nest .mini{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform var(--t2) var(--e),background var(--t2)}
+.nest .mini:hover{background:var(--sunk)}
 .nest .mini svg{width:15px;height:15px}
 .nest .muted{color:var(--ink3)}
 .nest .m2{color:var(--ink2)}
 /* fields */
 .nest .fld{display:flex;flex-direction:column;gap:8px}
 .nest .fld>label{font:700 13.5px var(--fb)}
-.nest .inp{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);transition:border-color .2s,box-shadow .35s var(--e),background .25s}
+.nest .inp{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);transition:border-color var(--t2),box-shadow var(--t3) var(--e),background var(--t2)}
 .nest .inp:hover{border-color:var(--ink3)}
 .nest .inp:focus-within{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
 .nest .inp input,.nest .inp textarea{flex:1;min-width:0;border:0;outline:0;background:none;font:600 15px var(--fb);color:var(--ink)}
 .nest .inp input::placeholder{color:var(--ink3);font-weight:500}
-.nest .inp>svg{width:19px;height:19px;color:var(--ink3);flex:none;transition:color .25s}
+.nest .inp>svg{width:19px;height:19px;color:var(--ink3);flex:none;transition:color var(--t2)}
 .nest .inp:focus-within>svg{color:var(--v)}
 .nest .inp.err{border-color:var(--r);background:color-mix(in srgb,var(--rS) 45%,var(--card));box-shadow:0 0 0 1px var(--r)}
-.nest .emsg{display:flex;align-items:center;gap:7px;font:700 13px var(--fb);color:var(--r);animation:nEm .45s var(--e)}
+.nest .emsg{display:flex;align-items:center;gap:7px;font:700 13px var(--fb);color:var(--r);animation:nEm var(--t3) var(--e)}
 .nest .emsg svg{width:15px;height:15px;flex:none}
 @keyframes nEm{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .nest .help{font:500 13px var(--fb);color:var(--ink3)}
 /* vibrate on error: restartable by flipping shk1 and shk2 on an ancestor */
-.nest .shk1 .shake{animation:nShkA .6s linear}
-.nest .shk2 .shake{animation:nShkB .6s linear}
+.nest .shk1 .shake{animation:nShkA var(--t3) linear}
+.nest .shk2 .shake{animation:nShkB var(--t3) linear}
 @keyframes nShkA{0%,100%{transform:translateX(0)}8%{transform:translateX(-9px)}16%{transform:translateX(9px)}24%{transform:translateX(-8px)}32%{transform:translateX(8px)}40%{transform:translateX(-6px)}48%{transform:translateX(6px)}58%{transform:translateX(-4px)}68%{transform:translateX(3px)}80%{transform:translateX(-1.5px)}90%{transform:translateX(1px)}}
 @keyframes nShkB{0%,100%{transform:translateX(0)}8%{transform:translateX(-9px)}16%{transform:translateX(9px)}24%{transform:translateX(-8px)}32%{transform:translateX(8px)}40%{transform:translateX(-6px)}48%{transform:translateX(6px)}58%{transform:translateX(-4px)}68%{transform:translateX(3px)}80%{transform:translateX(-1.5px)}90%{transform:translateX(1px)}}
 /* switch, checkbox */
-.nest .cb{width:22px;height:22px;border-radius:7px;border:1.8px solid var(--field);background:var(--card);display:grid;place-items:center;color:var(--onV);cursor:pointer;padding:0;flex:none;transition:background .2s,border-color .2s,transform .15s}
-.nest .cb:active{transform:scale(.84)}
+.nest .cb{width:22px;height:22px;border-radius:7px;border:1.8px solid var(--field);background:var(--card);display:grid;place-items:center;color:var(--onV);cursor:pointer;padding:0;flex:none;transition:background var(--t2),border-color var(--t2),transform var(--t1)}
+.nest .cb:active{transform:scale(.9)}
 .nest .cb.on{background:var(--v);border-color:var(--v)}
 .nest .cb svg{width:14px;height:14px}
-.nest .cb path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .35s var(--e)}
+.nest .cb path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset var(--t3) var(--e)}
 .nest .cb.on path{stroke-dashoffset:0}
 /* tables */
 .nest .grd{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:14px;padding:0 22px}
 .nest .th{height:46px;font:700 12.5px var(--fb);color:var(--ink3);border-bottom:1px solid var(--line)}
-.nest .rw{position:relative;height:64px;border-bottom:1px solid var(--line);font:600 14px var(--fb);cursor:pointer;transition:background .25s}
+.nest .rw{position:relative;height:64px;border-bottom:1px solid var(--line);font:600 14px var(--fb);cursor:pointer;transition:background var(--t2)}
 .nest .rw:last-child{border-bottom:0}
 .nest .rw:hover{background:color-mix(in srgb,var(--v) 5%,transparent)}
 .nest .rw.sel{background:var(--vL)}
@@ -155,64 +156,68 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 /* rolling digits */
 .nest .roll{display:inline-flex;height:1.1em;overflow:hidden;line-height:1.1}
 .nest .dg{display:inline-block;height:1.1em;width:.62em;overflow:hidden;text-align:center}
-.nest .strip{display:flex;flex-direction:column;transition:transform .5s var(--e)}
+.nest .strip{display:flex;flex-direction:column;transition:transform var(--t3) var(--e)}
 .nest .strip span{display:block;height:1.1em;text-align:center}
 /* motion helpers */
-.nest .rise{animation:nRise .45s var(--e) both;animation-delay:calc(var(--d,0s) * .4)}
-@keyframes nRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.nest .pop{animation:nPop .7s var(--sp) both;animation-delay:var(--d,0s)}
-@keyframes nPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+/* Content arriving: a short rise, the stagger capped so a long page is never kept waiting. */
+.nest .rise{animation:nRise var(--t3) var(--e) both;animation-delay:min(calc(var(--d,0s) * .4),.2s)}
+@keyframes nRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes nFade{from{opacity:0}to{opacity:1}}
+@keyframes nFadeO{to{opacity:0}}
+/* A bar filling to its value (progress bars). */
+@keyframes fillw{from{width:0}}
+/* Popups grow from where they open (scale .96, never more) and leave a little faster than they came. */
+@keyframes nIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes nOut{to{opacity:0;transform:scale(.97)}}
+/* Something on its way out (see Presence) cannot be clicked or focused while it fades. */
+.nest [data-leaving]{pointer-events:none}
 .nest .float{animation:nFloat 5s ease-in-out infinite;animation-delay:var(--d,0s)}
 @keyframes nFloat{50%{transform:translateY(-9px)}}
-/* menus that grow out of their button */
-.nest .anc{position:relative;flex:none}
-.nest .morph{position:absolute;right:0;top:0;z-index:30;overflow:hidden;background:var(--card);border:1.5px solid var(--line2);width:var(--w0);height:42px;border-radius:999px;transition:width .6s var(--e),height .6s var(--e),border-radius .6s var(--e),box-shadow .5s,border-color .3s}
-.nest .morph.open{width:var(--w1);height:var(--h1);border-radius:24px;box-shadow:var(--sh3);border-color:var(--line)}
-.nest .morph.dk{background:var(--pri);color:var(--priT);border-color:transparent}
-.nest .mh{display:flex;align-items:center;gap:9px;width:100%;height:39px;padding:0 17px;border:0;background:none;color:inherit;font:700 14px var(--fb);cursor:pointer;white-space:nowrap}
-.nest .mh svg{width:17px;height:17px;flex:none}
-.nest .mh .cv{margin-left:auto;transition:transform .5s var(--e)}
-.nest .open .mh .cv{transform:rotate(180deg)}
-.nest .ml{padding:4px 8px 8px;display:flex;flex-direction:column;gap:2px}
-.nest .mo{display:flex;align-items:center;gap:11px;height:42px;padding:0 12px;border:0;border-radius:14px;background:none;color:inherit;font:600 14px var(--fb);cursor:pointer;white-space:nowrap;text-align:left;opacity:0;transform:translateY(-8px);transition:opacity .3s,transform .5s var(--e),background .15s}
-.nest .open .mo{opacity:1;transform:none}
-.nest .mo:hover{background:var(--sunk)}
-.nest .mo svg{width:18px;height:18px;flex:none;opacity:.75}
-.nest .mo .ck{margin-left:auto;color:var(--v);opacity:1}
-.nest .mo kbd{margin-left:auto;font:700 11px var(--fb);opacity:.5}
-.nest .mo small{display:block;font:500 12px var(--fb);opacity:.6}
+/* A button that opens a menu: its chevron turns while the menu is open. */
+.nest .btn .cv{transition:transform var(--t2) var(--e)}
+.nest .btn[aria-expanded=true] .cv{transform:rotate(180deg)}
+.nest .popm button svg{width:17px;height:17px;flex:none;opacity:.75}
+.nest .popm button .ck{margin-left:auto;color:var(--v);opacity:1}
 /* overlays */
-.nest .scrim{position:absolute;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade .3s ease-out}
-.nest .scrim.out{animation:nFadeO .3s forwards}
-@keyframes nFadeO{to{opacity:0}}
-.nest .mod{position:absolute;z-index:51;left:50%;top:50%;transform:translate(-50%,-50%);animation:nMod .6s var(--e)}
-@keyframes nMod{from{opacity:0;transform:translate(-50%,-46%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%)}}
+.nest .scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade var(--t3) var(--e) both}
+.nest .scrim[data-leaving]{animation:nFadeO var(--t2) var(--ei) forwards}
+/* The layer a dialog or the search box sits in. It centres with a grid, not a transform, so the opening animation can never move it. */
+.nest .mod{position:fixed;inset:0;z-index:51;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;padding:16px;pointer-events:none}
+.nest .mod.top{place-items:start center;padding-top:18vh}
+.nest .mod>*{pointer-events:auto;animation:nIn var(--t3) var(--e) both}
+.nest .mod.top>*{transform-origin:top center}
+.nest .mod[data-leaving]>*{pointer-events:none;animation:nOut var(--t2) var(--ei) forwards}
 .nest .dlg{width:460px;max-width:calc(100% - 32px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);padding:28px;border:1px solid var(--line)}
 .nest .dlg.dk{background:var(--ci);color:#fff;border-color:rgba(255,255,255,.1)}
 .nest .dlg h3{margin:14px 0 6px;font:700 24px/1.15 var(--fd);letter-spacing:-.025em}
 .nest .dlg p{margin:0 0 20px;font:500 15px/1.55 var(--fb);color:var(--ink2)}
 .nest .dlg.dk p{color:#B8B8BE}
-.nest .toast{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:26px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14.5px var(--fb);animation:nToast .7s var(--e)}
-@keyframes nToast{from{opacity:0;transform:translateY(28px) scale(.94)}to{opacity:1;transform:none}}
+.nest .toast{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:26px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14.5px var(--fb);animation:nToast var(--t3) var(--e) both}
+@keyframes nToast{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nest .toast[data-leaving]{animation:nToastO var(--t2) var(--ei) forwards}
+@keyframes nToastO{to{opacity:0;transform:translateY(10px)}}
+/* One place for every toast: the bottom middle of the window, centred with margins so the animation's transform cannot move it. */
+.nest .toasts{position:fixed;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom));z-index:80;display:flex;justify-content:center;pointer-events:none;padding:0 16px}
+.nest .toasts>.toast{pointer-events:auto;max-width:100%}
+@media (max-width:900px){.nest .toasts{bottom:calc(92px + env(safe-area-inset-bottom))}}
 .nest .toast .btn{height:38px}
-.nest .xb{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;transition:background .2s,transform .3s var(--e)}
+.nest .xb{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;transition:background var(--t2),transform var(--t3) var(--e)}
 .nest .xb:hover{background:rgba(255,255,255,.2);transform:rotate(90deg)}
-.nest .bulk{position:absolute;left:50%;bottom:30px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);transform:translate(-50%,160%) scale(.9);opacity:0;transition:transform .7s var(--e),opacity .3s}
+.nest .bulk{position:absolute;left:50%;bottom:30px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);transform:translate(-50%,160%) scale(.9);opacity:0;transition:transform var(--t3) var(--e),opacity var(--t3)}
 .nest .bulk.on{transform:translate(-50%,0);opacity:1}
-.nest .bk{white-space:nowrap;flex:none;height:38px;padding:0 15px;border-radius:999px;border:0;background:none;color:#fff;font:700 13.5px var(--fb);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
+.nest .bk{white-space:nowrap;flex:none;height:38px;padding:0 15px;border-radius:999px;border:0;background:none;color:#fff;font:700 13.5px var(--fb);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background var(--t2)}
 .nest .bk:hover{background:rgba(255,255,255,.14)}
 .nest .bk svg{width:16px;height:16px}
-.nest .drw{position:absolute;top:14px;right:14px;bottom:14px;z-index:51;width:480px;max-width:calc(100% - 28px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;animation:nDrw .7s var(--e);border:1px solid var(--line)}
-.nest .drw.out{animation:nDrwO .35s var(--e) forwards}
+.nest .drw{position:absolute;top:14px;right:14px;bottom:14px;z-index:51;width:480px;max-width:calc(100% - 28px);background:var(--card);border-radius:28px;box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;animation:nDrw var(--t3) var(--e) both;border:1px solid var(--line)}
+.nest .drw[data-leaving]{animation:nDrwO var(--t2) var(--ei) forwards}
 @keyframes nDrw{from{transform:translateX(108%)}to{transform:none}}
 @keyframes nDrwO{to{transform:translateX(108%)}}
-.nest .save{position:absolute;left:50%;bottom:28px;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 22px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14px var(--fb);transform:translate(-50%,160%);opacity:0;transition:transform .7s var(--e),opacity .3s}
+.nest .save{position:absolute;left:50%;bottom:28px;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 22px;border-radius:999px;background:var(--ci);color:#fff;box-shadow:var(--sh3);font:600 14px var(--fb);transform:translate(-50%,160%);opacity:0;transition:transform var(--t3) var(--e),opacity var(--t3)}
 .nest .save.on{transform:translate(-50%,0);opacity:1}
 .nest .skc{border-radius:12px;background:var(--sunk);position:relative;overflow:hidden}
 .nest .skc::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,color-mix(in srgb,var(--card) 80%,transparent) 50%,transparent 80%);transform:translateX(-100%);animation:nSh 1.4s infinite}
 @keyframes nSh{to{transform:translateX(100%)}}
 /* reduce motion */
 .nest.rm *,.nest.rm *::before,.nest.rm *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}
-/* transition: none, not a 1 ms duration: a duration on its own turns on `transition: all` for every element. */
+/* transition:none, not a 1 ms duration: a duration on its own turns on `transition: all` for every element. */
 @media (prefers-reduced-motion:reduce){.nest *,.nest *::before,.nest *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}}

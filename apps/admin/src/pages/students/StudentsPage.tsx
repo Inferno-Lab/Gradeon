@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dayLabel, inr, istToday, type StudentRow } from '@gradeon/contracts';
-import { EmptyCard, Pop, Shell, rollDigits, tintFor } from '@gradeon/web-ui';
+import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor } from '@gradeon/web-ui';
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { AddStudentDialog, AssignFeeDialog, CollectFeeDialog, ImportDialog, MessageDialog } from './StudentDialogs';
 import { StudentsView } from './students.view';
 
@@ -13,7 +13,6 @@ const HOUSES = ['Emerald', 'Ruby', 'Sapphire', 'Amber'];
 const IC_OK = 'M5 12.5l4.5 4.5L19 7.5';
 const IC_CLK = 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2';
 const IC_AL = 'M12 3.5l9 15.5H3zM12 10v4M12 16.5h.01';
-const VIEW_W = [96, 92, 160, 164];
 const PILL_ICON = {
   cls: 'M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z',
   house: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
@@ -33,14 +32,14 @@ function Pill({ id, open, setOpen, on, icon, children, menu }: { id: string; ope
         <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>
         {children}
       </button>
-      {open === id && <Pop anchor={btn} onClose={() => setOpen('')}>{menu}</Pop>}
+      <Menu open={open === id} anchor={btn} onClose={() => setOpen('')}>{menu}</Menu>
     </div>
   );
 }
 
 export function StudentsPage() {
   const app = useApp();
-  const chrome = useChrome('stu');
+  const chrome = useShellChrome();
   const qc = useQueryClient();
   const [view, setView] = useState<number | null>(null);
   const [classId, setClassId] = useState<string | null>(null);
@@ -52,7 +51,6 @@ export function StudentsPage() {
   const [page, setPage] = useState(1);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
-  const [closing, setClosing] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [pop, setPop] = useState('');
   const [toast, setToast] = useState('');
@@ -60,7 +58,6 @@ export function StudentsPage() {
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => { const t = setTimeout(() => { setDq(q.trim()); setPage(1); }, 250); return () => clearTimeout(t); }, [q]);
-  useEffect(() => { const off = () => setPop(''); document.addEventListener('click', off); return () => document.removeEventListener('click', off); }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   const say = (m: string) => { if (!m) return; clearTimeout(toastTimer.current); setToast(m); toastTimer.current = setTimeout(() => setToast(''), 4500); };
 
@@ -92,7 +89,7 @@ export function StudentsPage() {
   const detail = useQuery({ queryKey: ['student', openId], queryFn: () => app.api.students.detail(openId!), enabled: !!openId });
 
   const refreshAll = () => void qc.invalidateQueries({ predicate: (qq) => ['students', 'student-summary', 'student-views', 'student', 'dashboard', 'shell', 'invoices'].includes(String(qq.queryKey[0])) });
-  const closeDrawer = () => { setClosing(true); setTimeout(() => { setOpenId(null); setClosing(false); setRev(null); }, 360); };
+  const closeDrawer = () => { setOpenId(null); setRev(null); };
   const done = (m: string, open?: string) => { setDialog(null); say(m); refreshAll(); if (open) setOpenId(open); };
 
   const download = async (ids?: string[]) => {
@@ -130,7 +127,6 @@ export function StudentsPage() {
     subtitle: `${allCount.toLocaleString('en-IN')} enrolled across ${classes.data?.length ?? 0} sections`,
     openImport: () => setDialog({ kind: 'import' }), exportAll: () => void download(), openAdd: () => setDialog({ kind: 'add' }),
     views: shownViews.map((x) => ({ ...x, on: x.i === active ? 'on' : '', sel: x.i === active ? 'true' : 'false', pick: () => { setView(x.i); setClassId(null); setHouse(''); setFee(''); setAtt(''); setPage(1); } })),
-    kw: VIEW_W[active], kx: shownViews.filter((x) => x.i < active).reduce((a, x) => a + VIEW_W[x.i]!, 4),
     pills: (
       <>
         <Pill id="cls" open={pop} setOpen={setPop} on={!!className} icon={PILL_ICON.cls} menu={<>
@@ -186,7 +182,7 @@ export function StudentsPage() {
     bulkFee: () => setDialog({ kind: 'fee', ids: [...sel], label: `${sel.size} selected ${sel.size === 1 ? 'student' : 'students'}` }),
     bulkExport: () => void download([...sel]),
     bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
-    drOn: !!openId, out: closing ? 'out' : '', close: closeDrawer,
+    drOn: !!openId, close: closeDrawer,
     canCollect: has.fees && app.user.permissions.includes('fees.collect'),
     d: (() => {
       const s = detail.data;
@@ -219,30 +215,18 @@ export function StudentsPage() {
 
   if (list.isError && !list.data) {
     return (
-      <Shell page="students" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="students">
         <main className="mn"><header className="hd"><div><h1>Students</h1></div></header>
           <div><EmptyCard error title="Students" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   return (
     <>
       <StudentsView v={vals} />
-      {toast && <ToastBar text={toast} theme={chrome.themeCls} />}
+      <ToastSlot toast={toast && { text: toast }} />
     </>
   );
 }
 
-function ToastBar({ text, theme }: { text: string; theme: string }) {
-  return (
-    <div className={`nest ${theme}`} style={{ position: 'fixed', inset: 'auto 0 28px 0', display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 80 }}>
-      <div className="toast" role="status" style={{ position: 'static', pointerEvents: 'auto' }}>
-        <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--g)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ stroke: '#fff', strokeWidth: 2.6 }}></path></svg>
-        </span>
-        {text}
-      </div>
-    </div>
-  );
-}

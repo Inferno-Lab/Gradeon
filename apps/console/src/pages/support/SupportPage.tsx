@@ -26,7 +26,7 @@ export function SupportPage() {
   });
   if (!app.can('support.access')) {
     return (
-      <Page active="sup" title="Support" sub="Look inside a school to help its staff">
+      <Page title="Support" sub="Look inside a school to help its staff">
         <div><EmptyCard title="Support" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Support sessions are for the support team" body="Ask a super admin to add the Support role to your account if you need to look inside a school." /></div>
       </Page>
     );
@@ -38,7 +38,7 @@ export function SupportPage() {
     start.mutate();
   };
   return (
-    <Page active="sup" title="Support" sub="Read-only sessions inside a school. Every one needs a reason and ends by itself after 30 minutes." toast={toast} loading={sessions.isLoading} error={sessions.isError ? { message: (sessions.error as Error).message, retry: () => void sessions.refetch() } : null}>
+    <Page title="Support" sub="Read-only sessions inside a school. Every one needs a reason and ends by itself after 30 minutes." toast={toast} loading={sessions.isLoading} error={sessions.isError ? { message: (sessions.error as Error).message, retry: () => void sessions.refetch() } : null}>
       <section className="grid">
         <Card title="Start a session" span="s12">
           <div className={shake.cls} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 16, alignItems: 'start' }}>

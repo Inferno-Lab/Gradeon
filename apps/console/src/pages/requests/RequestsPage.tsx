@@ -16,7 +16,7 @@ export function RequestsPage() {
   const q = useQuery({ queryKey: ['change-requests', show], queryFn: () => app.api.changeRequests.list(show) });
   const rows = q.data ?? [];
   return (
-    <Page active="req" title="Requests" sub="Changes schools have asked for. Make the change under the school’s Configuration or Roles, then answer here." toast={toast}
+    <Page title="Requests" sub="Changes schools have asked for. Make the change under the school’s Configuration or Roles, then answer here." toast={toast}
       loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
       actions={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
       overlays={answering && <AnswerDialog r={answering} onClose={() => setAnswering(null)} onDone={(m) => { setAnswering(null); say(m); }} />}>

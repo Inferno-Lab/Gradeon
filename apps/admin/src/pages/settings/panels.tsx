@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { APP_CATALOG } from '@gradeon/config-engine';
 import { DATA_REQUEST_KINDS, MESSAGE_EVENTS, PERMISSION_CATALOG, SchoolSettingsSchema, permissionAvailable, type DataRequestRow, type SettingsResponse } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Ico, problem } from '../../app/kit';
 
@@ -80,7 +80,7 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
                   <legend>{g.area}</legend>
                   {g.items.map((p) => (
                     <label key={p.key} className="hwc" style={{ whiteSpace: 'normal', alignItems: 'flex-start' }}>
-                      <input type="checkbox" checked={perms.has(p.key)} disabled={readOnly || (!app.user.permissions.includes(p.key))} onChange={(e) => { const n = new Set(perms); if (e.target.checked) n.add(p.key); else n.delete(p.key); setPerms(n); }} />
+                      <Checkbox checked={perms.has(p.key)} disabled={readOnly || (!app.user.permissions.includes(p.key))} onChange={(c) => { const n = new Set(perms); if (c) n.add(p.key); else n.delete(p.key); setPerms(n); }} />
                       <span>{p.label}{p.sensitive && <span className="chip a" style={{ marginLeft: 6, height: 20, padding: '0 8px' }}>careful</span>}</span>
                     </label>
                   ))}
@@ -127,7 +127,7 @@ export function AppLayoutPanel({ doc, say }: PanelProps) {
                   {options.map((c) => {
                     const on = chosen.includes(c.key);
                     const full = !on && chosen.length >= o.max;
-                    return <button key={c.key} type="button" className={`fp ${on ? 'on' : ''}`} aria-pressed={on} disabled={s.locked(o.key) || full} title={full ? `At most ${o.max}` : undefined} onClick={() => s.set(o.key, on ? chosen.filter((x) => x !== c.key) : [...chosen, c.key])}>{c.label}</button>;
+                    return <button key={c.key} type="button" className={`fp ${on ? 'on' : ''}`} aria-pressed={on} disabled={s.locked(o.key) || full} data-tip={full ? `At most ${o.max}` : undefined} onClick={() => s.set(o.key, on ? chosen.filter((x) => x !== c.key) : [...chosen, c.key])}>{c.label}</button>;
                   })}
                 </div>
                 {chosen.length > 1 && (
@@ -189,8 +189,8 @@ export function NotificationsPanel({ doc, say }: PanelProps) {
       <div className="grp" style={{ marginTop: 18 }}>
         <div className="rw2"><div><b>Quiet hours</b><small>Families are not texted or pinged between these times, except for urgent messages. Held messages go out in the morning.</small></div>
           <div className="two">
-            <Field label="From" type="time" value={s.get<string>('notify.quietFrom')} onChange={(v) => s.set('notify.quietFrom', v)} disabled={s.locked('notify.quietFrom')} />
-            <Field label="Until" type="time" value={s.get<string>('notify.quietTo')} onChange={(v) => s.set('notify.quietTo', v)} disabled={s.locked('notify.quietTo')} />
+            <TimeField label="From" value={s.get<string>('notify.quietFrom')} onChange={(v) => s.set('notify.quietFrom', v)} disabled={s.locked('notify.quietFrom')} />
+            <TimeField label="Until" value={s.get<string>('notify.quietTo')} onChange={(v) => s.set('notify.quietTo', v)} disabled={s.locked('notify.quietTo')} />
           </div>
         </div>
         <div className="rw2"><div><b>Text credits</b><small>This month.</small></div><div className="help" style={{ alignSelf: 'center' }}>{used.smsUsed.toLocaleString('en-IN')} used of {used.smsLimit.toLocaleString('en-IN')}</div></div>

@@ -17,7 +17,7 @@ export function InboxPage() {
   const msgs = useQuery({ queryKey: ['sandbox', school], queryFn: () => app.api.sandbox(school || undefined), enabled: app.can('sandbox.read'), refetchInterval: 6000 });
   const rows = msgs.data ?? [];
   return (
-    <Page active="inbox" title="Test inbox" sub="Every text and email the platform would send, caught here instead of reaching real phones" loading={msgs.isLoading} error={msgs.isError ? { message: (msgs.error as Error).message, retry: () => void msgs.refetch() } : null}
+    <Page title="Test inbox" sub="Every text and email the platform would send, caught here instead of reaching real phones" loading={msgs.isLoading} error={msgs.isError ? { message: (msgs.error as Error).message, retry: () => void msgs.refetch() } : null}
       actions={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...(schools.data ?? []).map((s) => ({ value: s.slug, label: s.name }))]} />}>
       {rows.length === 0 ? (
         <div><EmptyCard title="Test inbox" chip={{ text: 'Empty', tone: 'v' }} scene="envelope" heading="Nothing has been sent yet" body="Sign-in codes, fee receipts and notices land here as they are triggered. Try signing in to a school to see the first one." /></div>

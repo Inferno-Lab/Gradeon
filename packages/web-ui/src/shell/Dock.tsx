@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { leavingProps, useLeaving, useReturnFocus } from '../Presence';
 
 export interface DockTab { id: string; label: string; icon: string; onPress: () => void }
 
@@ -16,12 +17,14 @@ export function Dock({ tabs, active }: { tabs: DockTab[]; active: string }) {
   );
 }
 
-/** The full menu, from the dock's last tab. A sheet that rises from the bottom; the scrim and Escape close it. */
+/** The full menu, from the dock's last tab. A sheet that rises from the bottom; the scrim and Escape close it. Render it inside `<Presence>`. */
 export function MoreSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const leaving = useLeaving();
+  useReturnFocus(leaving);
   return (
     <>
-      <div className="scrim" onClick={onClose}></div>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="scrim" onClick={leaving ? undefined : onClose} {...leavingProps(leaving)}></div>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} {...leavingProps(leaving)}>
         <div className="grab" aria-hidden="true"></div>
         <div className="ch" style={{ marginBottom: 6 }}><h2 style={{ fontSize: 20 }}>{title}</h2><button className="xb" onClick={onClose} aria-label="Close"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path className="i" d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
         {children}

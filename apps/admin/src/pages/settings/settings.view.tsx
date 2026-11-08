@@ -1,35 +1,17 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminSettings.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, Shell } from "@gradeon/web-ui";
+import { Select, PageScope, Presence, ToastSlot } from "@gradeon/web-ui";
 import "./settings.css";
 
 export function SettingsView({ v }: { v: any }) {
   return (
-    <Shell
+    <PageScope
       page="settings"
-      theme={v.themeCls}
-      aside={v.aside}
       overlays={
         <>
-          {v.palette}
-          {v.askDialog}
-          {v.toast && (
-            <>
-              <div className="toast toast" role="status">
-                <span
-                  style={
-                    { width: "30px", height: "30px", borderRadius: "50%", background: "var(--g)", display: "grid", placeItems: "center", flex: "none" } as CSSProperties
-                  }
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ stroke: "#fff", strokeWidth: "2.6" } as CSSProperties}></path>
-                  </svg>
-                </span>
-                {v.toastText}
-              </div>
-            </>
-          )}
+          <Presence>{v.askDialog}</Presence>
+          <ToastSlot toast={v.toast && { text: v.toastText }} />
         </>
       }
     >
@@ -288,6 +270,6 @@ export function SettingsView({ v }: { v: any }) {
           </div>
         </div>
       </main>
-    </Shell>
+    </PageScope>
   );
 }

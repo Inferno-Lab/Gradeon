@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dock, IC, MoreSheet, Palette, Sidebar, WorkspaceHeader, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
-import { consoleNav, shortcutTargets } from './nav';
+import { useRouterState } from '@tanstack/react-router';
+import { Dock, IC, MoreSheet, Presence, SearchDialog, Sidebar, WorkspaceHeader, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
+import { activeNav, consoleNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 import { path } from './base';
 
 const COLLAPSE_KEY = 'gradeon.console.menu.collapsed';
 const ENV = (import.meta.env.VITE_ENV_LABEL as string | undefined) ?? (/^(localhost|127\.)/.test(window.location.hostname) ? 'Local' : 'Test track');
 
-/** What every console page shares: theme, menu, shortcuts and the search box. Merge it into the page's values. */
-export function useChrome(active: string) {
+/** What every console page shares: theme, menu, shortcuts and the search box. Called once, by the signed-in layout. */
+export function useChrome() {
   const { api, user, go, signOut } = useApp();
   const theme = useTheme();
+  const active = activeNav(path(useRouterState({ select: (s) => s.location.pathname })));
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => api.schools(), staleTime: 20_000 });
   const actions = useQuery({ queryKey: ['actions'], queryFn: api.actions.list, staleTime: 20_000 });
   const requests = useQuery({ queryKey: ['change-requests', 'open'], queryFn: () => api.changeRequests.list('open'), staleTime: 20_000 });
@@ -34,7 +36,7 @@ export function useChrome(active: string) {
       const el = e.target as HTMLElement | null;
       const typing = !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setOpen((o) => !o); return; }
-      if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.key === 'Escape') { setOpen(false); setMore(false); return; }
       if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === '/') { e.preventDefault(); setOpen(true); return; }
       if (Date.now() - armed < 1200) {
@@ -83,7 +85,13 @@ export function useChrome(active: string) {
       meMenu={[{ label: theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark', onPress: theme.toggle }, { label: 'Sign out', onPress: signOut }]}
     />
     <Dock tabs={dockTabs} active={dockActive} />
-    {more && (
+    </>
+  );
+
+  const overlays: ReactNode = (
+    <>
+    <Presence>{open && <SearchDialog hits={hits} query={q} onQuery={setQ} onPick={(h) => { close(); goRef.current(path(h.href)); }} onClose={close} placeholder="Find a school or go to a page" empty={`No matches for “${q}”. Try a school name or a page like Releases.`} />}</Presence>
+    <Presence>{more && (
       <MoreSheet title="Menu" onClose={() => setMore(false)}>
         {groups.map((g) => (
           <div key={g.name}>
@@ -97,20 +105,11 @@ export function useChrome(active: string) {
         ))}
         <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
       </MoreSheet>
-    )}
+    )}</Presence>
     </>
   );
 
-  const palette: ReactNode = open && (
-    <>
-      <div className="scrim" onClick={close}></div>
-      <div className="mod" style={{ top: '18%', transform: 'translate(-50%, 0)', width: 'min(560px, calc(100% - 32px))' }}>
-        <Palette hits={hits} query={q} onQuery={setQ} onPick={(h) => { close(); goRef.current(path(h.href)); }} onClose={close} placeholder="Find a school or go to a page" empty={`No matches for “${q}”. Try a school name or a page like Releases.`} />
-      </div>
-    </>
-  );
-
-  return { themeCls: theme.cls, rmCls: '', aside, palette, openSearch: () => setOpen(true), schools, actions, pending };
+  return { themeCls: theme.cls, aside, overlays, openSearch: () => setOpen(true), schools, actions, pending };
 }
 
 export function roleLabel(role: string | undefined): string {

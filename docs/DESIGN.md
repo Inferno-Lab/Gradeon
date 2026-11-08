@@ -10,7 +10,7 @@ A calm, bright, rounded workspace for people who run a school all day: office st
 - **Neutral and ink as the voice, one blue for data, colour only for state.** Ink marks what is current and primary (the menu's current page, the primary button); blue carries data, links and selection; amber is a warning, green is done, red says "look at this". Nothing is coloured just to decorate.
 - **Big friendly numbers, small honest labels.** Headings and figures use a characterful display face; everything else is a clean sans. Numbers are the heroes (attendance, money, counts) and roll when they change.
 - **Rounded everything, but disciplined.** Pills for controls, large radii for containers, never sharp corners, never mixed radii in one group.
-- **Motion that explains.** Things rise in, morph open, vibrate when wrong, draw their lines once. Nothing moves without a reason; reduced motion turns it all into instant states.
+- **Motion that explains, quickly.** Things rise in, grow from their button, vibrate when wrong, draw their lines once. Everyday controls answer in 120–200 ms with no bounce; nothing moves without a reason; reduced motion turns it all into instant states.
 - **Honest.** No invented features, no fake numbers dressed as data (decorative sample cards are allowed only on the sign-in panel), no cute mascots. Empty and error states are first-class pages with an illustration, one true sentence and the next step.
 - **What it is not:** it is not "Chalk & Glass" (no glass blur, no chalkboard), not playful (no mascots, pencil-shaped bars, jars, dot rows, confetti characters), not dense enterprise grey.
 
@@ -91,24 +91,24 @@ page background (flat)
 
 | Component | Spec |
 | --- | --- |
-| **Button** `.btn` | Pill, 42 px (34 `sm`), 700 14 px, 1.5 px border; hover lifts 1 px, press scales .96. Variants: `pri` (ink), `v` (blue, text in `--onV`), `wht` (white, only on ink surfaces: toast, save bar, the 404 card), `ghost`, `dng` (soft red), `dngf` (solid red, destructive confirm). Disabled 38 % opacity. Busy = spinner + word ("Saving…"). One primary per view. |
+| **Button** `.btn` | Pill, 42 px (34 `sm`), 700 14 px, 1.5 px border; hover changes the fill only (nothing moves), press scales .97 in `--t1`. Variants: `pri` (ink), `v` (blue, text in `--onV`), `wht` (white, only on ink surfaces: toast, save bar, the 404 card), `ghost`, `dng` (soft red), `dngf` (solid red). `MenuButton` is a button that opens a `Menu` under it (chevron turns while open). |
 | **Chip** `.chip` | 26 px pill, 12 px/700; tones plain, `v c a g r b k`. Counts and states ("56", "Not yet", "Draft"). |
 | **Status pill** `.st` | 28 px pill with a dot: `g` Healthy/Paid/Live, `a` Degraded/Waiting, `b` Updating/Setting up, `r` Down/Overdue, `n` neutral. Always includes a word. |
 | **Card** `.card` | White, 1 px line, radius 24, padding 22, `sh1`. Header row `.ch`: title 17–22 px display + chip + optional small button; wraps on phones. |
 | **Tile** `.tile t-*` | Coloured feature card, radius 28, a label chip, a big display number, a one-line explanation, optional corner arrow button. 3–4 per row at the top of a page. |
-| **Inputs** `.inp`/`Field` | 48 px, radius 16, 1.5 px border; resting border `--field`; focus = blue border plus a crisp 1 px line, no glow; label above (13.5 px/700); hint below in `--ink3`; error: red border, tint, message with a warning icon, and the field **vibrates** (see motion). `SelectField` wraps the `Select` dropdown below. |
+| **Fields** `.inp`/`Field` | 48 px, radius 16, 1.5 px border; resting border `--field`; focus = blue border plus a crisp 1 px line, no glow; label above (13.5 px/700); hint below in `--ink3`; error: red border, tint, message with a warning icon, and the field **vibrates** (see motion). `Field` takes text-like types only. **No browser widgets:** `DateField` (type "12 Nov" or pick from a Monday-first calendar; `compact` for a table row), `TimeField` (type "8:47" or pick a quarter hour), `MonthField`, `NumberField` (minus and plus) and `NumberInput` (a cell), `ColourField` and `Swatches` (`BRAND_SWATCHES`), `Checkbox` (`.cb`, with or without words), `FilePick` (our button opens the file chooser). All work from the keyboard. |
 | **Switch** `.sw` | 38×22 flat pill, 16 px knob; grey off, blue on, no spring and no shadow. Always paired with a label. |
 | **Dropdown** `Select` / `SelectField` | Replaces the browser's `<select>`. A 50 px field (or `compact` 40 px pill for page headers) with a round chevron chip; the list is drawn in a portal on the page root with fixed coordinates, so no card, table or dialog can clip it; it flips upward near the bottom, scrolls inside, gets a search box above 10 options, and works with the keyboard (arrows, Home/End, Enter, Esc, type-ahead). Never use a bare `<select>`. |
-| **Tooltip** `data-tip` | One shared tooltip (`Tooltips`, mounted by `Shell`). Put `data-tip="Title (newline) more"` on any chart column, bar or segment; every `.us` usage row gets one for free; the collapsed menu uses it for names. |
-| **Segmented** `.seg` | Pill track with a sliding white knob (`kn`); tabs, view switches, ranges. |
-| **Morph menu** `.morph` | A button that grows into its own list (width/height transition) instead of a popover; items stagger in; checkmark on the chosen. |
+| **Tooltip** `data-tip` | One shared tooltip (`Tooltips`, mounted by `Shell`); never the browser's `title`. Put `data-tip="Title (newline) more"` on any chart column, bar or segment; every `.us` usage row gets one for free; the collapsed menu uses it for names. A tip that repeats a cell's own words (a name cut off by its column) shows only when the text is actually cut off, after a short wait. |
+| **Segmented** `Segmented` | Pill track with a white knob that glides under the chosen tab in `--t2`, measured from the real tab (never a guessed width); tabs, view switches, ranges. |
+| **Menu and popovers** `Menu` / `Pop` | Everything that opens from a button (menus, the time list, the calendar, swatches) is one `Pop`: drawn on the page root so nothing clips it, under its button (over it when there is no room, beside it for the collapsed menu, right-aligned for a button at the right), grows from the button, arrows move inside, Escape, Tab or a click outside close it and focus returns. The dashboard's range and New menus are ordinary `MenuButton`s. |
 | **Table** `.grd` | CSS-grid rows (`--cols`), 58–64 px, hairline separators, hover tint, header row 11.5 px uppercase. Rows are links where they open something. Wrap in `.scroll-x` with a min-width on phones. |
 | **Usage bar** `.bar` | **14 px tall**, full radius, `--sunk` track, flat blue fill; `warn` variant flat amber; label left, value right. **Bars are never thin** (owner rule). Segmented tick bars (`tk3`, 20 ticks, 24 px tall) for SMS credits; release progress is 60 ticks. |
 | **Charts** | Columns: wide, rounded tops, today highlighted in blue, other days in `--v2`, previous period as a ghost behind, hover bubble. Lines: 3 px blue, drawn once, flat `--vS` area below, dashed previous line, follow-pointer tooltip. Roll bars: segmented present/late/absent, filled. Fee bars: filled, labelled with percent. No pencils, jars or dot rows. Goal line dashed with a chip. Empty chart: columns hidden, one sentence ("Attendance appears here after the first roll call is marked."). |
 | **Ticket** `.tkt` | The plan card: flat dark fill, notched sides (CSS mask), dashed perforation, plan name display 23 px, two icon lines, a white pill button, status chip and counts on the right. |
-| **Dialog** | Centered card over a blurred scrim, tag chip above the title, focus trapped, Esc and scrim close. Dark variant for dangerous actions (erase). Typed-confirmation input for irreversible actions. |
-| **Drawer** | Right panel that slides in (student detail). |
-| **Toast** | Dark pill, bottom centre, green check or red cross circle + one sentence; auto-hides after ~4 s; never the only place an error appears. |
+| **Dialog** `Dialog` | Centered card over a blurred scrim, tag chip above the title, focus trapped, Esc and scrim close, focus returns where it was. Dark variant for dangerous actions (erase). Typed-confirmation input for irreversible actions. Search is the same layer (`SearchDialog`), 18% from the top. |
+| **Panel** `Panel` | A record opened beside its list (student detail): slides in from the right; Esc and scrim close it. |
+| **Toast** `ToastSlot` | Dark pill, bottom centre (above the dock on a phone), green check or red cross circle + one sentence, optionally one button (Undo); auto-hides after ~4 s; never the only place an error appears. |
 | **Save bar** | Floating dark pill "You have unsaved changes · Discard · Save" when a form is dirty. |
 | **Support frame** | Red inset frame around the window plus a red pill "Gradeon support in <school> · read-only · mm:ss left · End session". |
 | **Avatar** `.av` | 34–76 px circle, initials, tint pair; stacks overlap by 8 px with a ring. |
@@ -118,17 +118,16 @@ page background (flat)
 
 ## 5. Motion
 
-Easing: `--e` = `cubic-bezier(.22,1,.36,1)` (smooth out) for movement; `--sp` = `cubic-bezier(.34,1.56,.64,1)` (spring) for pops, switches and knobs. Durations: hover/colour 150–300 ms, movement 200–500 ms, page entrance 450 ms with a short stagger (`rise` + `--d` delay at 0.4×), chart draws once.
+One timing scale, on `.nest` in `nest.css`: **`--t1` 120 ms** (press, toggle, a checkbox), **`--t2` 200 ms** (popups, menus, the tab knob, tooltips), **`--t3` 300 ms** (dialogs, panels, sheets, toasts, content arriving). Entering uses `--e` = `cubic-bezier(.22,1,.36,1)`; leaving uses the next step down with `--ei` = `cubic-bezier(.4,0,1,1)`. There is no overshoot curve: everyday controls never bounce. Endless loops (spinner, skeleton shimmer, the sign-in floats) keep their own lengths. The guard test (`packages/web-ui/src/rules.test.ts`) fails on any other literal duration.
 
 | Pattern | Behaviour |
 | --- | --- |
-| **Rise** | Blocks enter 10 px lower with a fade, staggered top to bottom. |
+| **Rise** | Content arriving enters 6 px lower with a fade in `--t3`; the stagger is capped at 200 ms. The menu, search and dock are mounted once per app, so changing page only brings in the new page. |
+| **Grow from the button** | Popups (menus, lists, calendar, swatches) scale from .96 at the edge they open from, in `--t2`. Dialogs and search do the same from the centre (or top) in `--t3`. |
+| **Leave** | Every overlay fades out instead of vanishing: `Presence` keeps it for 200 ms marked `data-leaving` (not clickable, not focusable) and gives focus back at once. |
 | **Roll digits** | Each digit scrolls on a vertical strip to its new value (`Roll`, 1.1 em per digit); separators stay still. |
-| **Morph** | Menus grow from their button (width, height) and items fade in with a delay per item. |
-| **Vibrate (errors)** | `nShkA`/`nShkB`: ±9 px horizontal shake over .6 s. Two keyframe names alternate (`shk1`/`shk2` on a wrapper, `useShake().hit()`), so the same error can vibrate again and again. Used for wrong passwords, wrong codes, invalid fields, a failed save, a wrong typed confirmation. The error message also fades down (`nEm`). |
-| **Pop** | Success marks scale from .6 with the spring. |
+| **Vibrate (errors)** | `nShkA`/`nShkB`: ±9 px horizontal shake over .6 s. Two keyframe names alternate (`shk1`/`shk2` on a wrapper, `useShake().hit()`), so the same error can vibrate again and again. Used for wrong passwords, wrong codes, invalid fields. Shake the card or the field, never the frame. |
 | **Draw** | Chart lines and illustration strokes draw once (dash offset). |
-| **Hover lift** | Cards rise 2–4 px; arrow buttons rotate 45°. |
 | **Sign-in** | A panel with floating sample cards, rolling digits, a toast that appears, and a padlock illustration that rocks when a credential is wrong; the form shakes. |
 | **Reduced motion** | `prefers-reduced-motion` (and the `rm` class) makes animations instant and turns transitions off (`transition: none`). Never rely on motion to convey meaning. |
 
@@ -144,7 +143,7 @@ Animate transform and opacity only; never animate layout properties in lists.
 - No glow anywhere: no soft coloured shadows, halo gradients, pulsing rings or blurred focus rings. Focus and hover change a border or a fill; the only ring is a crisp 1 px line.
 - Empty space is fixed by arranging content, never by stretching cards: put short and tall things in one full-width column, give a short block siblings of equal weight (a row of tiles, a 2- or 3-column grid), make lists scroll inside a capped card, and add real information (a summary, a guide) before adding height. `tools/scan-gaps.mjs` measures holes, unequal side-by-side cards and blank insides.
 - Columns side by side end on one line. Mark the row `data-even` and the lists in it `data-even-scroll`: `EvenRows` (mounted by `Shell`) trims the taller column's list so it scrolls inside, or shows more of a capped list, and never stretches a card. `data-even="fill"` also lets the last row's lists grow to the bottom of the window, and `data-fill` does that for a single list. `tools/scan-gaps.mjs` reports any row whose columns end more than 16 px apart.
-- A segmented control's knob is measured from the real tab by `SegFit`; never size it from guessed text widths. `tools/scan-fit.mjs` checks knobs, wrapped pill text, text outside its box and missing values shown as `undefined`.
+- A segmented control's knob is measured from the real tab by `Segmented`; never build a `.seg` by hand or size a knob from guessed text widths. `tools/scan-fit.mjs` checks knobs, wrapped pill text, text outside its box and missing values shown as `undefined`.
 - A table that scrolls inside its card keeps its column titles (`.grd.th`) pinned at the top, and on a phone its first column stays put while it scrolls sideways.
 - Reduced motion turns transitions off (`transition: none`). A bare 1 ms `transition-duration` turns `transition: all` on for every element and makes scrolling and layout work stutter.
 - The menu collapses to a logo with the expand button under it; names show in the tooltip and the account menu opens beside the menu on the page root.
@@ -166,7 +165,7 @@ Copy rules: say what happened and what to do, in the person's words ("That didn'
 
 - **Dashboard:** welcome tile (avatar, greeting, quick buttons) · three KPI tiles (present today with rolling digits and delta chip; fees collected; ink: approvals waiting with avatar stack) · wide chart tile (tabs Attendance/Fees/Homework, range menu) · "Needs you" list with Approve/Review/Remind/Publish and Undo · class roll bars · fees by type · "Today at school" timeline · dashed "Add a widget".
 - **List page (Students):** header with Import/Export/Add · view tabs (All / My class / Fees overdue / New) with counts · filter pills + dashed Add filter · four-figure summary strip · table card with sortable headers, select-all, row kebab, bulk bar, pagination footer · drawer for detail.
-- **Timetable:** class morph menu, Week/Day/List segmented, publish button, week stepper, subject legend, grid with colour per subject, clash cell outlined red with a fix panel on the right, load ring and unplaced list.
+- **Timetable:** class menu, Week/Day/List segmented, publish button, week stepper, subject legend, grid with colour per subject, clash cell outlined red with a fix panel on the right, load ring and unplaced list.
 - **Settings:** left section list (General, Modules…), grouped rows (label+help left, control right), brand colour swatches with live preview and contrast chip, toggles, plan ticket + SMS credits card, dirty save bar.
 - **Roll call / simple list pages:** table card + a summary tile + a save card; big three-way toggle per row (Present green, Late amber, Absent red).
 - **Console fleet:** release tile (progress ticks, wave dots, pause/roll back), schools tile, health tile (stacked bar and counts), requests chart, cells list with ring gauges, schools table, incident card, "waiting schools" tile.
@@ -195,7 +194,7 @@ Copy rules: say what happened and what to do, in the person's words ("That didn'
 - Thin bars, hairline progress lines used as data, pencil/jar/dot metaphors.
 - Cartoon characters or animals for empty states.
 - Colour-only status.
-- Modals for things a menu or drawer can do; popovers where a morph fits.
+- Modals for things a menu or panel can do; a hand-built popup, list or picker where a shared part (`Menu`, `Pop`, `Select`, the fields) fits.
 - Hiding a page because of permissions (show it read-only).
 - Fake data presented as real (placeholder numbers belong only on the sign-in panel).
 - Different looks for admin vs console.

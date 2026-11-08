@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
 import { istToday, type SettingsResponse } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, Shell, useShake } from '@gradeon/web-ui';
+import { BRAND_SWATCHES, Dialog, EmptyCard, ErrorLine, PageScope, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { useChrome } from '../../app/useChrome';
+import { useShellChrome } from '../../app/Layout';
 import { SettingsView } from './settings.view';
 import { AppLayoutPanel, NotificationsPanel, PrivacyPanel, RolesPanel, TemplatesPanel } from './panels';
 
@@ -18,7 +18,6 @@ const TABS: [string, string, boolean?][] = [
   ['Privacy and consent', 'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7z'],
   ['Audit log', 'M5 4h14v16H5zM9 8h6M9 12h6M9 16h4'],
 ];
-const SWATCHES: [string, string][] = [['Violet', '#6A4CF5'], ['Maroon', '#8C1D40'], ['Teal', '#0F7C86'], ['Orange', '#C2410C'], ['Blue', '#2F5BEA'], ['Green', '#1F8F5F']];
 const WAIVERS: [string, string][] = [['principal', 'Principal only'], ['office', 'Principal or the office'], ['anyone', 'Anyone allowed to approve']];
 const TICKS = 20;
 
@@ -47,7 +46,7 @@ function nextInvoice(): string {
 
 export function SettingsPage() {
   const app = useApp();
-  const chrome = useChrome('set');
+  const chrome = useShellChrome();
   const doc = useQuery({ queryKey: ['settings'], queryFn: app.api.settings.get });
   const data = doc.data;
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -79,20 +78,20 @@ export function SettingsPage() {
 
   if (doc.isError && !data) {
     return (
-      <Shell page="settings" theme={chrome.themeCls} aside={chrome.aside}>
+      <PageScope page="settings">
         <main className="mn"><header className="hd"><div><h1>Settings</h1></div></header>
           <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
         </main>
-      </Shell>
+      </PageScope>
     );
   }
   if (!data || !draft) {
     return (
-      <Shell page="settings" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}</>}>
+      <PageScope page="settings">
         <main className="mn" aria-busy="true"><header className="hd"><div><h1>Settings</h1><p>&nbsp;</p></div></header>
           <div className="skc" style={{ height: 520, borderRadius: 28, maxWidth: 780 }} />
         </main>
-      </Shell>
+      </PageScope>
     );
   }
 
@@ -101,7 +100,7 @@ export function SettingsPage() {
   const lock = (k: string) => !canWrite || data.locked.includes(k);
   const set = (p: Partial<Draft>) => { setDraft({ ...draft, ...p }); setErr({}); };
   const shortName = str(data.values['school.shortName'], draft.name);
-  const swatches = SWATCHES.some((s) => s[1].toLowerCase() === draft.brand.toLowerCase()) ? SWATCHES : [['Current', draft.brand] as [string, string], ...SWATCHES];
+  const swatches = BRAND_SWATCHES.some((s) => s[1].toLowerCase() === draft.brand.toLowerCase()) ? BRAND_SWATCHES : [['Current', draft.brand] as [string, string], ...BRAND_SWATCHES];
   const cur = swatches.find((s) => s[1].toLowerCase() === draft.brand.toLowerCase()) ?? swatches[0]!;
   const ratio = contrastRatio(draft.brand, '#FFFFFF');
   const copy = (key: string, text: string) => { void navigator.clipboard?.writeText(text).catch(() => undefined); setCopied(key); later(() => setCopied(''), 1800); };

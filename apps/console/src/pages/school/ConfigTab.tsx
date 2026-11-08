@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
 import { MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, Field, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
@@ -119,11 +119,11 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
     case 'enum': case 'language':
       return box(<Select value={str} onChange={onChange} disabled={disabled} aria-label={meta.label} options={(meta.options ?? []).map(([v, l]) => ({ value: v, label: l }))} />);
     case 'number':
-      return <div style={{ marginTop: 12 }}><Field label={meta.label} type="number" min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
+      return <div style={{ marginTop: 12 }}><NumberField label={meta.label} min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
     case 'color':
-      return box(<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><input type="color" value={str || '#6A4CF5'} onChange={(e) => onChange(e.target.value.toUpperCase())} disabled={disabled} aria-label={meta.label} style={{ width: 44, height: 36, border: 0, background: 'none' }} /><code>{str}</code></div>);
+      return box(<ColourField label={meta.label} value={str || '#6A4CF5'} onChange={onChange} disabled={disabled} />);
     case 'time': case 'date':
-      return <div style={{ marginTop: 12 }}><Field label={meta.label} type={meta.kind} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /></div>;
+      return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
       return box(<div className={`inp ${error ? 'err' : ''}`} style={{ height: 'auto' }}><textarea value={str} onChange={(e) => onChange(e.target.value)} disabled={disabled} aria-label={meta.label} style={ta} /></div>);
     case 'modules':
@@ -145,7 +145,7 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
         return (
           <div key={e.key} className="kv" style={{ flexWrap: 'wrap', gap: 8 }}>{e.label}{e.urgent ? ' · sent in quiet hours' : ''}
             <b style={{ display: 'flex', gap: 14 }}>{(['push', 'sms', 'email'] as const).map((ch) => (
-              <label key={ch} className="hwc"><input type="checkbox" checked={r[ch]} disabled={disabled} onChange={(x) => set(e.key, ch, x.target.checked)} />{ch === 'push' ? 'App' : ch === 'sms' ? 'SMS' : 'Email'}</label>
+              <Checkbox key={ch} checked={r[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={ch === 'push' ? 'App' : ch === 'sms' ? 'SMS' : 'Email'} />
             ))}</b>
           </div>
         );
@@ -239,7 +239,7 @@ function ApplyDialog({ schoolId, onClose, onDone }: { schoolId: string; onClose:
       <div style={{ maxHeight: 260, overflow: 'auto' }}>
         {rows.map((s) => (
           <label key={s.id} className="hwc" style={{ display: 'flex', padding: '6px 0' }}>
-            <input type="checkbox" checked={picked.has(s.id)} onChange={(e) => { const n = new Set(picked); if (e.target.checked) n.add(s.id); else n.delete(s.id); setPicked(n); }} />{s.name}
+            <Checkbox checked={picked.has(s.id)} onChange={(c) => { const n = new Set(picked); if (c) n.add(s.id); else n.delete(s.id); setPicked(n); }} />{s.name}
           </label>
         ))}
       </div>

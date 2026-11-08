@@ -20,7 +20,7 @@ export function NoticesPage() {
   const rows = list.data ?? [];
   const canWrite = app.user.permissions.includes('notices.write');
   return (
-    <Page active="notice" title="Notices" sub="What the school tells families and staff" toast={toast} loading={list.isLoading}
+    <Page title="Notices" sub="What the school tells families and staff" toast={toast} loading={list.isLoading}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setComposing(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New notice</button> : undefined}
       overlays={composing && <Compose onClose={() => setComposing(false)} onDone={(msg) => { setComposing(false); void qc.invalidateQueries({ predicate: (q) => ['notices', 'dashboard', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />}>

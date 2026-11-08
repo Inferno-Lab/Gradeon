@@ -8,6 +8,7 @@ import { SupportBanner } from './app/SupportBanner';
 import { LoginRoute } from './pages/login/LoginRoute';
 import { NotFoundPage } from './pages/status/StatusPages';
 import { PlanGate } from './pages/status/PlanGate';
+import { AppLayout } from './app/Layout';
 
 export interface RouterCtx {
   slug: string;
@@ -47,7 +48,7 @@ const authed = createRoute({
     const support = session.read(slug)?.support;
     return (
       <AppContext.Provider value={ctx}>
-        <PlanGate><Outlet /></PlanGate>
+        <AppLayout><PlanGate><Outlet /></PlanGate></AppLayout>
         {support && <SupportBanner school={slug} until={support.until} onEnd={() => { session.write(slug, null); qc.clear(); window.close(); void router.navigate({ to: '/login' }); }} />}
       </AppContext.Provider>
     );

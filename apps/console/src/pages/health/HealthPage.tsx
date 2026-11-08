@@ -18,7 +18,7 @@ export function HealthPage() {
   rows.sort((a, b) => order[a.health] - order[b.health]);
   const inc = fleet.data?.incident;
   return (
-    <Page active="health" title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
+    <Page title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={<button className="btn pri" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check everything now'}</button>}>
       {inc && (
         <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 18, borderRadius: 26, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : '#fff' }}>
@@ -47,7 +47,7 @@ export function HealthPage() {
               const st = statusOf(s); const t = tintFor(s.name);
               return (
                 <a key={s.id} className="grd rw" href={url(`/schools/${s.id}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${s.id}`); }} style={{ '--cols': 'minmax(0,2fr) 70px 140px 100px 130px', color: 'inherit', textDecoration: 'none' } as React.CSSProperties}>
-                  <span style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}><span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none' }}>{initials(s.name)}</span><b title={s.name} style={{ font: '700 14px/1.25 var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
+                  <span style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}><span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none' }}>{initials(s.name)}</span><b data-tip={s.name} style={{ font: '700 14px/1.25 var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
                   <span className="chip">{s.cell}</span><span className={`st ${st.tone}`}><i></i>{st.text}</span><span className="num" style={{ font: '700 13px var(--fb)' }}>{s.healthMs != null ? `${s.healthMs} ms` : '–'}</span><span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)' }}>{s.lastIncident ? 'Had a problem' : ''}</span>
                 </a>
               );
@@ -63,7 +63,7 @@ export function HealthPage() {
               <summary style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', listStyle: 'none', minWidth: 0 }}>
                 <span className="chip">{e.source}</span>
                 {e.schoolSlug && <span className="chip v">{e.schoolSlug}</span>}
-                <b style={{ flex: 1, minWidth: 0, font: '700 13.5px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.message}>{e.message}</b>
+                <b style={{ flex: 1, minWidth: 0, font: '700 13.5px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.message}>{e.message}</b>
                 <span className="num" style={{ font: '700 13px var(--fb)' }}>{e.count}×</span>
                 <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(e.lastAt)}</span>
               </summary>

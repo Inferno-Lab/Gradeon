@@ -24,7 +24,7 @@ export function BuildsPage() {
   const name = (id: string) => schools.data?.find((s) => s.id === id)?.name ?? 'A school';
   const rows = builds.data ?? [];
   return (
-    <Page active="app" title="Mobile builds" sub="Each school gets its own app with its name, colours and address built in" toast={toast} loading={builds.isLoading} error={builds.isError ? { message: (builds.error as Error).message, retry: () => void builds.refetch() } : null}
+    <Page title="Mobile builds" sub="Each school gets its own app with its name, colours and address built in" toast={toast} loading={builds.isLoading} error={builds.isError ? { message: (builds.error as Error).message, retry: () => void builds.refetch() } : null}
       actions={app.can('builds.write') && schools.data?.length ? (
         <span className="tgrow">
           <Select compact aria-label="School" value={schoolId || schools.data[0]!.id} onChange={setSchoolId} options={schools.data.map((s) => ({ value: s.id, label: s.name }))} />
@@ -38,7 +38,7 @@ export function BuildsPage() {
           <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
             <div className="grd th" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties}><span>School</span><span>Phone</span><span>Version</span><span>Status</span><span></span></div>
             {rows.map((b) => (
-              <div key={b.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties} title={b.note}>
+              <div key={b.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties} data-tip={b.note}>
                 <span style={{ minWidth: 0 }}><b style={{ display: 'block', font: '700 14px var(--fb)' }}>{name(b.schoolId)}</b><small style={{ color: 'var(--ink3)' }}>{b.status === 'done' ? `Built ${ago(b.createdAt)}` : b.note}</small></span>
                 <span>{b.platform === 'android' ? 'Android' : 'iPhone'}</span><span className="num">{b.version}</span>
                 <span className={`st ${TONE[b.status]}`}><i></i>{LABEL[b.status]}</span>

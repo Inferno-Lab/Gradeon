@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { inr, istToday, type ClassInfo, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, ErrorLine, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 
 type Done = (message: string, openId?: string) => void;
@@ -22,6 +22,8 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
   const { api } = useApp();
   const shake = useShake();
   const [f, setF] = useState({ name: '', classId: defaultClass ?? classes[0]?.id ?? '', rollNo: '', dob: '', guardianName: '', guardianPhone: '', bloodGroup: '', address: '' });
+  // Opened before the classes arrived: take the first one when they do, as if it had been there.
+  useEffect(() => { if (classes[0]) setF((s) => (s.classId ? s : { ...s, classId: classes[0]!.id })); }, [classes]);
   const [err, setErr] = useState<Record<string, string>>({});
   const [general, setGeneral] = useState('');
   const [busy, setBusy] = useState(false);
@@ -47,12 +49,12 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
     <Dialog title="Add a student" onClose={onClose} shake={shake.cls} width={520}>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Field label="Full name" value={f.name} onChange={set('name')} error={err.name} autoComplete="off" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="two">
           <SelectField label="Class" value={f.classId} onChange={set('classId')} options={classes.map((c) => ({ value: c.id, label: c.name }))} error={err.classId} />
           <Field label="Roll no. (optional)" value={f.rollNo} onChange={set('rollNo')} maxLength={10} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Date of birth" type="date" value={f.dob} onChange={set('dob')} error={err.dob} max={istToday()} />
+        <div className="two">
+          <DateField label="Date of birth" value={f.dob} onChange={set('dob')} error={err.dob} max={istToday()} />
           <Field label="Blood group (optional)" value={f.bloodGroup} onChange={set('bloodGroup')} maxLength={4} placeholder="B+" />
         </div>
         <Field label="Guardian" value={f.guardianName} onChange={set('guardianName')} error={err.guardianName} />
@@ -72,7 +74,6 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: { line: number; message: string }[] } | null>(null);
-  const file = useRef<HTMLInputElement>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (csv.trim().length < 10) { setErr('Paste your sheet here, or choose a file.'); shake.hit(); return; }
@@ -104,8 +105,7 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
           </div>
           {err && <ErrorLine>{err}</ErrorLine>}
         </div>
-        <input ref={file} type="file" accept=".csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void f.text().then((t) => { setCsv(t); setErr(''); }); }} />
-        <div><button type="button" className="btn sm" onClick={() => file.current?.click()}>Choose a file</button></div>
+        <div><FilePick className="btn sm" accept=".csv,text/csv" onPick={(f) => void f.text().then((t) => { setCsv(t); setErr(''); })}>Choose a file</FilePick></div>
         <Actions onClose={onClose} busy={busy} label="Import" />
       </form>
     </Dialog>
@@ -168,9 +168,9 @@ export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <SelectField label="Type" value={f.head} onChange={set('head')} options={[{ value: 'tuition', label: 'Tuition' }, { value: 'transport', label: 'Transport' }, { value: 'activities', label: 'Activities' }, { value: 'lab', label: 'Lab' }]} />
         <Field label="Name of the fee" value={f.title} onChange={set('title')} error={err.title} placeholder="Annual day costume" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="two">
           <Field label="Amount (₹)" value={f.amount} onChange={set('amount')} error={err.amount} inputMode="numeric" />
-          <Field label="Due on" type="date" value={f.dueOn} onChange={set('dueOn')} error={err.dueOn} />
+          <DateField label="Due on" value={f.dueOn} onChange={set('dueOn')} error={err.dueOn} />
         </div>
         <Actions onClose={onClose} busy={busy} label="Assign fee" />
       </form>
@@ -210,7 +210,7 @@ export function CollectFeeDialog({ student, onClose, onDone }: { student: Studen
       ) : (
         <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <SelectField label="Invoice" value={chosen?.id ?? ''} onChange={setPick} options={open.map((i) => ({ value: i.id, label: `${i.title} · ₹${inr(i.amount - i.paid)} due ${i.dueOn.slice(5)}` }))} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="two">
             <Field label="Amount (₹)" value={amount} onChange={(v) => { setAmount(v); setErr({}); }} error={err.amount} inputMode="numeric" />
             <SelectField label="Paid by" value={method} onChange={setMethod} options={[{ value: 'cash', label: 'Cash' }, { value: 'upi', label: 'UPI' }, { value: 'card', label: 'Card' }, { value: 'netbanking', label: 'Net banking' }, { value: 'cheque', label: 'Cheque' }]} />
           </div>

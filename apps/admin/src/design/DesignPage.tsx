@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Dialog, EmptyCard, ErrorLine, Field, Illustration, IC, SelectField, Shell, Toast, tintFor, useShake, type Scene } from '@gradeon/web-ui';
-import { useChrome } from '../app/useChrome';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, IC, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, SelectField, Swatches, TimeField, ToastSlot, tintFor, useShake, type Scene } from '@gradeon/web-ui';
+import { useShellChrome } from '../app/Layout';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
 const SWATCHES: [string, string][] = [['Accent (blue)', '--v'], ['Warning (amber)', '--a'], ['Good (green)', '--g'], ['Bad (red)', '--r'], ['Ink', '--ink'], ['Ink 3', '--ink3'], ['Field border', '--field'], ['Present', '--present']];
@@ -8,15 +8,22 @@ const CHIPS = ['', 'v', 'c', 'a', 'g', 'b', 'r'] as const;
 
 /** A living style guide built from the real components, so it can never drift from what the pages use. Open it at /design. */
 export function DesignPage() {
-  const chrome = useChrome('');
+  const chrome = useShellChrome();
   const [on, setOn] = useState(true);
   const [seg, setSeg] = useState(0);
   const [dlg, setDlg] = useState(false);
   const [toast, setToast] = useState(false);
   const [name, setName] = useState('');
+  const [day, setDay] = useState('2026-11-12');
+  const [time, setTime] = useState('08:30');
+  const [count, setCount] = useState('40');
+  const [colour, setColour] = useState('#2F5BEA');
+  const [tick, setTick] = useState(true);
+  const [menu, setMenu] = useState(false);
+  const [file, setFile] = useState('');
   const shake = useShake();
   return (
-    <Shell page="design" theme={chrome.themeCls} aside={chrome.aside} overlays={<>{chrome.palette}{toast && <Toast text="Saved. The app updates within a minute." />}{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'r' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</>}>
+    <PageScope page="design" overlays={<><ToastSlot toast={toast && { text: 'Saved. The app updates within a minute.' }} /><Presence>{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'r' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</Presence></>}>
       <main className="mn">
         <header className="hd rise"><div><h1>Design system</h1><p>The pieces every admin and console page is made of.</p></div><span className="grow"></span><button className="btn" onClick={chrome.openSearch}>Search</button></header>
 
@@ -50,9 +57,29 @@ export function DesignPage() {
           <div className="tgrow" style={{ marginTop: 14 }}>
             <button className="btn" onClick={() => { setName('x'); shake.hit(); }}>Make it vibrate</button>
             <button className={`sw ${on ? 'on' : ''}`} role="switch" aria-checked={on} aria-label="Example switch" onClick={() => setOn(!on)}></button>
-            <div className="seg"><span className="kn" style={{ width: 84, transform: `translateX(${seg * 84 + 4}px)` }}></span>{['Week', 'Day', 'List'].map((t, i) => <button key={t} className={i === seg ? 'on' : ''} style={{ width: 84, padding: 0, justifyContent: 'center' }} onClick={() => setSeg(i)}>{t}</button>)}</div>
+            <Segmented label="View" value={String(seg)} onChange={(v) => setSeg(Number(v))} options={['Week', 'Day', 'List'].map((t, i) => ({ value: String(i), label: t }))} />
           </div>
           <div style={{ marginTop: 14 }}><ErrorLine>This is what an error line looks like.</ErrorLine></div>
+        </Section>
+
+        <Section title="Fields">
+          <p className="help" style={{ marginTop: 0 }}>No browser widgets: every field has the same frame, error line and vibrate. Dates and times can be typed or picked; everything works from the keyboard.</p>
+          <div className="two" style={{ maxWidth: 720 }}>
+            <DateField label="Due on" value={day} onChange={setDay} hint="Type 12 Nov, or pick from the calendar" />
+            <TimeField label="Starts at" value={time} onChange={setTime} hint="Type 8:47, or pick a quarter hour" />
+            <NumberField label="Marks out of" value={count} onChange={setCount} min={1} max={100} />
+            <DateField label="Ends on" value="" onChange={() => undefined} error="Pick a day after it starts." />
+          </div>
+          <div className="tgrow" style={{ marginTop: 14, alignItems: 'center' }}>
+            <Checkbox checked={tick} onChange={setTick} label="Send a copy to parents" />
+            <ColourField label="Brand colour" value={colour} onChange={setColour} />
+            <FilePick onPick={(f) => setFile(f.name)}>{file || 'Choose a file'}</FilePick>
+            <MenuButton label="New" icon="M12 5v14M5 12h14" primary open={menu} onOpenChange={setMenu} menuLabel="Add something new">
+              <button role="menuitem" onClick={() => setMenu(false)}>Add student<small>N S</small></button>
+              <button role="menuitem" onClick={() => setMenu(false)}>Post a notice<small>N N</small></button>
+            </MenuButton>
+          </div>
+          <div style={{ marginTop: 14 }}><Swatches label="Brand colours" value={colour} onPick={setColour} /></div>
         </Section>
 
         <Section title="Tiles and bars">
@@ -66,6 +93,7 @@ export function DesignPage() {
         </Section>
 
         <Section title="Overlays">
+          <p className="help" style={{ marginTop: 0 }}>Popups grow from their button in 200 ms; dialogs, panels and toasts take 300 ms. Everything leaves a little faster than it came, and stops when the device asks for less motion.</p>
           <div className="tgrow"><button className="btn" onClick={() => setDlg(true)}>Open a dialog</button><button className="btn" onClick={() => { setToast(true); setTimeout(() => setToast(false), 3200); }}>Show a toast</button></div>
         </Section>
 
@@ -82,7 +110,7 @@ export function DesignPage() {
           </div>
         </Section>
       </main>
-    </Shell>
+    </PageScope>
   );
 }
 

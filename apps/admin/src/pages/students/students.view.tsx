@@ -1,12 +1,12 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, Shell } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, Segmented, Panel } from "@gradeon/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {
   return (
-    <Shell page="students" theme={v.themeCls} aside={v.aside} overlays={<>{v.palette}</>}>
+    <PageScope page="students">
       <main className="mn">
         <header className="hd rise">
           <div>
@@ -34,19 +34,7 @@ export function StudentsView({ v }: { v: any }) {
           </button>
         </header>
         <div className="fbar rise" style={{ "--d": ".05s" } as CSSProperties}>
-          <div className="seg" role="tablist">
-            <span className="kn" style={{ width: `${v.kw ?? ""}px`, transform: `translateX(${v.kx ?? ""}px)` } as CSSProperties}></span>
-            {v.views.map((v: any, $i: number) => (
-              <Fragment key={$i}>
-                <button className={v.on} role="tab" aria-selected={v.sel} onClick={v.pick}>
-                  {v.n}
-                  <span className={`chip ${v.cc ?? ""}`} style={{ height: "22px", padding: "0 8px" } as CSSProperties}>
-                    {v.c}
-                  </span>
-                </button>
-              </Fragment>
-            ))}
-          </div>
+          <Segmented label="Students view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n, count: x.c, countTone: x.cc }))} />
           <span className="grow"></span>
           {v.pills}
         </div>
@@ -279,11 +267,9 @@ export function StudentsView({ v }: { v: any }) {
           </svg>
         </button>
       </div>
-      {v.dialog}
-      {v.drOn && (
-        <>
-          <div className={`scrim ${v.out ?? ""}`} onClick={v.close}></div>
-          <aside className={`drw ${v.out ?? ""}`} role="dialog" aria-label="Student profile">
+      <Presence>{v.dialog}</Presence>
+      <Presence>{v.drOn && (
+          <Panel label="Student profile" onClose={v.close}>
             <div className="dh">
               <div className="dtop">
                 <span className="dav" style={{ background: v.d.bg, color: v.d.fg } as CSSProperties}>
@@ -380,9 +366,8 @@ export function StudentsView({ v }: { v: any }) {
                 </button>
               )}
             </div>
-          </aside>
-        </>
-      )}
-    </Shell>
+          </Panel>
+      )}</Presence>
+    </PageScope>
   );
 }

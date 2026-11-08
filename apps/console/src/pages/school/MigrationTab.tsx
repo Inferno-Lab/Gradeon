@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ImportInputIn } from '@gradeon/api-client';
 import type { ImportBatchRow, ImportKind, ImportPreview, MigrationView } from '@gradeon/contracts';
-import { EmptyCard, Field, Select } from '@gradeon/web-ui';
+import { EmptyCard, Field, FilePick, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
 
@@ -28,7 +28,6 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   // A new revision on every change: the query key stays small however big the file is.
   const change = (s: Source | null, m?: Record<string, string>) => setJob((j) => ({ src: s, mapping: m, rev: j.rev + 1 }));
   const [sample, setSample] = useState('300');
-  const file = useRef<HTMLInputElement>(null);
   const v = q.data;
   const kind = v?.kinds.find((k) => k.key === (kindKey || v.kinds[0]?.key));
   const input = (): ImportInputIn | null => (!src || !kind ? null : src.kind === 'file'
@@ -82,8 +81,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
           <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}><h2>Import</h2><span className="grow"></span><button className="btn sm" disabled={tpl.isPending} onClick={() => tpl.mutate(kind.key)}>Blank template</button></div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}>
             <div className="fld" style={{ flex: '1 1 240px', maxWidth: 360 }}><label htmlFor="imp-kind">What to import</label><Select id="imp-kind" value={kind.key} onChange={pickKind} options={v.kinds.map((k, i) => ({ value: k.key, label: `${i + 1}. ${k.label}` }))} /></div>
-            <input ref={file} type="file" accept=".csv,.txt,.xlsx" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void readFile(f).then((content) => change({ kind: 'file', fileName: f.name, content }), fail); }} />
-            <button className="btn" onClick={() => file.current?.click()}>Choose a file</button>
+            <FilePick accept=".csv,.txt,.xlsx" onPick={(f) => void readFile(f).then((content) => change({ kind: 'file', fileName: f.name, content }), fail)}>Choose a file</FilePick>
             <button className="btn" onClick={() => change({ kind: 'rows', fileName: 'Typed in the console', rows: Array.from({ length: 5 }, () => blank(kind)) })}>Type rows</button>
           </div>
           <div className="help" style={{ marginTop: 8 }}>{kind.blurb} Import in the order of the list: each kind can refer to the ones above it. A second import of the same rows updates them instead of adding them again.</div>
@@ -104,7 +102,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
         <div className="help">What the school sent from its admin (Moving in). Open one to import it; set aside what is not for importing.</div>
         {v.uploads.length === 0 ? <div className="help" style={{ marginTop: 10 }}>No files yet.</div> : v.uploads.map((u) => (
           <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, height: 'auto', padding: '10px 0', cursor: 'default' }}>
-            <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
+            <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
             <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {when(u.at)}</span>
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
               {u.status === 'imported' ? <span className="chip g">Imported</span> : <>
@@ -183,7 +181,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
           <div className="lbl" style={{ marginBottom: 6 }}>Columns in the file</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
             {p.headers.map((h) => (
-              <div className="fld" key={h}><label htmlFor={`map-${h}`} title={h} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h || '(no heading)'}</label>
+              <div className="fld" key={h}><label htmlFor={`map-${h}`} data-tip={h} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h || '(no heading)'}</label>
                 <Select id={`map-${h}`} compact value={p.mapping[h] ?? ''} onChange={(val) => onMap({ ...p.mapping, [h]: val })} options={options} /></div>
             ))}
           </div>

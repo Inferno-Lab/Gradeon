@@ -30,7 +30,7 @@ export function ReportsPage() {
   };
   const d = data.data;
   return (
-    <Page active="rep" title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={d ? <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button> : undefined}>
       {(list.data?.length ?? 0) === 0 ? (
@@ -58,7 +58,7 @@ export function ReportsPage() {
                       <div className="grd th" style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>{d.columns.map((c) => <span key={c.key} style={{ textAlign: c.align }}>{c.label}</span>)}</div>
                       {d.rows.map((r, i) => (
                         <div className="grd rw" key={i} style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>
-                          {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13.5px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} title={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
+                          {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13.5px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
                         </div>
                       ))}
                     </div>

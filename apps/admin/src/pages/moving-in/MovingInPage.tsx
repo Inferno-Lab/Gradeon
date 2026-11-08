@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IMPORT_KINDS, type LetterRow, type Permission } from '@gradeon/contracts';
-import { Field, Select } from '@gradeon/web-ui';
+import { Field, FilePick, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp } from '../../app/kit';
@@ -39,7 +39,6 @@ export function MovingInPage() {
   const batches = useQuery({ queryKey: ['import-batches'], queryFn: app.api.movingIn.batches, enabled: can('setup.write') });
   const act = useQuery({ queryKey: ['activation'], queryFn: app.api.movingIn.activation });
   const brand = useQuery({ queryKey: ['brand'], queryFn: app.api.brand, staleTime: 10 * 60_000 });
-  const file = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<File | null>(null);
   const [note, setNote] = useState('');
   const [kind, setKind] = useState('students');
@@ -53,7 +52,7 @@ export function MovingInPage() {
       const content = /\.(csv|txt)$/i.test(f.name) ? await f.text() : await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(new Error('That file could not be read.')); r.readAsDataURL(f); });
       return app.api.movingIn.upload({ fileName: f.name, note: note.trim(), content });
     },
-    onSuccess: (next) => { qc.setQueryData(['uploads'], next); setPicked(null); setNote(''); if (file.current) file.current.value = ''; say('Sent to Gradeon. The team will import it and tell you.'); },
+    onSuccess: (next) => { qc.setQueryData(['uploads'], next); setPicked(null); setNote(''); say('Sent to Gradeon. The team will import it and tell you.'); },
     onError: (e) => setErr(Object.values(problem(e))[0] ?? ''),
   });
   const invite = useMutation({
@@ -86,16 +85,15 @@ export function MovingInPage() {
   };
   const a = act.data;
   return (
-    <Page active="move" title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
+    <Page title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
       error={act.isError && !act.data ? { message: (act.error as Error).message, retry: () => void act.refetch() } : null}>
       <div className="stack" style={{ gap: 18 }}>
         {can('setup.write') && (
           <Card title="Send us your files" chip={<span className="chip">{uploads.data?.length ?? 0} sent</span>}>
             <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Gradeon’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
             <div className="stack">
-              <input ref={file} type="file" hidden onChange={(e) => { setPicked(e.target.files?.[0] ?? null); setErr(''); }} />
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => file.current?.click()}>{picked ? 'Choose another file' : 'Choose a file'}</button>
+                <FilePick onPick={(f) => { setPicked(f); setErr(''); }}>{picked ? 'Choose another file' : 'Choose a file'}</FilePick>
                 {picked && <b style={{ font: '700 14px var(--fb)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{picked.name}</b>}
               </div>
               <Field label="What is in it (optional)" value={note} onChange={setNote} maxLength={500} placeholder="For example: fees paid this year, up to October" />
@@ -106,7 +104,7 @@ export function MovingInPage() {
               <div style={{ marginTop: 18 }}>
                 {uploads.data!.map((u) => (
                   <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 6, height: 'auto', padding: '10px 0', cursor: 'default' }}>
-                    <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'A file to read')}</small></span>
+                    <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'A file to read')}</small></span>
                     <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {stamp(u.at)}</span>
                     <span className={`st ${STATUS[u.status].tone}`}><i></i>{STATUS[u.status].label}</span>
                   </div>

@@ -63,6 +63,12 @@ export function moduleForPath(path: string): string | null {
   return item && item.module !== 'core' ? item.module : null;
 }
 
+/** The menu item a path belongs to: its own, or the closest one above it (`/students/x` is Students). */
+export function activeNav(path: string): string {
+  const items = DEFS.flatMap((g) => g.items);
+  return items.find((i) => i.to === path)?.id ?? items.filter((i) => i.to !== '/' && path.startsWith(`${i.to}/`)).sort((a, b) => b.to.length - a.to.length)[0]?.id ?? '';
+}
+
 /** `G` then a letter, like the shortcuts on the menu. */
 export function shortcutTargets(groups: NavGroup[]): Map<string, string> {
   const m = new Map<string, string>();

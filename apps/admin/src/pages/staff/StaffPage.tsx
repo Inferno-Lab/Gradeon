@@ -23,7 +23,7 @@ export function StaffPage() {
   const canWrite = app.user.permissions.includes('staff.write');
   const all = list.data ?? [];
   return (
-    <Page active="staff" title="Staff" sub={all.length ? `${all.filter((s) => s.status === 'active').length} active · ${all.length} in all` : 'Teachers and office staff'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Staff" sub={all.length ? `${all.filter((s) => s.status === 'active').length} active · ${all.length} in all` : 'Teachers and office staff'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add staff</AddBtn> : undefined}
       overlays={editing && <StaffDialog person={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onDone={(msg) => { setEditing(null); refresh(qc); say(msg); }} />}>
@@ -44,7 +44,7 @@ export function StaffPage() {
                     <div className="grd rw stf" style={{ '--cols': 'minmax(0,1.7fr) minmax(0,1.3fr) 140px 120px 90px' } as React.CSSProperties}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                         <Avatar name={r.name} />
-                        <span style={{ minWidth: 0 }}><b title={r.name} style={{ font: '700 14.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.designation}{r.department ? ` · ${r.department}` : ''}</small></span>
+                        <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ font: '700 14.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.designation}{r.department ? ` · ${r.department}` : ''}</small></span>
                       </span>
                       <span className="tgrow hs" style={{ gap: 6 }}>{r.subjects.length ? r.subjects.map((s) => <span className="chip" key={s.id}>{s.name}</span>) : <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)' }}>–</span>}</span>
                       <span className="chip v">{r.roles[0]?.name ?? 'No role'}</span>

@@ -675,6 +675,88 @@ await flow('console: migration imports the school’s file after fixing a row in
   await expectVisible(p.getByText(/Undone\./), 'the undone toast');
 });
 
+await flow('design system: the menu keeps its scroll between pages, and search opens without jumping', { storage: adminStore, context: { viewport: { width: 1440, height: 640 } } }, async (p) => {
+  await p.goto(A('/'), { waitUntil: 'networkidle' });
+  const sb = p.locator('aside.sb');
+  const top = await sb.evaluate((el) => { el.scrollTop = el.scrollHeight; return el.scrollTop; });
+  if (top < 20) throw new Error('the menu should scroll on a short window');
+  await sb.getByRole('link', { name: 'Fees' }).click();
+  await p.waitForURL(/\/fees/);
+  await sb.getByRole('link', { name: 'Notices' }).click();
+  await p.waitForURL(/\/notices/);
+  const after = await sb.evaluate((el) => el.scrollTop);
+  if (Math.abs(after - top) > 1) throw new Error(`the menu scrolled back from ${top} to ${after} when the page changed`);
+  await p.keyboard.press('Control+k');
+  const tops = await p.evaluate(async () => {
+    const out = [];
+    for (let i = 0; i < 12; i++) { await new Promise((r) => requestAnimationFrame(r)); out.push(document.querySelector('.pal')?.getBoundingClientRect().top ?? -1); }
+    return out;
+  });
+  const settled = tops.filter((t) => t >= 0);
+  // It may grow a little (scale .96 to 1) but must not jump: the top stays within a few pixels of where it ends.
+  if (!settled.length || Math.max(...settled) - Math.min(...settled) > 12) throw new Error(`the search box moved while opening: ${tops.map(Math.round).join(', ')}`);
+});
+
+await flow('design system: every overlay opens and closes from the keyboard, and a date is picked without a mouse', { storage: adminStore }, async (p) => {
+  await p.goto(A('/events'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Add event' }).first().focus();
+  await p.keyboard.press('Enter');
+  const dlg = p.getByRole('dialog', { name: 'Add event' });
+  await expectVisible(dlg, 'the dialog');
+  // A dropdown inside the dialog: opens with the arrow key, Escape closes it and not the dialog.
+  await dlg.getByLabel('Kind').focus();
+  await p.keyboard.press('ArrowDown');
+  await expectVisible(p.getByRole('listbox'), 'the dropdown list');
+  await p.keyboard.press('Escape');
+  await p.getByRole('listbox').waitFor({ state: 'hidden' });
+  await expectVisible(dlg, 'the dialog still open');
+  // The calendar: Enter opens it on the chosen day, the right arrow moves a day, Enter picks it.
+  const day = dlg.getByLabel('Day', { exact: true });
+  const before = await day.inputValue();
+  await dlg.getByRole('button', { name: 'Choose from a calendar' }).first().focus();
+  await p.keyboard.press('Enter');
+  await expectVisible(p.getByRole('dialog', { name: 'Calendar' }), 'the calendar');
+  await p.keyboard.press('ArrowRight');
+  await p.keyboard.press('Enter');
+  await p.getByRole('dialog', { name: 'Calendar' }).waitFor({ state: 'hidden' });
+  const next = new Date(Date.parse(`${before} UTC`) + 86_400_000);
+  const want = `${next.getUTCDate()} ${next.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' })} ${next.getUTCFullYear()}`;
+  if ((await day.inputValue()) !== want) throw new Error(`picked ${await day.inputValue()}, expected ${want} (the day after ${before})`);
+  // The time list: arrows and Enter pick, Escape closes and gives focus back.
+  const times = dlg.getByRole('button', { name: 'Choose a time' }).first();
+  await times.focus();
+  await p.keyboard.press('Enter');
+  await expectVisible(p.getByRole('listbox', { name: 'Starts at' }), 'the list of times');
+  await p.keyboard.press('ArrowDown');
+  await p.keyboard.press('Enter');
+  if (!/^\d\d:\d\d$/.test(await dlg.getByLabel('Starts at', { exact: true }).inputValue())) throw new Error('no time was picked');
+  await times.focus();
+  await p.keyboard.press('Enter');
+  await p.keyboard.press('Escape');
+  await p.getByRole('listbox', { name: 'Starts at' }).waitFor({ state: 'hidden' });
+  if (!(await times.evaluate((el) => el === document.activeElement))) throw new Error('focus did not come back to the time button');
+  await p.keyboard.press('Escape');
+  await dlg.waitFor({ state: 'hidden' });
+  // The account menu: Enter opens it on its first item, arrows move, Escape closes and gives focus back.
+  const me = p.locator('.mebtn');
+  await me.focus();
+  await p.keyboard.press('Enter');
+  const menu = p.getByRole('menu', { name: 'Account' });
+  await expectVisible(menu, 'the account menu');
+  await p.keyboard.press('ArrowDown');
+  if (!(await p.evaluate(() => document.activeElement?.getAttribute('role') === 'menuitem'))) throw new Error('the arrow key did not move inside the menu');
+  await p.keyboard.press('Escape');
+  await menu.waitFor({ state: 'hidden' });
+  if (!(await me.evaluate((el) => el === document.activeElement))) throw new Error('focus did not come back to the account button');
+  // A record panel: opens from a row, Escape closes it.
+  await p.goto(A('/students'), { waitUntil: 'networkidle' });
+  await p.locator('[role=row][tabindex="0"]').first().focus();
+  await p.keyboard.press('Enter');
+  await expectVisible(p.getByRole('dialog', { name: 'Student profile' }), 'the student panel');
+  await p.keyboard.press('Escape');
+  await p.getByRole('dialog', { name: 'Student profile' }).waitFor({ state: 'hidden' });
+});
+
 await browser.close();
 console.log(`\n${passed} flows passed${errors.length ? `, ${errors.length} failed:\n - ${errors.join('\n - ')}` : ''}`);
 process.exit(errors.length ? 1 : 0);

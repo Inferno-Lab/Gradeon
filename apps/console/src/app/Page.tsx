@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, Shell, Toast } from '@gradeon/web-ui';
-import { useChrome } from './useChrome';
+import { EmptyCard, PageScope, Presence, ToastSlot } from '@gradeon/web-ui';
 import { url } from './base';
 
 interface PageProps {
-  /** The menu item to highlight. */
-  active: string;
   title: string;
   sub?: ReactNode;
   actions?: ReactNode;
@@ -19,11 +16,10 @@ interface PageProps {
   back?: { label: string; to: string; go: (to: string) => void };
 }
 
-/** The frame every console page without its own board shares: menu, title row, error and loading states. */
-export function Page({ active, title, sub, actions, children, overlays, toast, error, loading, back }: PageProps) {
-  const v = useChrome(active);
+/** The frame every console page without its own board shares: title row, error and loading states, its dialogs and toast. */
+export function Page({ title, sub, actions, children, overlays, toast, error, loading, back }: PageProps) {
   return (
-    <Shell page="c" theme={v.themeCls} aside={v.aside} overlays={<>{v.palette}{overlays}{toast && <Toast text={toast.text} tone={toast.tone} />}</>}>
+    <PageScope page="c" overlays={<><Presence>{overlays}</Presence><ToastSlot toast={toast} /></>}>
       <main className="mn" aria-busy={loading || undefined}>
         {back && (
           <div className="crumb rise">
@@ -43,7 +39,7 @@ export function Page({ active, title, sub, actions, children, overlays, toast, e
           </div>
         ) : loading ? <div className="skc" style={{ height: 320, borderRadius: 28 }} /> : children}
       </main>
-    </Shell>
+    </PageScope>
   );
 }
 

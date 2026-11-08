@@ -2,7 +2,7 @@
 
 
 .pg-students .fbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.pg-students .fp{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px 0 12px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);font:700 13.5px var(--fb);color:var(--ink);cursor:pointer;transition:transform .25s var(--e),border-color .2s,background .2s}
+.pg-students .fp{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px 0 12px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);font:700 13.5px var(--fb);color:var(--ink);cursor:pointer;transition:transform var(--t2) var(--e),border-color var(--t2),background var(--t2)}
 .pg-students .fp:hover{border-color:var(--v);transform:translateY(-1px)}
 .pg-students .fp svg{width:17px;height:17px;color:var(--ink3)}
 .pg-students .fp b{font-weight:800;color:var(--vD)}
@@ -29,30 +29,30 @@
 .pg-students .tk i.l{background:var(--a)}
 .pg-students .tk i.a{background:var(--r)}
 .pg-students .tk i.h{background:var(--line2)}
-.pg-students .rw:hover .tk i{animation:tkw .5s var(--sp) both;animation-delay:calc(var(--k) * 25ms)}
+.pg-students .rw:hover .tk i{animation:tkw var(--t3) var(--e) both;animation-delay:calc(var(--k) * 25ms)}
 @keyframes tkw{50%{transform:scaleY(1.3)}}
 .pg-students .fs{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;font:800 12.5px var(--fb);width:fit-content;white-space:nowrap}
 .pg-students .fs svg{width:14px;height:14px}
 .pg-students .fs.paid{background:var(--gS);color:var(--gD)}
 .pg-students .fs.due{background:var(--vS);color:var(--vD)}
 .pg-students .fs.over{background:var(--rS);color:var(--r)}
-.pg-students .fs.pp{animation:nPop .8s var(--sp)}
-.pg-students .kebab{width:34px;height:34px;border-radius:50%;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;transition:background .2s}
+.pg-students .fs.pp{animation:nPop var(--t3) var(--e)}
+.pg-students .kebab{width:34px;height:34px;border-radius:50%;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;transition:background var(--t2)}
 .pg-students .kebab:hover{background:var(--sunk);color:var(--ink)}
 .pg-students .tfoot{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;font:600 13px var(--fb);color:var(--ink3);border-top:1px solid var(--line)}
 .pg-students .dh{padding:24px 26px 18px;display:flex;flex-direction:column;gap:16px;background:linear-gradient(180deg,var(--vL),transparent)}
 .pg-students .dtop{display:flex;gap:16px;align-items:center}
 .pg-students .dav{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font:800 26px var(--fb);box-shadow:0 0 0 4px var(--card),0 0 0 6px var(--v2)}
-.pg-students .xbtn{margin-left:auto;align-self:flex-start;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:transform .35s var(--e),background .2s}
+.pg-students .xbtn{margin-left:auto;align-self:flex-start;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line2);background:var(--card);color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:transform var(--t3) var(--e),background var(--t2)}
 .pg-students .xbtn:hover{transform:rotate(90deg);background:var(--sunk)}
 .pg-students .db{flex:1;overflow:auto;padding:4px 26px 22px;display:flex;flex-direction:column;gap:22px}
 .pg-students .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.pg-students .fc{padding:16px;border-radius:20px;animation:nRise .8s var(--e) both;animation-delay:var(--d)}
+.pg-students .fc{padding:16px;border-radius:20px;animation:nRise var(--t3) var(--e) both;animation-delay:var(--d)}
 .pg-students .fc span{display:block;font:700 12.5px var(--fb);opacity:.7}
 .pg-students .fc b{font:700 26px var(--fd);letter-spacing:-.03em}
 .pg-students .db h3{margin:0 0 10px;font:700 15px var(--fd);letter-spacing:-.01em}
 .pg-students .roll24{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
-.pg-students .roll24 i{height:26px;border-radius:5px;background:var(--present);animation:nPop .6s var(--sp) both;animation-delay:var(--d)}
+.pg-students .roll24 i{height:26px;border-radius:5px;background:var(--present);animation:nPop var(--t3) var(--e) both;animation-delay:var(--d)}
 .pg-students .roll24 i.l{background:var(--a)}.pg-students .roll24 i.a{background:var(--r)}.pg-students .roll24 i.h{background:var(--line2)}
 .pg-students .g{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--sunk)}
 .pg-students .rev{border:0;background:none;color:var(--vD);font:800 12.5px var(--fb);cursor:pointer;text-decoration:underline;text-underline-offset:3px}

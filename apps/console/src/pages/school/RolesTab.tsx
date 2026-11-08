@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
+import { Checkbox, EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -70,7 +70,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
                   <legend className="lbl" style={{ marginBottom: 6 }}>{g.area}</legend>
                   {g.items.map((p) => (
                     <label key={p.key} className="hwc" style={{ display: 'flex', whiteSpace: 'normal', alignItems: 'flex-start', padding: '3px 0' }}>
-                      <input type="checkbox" checked={perms.has(p.key)} disabled={readOnly} onChange={(e) => { const n = new Set(perms); if (e.target.checked) n.add(p.key); else n.delete(p.key); setPerms(n); }} />
+                      <Checkbox checked={perms.has(p.key)} disabled={readOnly} onChange={(c) => { const n = new Set(perms); if (c) n.add(p.key); else n.delete(p.key); setPerms(n); }} />
                       <span>{p.label}{p.sensitive && <span className="chip a" style={{ marginLeft: 6, height: 20, padding: '0 8px' }}>careful</span>}</span>
                     </label>
                   ))}

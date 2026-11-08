@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError, type CellRow } from '@gradeon/api-client';
 import type { SchoolRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -23,7 +23,7 @@ export function CellsPage() {
   const canMove = app.can('schools.write');
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['cells', 'schools', 'fleet', 'actions'].includes(String(q.queryKey[0])) });
   return (
-    <Page active="cells" title="Cells" sub="Where schools run. Each cell is one database server and one API, and every school gets its own database inside it." toast={toast} loading={cells.isLoading}
+    <Page title="Cells" sub="Where schools run. Each cell is one database server and one API, and every school gets its own database inside it." toast={toast} loading={cells.isLoading}
       error={cells.isError ? { message: (cells.error as Error).message, retry: () => void cells.refetch() } : null}
       actions={canCells ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a cell</button> : undefined}
       overlays={<>
@@ -96,7 +96,7 @@ function AddCell({ onClose, onDone }: { onClose: () => void; onDone: (m: string)
       <div className="stack">
         <Field label="Name" value={f.key} onChange={set('key')} error={err.key} placeholder="mumbai-2" />
         <SelectField label="Runs on" value={f.target} onChange={set('target')} options={Object.entries(TARGET).map(([value, label]) => ({ value, label }))} />
-        <div className="two"><Field label="Region" value={f.region} onChange={set('region')} error={err.region} placeholder="Mumbai" /><Field label="Most schools" type="number" min={1} value={f.maxSchools} onChange={set('maxSchools')} error={err.maxSchools} /></div>
+        <div className="two"><Field label="Region" value={f.region} onChange={set('region')} error={err.region} placeholder="Mumbai" /><NumberField label="Most schools" min={1} value={f.maxSchools} onChange={set('maxSchools')} error={err.maxSchools} /></div>
         {f.target === 'aws-cell' && <div className="help">A cloud cell also needs the address of its database server in the console’s settings before a school can be placed in it.</div>}
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
@@ -119,7 +119,7 @@ function ManageCell({ cell, onClose, onDone }: { cell: CellRow; onClose: () => v
   return (
     <Dialog title={`Cell ${cell.key}`} tag={{ text: TARGET[cell.target] ?? cell.target, tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
       <div className="stack">
-        <div className="two"><Field label="Region" value={region} onChange={setRegion} error={err.region} /><Field label="Most schools" type="number" min={Math.max(1, cell.schools)} value={max} onChange={(v) => { setMax(v); setErr({}); }} error={err.maxSchools} hint={`${cell.schools} run here now.`} /></div>
+        <div className="two"><Field label="Region" value={region} onChange={setRegion} error={err.region} /><NumberField label="Most schools" min={Math.max(1, cell.schools)} value={max} onChange={(v) => { setMax(v); setErr({}); }} error={err.maxSchools} hint={`${cell.schools} run here now.`} /></div>
         <div className="tgl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ flex: 1 }}><b style={{ font: '700 14.5px var(--fb)' }}>Accept new schools</b><div className="help">Turn this off to drain a cell. Schools already here keep running.</div></div>
           <button className={`sw ${accepting ? 'on' : ''}`} role="switch" aria-checked={accepting} aria-label="Accept new schools" onClick={() => setAccepting(!accepting)}></button>

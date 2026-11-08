@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ENQUIRY_STAGES, addDays, istToday, type EnquiryRow, type EnquiryStage } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';
@@ -44,7 +44,7 @@ export function AdmissionsPage() {
   const declined = rows.filter((r) => r.stage === 'declined');
   const open = rows.filter((r) => r.stage !== 'enrolled' && r.stage !== 'declined').length;
   return (
-    <Page active="adm" title="Admissions" sub={rows.length ? `${open} open · ${rows.filter((r) => r.stage === 'enrolled').length} enrolled` : 'From first enquiry to first day'} toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Admissions" sub={rows.length ? `${open} open · ${rows.filter((r) => r.stage === 'enrolled').length} enrolled` : 'From first enquiry to first day'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <AddBtn onClick={() => setAdding(true)}>New enquiry</AddBtn> : undefined}
       overlays={<>
@@ -70,7 +70,7 @@ export function AdmissionsPage() {
                       <article className="admk" key={r.id}>
                         <button className="admo" onClick={() => setDlg({ kind: 'view', row: r })} aria-label={`Open ${r.childName}`}>
                           <Avatar name={r.childName} size={32} />
-                          <span style={{ minWidth: 0 }}><b title={r.childName}>{r.childName}</b><small>Grade {r.gradeSought} · {r.guardianName}</small></span>
+                          <span style={{ minWidth: 0 }}><b data-tip={r.childName}>{r.childName}</b><small>Grade {r.gradeSought} · {r.guardianName}</small></span>
                         </button>
                         <div className="tgrow" style={{ gap: 6 }}>
                           <span className="chip">{SOURCE[r.source] ?? r.source}</span>
@@ -145,7 +145,7 @@ function TestDay({ row, onClose, onPick, busy }: { row: EnquiryRow; onClose: () 
   const [d, setD] = useState(row.testOn ?? addDays(istToday(), 3));
   return (
     <Dialog title="Entrance test" tag={{ text: row.childName, tone: 'v' }} onClose={onClose} width={440}>
-      <Field label="Day of the test" type="date" value={d} min={istToday()} onChange={setD} />
+      <DateField label="Day of the test" value={d} min={istToday()} onChange={setD} />
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn pri" disabled={busy || !d} onClick={() => onPick(d)}>{busy ? 'Saving…' : 'Book the test'}</button>
@@ -176,7 +176,7 @@ function Enrol({ row, onClose, onDone }: { row: EnquiryRow; onClose: () => void;
       <div className="stack">
         <SelectField label="Class" value={chosen} onChange={(v) => { setClassId(v); setErr({ ...err, classId: '' }); }} error={err.classId}
           options={(fit.length ? fit : classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name} · ${c.studentCount} students` }))} />
-        <Field label="Date of birth" type="date" value={dob} max={istToday()} onChange={(v) => { setDob(v); setErr({ ...err, dob: '' }); }} error={err.dob} />
+        <DateField label="Date of birth" value={dob} max={istToday()} onChange={(v) => { setDob(v); setErr({ ...err, dob: '' }); }} error={err.dob} />
         <div className="help">{row.guardianName} · {row.phone || 'no phone yet'} becomes the guardian on the student record.</div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>

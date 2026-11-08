@@ -18,9 +18,9 @@
 .il .il-fill-glass { fill: color-mix(in srgb, var(--v) 14%, transparent); }
 .il .il-slot { fill: #0A0A0B; }
 /* Strokes draw in once, in order. Reduce Motion shows the finished picture. */
-.il .il-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ilDraw 1.1s var(--e, cubic-bezier(.22, 1, .36, 1)) both; animation-delay: calc(var(--n, 0) * .14s + .1s); }
+.il .il-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation:ilDraw var(--t3) var(--e, cubic-bezier(.22, 1, .36, 1)) both; animation-delay: calc(var(--n, 0) * .14s + .1s); }
 @keyframes ilDraw { to { stroke-dashoffset: 0; } }
-.il > * { animation: ilRise .8s var(--e, cubic-bezier(.22, 1, .36, 1)) both; }
+.il > * { animation:ilRise var(--t3) var(--e, cubic-bezier(.22, 1, .36, 1)) both; }
 @keyframes ilRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.nest.rm .il .il-draw, .nest.rm .il > * { animation: none; stroke-dashoffset: 0; }
-@media (prefers-reduced-motion: reduce) { .il .il-draw, .il > * { animation: none; stroke-dashoffset: 0; } }
+.nest.rm .il .il-draw, .nest.rm .il > * { animation:none; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { .il .il-draw, .il > * { animation:none; stroke-dashoffset: 0; } }

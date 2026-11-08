@@ -25,7 +25,7 @@ export function ReleasesPage() {
   const rows = list.data ?? [];
   const canWrite = app.can('releases.write');
   return (
-    <Page active="rel" title="Releases" sub="Every school runs the code deployed last, and its database is updated when the server starts. A release signs schools off in waves: your own first, then a pilot group, then everyone else" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
+    <Page title="Releases" sub="Every school runs the code deployed last, and its database is updated when the server starts. A release signs schools off in waves: your own first, then a pilot group, then everyone else" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setCreating(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New release</button> : undefined}
       overlays={<>
         {creating && <CreateDialog onClose={() => setCreating(false)} onDone={() => { setCreating(false); refresh(); say('Release created. Start it when you are ready.'); }} />}

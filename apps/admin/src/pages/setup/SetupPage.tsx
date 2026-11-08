@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { Dialog, Field, Segmented, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, Segmented, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, problem } from '../../app/kit';
@@ -40,7 +40,7 @@ export function SetupPage() {
   const groups = GROUPS.filter((g) => g.kinds.some((k) => sections.some((s) => s.kind === k)));
   const visible = sections.filter((s) => (GROUPS.find((g) => g.value === group)?.kinds as readonly string[] | undefined)?.includes(s.kind));
   return (
-    <Page active="setup" title="Classes and calendar" sub="The school’s year, classes, subjects, bells and fees. Everything else in Gradeon reads from these." toast={toast} loading={list.isLoading && !list.data}
+    <Page title="Classes and calendar" sub="The school’s year, classes, subjects, bells and fees. Everything else in Gradeon reads from these." toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
       overlays={editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
         onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />}>
@@ -71,7 +71,7 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
           <div style={{ minWidth: 120 * cols.length }}>
             <div className="grd th" style={grid}>{cols.map((c) => <span key={c.key}>{c.label.replace(/ \(.*\)$/, '')}</span>)}</div>
             {s.rows.map((r) => {
-              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13.5px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} title={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
+              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13.5px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} data-tip={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
               return edit
                 ? <button className="rowbtn" key={r.id} onClick={() => onOpen(r)} aria-label={`Open ${nameOf(r)}`}><div className="grd rw" style={grid}>{cells}</div></button>
                 : <div className="grd rw" key={r.id} style={grid}>{cells}</div>;
@@ -107,7 +107,9 @@ function RowDialog({ section: s, row, all, onClose, onDone }: { section: SetupSe
     if (c.key === 'head') return pick(HEADS.map((h) => ({ value: h, label: h[0]!.toUpperCase() + h.slice(1) })));
     if (c.key === 'kind') return pick(PERIOD_KINDS.map((k) => ({ value: k, label: k[0]!.toUpperCase() + k.slice(1) })));
     if (c.key === 'current') return pick([{ value: '', label: 'No' }, { value: 'yes', label: 'Yes, the year the school is in' }]);
-    return <Field key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} placeholder={c.example} type={isDay(c.key) ? 'date' : isTime(c.key) ? 'time' : 'text'} maxLength={120} />;
+    if (isDay(c.key)) return <DateField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} />;
+    if (isTime(c.key)) return <TimeField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} />;
+    return <Field key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} placeholder={c.example} maxLength={120} />;
   };
   const busy = save.isPending || remove.isPending || bill.isPending;
   return (

@@ -25,7 +25,7 @@ export function TeamPage() {
   const rows = team.data ?? [];
   const canWrite = app.can('team.write');
   return (
-    <Page active="team" title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
+    <Page title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
       actions={canWrite ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a person</button> : undefined}
       overlays={<>
         {adding && <AddDialog onClose={() => setAdding(false)} onDone={() => { setAdding(false); refresh(); say('Added. At their first sign-in they set up an authenticator app with the password you chose.'); }} />}
@@ -125,7 +125,7 @@ function EditDialog({ row, self, onClose, onSave, busy }: { row: ConsoleUserRow;
     <Dialog title={row.name} onClose={onClose} width={560}>
       <RoleChoice value={roles} onChange={setRoles} />
       <div className="tgrow" style={{ marginTop: 16 }}>
-        <button className={`btn ${status === 'disabled' ? 'dng' : ''}`} disabled={self} title={self ? 'You can’t switch yourself off' : undefined} onClick={() => setStatus(status === 'disabled' ? 'active' : 'disabled')}>{status === 'disabled' ? 'Switched off · tap to switch on' : 'Switch this person off'}</button>
+        <button className={`btn ${status === 'disabled' ? 'dng' : ''}`} disabled={self} data-tip={self ? 'You can’t switch yourself off' : undefined} onClick={() => setStatus(status === 'disabled' ? 'active' : 'disabled')}>{status === 'disabled' ? 'Switched off · tap to switch on' : 'Switch this person off'}</button>
       </div>
       {self && <div className="help" style={{ marginTop: 8 }}>You can’t switch yourself off or remove your own super admin role in one go.</div>}
       <div style={{ marginTop: 16 }}>

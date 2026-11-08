@@ -25,13 +25,12 @@
 .pg-login .fa{left:0;top:30px;width:236px;rotate:-3deg}
 .pg-login .fb{right:0;top:110px;width:248px;rotate:2.5deg}
 .pg-login .mp{display:flex;align-items:flex-end;gap:5px;height:44px;margin-top:12px}
-.pg-login .mp i{flex:1;border-radius:5px 5px 4px 4px;background:#C8D5F6;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%);animation:grow 1.2s var(--e) both;animation-delay:var(--d)}
+.pg-login .mp i{flex:1;border-radius:5px 5px 4px 4px;background:#C8D5F6;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%);animation:grow var(--t3) var(--e) both;animation-delay:var(--d)}
 .pg-login .mp i.hi{background:#2F5BD3}
 @keyframes grow{from{height:0 !important}}
 .pg-login .cons .mp i{background:#2C3A5E}
 .pg-login .pr{height:10px;border-radius:5px;background:#EDF2FD;margin-top:14px;overflow:hidden}
-.pg-login .pr b{display:block;height:100%;border-radius:5px;background:#2F5BD3;animation:fillw 1.6s .4s var(--e) both}
-@keyframes fillw{from{width:0 !important}}
+.pg-login .pr b{display:block;height:100%;border-radius:5px;background:#2F5BD3;animation:fillw var(--t3) .4s var(--e) both}
 .pg-login .cons .pr{background:#2A2A2E}
 .pg-login .tst{position:absolute;left:34px;top:300px;display:flex;align-items:center;gap:10px;background:var(--ci);color:#fff;border-radius:999px;padding:10px 18px 10px 10px;font:700 13.5px var(--fb);box-shadow:0 20px 40px -16px rgba(0,0,0,.6);animation:lgToast 7s var(--e) infinite;opacity:0}
 .pg-login .cons .tst{background:#fff;color:#1A1A1C}
@@ -46,30 +45,30 @@
 .pg-login .fw .sub{margin:8px 0 0;font:500 15.5px/1.5 var(--fb);color:var(--ink2)}
 .pg-login .top{position:absolute;right:34px;top:28px;display:flex;gap:10px;align-items:center}
 .pg-login .lang{display:inline-flex;padding:3px;border-radius:999px;background:var(--sunk)}
-.pg-login .lang button{height:30px;padding:0 12px;border:0;border-radius:999px;background:none;font:700 12.5px var(--fb);color:var(--ink3);cursor:pointer;transition:background .25s,color .25s}
+.pg-login .lang button{height:30px;padding:0 12px;border:0;border-radius:999px;background:none;font:700 12.5px var(--fb);color:var(--ink3);cursor:pointer;transition:background var(--t2),color var(--t2)}
 .pg-login .lang button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh1)}
-.pg-login .eye{border:0;background:none;color:var(--ink3);cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;transition:background .2s,color .2s}
+.pg-login .eye{border:0;background:none;color:var(--ink3);cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;transition:background var(--t2),color var(--t2)}
 .pg-login .eye:hover{background:var(--sunk);color:var(--ink)}
 .pg-login .eye svg{width:19px;height:19px}
-.pg-login .go{height:54px;width:100%;font-size:16px;transition:background .5s,width .6s var(--e),transform .25s var(--e),box-shadow .35s}
+.pg-login .go{height:54px;width:100%;font-size:16px;transition:background var(--t3),width var(--t3) var(--e),transform var(--t2) var(--e),box-shadow var(--t3)}
 .pg-login .go.ok{background:var(--g);color:var(--card)}
 .pg-login .or{display:flex;align-items:center;gap:14px;font:700 12.5px var(--fb);color:var(--ink3)}
 .pg-login .or::before,.pg-login .or::after{content:"";flex:1;height:1px;background:var(--line)}
 .pg-login .otp{position:relative;display:flex;gap:10px;justify-content:space-between}
-.pg-login .otp .bx{flex:1;height:64px;border-radius:18px;border:1.5px solid var(--line2);background:var(--card);display:grid;place-items:center;font:700 28px var(--fd);position:relative;transition:border-color .2s,box-shadow .3s var(--e),transform .35s var(--sp),background .25s}
+.pg-login .otp .bx{flex:1;height:64px;border-radius:18px;border:1.5px solid var(--line2);background:var(--card);display:grid;place-items:center;font:700 28px var(--fd);position:relative;transition:border-color var(--t2),box-shadow var(--t3) var(--e),transform var(--t3) var(--e),background var(--t2)}
 .pg-login .otp .bx.cur{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
 .pg-login .otp .bx.cur::after{content:"";position:absolute;width:2px;height:28px;background:var(--v);animation:car 1s steps(2) infinite}
 .pg-login .otp .bx.f{transform:translateY(-3px)}
 .pg-login .otp.bad .bx{border-color:var(--r);background:color-mix(in srgb,var(--rS) 45%,var(--card))}
 @keyframes car{50%{opacity:0}}
 .pg-login .otp input{position:absolute;inset:0;opacity:0;cursor:text;font-size:16px}
-.pg-login .demo{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line2);background:none;color:var(--ink2);font:700 13px var(--fb);cursor:pointer;align-self:flex-start;transition:border-color .2s,color .2s,background .2s}
+.pg-login .demo{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line2);background:none;color:var(--ink2);font:700 13px var(--fb);cursor:pointer;align-self:flex-start;transition:border-color var(--t2),color var(--t2),background var(--t2)}
 .pg-login .demo:hover{border-color:var(--v);color:var(--vD);background:var(--vL)}
 .pg-login .done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
 .pg-login .bar{height:6px;width:220px;border-radius:3px;background:var(--sunk);overflow:hidden}
-.pg-login .bar b{display:block;height:100%;background:var(--v);border-radius:3px;animation:fillw 2.2s .2s var(--e) both}
+.pg-login .bar b{display:block;height:100%;background:var(--v);border-radius:3px;animation:fillw var(--t3) .2s var(--e) both}
 .pg-login .stp{display:flex;gap:6px}
-.pg-login .stp i{height:5px;width:26px;border-radius:3px;background:var(--line2);transition:background .4s,width .5s var(--e)}
+.pg-login .stp i{height:5px;width:26px;border-radius:3px;background:var(--line2);transition:background var(--t3),width var(--t3) var(--e)}
 .pg-login .stp i.on{background:var(--v);width:40px}
 .pg-login .foot{position:absolute;left:0;right:0;bottom:24px;text-align:center;font:600 12.5px var(--fb);color:var(--ink3)}
 .pg-login .foot a{color:var(--ink2);text-decoration:underline;text-underline-offset:3px}
