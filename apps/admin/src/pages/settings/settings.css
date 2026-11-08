@@ -33,12 +33,6 @@
 .pg-settings .tgl div{flex:1}
 .pg-settings .tgl b{font:700 14.5px var(--fb);display:block}
 .pg-settings .tgl small{font:500 13px/1.45 var(--fb);color:var(--ink3)}
-.pg-settings .sw5{display:flex;gap:12px;flex-wrap:wrap}
-.pg-settings .sw5 button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;position:relative;transition:transform .4s var(--sp);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
-.pg-settings .sw5 button:hover{transform:scale(1.12)}
-.pg-settings .sw5 button.on{transform:scale(1.04);box-shadow:0 0 0 3px var(--card),0 0 0 5.5px var(--c2)}
-.pg-settings .sw5 button svg{position:absolute;inset:0;margin:auto;width:20px;height:20px;color:#fff;opacity:0;transform:scale(.4);transition:opacity .25s,transform .45s var(--sp)}
-.pg-settings .sw5 button.on svg{opacity:1;transform:none}
 .pg-settings .pv{border-radius:22px;border:1px solid var(--line);overflow:hidden;background:var(--sunk);width:210px}
 .pg-settings .pv .tb{padding:14px 14px 18px;color:#fff;font:700 13.5px var(--fb);display:flex;align-items:center;gap:8px;transition:background .5s}
 .pg-settings .pv .bd{padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -58,7 +52,7 @@
 @media (max-width:1250px){.pg-settings .billing{grid-template-columns:minmax(0,1fr)}}
 
 .pg-settings .in2.err{border-color:var(--r);background:color-mix(in srgb,var(--rS) 45%,var(--card));box-shadow:0 0 0 1px var(--r)}
-.pg-settings .sw:disabled,.pg-settings .sw5 button:disabled{opacity:.5;cursor:not-allowed}
+.pg-settings .sw:disabled{opacity:.5;cursor:not-allowed}
 .pg-settings .set .es{max-width:none}
 
 @media (max-width:760px){

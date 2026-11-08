@@ -15,34 +15,55 @@ export function placeBy(anchor: HTMLElement, side: 'auto' | 'right', min = 220):
   const below = window.innerHeight - r.bottom - EDGE;
   const above = r.top - EDGE;
   const up = below < 240 && above > below;
-  const maxH = Math.max(150, Math.min(360, (up ? above : below) - GAP));
-  const minWidth = Math.max(r.width, min);
+  const maxH = Math.max(150, Math.min(420, (up ? above : below) - GAP));
+  const minWidth = Math.min(Math.max(r.width, min), window.innerWidth - EDGE * 2);
   const left = Math.min(Math.max(EDGE, r.left), window.innerWidth - minWidth - EDGE);
   return up ? { left, minWidth, bottom: window.innerHeight - r.top + GAP, maxH, origin: 'bottom left' } : { left, minWidth, top: r.bottom + GAP, maxH, origin: 'top left' };
 }
 
-/**
- * A menu that opens from a button: drawn on the page root with fixed coordinates so nothing clips it, grows from the button,
- * moves with the arrow keys, and closes on Escape, Tab or a click outside (and fades as it goes).
- */
-export function Menu({ open, anchor, onClose, side = 'auto', label, children }: { open: boolean; anchor: RefObject<HTMLElement | null>; onClose: () => void; side?: 'auto' | 'right'; label?: string; children: ReactNode }) {
-  const { shown, leaving } = useExit(open);
-  if (!shown) return null;
-  return <MenuPop anchor={anchor} onClose={onClose} side={side} leaving={leaving} label={label}>{children}</MenuPop>;
+export interface PopProps {
+  open: boolean;
+  /** What it opens from: placed against it, and clicks on it do not count as "outside". */
+  anchor: RefObject<HTMLElement | null>;
+  onClose: () => void;
+  /** Where focus goes on Escape (the anchor if it can take focus). */
+  returnTo?: RefObject<HTMLElement | null>;
+  side?: 'auto' | 'right';
+  /** `menu` and `listbox` move between their buttons with the arrow keys. */
+  role?: 'menu' | 'listbox' | 'dialog';
+  label?: string;
+  className?: string;
+  /** Where focus starts inside (a CSS selector); the first item by default. */
+  focus?: string;
+  minWidth?: number;
+  children: ReactNode;
 }
 
-function MenuPop({ anchor, onClose, side, leaving, label, children }: { anchor: RefObject<HTMLElement | null>; onClose: () => void; side: 'auto' | 'right'; leaving: boolean; label?: string; children: ReactNode }) {
+/**
+ * Anything that opens from a button: a menu, a list of times, a calendar, swatches. Drawn on the page root with fixed
+ * coordinates so nothing clips it, it grows from the button, closes on Escape, Tab or a click outside, and fades as it goes.
+ */
+export function Pop(props: PopProps) {
+  const { shown, leaving } = useExit(props.open);
+  if (!shown) return null;
+  return <PopBox {...props} leaving={leaving} />;
+}
+
+function PopBox({ anchor, onClose, returnTo, side = 'auto', role = 'dialog', label, className = 'pvr', focus, minWidth, leaving, children }: PopProps & { leaving: boolean }) {
   const [box, setBox] = useState<Box | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
+  const arrows = role !== 'dialog';
   useLayoutEffect(() => {
-    if (anchor.current) setBox(placeBy(anchor.current, side));
+    if (anchor.current) setBox(placeBy(anchor.current, side, minWidth));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (leaving) return;
-    ref.current?.querySelector<HTMLElement>(ITEMS)?.focus({ preventScroll: true });
-    const place = () => { if (anchor.current) setBox(placeBy(anchor.current, side)); };
+    if (leaving || !box) return;
+    const start = (focus && ref.current?.querySelector<HTMLElement>(focus)) || ref.current?.querySelector<HTMLElement>(arrows ? ITEMS : 'input,button:not(:disabled)');
+    start?.focus({ preventScroll: true });
+    start?.scrollIntoView({ block: 'nearest' });
+    const place = () => { if (anchor.current) setBox(placeBy(anchor.current, side, minWidth)); };
     const away = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node) && !anchor.current?.contains(e.target as Node)) close.current(); };
     document.addEventListener('pointerdown', away, true);
     window.addEventListener('resize', place);
@@ -52,14 +73,15 @@ function MenuPop({ anchor, onClose, side, leaving, label, children }: { anchor: 
       window.removeEventListener('resize', place);
       window.removeEventListener('scroll', place, true);
     };
-  }, [leaving]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [leaving, !box]); // eslint-disable-line react-hooks/exhaustive-deps
   const key = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close.current(); (returnTo ?? anchor).current?.focus(); return; }
+    if (e.key === 'Tab') { close.current(); return; }
+    if (!arrows) return;
     const items = [...(ref.current?.querySelectorAll<HTMLElement>(ITEMS) ?? [])];
     const at = items.indexOf(document.activeElement as HTMLElement);
     const go = (i: number) => { e.preventDefault(); items[(i + items.length) % items.length]?.focus(); };
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close.current(); anchor.current?.focus(); }
-    else if (e.key === 'Tab') close.current();
-    else if (e.key === 'ArrowDown') go(at + 1);
+    if (e.key === 'ArrowDown') go(at + 1);
     else if (e.key === 'ArrowUp') go(at - 1);
     else if (e.key === 'Home') go(0);
     else if (e.key === 'End') go(items.length - 1);
@@ -67,12 +89,17 @@ function MenuPop({ anchor, onClose, side, leaving, label, children }: { anchor: 
   const root = (anchor.current?.closest('.nest') as HTMLElement | null) ?? document.body;
   if (!box) return null;
   return createPortal(
-    <div ref={ref} className="popm" role="menu" aria-label={label} onKeyDown={key} {...leavingProps(leaving)}
+    <div ref={ref} className={className} role={role} aria-label={label} onKeyDown={key} {...leavingProps(leaving)}
       style={{ position: 'fixed', zIndex: 120, left: box.left, minWidth: box.minWidth, top: box.top ?? 'auto', bottom: box.bottom ?? 'auto', maxHeight: box.maxH, transformOrigin: box.origin }}>
       {children}
     </div>,
     root,
   );
+}
+
+/** A menu of actions from a button: moves with the arrow keys. */
+export function Menu({ open, anchor, onClose, side = 'auto', label, children }: { open: boolean; anchor: RefObject<HTMLElement | null>; onClose: () => void; side?: 'auto' | 'right'; label?: string; children: ReactNode }) {
+  return <Pop open={open} anchor={anchor} onClose={onClose} side={side} role="menu" label={label} className="popm">{children}</Pop>;
 }
 
 /** A pill button that opens a menu under it: the same button and the same menu everywhere. */
@@ -82,7 +109,7 @@ export function MenuButton({ label, icon, primary, chevron, open, onOpenChange, 
   const btn = useRef<HTMLButtonElement>(null);
   return (
     <>
-      <button ref={btn} type="button" className={`btn ${primary ? 'pri' : ''} ${chevron ? 'mbtn' : ''}`} aria-haspopup="menu" aria-expanded={open} onClick={() => onOpenChange(!open)}>
+      <button ref={btn} type="button" className={`btn ${primary ? 'pri' : ''}`} aria-haspopup="menu" aria-expanded={open} onClick={() => onOpenChange(!open)}>
         {icon && <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>}
         {label}
         {chevron && <svg className="cv" viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 9l6 6 6-6"></path></svg>}

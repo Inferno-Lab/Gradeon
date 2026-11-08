@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard } from '@gradeon/web-ui';
+import { EmptyCard, MonthField } from '@gradeon/web-ui';
 import type { InvoiceRowC } from '@gradeon/contracts';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -34,7 +34,7 @@ export function BillingPage() {
     <Page title="Billing" sub="One invoice per live school each month: students times the plan’s yearly price, divided by twelve" toast={toast} loading={inv.isLoading} error={inv.isError ? { message: (inv.error as Error).message, retry: () => void inv.refetch() } : null}
       actions={canWrite ? (
         <span className="tgrow">
-          <label className="inp" style={{ width: 150, height: 44 }}><input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Month" /></label>
+          <MonthField label="Month" value={period} onChange={setPeriod} />
           <button className="btn pri" onClick={() => gen.mutate()} disabled={gen.isPending || !period}>Create invoices</button>
         </span>
       ) : undefined}>

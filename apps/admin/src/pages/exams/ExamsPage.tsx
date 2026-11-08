@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, dateLabel, problem } from '../../app/kit';
@@ -94,8 +94,8 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
         <Field label="Name" value={f.name} onChange={(name) => { setF({ ...f, name }); setErr({ ...err, name: '' }); }} error={err.name} placeholder="Mid-term exams" maxLength={80} />
         <SelectField label="Class" value={f.classId} onChange={(classId) => { setF({ ...f, classId }); setErr({ ...err, classId: '' }); }} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
         <div className="two">
-          <Field label="First day" type="date" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
-          <Field label="Last day" type="date" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />
+          <DateField label="First day" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
+          <DateField label="Last day" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />
         </div>
         <div className="fld">
           <label>Subjects</label>
@@ -104,9 +104,9 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
               const on = picked[s.id];
               return (
                 <div key={s.id} className={`exr ${on ? 'on' : ''}`}>
-                  <label className="hwc"><input type="checkbox" checked={!!on} onChange={() => toggle(s.id)} /><span>{s.name}</span></label>
+                  <Checkbox checked={!!on} onChange={() => toggle(s.id)} label={<span>{s.name}</span>} />
                   {on && <>
-                    <input className="hws wide" type="date" aria-label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(e) => setPicked({ ...picked, [s.id]: { ...on, on: e.target.value } })} />
+                    <DateField compact label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(v) => setPicked({ ...picked, [s.id]: { ...on, on: v } })} />
                     <input className="hws" inputMode="numeric" aria-label={`${s.name} marks out of`} value={on.max} onChange={(e) => setPicked({ ...picked, [s.id]: { ...on, max: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
                     <small>marks</small>
                   </>}

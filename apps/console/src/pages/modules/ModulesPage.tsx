@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
 import type { EntitlementDoc, EntitlementRow, SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, Field, SelectField } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, SelectField } from '@gradeon/web-ui';
 import type { CatalogDoc } from '@gradeon/api-client';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -128,7 +128,7 @@ export function ModulesPage() {
             <Card title="Change many schools" chip={<span className="chip">{picked.size} chosen</span>}>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: '2 1 240px' }}><SelectField label="Module or feature" value={target} onChange={setTarget} options={[{ value: '', label: 'Choose…' }, ...options]} /></div>
-                <div style={{ flex: '1 1 160px' }}><Field label="Until (optional, a trial)" type="date" value={until} onChange={setUntil} disabled={target.includes('.')} /></div>
+                <div style={{ flex: '1 1 160px' }}><DateField label="Until (optional, a trial)" value={until} onChange={setUntil} disabled={target.includes('.')} /></div>
                 <div style={{ display: 'flex', gap: 10, paddingBottom: 2 }}>
                   <button className="btn pri" disabled={!picked.size} onClick={() => open(true)}>Give</button>
                   <button className="btn dng" disabled={!picked.size} onClick={() => open(false)}>Take away</button>
@@ -141,7 +141,7 @@ export function ModulesPage() {
               <div role="table" aria-label="Modules by school" style={{ display: 'grid', gridTemplateColumns: `40px minmax(190px,1.6fr) repeat(${built.length}, minmax(72px,1fr))`, minWidth: 260 + built.length * 72, alignItems: 'stretch' }}>
                 <div role="row" style={{ display: 'contents' }}>
                   <span role="columnheader" style={{ padding: '14px 0 14px 18px', display: 'flex', alignItems: 'center' }}>
-                    {can && <input type="checkbox" aria-label="Choose every school" checked={all} onChange={() => setPicked(all ? new Set() : new Set(rows.map((r) => r.id)))} />}
+                    {can && <Checkbox aria-label="Choose every school" checked={all} onChange={() => setPicked(all ? new Set() : new Set(rows.map((r) => r.id)))} />}
                   </span>
                   <span role="columnheader" className="help" style={{ margin: 0, padding: '14px 8px', fontWeight: 700, display: 'flex', alignItems: 'center' }}>School</span>
                   {built.map((m) => <span key={m.key} role="columnheader" className="help" style={{ margin: 0, padding: '14px 4px', fontWeight: 700, textAlign: 'center', lineHeight: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{m.name}</span>)}
@@ -149,7 +149,7 @@ export function ModulesPage() {
                 {rows.map((r) => (
                   <div key={r.id} role="row" style={{ display: 'contents' }}>
                     <span role="cell" style={{ padding: '12px 0 12px 18px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center' }}>
-                      {can && <input type="checkbox" aria-label={`Choose ${r.name}`} checked={picked.has(r.id)} onChange={() => { const n = new Set(picked); if (n.has(r.id)) n.delete(r.id); else n.add(r.id); setPicked(n); }} />}
+                      {can && <Checkbox aria-label={`Choose ${r.name}`} checked={picked.has(r.id)} onChange={() => { const n = new Set(picked); if (n.has(r.id)) n.delete(r.id); else n.add(r.id); setPicked(n); }} />}
                     </span>
                     <span role="cell" style={{ padding: '12px 8px', borderTop: '1px solid var(--line)', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <a href={url(`/schools/${r.id}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.id}`); }} style={{ font: '700 14px var(--fb)', color: 'inherit', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</a>
@@ -216,7 +216,7 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
           <Field label="Staff accounts" inputMode="numeric" placeholder="No limit" value={limits.staff} onChange={(v) => setLimits({ ...limits, staff: v })} disabled={!can} />
           <Field label="File storage (GB)" inputMode="numeric" value={limits.storageGb} onChange={(v) => setLimits({ ...limits, storageGb: v })} disabled={!can} />
           <Field label="SMS a month" inputMode="numeric" value={limits.smsPerMonth} onChange={(v) => setLimits({ ...limits, smsPerMonth: v })} disabled={!can} />
-          <Field label="Free until (trial)" type="date" value={trial} onChange={setTrial} disabled={!can} hint="No invoice until this day." />
+          <DateField label="Free until (trial)" value={trial} onChange={setTrial} disabled={!can} hint="No invoice until this day." />
         </div>
       </Card>
       <Card title="Modules and features" span="s12" chip={<span className="chip">{e.active.length} on today</span>}>
@@ -231,8 +231,8 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
                 <span style={{ flex: '1 1 200px', minWidth: 0 }}><b style={{ font: '700 14.5px var(--fb)' }}>{m.name}</b>{m.core && <span className="chip" style={{ marginLeft: 8 }}>Always on</span>}<div className="help" style={{ margin: 0 }}>{m.blurb}</div></span>
                 {on && !m.core && (
                   <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ width: 160 }}><Field label="From" type="date" value={dates[m.key]?.from ?? ''} onChange={(v) => setDate(m.key, 'from', v)} disabled={!can} /></span>
-                    <span style={{ width: 160 }}><Field label="Until" type="date" value={dates[m.key]?.until ?? ''} onChange={(v) => setDate(m.key, 'until', v)} disabled={!can} /></span>
+                    <span style={{ width: 160 }}><DateField label="From" value={dates[m.key]?.from ?? ''} onChange={(v) => setDate(m.key, 'from', v)} disabled={!can} /></span>
+                    <span style={{ width: 160 }}><DateField label="Until" value={dates[m.key]?.until ?? ''} onChange={(v) => setDate(m.key, 'until', v)} disabled={!can} /></span>
                   </span>
                 )}
               </div>

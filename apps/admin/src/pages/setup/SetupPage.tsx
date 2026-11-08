@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { Dialog, Field, Segmented, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, Segmented, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, problem } from '../../app/kit';
@@ -107,7 +107,9 @@ function RowDialog({ section: s, row, all, onClose, onDone }: { section: SetupSe
     if (c.key === 'head') return pick(HEADS.map((h) => ({ value: h, label: h[0]!.toUpperCase() + h.slice(1) })));
     if (c.key === 'kind') return pick(PERIOD_KINDS.map((k) => ({ value: k, label: k[0]!.toUpperCase() + k.slice(1) })));
     if (c.key === 'current') return pick([{ value: '', label: 'No' }, { value: 'yes', label: 'Yes, the year the school is in' }]);
-    return <Field key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} placeholder={c.example} type={isDay(c.key) ? 'date' : isTime(c.key) ? 'time' : 'text'} maxLength={120} />;
+    if (isDay(c.key)) return <DateField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} />;
+    if (isTime(c.key)) return <TimeField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} />;
+    return <Field key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} placeholder={c.example} maxLength={120} />;
   };
   const busy = save.isPending || remove.isPending || bill.isPending;
   return (

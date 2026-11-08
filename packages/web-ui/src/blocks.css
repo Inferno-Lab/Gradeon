@@ -73,7 +73,6 @@
 /* Small controls the admin pages share: a roll number, a tick with a label, a number box, a filter pill. */
 .nest .rn{font:800 13px var(--fb);color:var(--ink3)}
 .nest .hwc{display:inline-flex;align-items:center;gap:8px;font:700 13px var(--fb);color:var(--ink2);cursor:pointer;white-space:nowrap}
-.nest .hwc input[type=checkbox]{width:18px;height:18px;accent-color:var(--v);cursor:pointer;flex:none}
 .nest .hws{width:64px;height:36px;border-radius:12px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 14px var(--fb);text-align:center;padding:0 6px;min-width:0}
 .nest .hws:focus{outline:0;border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
 .nest .hws:disabled{background:var(--sunk);border-color:transparent;cursor:not-allowed}

@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ImportInputIn } from '@gradeon/api-client';
 import type { ImportBatchRow, ImportKind, ImportPreview, MigrationView } from '@gradeon/contracts';
-import { EmptyCard, Field, Select } from '@gradeon/web-ui';
+import { EmptyCard, Field, FilePick, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
 
@@ -28,7 +28,6 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   // A new revision on every change: the query key stays small however big the file is.
   const change = (s: Source | null, m?: Record<string, string>) => setJob((j) => ({ src: s, mapping: m, rev: j.rev + 1 }));
   const [sample, setSample] = useState('300');
-  const file = useRef<HTMLInputElement>(null);
   const v = q.data;
   const kind = v?.kinds.find((k) => k.key === (kindKey || v.kinds[0]?.key));
   const input = (): ImportInputIn | null => (!src || !kind ? null : src.kind === 'file'
@@ -82,8 +81,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
           <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}><h2>Import</h2><span className="grow"></span><button className="btn sm" disabled={tpl.isPending} onClick={() => tpl.mutate(kind.key)}>Blank template</button></div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}>
             <div className="fld" style={{ flex: '1 1 240px', maxWidth: 360 }}><label htmlFor="imp-kind">What to import</label><Select id="imp-kind" value={kind.key} onChange={pickKind} options={v.kinds.map((k, i) => ({ value: k.key, label: `${i + 1}. ${k.label}` }))} /></div>
-            <input ref={file} type="file" accept=".csv,.txt,.xlsx" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void readFile(f).then((content) => change({ kind: 'file', fileName: f.name, content }), fail); }} />
-            <button className="btn" onClick={() => file.current?.click()}>Choose a file</button>
+            <FilePick accept=".csv,.txt,.xlsx" onPick={(f) => void readFile(f).then((content) => change({ kind: 'file', fileName: f.name, content }), fail)}>Choose a file</FilePick>
             <button className="btn" onClick={() => change({ kind: 'rows', fileName: 'Typed in the console', rows: Array.from({ length: 5 }, () => blank(kind)) })}>Type rows</button>
           </div>
           <div className="help" style={{ marginTop: 8 }}>{kind.blurb} Import in the order of the list: each kind can refer to the ones above it. A second import of the same rows updates them instead of adding them again.</div>

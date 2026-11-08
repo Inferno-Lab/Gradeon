@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ENQUIRY_STAGES, addDays, istToday, type EnquiryRow, type EnquiryStage } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';
@@ -145,7 +145,7 @@ function TestDay({ row, onClose, onPick, busy }: { row: EnquiryRow; onClose: () 
   const [d, setD] = useState(row.testOn ?? addDays(istToday(), 3));
   return (
     <Dialog title="Entrance test" tag={{ text: row.childName, tone: 'v' }} onClose={onClose} width={440}>
-      <Field label="Day of the test" type="date" value={d} min={istToday()} onChange={setD} />
+      <DateField label="Day of the test" value={d} min={istToday()} onChange={setD} />
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn pri" disabled={busy || !d} onClick={() => onPick(d)}>{busy ? 'Saving…' : 'Book the test'}</button>
@@ -176,7 +176,7 @@ function Enrol({ row, onClose, onDone }: { row: EnquiryRow; onClose: () => void;
       <div className="stack">
         <SelectField label="Class" value={chosen} onChange={(v) => { setClassId(v); setErr({ ...err, classId: '' }); }} error={err.classId}
           options={(fit.length ? fit : classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name} · ${c.studentCount} students` }))} />
-        <Field label="Date of birth" type="date" value={dob} max={istToday()} onChange={(v) => { setDob(v); setErr({ ...err, dob: '' }); }} error={err.dob} />
+        <DateField label="Date of birth" value={dob} max={istToday()} onChange={(v) => { setDob(v); setErr({ ...err, dob: '' }); }} error={err.dob} />
         <div className="help">{row.guardianName} · {row.phone || 'no phone yet'} becomes the guardian on the student record.</div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>

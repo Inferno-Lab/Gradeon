@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { EVENT_KINDS, istToday, type EventKind, type EventRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Ico, problem } from '../../app/kit';
@@ -157,10 +157,10 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
           <SelectField label="Who is told" value={f.audience} onChange={set('audience')} disabled={!canWrite} options={Object.entries(AUDIENCE).map(([value, label]) => ({ value, label }))} />
         </div>
         <div className="two">
-          <Field label={holiday ? 'From' : 'Day'} type="date" value={f.date} onChange={(v) => setF((x) => ({ ...x, date: v, endDate: x.endDate < v ? v : x.endDate }))} error={err.date} disabled={!canWrite} />
-          {holiday ? <Field label="To" type="date" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /> : <Field label="Starts at" type="time" value={f.time} onChange={set('time')} disabled={!canWrite} />}
+          <DateField label={holiday ? 'From' : 'Day'} value={f.date} onChange={(v) => setF((x) => ({ ...x, date: v, endDate: x.endDate < v ? v : x.endDate }))} error={err.date} disabled={!canWrite} />
+          {holiday ? <DateField label="To" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /> : <TimeField label="Starts at" value={f.time} onChange={set('time')} disabled={!canWrite} />}
         </div>
-        {!holiday && <div className="two"><Field label="Ends on" type="date" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /><Field label="Ends at" type="time" value={f.endTime} onChange={set('endTime')} disabled={!canWrite} /></div>}
+        {!holiday && <div className="two"><DateField label="Ends on" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /><TimeField label="Ends at" value={f.endTime} onChange={set('endTime')} disabled={!canWrite} /></div>}
         <Field label="Where (optional)" value={f.venue} onChange={set('venue')} maxLength={80} disabled={!canWrite} />
         <AreaField label="Note (optional)" value={f.note} onChange={set('note')} rows={2} maxLength={300} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}

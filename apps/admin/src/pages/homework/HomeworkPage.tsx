@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type HomeworkDetail, type HomeworkRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';
@@ -106,8 +106,8 @@ function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; 
         <Field label="Title" value={f.title} onChange={set('title')} error={err.title} maxLength={120} placeholder="Linear equations, questions 1 to 10" />
         <AreaField label="What to do (optional)" value={f.description} onChange={set('description')} error={err.description} maxLength={1000} rows={3} />
         <div className="two">
-          <Field label="Due on" type="date" value={f.dueOn} min={istToday()} onChange={set('dueOn')} error={err.dueOn} />
-          <Field label="Marks out of" type="number" min={1} max={100} value={f.maxMarks} onChange={set('maxMarks')} error={err.maxMarks} />
+          <DateField label="Due on" value={f.dueOn} min={istToday()} onChange={set('dueOn')} error={err.dueOn} />
+          <NumberField label="Marks out of" min={1} max={100} value={f.maxMarks} onChange={set('maxMarks')} error={err.maxMarks} />
         </div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
@@ -156,7 +156,7 @@ function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: stri
                 <div key={s.studentId} className="hwr">
                   <span className="rn num">{s.rollNo || '–'}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={s.name} size={30} /><b style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={s.name}>{s.name}</b></span>
-                  <label className="hwc"><input type="checkbox" checked={x.handed} disabled={!canWrite} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, handed: e.target.checked } })} /><span>{x.handed ? (s.onTime || !s.handedAt ? 'Handed in' : 'Late') : 'Not yet'}</span></label>
+                  <Checkbox checked={x.handed} disabled={!canWrite} onChange={(handed) => setDraft({ ...draft, [s.studentId]: { ...x, handed } })} label={<span>{x.handed ? (s.onTime || !s.handedAt ? 'Handed in' : 'Late') : 'Not yet'}</span>} />
                   <input className="hws" inputMode="numeric" aria-label={`Marks for ${s.name}`} placeholder="–" disabled={!canWrite || !x.handed} value={x.score} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, score: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
                 </div>
               );

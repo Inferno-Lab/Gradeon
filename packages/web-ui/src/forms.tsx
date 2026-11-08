@@ -18,7 +18,9 @@ export function ErrorLine({ children }: { children: ReactNode }) {
   );
 }
 
-interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type'> {
+  /** Text-like only: dates, times, numbers, colours, ticks and files have their own fields (DateField, TimeField…). */
+  type?: 'text' | 'email' | 'tel' | 'password' | 'search' | 'url';
   label: string;
   value: string;
   onChange: (v: string) => void;

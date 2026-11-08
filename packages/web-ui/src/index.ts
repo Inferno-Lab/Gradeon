@@ -18,6 +18,7 @@ export * from './Palette';
 export * from './EmptyCard';
 export * from './Roll';
 export * from './forms';
+export * from './fields';
 export * from './Dialog';
 export * from './Presence';
 export * from './Toast';
