@@ -267,4 +267,10 @@ describe('backups', () => {
     const restore = (await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'backup.restore', schoolId: school.id, params: { backupId: list[0].id } } })).json;
     expect(restore.status).toBe('pending_approval');
   });
+  it('runs a restore drill into a scratch database and keeps the result', async () => {
+    const d = (await h.c('POST', '/console/v1/health/restore-drills', { token: t })).json;
+    expect(d).toMatchObject({ ok: true, error: null, by: 'kaushal@gradeon.app' });
+    expect(d.tables).toBeGreaterThan(10);
+    expect((await h.c('GET', '/console/v1/health/restore-drills', { token: t })).json[0].id).toBe(d.id);
+  }, 60_000);
 });

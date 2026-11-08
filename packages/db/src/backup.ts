@@ -3,6 +3,7 @@ import { createInterface } from 'node:readline';
 import { Readable } from 'node:stream';
 import { createGunzip, createGzip } from 'node:zlib';
 import type pg from 'pg';
+import { migrate } from './migrate.js';
 
 // A school's whole database as gzipped JSON, readable by any PostgreSQL: Postgres itself turns each row into JSON and back,
 // so dates, numbers and JSON columns survive exactly. Provider snapshots (point-in-time recovery) come on top of this, not instead.
@@ -124,4 +125,32 @@ export async function restoreDatabase(pool: pg.Pool, gz: Buffer): Promise<{ tabl
     lines.close();
     client.release();
   }
+}
+
+/** The migrations a backup was taken at, from its first line. */
+export async function backupMigrations(gz: Buffer): Promise<string[]> {
+  const lines = createInterface({ input: Readable.from([gz]).pipe(createGunzip()), crlfDelay: Infinity });
+  try {
+    for await (const line of lines) return (JSON.parse(line) as { migrations: string[] }).migrations;
+  } finally {
+    lines.close();
+  }
+  throw new Error('This backup is empty.');
+}
+
+/**
+ * A backup taken before later migrations, brought up to today's database version in `scratch` (an empty database): migrate it to
+ * the backup's version, put the backup in, run the rest of the migrations (backfills included), and back it up again.
+ * Without this, every backup older than the last deploy that added a migration could not be restored.
+ */
+export async function bringForward(gz: Buffer, scratch: pg.Pool, current: string[]): Promise<Buffer> {
+  const tags = await backupMigrations(gz);
+  if (tags.join() === current.join()) return gz;
+  if (tags.length > current.length || tags.some((t, i) => current[i] !== t)) {
+    throw new Error('This backup was taken on a newer or different version of the database and cannot be put back here.');
+  }
+  await migrate(scratch, 'school', tags.length ? { upTo: tags.at(-1) } : {});
+  await restoreDatabase(scratch, gz);
+  await migrate(scratch, 'school');
+  return backupDatabase(scratch);
 }

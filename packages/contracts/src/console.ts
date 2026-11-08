@@ -539,6 +539,20 @@ export interface BackupRow {
   takenAt: string;
 }
 
+/** A restore drill: one school's fresh backup put back into a scratch database and counted. */
+export interface RestoreDrillRow {
+  id: string;
+  schoolName: string;
+  ok: boolean;
+  tables: number;
+  rows: number;
+  students: number;
+  ms: number;
+  error: string | null;
+  by: string;
+  at: string;
+}
+
 /** A school's configuration as the console edits it. */
 export interface SchoolConfig {
   version: number;

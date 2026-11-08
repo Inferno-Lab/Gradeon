@@ -204,4 +204,17 @@ describe('family accounts', () => {
     expect((await h.call('GET', '/v1/f/me', { token: teacher })).status).toBe(401);
     expect(await h.login('kavita.iyer@greenfield.edu.in', 'a-new-pass-123')).toBeTruthy();
   });
+  it('sends one account at most five codes in fifteen minutes (outside demo mode)', async () => {
+    expect((await h.call('POST', '/v1/students', { token: admin, body: { name: 'Ira Rao', classId: 'cls_8a', dob: '2013-06-02', guardianName: 'Anil Rao', guardianPhone: '+91 90000 11122' } })).status).toBe(201);
+    await h.setSettings({ 'demo.mode': false });
+    try {
+      for (let i = 0; i < 5; i++) expect((await h.call('POST', '/v1/auth/code', { body: { identifier: '90000 11122' } })).status).toBe(200);
+      const sixth = await h.call('POST', '/v1/auth/code', { body: { identifier: '90000 11122' } });
+      expect(sixth.status).toBe(429);
+      expect(sixth.json.retryAfter).toBeGreaterThan(0);
+      expect((await h.call('POST', '/v1/auth/reset/start', { body: { identifier: '90000 11122' } })).status).toBe(429);
+    } finally {
+      await h.setSettings({ 'demo.mode': true });
+    }
+  });
 });

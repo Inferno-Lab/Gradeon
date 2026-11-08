@@ -1,5 +1,5 @@
 import type {
-  ActionRequest, ActionRow, AuditRow, BackupRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
+  ActionRequest, ActionRow, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, UploadRow } from '@gradeon/contracts';
 import type { Http } from './http';
@@ -58,6 +58,8 @@ export function consoleApi(h: Http) {
       update: (id: string, b: ComplianceUpdate) => h.put<ComplianceRow>(`${base}/compliance/${id}`, b),
     },
     probe: () => h.post<{ probed: number }>(`${base}/health/probe`),
+    drills: () => h.get<RestoreDrillRow[]>(`${base}/health/restore-drills`),
+    runDrill: () => h.post<RestoreDrillRow>(`${base}/health/restore-drills`),
     schools: (q?: { status?: string; query?: string }) => h.get<SchoolRow[]>(`${base}/schools`, q),
     school: (id: string) => h.get<SchoolDetail>(`${base}/schools/${id}`),
     setChecklist: (id: string, key: string, state: 'done' | 'waiting' | 'todo') => h.patch<{ ok: true }>(`${base}/schools/${id}/checklist`, { key, state }),

@@ -28,8 +28,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
       status = 400;
       body = { code: 'validation', message: err.message };
     } else {
-      this.log.error(`${req.method} ${req.url}: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
       const school = req.headers['x-school'];
+      // One structured line per failure: which school and which request, so a report from a school finds its log line.
+      this.log.error({ msg: err instanceof Error ? err.message : String(err), school: typeof school === 'string' ? school : null, requestId: req.id, method: req.method, url: req.url.split('?')[0], stack: err instanceof Error ? err.stack : undefined });
       errorSink.report?.({
         source: req.url.startsWith('/console/') ? 'console-api' : 'api', schoolSlug: typeof school === 'string' ? school : null,
         message: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : null, url: `${req.method} ${req.url.split('?')[0]}`,

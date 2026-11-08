@@ -15,7 +15,7 @@ import { Sandbox, SandboxController } from './sandbox.js';
 import { Schools, SchoolsController } from './schools.js';
 import { POOLS, REGISTRY } from './tokens.js';
 import { Wizard, WizardController } from './wizard.js';
-import { Backups, BackupsController } from './backups.js';
+import { Backups, BackupsController, DrillsController } from './backups.js';
 import { Migration, MigrationController } from './migration.js';
 import { ConfigController, ConfigService } from './config.js';
 import { ErrorBook, ErrorsController } from './errors.js';
@@ -45,7 +45,7 @@ export class ConsoleModule {
     const pools = shared?.pools ?? new PoolManager({ maxPools: env.TENANT_MAX_POOLS, perPool: env.TENANT_PER_POOL });
     return {
       module: ConsoleModule,
-      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, OpsController, ComplianceController, ErrorsController, BackupsController, ConfigController, MigrationController],
+      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, OpsController, ComplianceController, ErrorsController, BackupsController, DrillsController, ConfigController, MigrationController],
       providers: [
         { provide: ENV, useValue: env }, { provide: REGISTRY, useValue: registry }, { provide: POOLS, useValue: pools }, { provide: OWNS, useValue: !shared }, Shutdown,
         Db, Sandbox, ConsoleAuth, Policy, Blueprints, Provisioner, Schools, Wizard, Builds, Actions, Releases, Health, Support, Admin, Bootstrap, Compliance, ErrorBook, Backups, ConfigService, Migration,
