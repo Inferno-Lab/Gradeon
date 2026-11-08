@@ -54,3 +54,24 @@ export function Dialog({ title, tag, dark, onClose, shake, width, children }: Di
     </>
   );
 }
+
+/** A record opened beside the list: slides in from the right over a blurred page. Escape and the backdrop close it. Render it inside `<Presence>`. */
+export function Panel({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const leaving = useLeaving();
+  useReturnFocus(leaving);
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    ref.current?.querySelector<HTMLElement>('button,[tabindex="0"]')?.focus({ preventScroll: true });
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape' && !e.defaultPrevented && !ref.current?.closest('[data-leaving]')) close.current(); };
+    document.addEventListener('keydown', key);
+    return () => document.removeEventListener('keydown', key);
+  }, []);
+  return (
+    <>
+      <div className="scrim" onClick={leaving ? undefined : onClose} {...leavingProps(leaving)}></div>
+      <aside ref={ref} className="drw" role="dialog" aria-modal="true" aria-label={label} {...leavingProps(leaving)}>{children}</aside>
+    </>
+  );
+}

@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, PageScope, Presence, Segmented } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, Segmented, Panel } from "@gradeon/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {
@@ -268,10 +268,8 @@ export function StudentsView({ v }: { v: any }) {
         </button>
       </div>
       <Presence>{v.dialog}</Presence>
-      {v.drOn && (
-        <>
-          <div className={`scrim ${v.out ?? ""}`} onClick={v.close}></div>
-          <aside className={`drw ${v.out ?? ""}`} role="dialog" aria-label="Student profile">
+      <Presence>{v.drOn && (
+          <Panel label="Student profile" onClose={v.close}>
             <div className="dh">
               <div className="dtop">
                 <span className="dav" style={{ background: v.d.bg, color: v.d.fg } as CSSProperties}>
@@ -368,9 +366,8 @@ export function StudentsView({ v }: { v: any }) {
                 </button>
               )}
             </div>
-          </aside>
-        </>
-      )}
+          </Panel>
+      )}</Presence>
     </PageScope>
   );
 }

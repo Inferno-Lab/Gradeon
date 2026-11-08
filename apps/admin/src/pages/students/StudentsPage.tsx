@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dayLabel, inr, istToday, type StudentRow } from '@gradeon/contracts';
-import { EmptyCard, LEAVE_MS, Menu, PageScope, ToastSlot, rollDigits, tintFor } from '@gradeon/web-ui';
+import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor } from '@gradeon/web-ui';
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
@@ -51,7 +51,6 @@ export function StudentsPage() {
   const [page, setPage] = useState(1);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
-  const [closing, setClosing] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [pop, setPop] = useState('');
   const [toast, setToast] = useState('');
@@ -90,7 +89,7 @@ export function StudentsPage() {
   const detail = useQuery({ queryKey: ['student', openId], queryFn: () => app.api.students.detail(openId!), enabled: !!openId });
 
   const refreshAll = () => void qc.invalidateQueries({ predicate: (qq) => ['students', 'student-summary', 'student-views', 'student', 'dashboard', 'shell', 'invoices'].includes(String(qq.queryKey[0])) });
-  const closeDrawer = () => { setClosing(true); setTimeout(() => { setOpenId(null); setClosing(false); setRev(null); }, LEAVE_MS); };
+  const closeDrawer = () => { setOpenId(null); setRev(null); };
   const done = (m: string, open?: string) => { setDialog(null); say(m); refreshAll(); if (open) setOpenId(open); };
 
   const download = async (ids?: string[]) => {
@@ -183,7 +182,7 @@ export function StudentsPage() {
     bulkFee: () => setDialog({ kind: 'fee', ids: [...sel], label: `${sel.size} selected ${sel.size === 1 ? 'student' : 'students'}` }),
     bulkExport: () => void download([...sel]),
     bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
-    drOn: !!openId, out: closing ? 'out' : '', close: closeDrawer,
+    drOn: !!openId, close: closeDrawer,
     canCollect: has.fees && app.user.permissions.includes('fees.collect'),
     d: (() => {
       const s = detail.data;
