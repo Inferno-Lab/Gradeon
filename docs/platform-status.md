@@ -19,7 +19,7 @@ Deploying the free test track: `docs/deploy-free-test.md`. The hand-off (decisio
 UI checks, all repeatable:
 
 - `node tools/audit-ui.mjs`: every page of both apps at 360, 390, 768 and 1440 wide, light and dark. Fails on console errors, failed calls, sideways scroll and anything clipped or outside the window.
-- `node tools/e2e-flows.mjs` (47 flows): sign-in errors, add student, dashboard approval, timetable clash fix and publish, roll call, school setup, search and shortcuts, phone dock, homework, exams, staff, admissions, invoices, reports, messages, events, classes and calendar, moving in, console modules, plan, migration, release, flags, cells, compliance, team, support and erase guards, billing, the dropdown, the collapsed menu.
+- `node tools/e2e-flows.mjs` (49 flows): sign-in errors, add student, dashboard approval, timetable clash fix and publish, roll call, school setup, search and shortcuts, phone dock, homework, exams, staff, admissions, invoices, reports, messages, events, classes and calendar, moving in, console modules, plan, migration, release, flags, cells, compliance, team, support and erase guards, billing, the dropdown, the collapsed menu.
 - `node tools/scan-gaps.mjs`, `scan-fit.mjs`, `scan-scroll.mjs`, `scan-cutoff.mjs`: uneven columns and blank cards; tabs and pills that do not fit; slow scroll areas and headings that scroll away; text cut off.
 - `node tools/e2e-onboard.mjs`: onboards a new empty school through the console wizard and screenshots every admin page (the brand-new-school states).
 - `flutter test test/tool/shoot_test.dart --dart-define=SHOOT_ROLE=parent|teacher|guest`: every app screen, headless, in any theme and size.

@@ -17,7 +17,7 @@ bash tools/dev-reset.sh &           # local PostgreSQL + server + Greenfield dem
 pnpm --filter @gradeon/admin dev    # http://localhost:5173/s/greenfield
 pnpm --filter @gradeon/console dev  # http://localhost:5174
 node tools/audit-ui.mjs             # every page, 4 widths, light/dark: errors, overflow, clipping
-node tools/e2e-flows.mjs            # 47 browser flows (re-run dev-reset first; it changes data)
+node tools/e2e-flows.mjs            # 49 browser flows (re-run dev-reset first; it changes data)
 node tools/scan-gaps.mjs            # columns ending unevenly; also scan-fit.mjs (tabs, pills) and scan-scroll.mjs (scroll areas)
 ```
 

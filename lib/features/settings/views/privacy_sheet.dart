@@ -62,6 +62,22 @@ class _PrivacySheetState extends State<PrivacySheet> {
       canPop: !widget.consent,
       child: SheetBody(
         padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+        // The answer stays in view however long the school's notice is.
+        footer: widget.consent
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Btn('privacy.agree', expand: true, loading: _busy, onPressed: _agree),
+                  const SizedBox(height: 10),
+                  Btn(
+                    'common.logout',
+                    kind: BtnKind.quiet,
+                    expand: true,
+                    onPressed: _busy ? null : () => unawaited(Get.find<AuthService>().signOut()),
+                  ),
+                ],
+              )
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -106,15 +122,6 @@ class _PrivacySheetState extends State<PrivacySheet> {
                   ],
                 ),
               ],
-              const SizedBox(height: 22),
-              Btn('privacy.agree', expand: true, loading: _busy, onPressed: _agree),
-              const SizedBox(height: 10),
-              Btn(
-                'common.logout',
-                kind: BtnKind.quiet,
-                expand: true,
-                onPressed: _busy ? null : () => unawaited(Get.find<AuthService>().signOut()),
-              ),
             ],
           ],
         ),

@@ -21,10 +21,13 @@ Future<T?> showSheet<T>(Widget child, {bool dismissible = true}) {
 }
 
 class SheetBody extends StatelessWidget {
-  const SheetBody({required this.child, this.padding = const EdgeInsets.fromLTRB(20, 0, 20, 0), super.key});
+  const SheetBody({required this.child, this.padding = const EdgeInsets.fromLTRB(20, 0, 20, 0), this.footer, super.key});
 
   final Widget child;
   final EdgeInsetsGeometry padding;
+
+  /// Stays in view under the scrolling [child] (the actions of a step the person must answer).
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +56,7 @@ class SheetBody extends StatelessWidget {
                   child: child,
                 ),
               ),
+              if (footer != null) Padding(padding: const EdgeInsets.fromLTRB(22, 12, 22, 16), child: footer),
             ],
           ),
         ),
