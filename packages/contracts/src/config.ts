@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ThemeColorsSchema, type ThemeColors } from './theme.js';
+import { ThemeColorsSchema, type AppMode, type ThemeColors } from './theme.js';
 
 
 /** Every setting a school can change (config layer 4). Defaults here are the platform defaults (layer 1). */
@@ -130,6 +130,8 @@ export interface SchoolBrand {
   demoMode: boolean;
   /** The school's colours, so the sign-in pages wear them before anyone signs in. */
   theme: ThemeColors;
+  /** The app's full palette for each of its themes, worked out from the theme, so the app needs no colour arithmetic. */
+  palette: Record<AppMode, Record<string, string>>;
   privacy: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
 }
 

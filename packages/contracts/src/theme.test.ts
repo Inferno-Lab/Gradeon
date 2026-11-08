@@ -14,6 +14,7 @@ describe('theme', () => {
     expect(t.v).toBe('#0F7C86');
     expect(t.vS).not.toBe('#EDF2FD');
     expect(contrast(t.vD!, t.card!)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t.vD!, t.vS!)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t.onV!, t.v!)).toBeGreaterThanOrEqual(4.5);
     expect(resolveWeb({ 'web.light.v': '#0F7C86', 'web.light.vS': '#ABCDEF' }, 'light').vS).toBe('#ABCDEF');
     // The other mode is untouched.

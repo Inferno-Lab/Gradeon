@@ -70,6 +70,7 @@ export const APP_TOKENS: AppToken[] = [
   a('line', 'Lines', 'Hairlines', 'Usually see-through.', '#10201B17', '#E8EFEA17'),
   a('line2', 'Lines', 'Outlines', 'Usually see-through.', '#10201B2B', '#E8EFEA2B'),
   a('scrim', 'Lines', 'Overlay', 'Behind sheets.', '#0A141157', '#00000080'),
+  a('shadow', 'Lines', 'Shadow', 'Under floating controls: the dock, top buttons, sheets.', '#10201B33', '#00000066'),
   a('mariText', 'Main action', 'Main colour as text', '', '#8A5600', '#F6BA45', undefined, 'mari', 'text'),
   a('mariSoft', 'Main action', 'Main colour fill', '', '#FCEBC4', '#3A2B0C', undefined, 'mari', 'soft'),
   a('okSoft', 'States', 'Good fill', '', '#DCEFE3', '#173A28', undefined, 'ok', 'soft'),
@@ -168,9 +169,15 @@ function derive(kind: Derive, base: string, ground: string, dark: boolean): stri
     case 'soft': return mix(base, ground, dark ? 0.22 : 0.12);
     case 'wash': return mix(base, ground, dark ? 0.12 : 0.06);
     case 'line': return mix(base, ground, dark ? 0.35 : 0.28);
-    case 'text': return readable(base, ground, dark ? '#FFFFFF' : '#000000');
+    // Text sits on its soft fill as well as on cards; the fill is the harder of the two, so it is the one checked.
+    case 'text': return readable(base, derive('soft', base, ground, dark), dark ? '#FFFFFF' : '#000000');
     case 'solid': return readable(base, '#FFFFFF', '#000000');
   }
+}
+
+/** A colour as the accent of one mode: as given in light, lifted until it reads on the dark cards in dark. */
+export function accentFor(hex: string, mode: WebMode): string {
+  return mode === 'light' ? hex.toUpperCase() : readable(hex, WEB_TOKENS.find((t) => t.key === 'card')!.dark, '#FFFFFF');
 }
 
 /** White or near-black, whichever reads better on `ground`. */

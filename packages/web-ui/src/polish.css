@@ -49,7 +49,7 @@ html:has(.nest.dark){color-scheme:dark}
   .nest .tile .big{font-size:38px}
 }
 .nest .need{flex-wrap:wrap}
-.nest .need>div{flex:1 1 130px}
+.nest .need>div{flex:1 1 112px}
 /* The account block stays at the bottom of the menu even when the list above it scrolls. */
 @media (min-width:901px){
   .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 6px 12px;background:var(--frame);z-index:2;box-shadow:0 -14px 14px -10px var(--frame)}

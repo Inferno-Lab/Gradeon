@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { APP_SHARED, APP_TOKENS, WEB_TOKENS, contrast, readableOn, resolveApp, resolveWeb, type AppMode, type ThemeColors, type WebMode } from '@gradeon/contracts';
+import { APP_SHARED, APP_TOKENS, WEB_TOKENS, accentFor, contrast, readableOn, resolveApp, resolveWeb, type AppMode, type ThemeColors, type WebMode } from '@gradeon/contracts';
 import { ColourField, Segmented } from '@gradeon/web-ui';
 
 type Part = 'admin' | 'app';
@@ -35,7 +35,7 @@ export function ThemeEditor({ value, onChange, disabled, scope, brand }: { value
   const low = weak.filter((p) => p.r < 4.5);
 
   const cell = (key: string, shown: string, dflt: string, follows?: string) => (
-    <div className="thm-cell">
+    <div className="thm-cell" key={key}>
       <ColourField compact alpha label={label(key.split('.').pop()!)} value={shown} onChange={(hex) => set(key, hex, dflt)} disabled={disabled} />
       {value[key] ? <button type="button" className="lnk" disabled={disabled} onClick={() => reset([key])}>Default</button> : follows && <small>Follows {follows}</small>}
     </div>
@@ -47,7 +47,7 @@ export function ThemeEditor({ value, onChange, disabled, scope, brand }: { value
         {scope === 'school' && <Segmented label="Which colours" value={part} onChange={setPart} options={[{ value: 'admin', label: 'Admin' }, { value: 'app', label: 'App' }]} />}
         <span className="help">{changed ? `${changed} ${changed === 1 ? 'colour' : 'colours'} changed from the design` : 'All colours are the design’s defaults'}</span>
         <span className="thm-sp" />
-        {scope === 'school' && !isApp && brand && <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange({ ...value, 'web.light.v': brand.toUpperCase() })}>Accent from the brand colour</button>}
+        {scope === 'school' && !isApp && brand && <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange({ ...value, 'web.light.v': accentFor(brand, 'light'), 'web.dark.v': accentFor(brand, 'dark') })}>Accent from the brand colour</button>}
         {scope === 'school' && isApp && brand && <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange({ ...value, 'app.mari': brand.toUpperCase() })}>Main action from the brand colour</button>}
         <button type="button" className="btn sm" disabled={disabled || !changed} onClick={() => reset(Object.keys(value).filter((k) => k.startsWith(prefix)))}>Reset all</button>
       </div>
