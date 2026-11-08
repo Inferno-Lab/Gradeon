@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, IC, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, SelectField, Swatches, TimeField, ToastSlot, tintFor, useShake, type Scene } from '@gradeon/web-ui';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, IC, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, ColourPicker, SelectField, TimeField, ToastSlot, tintFor, useShake, type Scene } from '@gradeon/web-ui';
 import { useShellChrome } from '../app/Layout';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
@@ -79,7 +79,7 @@ export function DesignPage() {
               <button role="menuitem" onClick={() => setMenu(false)}>Post a notice<small>N N</small></button>
             </MenuButton>
           </div>
-          <div style={{ marginTop: 14 }}><Swatches label="Brand colours" value={colour} onPick={setColour} /></div>
+          <div style={{ marginTop: 14 }}><ColourPicker label="Any colour" value={colour} onChange={setColour} /></div>
         </Section>
 
         <Section title="Tiles and bars">

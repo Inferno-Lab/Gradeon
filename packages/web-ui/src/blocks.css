@@ -85,3 +85,24 @@
 /* A filter pill: a choice that can be on or off. */
 /* A list that EvenRows may cap keeps room for its scrollbar, so capping it never rewraps the text and moves the line again. */
 .nest [data-even-scroll]{scrollbar-gutter:stable;transition:none}
+/* colour picker: the square, hue and opacity sliders, any-format input */
+.nest .cpk{display:flex;flex-direction:column;gap:10px;width:256px;max-width:100%}
+.nest .cpk-sv{position:relative;height:160px;border-radius:10px;background-image:linear-gradient(to top,black,transparent),linear-gradient(to right,white,transparent);cursor:crosshair;touch-action:none}
+.nest .cpk-sv i{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent);transform:translate(-50%,-50%);pointer-events:none}
+.nest .cpk-hue,.nest .cpk-alpha{appearance:none;-webkit-appearance:none;width:100%;height:12px;border-radius:999px;margin:0;cursor:pointer;background:linear-gradient(to right,red,yellow,lime,cyan,blue,magenta,red)}
+.nest .cpk-alpha{background:linear-gradient(to right,transparent,var(--cpk)),conic-gradient(var(--line2) 25%,var(--card) 0 50%,var(--line2) 0 75%,var(--card) 0) 0 0/10px 10px}
+.nest .cpk-hue::-webkit-slider-thumb,.nest .cpk-alpha::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:white;border:0;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent),var(--sh1)}
+.nest .cpk-hue::-moz-range-thumb,.nest .cpk-alpha::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:white;border:0;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent)}
+.nest .cpk-hue:focus-visible,.nest .cpk-alpha:focus-visible,.nest .cpk-sv:focus-visible{outline:2.5px solid var(--ink);outline-offset:2px}
+.nest .cpk-row{display:flex;gap:8px;align-items:center}
+.nest .cpk-in{flex:1;width:auto;min-width:0}
+.nest .cpk-in input{font:600 13px var(--fb);font-variant-numeric:tabular-nums}
+.nest .cpk-chip{flex:none;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line2);background:linear-gradient(var(--cpk),var(--cpk)),conic-gradient(var(--line2) 25%,var(--card) 0 50%,var(--line2) 0 75%,var(--card) 0) 0 0/8px 8px}
+.nest .cpk-out{display:flex;flex-wrap:wrap;gap:4px 12px;font:600 12px var(--fb);color:var(--ink3)}
+.nest .cpk-btn{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 8px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);cursor:pointer;transition:background var(--t1),border-color var(--t1)}
+.nest .cpk-btn:hover:not(:disabled){background:var(--sunk);border-color:var(--ink3)}
+.nest .cpk-btn:disabled{opacity:.4;cursor:not-allowed}
+.nest .cpk-btn code{font:600 12px var(--fb);font-variant-numeric:tabular-nums;background:none;border:0;padding:0}
+.nest .lnk{border:0;background:none;padding:0;font:700 12px var(--fb);color:var(--vD);cursor:pointer}
+.nest .lnk:hover{text-decoration:underline}
+.nest .lnk:disabled{opacity:.4;cursor:not-allowed;text-decoration:none}

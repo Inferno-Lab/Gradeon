@@ -4,7 +4,7 @@ import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { closeModules, contrastRatio } from '@gradeon/config-engine';
 import { WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { Field, SelectField, Swatches, useShake } from '@gradeon/web-ui';
+import { ColourField, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -185,7 +185,7 @@ export function WizardPage() {
           <div className="two">{f('branding', 'appName', 'Name in the app', { hint: 'Shown on the home screen' })}{f('branding', 'logoText', 'Logo letters', { maxLength: 2, hint: 'One or two letters' })}</div>
           {f('branding', 'tagline', 'Tagline (optional)')}
           <div className="lbl" style={{ margin: '8px 0' }}>Brand colour</div>
-          <Swatches label="Brand colour" value={String(data.branding.color)} onPick={(c) => set('branding', 'color', c)} />
+          <ColourField label="Brand colour" value={String(data.branding.color)} onChange={(c) => set('branding', 'color', c)} />
           {errs['branding.color'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['branding.color']}</div>}
           <div style={{ marginTop: 18, borderRadius: 22, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--sunk)' }} aria-label="App preview">
             <div style={{ padding: '14px 14px 18px', color: '#fff', background: str(data.branding.color), font: '700 13.5px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>

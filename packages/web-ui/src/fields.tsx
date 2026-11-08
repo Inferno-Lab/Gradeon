@@ -219,49 +219,6 @@ export function NumberField({ label, value, onChange, error, hint, disabled, min
 
 // ── colours ─────────────────────────────────────────────────────────────────
 /** The colours a school can choose for its brand, the same everywhere they are offered. */
-export const BRAND_SWATCHES: [string, string][] = [['Violet', '#6A4CF5'], ['Maroon', '#8C1D40'], ['Teal', '#0F7C86'], ['Orange', '#C2410C'], ['Blue', '#2F5BEA'], ['Green', '#1F8F5F']];
-const HEX = /^#[0-9a-f]{6}$/i;
-
-/** The brand colours as round swatches, the chosen one ringed and ticked. */
-export function Swatches({ label, value, onPick, disabled, colours = BRAND_SWATCHES }: { label: string; value: string; onPick: (c: string) => void; disabled?: boolean; colours?: [string, string][] }) {
-  return (
-    <div className="sw5" role="radiogroup" aria-label={label}>
-      {colours.map(([n, c]) => {
-        const on = c.toLowerCase() === value.toLowerCase();
-        return (
-          <button key={c} type="button" role="radio" aria-checked={on} aria-label={n} disabled={disabled} className={on ? 'on' : ''} style={{ background: c, '--c2': c } as React.CSSProperties} onClick={() => onPick(c)}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 2.6 }}></path></svg>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** A colour: a brand swatch, or any hex typed in. The value is #RRGGBB. */
-export function ColourField({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
-  const btn = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  const [hex, setHex] = useState(value);
-  useEffect(() => setHex(value), [value]);
-  return (
-    <div>
-      <button ref={btn} type="button" className="btn" disabled={disabled} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label={`${label}: ${value}`}>
-        <span style={{ width: 20, height: 20, borderRadius: '50%', background: value, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.12)' }} />
-        <code>{value}</code>
-      </button>
-      <Pop open={open} anchor={btn} onClose={() => setOpen(false)} label={label} minWidth={260}>
-        <Swatches label={label} value={value} onPick={(c) => { onChange(c); setOpen(false); btn.current?.focus(); }} />
-        <div className="inp" style={{ marginTop: 12, height: 44 }}>
-          <input value={hex} onChange={(e) => setHex(e.target.value)} aria-label={`${label} as hex`} placeholder="#2F5BD3" maxLength={7}
-            onKeyDown={(e) => { if (e.key === 'Enter' && HEX.test(hex)) { onChange(hex.toUpperCase()); setOpen(false); btn.current?.focus(); } }}
-            onBlur={() => { if (HEX.test(hex)) onChange(hex.toUpperCase()); else setHex(value); }} />
-        </div>
-      </Pop>
-    </div>
-  );
-}
-
 // ── ticks and files ─────────────────────────────────────────────────────────
 /** A tick box. With `label`, the words beside it toggle it too. */
 export function Checkbox({ checked, onChange, label, disabled, ...aria }: { checked: boolean; onChange: (v: boolean) => void; label?: ReactNode; disabled?: boolean; 'aria-label'?: string }) {
