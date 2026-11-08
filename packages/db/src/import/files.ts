@@ -40,6 +40,46 @@ export function toCsv(rows: string[][]): string {
   return `﻿${rows.map((r) => r.map(q).join(',')).join('\r\n')}\r\n`;
 }
 
+const esc = (v: string) => v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+const colName = (i: number) => { let s = ''; for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
+const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+export interface XlsxSheet {
+  name: string;
+  rows: string[][];
+  /** Dropdowns: column index -> the values it takes (rows 2 to 2000). */
+  lists?: Record<number, readonly string[]>;
+  widths?: number[];
+}
+
+/**
+ * An .xlsx Excel and Sheets open: every cell is text (so "8 A", 2019/0412 and phone numbers stay as typed), the first
+ * row is bold and frozen, and a column can carry a dropdown. Built by hand on `zip`, like the importer reads one.
+ */
+export function xlsx(sheets: XlsxSheet[]): Buffer {
+  const sheetXml = (s: XlsxSheet) => {
+    const width = s.rows[0]?.length ?? 1;
+    const cols = Array.from({ length: width }, (_, i) => `<col min="${i + 1}" max="${i + 1}" width="${s.widths?.[i] ?? 18}" style="2" customWidth="1"/>`).join('');
+    const data = s.rows.map((r, i) => `<row r="${i + 1}">${r.map((v, j) => (v === '' ? '' : `<c r="${colName(j)}${i + 1}" s="${i === 0 ? 1 : 2}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`)).join('')}</row>`).join('');
+    const lists = Object.entries(s.lists ?? {});
+    const dv = lists.length ? `<dataValidations count="${lists.length}">${lists.map(([j, values]) => `<dataValidation type="list" allowBlank="1" showErrorMessage="1" errorTitle="Not on the list" error="Choose one of: ${esc(values.join(', '))}" sqref="${colName(Number(j))}2:${colName(Number(j))}2000"><formula1>&quot;${esc(values.join(','))}&quot;</formula1></dataValidation>`).join('')}</dataValidations>` : '';
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="${MAIN}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${data}</sheetData>${dv}</worksheet>`;
+  };
+  // Sheet names: at most 31 characters, none of []:*?/\
+  const name = (n: string) => n.replace(/[[\]:*?/\\]/g, ' ').slice(0, 31);
+  const files = [
+    { name: '[Content_Types].xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>` },
+    { name: '_rels/.rels', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: 'xl/workbook.xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets>${sheets.map((s, i) => `<sheet name="${esc(name(s.name))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>` },
+    { name: 'xl/_rels/workbook.xml.rels', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="${REL}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="${REL}/styles" Target="styles.xml"/></Relationships>` },
+    // Three cell styles: the default, the bold heading, and text (number format 49, "@") for everything typed.
+    { name: 'xl/styles.xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${MAIN}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="49" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/><xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+    ...sheets.map((s, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, content: sheetXml(s) })),
+  ];
+  return zip(files);
+}
+
 /** A ZIP of text files, stored without compression: every unzip tool opens it, and it needs nothing beyond node:zlib's crc32. */
 export function zip(files: { name: string; content: string }[]): Buffer {
   const parts: Buffer[] = [];

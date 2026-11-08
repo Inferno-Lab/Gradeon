@@ -7,7 +7,7 @@ import {
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { gradeOf } from './learning.service.js';
-import { AuditService, Messenger } from './support.js';
+import { AuditService, Messenger, SettingsService } from './support.js';
 
 type User = { id: string; name: string };
 const esc = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -30,6 +30,7 @@ export class OfficeService {
   constructor(
     private readonly audit: AuditService,
     private readonly messenger: Messenger,
+    private readonly settings: SettingsService,
   ) {}
 
   // Invoices and receipts
@@ -82,7 +83,7 @@ export class OfficeService {
     const info = REPORTS.find((r) => r.id === id);
     if (!info) throw notFound('That report');
     const today = istToday();
-    const last = latestSchoolDay(today, [0]);
+    const last = latestSchoolDay(today, await this.settings.offDays(t));
     const from = addDays(last, -42);
     const base = { id, title: info.title };
     if (id === 'attendance-class') {

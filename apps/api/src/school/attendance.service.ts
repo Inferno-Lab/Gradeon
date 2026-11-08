@@ -7,7 +7,6 @@ import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
-const OFF_DAYS = [0];
 
 @Injectable()
 export class AttendanceService {
@@ -74,6 +73,7 @@ export class AttendanceService {
 
   /** Percentage present for each of the last six school days, with the same weekday a week earlier for comparison. */
   async week(t: TenantCtx, count = 6): Promise<AttendanceWeekPoint[]> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const today = istToday();
     const last = latestSchoolDay(today, OFF_DAYS);
     const days = schoolDaysEnding(last, count, OFF_DAYS);
@@ -90,6 +90,7 @@ export class AttendanceService {
   }
 
   async unmarked(t: TenantCtx): Promise<{ id: string; name: string; teacherId: string | null }[]> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const last = latestSchoolDay(istToday(), OFF_DAYS);
     const { rows } = await t.pool.query<{ id: string; name: string; teacher: string | null }>(
       `select c.id, c.name, c.class_teacher_id teacher from classes c where not exists (select 1 from attendance_sessions a where a.class_id = c.id and a.date = $1)

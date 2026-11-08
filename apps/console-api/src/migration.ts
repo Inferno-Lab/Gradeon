@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Patch, Post } from '@nestjs/common';
 import { activeFeatures, activeModules } from '@gradeon/config-engine';
 import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
-import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateCsv, undoBatch } from '@gradeon/db';
+import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateXlsx, undoBatch } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
@@ -168,10 +168,11 @@ export class MigrationController {
     return this.migration.mark(me, id, body);
   }
 
-  @Get('template/:kind') @Needs('schools.read') @Header('content-type', 'text/csv; charset=utf-8')
-  template(@Param('kind') kind: string): string {
+  /** The kind's template as an .xlsx with dropdowns (CSV still imports; this is the friendlier sheet to fill). */
+  @Get('template/:kind') @Needs('schools.read') @Header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  template(@Param('kind') kind: string): Buffer {
     if (!importKind(kind)) throw notFound('That kind of import');
-    return templateCsv(kind);
+    return templateXlsx(kind);
   }
 
   @Get('uploads/:uploadId') @Needs('schools.read')

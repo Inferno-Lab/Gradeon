@@ -9,7 +9,6 @@ import { AttendanceService } from './attendance.service.js';
 import { FeesService } from './fees.service.js';
 import { SettingsService } from './support.js';
 
-const OFF_DAYS = [0];
 /** The run-up to exams that the sidebar card counts down through. */
 const REVISION_WINDOW_DAYS = 17;
 
@@ -25,6 +24,7 @@ export class DashboardService {
   ) {}
 
   async get(t: TenantCtx, user: { id: string; name: string }, count = 6): Promise<DashboardData> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const today = istToday();
     const last = latestSchoolDay(today, OFF_DAYS);
     const doc = await this.settings.doc(t);
@@ -99,6 +99,7 @@ export class DashboardService {
   }
 
   private async homeworkWeek(t: TenantCtx, last: string, count: number): Promise<number[]> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const days = schoolDaysEnding(last, count, OFF_DAYS);
     const { rows } = await t.pool.query<{ d: string; pct: number | null }>(
       `select to_char(h.assigned_on,'YYYY-MM-DD') d, avg(case when hs.on_time then 100.0 else 0.0 end) pct from homework h join homework_submissions hs on hs.homework_id = h.id where h.assigned_on = any($1::date[]) group by 1`, [days]);
@@ -122,6 +123,7 @@ export class DashboardService {
 
   /** The small slice every page needs for the menu. */
   async shell(t: TenantCtx, modules: string[], features: string[]): Promise<ShellData> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const last = latestSchoolDay(istToday(), OFF_DAYS);
     const v = (await this.settings.doc(t)).values;
     const [unmarked, counts] = await Promise.all([modules.includes('attendance') ? this.attendance.unmarked(t) : Promise.resolve([]), this.approvals.counts(t)]);
