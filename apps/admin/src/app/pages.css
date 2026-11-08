@@ -1,6 +1,6 @@
 /* Admin pages without a canvas board of their own: attendance, fees, notices. Built from the shared blocks and these few rules. */
 .pg-p .mk{display:inline-flex;gap:6px;padding:4px;border-radius:999px;background:var(--sunk)}
-.pg-p .mk button{height:40px;min-width:92px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--ink3);font:800 13px var(--fb);cursor:pointer;transition:background .25s,color .25s,transform .35s var(--sp)}
+.pg-p .mk button{height:40px;min-width:92px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--ink3);font:800 13px var(--fb);cursor:pointer;transition:background var(--t2),color var(--t2),transform var(--t3) var(--e)}
 .pg-p .mk button:hover:not(:disabled){color:var(--ink)}
 .pg-p .mk button[aria-pressed=true].p{background:var(--pri);color:var(--priT)}
 .pg-p .mk button[aria-pressed=true].l{background:var(--aS);color:var(--aD)}
@@ -11,7 +11,7 @@
 .pg-p .rcall .rn{font:800 13px var(--fb);color:var(--ink3)}
 .pg-p .big{font:700 40px/1 var(--fd);letter-spacing:-.04em}
 .pg-p .meter{display:flex;gap:4px;height:22px;margin-top:14px}
-.pg-p .meter i{border-radius:6px;transition:flex .6s var(--e)}
+.pg-p .meter i{border-radius:6px;transition:flex var(--t3) var(--e)}
 .pg-p .ntc{display:flex;flex-direction:column;gap:6px;padding:18px 0;border-top:1px solid var(--line)}
 .pg-p .ntc:first-child{border-top:0}
 .pg-p .ntc b{font:700 16px var(--fd);letter-spacing:-.01em}
@@ -29,7 +29,7 @@
 .nest .exb{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:26px 22px;align-items:start}
 .nest .exbs{min-width:0;display:flex;flex-direction:column;gap:2px}
 .nest .exbs .exg{grid-template-columns:minmax(0,1fr)}
-.nest .exc{display:flex;flex-direction:column;gap:8px;text-align:left;padding:18px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);color:inherit;cursor:pointer;font:inherit;transition:transform .4s var(--e),border-color .2s,box-shadow .4s}
+.nest .exc{display:flex;flex-direction:column;gap:8px;text-align:left;padding:18px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);color:inherit;cursor:pointer;font:inherit;transition:transform var(--t3) var(--e),border-color var(--t2),box-shadow var(--t3)}
 .nest .exc:hover{transform:translateY(-3px);border-color:var(--v2);box-shadow:var(--sh2)}
 .nest .exs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .nest .exr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);min-height:52px}
@@ -44,7 +44,7 @@
 .nest .mkr:hover{background:var(--sunk)}
 .nest .mkc{display:flex;align-items:center;gap:4px;justify-content:center}
 .nest .mkc .hws{width:58px}
-.nest .abs{width:24px;height:24px;border-radius:8px;border:0;background:var(--sunk);color:var(--ink3);font:800 11px var(--fb);cursor:pointer;flex:none;transition:background .2s,color .2s}
+.nest .abs{width:24px;height:24px;border-radius:8px;border:0;background:var(--sunk);color:var(--ink3);font:800 11px var(--fb);cursor:pointer;flex:none;transition:background var(--t2),color var(--t2)}
 .nest .abs.on{background:var(--rF);color:#fff}
 
 .nest .adm{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:14px;overflow-x:auto;padding-bottom:10px;align-items:start}
@@ -54,7 +54,7 @@
 .nest .admc>small{padding:0 4px 6px;color:var(--ink3);font:600 12px var(--fb)}
 .nest .admcl{display:flex;flex-direction:column;gap:10px;max-height:min(64dvh,620px);padding:2px;--scbg:var(--sunk)}
 .nest .admn{padding:22px 8px;text-align:center;color:var(--ink3);font:600 13px var(--fb);border:2px dashed var(--line2);border-radius:16px}
-.nest .admk{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--sh1);transition:transform .35s var(--e),box-shadow .35s}
+.nest .admk{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--sh1);transition:transform var(--t3) var(--e),box-shadow var(--t3)}
 .nest .admk:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
 .nest .admo{display:flex;align-items:center;gap:10px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:0;min-width:0}
 .nest .admo>span{min-width:0}
@@ -63,7 +63,7 @@
 
 .nest .rpg{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:18px;align-items:start}
 .nest .rpl{padding:14px;display:flex;flex-direction:column;gap:12px;max-height:min(72dvh,720px);overflow-y:auto}
-.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background .2s}
+.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
 .nest .rpb:hover{background:var(--sunk)}
 .nest .rpb.on{background:var(--vS);color:var(--vD)}
 .nest .rpb b{display:block;font:700 14.5px var(--fb)}
@@ -73,7 +73,7 @@
 
 .nest .msg{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:18px;align-items:stretch}
 .nest .msl,.nest .mst{overflow:hidden}
-.nest .mti{display:flex;gap:12px;width:100%;text-align:left;padding:14px 16px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background .2s}
+.nest .mti{display:flex;gap:12px;width:100%;text-align:left;padding:14px 16px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
 .nest .mti:hover{background:var(--sunk)}
 .nest .mti.on{background:var(--vS)}
 .nest .mti b{font:700 14px var(--fb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -108,7 +108,7 @@
 .nest .evcol{display:flex;flex-direction:column;gap:18px;min-width:0}
 .nest .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px}
 .nest .calh{text-align:center;font:800 11px var(--fb);color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;padding:4px 0}
-.nest .calc{position:relative;aspect-ratio:1;min-height:42px;border:0;border-radius:14px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:background .2s,transform .3s var(--sp)}
+.nest .calc{position:relative;aspect-ratio:1;min-height:42px;border:0;border-radius:14px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:background var(--t2),transform var(--t3) var(--e)}
 .nest .calc:hover{background:var(--sunk)}
 .nest .calc.now{box-shadow:inset 0 0 0 2px var(--v)}
 .nest .calc.sel{background:var(--v);color:var(--onV)}
@@ -117,7 +117,7 @@
 .nest .cald i{width:6px;height:6px}
 .nest .k-event{background:var(--v)}.nest .k-ptm{background:var(--ink)}.nest .k-exam{background:var(--a)}.nest .k-holiday{background:var(--g)}.nest .k-routine{background:var(--ink3)}.nest .k-cover{background:var(--b)}
 .nest .calc.sel .cald i{background:var(--onV)}
-.nest .evi{display:flex;gap:14px;align-items:flex-start;width:100%;padding:14px 4px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background .2s}
+.nest .evi{display:flex;gap:14px;align-items:flex-start;width:100%;padding:14px 4px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
 .nest .evi:first-child{border-top:0}
 .nest .evi:hover{background:var(--sunk)}
 .nest .evk{width:10px;height:10px;margin-top:6px;flex:none}

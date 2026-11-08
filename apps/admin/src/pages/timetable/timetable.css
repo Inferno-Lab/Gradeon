@@ -5,17 +5,17 @@
 @media (max-width:1150px){.pg-timetable .bd{grid-template-columns:minmax(0,1fr)}}
 .pg-timetable .wk{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pg-timetable .wkp{display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 6px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card)}
-.pg-timetable .wkp button{width:30px;height:30px;border:0;border-radius:50%;background:none;color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .3s var(--sp)}
+.pg-timetable .wkp button{width:30px;height:30px;border:0;border-radius:50%;background:none;color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:background var(--t2),transform var(--t3) var(--e)}
 .pg-timetable .wkp button:hover{background:var(--sunk);transform:scale(1.1)}
 .pg-timetable .wkp span{font:800 13.5px var(--fb);padding:0 8px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .pg-timetable .tg{display:grid;grid-template-columns:78px repeat(5,minmax(0,1fr));gap:8px;padding:16px 16px 18px;background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--sh1)}
 .pg-timetable .trow{display:contents}
 .pg-timetable .dh{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 10px;font:700 12.5px var(--fb);color:var(--ink3)}
-.pg-timetable .dh b{font:700 22px var(--fd);letter-spacing:-.03em;color:var(--ink);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;transition:background .3s,color .3s}
+.pg-timetable .dh b{font:700 22px var(--fd);letter-spacing:-.03em;color:var(--ink);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;transition:background var(--t3),color var(--t3)}
 .pg-timetable .dh.today b{background:var(--v);color:var(--onV);box-shadow:none}
 .pg-timetable .tl{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding-right:6px;font:800 12px var(--fb);color:var(--ink3)}
 .pg-timetable .tl small{font:700 10.5px var(--fb);opacity:.7}
-.pg-timetable .cl{position:relative;height:76px;border:0;border-radius:18px;text-align:left;padding:10px 12px;display:flex;flex-direction:column;gap:2px;cursor:pointer;font-family:var(--fb);color:var(--ink);transition:transform .4s var(--sp),box-shadow .35s,filter .2s;overflow:hidden;animation:nPop .7s var(--sp) both;animation-delay:var(--d)}
+.pg-timetable .cl{position:relative;height:76px;border:0;border-radius:18px;text-align:left;padding:10px 12px;display:flex;flex-direction:column;gap:2px;cursor:pointer;font-family:var(--fb);color:var(--ink);transition:transform var(--t3) var(--e),box-shadow var(--t3),filter var(--t2);overflow:hidden;animation:nPop var(--t3) var(--e) both;animation-delay:var(--d)}
 .pg-timetable .cl:hover{transform:translateY(-3px);box-shadow:var(--sh2);filter:brightness(1.02)}
 .pg-timetable .cl:active{transform:scale(.97)}
 .pg-timetable .cl b{font:800 14px var(--fb);letter-spacing:-.01em}
@@ -27,34 +27,33 @@
 .pg-timetable .cl.bad.sel{box-shadow:inset 0 0 0 2px var(--r),0 0 0 3px var(--card),0 0 0 5.5px var(--r)}
 .pg-timetable .cl .alert{position:absolute;right:9px;top:9px;width:22px;height:22px;border-radius:50%;background:var(--rF);color:#fff;display:grid;place-items:center;animation:none}
 
-.pg-timetable .cl .fixed{position:absolute;right:9px;top:9px;width:22px;height:22px;border-radius:50%;background:var(--g);color:var(--card);display:grid;place-items:center;animation:nPop .6s var(--sp)}
+.pg-timetable .cl .fixed{position:absolute;right:9px;top:9px;width:22px;height:22px;border-radius:50%;background:var(--g);color:var(--card);display:grid;place-items:center;animation:nPop var(--t3) var(--e)}
 .pg-timetable .cl.now::after{content:"";position:absolute;left:12px;right:12px;bottom:8px;height:4px;border-radius:2px;background:color-mix(in srgb,currentColor 18%,transparent)}
-.pg-timetable .cl.now::before{content:"";position:absolute;left:12px;bottom:8px;height:4px;width:var(--pg);border-radius:2px;background:currentColor;z-index:1;animation:fillw 2s var(--e) both}
-@keyframes fillw{from{width:0}}
+.pg-timetable .cl.now::before{content:"";position:absolute;left:12px;bottom:8px;height:4px;width:var(--pg);border-radius:2px;background:currentColor;z-index:1;animation:fillw var(--t3) var(--e) both}
 .pg-timetable .br{grid-column:2/-1;height:36px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px;font:700 12.5px var(--fb);color:var(--ink3);background:repeating-linear-gradient(90deg,var(--sunk) 0 10px,transparent 10px 20px)}
 .pg-timetable .side{display:flex;flex-direction:column;gap:16px}
 .pg-timetable .card .k{font:700 12.5px var(--fb);color:var(--ink3)}
-.pg-timetable .det{padding:20px;border-radius:24px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh1);display:flex;flex-direction:column;gap:14px;animation:nRise .6s var(--e)}
+.pg-timetable .det{padding:20px;border-radius:24px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh1);display:flex;flex-direction:column;gap:14px;animation:nRise var(--t3) var(--e)}
 .pg-timetable .det .sw1{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font:800 18px var(--fd)}
-.pg-timetable .call{display:flex;gap:10px;padding:14px;border-radius:18px;background:var(--rS);color:var(--r);font:600 13.5px/1.45 var(--fb);animation:nRise .6s var(--e)}
+.pg-timetable .call{display:flex;gap:10px;padding:14px;border-radius:18px;background:var(--rS);color:var(--r);font:600 13.5px/1.45 var(--fb);animation:nRise var(--t3) var(--e)}
 .pg-timetable .call svg{width:20px;height:20px;flex:none;margin-top:1px}
 .pg-timetable .call.ok{background:var(--gS);color:var(--gD)}
 .pg-timetable .lr{display:flex;align-items:center;gap:12px;padding:7px 0}
 .pg-timetable .lr b{font:700 13.5px var(--fb);display:block}
 .pg-timetable .lr small{font:600 12px var(--fb);color:var(--ink3)}
 .pg-timetable .lb{height:8px;border-radius:4px;background:var(--sunk);flex:1;overflow:hidden}
-.pg-timetable .lb i{display:block;height:100%;border-radius:4px;background:var(--v);transition:width 1.2s var(--e)}
+.pg-timetable .lb i{display:block;height:100%;border-radius:4px;background:var(--v);transition:width var(--t3) var(--e)}
 .pg-timetable .lb i.hot{background:var(--c)}
 .pg-timetable .ring{width:84px;height:84px;transform:rotate(-90deg);flex:none}
 .pg-timetable .ring circle{fill:none;stroke-width:9;stroke-linecap:round}
 .pg-timetable .ring .bg{stroke:var(--sunk)}
-.pg-timetable .ring .fg{stroke:var(--v);stroke-dasharray:226;transition:stroke-dashoffset 1.4s var(--e),stroke .4s}
-.pg-timetable .un{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1.5px dashed var(--line2);font:700 13px var(--fb);cursor:grab;transition:border-color .2s,background .2s,transform .3s var(--sp)}
+.pg-timetable .ring .fg{stroke:var(--v);stroke-dasharray:226;transition:stroke-dashoffset var(--t3) var(--e),stroke var(--t3)}
+.pg-timetable .un{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1.5px dashed var(--line2);font:700 13px var(--fb);cursor:grab;transition:border-color var(--t2),background var(--t2),transform var(--t3) var(--e)}
 .pg-timetable .un:hover{border-color:var(--v);background:var(--vL);transform:translateX(4px)}
 
 /* List view and small screens. */
 .pg-timetable .lst{display:flex;flex-direction:column;gap:6px}
-.pg-timetable .lrow{display:grid;grid-template-columns:70px minmax(0,1.2fr) minmax(0,1fr) 120px;gap:12px;align-items:center;height:52px;padding:0 16px;border:0;border-radius:16px;font:600 14px var(--fb);text-align:left;cursor:pointer;color:var(--ink);transition:transform .3s var(--e),filter .2s}
+.pg-timetable .lrow{display:grid;grid-template-columns:70px minmax(0,1.2fr) minmax(0,1fr) 120px;gap:12px;align-items:center;height:52px;padding:0 16px;border:0;border-radius:16px;font:600 14px var(--fb);text-align:left;cursor:pointer;color:var(--ink);transition:transform var(--t3) var(--e),filter var(--t2)}
 .pg-timetable .lrow:hover{transform:translateX(4px);filter:brightness(1.03)}
 .pg-timetable .lrow .d{font:800 12.5px var(--fb);opacity:.7}
 .pg-timetable .lrow.v{background:var(--vS);color:var(--vD)}.pg-timetable .lrow.g{background:var(--gS);color:var(--gD)}.pg-timetable .lrow.c{background:var(--cS);color:var(--cD)}.pg-timetable .lrow.a{background:var(--aS);color:var(--aD)}.pg-timetable .lrow.b{background:var(--bS);color:var(--b)}.pg-timetable .lrow.n{background:var(--sunk)}.pg-timetable .lrow.bad{background:var(--rS);color:var(--r)}

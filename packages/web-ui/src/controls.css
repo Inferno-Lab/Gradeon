@@ -1,14 +1,14 @@
 /* The dropdown, the tooltip and the switch. Flat and crisp: borders and fills change on hover and focus, nothing glows. */
 
 /* Dropdown button */
-.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color var(--t1),background var(--t1)}
 .nest .sx:hover:not(:disabled){border-color:var(--ink3)}
 .nest .sx:focus-visible,.nest .sx.open{outline:0;border-color:var(--v)}
 .nest .sx.err{border-color:var(--r)}
 .nest .sx:disabled{opacity:.5;cursor:not-allowed}
 .nest .sxv{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nest .sxc{width:28px;height:28px;border-radius:50%;background:var(--sunk);color:var(--ink2);display:grid;place-items:center;flex:none;transition:background .15s,color .15s}
-.nest .sxc svg{width:16px;height:16px;transition:transform .2s var(--e)}
+.nest .sxc{width:28px;height:28px;border-radius:50%;background:var(--sunk);color:var(--ink2);display:grid;place-items:center;flex:none;transition:background var(--t1),color var(--t1)}
+.nest .sxc svg{width:16px;height:16px;transition:transform var(--t2) var(--e)}
 .nest .sx:hover:not(:disabled) .sxc{color:var(--ink)}
 .nest .sx.open .sxc{background:var(--vS);color:var(--vD)}
 .nest .sx.open .sxc svg{transform:rotate(180deg)}
@@ -40,8 +40,8 @@
 .nest .tipx.rt{transform:translate(0,-50%)}
 
 /* Switch: a small flat track and a round knob. Off is a quiet grey, on is the brand colour. */
-.nest .sw{width:38px;height:22px;border-radius:999px;border:0;padding:0;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background .18s}
-.nest .sw::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:none;transition:transform .2s var(--e)}
+.nest .sw{width:38px;height:22px;border-radius:999px;border:0;padding:0;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background var(--t2)}
+.nest .sw::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:none;transition:transform var(--t2) var(--e)}
 .nest .sw:hover:not(:disabled){background:color-mix(in srgb,var(--line2) 70%,var(--ink3))}
 .nest .sw.on,.nest .sw.on:hover:not(:disabled){background:var(--v)}
 .nest .sw.on::after{transform:translateX(16px)}

@@ -3,7 +3,7 @@
 .nest .pin input{flex:1;border:0;outline:0;background:none;font:600 17px var(--fb);color:var(--ink)}
 .nest .pin svg{width:20px;height:20px}
 .nest .pg{font:800 11px var(--fb);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:14px 20px 6px}
-.nest .po{display:flex;align-items:center;gap:12px;width:calc(100% - 16px);margin:0 8px;height:46px;padding:0 12px;border:0;border-radius:16px;background:none;color:var(--ink);font:700 14.5px var(--fb);cursor:pointer;text-align:left;position:relative;transition:background .15s}
+.nest .po{display:flex;align-items:center;gap:12px;width:calc(100% - 16px);margin:0 8px;height:46px;padding:0 12px;border:0;border-radius:16px;background:none;color:var(--ink);font:700 14.5px var(--fb);cursor:pointer;text-align:left;position:relative;transition:background var(--t1)}
 .nest .po.act{background:var(--vS);color:var(--vD)}
 .nest .po .pic{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--sunk);color:var(--ink2);flex:none}
 .nest .po.act .pic{background:var(--card);color:var(--v)}
