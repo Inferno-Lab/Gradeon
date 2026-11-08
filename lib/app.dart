@@ -5,6 +5,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_pages.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_theme.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/translations/app_translations.dart';
@@ -26,8 +27,10 @@ class GradeonApp extends StatelessWidget {
       initialRoute: AppRoutes.splash,
       getPages: AppPages.pages,
       theme: AppTheme.resolve(mode: AppThemeMode.light, platformBrightness: Brightness.light),
-      builder: (context, child) {
-        return Obx(() {
+      // A new palette from the school rebuilds the themes; the mode, text size and motion come from ThemeService.
+      builder: (context, child) => ValueListenableBuilder<int>(
+        valueListenable: AppPalette.version,
+        builder: (context, _, _) => Obx(() {
           final data = AppTheme.resolve(
             mode: theme.mode.value,
             platformBrightness: MediaQuery.platformBrightnessOf(context),
@@ -43,8 +46,8 @@ class GradeonApp extends StatelessWidget {
               child: ToastHost(child: child ?? const SizedBox.shrink()),
             ),
           );
-        });
-      },
+        }),
+      ),
     );
   }
 }

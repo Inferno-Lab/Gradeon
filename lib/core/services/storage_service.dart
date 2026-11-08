@@ -4,6 +4,7 @@ import 'package:get_storage/get_storage.dart';
 
 abstract final class StorageKeys {
   static const themeMode = 'themeMode';
+  static const palette = 'palette';
   static const textScale = 'textScale';
   static const onboardingSeen = 'onboardingSeen';
   static const welcomeSeen = 'welcomeSeen';

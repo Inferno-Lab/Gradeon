@@ -837,7 +837,7 @@ class _TeacherArt extends StatelessWidget {
                               ),
                               TextSpan(
                                 text: 'onboarding.tally_late'.tr,
-                                style: const TextStyle(color: AppColors.late),
+                                style: TextStyle(color: AppColors.late),
                               ),
                             ],
                           ),

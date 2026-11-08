@@ -623,7 +623,7 @@ class _ClassCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (live != null) const Padding(padding: EdgeInsets.only(left: 8), child: PulseDot(AppColors.ok)),
+                if (live != null) Padding(padding: EdgeInsets.only(left: 8), child: PulseDot(AppColors.ok)),
               ],
             ),
           ),

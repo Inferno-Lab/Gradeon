@@ -596,7 +596,7 @@ class DueSection extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
+                Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
                 const SizedBox(width: 12),
                 Expanded(child: Text('home.nothing_due'.tr, style: context.type.t)),
               ],

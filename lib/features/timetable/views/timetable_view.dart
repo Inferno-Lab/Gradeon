@@ -235,7 +235,7 @@ class _DayPicker extends StatelessWidget {
                     color: c.dark ? const Color(0x38FFFFFF) : const Color(0xCCFFFFFF),
                     borderRadius: BorderRadius.circular(26),
                     border: Border.all(color: const Color(0x66FFFFFF)),
-                    boxShadow: [BoxShadow(color: c.glassShadow, blurRadius: 10, spreadRadius: -3, offset: const Offset(0, 3))],
+                    boxShadow: [BoxShadow(color: c.shadow, blurRadius: 10, spreadRadius: -3, offset: const Offset(0, 3))],
                   ),
                 ),
               ),

@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/painting.dart';
 import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 
 /// Reads the school's own name and tagline from its API at start-up, so the app follows what the school sets in its admin.
 /// Without a build profile (`SCHOOL` and `API_BASE_URL`) nothing happens and the demo values stay. A slow or failed call
@@ -11,7 +13,7 @@ import 'package:gradeon/core/config/app_config.dart';
 class SchoolProfileService {
   const SchoolProfileService._();
 
-  static Future<void> load() async {
+  static Future<void> load(StorageService storage) async {
     if (!AppConfig.live) return;
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
@@ -29,6 +31,12 @@ class SchoolProfileService {
       final color = json['color'];
       if (color is String && RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(color)) {
         AppConfig.schoolColor = Color(int.parse('FF${color.substring(1)}', radix: 16));
+      }
+      // Every colour of the app as the console set it, kept for the next start.
+      final palette = json['palette'];
+      if (palette is Map) {
+        AppPalette.apply(Map<String, dynamic>.from(palette));
+        await storage.write(StorageKeys.palette, palette);
       }
       final logo = json['logoText'];
       if (logo is String && logo.trim().isNotEmpty) AppConfig.schoolMark = logo.trim().toUpperCase();

@@ -634,7 +634,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                                   ),
                                 ],
                               ),
-                              child: const Icon(PhosphorIconsBold.arrowUp, color: AppColors.mariInk, size: 22),
+                              child: Icon(PhosphorIconsBold.arrowUp, color: AppColors.mariInk, size: 22),
                             ),
                           ),
                         ),

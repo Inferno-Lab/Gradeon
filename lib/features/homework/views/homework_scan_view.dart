@@ -179,7 +179,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const PulseDot(AppColors.mari),
+                      PulseDot(AppColors.mari),
                       const SizedBox(width: 8),
                       Text(
                         (camera == null ? 'scan.starting' : 'scan.hold_still').tr,
@@ -227,7 +227,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                                 constraints: const BoxConstraints(minWidth: 22),
                                 height: 22,
                                 alignment: Alignment.center,
-                                decoration: const BoxDecoration(color: AppColors.mari, shape: BoxShape.circle),
+                                decoration: BoxDecoration(color: AppColors.mari, shape: BoxShape.circle),
                                 child: Text(
                                   '${_pages.length}',
                                   style: anek(12, 760, height: 1, color: AppColors.mariInk),
@@ -330,7 +330,7 @@ class _GuideState extends State<_Guide> with SingleTickerProviderStateMixin {
                   width: w + 24,
                   top: top + h * Curves.easeInOut.transform(_c.value),
                   height: 2,
-                  child: const DecoratedBox(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [Colors.transparent, AppColors.mari, Colors.transparent]),
                     ),

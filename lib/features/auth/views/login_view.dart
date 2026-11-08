@@ -465,7 +465,7 @@ class _OtpScreenState extends State<_OtpScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(PhosphorIconsRegular.shieldCheck, color: AppColors.ok),
+                            Icon(PhosphorIconsRegular.shieldCheck, color: AppColors.ok),
                             const SizedBox(width: 12),
                             Expanded(child: Text('auth.code_note'.tr, style: context.type.s)),
                           ],

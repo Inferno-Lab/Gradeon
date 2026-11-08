@@ -323,7 +323,7 @@ class _AllPaid extends StatelessWidget {
     padding: const EdgeInsets.all(18),
     child: Row(
       children: [
-        const Icon(PhosphorIconsBold.checkCircle, color: AppColors.ok, size: 28),
+        Icon(PhosphorIconsBold.checkCircle, color: AppColors.ok, size: 28),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -348,7 +348,7 @@ class _DueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final overdue = moneyStatus(item) == MoneyStatus.overdue;
     final days = Formatters.daysUntil(item.dueDate);
-    const ink = AppColors.mariInk;
+    final ink = AppColors.mariInk;
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(26)),

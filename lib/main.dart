@@ -9,6 +9,7 @@ import 'package:gradeon/core/services/school_profile_service.dart';
 import 'package:gradeon/core/services/session_bus.dart';
 import 'package:gradeon/core/services/storage_service.dart';
 import 'package:gradeon/core/services/theme_service.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
@@ -16,8 +17,10 @@ Future<void> main() async {
   AppConfig.assertReleaseUrl();
   ErrorReporter.install();
   await initializeDateFormatting();
-  await SchoolProfileService.load();
   final storage = await StorageService().init();
+  // The school's colours from the last start, so the first frame is already in them; the brand call below refreshes them.
+  AppPalette.apply(storage.read<Map<String, dynamic>>(StorageKeys.palette));
+  await SchoolProfileService.load(storage);
   Get.put(storage, permanent: true);
   final themes = ThemeService(storage)..load();
   Get.put(themes, permanent: true);

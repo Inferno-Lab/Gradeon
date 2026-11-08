@@ -275,7 +275,7 @@ class _PullToRefreshState extends State<_PullToRefresh> {
                       color: c.paper,
                       shape: BoxShape.circle,
                       border: Border.all(color: c.line2),
-                      boxShadow: [BoxShadow(color: c.glassShadow, blurRadius: 12, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: c.shadow, blurRadius: 12, offset: const Offset(0, 4))],
                     ),
                     child: busy
                         ? Padding(

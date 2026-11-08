@@ -79,7 +79,7 @@ class TransportView extends GetView<TransportController> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const PulseDot(AppColors.ok),
+                            PulseDot(AppColors.ok),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(

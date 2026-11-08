@@ -241,7 +241,7 @@ class _Row extends StatelessWidget {
             onTap: () => Get.toNamed<void>(item.route),
             child: Stack(
               children: [
-                if (!item.read) const Positioned(left: 5, top: 28, child: Dot(AppColors.mari, size: 7)),
+                if (!item.read) Positioned(left: 5, top: 28, child: Dot(AppColors.mari, size: 7)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                   child: Row(

@@ -185,7 +185,7 @@ class DayRibbonState extends State<DayRibbon> {
         borderRadius: radius,
       ),
       foregroundDecoration: widget.blockAccent?.call(p) ?? false
-          ? const BoxDecoration(
+          ? BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.mari, width: 5)),
               borderRadius: radius,
             )

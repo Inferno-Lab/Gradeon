@@ -43,7 +43,7 @@ class LeaveView extends GetView<LeaveController> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
+                    Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
                     const SizedBox(width: 8),
                     Text('leave.new'.tr, style: anek(16, 700, height: 1, color: AppColors.mariInk)),
                   ],
