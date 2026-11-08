@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta } from '@gradeon/contracts';
+import { MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
+import { ThemeEditor } from '../../app/ThemeEditor';
 import { ago } from '../../app/format';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -120,6 +121,8 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
       return box(<Select value={str} onChange={onChange} disabled={disabled} aria-label={meta.label} options={(meta.options ?? []).map(([v, l]) => ({ value: v, label: l }))} />);
     case 'number':
       return <div style={{ marginTop: 12 }}><NumberField label={meta.label} min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
+    case 'theme':
+      return box(<ThemeEditor scope="school" value={(value ?? {}) as ThemeColors} onChange={onChange} disabled={disabled} brand={typeof cfg.values['brand.color'] === 'string' ? cfg.values['brand.color'] : undefined} />);
     case 'color':
       return box(<ColourField label={meta.label} value={str || '#6A4CF5'} onChange={onChange} disabled={disabled} />);
     case 'time': case 'date':

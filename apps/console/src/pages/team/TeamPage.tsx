@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { CONSOLE_ROLES, type ConsoleRole, type ConsoleUserRow } from '@gradeon/contracts';
+import { CONSOLE_ROLES, type ConsoleRole, type ConsoleUserRow, type ThemeColors } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, tintFor, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { initials, ago } from '../../app/format';
 import { roleLabel } from '../../app/useChrome';
+import { ThemeEditor } from '../../app/ThemeEditor';
 
 const ROLE_HELP: Record<ConsoleRole, string> = {
   super_admin: 'Everything, including team and policy', implementation: 'Set schools up: configuration, roles and requests', support: 'Look inside schools, read-only', release_manager: 'Releases, migrations and builds',
@@ -62,7 +63,35 @@ export function TeamPage() {
           {CONSOLE_ROLES.map((r) => <div key={r}><b>{roleLabel(r)}</b><small>{ROLE_HELP[r]}</small></div>)}
         </div>
       </Card>
+      <ConsoleColours say={say} />
     </Page>
+  );
+}
+
+/** The console's own colours, for everyone who uses it. A school's colours are under its Configuration → Colours. */
+function ConsoleColours({ say }: { say: (text: string, tone?: 'ok' | 'bad') => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const saved = useQuery({ queryKey: ['console-theme'], queryFn: app.api.theme.get });
+  const [draft, setDraft] = useState<ThemeColors | null>(null);
+  const can = app.can('policy.write');
+  const value = draft ?? saved.data ?? {};
+  const save = useMutation({
+    mutationFn: () => app.api.theme.set(value),
+    onSuccess: (v) => { qc.setQueryData(['console-theme'], v); setDraft(null); say('Saved. The console wears the new colours for everyone.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
+  return (
+    <Card title="Console colours">
+      <div className="help">Every colour of this console, in light and dark. Changes show in the preview first and apply to everyone once saved.</div>
+      <div style={{ marginTop: 16 }}><ThemeEditor scope="console" value={value} onChange={setDraft} disabled={!can || saved.isLoading} /></div>
+      {can && (
+        <div className="tgrow" style={{ marginTop: 16, justifyContent: 'flex-end' }}>
+          <button className="btn" disabled={!draft || save.isPending} onClick={() => setDraft(null)}>Discard</button>
+          <button className="btn pri" disabled={!draft || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save colours'}</button>
+        </div>
+      )}
+    </Card>
   );
 }
 

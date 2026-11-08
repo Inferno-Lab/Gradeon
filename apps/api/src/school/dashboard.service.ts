@@ -133,6 +133,7 @@ export class DashboardService {
         paymentMethods: Array.isArray(v['fees.paymentMethods']) ? (v['fees.paymentMethods'] as string[]) : ['cash', 'upi', 'card', 'netbanking', 'cheque'] },
       term: { name: String(v['term.name'] ?? 'Term 1'), examsLabel: `Exams start ${dayMonth(examsStart)}`, daysToGo, progress: Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))) },
       badges: { attendance: unmarked.length, admissions: counts.admissions, messages: counts.messages }, modules, features,
+      theme: (v['theme.colors'] ?? {}) as ShellData['theme'],
     };
   }
 

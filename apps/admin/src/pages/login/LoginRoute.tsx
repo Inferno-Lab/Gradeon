@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
-import { EmptyCard, LoginPage } from '@gradeon/web-ui';
+import { EmptyCard, LoginPage, useThemeColors } from '@gradeon/web-ui';
 import { session } from '../../app/client';
 
 /** Signs in to the school named in the address: password first, then the code. */
@@ -8,6 +8,7 @@ export function LoginRoute() {
   const { slug, client } = useRouteContext({ from: '__root__' });
   const navigate = useNavigate();
   const brand = useQuery({ queryKey: ['brand', slug], queryFn: client.api.brand, staleTime: 5 * 60_000, retry: false });
+  useThemeColors(brand.data?.theme);
   if (brand.isError) return <NoSchool message={(brand.error as Error).message} />;
   const b = brand.data;
   return (

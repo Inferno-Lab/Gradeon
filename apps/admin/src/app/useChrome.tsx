@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { Dock, IC, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
+import { Dock, IC, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useThemeColors, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import { activeNav, adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 
@@ -23,6 +23,7 @@ export function useChrome() {
   const hits = useQuery({ queryKey: ['search', dq], queryFn: () => api.search(dq), enabled: open, placeholderData: (p) => p });
 
   const data = shell.data;
+  useThemeColors(data?.theme);
   const groups = useMemo(() => adminNav([...(data?.modules ?? ['people', 'timetable']), ...(data?.features ?? [])], base, data?.badges, data && { student: data.school.studentWord, class: data.school.classWord }), [data, base]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
   const goRef = useRef(go);
