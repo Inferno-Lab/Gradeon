@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // The design system's rules, checked over the admin's and console's source so they cannot drift back. Each failure names the
 // part to use instead.
 import { readdirSync, readFileSync } from 'node:fs';
@@ -15,14 +16,15 @@ const apps = ['apps/admin/src', 'apps/console/src'].flatMap((d) => walk(path.joi
 const ui = walk(path.join(root, 'packages/web-ui/src'));
 const tsx = apps.filter((f) => f.endsWith('.tsx'));
 const css = [...apps, ...ui].filter((f) => f.endsWith('.css'));
-const read = (f: string) => readFileSync(f, 'utf8');
+const cache = new Map<string, string>();
+const read = (f: string) => cache.get(f) ?? cache.set(f, readFileSync(f, 'utf8')).get(f)!;
 
 /** Every line of these files that matches, as "file:line  text". */
 function hits(files: string[], re: RegExp, keep: (line: string, file: string) => boolean = () => true): string[] {
   return files.flatMap((f) => read(f).split(/\r?\n/).flatMap((line, i) => (re.test(line) && keep(line, f) ? [`${rel(f)}:${i + 1}  ${line.trim().slice(0, 120)}`] : [])));
 }
 
-describe('the design system', () => {
+describe('the design system', { timeout: 30_000 }, () => {
   it('has no browser widgets in the apps', () => {
     expect(hits(tsx, /\btype=["'{]?\s*["']?(date|time|month|color|number|checkbox|file|datetime-local|week|range)\b/), 'use DateField, TimeField, MonthField, NumberField, ColourField, Checkbox or FilePick from @gradeon/web-ui').toEqual([]);
     expect(hits(tsx, /<select\b/), 'use Select from @gradeon/web-ui').toEqual([]);

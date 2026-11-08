@@ -182,7 +182,7 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade var(--t3) var(--e) both}
 .nest .scrim[data-leaving]{animation:nFadeO var(--t2) var(--ei) forwards}
 /* The layer a dialog or the search box sits in. It centres with a grid, not a transform, so the opening animation can never move it. */
-.nest .mod{position:fixed;inset:0;z-index:51;display:grid;place-items:center;padding:16px;pointer-events:none}
+.nest .mod{position:fixed;inset:0;z-index:51;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;padding:16px;pointer-events:none}
 .nest .mod.top{place-items:start center;padding-top:18vh}
 .nest .mod>*{pointer-events:auto;animation:nIn var(--t3) var(--e) both}
 .nest .mod.top>*{transform-origin:top center}
