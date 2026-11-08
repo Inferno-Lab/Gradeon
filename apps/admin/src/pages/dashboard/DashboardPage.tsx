@@ -165,7 +165,7 @@ function DashboardDesktop() {
     return (
       <PageScope page="dashboard">
         <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
-          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );

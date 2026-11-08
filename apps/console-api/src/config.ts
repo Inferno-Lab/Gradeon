@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Patch, Post, Put, Query, type OnModuleInit } from '@nestjs/common';
-import { activeFeatures, activeModules, contrastRatio, diffSettings, resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
+import { activeFeatures, activeModules, diffSettings, resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
 import {
   ConfigPatch, PERMISSIONS, RoleDefSave, SETTINGS_META,
   type ChangeRequestRow, type ConfigTemplateRow, type ConfigVersionRow, type EffectiveConfig, type EntitlementDoc, type RoleDef, type SchoolConfig,
@@ -86,10 +86,6 @@ export class ConfigService implements OnModuleInit {
     if (!checked.ok) throw new ApiError('validation', checked.problems[0]!.message, { fields: Object.fromEntries(checked.problems.map((p) => [p.key, p.message])) });
     const unknown = resets.find((k) => !(k in SETTINGS_META));
     if (unknown) throw new ApiError('validation', 'That setting does not exist.', { fields: { [unknown]: 'That setting does not exist.' } });
-    const color = checked.values['brand.color'];
-    if (typeof color === 'string' && contrastRatio(color, '#FFFFFF') < 3) {
-      throw new ApiError('validation', 'That colour is too light for white text on buttons. Pick a darker one.', { fields: { 'brand.color': 'Too light to read white text on.' } });
-    }
     const mods = checked.values['modules.enabled'];
     if (Array.isArray(mods)) {
       const entitled = activeModules(await this.entitlement(schoolId));

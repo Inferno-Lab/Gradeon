@@ -37,7 +37,7 @@ export function RequestsPage() {
                 </span>
                 {r.status === 'open'
                   ? (app.can('schools.configure') && <button className="btn sm pri" onClick={() => setAnswering(r)}>Answer</button>)
-                  : <span className={`chip ${r.status === 'done' ? 'g' : 'r'}`}>{r.status === 'done' ? 'Done' : 'Declined'}</span>}
+                  : <span className={`chip ${r.status === 'done' ? 'g' : 'c'}`}>{r.status === 'done' ? 'Done' : 'Declined'}</span>}
               </div>
             );
           })}

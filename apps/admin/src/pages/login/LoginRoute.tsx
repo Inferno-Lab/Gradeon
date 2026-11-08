@@ -42,7 +42,7 @@ function NoSchool({ message }: { message: string }) {
   return (
     <div className="nest" style={{ minHeight: '100dvh', padding: 12, display: 'grid', placeItems: 'center' }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
-        <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'r' }} scene="search-paper" heading="We couldn’t find that school" body={message} actions={<a className="btn pri" href="/">Try another address</a>} />
+        <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'c' }} scene="search-paper" heading="We couldn’t find that school" body={message} actions={<a className="btn pri" href="/">Try another address</a>} />
       </div>
     </div>
   );

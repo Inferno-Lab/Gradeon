@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
+import { DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ThemeEditor } from '../../app/ThemeEditor';
@@ -45,7 +45,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
-  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
   const keys = KEYS.filter((k) => SETTINGS_META[k].group === group);
   const modName = (k: string) => cat.data?.modules.find((m) => m.key === k)?.name ?? k;
@@ -124,7 +124,7 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
     case 'theme':
       return box(<ThemeEditor scope="school" value={(value ?? {}) as ThemeColors} onChange={onChange} disabled={disabled} brand={typeof cfg.values['brand.color'] === 'string' ? cfg.values['brand.color'] : undefined} />);
     case 'color':
-      return box(<ColourField label={meta.label} value={str || '#6A4CF5'} onChange={onChange} disabled={disabled} />);
+      return box(<ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} />);
     case 'time': case 'date':
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':

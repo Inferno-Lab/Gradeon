@@ -1,5 +1,5 @@
 /* Shell additions that are not part of the canvas boards: the console workspace block, and the phone layout. */
-.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:none;animation:none}
+.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:none;animation:none}
 .nest .pdot.stage{background:var(--a);box-shadow:none}
 .nest .pdot.local{background:var(--g);box-shadow:none}
 
@@ -26,7 +26,7 @@
 .nest .dock{display:none}
 @media (max-width:900px){
   .nest .dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:6px;border-radius:999px;background:var(--ci);box-shadow:none}
-  .nest .dock button{position:relative;width:56px;height:52px;border-radius:999px;border:0;background:none;color:#B8B8BE;display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
+  .nest .dock button{position:relative;width:56px;height:52px;border-radius:999px;border:0;background:none;color:color-mix(in srgb,var(--onCi) 72%,transparent);display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
   .nest .dock button.on{width:112px;background:var(--card);color:var(--ink)}
   .nest .dock button svg{width:22px;height:22px;grid-area:1/1}
   .nest .dock button span{grid-area:1/1;font:800 13px var(--fb);margin-left:30px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}

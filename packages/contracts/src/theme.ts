@@ -24,7 +24,9 @@ export const WEB_TOKENS: WebToken[] = [
   w('frame', 'Surfaces', 'Frame and menu', 'The frame around every page and the side menu.', '#F3F3F1', '#111113'),
   w('card', 'Surfaces', 'Cards', 'Cards, dialogs, menus and fields.', '#FFFFFF', '#19191C'),
   w('sunk', 'Surfaces', 'Wells and hover', 'Recessed areas, table headers, and rows under the pointer.', '#F6F6F4', '#1E1E22'),
-  w('ci', 'Surfaces', 'Dark card', 'The one inverted card (Approvals on the dashboard).', '#1A1A1C', '#26262A'),
+  w('ci', 'Surfaces', 'Dark card', 'Inverted cards, toasts and floating bars.', '#1A1A1C', '#26262A'),
+  w('onCi', 'Surfaces', 'Text on the dark card', '', '#FFFFFF', '#FFFFFF', 'ci', 'on'),
+  w('knob', 'Surfaces', 'Switch knob', 'The round knob of every on/off switch.', '#FFFFFF', '#FFFFFF'),
   w('line', 'Lines', 'Hairlines', 'Card edges and dividers.', '#E5E5E1', '#2A2A2E'),
   w('line2', 'Lines', 'Control borders', 'Buttons and chips with an outline.', '#D6D6D1', '#34343A'),
   w('field', 'Lines', 'Field borders', 'Text fields and selects.', '#8A8A84', '#6B6B72'),
@@ -49,6 +51,7 @@ export const WEB_TOKENS: WebToken[] = [
   w('cS', 'Danger', 'Danger fill', '', '#FCEBE9', '#3A1D1A', 'c', 'soft'),
   w('cD', 'Danger', 'Danger text', '', '#B42318', '#F0857A', 'c', 'text'),
   w('cF', 'Danger', 'Delete button', 'The confirm button in a delete dialog.', '#B42318', '#B42318', 'c', 'solid'),
+  w('onCF', 'Danger', 'Text on the delete button', '', '#FFFFFF', '#FFFFFF', 'cF', 'on'),
   w('present', 'Charts', 'Muted series', 'A chart series that is there for comparison.', '#B9B9B3', '#5A5A61'),
   w('scrim', 'Charts', 'Overlay', 'Behind dialogs and panels. Usually see-through.', '#1111136B', '#0000009E'),
 ];
@@ -99,6 +102,12 @@ export const APP_SHARED: SharedToken[] = [
   s('house.3', 'Houses', 'House 3', '', '#B8306F'),
   s('house.4', 'Houses', 'House 4', '', '#E0A81E'),
 ];
+
+/** The school's brand colour until the console sets one. */
+export const DEFAULT_BRAND = '#6A4CF5';
+
+/** Subjects share one palette across the admin (timetable) and the app; on the web they are --subj-<id>. */
+export const SUBJECTS = APP_SHARED.filter((t) => t.group === 'Subjects').map((t) => t.key.slice('subject.'.length));
 
 /** Every key a theme may hold. */
 export const THEME_KEYS = new Set<string>([
@@ -155,13 +164,18 @@ function readable(base: string, ground: string, toward: string): string {
 
 function derive(kind: Derive, base: string, ground: string, dark: boolean): string {
   switch (kind) {
-    case 'on': return contrast('#FFFFFF', base) >= contrast('#1A1A1C', base) ? '#FFFFFF' : '#1A1A1C';
+    case 'on': return readableOn(base);
     case 'soft': return mix(base, ground, dark ? 0.22 : 0.12);
     case 'wash': return mix(base, ground, dark ? 0.12 : 0.06);
     case 'line': return mix(base, ground, dark ? 0.35 : 0.28);
     case 'text': return readable(base, ground, dark ? '#FFFFFF' : '#000000');
     case 'solid': return readable(base, '#FFFFFF', '#000000');
   }
+}
+
+/** White or near-black, whichever reads better on `ground`. */
+export function readableOn(ground: string): string {
+  return contrast('#FFFFFF', ground) >= contrast('#1A1A1C', ground) ? '#FFFFFF' : '#1A1A1C';
 }
 
 // ── resolving: defaults, then changes, then colours that follow a changed base ─────────────────────────────────────────
@@ -182,7 +196,8 @@ export function webThemeCss(changes: ThemeColors): string {
     const all = resolveWeb(changes, mode);
     return WEB_TOKENS.filter((t) => all[t.key]!.toUpperCase() !== t[mode].toUpperCase()).map((t) => `--${t.key}:${all[t.key]}`).join(';');
   };
-  const light = block('light'), dark = block('dark');
+  const subj = SUBJECTS.filter((id) => changes[`app.subject.${id}`]).map((id) => `--subj-${id}:${changes[`app.subject.${id}`]}`);
+  const light = [block('light'), ...subj].filter(Boolean).join(';'), dark = block('dark');
   // The doubled class wins over nest.css's own `.nest` and `.nest.dark` without !important.
   return `${light ? `.nest.nest{${light}}` : ''}${dark ? `.nest.nest.dark{${dark}}` : ''}`;
 }

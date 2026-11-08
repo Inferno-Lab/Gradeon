@@ -38,7 +38,7 @@ export function CompliancePage() {
       actions={canWrite ? <><button className="btn" onClick={() => setAdding('dpa')}>Add an agreement</button><button className="btn pri" onClick={() => setAdding('breach')}>Log a breach</button></> : undefined}
       overlays={adding && <Add kind={adding} onClose={() => setAdding(null)} onDone={(m) => { setAdding(null); void qc.invalidateQueries({ queryKey: ['compliance'] }); say(m); }} />}>
       <section className="grid">
-        <Card title="Breaches" chip={<span className={`chip ${breaches.some((b) => b.status !== 'closed') ? 'r' : 'g'}`}>{breaches.filter((b) => b.status !== 'closed').length} open</span>} span="s12">
+        <Card title="Breaches" chip={<span className={`chip ${breaches.some((b) => b.status !== 'closed') ? 'c' : 'g'}`}>{breaches.filter((b) => b.status !== 'closed').length} open</span>} span="s12">
           {breaches.length === 0 ? <EmptyCard title="Breaches" chip={{ text: 'None', tone: 'g' }} scene="padlock" heading="No breaches logged" body="If personal data may have reached the wrong person, log it here. The school must be told within 72 hours so it can meet its own duty." /> : (
             <div className="lscroll" style={{ maxHeight: 520 }}>
               {breaches.map((b) => <Row key={b.id} r={b} canWrite={canWrite} busy={update.isPending} onStatus={(status) => update.mutate({ id: b.id, status })} />)}
@@ -72,10 +72,10 @@ function Row({ r, canWrite, busy, onStatus }: { r: ComplianceRow; canWrite: bool
         <b style={{ color: 'var(--ink)', display: 'block', textAlign: 'left' }}>{r.title}</b>
         <small style={{ color: 'var(--ink3)' }}>{r.schoolName} · {KIND[r.kind]} · {ago(r.createdAt)} by {r.createdBy}</small>
         {r.note && <small style={{ display: 'block', color: 'var(--ink2)', marginTop: 4 }}>{r.note}</small>}
-        {c && <small className={`chip ${c.late ? 'r' : 'a'}`} style={{ marginTop: 6 }}>{c.text}</small>}
+        {c && <small className={`chip ${c.late ? 'c' : 'a'}`} style={{ marginTop: 6 }}>{c.text}</small>}
       </span>
       <span style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
-        <span className={`st ${done ? 'g' : r.status === 'notified' ? 'b' : 'a'}`}><i></i>{({ open: 'Open', signed: 'Signed', notified: 'School told', closed: 'Closed' } as const)[r.status]}</span>
+        <span className={`st ${done ? 'g' : r.status === 'notified' ? 'v' : 'a'}`}><i></i>{({ open: 'Open', signed: 'Signed', notified: 'School told', closed: 'Closed' } as const)[r.status]}</span>
         {canWrite && !done && r.kind === 'dpa' && <button className="btn sm" disabled={busy} onClick={() => onStatus('signed')}>Mark signed</button>}
         {canWrite && !done && r.kind === 'breach' && r.status === 'open' && <button className="btn sm" disabled={busy} onClick={() => onStatus('notified')}>Tell the school</button>}
         {canWrite && !done && r.kind === 'breach' && r.status === 'notified' && <button className="btn sm" disabled={busy} onClick={() => onStatus('closed')}>Close</button>}
@@ -104,7 +104,7 @@ function Add({ kind, onClose, onDone }: { kind: 'dpa' | 'breach'; onClose: () =>
     if (Object.keys(p).length) shake.hit(); else make.mutate();
   };
   return (
-    <Dialog title={kind === 'dpa' ? 'Add an agreement' : 'Log a breach'} tag={kind === 'breach' ? { text: '72-hour clock starts', tone: 'r' } : undefined} onClose={onClose} width={500} shake={shake.cls}>
+    <Dialog title={kind === 'dpa' ? 'Add an agreement' : 'Log a breach'} tag={kind === 'breach' ? { text: '72-hour clock starts', tone: 'c' } : undefined} onClose={onClose} width={500} shake={shake.cls}>
       <div className="stack">
         <SelectField label="School" value={f.schoolId} onChange={set('schoolId')} error={err.schoolId} options={[{ value: '', label: 'Choose a school' }, ...(schools.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
         <Field label={kind === 'dpa' ? 'Agreement' : 'What happened'} value={f.title} onChange={set('title')} error={err.title} maxLength={120} />

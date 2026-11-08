@@ -120,7 +120,7 @@ export function FleetView({ v }: { v: any }) {
           </div>
           <div className="tile t-i s4 rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(255,255,255,.14)", color: "#fff" } as CSSProperties}>
+              <span className="chip" style={{ background: "color-mix(in srgb,var(--onCi) 14%,transparent)", color: "var(--onCi)" } as CSSProperties}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M3 12h4l3-7 4 14 3-7h4"></path>
                 </svg>
@@ -133,7 +133,7 @@ export function FleetView({ v }: { v: any }) {
             <div className="hbar" aria-hidden="true">
               <i style={{ flex: v.hOk || 0.001, background: "var(--g)" } as CSSProperties}></i>
               <i style={{ flex: v.hWarn || 0.001, background: "var(--a)" } as CSSProperties}></i>
-              <i style={{ flex: v.hBad || 0.001, background: "var(--r)" } as CSSProperties}></i>
+              <i style={{ flex: v.hBad || 0.001, background: "var(--c)" } as CSSProperties}></i>
             </div>
             <div className="hl">
               <div>
@@ -143,7 +143,7 @@ export function FleetView({ v }: { v: any }) {
                 <i style={{ background: "var(--a)" } as CSSProperties}></i>Degraded<b>{v.hWarn}</b>
               </div>
               <div>
-                <i style={{ background: "var(--r)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
+                <i style={{ background: "var(--c)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
               </div>
             </div>
           </div>
@@ -302,7 +302,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
                 <div style={{ display: "flex", gap: "8px" } as CSSProperties}>
                   {v.inc.open && (
-                    <button className="btn sm" style={{ background: "rgba(255,255,255,.1)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
+                    <button className="btn sm" style={{ background: "color-mix(in srgb,var(--onCi) 10%,transparent)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
                       Open the school
                     </button>
                   )}

@@ -179,7 +179,7 @@ export function DashboardView({ v }: { v: any }) {
           )}
           <div className="tile t-i s3 lift rise" style={{ "--d": ".2s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(255,255,255,.14)", color: "#fff" } as CSSProperties}>
+              <span className="chip" style={{ background: "color-mix(in srgb,var(--onCi) 14%,transparent)", color: "var(--onCi)" } as CSSProperties}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path>
                 </svg>
@@ -318,7 +318,7 @@ export function DashboardView({ v }: { v: any }) {
                   <i style={{ background: "var(--a)" } as CSSProperties}></i>Late
                 </span>
                 <span>
-                  <i style={{ background: "var(--r)" } as CSSProperties}></i>Absent
+                  <i style={{ background: "var(--c)" } as CSSProperties}></i>Absent
                 </span>
               </span>
             </div>

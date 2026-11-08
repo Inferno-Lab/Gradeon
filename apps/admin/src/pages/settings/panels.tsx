@@ -54,7 +54,7 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const groups = useMemo(() => [...new Set(offered.map((p) => p.area))].map((a) => ({ area: a, items: offered.filter((p) => p.area === a) })), [offered]);
   const readOnly = !canManage || (cur?.locked ?? false);
   if (roles.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 26 }} />;
-  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
+  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   return (
     <section className="rise">
       <Head title="Roles and access" sub="What each kind of person can see and do. Gradeon makes and changes roles for your school." />

@@ -9,7 +9,7 @@ import { Avatar, Ico, dateLabel } from '../../app/kit';
 import { CollectFeeDialog } from '../students/StudentDialogs';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${inr(Math.round(n))}`);
-const STATUS: Record<string, { tone: string; label: string }> = { paid: { tone: 'g', label: 'Paid' }, partial: { tone: 'b', label: 'Part paid' }, due: { tone: 'a', label: 'Due' }, overdue: { tone: 'r', label: 'Overdue' } };
+const STATUS: Record<string, { tone: string; label: string }> = { paid: { tone: 'g', label: 'Paid' }, partial: { tone: 'v', label: 'Part paid' }, due: { tone: 'a', label: 'Due' }, overdue: { tone: 'c', label: 'Overdue' } };
 const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
 type Filter = 'all' | 'overdue' | 'due' | 'partial' | 'paid';
 
@@ -46,7 +46,7 @@ export function InvoicesPage() {
         {view === 'invoices' && s && <>
           <div className="tile t-v s4 rise"><span className="lbl">Billed</span><div className="big" style={{ marginTop: 8 }}>{money(s.billed)}</div><div style={{ font: '600 13px var(--fb)', opacity: 0.8 }}>{s.count.toLocaleString('en-IN')} {s.count === 1 ? 'invoice' : 'invoices'} in view</div></div>
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Collected</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>{s.billed ? Math.round((s.collected / s.billed) * 100) : 0}% of what was billed</div></div>
-          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to pay</span><div className="big" style={{ marginTop: 8, color: s.outstanding ? 'var(--r)' : undefined }}>{money(s.outstanding)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>across the invoices in view</div></div>
+          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to pay</span><div className="big" style={{ marginTop: 8, color: s.outstanding ? 'var(--c)' : undefined }}>{money(s.outstanding)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>across the invoices in view</div></div>
         </>}
         <div className="card tbl s12 rise" style={{ '--d': '.14s', padding: 0 } as React.CSSProperties}>
           <div className="ch" style={{ padding: '22px 22px 6px', flexWrap: 'wrap', rowGap: 12 }}>

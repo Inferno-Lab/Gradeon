@@ -6,7 +6,7 @@ import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
-const TONE: Record<BuildRow['status'], string> = { queued: 'b', building: 'b', done: 'g', failed: 'r', unavailable: 'a' };
+const TONE: Record<BuildRow['status'], string> = { queued: 'v', building: 'v', done: 'g', failed: 'c', unavailable: 'a' };
 const LABEL: Record<BuildRow['status'], string> = { queued: 'Queued', building: 'Building', done: 'Ready', failed: 'Failed', unavailable: 'Not started' };
 
 export function BuildsPage() {

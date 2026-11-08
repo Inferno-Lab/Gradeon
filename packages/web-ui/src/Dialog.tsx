@@ -4,7 +4,7 @@ import { leavingProps, useLeaving, useReturnFocus } from './Presence';
 export interface DialogProps {
   title: string;
   /** A small label above the title, like "Cannot be undone". */
-  tag?: { text: string; tone: 'v' | 'c' | 'a' | 'g' | 'r' | 'b' };
+  tag?: { text: string; tone: 'v' | 'c' | 'a' | 'g' };
   dark?: boolean;
   onClose: () => void;
   /** Applied to the card, for the vibrate on a wrong answer. */

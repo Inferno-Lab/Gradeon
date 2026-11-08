@@ -6,5 +6,5 @@ export function tintFor(_name: string): { bg: string; fg: string } {
 /** Colours for the approval tones used on the dashboard, from the theme so they work in dark mode too. */
 export const TONES: Record<string, { bg: string; fg: string }> = {
   blue: { bg: 'var(--vS)', fg: 'var(--vD)' }, violet: { bg: 'var(--vS)', fg: 'var(--vD)' }, mint: { bg: 'var(--gS)', fg: 'var(--gD)' },
-  amber: { bg: 'var(--aS)', fg: 'var(--aD)' }, coral: { bg: 'var(--rS)', fg: 'var(--r)' },
+  amber: { bg: 'var(--aS)', fg: 'var(--aD)' }, coral: { bg: 'var(--cS)', fg: 'var(--c)' },
 };

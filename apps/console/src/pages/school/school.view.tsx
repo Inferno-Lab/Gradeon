@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { PageScope, Presence, ToastSlot, Segmented } from "@gradeon/web-ui";
+import { PageScope, Presence, ToastSlot, Segmented, markStyle } from "@gradeon/web-ui";
 import "./school.css";
 
 export function SchoolView({ v }: { v: any }) {
@@ -40,7 +40,7 @@ export function SchoolView({ v }: { v: any }) {
           <b style={{ color: "var(--ink)" } as CSSProperties}>{v.name}</b>
         </div>
         <header className="hd rise" style={{ "--d": ".05s", gap: "18px", flexWrap: "wrap" } as CSSProperties}>
-          <span className="slogo" style={{ background: v.color, boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
+          <span className="slogo" style={{ ...markStyle(v.color), boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
             {v.logoText}
           </span>
           <div style={{ minWidth: "0" } as CSSProperties}>

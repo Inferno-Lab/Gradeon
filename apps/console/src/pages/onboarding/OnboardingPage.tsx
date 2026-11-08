@@ -26,7 +26,7 @@ export function OnboardingPage() {
       )}
       <section className="grid">
         {setting.length > 0 && (
-          <Card title="Being set up" chip={<span className="chip b">{setting.length}</span>} span="s12">
+          <Card title="Being set up" chip={<span className="chip v">{setting.length}</span>} span="s12">
             {setting.map((s) => {
               const t = tintFor(s.name);
               return (

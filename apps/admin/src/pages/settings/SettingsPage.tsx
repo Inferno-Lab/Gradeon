@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
-import { istToday, type SettingsResponse } from '@gradeon/contracts';
+import { closeModules, dependents } from '@gradeon/config-engine';
+import { DEFAULT_BRAND, contrast, istToday, readableOn, type SettingsResponse } from '@gradeon/contracts';
 import { Dialog, EmptyCard, ErrorLine, PageScope, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
@@ -31,7 +31,7 @@ function draftOf(doc: SettingsResponse): Draft {
   const entitled = doc.modules.filter((m) => m.entitled).map((m) => m.key);
   const set = Array.isArray(v['modules.enabled']) && (v['modules.enabled'] as string[]).length ? (v['modules.enabled'] as string[]) : entitled;
   return {
-    name: str(v['school.name']), logo: str(v['brand.logoText']) || str(v['school.shortName']).slice(0, 1).toUpperCase(), about: str(v['school.tagline']), brand: str(v['brand.color'], '#6A4CF5'),
+    name: str(v['school.name']), logo: str(v['brand.logoText']) || str(v['school.shortName']).slice(0, 1).toUpperCase(), about: str(v['school.tagline']), brand: str(v['brand.color'], DEFAULT_BRAND),
     notify: bool(v['attendance.notifyParents'], true), notice: v['approvals.notice'] !== 'off', twoFactor: bool(v['security.twoFactor'], true), waiver: str(v['approvals.feeWaiver'], 'principal'),
     modules: closeModules(set).sort(),
   };
@@ -80,7 +80,7 @@ export function SettingsPage() {
     return (
       <PageScope page="settings">
         <main className="mn"><header className="hd"><div><h1>Settings</h1></div></header>
-          <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -102,7 +102,7 @@ export function SettingsPage() {
   const shortName = str(data.values['school.shortName'], draft.name);
   const swatches: [string, string][] = [[draft.brand.toUpperCase(), draft.brand]];
   const cur = swatches[0]!;
-  const ratio = contrastRatio(draft.brand, '#FFFFFF');
+  const ratio = contrast(draft.brand, readableOn(draft.brand));
   const copy = (key: string, text: string) => { void navigator.clipboard?.writeText(text).catch(() => undefined); setCopied(key); later(() => setCopied(''), 1800); };
   const address = `${window.location.host}${app.base}`;
   const toggle = (key: 'notify' | 'notice' | 'twoFactor', n: string, d: string, setting: string) => ({
@@ -129,7 +129,7 @@ export function SettingsPage() {
     tabs: TABS.map((t, i) => ({ n: t[0], d: t[1], nw: !!t[2], on: i === tab ? 'on' : '', cur: i === tab ? 'page' : 'false', pick: () => setTab(i) })),
     name: draft.name, onName: (e: React.ChangeEvent<HTMLInputElement>) => set({ name: e.target.value }), logoText: draft.logo, onLogo: (e: React.ChangeEvent<HTMLInputElement>) => set({ logo: e.target.value.slice(0, 2) }),
     roName: lock('school.name'), roLogo: lock('brand.logoText'),
-    brandC: draft.brand, brandN: cur[0], ratio: ratio.toFixed(1), aa: ratio >= 4.5,
+    brandC: draft.brand, brandStyle: { background: draft.brand, color: readableOn(draft.brand), '--onBrand': readableOn(draft.brand) } as React.CSSProperties, brandN: cur[0], ratio: ratio.toFixed(1), aa: ratio >= 4.5,
     swatches: swatches.map((w) => ({ n: w[0], c: w[1], on: w[1].toLowerCase() === draft.brand.toLowerCase() ? 'on' : '', sel: w[1].toLowerCase() === draft.brand.toLowerCase() ? 'true' : 'false', locked: lock('brand.color'), pick: () => set({ brand: w[1] }) })),
     address, copiedAddr: copied === 'addr' ? 'done' : '', copyAddress: () => copy('addr', address),
     schoolCode: app.slug.toUpperCase(), copied: copied === 'code' ? 'done' : '', copyLabel: copied === 'code' ? 'Copied' : 'Copy', copyIc: copied === 'code' ? 'M5 12.5l4.5 4.5L19 7.5' : 'M9 9h10v10H9zM5 15V5h10', copy: () => copy('code', app.slug.toUpperCase()),
@@ -183,7 +183,7 @@ function AuditPanel() {
   const { api } = useApp();
   const q = useQuery({ queryKey: ['settings-audit'], queryFn: api.settings.audit });
   if (q.isLoading) return <div className="skc" style={{ height: 260, borderRadius: 26 }} />;
-  if (q.isError) return <EmptyCard error title="Audit log" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see this log" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError) return <EmptyCard error title="Audit log" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see this log" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const rows = q.data ?? [];
   if (!rows.length) return <EmptyCard title="Audit log" chip={{ text: '0 entries', tone: 'v' }} scene="checklist" heading="Nothing has been changed yet" body="Every change to settings, fees and approvals is written here, with who made it and when." />;
   return (
@@ -234,7 +234,7 @@ function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => voi
           {(mine.data ?? []).slice(0, 5).map((r) => (
             <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>
               <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{r.area}</b> · {r.message}{r.answer && <small style={{ display: 'block', color: 'var(--ink3)' }}>Gradeon: {r.answer}</small>}</span>
-              <b><span className={`chip ${r.status === 'open' ? 'a' : r.status === 'done' ? 'g' : 'r'}`}>{r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Done' : 'Declined'}</span></b>
+              <b><span className={`chip ${r.status === 'open' ? 'a' : r.status === 'done' ? 'g' : 'c'}`}>{r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Done' : 'Declined'}</span></b>
             </div>
           ))}
         </div>

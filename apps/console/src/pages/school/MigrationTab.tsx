@@ -58,7 +58,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (text, k) => save(new Blob([text], { type: 'text/csv' }), `${k}-template.csv`), onError: fail });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
-  if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const ready = v.readiness.filter((r) => r.done).length;
   const pickKind = (k: string) => { setKindKey(k); change(null); };
   return (
@@ -206,7 +206,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
         <>
           <div className="tgrow" style={{ gap: 6, marginTop: 14 }}>
             <span className="chip g">{p.counts.create} to add</span><span className="chip">{p.counts.update} to update</span>
-            <span className={`chip ${p.counts.skip ? 'r' : ''}`}>{p.counts.skip} with problems</span>
+            <span className={`chip ${p.counts.skip ? 'c' : ''}`}>{p.counts.skip} with problems</span>
             {p.totals.map((t) => <span key={t.label} className="chip">{t.label}: {t.value}</span>)}
           </div>
           {rows.length > 0 && (
@@ -224,7 +224,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
                       <span style={{ font: '700 12.5px var(--fb)', color: 'var(--ink3)' }}>{r.line}</span>
                       {kind.columns.map((c) => <input key={c.key} className={`hws ${r.errors.length && c.required && !r.values[c.key] ? 'bad' : ''}`} style={{ width: '100%', textAlign: 'left' }} aria-label={`Line ${r.line}, ${c.label}`} placeholder={c.example} defaultValue={r.values[c.key] ?? ''}
                         onBlur={(e) => { if (e.target.value !== (r.values[c.key] ?? '')) edit(r.i, c.key, e.target.value); }} />)}
-                      <span style={{ font: '600 12.5px var(--fb)', color: r.errors.length ? 'var(--r)' : 'var(--g)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
+                      <span style={{ font: '600 12.5px var(--fb)', color: r.errors.length ? 'var(--c)' : 'var(--g)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
                     </div>
                   ))}
                 </div>

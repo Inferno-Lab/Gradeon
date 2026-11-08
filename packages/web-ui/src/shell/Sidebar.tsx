@@ -1,3 +1,4 @@
+import { readableOn } from '@gradeon/contracts';
 import { useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Menu } from '../Menu';
 import { GradeonIcon } from '../GradeonIcon';
@@ -109,8 +110,7 @@ export function SchoolHeader({ logo, name, place, color, onToggle, collapsed }: 
 /** A school's mark in its own colour (console: Brand colour), with ink or white letters, whichever reads. */
 export function markStyle(color?: string): CSSProperties | undefined {
   if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return undefined;
-  const [r, g, b] = [1, 3, 5].map((i) => { const c = parseInt(color.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
-  return { background: color, color: 0.2126 * r! + 0.7152 * g! + 0.0722 * b! > 0.36 ? '#1A1A1C' : '#FFFFFF' };
+  return { background: color, color: readableOn(color) };
 }
 
 /** The workspace block at the top of the console menu, with the environment marked. */

@@ -7,9 +7,9 @@ import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
-const TONE: Record<ReleaseRow['status'], string> = { draft: 'n', rolling: 'b', paused: 'a', halted: 'r', done: 'g', rolled_back: 'a' };
+const TONE: Record<ReleaseRow['status'], string> = { draft: 'n', rolling: 'v', paused: 'a', halted: 'c', done: 'g', rolled_back: 'a' };
 const LABEL: Record<ReleaseRow['status'], string> = { draft: 'Ready to start', rolling: 'Rolling out', paused: 'Paused', halted: 'Halted', done: 'Finished', rolled_back: 'Rolled back' };
-const SCHOOL: Record<string, string> = { pending: 'n', rolling: 'b', done: 'g', failed: 'r', rolled_back: 'a' };
+const SCHOOL: Record<string, string> = { pending: 'n', rolling: 'v', done: 'g', failed: 'c', rolled_back: 'a' };
 
 export function ReleasesPage() {
   const app = useApp();

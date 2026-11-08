@@ -60,7 +60,7 @@ export function TimetablePage() {
     return (
       <PageScope page="timetable">
         <main className="mn"><header className="hd"><div><h1>Timetable</h1></div></header>
-          <div><EmptyCard error title="Timetable" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(tt.error as Error).message} actions={<button className="btn pri" onClick={() => void tt.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Timetable" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(tt.error as Error).message} actions={<button className="btn pri" onClick={() => void tt.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -136,7 +136,7 @@ export function TimetablePage() {
     publish: () => publish.mutate(),
     prevWeek: () => setWeek((w) => w - 1), nextWeek: () => setWeek((w) => w + 1),
     weekLabel: `${dayMonth(dateOf(1))} – ${dayMonth(dateOf(5))} ${dateOf(5).slice(0, 4)} · W${isoWeek(dateOf(1))}`,
-    clashChip: data.clashes.length ? 'r' : 'g', clashText: data.clashes.length ? `${data.clashes.length} ${data.clashes.length === 1 ? 'clash' : 'clashes'} to fix` : 'No clashes',
+    clashChip: data.clashes.length ? 'c' : 'g', clashText: data.clashes.length ? `${data.clashes.length} ${data.clashes.length === 1 ? 'clash' : 'clashes'} to fix` : 'No clashes',
     legend: subjects.map((s) => ({ k: subjectKey(s), n: s.subjectName })),
     days: shownDays.map((d) => ({ n: dayName(dateOf(d), true), d: Number(dateOf(d).slice(8)), today: dateOf(d) === today ? 'today' : '' })),
     rows,
@@ -145,7 +145,7 @@ export function TimetablePage() {
       k: badIds.has(s.id) && !s.substituteId ? 'bad' : subjectKey(s), pick: () => { setSel({ day: s.day, period: s.period }); setMode(1); },
     })),
     sel: {
-      k: selBad ? 'r' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
+      k: selBad ? 'c' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
       day: `${dayLabel(dateOf(sel.day))}`, time: curDef ? `${curDef.starts} to ${curDef.ends}` : '', len: curDef ? `${toMin(curDef.ends) - toMin(curDef.starts)} min` : '',
       bad: selBad, fixedNow, fine: !!cur && !selBad && !fixedNow, other: clash ? clash.classNames.filter((n) => n !== data.className).join(', ') || 'another class' : '',
       suggest: clash?.suggestion ? clash.suggestion.teacherName.split(' ')[0] : null,

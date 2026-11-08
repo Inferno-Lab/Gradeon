@@ -4,7 +4,7 @@
 @media (max-width:1100px){.nest .s3,.nest .s4,.nest .s5,.nest .s6,.nest .s7,.nest .s8{grid-column:span 12}}
 .nest .st{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px;border-radius:999px;font:800 12px var(--fb);width:fit-content;white-space:nowrap}
 .nest .st i{width:7px;height:7px;border-radius:50%;background:currentColor}
-.nest .st.g{background:var(--gS);color:var(--gD)}.nest .st.a{background:var(--aS);color:var(--aD)}.nest .st.b{background:var(--bS);color:var(--b)}.nest .st.r{background:var(--rS);color:var(--r)}.nest .st.n{background:var(--sunk);color:var(--ink3)}
+.nest .st.g{background:var(--gS);color:var(--gD)}.nest .st.a{background:var(--aS);color:var(--aD)}.nest .st.v{background:var(--vS);color:var(--vD)}.nest .st.c{background:var(--cS);color:var(--cD)}.nest .st.n{background:var(--sunk);color:var(--ink3)}
 .nest .bar{height:14px;border-radius:7px;background:var(--sunk);overflow:hidden}
 .nest .bar i{display:block;height:100%;border-radius:7px;background:var(--v);transition:width var(--t3) var(--e)}
 .nest .bar.warn i{background:var(--a)}
@@ -31,7 +31,7 @@
 .nest .kv:first-child{border-top:0}
 .nest .kv b{color:var(--ink);font-weight:700;text-align:right;min-width:0;overflow-wrap:anywhere}
 .nest .mono{font:600 12.5px/1.6 ui-monospace,Consolas,monospace}
-.nest .tile.t-i .lbl{color:rgba(255,255,255,.7)}
+.nest .tile.t-i .lbl{color:color-mix(in srgb,var(--onCi) 70%,transparent)}
 /* Columns that EvenRows lines up keep their own heights; it trims the taller list instead of stretching anything. */
 .nest [data-even]{align-items:start!important}
 .nest .tgrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -51,11 +51,11 @@
 .nest .stp .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line2);background:var(--card);position:relative;z-index:1;font:800 13px var(--fb);color:var(--ink3);transition:background var(--t3),border-color var(--t3)}
 .nest .stp.done .dot{background:var(--v);border-color:var(--v);color:var(--onV);animation:nPop var(--t3) var(--e)}
 .nest .stp.run .dot{border-color:var(--v);border-top-color:transparent;animation:nSpin .8s linear infinite;color:transparent}
-.nest .stp.fail .dot{background:var(--rF);border-color:var(--r);color:#fff;animation:nPop var(--t3) var(--e)}
+.nest .stp.fail .dot{background:var(--cF);border-color:var(--c);color:var(--onCF);animation:nPop var(--t3) var(--e)}
 .nest .stp.skip .dot{background:var(--sunk);color:var(--ink3)}
 .nest .stp b{display:block;font:700 15px var(--fb)}
 .nest .stp small{display:block;font:500 13px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
-.nest .stp.fail small{color:var(--r);font-weight:700}
+.nest .stp.fail small{color:var(--c);font-weight:700}
 .nest .stp .tm{font:700 12px var(--fb);color:var(--ink3);padding-top:8px;display:flex;gap:8px;align-items:center}
 .nest .fld + .fld,.nest .fld + .two,.nest .two + .fld,.nest .two + .two,.nest .stack > * + *{margin-top:16px}
 .nest .two .fld{margin-top:0}
@@ -63,11 +63,11 @@
 .nest .card>.ch{flex-wrap:wrap;row-gap:10px}
 .nest .card>.ch h2{min-width:min(100%,max-content)}
 /* The red frame and pill that say a support person is looking inside a school, read-only. */
-.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--rF);color:#fff;font:700 13.5px var(--fb);box-shadow:none;animation:sbIn var(--t3) var(--e);max-width:calc(100vw - 24px)}
+.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--cF);color:var(--onCF);font:700 13.5px var(--fb);box-shadow:none;animation:sbIn var(--t3) var(--e);max-width:calc(100vw - 24px)}
 @keyframes sbIn{from{opacity:0;transform:translate(-50%,-24px)}to{opacity:1;transform:translateX(-50%)}}
-.nest .sbar .c{font:800 13px var(--fb);padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.22);white-space:nowrap}
-.nest .sbar button{height:32px;padding:0 14px;border:0;border-radius:999px;background:#fff;color:var(--rF);font:800 12.5px var(--fb);cursor:pointer;white-space:nowrap}
-.nest .glow{inset:0;z-index:55;pointer-events:none;box-shadow:inset 0 0 0 3px var(--r);animation:nFade var(--t3)}
+.nest .sbar .c{font:800 13px var(--fb);padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--ci) 22%,transparent);white-space:nowrap}
+.nest .sbar button{height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--onCF);color:var(--cF);font:800 12.5px var(--fb);cursor:pointer;white-space:nowrap}
+.nest .glow{inset:0;z-index:55;pointer-events:none;box-shadow:inset 0 0 0 3px var(--c);animation:nFade var(--t3)}
 @media (max-width:560px){.nest .sbar{flex-wrap:wrap;justify-content:center;border-radius:22px;padding:10px 12px;gap:8px}}
 
 /* Small controls the admin pages share: a roll number, a tick with a label, a number box, a filter pill. */
@@ -76,7 +76,7 @@
 .nest .hws{width:64px;height:36px;border-radius:12px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 14px var(--fb);text-align:center;padding:0 6px;min-width:0}
 .nest .hws:focus{outline:0;border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
 .nest .hws:disabled{background:var(--sunk);border-color:transparent;cursor:not-allowed}
-.nest .hws.bad{border-color:var(--r);background:var(--rS)}
+.nest .hws.bad{border-color:var(--c);background:var(--cS)}
 .nest .hws.wide{width:150px}
 .nest .fp{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 13.5px var(--fb);cursor:pointer;transition:transform var(--t2) var(--e),border-color var(--t2),background var(--t2),color var(--t2)}
 .nest .fp:hover:not(:disabled){border-color:var(--v);transform:translateY(-1px)}

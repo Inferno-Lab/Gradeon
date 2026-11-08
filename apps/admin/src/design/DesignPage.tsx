@@ -1,10 +1,11 @@
+import { DEFAULT_BRAND } from '@gradeon/contracts';
 import { useState } from 'react';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, IC, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, ColourPicker, SelectField, TimeField, ToastSlot, tintFor, useShake, type Scene } from '@gradeon/web-ui';
 import { useShellChrome } from '../app/Layout';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
 const SWATCHES: [string, string][] = [['Accent (blue)', '--v'], ['Warning (amber)', '--a'], ['Good (green)', '--g'], ['Bad (red)', '--r'], ['Ink', '--ink'], ['Ink 3', '--ink3'], ['Field border', '--field'], ['Present', '--present']];
-const CHIPS = ['', 'v', 'c', 'a', 'g', 'b', 'r'] as const;
+const CHIPS = ['', 'v', 'c', 'a', 'g'] as const;
 
 /** A living style guide built from the real components, so it can never drift from what the pages use. Open it at /design. */
 export function DesignPage() {
@@ -17,13 +18,13 @@ export function DesignPage() {
   const [day, setDay] = useState('2026-11-12');
   const [time, setTime] = useState('08:30');
   const [count, setCount] = useState('40');
-  const [colour, setColour] = useState('#2F5BEA');
+  const [colour, setColour] = useState(DEFAULT_BRAND);
   const [tick, setTick] = useState(true);
   const [menu, setMenu] = useState(false);
   const [file, setFile] = useState('');
   const shake = useShake();
   return (
-    <PageScope page="design" overlays={<><ToastSlot toast={toast && { text: 'Saved. The app updates within a minute.' }} /><Presence>{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'r' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</Presence></>}>
+    <PageScope page="design" overlays={<><ToastSlot toast={toast && { text: 'Saved. The app updates within a minute.' }} /><Presence>{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'c' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</Presence></>}>
       <main className="mn">
         <header className="hd rise"><div><h1>Design system</h1><p>The pieces every admin and console page is made of.</p></div><span className="grow"></span><button className="btn" onClick={chrome.openSearch}>Search</button></header>
 
@@ -106,7 +107,7 @@ export function DesignPage() {
         <Section title="Empty and error states">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 18 }}>
             <EmptyCard title="Students" chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students yet" body="Add the first student, or import the whole school from a sheet." actions={<button className="btn pri">Import from Excel</button>} />
-            <EmptyCard error title="Fees" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body="The server did not answer. Your data is safe." actions={<button className="btn pri">Try again</button>} />
+            <EmptyCard error title="Fees" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body="The server did not answer. Your data is safe." actions={<button className="btn pri">Try again</button>} />
           </div>
         </Section>
       </main>

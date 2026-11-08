@@ -95,7 +95,7 @@ export function AttendancePage() {
               <div className="meter" aria-hidden="true">
                 <i style={{ flex: counts.present || 0.001, background: 'var(--present)' }}></i>
                 <i style={{ flex: counts.late || 0.001, background: 'var(--a)' }}></i>
-                <i style={{ flex: counts.absent || 0.001, background: 'var(--r)' }}></i>
+                <i style={{ flex: counts.absent || 0.001, background: 'var(--c)' }}></i>
                 <i style={{ flex: counts.none || 0.001, background: 'var(--sunk)' }}></i>
               </div>
               <div className="tgrow" style={{ marginTop: 14, font: '700 13px var(--fb)' }}>

@@ -4,7 +4,7 @@
 .pg-p .mk button:hover:not(:disabled){color:var(--ink)}
 .pg-p .mk button[aria-pressed=true].p{background:var(--pri);color:var(--priT)}
 .pg-p .mk button[aria-pressed=true].l{background:var(--aS);color:var(--aD)}
-.pg-p .mk button[aria-pressed=true].a{background:var(--rS);color:var(--r)}
+.pg-p .mk button[aria-pressed=true].a{background:var(--cS);color:var(--c)}
 .pg-p .mk button:disabled{cursor:not-allowed;opacity:.6}
 .pg-p .mk button:active:not(:disabled){transform:scale(.94)}
 .pg-p .rcall .grd.rw{min-height:60px}
@@ -45,7 +45,7 @@
 .nest .mkc{display:flex;align-items:center;gap:4px;justify-content:center}
 .nest .mkc .hws{width:58px}
 .nest .abs{width:24px;height:24px;border-radius:8px;border:0;background:var(--sunk);color:var(--ink3);font:800 11px var(--fb);cursor:pointer;flex:none;transition:background var(--t2),color var(--t2)}
-.nest .abs.on{background:var(--rF);color:#fff}
+.nest .abs.on{background:var(--cF);color:var(--onCF)}
 
 .nest .adm{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:14px;overflow-x:auto;padding-bottom:10px;align-items:start}
 .nest .admc{padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -115,7 +115,7 @@
 .nest .cald{display:flex;gap:3px;height:6px}
 .nest .cald i,.nest .evk{display:block;border-radius:50%}
 .nest .cald i{width:6px;height:6px}
-.nest .k-event{background:var(--v)}.nest .k-ptm{background:var(--ink)}.nest .k-exam{background:var(--a)}.nest .k-holiday{background:var(--g)}.nest .k-routine{background:var(--ink3)}.nest .k-cover{background:var(--b)}
+.nest .k-event{background:var(--v)}.nest .k-ptm{background:var(--ink)}.nest .k-exam{background:var(--a)}.nest .k-holiday{background:var(--g)}.nest .k-routine{background:var(--ink3)}.nest .k-cover{background:var(--v)}
 .nest .calc.sel .cald i{background:var(--onV)}
 .nest .evi{display:flex;gap:14px;align-items:flex-start;width:100%;padding:14px 4px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
 .nest .evi:first-child{border-top:0}

@@ -4,7 +4,7 @@ import type { MigrationRow } from '@gradeon/contracts';
 import { Card, Page } from '../../app/Page';
 import { useApp } from '../../app/context';
 
-const KIND: Record<MigrationRow['kind'], string> = { expand: 'v', backfill: 'b', contract: 'a' };
+const KIND: Record<MigrationRow['kind'], string> = { expand: 'v', backfill: 'v', contract: 'a' };
 const KIND_HELP: Record<MigrationRow['kind'], string> = { expand: 'Adds something new. Safe to run first.', backfill: 'Fills in old rows.', contract: 'Removes something old. Runs last.' };
 
 export function MigrationsPage() {

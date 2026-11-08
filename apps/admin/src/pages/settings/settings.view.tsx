@@ -63,7 +63,7 @@ export function SettingsView({ v }: { v: any }) {
                     <small>Shown in the app, on receipts and on report cards.</small>
                   </div>
                   <div style={{ display: "flex", gap: "18px", alignItems: "center" } as CSSProperties}>
-                    <span className="logo" style={{ background: v.brandC } as CSSProperties}>
+                    <span className="logo" style={v.brandStyle}>
                       {v.logoText}
                     </span>
                     <div style={{ flex: "1", display: "flex", flexDirection: "column", gap: "10px" } as CSSProperties}>
@@ -104,24 +104,24 @@ export function SettingsView({ v }: { v: any }) {
                         ))}
                       </div>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" } as CSSProperties}>
-                        <span className={`chip ${v.aa ? "g" : "r"}`}>
+                        <span className={`chip ${v.aa ? "g" : "c"}`}>
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path className="i" d={v.aa ? "M5 12.5l4.5 4.5L19 7.5" : "M6 6l12 12M18 6L6 18"} style={{ strokeWidth: "2.6" } as CSSProperties}></path>
                           </svg>
-                          {v.aa ? "Passes AA" : "Too light for white text"} · {v.ratio}:1
+                          {v.aa ? "Passes AA" : "Hard to read"} · {v.ratio}:1
                         </span>
                         <span className="chip">{v.brandN}</span>
                       </div>
                     </div>
                     <div className="pv" aria-label="App preview">
-                      <div className="tb" style={{ background: v.brandC } as CSSProperties}>
+                      <div className="tb" style={v.brandStyle}>
                         <span
                           style={
                             {
                               width: "24px",
                               height: "24px",
                               borderRadius: "8px",
-                              background: "rgba(255,255,255,.28)",
+                              background: "color-mix(in srgb,var(--onCi) 28%,transparent)",
                               display: "grid",
                               placeItems: "center",
                               font: "800 12px var(--fd)",
@@ -135,7 +135,7 @@ export function SettingsView({ v }: { v: any }) {
                       <div className="bd">
                         <i style={{ width: "70%" } as CSSProperties}></i>
                         <i style={{ width: "46%" } as CSSProperties}></i>
-                        <b style={{ background: v.brandC } as CSSProperties}>Pay fees</b>
+                        <b style={v.brandStyle}>Pay fees</b>
                       </div>
                     </div>
                   </div>
@@ -244,13 +244,13 @@ export function SettingsView({ v }: { v: any }) {
                   </div>
                 </div>
                 <div className="cred">
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", font: "700 13px var(--fb)", color: "#CFC9E6" } as CSSProperties}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", font: "700 13px var(--fb)", color: "color-mix(in srgb,var(--onCi) 72%,transparent)" } as CSSProperties}>
                     <i style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--g)" } as CSSProperties}></i>SMS credits
                   </div>
                   <div className="fd" style={{ fontSize: "38px", letterSpacing: "-.04em", lineHeight: "1" } as CSSProperties}>
                     {v.plan.smsLeft} <span style={{ font: "700 14px var(--fb)", opacity: ".6", letterSpacing: "0" } as CSSProperties}>left</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", font: "700 12px var(--fb)", color: "#CFC9E6" } as CSSProperties}>
+                  <div style={{ display: "flex", justifyContent: "space-between", font: "700 12px var(--fb)", color: "color-mix(in srgb,var(--onCi) 72%,transparent)" } as CSSProperties}>
                     <span>Used this month</span>
                     <span className="num">{v.used}%</span>
                   </div>

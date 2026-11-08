@@ -67,7 +67,7 @@ function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () =
           <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.subjectName} · set {dateLabel(r.assignedOn)}</small>
         </span>
         <span className="chip">{r.className}</span>
-        <span className={`chip ${overdue ? 'r' : ''}`}>Due {dateLabel(r.dueOn)}</span>
+        <span className={`chip ${overdue ? 'c' : ''}`}>Due {dateLabel(r.dueOn)}</span>
         <span className="us hs" style={{ gap: 6 }}><div className="bar" style={{ height: 14 }}><i style={{ width: `${p}%` }}></i></div></span>
         <b className="num" style={{ font: '700 13px var(--fb)', textAlign: 'right' }}>{r.handedIn} / {r.total}</b>
       </div>

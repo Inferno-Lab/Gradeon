@@ -119,7 +119,7 @@ export function StudentsPage() {
   const has = { fees: mods.includes('fees'), attendance: mods.includes('attendance') };
   const allViews = [
     { n: 'All', c: inr(allCount), cc: 'v' }, { n: pinned?.name ?? 'My class', c: String(pinned?.count ?? 0), cc: 'g' },
-    { n: 'Fees overdue', c: String(views.data?.overdue ?? 0), cc: 'r' }, { n: 'New this year', c: String(views.data?.newThisYear ?? 0), cc: 'a' },
+    { n: 'Fees overdue', c: String(views.data?.overdue ?? 0), cc: 'c' }, { n: 'New this year', c: String(views.data?.newThisYear ?? 0), cc: 'a' },
   ].map((x, i) => ({ ...x, i }));
   const shownViews = allViews.filter((x) => has.fees || x.i !== 2);
   const vals = {
@@ -219,7 +219,7 @@ export function StudentsPage() {
     return (
       <PageScope page="students">
         <main className="mn"><header className="hd"><div><h1>Students</h1></div></header>
-          <div><EmptyCard error title="Students" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Students" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );

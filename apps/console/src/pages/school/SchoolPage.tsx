@@ -75,7 +75,7 @@ export function SchoolPage() {
     return (
       <PageScope page="school">
         <main className="mn"><header className="hd"><div><h1>School</h1></div></header>
-          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
+          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
         </main>
       </PageScope>
     );
@@ -101,7 +101,7 @@ export function SchoolPage() {
   const smsPct = pct(d.usage.sms, lim.smsPerMonth);
   const nextMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
   const st = statusOf(d);
-  const stChip = running ? 'v' : d.status === 'live' ? 'g' : d.status === 'suspended' ? 'r' : 'a';
+  const stChip = running ? 'v' : d.status === 'live' ? 'g' : d.status === 'suspended' ? 'c' : 'a';
   const stText = running ? 'Setting up' : d.status === 'live' ? 'Live' : st.text;
   const lines = (run?.steps ?? []).flatMap((s) => s.log).sort((a, b) => a.at.localeCompare(b.at)).slice(-6);
   const done = d.checklist.filter((c) => c.state === 'done').length;
@@ -182,7 +182,7 @@ function Versions({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p
         {d.builds.map((b) => (
           <div key={b.id} className="kv">
             <span>{b.platform === 'android' ? 'Android' : 'iPhone'} · {b.version} · {when(b.createdAt)}<br /><small style={{ color: 'var(--ink3)' }}>{b.note}</small></span>
-            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--vD)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'r' : 'n'}`}>{b.status}</span>}</b>
+            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--vD)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'c' : 'n'}`}>{b.status}</span>}</b>
           </div>
         ))}
       </Card>
@@ -292,15 +292,15 @@ function EraseDialog({ school, onClose, onSent }: { school: SchoolDetail; onClos
     send.mutate();
   };
   return (
-    <Dialog dark title={`Erase ${school.name}?`} tag={{ text: 'Permanent · needs a second approver', tone: 'r' }} onClose={onClose} shake={shake.cls} width={480}>
+    <Dialog dark title={`Erase ${school.name}?`} tag={{ text: 'Permanent · needs a second approver', tone: 'c' }} onClose={onClose} shake={shake.cls} width={480}>
       <p>Its database is dropped, its files are deleted and its key is scheduled for deletion, so every backup becomes unreadable.</p>
       <div>
-        <label htmlFor="er-in">Type <b style={{ color: '#fff' }}>{school.slug}</b> to continue</label>
+        <label htmlFor="er-in">Type <b style={{ color: 'var(--onCi)' }}>{school.slug}</b> to continue</label>
         <input id="er-in" className={`shake ${bad ? 'err' : ''}`} value={typed} onChange={(e) => { setTyped(e.target.value); setBad(''); }} autoComplete="off" aria-invalid={!!bad} />
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: '#fff', borderColor: 'rgba(255,255,255,.18)' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: 'var(--onCi)', borderColor: 'color-mix(in srgb,var(--onCi) 18%,transparent)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={go} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

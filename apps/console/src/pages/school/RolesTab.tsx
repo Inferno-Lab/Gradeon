@@ -43,7 +43,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
-  if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const readOnly = !can || !!cur?.locked;
   const startNew = () => { setSel('new'); setName(''); setDesc(''); setPerms(new Set(['students.read'])); setErr({}); };
   const options = roles.map((r) => ({ value: r.id, label: r.name }));

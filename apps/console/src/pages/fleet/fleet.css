@@ -4,7 +4,7 @@
 .pg-fleet .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
 .pg-fleet .s3{grid-column:span 3}.pg-fleet .s4{grid-column:span 4}.pg-fleet .s5{grid-column:span 5}.pg-fleet .s7{grid-column:span 7}.pg-fleet .s8{grid-column:span 8}
 @media (max-width:1100px){.pg-fleet .s3,.pg-fleet .s4,.pg-fleet .s5,.pg-fleet .s7,.pg-fleet .s8{grid-column:span 12}}
-.pg-fleet .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:none;animation:none}
+.pg-fleet .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:none;animation:none}
 
 .pg-fleet .wsw{display:flex;align-items:center;gap:12px;padding:8px;border-radius:18px;background:var(--card);border:1px solid var(--line);margin-bottom:6px;white-space:nowrap;overflow:hidden}
 .pg-fleet .wsw b{display:block;font:700 14.5px var(--fb);line-height:1.2}
@@ -15,7 +15,7 @@
 .pg-fleet .arrow{margin-left:auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);color:inherit;border:0;cursor:pointer;transition:transform var(--t3) var(--e),background var(--t2)}
 .pg-fleet .arrow:hover{transform:rotate(45deg) scale(1.08)}
 .pg-fleet .ticks{display:flex;gap:3px;height:40px;margin:16px 0 14px}
-.pg-fleet .t-i .arrow{background:rgba(255,255,255,.14)}
+.pg-fleet .t-i .arrow{background:color-mix(in srgb,var(--onCi) 14%,transparent)}
 .pg-fleet .ticks i{flex:1;border-radius:3px;background:var(--sunk);transition:background var(--t3)}
 .pg-fleet .ticks i.on{background:var(--v)}
 .pg-fleet .ticks i.now{background:var(--a);animation:nowb 1s infinite}
@@ -43,7 +43,7 @@
 .pg-fleet .area{opacity:0;animation:nFade var(--t3) .9s forwards}
 .pg-fleet .vl{position:absolute;top:0;height:240px;width:1.5px;background:var(--line2);transition:left var(--t3) var(--e)}
 .pg-fleet .cd{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--card);border:4px solid var(--v);transform:translate(-50%,-50%);box-shadow:none;transition:left var(--t3) var(--e),top var(--t3) var(--e)}
-.pg-fleet .ctp{position:absolute;transform:translate(-50%,-150%);background:var(--ci);color:#fff;border-radius:16px;padding:9px 14px;white-space:nowrap;font:700 12px var(--fb);transition:left var(--t3) var(--e),top var(--t3) var(--e)}
+.pg-fleet .ctp{position:absolute;transform:translate(-50%,-150%);background:var(--ci);color:var(--onCi);border-radius:16px;padding:9px 14px;white-space:nowrap;font:700 12px var(--fb);transition:left var(--t3) var(--e),top var(--t3) var(--e)}
 .pg-fleet .ctp b{display:block;font:700 20px var(--fd);letter-spacing:-.03em}
 .pg-fleet .xl{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font:700 11.5px var(--fb);color:var(--ink3)}
 .pg-fleet .lgd{display:flex;gap:14px;font:700 12px var(--fb);color:var(--ink3)}
@@ -62,10 +62,10 @@
 .pg-fleet .ver span b{display:flex;align-items:center;height:26px;font-weight:800}
 .pg-fleet .st{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px;border-radius:999px;font:800 12px var(--fb);width:fit-content}
 .pg-fleet .st i{width:7px;height:7px;border-radius:50%;background:currentColor}
-.pg-fleet .st.g{background:var(--gS);color:var(--gD)}.pg-fleet .st.a{background:var(--aS);color:var(--aD)}.pg-fleet .st.b{background:var(--bS);color:var(--b)}
+.pg-fleet .st.g{background:var(--gS);color:var(--gD)}.pg-fleet .st.a{background:var(--aS);color:var(--aD)}.pg-fleet .st.v{background:var(--vS);color:var(--v)}
 .pg-fleet .rw.up{animation:glow var(--t3) var(--e)}
 @keyframes glow{0%{background:color-mix(in srgb,var(--v) 18%,transparent)}100%{background:transparent}}
-.pg-fleet .inc{padding:18px;border-radius:26px;background:var(--ci);color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh2);animation:nToast var(--t3) var(--e)}
+.pg-fleet .inc{padding:18px;border-radius:26px;background:var(--ci);color:var(--onCi);display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh2);animation:nToast var(--t3) var(--e)}
 .pg-fleet .inc.ok{background:var(--gS);color:var(--gD)}
 .pg-fleet .inc b{font:700 17px var(--fd);letter-spacing:-.02em}
 .pg-fleet .inc p{margin:0;font:500 13.5px/1.45 var(--fb);opacity:.72}

@@ -58,7 +58,7 @@ function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose: () => 
             <b style={{ font: '700 14px var(--fb)' }}>{p.name}</b>
             <div className="tgrow" style={{ marginTop: 6 }}>
               {r.added.map((k) => <span key={k} className="chip g">+ {catalogueName(k)}</span>)}
-              {r.removed.map((k) => <span key={k} className="chip r">− {catalogueName(k)}</span>)}
+              {r.removed.map((k) => <span key={k} className="chip c">− {catalogueName(k)}</span>)}
               {!r.added.length && !r.removed.length && <span className="help" style={{ margin: 0 }}>Limits, dates or plan only</span>}
             </div>
           </div>

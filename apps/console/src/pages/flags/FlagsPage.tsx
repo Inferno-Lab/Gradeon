@@ -52,7 +52,7 @@ export function FlagsPage() {
         </Card>
         <div className="s12 fpair" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(340px,100%),1fr))', gap: 18 }}>
           {canWrite && (
-            <Card title="Pause a feature" chip={<span className={`chip ${paused.length ? 'r' : 'g'}`}>{paused.length} paused</span>}>
+            <Card title="Pause a feature" chip={<span className={`chip ${paused.length ? 'c' : 'g'}`}>{paused.length} paused</span>}>
               <div className="help" style={{ marginBottom: 12 }}>A kill switch takes a feature away from the app and refuses its requests within seconds. Lift it by switching the flag off.</div>
               <SelectField label="Feature" value={kill.module} onChange={(module) => setKill({ ...kill, module })} options={MODULES.filter((m) => !m.core && m.state !== 'planned').map((m) => ({ value: m.key, label: m.name }))} />
               <SelectField label="For" value={kill.school} onChange={(school) => setKill({ ...kill, school })} options={[{ value: '', label: 'Every school' }, ...(schools.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />

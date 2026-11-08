@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { APP_SHARED, APP_TOKENS, WEB_TOKENS, contrast, resolveApp, resolveWeb, type AppMode, type ThemeColors, type WebMode } from '@gradeon/contracts';
+import { APP_SHARED, APP_TOKENS, WEB_TOKENS, contrast, readableOn, resolveApp, resolveWeb, type AppMode, type ThemeColors, type WebMode } from '@gradeon/contracts';
 import { ColourField, Segmented } from '@gradeon/web-ui';
 
 type Part = 'admin' | 'app';
@@ -140,7 +140,7 @@ function AppPreview({ app }: { app: Record<AppMode, Record<string, string>> }) {
             <small className="thm-o">Sunday · 8 November</small>
             <b className="thm-h">Good evening</b>
             <div className="thm-pcard">
-              <span className="thm-cover" style={{ background: c['subject.maths'] }}>MA</span>
+              <span className="thm-cover" style={{ background: c['subject.maths'], color: readableOn(c['subject.maths']!) }}>MA</span>
               <span className="thm-t"><b>Linear equations</b><small>Maths · due tomorrow</small></span>
               <span className="thm-stamp">1 day</span>
             </div>

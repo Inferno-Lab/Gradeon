@@ -214,7 +214,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
                         <span className="num" style={{ font: '600 13.5px var(--fb)' }}>{r.total} / {r.max}</span>
                         <b className="num" style={{ font: '800 14px var(--fb)' }}>{r.pct}%</b>
-                        <span className={`chip ${r.pct >= 33 ? 'g' : 'r'}`}>{r.grade}</span>
+                        <span className={`chip ${r.pct >= 33 ? 'g' : 'c'}`}>{r.grade}</span>
                       </div>
                     ))}
                   </div>
