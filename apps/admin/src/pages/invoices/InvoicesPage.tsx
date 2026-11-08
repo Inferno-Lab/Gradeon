@@ -68,8 +68,8 @@ export function InvoicesPage() {
                     <div className="grd th inv" style={{ '--cols': 'minmax(0,1.6fr) minmax(0,1.3fr) 90px 100px 100px 100px 90px' } as React.CSSProperties}><span>Student</span><span className="hs">Fee</span><span className="hs">Due</span><span style={{ textAlign: 'right' }}>Billed</span><span className="hs" style={{ textAlign: 'right' }}>Paid</span><span>Status</span><span></span></div>
                     {inv.data!.items.map((r) => (
                       <div className="grd rw inv" key={r.id} style={{ '--cols': 'minmax(0,1.6fr) minmax(0,1.3fr) 90px 100px 100px 100px 90px' } as React.CSSProperties}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.studentName} size={30} /><span style={{ minWidth: 0 }}><b title={r.studentName} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.studentName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>Class {r.className}</small></span></span>
-                        <span className="hs" title={r.title} style={{ font: '600 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.title}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.studentName} size={30} /><span style={{ minWidth: 0 }}><b data-tip={r.studentName} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.studentName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>Class {r.className}</small></span></span>
+                        <span className="hs" data-tip={r.title} style={{ font: '600 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.title}</span>
                         <span className="hs" style={{ font: '600 13px var(--fb)', color: 'var(--ink2)' }}>{dateLabel(r.dueOn)}</span>
                         <b className="num" style={{ font: '700 13.5px var(--fb)', textAlign: 'right' }}>₹{inr(r.amount - r.waived)}</b>
                         <span className="num hs" style={{ font: '600 13.5px var(--fb)', textAlign: 'right', color: 'var(--ink2)' }}>₹{inr(r.paid)}</span>
@@ -94,8 +94,8 @@ export function InvoicesPage() {
                   <button className="rowbtn" key={r.id} onClick={() => setReceipt(r)} aria-label={`Open receipt ${r.receiptNo}`}>
                     <div className="grd rw" style={{ '--cols': '150px minmax(0,1.5fr) minmax(0,1.2fr) 100px 100px' } as React.CSSProperties}>
                       <b className="num" style={{ font: '700 13px var(--fb)' }}>{r.receiptNo}</b>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.studentName} size={28} /><b title={r.studentName} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.studentName}</b></span>
-                      <span className="hs" title={r.title} style={{ font: '600 13.5px var(--fb)', color: 'var(--ink2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.title}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.studentName} size={28} /><b data-tip={r.studentName} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.studentName}</b></span>
+                      <span className="hs" data-tip={r.title} style={{ font: '600 13.5px var(--fb)', color: 'var(--ink2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.title}</span>
                       <span style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{dateLabel(r.paidOn)}</span>
                       <b className="num" style={{ font: '700 14px var(--fb)', textAlign: 'right' }}>₹{inr(r.amount)}</b>
                     </div>

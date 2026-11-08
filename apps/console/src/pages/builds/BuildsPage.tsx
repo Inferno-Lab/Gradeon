@@ -38,7 +38,7 @@ export function BuildsPage() {
           <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
             <div className="grd th" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties}><span>School</span><span>Phone</span><span>Version</span><span>Status</span><span></span></div>
             {rows.map((b) => (
-              <div key={b.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties} title={b.note}>
+              <div key={b.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) 90px 100px 130px 110px' } as React.CSSProperties} data-tip={b.note}>
                 <span style={{ minWidth: 0 }}><b style={{ display: 'block', font: '700 14px var(--fb)' }}>{name(b.schoolId)}</b><small style={{ color: 'var(--ink3)' }}>{b.status === 'done' ? `Built ${ago(b.createdAt)}` : b.note}</small></span>
                 <span>{b.platform === 'android' ? 'Android' : 'iPhone'}</span><span className="num">{b.version}</span>
                 <span className={`st ${TONE[b.status]}`}><i></i>{LABEL[b.status]}</span>

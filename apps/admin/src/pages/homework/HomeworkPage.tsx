@@ -63,7 +63,7 @@ function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () =
     <button className="rowbtn" onClick={onOpen} aria-label={`Open ${r.title}, ${r.className}`}>
       <div className="grd rw hwl" style={{ '--cols': 'minmax(0,1.7fr) 70px 90px minmax(120px,1fr) 90px' } as React.CSSProperties}>
         <span style={{ minWidth: 0 }}>
-          <b title={r.title} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14.5px/1.25 var(--fb)' }}>{r.title}</b>
+          <b data-tip={r.title} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14.5px/1.25 var(--fb)' }}>{r.title}</b>
           <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.subjectName} · set {dateLabel(r.assignedOn)}</small>
         </span>
         <span className="chip">{r.className}</span>
@@ -155,7 +155,7 @@ function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: stri
               return (
                 <div key={s.studentId} className="hwr">
                   <span className="rn num">{s.rollNo || '–'}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={s.name} size={30} /><b style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} title={s.name}>{s.name}</b></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={s.name} size={30} /><b style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={s.name}>{s.name}</b></span>
                   <label className="hwc"><input type="checkbox" checked={x.handed} disabled={!canWrite} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, handed: e.target.checked } })} /><span>{x.handed ? (s.onTime || !s.handedAt ? 'Handed in' : 'Late') : 'Not yet'}</span></label>
                   <input className="hws" inputMode="numeric" aria-label={`Marks for ${s.name}`} placeholder="–" disabled={!canWrite || !x.handed} value={x.score} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, score: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
                 </div>

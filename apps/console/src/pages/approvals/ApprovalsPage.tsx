@@ -44,7 +44,7 @@ export function ApprovalsPage() {
                 </span>
                 <span className="tgrow">
                   <button className="btn sm" disabled={!mayDecide || decide.isPending} onClick={() => decide.mutate({ id: r.id, yes: false })}>Reject</button>
-                  <button className="btn pri sm" disabled={!mayDecide || own || decide.isPending} title={own ? 'A second person has to approve this' : undefined} onClick={() => decide.mutate({ id: r.id, yes: true })}>Approve</button>
+                  <button className="btn pri sm" disabled={!mayDecide || own || decide.isPending} data-tip={own ? 'A second person has to approve this' : undefined} onClick={() => decide.mutate({ id: r.id, yes: true })}>Approve</button>
                   {own && <span className="help" style={{ flexBasis: '100%', textAlign: 'right' }}>You asked for this, so someone else has to approve it.</span>}
                 </span>
               </div>

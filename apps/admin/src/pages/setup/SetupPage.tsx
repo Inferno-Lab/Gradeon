@@ -71,7 +71,7 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
           <div style={{ minWidth: 120 * cols.length }}>
             <div className="grd th" style={grid}>{cols.map((c) => <span key={c.key}>{c.label.replace(/ \(.*\)$/, '')}</span>)}</div>
             {s.rows.map((r) => {
-              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13.5px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} title={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
+              const cells = cols.map((c, i) => <span key={c.key} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: i === 0 ? '700 14px var(--fb)' : '600 13.5px var(--fb)', color: i === 0 ? 'var(--ink)' : 'var(--ink2)' }} data-tip={r[c.key]}>{shown(c, r[c.key] ?? '')}</span>);
               return edit
                 ? <button className="rowbtn" key={r.id} onClick={() => onOpen(r)} aria-label={`Open ${nameOf(r)}`}><div className="grd rw" style={grid}>{cells}</div></button>
                 : <div className="grd rw" key={r.id} style={grid}>{cells}</div>;

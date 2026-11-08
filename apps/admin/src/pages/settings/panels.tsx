@@ -127,7 +127,7 @@ export function AppLayoutPanel({ doc, say }: PanelProps) {
                   {options.map((c) => {
                     const on = chosen.includes(c.key);
                     const full = !on && chosen.length >= o.max;
-                    return <button key={c.key} type="button" className={`fp ${on ? 'on' : ''}`} aria-pressed={on} disabled={s.locked(o.key) || full} title={full ? `At most ${o.max}` : undefined} onClick={() => s.set(o.key, on ? chosen.filter((x) => x !== c.key) : [...chosen, c.key])}>{c.label}</button>;
+                    return <button key={c.key} type="button" className={`fp ${on ? 'on' : ''}`} aria-pressed={on} disabled={s.locked(o.key) || full} data-tip={full ? `At most ${o.max}` : undefined} onClick={() => s.set(o.key, on ? chosen.filter((x) => x !== c.key) : [...chosen, c.key])}>{c.label}</button>;
                   })}
                 </div>
                 {chosen.length > 1 && (

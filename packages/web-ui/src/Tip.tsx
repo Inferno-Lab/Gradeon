@@ -26,17 +26,40 @@ export function Tooltips() {
   const tip = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let wait = 0;
+    let lastShown = 0;
     const show = (el: HTMLElement) => {
       const text = tipText(el);
       const root = el.closest<HTMLElement>('.nest');
       if (!text || !root) return;
+      // A tip that only repeats the element's own words is for text cut off by its cell: none when it all shows,
+      // and a short wait first (instant when moving between neighbours), so a table does not flicker under the mouse.
+      if (text === el.textContent?.trim()) {
+        if (el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1) return;
+        if (performance.now() - lastShown > 300 && !wait) {
+          cur.current = el;
+          wait = window.setTimeout(() => { wait = 0; if (cur.current === el) place(el, text, root); }, 450);
+          return;
+        }
+      }
+      place(el, text, root);
+    };
+    let visible = false;
+    const place = (el: HTMLElement, text: string, root: HTMLElement) => {
       cur.current = el;
+      visible = true;
       const r = el.getBoundingClientRect();
       setFit(null);
       if (el.dataset.tipSide === 'right') setShown({ text, x: r.right + 10, y: r.top + r.height / 2, below: false, side: true, root });
       else setShown({ text, x: r.left + r.width / 2, y: r.top < 80 ? r.bottom : r.top, below: r.top < 80, side: false, root });
     };
-    const hide = () => { if (cur.current) { cur.current = null; setShown(null); setFit(null); } };
+    const hide = () => {
+      clearTimeout(wait);
+      wait = 0;
+      if (visible) lastShown = performance.now();
+      visible = false;
+      if (cur.current) { cur.current = null; setShown(null); setFit(null); }
+    };
     // Rows sliding under a still mouse while a list scrolls would open and close a tooltip on every frame; wait until scrolling stops.
     let still = 0;
     const scrolled = () => { still = performance.now() + 160; hide(); };

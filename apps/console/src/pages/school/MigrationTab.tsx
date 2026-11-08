@@ -104,7 +104,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
         <div className="help">What the school sent from its admin (Moving in). Open one to import it; set aside what is not for importing.</div>
         {v.uploads.length === 0 ? <div className="help" style={{ marginTop: 10 }}>No files yet.</div> : v.uploads.map((u) => (
           <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, height: 'auto', padding: '10px 0', cursor: 'default' }}>
-            <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
+            <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
             <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {when(u.at)}</span>
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
               {u.status === 'imported' ? <span className="chip g">Imported</span> : <>
@@ -183,7 +183,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
           <div className="lbl" style={{ marginBottom: 6 }}>Columns in the file</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
             {p.headers.map((h) => (
-              <div className="fld" key={h}><label htmlFor={`map-${h}`} title={h} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h || '(no heading)'}</label>
+              <div className="fld" key={h}><label htmlFor={`map-${h}`} data-tip={h} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h || '(no heading)'}</label>
                 <Select id={`map-${h}`} compact value={p.mapping[h] ?? ''} onChange={(val) => onMap({ ...p.mapping, [h]: val })} options={options} /></div>
             ))}
           </div>

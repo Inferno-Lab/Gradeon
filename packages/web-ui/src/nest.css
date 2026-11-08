@@ -172,23 +172,11 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest [data-leaving]{pointer-events:none}
 .nest .float{animation:nFloat 5s ease-in-out infinite;animation-delay:var(--d,0s)}
 @keyframes nFloat{50%{transform:translateY(-9px)}}
-/* menus that grow out of their button */
-.nest .anc{position:relative;flex:none}
-.nest .morph{position:absolute;right:0;top:0;z-index:30;overflow:hidden;background:var(--card);border:1.5px solid var(--line2);width:var(--w0);height:42px;border-radius:999px;transition:width .6s var(--e),height .6s var(--e),border-radius .6s var(--e),box-shadow .5s,border-color .3s}
-.nest .morph.open{width:var(--w1);height:var(--h1);border-radius:24px;box-shadow:var(--sh3);border-color:var(--line)}
-.nest .morph.dk{background:var(--pri);color:var(--priT);border-color:transparent}
-.nest .mh{display:flex;align-items:center;gap:9px;width:100%;height:39px;padding:0 17px;border:0;background:none;color:inherit;font:700 14px var(--fb);cursor:pointer;white-space:nowrap}
-.nest .mh svg{width:17px;height:17px;flex:none}
-.nest .mh .cv{margin-left:auto;transition:transform .5s var(--e)}
-.nest .open .mh .cv{transform:rotate(180deg)}
-.nest .ml{padding:4px 8px 8px;display:flex;flex-direction:column;gap:2px}
-.nest .mo{display:flex;align-items:center;gap:11px;height:42px;padding:0 12px;border:0;border-radius:14px;background:none;color:inherit;font:600 14px var(--fb);cursor:pointer;white-space:nowrap;text-align:left;opacity:0;transform:translateY(-8px);transition:opacity .3s,transform .5s var(--e),background .15s}
-.nest .open .mo{opacity:1;transform:none}
-.nest .mo:hover{background:var(--sunk)}
-.nest .mo svg{width:18px;height:18px;flex:none;opacity:.75}
-.nest .mo .ck{margin-left:auto;color:var(--v);opacity:1}
-.nest .mo kbd{margin-left:auto;font:700 11px var(--fb);opacity:.5}
-.nest .mo small{display:block;font:500 12px var(--fb);opacity:.6}
+/* A button that opens a menu: its chevron turns while the menu is open. */
+.nest .btn .cv{transition:transform var(--t2) var(--e)}
+.nest .btn[aria-expanded=true] .cv{transform:rotate(180deg)}
+.nest .popm button svg{width:17px;height:17px;flex:none;opacity:.75}
+.nest .popm button .ck{margin-left:auto;color:var(--v);opacity:1}
 /* overlays */
 .nest .scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:nFade var(--t3) var(--e) both}
 .nest .scrim[data-leaving],.nest .scrim.out{animation:nFadeO var(--t2) var(--ei) forwards}

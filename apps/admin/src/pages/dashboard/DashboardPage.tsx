@@ -52,12 +52,6 @@ function DashboardDesktop() {
 
   const q = useQuery({ queryKey: ['dashboard', days], queryFn: () => app.api.dashboard(days), refetchInterval: 20_000, placeholderData: keepPreviousData });
 
-  // Close the two menus when the page is clicked anywhere else.
-  useEffect(() => {
-    const off = () => { setRangeOpen(false); setNewOpen(false); };
-    const t = setTimeout(() => document.addEventListener('click', off), 0);
-    return () => { clearTimeout(t); document.removeEventListener('click', off); };
-  }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const decide = useMutation({
@@ -131,11 +125,9 @@ function DashboardDesktop() {
       ), me: { name: app.user.name, initials: app.user.initials, role: app.user.roleNames[0] ?? 'Staff', ...me }, schoolName: chrome.shell?.school.shortName ?? d.schoolName,
       greeting: greeting(), subtitle: `${d.term.name} · ${d.subtitle.marked} of ${d.subtitle.classes} classes have marked attendance`,
       hasAlerts: left > 0,
-      rangeOpen: rangeOpen ? 'open' : '', rangeExp: rangeOpen ? 'true' : 'false', rangeLabel: RANGES[range]![0],
-      toggleRange: (e: React.MouseEvent) => { e.stopPropagation(); setRangeOpen((o) => !o); setNewOpen(false); },
+      rangeOpen, rangeLabel: RANGES[range]![0], setRangeOpen: (o: boolean) => { setRangeOpen(o); setNewOpen(false); },
       ranges: RANGES.map((r, i) => ({ t: r[0], on: i === range, sel: i === range ? 'true' : 'false', d: 50 + i * 45, pick: () => { setRange(i); setRangeOpen(false); } })),
-      newOpen: newOpen ? 'open' : '', newExp: newOpen ? 'true' : 'false',
-      toggleNew: (e: React.MouseEvent) => { e.stopPropagation(); setNewOpen((o) => !o); setRangeOpen(false); },
+      newOpen, setNewOpen: (o: boolean) => { setNewOpen(o); setRangeOpen(false); },
       news: NEWS.filter((n) => has(n[4])).map((n, i) => ({ t: n[0], ic: IC[n[1] as keyof typeof IC], k: n[2], d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n[3]); } })),
       dayLine: d.day.isToday ? `${d.day.label} · ${d.day.clock}` : `${d.day.label} · last school day`,
       kPresent: rollDigits(inr(d.present.value)), totalStudents: inr(d.present.total),

@@ -70,7 +70,7 @@ export function AdmissionsPage() {
                       <article className="admk" key={r.id}>
                         <button className="admo" onClick={() => setDlg({ kind: 'view', row: r })} aria-label={`Open ${r.childName}`}>
                           <Avatar name={r.childName} size={32} />
-                          <span style={{ minWidth: 0 }}><b title={r.childName}>{r.childName}</b><small>Grade {r.gradeSought} · {r.guardianName}</small></span>
+                          <span style={{ minWidth: 0 }}><b data-tip={r.childName}>{r.childName}</b><small>Grade {r.gradeSought} · {r.guardianName}</small></span>
                         </button>
                         <div className="tgrow" style={{ gap: 6 }}>
                           <span className="chip">{SOURCE[r.source] ?? r.source}</span>

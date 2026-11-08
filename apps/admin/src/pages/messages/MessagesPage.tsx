@@ -60,8 +60,8 @@ function ThreadItem({ t, on, onOpen }: { t: ThreadRow; on: boolean; onOpen: () =
     <button className={`mti ${on ? 'on' : ''}`} onClick={onOpen} aria-current={on}>
       <Avatar name={t.guardianName} size={38} />
       <span style={{ minWidth: 0, flex: 1 }}>
-        <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><b title={t.guardianName}>{t.guardianName}</b><small>{ago(t.lastAt)}</small></span>
-        <span className="mts" title={t.subject}>{t.subject}</span>
+        <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><b data-tip={t.guardianName}>{t.guardianName}</b><small>{ago(t.lastAt)}</small></span>
+        <span className="mts" data-tip={t.subject}>{t.subject}</span>
         <span className="mtp">{t.lastFrom === 'staff' ? 'You: ' : ''}{t.lastBody}</span>
       </span>
       {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '800 11.5px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
@@ -93,7 +93,7 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
       <header className="mch">
         <button className="btn sm mback" onClick={onBack} aria-label="Back to the list"><Ico d={BACK} /></button>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <b className="fd" title={t.subject} style={{ display: 'block', fontSize: 18, letterSpacing: '-.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</b>
+          <b className="fd" data-tip={t.subject} style={{ display: 'block', fontSize: 18, letterSpacing: '-.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</b>
           <small style={{ color: 'var(--ink3)', font: '600 12.5px var(--fb)' }}>{t.guardianName}{t.studentName ? ` · ${t.studentName}, Class ${t.className}` : ''}{t.assignedToName ? ` · with ${t.assignedToName}` : ''}</small>
         </div>
         {canWrite && <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

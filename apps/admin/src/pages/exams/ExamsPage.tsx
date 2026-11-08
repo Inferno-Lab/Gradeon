@@ -180,12 +180,12 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
               <div style={{ minWidth: 120 + ex.subjects.length * 96 + 220 }}>
                 <div className="mkh" style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                   <span>Roll</span><span>Student</span>
-                  {ex.subjects.map((s) => <span key={s.subjectId} title={`${s.name}, out of ${s.maxMarks}`} style={{ textAlign: 'center' }}>{s.name}<small>/ {s.maxMarks}</small></span>)}
+                  {ex.subjects.map((s) => <span key={s.subjectId} data-tip={`${s.name}, out of ${s.maxMarks}`} style={{ textAlign: 'center' }}>{s.name}<small>/ {s.maxMarks}</small></span>)}
                 </div>
                 {m.students.map((s) => (
                   <div className="mkr" key={s.studentId} style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                     <span className="rn num">{s.rollNo || '–'}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b title={s.name} style={{ font: '700 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><Avatar name={s.name} size={26} /><b data-tip={s.name} style={{ font: '700 13.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
                     {ex.subjects.map((sub) => {
                       const c = cell(s.studentId, sub.subjectId);
                       const over = c.score !== '' && Number(c.score) > sub.maxMarks;
@@ -193,7 +193,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                         <span key={sub.subjectId} className="mkc">
                           <input data-col={sub.subjectId} inputMode="decimal" aria-label={`${s.name}, ${sub.name}`} className={`hws ${over ? 'bad' : ''}`} disabled={!editable || c.absent} placeholder={c.absent ? 'Abs' : '–'} value={c.score}
                             onKeyDown={onKey} onChange={(e) => setDraft({ ...draft, [key(s.studentId, sub.subjectId)]: { score: e.target.value.replace(/[^\d.]/g, '').slice(0, 5), absent: false } })} />
-                          {editable && <button type="button" className={`abs ${c.absent ? 'on' : ''}`} title={c.absent ? 'Marked absent. Click to undo' : 'Mark absent'} aria-label={`Absent: ${s.name}, ${sub.name}`} aria-pressed={c.absent}
+                          {editable && <button type="button" className={`abs ${c.absent ? 'on' : ''}`} data-tip={c.absent ? 'Marked absent. Click to undo' : 'Mark absent'} aria-label={`Absent: ${s.name}, ${sub.name}`} aria-pressed={c.absent}
                             onClick={() => setDraft({ ...draft, [key(s.studentId, sub.subjectId)]: { score: '', absent: !c.absent } })}>A</button>}
                         </span>
                       );
@@ -211,7 +211,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                     {results.data.rows.map((r) => (
                       <div className="grd rw" key={r.studentId} style={{ '--cols': '44px minmax(0,1.6fr) 90px 70px 60px' } as React.CSSProperties}>
                         <b className="num" style={{ font: '800 14px var(--fb)', color: r.rank <= 3 ? 'var(--v)' : 'var(--ink3)' }}>#{r.rank}</b>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b title={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
                         <span className="num" style={{ font: '600 13.5px var(--fb)' }}>{r.total} / {r.max}</span>
                         <b className="num" style={{ font: '800 14px var(--fb)' }}>{r.pct}%</b>
                         <span className={`chip ${r.pct >= 33 ? 'g' : 'r'}`}>{r.grade}</span>

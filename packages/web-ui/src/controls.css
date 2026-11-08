@@ -33,7 +33,7 @@
 .nest .sxe{padding:12px;font:600 13.5px var(--fb);color:var(--ink3)}
 
 /* Tooltip */
-.nest .tipx{position:fixed;z-index:130;transform:translate(-50%,calc(-100% - 8px));max-width:260px;padding:7px 11px;border-radius:12px;background:var(--pri);color:var(--priT);font:600 12.5px/1.4 var(--fb);pointer-events:none;display:flex;flex-direction:column;gap:1px;animation:nFade .1s ease-out;white-space:normal}
+.nest .tipx{position:fixed;z-index:130;transform:translate(-50%,calc(-100% - 8px));max-width:260px;padding:7px 11px;border-radius:12px;background:var(--pri);color:var(--priT);font:600 12.5px/1.4 var(--fb);pointer-events:none;display:flex;flex-direction:column;gap:1px;animation:nFade var(--t1) var(--e);white-space:normal}
 .nest .tipx b{font-weight:800}
 .nest .tipx span{white-space:pre-line;font-weight:600;opacity:.8}
 .nest .tipx.bl{transform:translate(-50%,8px)}

@@ -261,7 +261,7 @@ export function FleetView({ v }: { v: any }) {
                           <span className="av" style={{ width: "34px", height: "34px", fontSize: "11px", background: r.bg, color: r.fg, boxShadow: "none" } as CSSProperties}>
                             {r.ini}
                           </span>
-                          <b title={r.n} style={{ font: "700 14px/1.25 var(--fb)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as CSSProperties}>{r.n}</b>
+                          <b data-tip={r.n} style={{ font: "700 14px/1.25 var(--fb)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as CSSProperties}>{r.n}</b>
                         </div>
                         <span className="chip">{r.cell}</span>
                         <span className="ver">

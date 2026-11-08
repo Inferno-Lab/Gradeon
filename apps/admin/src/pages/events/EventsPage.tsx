@@ -103,13 +103,13 @@ function EventItem({ e, canWrite, onOpen, dim }: { e: EventRow; canWrite: boolea
     <button className="evi" style={{ opacity: dim ? 0.6 : 1 }} onClick={onOpen} aria-label={`${canWrite ? 'Edit' : 'Open'} ${e.title}`}>
       <span className={`evk k-${e.kind}`}></span>
       <span style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
-        <b title={e.title}>{e.title}</b>
+        <b data-tip={e.title}>{e.title}</b>
         <small>{when(e)}{e.venue ? ` · ${e.venue}` : ''}</small>
         {e.note && <small className="evn">{e.note}</small>}
       </span>
       <span style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
         <span className={`chip ${KIND[e.kind].tone}`}>{KIND[e.kind].label}</span>
-        {replies > 0 && <span className="chip g" title={`${e.going} going, ${e.maybe} maybe, ${e.cant} cannot`}>{e.going} going</span>}
+        {replies > 0 && <span className="chip g" data-tip={`${e.going} going, ${e.maybe} maybe, ${e.cant} cannot`}>{e.going} going</span>}
         {e.audience !== 'everyone' && <span className="chip">{AUDIENCE[e.audience]}</span>}
       </span>
     </button>
