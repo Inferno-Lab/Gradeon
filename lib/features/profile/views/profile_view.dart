@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -68,7 +69,7 @@ class ProfileView extends GetView<ProfileController> {
                       photo: role == UserRole.student ? user?.avatarUrl : null,
                       facts: [
                         (
-                          'profile.class'.tr,
+                          SchoolConfig.classWord.isEmpty ? 'profile.class'.tr : SchoolConfig.classWord,
                           '${controller.schoolClass?.name.replaceAll(RegExp('[^0-9]'), '') ?? ''} ${controller.schoolClass?.section ?? ''} · ${'fees.roll'.trp({'n': student.rollNo})}',
                         ),
                         ('profile.house'.tr, student.house),
@@ -322,13 +323,18 @@ class _Tiles extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     SubjectColor s(String id) => AppColors.subject(id);
+    // A tile only for a module the school has (console: Modules).
+    const has = SchoolConfig.has;
     final tiles = <(IconData, String, String, Color, Color)>[
-      if (!teacher) (PhosphorIconsRegular.megaphone, 'menu.notices', AppRoutes.notices, c.mariSoft, c.mariText),
-      (PhosphorIconsRegular.calendarBlank, 'menu.events', AppRoutes.events, s('science').fill, s('science').on),
-      if (!teacher) (PhosphorIconsRegular.bus, 'menu.transport', AppRoutes.transport, s('social').fill, s('social').on),
-      if (!teacher)
+      if (!teacher && has('notices'))
+        (PhosphorIconsRegular.megaphone, 'menu.notices', AppRoutes.notices, c.mariSoft, c.mariText),
+      if (has('events'))
+        (PhosphorIconsRegular.calendarBlank, 'menu.events', AppRoutes.events, s('science').fill, s('science').on),
+      if (!teacher && has('transport'))
+        (PhosphorIconsRegular.bus, 'menu.transport', AppRoutes.transport, s('social').fill, s('social').on),
+      if (!teacher && has('library'))
         (PhosphorIconsRegular.bookOpen, 'menu.library', AppRoutes.library, s('computer').fill, s('computer').on),
-      (PhosphorIconsRegular.image, 'menu.gallery', AppRoutes.gallery, s('hindi').fill, s('hindi').on),
+      if (has('gallery')) (PhosphorIconsRegular.image, 'menu.gallery', AppRoutes.gallery, s('hindi').fill, s('hindi').on),
       if (!teacher)
         (PhosphorIconsRegular.calendarCheck, 'menu.leave', AppRoutes.leave, s('english').fill, s('english').on),
       if (teacher) (PhosphorIconsRegular.bell, 'menu.notifications', AppRoutes.notifications, c.mariSoft, c.mariText),

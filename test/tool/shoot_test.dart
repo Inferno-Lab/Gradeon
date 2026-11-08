@@ -17,6 +17,7 @@ import 'package:gradeon/core/translations/app_translations.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/auth/views/welcome_overlay.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 
 import '../support/harness.dart';
@@ -100,6 +101,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(() => Get.find<MockJsonDataSource>().ensureLoaded());
     if (!guest) await real(tester, () => signIn(role));
+    // Home itself, not the one-time welcome over it.
+    if (!guest) await real(tester, markWelcomeSeen);
 
     await tester.pumpWidget(
       RepaintBoundary(

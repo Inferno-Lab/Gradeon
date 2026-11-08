@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:get/get.dart';
 
 /// Single place for the product name and the mock/remote switch.
@@ -27,6 +28,14 @@ class AppConfig {
   /// The school's name and tagline. The demo values stand until `SchoolProfileService` has the school's own from the API.
   static String schoolName = 'Greenfield International School';
   static String schoolTagline = 'Curiosity first. Kindness always.';
+
+  /// The school's mark: its brand colour and logo letters (console: Identity and branding). Null colour: the app's own ink.
+  static Color? schoolColor;
+  static String schoolMark = 'G';
+
+  /// The school's privacy notice and grievance officer (console: Privacy). Empty on sample content.
+  static String privacyNotice = '';
+  static String privacyOfficer = '';
   static const version = '2.0.6';
   static const build = 216;
 

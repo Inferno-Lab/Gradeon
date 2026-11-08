@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
+import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 
@@ -8,6 +10,17 @@ import 'package:gradeon/data/datasources/remote_datasource.dart';
 abstract final class SchoolConfig {
   static final dock = <String>['home', 'academics', 'fees', 'chat'].obs;
   static final home = <String>['dayRibbon', 'dueStack', 'attendance', 'nextExam', 'notices', 'events'].obs;
+  static final quick = <String>['payFees', 'applyLeave', 'messageTeacher', 'timetable'].obs;
+
+  /// The languages the app offers (console: The app → Languages offered).
+  static final languages = <String>['en', 'hi', 'mr'].obs;
+
+  /// Whether a family consents to the privacy notice before using the app, and is asked about photos too.
+  static bool consentRequired = false;
+  static bool photoConsent = false;
+
+  /// What the school calls a class; empty means the app's own (translated) word.
+  static String classWord = '';
 
   /// Empty means every module (sample content, or before the school's config arrives).
   static final modules = <String>[].obs;
@@ -36,6 +49,20 @@ abstract final class SchoolConfig {
       features.value = List<String>.from((json['features'] as List?) ?? const []);
       dock.assignAll(List<String>.from(app['dock'] as List));
       home.assignAll(List<String>.from(app['home'] as List));
+      quick.assignAll(List<String>.from((app['quick'] as List?) ?? const []));
+      final settings = Map<String, dynamic>.from((json['settings'] as Map?) ?? const {});
+      final langs = List<String>.from((settings['app.languages'] as List?) ?? const ['en', 'hi', 'mr']);
+      if (langs.isNotEmpty) languages.assignAll(langs);
+      // A family whose language the school does not offer gets the school's default language (or the first one offered).
+      final theme = Get.find<ThemeService>();
+      if (!languages.contains(theme.locale.value.languageCode)) {
+        final fallback = '${(json['school'] as Map?)?['language'] ?? ''}';
+        await theme.setLocale(Locale(languages.contains(fallback) ? fallback : languages.first));
+      }
+      consentRequired = settings['privacy.consentRequired'] == true;
+      photoConsent = settings['privacy.photoConsent'] == true;
+      final word = '${(json['vocabulary'] as Map?)?['class'] ?? ''}'.trim();
+      classWord = word == 'Class' ? '' : word;
     } on Object {
       // Keeps what it had: the next resume or the next "not in your plan" answer tries again.
     }

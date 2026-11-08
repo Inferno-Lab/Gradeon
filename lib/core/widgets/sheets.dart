@@ -6,10 +6,13 @@ import 'package:gradeon/core/widgets/ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Opens a paper sheet over a scrim (content sheets are solid, never glass).
-Future<T?> showSheet<T>(Widget child) {
+/// [dismissible] false keeps it open until it closes itself (a step the person must answer).
+Future<T?> showSheet<T>(Widget child, {bool dismissible = true}) {
   return Get.bottomSheet<T>(
     child,
     isScrollControlled: true,
+    isDismissible: dismissible,
+    enableDrag: dismissible,
     backgroundColor: Colors.transparent,
     barrierColor: Get.context?.app.scrim,
     enterBottomSheetDuration: const Duration(milliseconds: 550),

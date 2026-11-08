@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/painting.dart';
 import 'package:gradeon/core/config/app_config.dart';
 
 /// Reads the school's own name and tagline from its API at start-up, so the app follows what the school sets in its admin.
@@ -25,6 +26,20 @@ class SchoolProfileService {
       if (name is String && name.trim().isNotEmpty) AppConfig.schoolName = name.trim();
       if (tagline is String && tagline.trim().isNotEmpty) AppConfig.schoolTagline = tagline.trim();
       AppConfig.demoSchool.value = json['demoMode'] == true;
+      final color = json['color'];
+      if (color is String && RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(color)) {
+        AppConfig.schoolColor = Color(int.parse('FF${color.substring(1)}', radix: 16));
+      }
+      final logo = json['logoText'];
+      if (logo is String && logo.trim().isNotEmpty) AppConfig.schoolMark = logo.trim().toUpperCase();
+      final privacy = json['privacy'];
+      if (privacy is Map) {
+        AppConfig.privacyNotice = '${privacy['notice'] ?? ''}'.trim();
+        AppConfig.privacyOfficer = [privacy['officerName'], privacy['officerEmail'], privacy['officerPhone']]
+            .whereType<String>()
+            .where((s) => s.trim().isNotEmpty)
+            .join(' · ');
+      }
     } on Object {
       // shortcut: any failure keeps the built-in values, retrying at the next start; add a cached copy when offline use matters.
     } finally {

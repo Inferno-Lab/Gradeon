@@ -63,7 +63,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'timetable.schoolEdits': { group: 'Academic year', label: 'The school may edit its own timetable', kind: 'bool', help: 'Off: the timetable is locked and only Gradeon changes it. Covering an absent teacher for a day is always allowed.' },
   'staff.schoolAssignsRoles': { group: 'People', label: 'The school may put its staff into roles', kind: 'bool', help: 'Roles themselves are always made here. Off: only Gradeon assigns roles to people.' },
   'vocab.student': { group: 'People', label: 'What the school calls a student', kind: 'text', help: 'The admin menu and the Students page use it (an “s” is added for more than one).' },
-  'vocab.class': { group: 'People', label: 'What the school calls a class', kind: 'text', help: 'The admin menu and the app’s profile use it.' },
+  'vocab.class': { group: 'People', label: 'What the school calls a class', kind: 'text', help: 'The admin menu (“Sections and calendar”) and the app’s profile use it.' },
   'fees.receiptPrefix': { group: 'Fees', label: 'Receipt number prefix', kind: 'text', help: '{year} becomes the year, for example RCPT-{year}-.' },
   'fees.receiptStart': { group: 'Fees', label: 'First receipt number', kind: 'number', min: 1, max: 99_999_999, help: 'For a school arriving from another system: carry on from its last receipt.' },
   'fees.receiptNote': { group: 'Fees', label: 'Printed on receipts', kind: 'textarea', help: 'Under the school’s name and address on every receipt: the trust, its registration or GST number.' },

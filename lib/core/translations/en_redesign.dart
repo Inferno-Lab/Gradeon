@@ -788,4 +788,24 @@ const enRedesign = <String, String>{
   'chat.no_chats': 'No conversations yet',
   'chat.no_chats_body': 'Pick a teacher below to start your first chat.',
   'chat.family': 'Family',
+  'home.latest_notices': 'Latest notices',
+  'quick.pay_fees': 'Pay fees',
+  'quick.apply_leave': 'Apply for leave',
+  'quick.message_teacher': 'Message a teacher',
+  'quick.timetable': 'Timetable',
+  'quick.homework': 'Homework',
+  'quick.events': 'Events',
+  'about.principal_only': 'Principal: @name',
+  'privacy.title': 'Privacy',
+  'privacy.consent_title': 'Before you start',
+  'privacy.consent_intro': '@school keeps your family’s details to run the school. Please read how they are used.',
+  'privacy.default_notice':
+      'The school uses your family’s details only to run the school: attendance, fees, homework, results and messages. '
+      'They are kept in Gradeon’s databases for the school and are never sold or used for advertising. '
+      'Ask the school office for its full privacy notice.',
+  'privacy.officer': 'Grievance officer: @who',
+  'privacy.photos': 'The school may share photos of my child',
+  'privacy.photos_hint': 'In the school’s gallery and newsletters. Ask the school office to change this later.',
+  'privacy.agree': 'I agree',
+  'privacy.save_failed': 'That did not save. Check your connection and try again.',
 };

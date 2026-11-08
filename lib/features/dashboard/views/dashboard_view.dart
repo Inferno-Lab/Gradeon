@@ -267,6 +267,38 @@ String todayLine() => DateFormat('EEEE · d MMMM', Get.locale?.languageCode).for
 /// Home sections follow what Gradeon set for the school (console → The app → Home screen cards) and its modules.
 bool _show(String card, [String? module]) => SchoolConfig.home.contains(card) && (module == null || SchoolConfig.has(module));
 
+/// Home's cards in the order the console set, each once: what is due (fees, homework and events share one list),
+/// attendance and the next exam side by side, and the latest notices. Today's timetable is the band at the top.
+/// [due] replaces the student's due list (a parent's covers every child); [only] picks groups for the wide layout.
+List<Widget> homeSections(HomeSnapshot data, {bool parent = false, List<Widget>? due, Set<String>? only}) {
+  final out = <Widget>[];
+  final done = <String>{};
+  for (final key in SchoolConfig.home) {
+    final group = switch (key) {
+      'dueStack' || 'homework' || 'events' => 'due',
+      'attendance' || 'nextExam' => 'stats',
+      'notices' => 'notices',
+      _ => null,
+    };
+    if (group == null || (only != null && !only.contains(group)) || !done.add(group)) continue;
+    switch (group) {
+      case 'due':
+        out.addAll(due ?? [DueSection(items: data.due)]);
+      case 'stats':
+        final attendance = _show('attendance', 'attendance');
+        final exam = _show('nextExam', 'exams');
+        if (!parent && (attendance || exam)) {
+          out
+            ..add(const SizedBox(height: 12))
+            ..add(StatsRow(data: data, attendance: attendance, exam: exam));
+        }
+      case 'notices':
+        if (data.notices.isNotEmpty && SchoolConfig.has('notices')) out.add(NoticesCard(notices: data.notices.take(3).toList()));
+    }
+  }
+  return out;
+}
+
 class _StudentBody extends StatelessWidget {
   const _StudentBody({required this.data, required this.scrub});
 
@@ -281,6 +313,7 @@ class _StudentBody extends StatelessWidget {
         Rise(child: Overline(todayLine())),
         const SizedBox(height: 8),
         Rise(index: 1, child: Text(greeting(data.student.name.split(' ').first), style: context.type.h1)),
+        const Rise(index: 1, child: QuickRow()),
         const SizedBox(height: 18),
         if (data.isNew)
           const Rise(index: 2, child: HomeWelcome())
@@ -289,9 +322,7 @@ class _StudentBody extends StatelessWidget {
             index: 2,
             child: NowCard(data: data, scrub: scrub),
           ),
-          if (_show('dueStack')) Rise(index: 3, child: DueSection(items: data.due)),
-          const SizedBox(height: 12),
-          if (_show('attendance', 'attendance')) Rise(index: 5, child: StatsRow(data: data)),
+          for (final (i, w) in homeSections(data).indexed) Rise(index: 3 + i, child: w),
         ],
       ],
     );
@@ -322,6 +353,7 @@ class _ParentBody extends StatelessWidget {
             style: context.type.h1,
           ),
         ),
+        const Rise(index: 1, child: QuickRow()),
         Rise(index: 2, child: SectionLabel('home.both_children'.tr)),
         Rise(index: 2, child: ChildrenStrip(children: data.children)),
         if (data.isNew)
@@ -329,27 +361,30 @@ class _ParentBody extends StatelessWidget {
             padding: EdgeInsets.only(top: 16),
             child: Rise(index: 3, child: HomeWelcome()),
           )
-        else ...[
-          Rise(
-            index: 3,
-            child: SectionLabel(
-              'home.due_across'.trp({'amount': Formatters.inr(data.dueTotal)}),
-              action: 'nav.fees',
-              onAction: () => Get.toNamed<void>(AppRoutes.fees),
-            ),
-          ),
-          if (_show('dueStack')) Rise(index: 4, child: DueList(items: data.due.take(4).toList(), showChild: true)),
-          for (final child in quiet)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Center(
-                child: Text(
-                  'home.nothing_due_for'.trp({'name': child.student.name.split(' ').first}),
-                  style: context.type.cap.copyWith(color: c.ink3),
-                ),
+        else
+          for (final (i, w) in homeSections(
+            data,
+            parent: true,
+            due: [
+              SectionLabel(
+                'home.due_across'.trp({'amount': Formatters.inr(data.dueTotal)}),
+                action: 'nav.fees',
+                onAction: () => Get.toNamed<void>(AppRoutes.fees),
               ),
-            ),
-        ],
+              DueList(items: data.due.take(4).toList(), showChild: true),
+              for (final child in quiet)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Center(
+                    child: Text(
+                      'home.nothing_due_for'.trp({'name': child.student.name.split(' ').first}),
+                      style: context.type.cap.copyWith(color: c.ink3),
+                    ),
+                  ),
+                ),
+            ],
+          ).indexed)
+            Rise(index: 3 + i, child: w),
       ],
     );
   }
@@ -379,11 +414,13 @@ class _WideBody extends StatelessWidget {
                 style: context.type.h1.copyWith(fontSize: 40),
               ),
               const SizedBox(height: 18),
+              const QuickRow(),
+              const SizedBox(height: 12),
               if (data.isNew) ...[
                 const HomeWelcome(),
               ] else ...[
                 NowCard(data: data, scrub: scrub, large: true),
-                if (_show('dueStack')) DueSection(items: data.due),
+                ...homeSections(data, parent: parent, only: const {'due', 'notices'}),
               ],
             ],
           ),
@@ -395,22 +432,7 @@ class _WideBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 22),
-              if (!data.isNew) ...[
-                if (_show('attendance', 'attendance')) StatsRow(data: data),
-                if (data.notices.any((n) => n.pinned)) ...[
-                  SectionLabel('home.pinned_notices'.tr),
-                  EduCard(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < data.notices.where((n) => n.pinned).length; i++) ...[
-                          if (i > 0) const Hr(),
-                          NoticeLine(notice: data.notices.where((n) => n.pinned).elementAt(i)),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+              if (!data.isNew && !parent) ...homeSections(data, only: const {'stats'}),
               if (parent) ...[SectionLabel('home.both_children'.tr), ChildrenStrip(children: data.children)],
             ],
           ),
@@ -585,19 +607,24 @@ class DueSection extends StatelessWidget {
 }
 
 class StatsRow extends StatelessWidget {
-  const StatsRow({required this.data, super.key});
+  const StatsRow({required this.data, this.attendance = true, this.exam = true, super.key});
 
   final HomeSnapshot data;
+
+  /// Which halves the school shows (console: Home screen cards); one alone fills the row.
+  final bool attendance;
+  final bool exam;
 
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final exam = data.nextExam;
-    final days = exam == null ? null : Formatters.daysUntil(exam.startDate);
+    final next = data.nextExam;
+    final days = next == null ? null : Formatters.daysUntil(next.startDate);
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (attendance)
           Expanded(
             child: EduCard(
               onTap: () => Get.toNamed<void>(AppRoutes.attendance),
@@ -626,7 +653,8 @@ class StatsRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          if (attendance && exam) const SizedBox(width: 10),
+          if (exam)
           Expanded(
             child: EduCard(
               onTap: () => Get.toNamed<void>(AppRoutes.results),
@@ -634,18 +662,18 @@ class StatsRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Overline(exam == null ? 'home.exam'.tr : 'home.exam_in'.trp({'name': exam.name})),
+                  Overline(next == null ? 'home.exam'.tr : 'home.exam_in'.trp({'name': next.name})),
                   const SizedBox(height: 10),
-                  if (exam == null)
+                  if (next == null)
                     Text('home.no_exam'.tr, style: context.type.t)
                   else
                     BigNumber(value: '$days', unit: ' ${'home.days'.tr}'),
                   const SizedBox(height: 10),
-                  if (exam != null)
+                  if (next != null)
                     Text(
                       'home.exam_meta'.trp({
-                        'date': DateFormat('d MMM').format(exam.startDate),
-                        'n': '${exam.subjects.length}',
+                        'date': DateFormat('d MMM').format(next.startDate),
+                        'n': '${next.subjects.length}',
                       }),
                       style: context.type.cap,
                     ),
@@ -693,4 +721,3 @@ String daysStamp(DateTime date) {
   if (d == 1) return 'time.one_day'.tr;
   return 'time.n_days'.trp({'n': '$d'});
 }
-
