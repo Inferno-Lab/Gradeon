@@ -4,6 +4,7 @@ import { HttpError } from '@gradeon/api-client';
 import { inr, istToday, type ClassInfo, type StudentDetail } from '@gradeon/contracts';
 import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
+import { useShellChrome } from '../../app/Layout';
 
 type Done = (message: string, openId?: string) => void;
 const fieldsOf = (e: unknown): Record<string, string> => (e instanceof HttpError ? e.fields : {});
@@ -178,6 +179,8 @@ export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]
   );
 }
 
+const METHODS = [{ value: 'cash', label: 'Cash' }, { value: 'upi', label: 'UPI' }, { value: 'card', label: 'Card' }, { value: 'netbanking', label: 'Net banking' }, { value: 'cheque', label: 'Cheque' }];
+
 export function CollectFeeDialog({ student, onClose, onDone }: { student: StudentDetail; onClose: () => void; onDone: Done }) {
   const { api } = useApp();
   const shake = useShake();
@@ -185,7 +188,10 @@ export function CollectFeeDialog({ student, onClose, onDone }: { student: Studen
   const open = (inv.data ?? []).filter((i) => i.paid < i.amount);
   const [pick, setPick] = useState('');
   const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('cash');
+  // Only the ways the school takes money (console: Fees → How the office records payments).
+  const taken = useShellChrome().shell?.school.paymentMethods;
+  const methods = METHODS.filter((m) => !taken || taken.includes(m.value));
+  const [method, setMethod] = useState(methods[0]?.value ?? 'cash');
   const [ref, setRef] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -212,7 +218,7 @@ export function CollectFeeDialog({ student, onClose, onDone }: { student: Studen
           <SelectField label="Invoice" value={chosen?.id ?? ''} onChange={setPick} options={open.map((i) => ({ value: i.id, label: `${i.title} · ₹${inr(i.amount - i.paid)} due ${i.dueOn.slice(5)}` }))} />
           <div className="two">
             <Field label="Amount (₹)" value={amount} onChange={(v) => { setAmount(v); setErr({}); }} error={err.amount} inputMode="numeric" />
-            <SelectField label="Paid by" value={method} onChange={setMethod} options={[{ value: 'cash', label: 'Cash' }, { value: 'upi', label: 'UPI' }, { value: 'card', label: 'Card' }, { value: 'netbanking', label: 'Net banking' }, { value: 'cheque', label: 'Cheque' }]} />
+            <SelectField label="Paid by" value={method} onChange={setMethod} options={methods} />
           </div>
           {method !== 'cash' && <Field label="Reference (optional)" value={ref} onChange={setRef} maxLength={60} />}
           <Actions onClose={onClose} busy={busy} label="Record payment" />

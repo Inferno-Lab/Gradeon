@@ -47,7 +47,8 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
 export function Card({ title, chip, children, span, style, id }: { title?: string; chip?: ReactNode; children: ReactNode; span?: string; style?: React.CSSProperties; id?: string }) {
   return (
     <div className={`card ${span ?? ''} rise`} style={style}>
-      {title && <div className="ch"><h2 id={id}>{title}</h2>{chip}</div>}
+      {/* A card with no padding (a list that runs to its edges) still keeps its heading off the edge. */}
+      {title && <div className="ch" style={style?.padding === 0 ? { padding: '20px 18px 0' } : undefined}><h2 id={id}>{title}</h2>{chip}</div>}
       <div style={{ marginTop: title ? 12 : 0 }}>{children}</div>
     </div>
   );

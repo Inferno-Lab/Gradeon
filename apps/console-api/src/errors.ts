@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpCode, Injectable, Post, Query, Req, type OnModuleInit } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Query, Req, type OnModuleInit } from '@nestjs/common';
 import { ClientError, type ErrorGroup } from '@gradeon/contracts';
-import { Limiter, ZodPipe, errorSink, recordError } from '@gradeon/nest-kit';
+import { Limiter, ZodPipe, alerts, errorSink, recordError } from '@gradeon/nest-kit';
+import { ENV, type Env } from './env.js';
 import type { FastifyRequest } from 'fastify';
 import { Db, Needs, Public } from './core.js';
 
@@ -8,9 +9,10 @@ const limit = new Limiter(process.env.NODE_ENV === 'test' ? 10_000 : 60, 60_000)
 
 @Injectable()
 export class ErrorBook implements OnModuleInit {
-  constructor(private readonly db: Db) {}
+  constructor(private readonly db: Db, @Inject(ENV) private readonly env: Env) {}
 
   onModuleInit(): void {
+    alerts.url ??= this.env.ALERT_WEBHOOK_URL;
     errorSink.report ??= (e) => void recordError(this.db.pool, e).catch(() => undefined);
   }
 

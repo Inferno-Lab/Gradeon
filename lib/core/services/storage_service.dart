@@ -12,7 +12,6 @@ abstract final class StorageKeys {
   static const accessToken = 'accessToken';
   static const refreshToken = 'refreshToken';
   static const reduceMotion = 'reduceMotion';
-  static const reduceTransparency = 'reduceTransparency';
   static const simulateErrors = 'simulateErrors';
   static const locale = 'locale';
   static const notifyHomework = 'notifyHomework';

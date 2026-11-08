@@ -83,6 +83,8 @@ export interface PlanRow {
   name: string;
   perStudentYear: number;
   modules: string[];
+  /** Features this plan leaves out (false), like fees.onlinePayment on a starter plan. Applied when a school takes the plan. */
+  features?: Record<string, boolean>;
   limits: Limits;
 }
 
@@ -537,6 +539,20 @@ export interface BackupRow {
   takenBy: string;
   bytes: number;
   takenAt: string;
+}
+
+/** A restore drill: one school's fresh backup put back into a scratch database and counted. */
+export interface RestoreDrillRow {
+  id: string;
+  schoolName: string;
+  ok: boolean;
+  tables: number;
+  rows: number;
+  students: number;
+  ms: number;
+  error: string | null;
+  by: string;
+  at: string;
 }
 
 /** A school's configuration as the console edits it. */

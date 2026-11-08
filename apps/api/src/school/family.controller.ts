@@ -11,6 +11,7 @@ const Marks = z.object({ subject: z.string().min(1).max(40), values: z.record(z.
 const Submit = z.object({ studentId: z.string().min(1), fileName: z.string().max(200).optional() });
 const Grade = z.object({ studentId: z.string().min(1), marks: z.number().int().min(0).max(100), feedback: z.string().max(300).optional() });
 const Assign = z.object({ classId: z.string().min(1), subject: z.string().min(1), title: z.string().min(3).max(120), description: z.string().max(1000).optional(), dueOn: z.string().min(10), maxMarks: z.number().int().min(1).max(100).optional() });
+const Consent = z.object({ photos: z.boolean().optional() });
 const Pay = z.object({ studentId: z.string().min(1), method: z.string().max(20).default('upi') });
 const Rsvp = z.object({ status: z.string().min(1).max(10) });
 const Notice = z.object({ title: z.string().min(3).max(120), body: z.string().min(3).max(4000), audience: z.string().optional() });
@@ -29,6 +30,7 @@ export class FamilyController {
   constructor(private readonly f: FamilyService) {}
 
   @Get('me') me(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.f.me(t, u); }
+  @Post('consent') @HttpCode(200) consent(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(Consent)) b: z.infer<typeof Consent>) { return this.f.consent(t, u, b.photos); }
   @Get('school') school(@Tenant() t: TenantCtx) { return this.f.school(t); }
   @Get('users/:id') userName(@Tenant() t: TenantCtx, @Param('id') id: string) { return this.f.userName(t, id); }
 

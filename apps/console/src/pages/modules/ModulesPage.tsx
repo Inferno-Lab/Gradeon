@@ -192,8 +192,9 @@ export function PlanEditor({ d, say }: { d: SchoolDetail; say: Say }) {
     setPlan(k);
     const p = plans.data?.find((x) => x.key === k);
     if (!p) return;
-    // A plan is the starting bundle: its modules and limits, which can then be changed for this school.
+    // A plan is the starting bundle: its modules, the features it leaves out and its limits, which can then be changed for this school.
     setMods(new Set(p.modules));
+    setFeatures({ ...p.features });
     setLimits({ students: String(p.limits.students), staff: String(p.limits.staff ?? ''), storageGb: String(p.limits.storageGb), smsPerMonth: String(p.limits.smsPerMonth) });
   };
   const num = (v: string) => (v.trim() === '' ? undefined : Number(v));

@@ -9,7 +9,7 @@ import { ApprovalsService } from './approvals.service.js';
 import { FeesService } from './fees.service.js';
 import { LearningService, gradeOf } from './learning.service.js';
 import { OfficeService } from './office.service.js';
-import { SettingsService } from './support.js';
+import { AuditService, SettingsService } from './support.js';
 
 const DAYS = ['', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const key = (subjectId: string) => subjectId.replace(/^sub_/, '');
@@ -37,6 +37,7 @@ export class FamilyService {
     private readonly learning: LearningService,
     private readonly office: OfficeService,
     private readonly settings: SettingsService,
+    private readonly audit: AuditService,
   ) {}
 
   async who(t: TenantCtx, user: AuthedUser): Promise<Who> {
@@ -68,10 +69,20 @@ export class FamilyService {
 
   async me(t: TenantCtx, user: AuthedUser): Promise<Record<string, unknown>> {
     const w = await this.who(t, user);
+    const c = (await t.pool.query<{ consented_at: Date | null; photo_consent: boolean | null }>('select consented_at, photo_consent from users where id = $1', [user.id])).rows[0];
     return {
       id: w.id, role: w.kind === 'guardian' ? 'parent' : 'teacher', name: w.name, email: w.email ?? '', phone: w.phone ?? '', avatarUrl: '', password: '',
       childIds: w.kind === 'guardian' ? w.children : [], ...(w.kind === 'staff' ? { teacherId: w.id } : {}),
+      consentedAt: c?.consented_at?.toISOString() ?? null, photoConsent: c?.photo_consent ?? null,
     };
+  }
+
+  /** A family agrees to the school's privacy notice (once), and says whether the school may share photos of the child. */
+  async consent(t: TenantCtx, user: AuthedUser, photos: boolean | undefined): Promise<{ consentedAt: string; photoConsent: boolean | null }> {
+    const { rows } = await t.pool.query<{ consented_at: Date; photo_consent: boolean | null }>(
+      'update users set consented_at = coalesce(consented_at, now()), photo_consent = coalesce($2, photo_consent) where id = $1 returning consented_at, photo_consent', [user.id, photos ?? null]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'privacy.consented', entity: 'user', entityId: user.id, detail: { photos: photos ?? null } });
+    return { consentedAt: rows[0]!.consented_at.toISOString(), photoConsent: rows[0]!.photo_consent };
   }
 
   async school(t: TenantCtx): Promise<Record<string, unknown>> {
@@ -79,8 +90,9 @@ export class FamilyService {
     const s = (k: string) => (typeof v[k] === 'string' ? (v[k] as string) : '');
     const principal = (await t.pool.query<{ name: string }>("select u.name from staff st join users u on u.id = st.user_id where st.designation = 'Principal' limit 1")).rows[0]?.name ?? '';
     return {
-      name: s('school.name') || t.info.name, tagline: s('school.tagline'), address: s('school.address'), phone: s('school.phone'), email: s('school.email'), website: '', principal, founded: 2004,
-      officeHours: 'Monday to Friday, 8:00 am to 3:30 pm', about: s('school.tagline'),
+      // The school's own facts only: the year it was founded and its office hours are not recorded, so they are left empty.
+      name: s('school.name') || t.info.name, tagline: s('school.tagline'), address: s('school.address'), phone: s('school.phone'), email: s('school.email'), website: '', principal, founded: 0,
+      officeHours: '', about: s('school.tagline'),
     };
   }
 

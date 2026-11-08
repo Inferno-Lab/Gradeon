@@ -8,6 +8,7 @@ import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/features/settings/views/privacy_sheet.dart';
 
 class ShellController extends GetxController {
   final index = 0.obs;
@@ -22,7 +23,7 @@ class ShellController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    unawaited(SchoolConfig.load());
+    unawaited(SchoolConfig.load().then((_) => askConsentIfNeeded()));
     _life = AppLifecycleListener(onResume: () => unawaited(SchoolConfig.load()));
   }
 

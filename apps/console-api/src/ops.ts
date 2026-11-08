@@ -4,7 +4,7 @@ import { MODULES, activeModules, closeModules, moduleByKey } from '@gradeon/conf
 import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
 import { migrate, newId, pg, scheduleJob } from '@gradeon/db';
 import { topUpDemo } from '@gradeon/db/seed';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { ApiError, ZodPipe, alert, notFound } from '@gradeon/nest-kit';
 import { hashPassword, signJwt, unseal } from '@gradeon/security';
 import type { PoolManager } from '@gradeon/tenancy';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
@@ -65,8 +65,12 @@ export class Health implements OnApplicationBootstrap, OnApplicationShutdown {
     if (missed === 2) {
       await this.db.pool.query("insert into incidents (id, title, state, school_id) values ($1,$2,'open',$3)", [newId('inc'), `${s.name} is not answering`, s.id]);
       await this.db.pool.query('update schools set last_incident = $2 where id = $1', [s.id, `${s.name} was unreachable`]);
+      alert(`${s.name} (${s.slug}) is not answering: two health checks in a row failed.`);
     }
-    if (ok) await this.db.pool.query("update incidents set state = 'resolved', resolved_at = now() where school_id = $1 and state = 'open'", [s.id]);
+    if (ok) {
+      const r = await this.db.pool.query("update incidents set state = 'resolved', resolved_at = now() where school_id = $1 and state = 'open'", [s.id]);
+      if (r.rowCount) alert(`${s.name} (${s.slug}) is answering again.`);
+    }
   }
 }
 
@@ -275,24 +279,28 @@ export class Bootstrap implements OnApplicationBootstrap {
    * Every school runs this process's code, so every school's database is brought up to date before the server takes requests
    * (Nest awaits this hook before listening). Migrations are expand-first, so the previous code still running during a deploy is safe.
    * A school that fails is logged in the migration runs and skipped, so one broken database cannot keep the others offline.
+   * Four schools at a time: start-up stays short as schools are added, and four pools of two fit any database's connection limit.
    */
   async upgradeSchools(): Promise<void> {
     const { rows } = await this.db.pool.query<{ id: string; slug: string; db_url_sealed: string }>(
       'select id, slug, db_url_sealed from schools where deleted_at is null and db_url_sealed is not null order by slug');
-    for (const s of rows) {
-      const started = Date.now();
-      const pool = new pg.Pool({ connectionString: unseal(s.db_url_sealed, this.env.SECRETS_KEY), max: 2, connectionTimeoutMillis: 20_000 });
-      try {
-        const applied = await migrate(pool, 'school');
-        for (const m of applied) await this.actions.recordMigration(m.tag, m.kind, s.id, 'applied', m.ms, null);
-        const filled = this.env.SEED_DEMO === 'true' && s.slug === 'greenfield' ? await topUpDemo(pool) : [];
-        if (applied.length || filled.length) this.log.log(`${s.slug}: ${applied.length} migrations applied${filled.length ? `, sample content added for ${filled.join(', ')}` : ''}`);
-      } catch (err) {
-        this.log.error(`${s.slug}: could not bring the database up to date: ${(err as Error).message}`);
-        await this.actions.recordMigration('start-up', 'expand', s.id, 'failed', Date.now() - started, (err as Error).message.slice(0, 500)).catch(() => undefined);
-      } finally {
-        await pool.end();
-      }
+    const queue = [...rows];
+    await Promise.all(Array.from({ length: Math.min(4, queue.length) }, async () => { for (let s = queue.shift(); s; s = queue.shift()) await this.upgradeSchool(s); }));
+  }
+
+  private async upgradeSchool(s: { id: string; slug: string; db_url_sealed: string }): Promise<void> {
+    const started = Date.now();
+    const pool = new pg.Pool({ connectionString: unseal(s.db_url_sealed, this.env.SECRETS_KEY), max: 2, connectionTimeoutMillis: 20_000 });
+    try {
+      const applied = await migrate(pool, 'school');
+      for (const m of applied) await this.actions.recordMigration(m.tag, m.kind, s.id, 'applied', m.ms, null);
+      const filled = this.env.SEED_DEMO === 'true' && s.slug === 'greenfield' ? await topUpDemo(pool) : [];
+      if (applied.length || filled.length) this.log.log(`${s.slug}: ${applied.length} migrations applied${filled.length ? `, sample content added for ${filled.join(', ')}` : ''}`);
+    } catch (err) {
+      alert(`${s.slug}: could not bring the database up to date at start-up: ${(err as Error).message}`);
+      await this.actions.recordMigration('start-up', 'expand', s.id, 'failed', Date.now() - started, (err as Error).message.slice(0, 500)).catch(() => undefined);
+    } finally {
+      await pool.end();
     }
   }
 

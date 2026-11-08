@@ -42,7 +42,7 @@ export function CellsPage() {
           { label: 'Schools placed', value: list.reduce((n, c) => n + c.schools, 0), note: `room for ${list.reduce((n, c) => n + c.maxSchools, 0)}`, tone: 'a' },
           { label: 'Space used', value: `${Math.round((list.reduce((n, c) => n + c.schools, 0) / Math.max(1, list.reduce((n, c) => n + c.maxSchools, 0))) * 100)}%`, note: 'across every cell', tone: 'i' },
         ]} />
-        <section className="grid">
+        <section className="grid" data-even="">
           {list.map((c) => {
             const here = (schools.data ?? []).filter((s) => s.cell === c.key);
             const full = c.maxSchools ? Math.round((c.schools / c.maxSchools) * 100) : 0;
@@ -55,7 +55,7 @@ export function CellsPage() {
                 <div className="kv" style={{ marginTop: 14 }}>Region<b>{c.region}</b></div>
                 <div className="lbl" style={{ margin: '12px 0 4px' }}>Schools here</div>
                 {here.length === 0 && <div className="help">No schools in this cell yet.</div>}
-                <div className="lscroll" style={{ maxHeight: 260 }}>
+                <div className="lscroll" data-even-scroll="" style={{ maxHeight: 260 }}>
                   {here.map((s) => {
                     const st = statusOf(s);
                     return (

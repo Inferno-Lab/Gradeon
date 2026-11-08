@@ -74,6 +74,10 @@ export function dayLabel(day: string): string {
   return `${dayName(day, true)} ${dayMonth(day)}`;
 }
 
+/** "Pupil" → "Pupils", "Class" → "Classes", "Batch" → "Batches", "Nursery" → "Nurseries". ponytail: regular English plurals only. */
+export const plural = (word: string): string =>
+  /(s|x|z|ch|sh)$/i.test(word) ? `${word}es` : /[^aeiou]y$/i.test(word) ? `${word.slice(0, -1)}ies` : `${word}s`;
+
 /** Indian digit grouping: 1842300 -> "18,42,300". */
 export function inr(n: number): string {
   const x = String(Math.round(Math.abs(n)));

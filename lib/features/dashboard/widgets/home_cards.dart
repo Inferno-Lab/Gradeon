@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/campus.dart';
@@ -15,6 +17,71 @@ import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+/// The quick buttons under the greeting (console: The app → Quick buttons), for families. The server keeps only
+/// buttons of modules the school has.
+class QuickRow extends StatelessWidget {
+  const QuickRow({super.key});
+
+  static const _buttons = <String, (String, IconData, String)>{
+    'payFees': ('quick.pay_fees', PhosphorIconsRegular.wallet, AppRoutes.fees),
+    'applyLeave': ('quick.apply_leave', PhosphorIconsRegular.calendarCheck, AppRoutes.leaveApply),
+    'messageTeacher': ('quick.message_teacher', PhosphorIconsRegular.chatCircle, AppRoutes.chat),
+    'timetable': ('quick.timetable', PhosphorIconsRegular.clock, AppRoutes.timetable),
+    'homework': ('quick.homework', PhosphorIconsRegular.books, AppRoutes.homework),
+    'events': ('quick.events', PhosphorIconsRegular.calendarBlank, AppRoutes.events),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final keys = SchoolConfig.quick.where(_buttons.containsKey).toList();
+      if (keys.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              for (final (i, k) in keys.indexed) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Chip2(_buttons[k]!.$1, icon: _buttons[k]!.$2, onTap: () => Get.toNamed<void>(_buttons[k]!.$3)),
+              ],
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+/// The latest notices, pinned ones first (console: Home screen cards → Latest notices).
+class NoticesCard extends StatelessWidget {
+  const NoticesCard({required this.notices, super.key});
+
+  final List<Notice> notices;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionLabel('home.latest_notices'.tr, top: 24, action: 'common.see_all', onAction: () => Get.toNamed<void>(AppRoutes.notices)),
+        EduCard(
+          child: Column(
+            children: [
+              for (final (i, n) in notices.indexed) ...[
+                if (i > 0) const Hr(),
+                NoticeLine(notice: n),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 /// Merged Due stack: fees, homework and replies in one card.
 class DueList extends StatelessWidget {

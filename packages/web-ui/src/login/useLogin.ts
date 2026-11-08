@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { rollDigits } from '../digits';
+import { markStyle } from '../shell/Sidebar';
 
 const EYE_ON = 'M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12zM9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0';
 const EYE_OFF = 'M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3 3.6M6.4 7.6A16.5 16.5 0 0 0 2.5 12s3.5 6.5 9.5 6.5a9.3 9.3 0 0 0 4.1-.9M9.9 9.9a3 3 0 0 0 4.2 4.2';
@@ -21,6 +22,11 @@ export interface LoginController {
   /** The school's own name for the panel and the heading. */
   schoolName: string;
   shortName: string;
+  /** The school's brand colour and logo letters, for its mark. */
+  color?: string;
+  logoText?: string;
+  /** The school's privacy notice and grievance officer, behind "Privacy". */
+  privacy?: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
   demoMode: boolean;
   /** Step one. Resolves to the code challenge, or to nothing when the school has two-step sign-in off. */
   submitCredentials: (email: string, password: string) => Promise<Challenge | null>;
@@ -41,6 +47,7 @@ const failure = (e: unknown): LoginFailure => (e && typeof e === 'object' && 'me
 export function useLogin(c: LoginController, themeCls: string) {
   const cons = c.product === 'console';
   const [step, setStep] = useState<'cred' | 'otp' | 'ok'>('cred');
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [email, setEmail] = useState(c.initialEmail ?? '');
   const [pw, setPw] = useState('');
   const [show, setShow] = useState(false);
@@ -132,7 +139,8 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   return {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
-    brand: c.schoolName,
+    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color),
+    privacyOpen, privacy: c.privacy, togglePrivacy: () => setPrivacyOpen((o) => !o),
     // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
     gradeon: c.product === 'console' || c.schoolName === 'Gradeon',
     cardA: cons ? 'Schools live' : 'Attendance today', aD: rollDigits(cons ? '312' : '94.2'), aU: cons ? '' : '%',

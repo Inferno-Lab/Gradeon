@@ -14,6 +14,9 @@ const MAX_PASSWORD_TRIES = 5;
 const LOCK_MINUTES = 15;
 const OTP_TRIES = 3;
 const OTP_MINUTES = 10;
+// Each code has OTP_TRIES guesses, so the number of codes is what bounds guessing (and the SMS bill).
+const OTP_SENDS = 5;
+const OTP_WINDOW_MINUTES = 15;
 export const DEMO_CODE = '424242';
 
 
@@ -85,6 +88,9 @@ export class AuthService {
       throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     }
     await t.pool.query('update users set failed_logins = 0, locked_until = null where id = $1', [user.id]);
+    if (clientOf(body.client) === 'mobile' && user.kind === 'staff' && (await this.settings.doc(t)).values['app.teachers'] === false) {
+      throw new ApiError('forbidden', 'Your school uses Gradeon on the web for staff. Sign in to the admin instead.');
+    }
     if (passwordNeedsRehash(user.password_hash)) {
       await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(body.password)]);
     }
@@ -142,6 +148,14 @@ export class AuthService {
 
   private async sendCode(t: TenantCtx, user: { id: string; phone: string | null; email: string | null }, purpose: 'sign_in' | 'reset'): Promise<LoginChallenge> {
     const demo = (await this.settings.doc(t)).values['demo.mode'] === true;
+    if (!demo) {
+      const { rows: [r] } = await t.pool.query<{ n: string; first: Date | null }>(
+        `select count(*) n, min(created_at) first from otp_challenges where user_id = $1 and created_at > now() - interval '${OTP_WINDOW_MINUTES} minutes'`, [user.id]);
+      if (Number(r!.n) >= OTP_SENDS) {
+        const retryAfter = Math.max(60, Math.ceil((r!.first!.getTime() + OTP_WINDOW_MINUTES * 60_000 - Date.now()) / 1000));
+        throw new ApiError('rate_limited', `Too many codes sent. Try again in ${Math.ceil(retryAfter / 60)} minutes.`, { retryAfter });
+      }
+    }
     const code = demo ? DEMO_CODE : randomCode(6);
     const id = newId('otp');
     const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';

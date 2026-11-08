@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_theme.dart';
@@ -19,10 +20,12 @@ import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:gradeon/features/chat/controllers/chat_controller.dart';
+import 'package:gradeon/features/settings/views/privacy_sheet.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _locales = [Locale('en'), Locale('hi'), Locale('mr')];
+const _localeNames = ['English', 'हिंदी', 'मराठी'];
 
 /// Text size slider runs 85% to 125%.
 double _scaleOf(double t) => .85 + t * .40;
@@ -57,15 +60,11 @@ class SettingsView extends StatelessWidget {
     final c = context.app;
     return Obx(() {
       final mode = theme.mode.value;
-      final lang = _locales.indexWhere((l) => l.languageCode == theme.locale.value.languageCode);
+      // Only the languages the school offers (console: The app → Languages offered).
+      final offered = [for (final (i, l) in _locales.indexed) if (SchoolConfig.languages.contains(l.languageCode)) i];
+      final lang = offered.indexWhere((i) => _locales[i].languageCode == theme.locale.value.languageCode);
       final toggles = <(String, String, bool, ValueChanged<bool>)>[
         ('settings.motion', 'settings.motion_hint', theme.reduceMotion.value, (v) => theme.setReduceMotion(value: v)),
-        (
-          'settings.transparency',
-          'settings.transparency_hint',
-          theme.reduceTransparency.value,
-          (v) => theme.setReduceTransparency(value: v),
-        ),
         (
           'settings.hw_reminders',
           'settings.hw_reminders_hint',
@@ -138,16 +137,18 @@ class SettingsView extends StatelessWidget {
               ],
             ),
           ),
-          SectionLabel('settings.language'.tr, top: 16),
-          GlassSegmented(
-            labels: const ['English', 'हिंदी', 'मराठी'],
-            index: lang < 0 ? 0 : lang,
-            height: 48,
-            droplet: c.ink,
-            dropletText: c.chalk,
-            semanticLabel: 'settings.language'.tr,
-            onChanged: (i) => theme.setLocale(_locales[i]),
-          ),
+          if (offered.length > 1) ...[
+            SectionLabel('settings.language'.tr, top: 16),
+            GlassSegmented(
+              labels: [for (final i in offered) _localeNames[i]],
+              index: lang < 0 ? 0 : lang,
+              height: 48,
+              droplet: c.ink,
+              dropletText: c.chalk,
+              semanticLabel: 'settings.language'.tr,
+              onChanged: (i) => theme.setLocale(_locales[offered[i]]),
+            ),
+          ],
           SectionLabel('settings.comfort'.tr, top: 16),
           EduCard(
             child: Column(
@@ -191,6 +192,8 @@ class SettingsView extends StatelessWidget {
                   label: 'menu.help',
                   onTap: () => Get.toNamed<void>(AppRoutes.help),
                 ),
+                const Hr(indent: 46),
+                _LinkRow(icon: PhosphorIconsRegular.shieldCheck, label: 'privacy.title', onTap: () => unawaited(showPrivacy())),
                 const Hr(indent: 46),
                 _LinkRow(
                   icon: PhosphorIconsRegular.signOut,
@@ -429,12 +432,14 @@ class _AboutViewState extends State<AboutView> {
                         ),
                       ),
                       const Hr(indent: 44),
-                      _Fact(
-                        icon: PhosphorIconsRegular.clock,
-                        title: 'about.office'.trp({'hours': s.officeHours}),
-                        sub: 'about.principal'.trp({'name': s.principal, 'year': '${s.founded}'}),
-                      ),
-                      const Hr(indent: 44),
+                      if (s.officeHours.isNotEmpty || s.principal.isNotEmpty) ...[
+                        _Fact(
+                          icon: PhosphorIconsRegular.clock,
+                          title: s.officeHours.isNotEmpty ? 'about.office'.trp({'hours': s.officeHours}) : _principal(s),
+                          sub: s.officeHours.isNotEmpty && s.principal.isNotEmpty ? _principal(s) : null,
+                        ),
+                        const Hr(indent: 44),
+                      ],
                       _Fact(
                         icon: PhosphorIconsRegular.phone,
                         title: s.phone,
@@ -490,6 +495,10 @@ class _AboutViewState extends State<AboutView> {
     );
   }
 }
+
+String _principal(SchoolInfo s) => s.founded > 0
+    ? 'about.principal'.trp({'name': s.principal, 'year': '${s.founded}'})
+    : 'about.principal_only'.trp({'name': s.principal});
 
 class _Fact extends StatelessWidget {
   const _Fact({required this.icon, required this.title, this.sub, this.onTap});

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -55,5 +56,19 @@ class Avatar extends StatelessWidget {
         style: anek(size * .35, 700, width: 112, height: 1, em: .02, color: fg),
       ),
     );
+  }
+}
+
+/// The school's mark: its logo letters in its brand colour (console: Identity and branding), with letters that read on it.
+class SchoolMark extends StatelessWidget {
+  const SchoolMark({this.size = 28, super.key});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = AppConfig.schoolColor ?? context.app.ink;
+    final fg = bg.computeLuminance() > .36 ? AppColors.mariInk : AppColors.white;
+    return Avatar(AppConfig.schoolName, size: size, background: bg, foreground: fg, initials: AppConfig.schoolMark);
   }
 }

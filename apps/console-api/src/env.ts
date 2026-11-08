@@ -37,6 +37,8 @@ const Env = z.object({
   SEED_DEMO: z.enum(['true', 'false']).default('false'),
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
   PROBE_SECONDS: z.coerce.number().int().default(60),
+  /** A Slack or Discord incoming webhook: new errors, a school not answering, failed backups and failed restore drills are posted there. */
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
   STEP_PAUSE_MS: z.coerce.number().int().default(350),
   TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(20),
   TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),

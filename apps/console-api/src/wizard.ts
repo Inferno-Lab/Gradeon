@@ -20,13 +20,13 @@ export class Wizard {
   ) {}
 
   async plans(): Promise<PlanRow[]> {
-    const { rows } = await this.db.pool.query<{ key: string; name: string; per_student_year: number; modules: string[]; limits: PlanRow['limits'] }>('select * from plans order by per_student_year');
-    return rows.map((r) => ({ key: r.key, name: r.name, perStudentYear: r.per_student_year, modules: r.modules, limits: r.limits }));
+    const { rows } = await this.db.pool.query<{ key: string; name: string; per_student_year: number; modules: string[]; features: Record<string, boolean>; limits: PlanRow['limits'] }>('select * from plans order by per_student_year');
+    return rows.map((r) => ({ key: r.key, name: r.name, perStudentYear: r.per_student_year, modules: r.modules, features: r.features ?? {}, limits: r.limits }));
   }
 
   async ensurePlans(): Promise<void> {
     for (const p of DEFAULT_PLANS) {
-      await this.db.pool.query('insert into plans (key, name, per_student_year, modules, limits) values ($1,$2,$3,$4,$5) on conflict (key) do nothing', [p.key, p.name, p.perStudentYear, JSON.stringify(p.modules), JSON.stringify(p.limits)]);
+      await this.db.pool.query('insert into plans (key, name, per_student_year, modules, features, limits) values ($1,$2,$3,$4,$5,$6) on conflict (key) do nothing', [p.key, p.name, p.perStudentYear, JSON.stringify(p.modules), JSON.stringify(p.features ?? {}), JSON.stringify(p.limits)]);
     }
   }
 
@@ -116,7 +116,7 @@ export class Wizard {
     const bp = await this.blueprints.pick(payload.placement.target, payload.plan.plan);
     const cell = (await this.db.pool.query<{ region: string }>('select region from cells where key = $1', [payload.placement.cell])).rows[0]!;
     const id = newId('sch');
-    const entitlement = { modules: closeModules(payload.plan.modules), limits: plan.limits, locks: payload.plan.locks, overrides: {}, version: 1 };
+    const entitlement = { modules: closeModules(payload.plan.modules), features: plan.features ?? {}, limits: plan.limits, locks: payload.plan.locks, overrides: {}, version: 1 };
     const school = (await this.db.query<typeof reg.schools.$inferSelect>(
       `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, entitlement, contact, gstin, board, address, addressing, custom_domain, app_name, created_by, ring, api_version, admin_version)
        values ($1,$2,$3,$4,$5,$6,'onboarding',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'rest',$20,$20) returning *`,

@@ -675,6 +675,35 @@ await flow('console: migration imports the school’s file after fixing a row in
   await expectVisible(p.getByText(/Undone\./), 'the undone toast');
 });
 
+await flow('console: go-live reconciles the dues with the old system, and a restore drill runs from Health', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
+  await p.getByRole('tab', { name: 'Migration' }).click();
+  const owed = p.getByText(/owed here; type the old system’s total to compare/);
+  await expectVisible(owed, 'the dues waiting for the old system’s total');
+  const total = (await owed.first().textContent()).match(/₹([\d,]+)/)[1].replace(/,/g, '');
+  await p.getByLabel('The old system’s total dues (₹)').fill(total);
+  await p.getByRole('button', { name: 'Compare' }).click();
+  await expectVisible(p.getByText(/the same as the old system/), 'the dues reconciled');
+  const tick = p.locator('.rw', { hasText: 'The school’s staff are trained' });
+  await tick.getByRole('button', { name: 'Mark done' }).click();
+  await expectVisible(tick.getByRole('button', { name: 'Undo' }), 'the item ticked');
+  await tick.getByRole('button', { name: 'Undo' }).click();
+  await p.goto(`${CONSOLE}/health`, { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Run a drill now' }).click();
+  await expectVisible(p.getByText(/into a scratch database/), 'the drill’s result', 60000);
+  await expectVisible(p.locator('.rw', { hasText: 'Restored' }), 'the drill listed');
+});
+
+await flow('admin: the sign-in page shows the school’s mark and its privacy notice', {}, async (p) => {
+  await p.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
+  const mark = p.locator('.pnl .lg').first();
+  const bg = await mark.evaluate((el) => getComputedStyle(el).backgroundColor);
+  if (!/rgb\(106, 76, 245\)/.test(bg)) throw new Error(`the mark should be in the school's colour, got ${bg}`);
+  await p.getByRole('button', { name: 'Privacy' }).click();
+  await expectVisible(p.getByRole('region', { name: 'Privacy' }), 'the privacy notice');
+  if (!(await p.getByRole('link', { name: 'Help' }).getAttribute('href'))?.startsWith('mailto:')) throw new Error('Help should write to support');
+});
+
 await flow('design system: the menu keeps its scroll between pages, and search opens without jumping', { storage: adminStore, context: { viewport: { width: 1440, height: 640 } } }, async (p) => {
   await p.goto(A('/'), { waitUntil: 'networkidle' });
   const sb = p.locator('aside.sb');

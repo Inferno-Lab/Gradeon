@@ -131,19 +131,6 @@ class _DesignSystemViewState extends State<DesignSystemView> {
             children: [
               Obx(
                 () => _Row(
-                  title: 'dev.quality',
-                  hint: 'dev.quality_hint',
-                  trailing: Chip2(
-                    theme.reduceTransparency.value ? 'dev.q_off'.tr : 'dev.q_auto'.tr,
-                    on: true,
-                    height: 32,
-                    onTap: () => theme.setReduceTransparency(value: !theme.reduceTransparency.value),
-                  ),
-                ),
-              ),
-              const Hr(),
-              Obx(
-                () => _Row(
                   title: 'dev.errors',
                   hint: 'dev.errors_hint',
                   trailing: GlassSwitch(

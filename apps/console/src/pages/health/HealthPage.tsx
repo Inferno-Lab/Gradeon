@@ -12,6 +12,8 @@ export function HealthPage() {
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => app.api.schools(), refetchInterval: 20_000 });
   const fleet = useQuery({ queryKey: ['fleet'], queryFn: app.api.fleet });
   const errors = useQuery({ queryKey: ['errors'], queryFn: () => app.api.errors(7), refetchInterval: 60_000 });
+  const drills = useQuery({ queryKey: ['drills'], queryFn: app.api.drills });
+  const drill = useMutation({ mutationFn: app.api.runDrill, onSuccess: (d) => { void qc.invalidateQueries({ queryKey: ['drills'] }); say(d.ok ? `Restored ${d.rows.toLocaleString('en-IN')} rows of ${d.schoolName} into a scratch database.` : `The drill failed: ${d.error}`, d.ok ? undefined : 'bad'); }, onError: (e) => say((e as Error).message, 'bad') });
   const probe = useMutation({ mutationFn: app.api.probe, onSuccess: (r) => { void qc.invalidateQueries({ predicate: (q) => ['schools', 'fleet'].includes(String(q.queryKey[0])) }); say(`Checked ${r.probed} ${r.probed === 1 ? 'school' : 'schools'}.`); }, onError: (e) => say((e as Error).message, 'bad') });
   const rows = (schools.data ?? []).filter((s) => s.status !== 'archived');
   const order = { down: 0, degraded: 1, unknown: 2, ok: 3 } as const;
@@ -70,6 +72,18 @@ export function HealthPage() {
               <div className="help" style={{ marginTop: 8 }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}</div>
               {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 12, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
             </details>
+          ))}
+      </Card>
+      <Card title="Restore drills" chip={<button className="btn sm" onClick={() => drill.mutate()} disabled={drill.isPending}>{drill.isPending ? 'Restoring…' : 'Run a drill now'}</button>} style={{ padding: 0 }}>
+        <div className="help" style={{ padding: '0 18px 12px' }}>Once a week a fresh backup of one live school is put back into a scratch database and counted, so we know backups restore. The school is never touched.</div>
+        {!(drills.data ?? []).length ? <div className="help" style={{ padding: '0 18px 18px' }}>No drill has run yet.</div>
+          : (drills.data ?? []).map((d) => (
+            <div key={d.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 52, padding: '10px 18px', flexWrap: 'wrap' }}>
+              <span className={`chip ${d.ok ? 'g' : 'r'}`}>{d.ok ? 'Restored' : 'Failed'}</span>
+              <b style={{ flex: 1, minWidth: 160, font: '700 13.5px/1.35 var(--fb)' }}>{d.schoolName}</b>
+              <span className="help" style={{ margin: 0 }} data-tip={d.error ?? undefined}>{d.ok ? `${d.rows.toLocaleString('en-IN')} rows · ${d.students.toLocaleString('en-IN')} students · ${(d.ms / 1000).toFixed(1)} s` : (d.error ?? '').slice(0, 80)}</span>
+              <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(d.at)}</span>
+            </div>
           ))}
       </Card>
     </Page>

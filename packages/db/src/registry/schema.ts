@@ -29,6 +29,7 @@ export const plans = pgTable('plans', {
   name: text('name').notNull(),
   perStudentYear: integer('per_student_year').notNull(),
   modules: jsonb('modules').$type<string[]>().notNull(),
+  features: jsonb('features').$type<Record<string, boolean>>().notNull().default({}),
   limits: jsonb('limits').$type<{ students: number; storageGb: number; smsPerMonth: number }>().notNull(),
 });
 

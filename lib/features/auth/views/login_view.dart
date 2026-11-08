@@ -102,7 +102,16 @@ class _PasswordScreen extends StatelessWidget {
                   children: [
                     Rise(child: Text('auth.sign_in'.tr, style: context.type.h1)),
                     const SizedBox(height: 6),
-                    Rise(index: 1, child: Text(AppConfig.schoolName, style: context.type.cap)),
+                    Rise(
+                      index: 1,
+                      child: Row(
+                        children: [
+                          const SchoolMark(size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(AppConfig.schoolName, style: context.type.cap, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 22),
                     Rise(
                       index: 2,

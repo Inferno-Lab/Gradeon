@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/network/api_client.dart';
@@ -16,7 +17,8 @@ import 'package:gradeon/data/repositories/directory_repository.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    if (AppConfig.useMockData) {
+    // Release builds only ever talk to a school (AppConfig.assertReleaseUrl), so the sample content's code is compiled out.
+    if (AppConfig.useMockData && !kReleaseMode) {
       final source = Get.put(MockJsonDataSource(), permanent: true);
       Get
         ..lazyPut<AuthRepository>(() => MockAuthRepository(source), fenix: true)

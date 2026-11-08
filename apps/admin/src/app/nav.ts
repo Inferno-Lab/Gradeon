@@ -1,3 +1,4 @@
+import { plural } from '@gradeon/contracts';
 import { IC, type NavGroup } from '@gradeon/web-ui';
 
 interface Def {
@@ -43,15 +44,16 @@ const DEFS: { name: string; items: Def[] }[] = [
 
 export const PAGE_TITLES: Record<string, string> = Object.fromEntries(DEFS.flatMap((g) => g.items.map((i) => [i.to.replace('/p/', ''), i.label])));
 
-/** The menu for a school: only the modules it has on, with counts where the data has them. */
-export function adminNav(modules: string[], base: string, badges?: { attendance: number; admissions: number; messages?: number }): NavGroup[] {
+/** The menu for a school: only the modules it has on, with counts where the data has them, in the school's own words (console: People). */
+export function adminNav(modules: string[], base: string, badges?: { attendance: number; admissions: number; messages?: number }, words?: { student: string; class: string }): NavGroup[] {
+  const label = (i: Def) => (i.id === 'stu' && words ? plural(words.student) : i.id === 'setup' && words ? `${plural(words.class)} and calendar` : i.label);
   const on = new Set(['core', ...modules]);
   return DEFS.map((g) => ({
     name: g.name,
     items: g.items
       .filter((i) => on.has(i.module))
       .map((i) => ({
-        id: i.id, label: i.label, icon: IC[i.icon], keys: i.keys, href: `${base}${i.to === '/' ? '' : i.to}` || '/',
+        id: i.id, label: label(i), icon: IC[i.icon], keys: i.keys, href: `${base}${i.to === '/' ? '' : i.to}` || '/',
         count: i.id === 'att' && badges?.attendance ? String(badges.attendance) : i.id === 'adm' && badges?.admissions ? String(badges.admissions) : i.id === 'msg' && badges?.messages ? String(badges.messages) : undefined,
       })),
   })).filter((g) => g.items.length);

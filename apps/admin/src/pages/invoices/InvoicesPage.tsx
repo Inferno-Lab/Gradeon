@@ -4,6 +4,7 @@ import { inr, lakhs, type InvoiceListQuery, type ReceiptRow, type StudentDetail 
 import { Dialog, EmptyCard, Segmented, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
+import { useShellChrome } from '../../app/Layout';
 import { Avatar, Ico, dateLabel } from '../../app/kit';
 import { CollectFeeDialog } from '../students/StudentDialogs';
 
@@ -111,11 +112,14 @@ export function InvoicesPage() {
 }
 
 function ReceiptSheet({ r, onClose }: { r: ReceiptRow; onClose: () => void }) {
+  const school = useShellChrome().shell?.school;
   const print = () => {
     const w = window.open('', '_blank', 'width=520,height=640');
     if (!w) return;
     const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-    w.document.write(`<!doctype html><title>${esc(r.receiptNo)}</title><body style="font:15px/1.6 system-ui,sans-serif;max-width:420px;margin:32px auto;color:#1A1A1C"><h2 style="margin:0">Fee receipt</h2><p style="margin:2px 0 18px;color:#4D4D53">${esc(r.receiptNo)}</p><table style="width:100%;border-collapse:collapse">${[['Student', `${r.studentName}, Class ${r.className}`], ['For', r.title], ['Paid on', dateLabel(r.paidOn)], ['Method', r.method.toUpperCase()], ['Reference', r.reference ?? 'None'], ['Received by', r.recordedBy]].map(([k, v]) => `<tr><td style="padding:6px 0;color:#4D4D53">${k}</td><td style="padding:6px 0;text-align:right"><b>${esc(String(v))}</b></td></tr>`).join('')}<tr><td style="padding:14px 0;border-top:2px solid #1A1A1C">Amount</td><td style="padding:14px 0;border-top:2px solid #1A1A1C;text-align:right;font-size:22px"><b>₹${inr(r.amount)}</b></td></tr></table><script>window.onload=()=>print()</script>`);
+    // A receipt names who received the money: the school, its address and phone, and what the console set to print under them.
+    const head = school ? `<header style="text-align:center;border-bottom:2px solid #1A1A1C;padding-bottom:12px;margin-bottom:18px"><h1 style="margin:0;font-size:20px">${esc(school.name)}</h1>${[school.address, school.phone].filter(Boolean).map((l) => `<div style="color:#4D4D53;font-size:13px">${esc(l)}</div>`).join('')}${school.receiptNote ? `<div style="color:#4D4D53;font-size:12.5px;white-space:pre-line;margin-top:4px">${esc(school.receiptNote)}</div>` : ''}</header>` : '';
+    w.document.write(`<!doctype html><title>${esc(r.receiptNo)}</title><body style="font:15px/1.6 system-ui,sans-serif;max-width:420px;margin:32px auto;color:#1A1A1C">${head}<h2 style="margin:0">Fee receipt</h2><p style="margin:2px 0 18px;color:#4D4D53">${esc(r.receiptNo)}</p><table style="width:100%;border-collapse:collapse">${[['Student', `${r.studentName}, Class ${r.className}`], ['For', r.title], ['Paid on', dateLabel(r.paidOn)], ['Method', r.method.toUpperCase()], ['Reference', r.reference ?? 'None'], ['Received by', r.recordedBy]].map(([k, v]) => `<tr><td style="padding:6px 0;color:#4D4D53">${k}</td><td style="padding:6px 0;text-align:right"><b>${esc(String(v))}</b></td></tr>`).join('')}<tr><td style="padding:14px 0;border-top:2px solid #1A1A1C">Amount</td><td style="padding:14px 0;border-top:2px solid #1A1A1C;text-align:right;font-size:22px"><b>₹${inr(r.amount)}</b></td></tr></table><script>window.onload=()=>print()</script>`);
     w.document.close();
   };
   return (

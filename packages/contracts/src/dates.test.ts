@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, inr, isSchoolDay, latestSchoolDay, lakhs, schoolDaysEnding, weekday } from './dates.js';
+import { addDays, inr, isSchoolDay, latestSchoolDay, lakhs, plural, schoolDaysEnding, weekday } from './dates.js';
 
 describe('dates', () => {
   it('knows the weekday (14 Oct 2026 is a Wednesday)', () => {
@@ -18,5 +18,8 @@ describe('dates', () => {
     expect(inr(999)).toBe('999');
     expect(inr(100000)).toBe('1,00,000');
     expect(lakhs(210000)).toBe('2.1L');
+  });
+  it('names more than one the school’s way', () => {
+    expect(['Student', 'Pupil', 'Class', 'Batch', 'Nursery', 'Day'].map(plural)).toEqual(['Students', 'Pupils', 'Classes', 'Batches', 'Nurseries', 'Days']);
   });
 });

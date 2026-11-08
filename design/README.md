@@ -9,7 +9,7 @@
 | `Main.dc.html` | School admin dashboard | `apps/admin/src/pages/dashboard` |
 | `AdminStudents.dc.html` | Students list, filters, student drawer | `apps/admin/src/pages/students` |
 | `AdminTimetable.dc.html` | Week grid, clash fix, publish | `apps/admin/src/pages/timetable` |
-| `AdminSettings.dc.html` | Settings: name, brand colour, toggles, plan | `apps/admin/src/pages/settings` |
+| `AdminSettings.dc.html` | Settings: name, brand colour, toggles, plan (now the read-only School setup; changes are made in the console) | `apps/admin/src/pages/settings` |
 | `AdminPhone.dc.html` | Phone home with the dock | `apps/admin/src/pages/phone` |
 | `AdminLogin.dc.html`, `ConsoleLogin.dc.html` | Sign-in with the animated panel | `packages/web-ui/src/login` |
 | `AdminDark.dc.html` | The dashboard in dark | same page, dark theme |

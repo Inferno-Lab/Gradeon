@@ -42,6 +42,10 @@ export const SchoolSettingsSchema = z.object({
   // Receipt numbers: {year} becomes the year. The start lets a school arriving from another system keep its numbering.
   'fees.receiptPrefix': z.string().trim().min(1).max(20).default('RCPT-{year}-'),
   'fees.receiptStart': z.number().int().min(1).max(99_999_999).default(9001),
+  // Printed under the school's name on every receipt: the trust, its registration or GST number.
+  'fees.receiptNote': z.string().max(300).default(''),
+  // How the office may record a payment (families pay in the app by UPI, card or net banking).
+  'fees.paymentMethods': z.array(z.enum(['cash', 'upi', 'card', 'netbanking', 'cheque'])).min(1).default(['cash', 'upi', 'card', 'netbanking', 'cheque']),
   'demo.mode': z.boolean().default(false),
   'vocab.student': z.string().max(24).default('Student'),
   'vocab.class': z.string().max(24).default('Class'),
@@ -49,6 +53,10 @@ export const SchoolSettingsSchema = z.object({
   'app.dock': z.array(z.string()).max(4).default(['home', 'academics', 'fees', 'chat']),
   'app.home': z.array(z.string()).max(12).default(['dayRibbon', 'dueStack', 'attendance', 'nextExam', 'notices', 'events']),
   'app.quick': z.array(z.string()).max(6).default(['payFees', 'applyLeave', 'messageTeacher', 'timetable']),
+  // Which languages the app offers; the school's default language comes first.
+  'app.languages': z.array(z.enum(['en', 'hi', 'mr'])).min(1).default(['en', 'hi', 'mr']),
+  // Whether teachers sign in to the app (families always do; teachers can always use the admin).
+  'app.teachers': z.boolean().default(true),
   // Notifications: which message goes out on which channel, and when families are left in peace.
   'notify.rules': z.record(z.string(), z.object({ push: z.boolean(), sms: z.boolean(), email: z.boolean() })).default({}),
   'notify.quietFrom': z.string().regex(/^\d{2}:\d{2}$/, 'Use a time like 21:00').default('21:00'),
@@ -106,6 +114,18 @@ export interface EntitlementDoc {
   locks: string[];
   overrides: Record<string, unknown>;
   version: number;
+}
+
+/** What a school's sign-in pages show before anyone signs in: who the school is, and its privacy notice. */
+export interface SchoolBrand {
+  name: string;
+  shortName: string;
+  color: string;
+  logoText: string;
+  tagline: string;
+  language: string;
+  demoMode: boolean;
+  privacy: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
 }
 
 /** What the apps fetch: layers 1 to 5 resolved for one audience, with the version it was built from. */

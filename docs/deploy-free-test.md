@@ -44,6 +44,8 @@ The demo school Greenfield is created by the first start (a minute or two; watch
 
 Texts and emails are caught in the console under **Test inbox**; nothing is sent to real phones. New schools created from **Onboarding** get their invite and sign-in codes there.
 
+Optional: to hear about trouble (a new kind of error, a school not answering, a failed backup or restore drill), add `ALERT_WEBHOOK_URL` in Render → **Environment** with a Slack or Discord incoming webhook. Backups run daily and a restore drill weekly; both show on the console's **Health** page.
+
 ## 5. Optional: Android app builds
 
 The console's **Build Android app** starts a GitHub Actions workflow (`.github/workflows/mobile-build.yml`) that builds the APK and posts the install link back.
@@ -54,11 +56,11 @@ The console's **Build Android app** starts a GitHub Actions workflow (`.github/w
 
 ### What the app does against the test track
 
-A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (password, then the code; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). What a teacher marks in the app shows up in the admin. Not yet: hiding tabs for switched-off modules, library catalogue, gallery, live transport, push.
+A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (teachers: password, then the code; families: a code to their phone; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). It follows what the console set for the school: tabs, Home cards and quick buttons, languages, the privacy notice and consent. What a teacher marks in the app shows up in the admin. The workflow leaves the sample content out of the package. Not yet: library catalogue, gallery photos, live transport, push.
 
 ## Updating
 
-Pushing to `main` redeploys automatically. Database changes are applied by the server at start; schools get theirs from the console under **Migrations** and **Releases**.
+Pushing to `main` redeploys automatically. Database changes are applied by the server at start, to the registry and to every school (four at a time) before it takes requests; **Releases** then signs schools off wave by wave, and **Migrations** shows what ran where.
 
 ## Using real infrastructure later
 

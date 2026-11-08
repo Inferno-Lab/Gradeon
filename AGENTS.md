@@ -1,6 +1,6 @@
 # Gradeon — guide for coding agents and new developers
 
-Gradeon is a school platform: a TypeScript backend, a school admin, a console and the original Flutter school app (students, parents, teachers) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
+Gradeon is a school platform: a TypeScript backend, a school admin, a console and the Flutter school app (parents and teachers; students do not sign in) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
 
 Branch work happens on feature branches off `main`; the Render test deployment builds from `main`, so a change reaches `https://gradeon.onrender.com` only after it is merged (or pushed) to `main`. The Chalk & Glass redesign of the app was merged to `main`; `redesign/chalk-glass` and `apple_glass` remain on GitHub as history.
 
@@ -17,7 +17,7 @@ bash tools/dev-reset.sh &           # local PostgreSQL + server + Greenfield dem
 pnpm --filter @gradeon/admin dev    # http://localhost:5173/s/greenfield
 pnpm --filter @gradeon/console dev  # http://localhost:5174
 node tools/audit-ui.mjs             # every page, 4 widths, light/dark: errors, overflow, clipping
-node tools/e2e-flows.mjs            # 47 browser flows (re-run dev-reset first; it changes data)
+node tools/e2e-flows.mjs            # 49 browser flows (re-run dev-reset first; it changes data)
 node tools/scan-gaps.mjs            # columns ending unevenly; also scan-fit.mjs (tabs, pills) and scan-scroll.mjs (scroll areas)
 ```
 
@@ -35,14 +35,14 @@ flutter run --dart-define=ASSISTANT=true    # turns on the (future) assistant fe
 flutter build apk --release --target-platform android-arm64,android-arm
 ```
 
-Headless screenshots (no emulator, glass uses its blur fallback there):
+Headless screenshots (no emulator needed; they look the same as on a device, since glass is a solid fill):
 
 ```bash
-flutter test test/tool/shoot_test.dart --dart-define=SHOOT_DIR=D:/out --dart-define=SHOOT_ROLE=student
-#   SHOOT_ROLE=student|parent|teacher   SHOOT_DARK=true   EMPTY_DATA=true   SHOOT_W=390 SHOOT_H=844
+flutter test test/tool/shoot_test.dart --dart-define=SHOOT_DIR=D:/out --dart-define=SHOOT_ROLE=parent
+#   SHOOT_ROLE=parent|teacher|guest   SHOOT_DARK=true   EMPTY_DATA=true   SHOOT_W=390 SHOOT_H=844
 ```
 
-The real glass shader only runs on a device or emulator (Impeller). Check glass changes there. See `docs/dev-environment.md` for machine setup and build pitfalls.
+Release builds come from the console's build workflow (`.github/workflows/mobile-build.yml`), which sets `SCHOOL` and `API_BASE_URL` and leaves `assets/mock/` out; a release build without both refuses to start. See `docs/dev-environment.md` for machine setup and build pitfalls.
 
 ## Architecture in one screen
 
@@ -66,12 +66,12 @@ Details: `docs/architecture.md`. How to add a screen, a repository, or an AI fea
 1. **Translations.** All user-visible text goes through keys in `lib/core/translations/` (`'area.key'.tr`). Parameters use **`.trp({'name': value})`**, never `.trParams` (GetX replaces key prefixes, so `@n` eats `@name`). Hindi and Marathi fall back to English; add `en` first. `test/translation_keys_test.dart` fails on any literal key that is missing. Keys passed as widget parameters (`emptyTitle: 'x.y'`) are translated inside the widget, so they are not checked: double-check them.
 2. **Never run repo-wide `dart fix --apply` or `dart format .`, and do not run `dart format` on a file you only touched in a few lines.** The code is hand-formatted to about 120 columns; the formatter's default is 80, so it rewraps whole files and buries your change in noise (it rewrote unrelated files and broke types once). Match the surrounding style by hand. Remove unused imports in the files you touched only.
 3. **No empty screens.** Every list or collection screen must handle the "brand-new school" case with `ViewStateView(emptyArt:, emptyTitle:, emptyBody:, emptyHint:, emptyActions:)` and an `EmptyArt` illustration, in friendly copy that says what will appear and what the user can do. Check with `--dart-define=EMPTY_DATA=true` (also a switch on the design-system screen).
-4. **Glass is for floating controls only** (dock, top icon buttons, pills, sheets, toast, bottom action bars). Never put a glass block behind page content such as a header, a card, or a greeting. Use `Glass`, `GlassIconButton`, `GlassSegmented`, `GlassSwitch`, `GlassSlider` from `core/widgets/`; do not re-implement the filter. On colourful art use `onPigment: true`.
+4. **Glass is for floating controls only** (dock, top icon buttons, pills, sheets, toast, bottom action bars). Never put a glass block behind page content such as a header, a card, or a greeting. Use `Glass`, `GlassIconButton`, `GlassSegmented`, `GlassSwitch`, `GlassSlider` from `core/widgets/`; do not draw your own. On colourful art use `onPigment: true`.
 5. **Layout traps we hit**: `Container(alignment:)` expands to fill its parent. A `Row` without `crossAxisAlignment: stretch` gives a 0-height `ColoredBox`. A `Column` in a loose-height parent needs `mainAxisSize: min`. A `Column` with default centre alignment will float a shrink-wrapped child to the middle (use `stretch`). `Obx` with no observable read inside throws. Labels next to chips need `Expanded`/`Flexible` plus a gap and `ellipsis`.
 6. **Dummy data lives in `assets/mock/*.json`.** Dates use relative tokens (`today-1`, `today+2T09:00`) resolved by `date_seed.dart`; keep them valid (`today-0T010:12` crashed headless runs). Mock calls answer in 30–90 ms by default; do not add artificial delays. `AppConfig.slowNetwork` (Developer switch) is how you test loading states.
 7. **Do not add dependencies for a few lines of code.** `phosphor_flutter` is vendored under `packages/` on purpose.
 8. **Sign-out** goes through `AuthService.signOut()` (clears the session, navigates to login first, then clears state). Do not clear state before navigating.
-9. **Glass hygiene** (each of these was a shipped bug): never nest one `Glass` inside another or inside an `Opacity`/fade (use a plain pill for droplets and highlights); glass text sits on a frosted tint with ink colour, not white on a clear lens, unless the backdrop is known to be dark; the blur is a small 5x5 kernel inside the shader at the canvas value (sigma 1.6 for bars and pills; lenses none): the canvas glass is clear with refraction, a heavier blur is the rejected 'Frosted' look, and a second `BackdropFilter` per glass doubles the full-window backdrop passes and makes scrolling laggy (one backdrop filter per glass, always); the shader works in the glass's unscaled pixels and maps to the screen with the scale of any `Transform.scale` above it (`uScale`), otherwise a stretched droplet draws two outlines; **never cover content with page-coloured fade bands near glass**: glass must show what scrolls beneath it, and in dark themes such bands read as black shadows at the top and bottom of every screen (only the thin status-bar scrim in `PageFrame` is allowed); the glass's window position is resolved at composition time in `_GlassLayer` (a position baked in at paint time goes stale when a list scrolls). Test glass on a device or emulator over colourful art, in a scrolled state and in **dark mode** (the owner uses dark), not just at rest in light.
+9. **Glass is a solid floating surface.** `Glass` blurs and refracts nothing: it is a filled, shadowed surface (paper on the page, brand ink with `onPigment`), so it costs nothing to scroll and reads the same in every theme. The liquid-glass shaders in `shaders/` are kept but not loaded (not in `pubspec.yaml`). Still: never nest one `Glass` inside another or inside an `Opacity`/fade; text on it is ink, white only with `onPigment`; and **never cover content with page-coloured fade bands** near floating controls (in dark themes they read as black shadows; only the thin status-bar scrim in `PageFrame` is allowed). Check floating controls over colourful art, scrolled, and in **dark mode** (the owner uses dark).
 10. **Overlays need a Material.** Anything mounted above the Navigator (toasts) must sit in a `Material(type: MaterialType.transparency)` or its text gets the debug double underline.
 11. **Screens that reorder after an action** must hold their position until the next load (the featured event card swapped to another event on the first RSVP, hiding the answer). Pin the choice in the controller.
 12. **Any day of the week must have content.** The demo school teaches seven days (`weeklyOffDays` in `core/utils/schedule.dart`); add demo data for every weekday, never assume "today" has lectures. Filters go under the page title, not in a bottom bar.
@@ -97,7 +97,7 @@ Details: `docs/architecture.md`. How to add a screen, a repository, or an AI fea
 | add a route | `core/routes/app_routes.dart` + `app_pages.dart` (and a `Binding` if the controller is not on the shell) |
 | add mock content | `assets/mock/*.json` + `docs/MOCK_SCHEMA.md` |
 | toggle a feature or demo mode | `core/config/app_config.dart` |
-| change glass | `core/widgets/glass.dart`, `shaders/liquid_glass.frag` |
+| change glass | `core/widgets/glass.dart` (a solid fill; the shaders in `shaders/` are not loaded) |
 | make an empty state | `core/widgets/states.dart`, `empty_art.dart` |
 | see all the building blocks | design-system screen (Settings → About → long-press the version row) |
 
@@ -106,4 +106,4 @@ Details: `docs/architecture.md`. How to add a screen, a repository, or an AI fea
 - Start from this file; open `docs/` only for the area you touch.
 - Slash commands in `.claude/commands/`: `/verify`, `/shoot`, `/new-screen`, `/new-repository`, `/new-ai-feature`.
 - Parallel sessions: one writer per set of files; use a worktree per session. Never edit `assets/mock/*.json` and `en_redesign.dart` from two sessions at once (merge hot-spots).
-- After a change, tell the user what you did **not** check (device glass, other roles, other themes).
+- After a change, tell the user what you did **not** check (a real device, other roles, other themes).

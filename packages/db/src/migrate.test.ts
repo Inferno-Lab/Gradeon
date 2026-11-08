@@ -6,7 +6,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureDatabase, startDevPostgres, type DevPostgres } from './dev.js';
 import { loadMigrations, migrate, pendingMigrations } from './migrate.js';
-import { backupDatabase, restoreDatabase } from './backup.js';
+import { backupDatabase, backupMigrations, bringForward, restoreDatabase } from './backup.js';
 import { runIfDue } from './jobs.js';
 
 let server: DevPostgres;
@@ -87,6 +87,28 @@ describe('backups', () => {
       expect((await snap()).st).toEqual(before.st);
     } finally {
       await pool.end();
+    }
+  });
+
+  it('brings a backup from before a later migration forward, so it still restores after a deploy', async () => {
+    const all = (await loadMigrations('school')).map((m) => m.tag);
+    const old = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_old'), max: 2 });
+    const scratch = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_scratch'), max: 2 });
+    const live = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_live'), max: 2 });
+    try {
+      await migrate(old, 'school', { upTo: all.at(-3) });
+      await old.query("insert into academic_years (id, label, starts_on, ends_on, current) values ('ay1', '2026-27', '2026-04-01', '2027-03-31', true)");
+      await old.query("insert into classes (id, year_id, name, grade, section) values ('c8a', 'ay1', 'Class 8 A', 8, 'A')");
+      await old.query("insert into students (id, admission_no, name, class_id, dob) values ('s1', '2026/0501', 'Tara Joshi', 'c8a', '2013-05-02')");
+      const gz = await backupDatabase(old);
+      expect(await backupMigrations(gz)).toEqual(all.slice(0, -2));
+      await migrate(live, 'school');
+      await expect(restoreDatabase(live, gz)).rejects.toThrow(/different version/);
+      await restoreDatabase(live, await bringForward(gz, scratch, all));
+      expect((await live.query('select name from students')).rows).toEqual([{ name: 'Tara Joshi' }]);
+      await expect(bringForward(gz, scratch, all.slice(0, 2))).rejects.toThrow(/newer or different/);
+    } finally {
+      await Promise.all([old.end(), scratch.end(), live.end()]);
     }
   });
 });

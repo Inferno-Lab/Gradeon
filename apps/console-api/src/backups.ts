@@ -1,8 +1,8 @@
-import { Controller, Get, Inject, Injectable, Param, type OnModuleInit } from '@nestjs/common';
-import type { BackupRow } from '@gradeon/contracts';
-import { backupDatabase, migrate, newId, pg, restoreDatabase, scheduleJob } from '@gradeon/db';
-import { notFound } from '@gradeon/nest-kit';
-import { Db, Needs } from './core.js';
+import { Controller, Get, HttpCode, Inject, Injectable, Param, Post, type OnModuleInit } from '@nestjs/common';
+import type { BackupRow, RestoreDrillRow } from '@gradeon/contracts';
+import { backupDatabase, backupMigrations, bringForward, loadMigrations, migrate, newId, pg, restoreDatabase, scheduleJob } from '@gradeon/db';
+import { ApiError, alert, notFound } from '@gradeon/nest-kit';
+import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { withSchoolDb } from './school-db.js';
 
@@ -26,11 +26,69 @@ export class Backups implements OnModuleInit {
     if (this.store !== this.db.pool) await migrate(this.store, 'registry');
     if (this.env.NODE_ENV === 'test') return;
     scheduleJob(this.db.pool, 'backups', 24 * 60 * 60 * 1000, () => this.daily(), () => undefined);
+    scheduleJob(this.db.pool, 'restore-drill', 7 * 24 * 60 * 60 * 1000, () => this.drill('weekly drill').then(() => undefined), () => undefined);
   }
 
   async daily(): Promise<void> {
-    const { rows } = await this.db.pool.query<{ id: string }>("select id from schools where status = 'live' and deleted_at is null and db_url_sealed is not null");
-    for (const s of rows) await this.take(s.id, 'daily', 'system').catch(() => undefined);
+    const { rows } = await this.db.pool.query<{ id: string; slug: string }>("select id, slug from schools where status = 'live' and deleted_at is null and db_url_sealed is not null");
+    for (const s of rows) await this.take(s.id, 'daily', 'system').catch((err: Error) => alert(`${s.slug}: the daily backup failed: ${err.message}`));
+  }
+
+  /** An empty database on the schools' server, dropped afterwards. */
+  private async scratch<T>(fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
+    const admin = this.env.SHARED_PG_ADMIN_URL ?? this.env.REGISTRY_DATABASE_URL;
+    const name = `gradeon_scratch_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+    const run = async (sql: string) => {
+      const c = new pg.Client({ connectionString: admin });
+      await c.connect();
+      try { await c.query(sql); } finally { await c.end().catch(() => undefined); }
+    };
+    await run(`create database ${name}`);
+    const u = new URL(admin);
+    u.pathname = `/${name}`;
+    const pool = new pg.Pool({ connectionString: u.toString(), max: 2 });
+    try {
+      return await fn(pool);
+    } finally {
+      await pool.end().catch(() => undefined);
+      await run(`drop database if exists ${name} with (force)`).catch((err: Error) => alert(`Could not drop the scratch database ${name}: ${err.message}`));
+    }
+  }
+
+  /**
+   * The restore drill (weekly, and on demand from Health): a fresh backup of one live school, read back from where backups are
+   * kept and put into a scratch database. It proves the path a real restore takes, without touching the school.
+   */
+  async drill(by: string): Promise<RestoreDrillRow> {
+    const school = (await this.db.pool.query<{ id: string; name: string }>(
+      "select id, name from schools where status = 'live' and deleted_at is null and db_url_sealed is not null order by random() limit 1")).rows[0];
+    if (!school) throw new ApiError('conflict', 'There is no live school to run a restore drill on.');
+    const started = Date.now();
+    let result: { tables: number; rows: number; students: number; error: string | null };
+    try {
+      const b = await this.take(school.id, 'manual', 'Restore drill');
+      const data = (await this.store.query<{ data: Buffer }>('select data from school_backups where id = $1', [b.id])).rows[0]!.data;
+      result = await this.scratch(async (pool) => {
+        await migrate(pool, 'school');
+        const r = await restoreDatabase(pool, data);
+        const students = Number((await pool.query<{ n: string }>('select count(*) n from students')).rows[0]?.n ?? 0);
+        return { ...r, students, error: null };
+      });
+    } catch (err) {
+      result = { tables: 0, rows: 0, students: 0, error: (err as Error).message.slice(0, 500) };
+      alert(`The restore drill on ${school.name} failed: ${result.error}`);
+    }
+    const id = newId('drl');
+    const ms = Date.now() - started;
+    await this.db.pool.query('insert into restore_drills (id, school_id, school_name, ok, tables, rows, students, ms, error, by) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+      [id, school.id, school.name, !result.error, result.tables, result.rows, result.students, ms, result.error, by]);
+    return { id, schoolName: school.name, ok: !result.error, ...result, ms, by, at: new Date().toISOString() };
+  }
+
+  async drills(): Promise<RestoreDrillRow[]> {
+    const { rows } = await this.db.pool.query<{ id: string; school_name: string; ok: boolean; tables: number; rows: number; students: number; ms: number; error: string | null; by: string; at: Date }>(
+      'select * from restore_drills order by at desc limit 10');
+    return rows.map((r) => ({ id: r.id, schoolName: r.school_name, ok: r.ok, tables: r.tables, rows: r.rows, students: r.students, ms: r.ms, error: r.error, by: r.by, at: r.at.toISOString() }));
   }
 
   private withPool<T>(schoolId: string, fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
@@ -56,8 +114,11 @@ export class Backups implements OnModuleInit {
   async restore(schoolId: string, backupId: string, by: string): Promise<string> {
     const b = (await this.store.query<{ data: Buffer; taken_at: Date }>('select data, taken_at from school_backups where id = $1 and school_id = $2', [backupId, schoolId])).rows[0];
     if (!b) throw notFound('That backup');
+    // A backup from before the last deploy that added a migration is brought forward first.
+    const current = (await loadMigrations('school')).map((m) => m.tag);
+    const data = (await backupMigrations(b.data)).join() === current.join() ? b.data : await this.scratch((pool) => bringForward(b.data, pool, current));
     await this.take(schoolId, 'manual', `${by} (before restoring)`);
-    const r = await this.withPool(schoolId, (pool) => restoreDatabase(pool, b.data));
+    const r = await this.withPool(schoolId, (pool) => restoreDatabase(pool, data));
     return `Restored ${r.rows} rows in ${r.tables} tables from the backup of ${b.taken_at.toISOString().slice(0, 16).replace('T', ' ')} UTC. A backup of the data just before is kept.`;
   }
 }
@@ -69,5 +130,20 @@ export class BackupsController {
   @Get(':id/backups') @Needs('schools.read')
   list(@Param('id') id: string): Promise<BackupRow[]> {
     return this.backups.list(id);
+  }
+}
+
+@Controller('console/v1/health/restore-drills')
+export class DrillsController {
+  constructor(private readonly backups: Backups) {}
+
+  @Get() @Needs('schools.read')
+  list(): Promise<RestoreDrillRow[]> {
+    return this.backups.drills();
+  }
+
+  @Post() @HttpCode(200) @Needs('schools.write')
+  run(@Me() user: ConsoleUser): Promise<RestoreDrillRow> {
+    return this.backups.drill(user.email);
   }
 }

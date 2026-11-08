@@ -128,7 +128,9 @@ export class DashboardService {
     const examsStart = (v['term.examsStart'] as string | undefined) ?? addDays(last, 30);
     const daysToGo = Math.max(0, Math.round((new Date(examsStart).getTime() - new Date(istToday()).getTime()) / 86_400_000));
     return {
-      school: { name: String(v['school.name'] ?? t.info.name), shortName: String(v['school.shortName'] ?? t.info.shortName), logoText: String(v['brand.logoText'] ?? '') || String(v['school.shortName'] ?? t.info.shortName).slice(0, 1).toUpperCase(), place: String(v['school.place'] ?? '') },
+      school: { name: String(v['school.name'] ?? t.info.name), shortName: String(v['school.shortName'] ?? t.info.shortName), logoText: String(v['brand.logoText'] ?? '') || String(v['school.shortName'] ?? t.info.shortName).slice(0, 1).toUpperCase(), place: String(v['school.place'] ?? ''),
+        color: String(v['brand.color'] ?? ''), address: String(v['school.address'] ?? ''), phone: String(v['school.phone'] ?? ''), receiptNote: String(v['fees.receiptNote'] ?? ''), studentWord: String(v['vocab.student'] ?? '').trim() || 'Student', classWord: String(v['vocab.class'] ?? '').trim() || 'Class',
+        paymentMethods: Array.isArray(v['fees.paymentMethods']) ? (v['fees.paymentMethods'] as string[]) : ['cash', 'upi', 'card', 'netbanking', 'cheque'] },
       term: { name: String(v['term.name'] ?? 'Term 1'), examsLabel: `Exams start ${dayMonth(examsStart)}`, daysToGo, progress: Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))) },
       badges: { attendance: unmarked.length, admissions: counts.admissions, messages: counts.messages }, modules, features,
     };

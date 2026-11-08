@@ -140,7 +140,8 @@ export class FeesController {
   }
 
   @Post('payments') @HttpCode(200) @Require('fees.collect')
-  pay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PaymentCreate)) body: PaymentCreate): Promise<{ receiptNo: string; amount: number; outstanding: number }> {
+  async pay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PaymentCreate)) body: PaymentCreate): Promise<{ receiptNo: string; amount: number; outstanding: number }> {
+    await this.fees.checkMethod(t, body.method);
     return this.fees.pay(t, u, body);
   }
 

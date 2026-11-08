@@ -110,9 +110,10 @@ export const MODULES: ModuleManifest[] = [
   { key: 'exams', state: 'live', addOnPerStudentYear: 60, features: [{ key: 'exams.resultsInApp', name: 'Results in the app', state: 'live' }, { key: 'exams.reportCards', name: 'Report cards in board formats', state: 'planned' }, { key: 'exams.hpc', name: 'NEP Holistic Progress Card', state: 'planned' }], name: 'Exams and results', blurb: 'Marks, results and report cards.', requires: ['people'], backend: true, nav: [{ label: 'Exams', icon: 'exams', href: '/exams', anyOf: ['exams.read'] }], settings: [] },
   { key: 'events', state: 'live', addOnPerStudentYear: 20, features: [{ key: 'events.rsvp', name: 'RSVPs from families', state: 'live' }], name: 'Events', blurb: 'Calendar, events and RSVPs.', requires: [], backend: true, nav: [{ label: 'Events', icon: 'events', href: '/events', anyOf: ['events.read'] }], settings: [] },
   { key: 'chat', state: 'live', addOnPerStudentYear: 40, features: [{ key: 'chat.familyChat', name: 'Families start conversations', state: 'live' }], name: 'Messages', blurb: 'Chat between staff and families.', requires: ['people'], backend: true, nav: [{ label: 'Messages', icon: 'messages', href: '/messages', anyOf: ['messages.read'] }], settings: [] },
-  { key: 'transport', state: 'live', addOnPerStudentYear: 60, features: [{ key: 'transport.routes', name: 'Routes, stops and route fees', state: 'planned' }, { key: 'transport.liveBus', name: 'Live bus tracking', state: 'planned' }], name: 'Transport', blurb: 'Routes, stops and live bus.', requires: ['people'], backend: false, nav: [], settings: [] },
-  { key: 'library', state: 'live', addOnPerStudentYear: 30, features: [{ key: 'library.reservations', name: 'Reserve and renew from the app', state: 'live' }], name: 'Library', blurb: 'Books and loans.', requires: ['people'], backend: false, nav: [], settings: [] },
-  { key: 'gallery', state: 'live', addOnPerStudentYear: 20, features: [], name: 'Gallery', blurb: 'Photos with consent.', requires: [], backend: false, nav: [], settings: [] },
+  // Beta: what works today is said in the blurb; the rest of each arrives with its admin pages (production plan, Phase 4).
+  { key: 'transport', state: 'beta', addOnPerStudentYear: 60, features: [{ key: 'transport.routes', name: 'Routes, stops and route fees', state: 'planned' }, { key: 'transport.liveBus', name: 'Live bus tracking', state: 'planned' }], name: 'Transport', blurb: 'Each child’s bus route, brought in by Migration. Stops and the live bus come later.', requires: ['people'], backend: false, nav: [], settings: [] },
+  { key: 'library', state: 'beta', addOnPerStudentYear: 30, features: [{ key: 'library.reservations', name: 'Renew from the app (reserving comes with the catalogue)', state: 'beta' }], name: 'Library', blurb: 'Books a child has out and their due dates, brought in by Migration. The catalogue comes later.', requires: ['people'], backend: false, nav: [], settings: [] },
+  { key: 'gallery', state: 'beta', addOnPerStudentYear: 20, features: [], name: 'Gallery', blurb: 'Photos with consent. Families’ photo consent is recorded; sharing photos comes with file storage.', requires: [], backend: false, nav: [], settings: [] },
   // Not built yet (features master): the switch exists so plans and prices can name them; it cannot be turned on until they ship.
   { key: 'certificates', state: 'planned', addOnPerStudentYear: 0, features: [], name: 'Certificates and ID cards', blurb: 'Transfer, bonafide and character certificates; printed ID cards.', requires: ['people'], backend: false, nav: [], settings: [] },
   { key: 'diary', state: 'planned', addOnPerStudentYear: 0, features: [], name: 'Digital diary', blurb: 'Daily diary and classwork notes to families.', requires: ['people'], backend: false, nav: [], settings: [] },
@@ -201,7 +202,6 @@ export const APP_CATALOG = {
     { key: 'homework', label: 'Homework to do', module: 'homework' },
     { key: 'notices', label: 'Latest notices', module: 'notices' },
     { key: 'events', label: 'Coming up', module: 'events' },
-    { key: 'busEta', label: 'Bus arrival', module: 'transport' },
   ],
   quick: [
     { key: 'payFees', label: 'Pay fees', module: 'fees' },

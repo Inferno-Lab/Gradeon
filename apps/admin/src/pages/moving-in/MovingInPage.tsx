@@ -142,14 +142,15 @@ export function MovingInPage() {
             <p className="help" style={{ marginTop: 0 }}>Invite a class at a time: each family gets an SMS, and letters to send home say the same. Families sign in with their phone; there is no password.</p>
             {a.classes.length === 0 ? <div className="help">No classes yet. They appear here once your students are in.</div> : (
               <div className="scroll-x lscroll">
-                <div style={{ minWidth: 620 }}>
-                  <div className="grd th" style={{ '--cols': 'minmax(0,1fr) 90px 90px minmax(0,1.4fr) 220px' } as React.CSSProperties}><span>Class</span><span>Families</span><span>Invited</span><span>Signed in</span><span></span></div>
+                <div style={{ minWidth: 710 }}>
+                  <div className="grd th" style={{ '--cols': 'minmax(0,1fr) 90px 90px minmax(0,1.4fr) 90px 220px' } as React.CSSProperties}><span>Class</span><span>Families</span><span>Invited</span><span>Signed in</span><span data-tip="Agreed to the school’s privacy notice in the app">Consented</span><span></span></div>
                   {a.classes.map((c) => (
-                    <div key={c.classId} className="grd rw" style={{ '--cols': 'minmax(0,1fr) 90px 90px minmax(0,1.4fr) 220px' } as React.CSSProperties}>
+                    <div key={c.classId} className="grd rw" style={{ '--cols': 'minmax(0,1fr) 90px 90px minmax(0,1.4fr) 90px 220px' } as React.CSSProperties}>
                       <b style={{ font: '700 14px var(--fb)' }}>{c.className}</b>
                       <span>{c.families}</span>
                       <span>{c.invited}</span>
                       <span className="us" style={{ gap: 5 }}><div className="bar" style={{ height: 10 }}><i style={{ width: `${pct(c.signedIn, c.families)}%` }}></i></div><small style={{ font: '700 11.5px var(--fb)', color: 'var(--ink3)' }}>{c.signedIn} of {c.families}</small></span>
+                      <span>{c.consented}</span>
                       <span style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                         {can('students.write') && c.invited < c.families && <button className="btn sm" disabled={invite.isPending} onClick={() => invite.mutate(c.classId)}>Invite</button>}
                         <button className="btn sm" disabled={!c.students} onClick={() => print(c.classId)}>Letters</button>

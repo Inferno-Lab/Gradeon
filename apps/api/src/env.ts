@@ -18,6 +18,8 @@ const Env = z.object({
   TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
   /** Lets a hosted test track keep SEED_DEMO / DEMO_CODE while NODE_ENV=production. */
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
+  /** A Slack or Discord incoming webhook: new errors, a school not answering, failed backups and failed restore drills are posted there. */
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
 });
 export type Env = z.infer<typeof Env>;
 

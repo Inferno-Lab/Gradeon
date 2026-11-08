@@ -20,7 +20,6 @@ extension AppContext on BuildContext {
       MediaQuery.disableAnimationsOf(this) ||
       (Get.isRegistered<ThemeService>() && Get.find<ThemeService>().reduceMotion.value);
 
-  bool get reduceTransparency => Get.isRegistered<ThemeService>() && Get.find<ThemeService>().reduceTransparency.value;
 }
 
 extension DateOnly on DateTime {

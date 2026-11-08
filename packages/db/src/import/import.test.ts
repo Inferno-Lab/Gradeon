@@ -99,6 +99,15 @@ describe('moving a school in', () => {
     expect(p.rows[0]!.values.name.split(' ').length).toBeGreaterThanOrEqual(2);
   }, 60_000);
 
+  it('recognises an Entab CampusCare export by its columns', async () => {
+    const csv = ['AdmNo,StudentName,ClassSec,DOB,FName,FMobile,House', 'E/2020/77,Meher Kapoor,8 A,14/03/2013,Rohit Kapoor,9822077001,Ruby'].join('\r\n');
+    const p = await previewImport(pool, { kind: 'students', csv, fileName: 'entab.csv' });
+    expect(p.source).toBe('entab');
+    expect(p.missing).toEqual([]);
+    expect(p.rows[0]!.errors).toEqual([]);
+    expect(p.rows[0]!.values).toMatchObject({ admission_no: 'E/2020/77', name: 'Meher Kapoor', guardian_phone: '9822077001', house: 'Ruby' });
+  }, 60_000);
+
   it('rows typed into the quick-entry grid go through the same checks', async () => {
     const p = await previewImport(pool, { kind: 'admissions', rows: [{ child_name: 'Tara Joshi', grade_sought: 'LKG', guardian_name: 'Vir Joshi', phone: '9811100099' }, { child_name: 'No Grade', grade_sought: 'abc', guardian_name: 'A' }], fileName: '' });
     expect(p.source).toBe('typed');
