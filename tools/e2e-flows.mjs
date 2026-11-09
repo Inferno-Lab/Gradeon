@@ -726,6 +726,25 @@ await flow('design system: the menu keeps its scroll between pages, and search o
   if (!settled.length || Math.max(...settled) - Math.min(...settled) > 12) throw new Error(`the search box moved while opening: ${tops.map(Math.round).join(', ')}`);
 });
 
+await flow('design system: a dialog opened while the last one is still fading starts fresh', { storage: adminStore }, async (p) => {
+  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
+  await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
+  await expectVisible(p.getByRole('dialog'), 'the holiday dialog');
+  // Close it and open another within its fade (200 ms), the way a quick hand or a slow machine does.
+  await p.evaluate(async () => {
+    const byText = (sel, text) => [...document.querySelectorAll(sel)].find((e) => e.textContent.trim() === text);
+    byText('[role=dialog] button', 'Cancel').click();
+    await new Promise((r) => setTimeout(r, 30));
+    byText('[role=tab]', 'Fees').click();
+    await new Promise((r) => setTimeout(r, 30));
+    const sec = [...document.querySelectorAll('section')].find((x) => x.querySelector('h2,h3')?.textContent.trim() === 'Fee structures');
+    [...sec.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+  });
+  await expectVisible(p.getByRole('dialog').getByText('Add to fee structures'), 'the fee dialog');
+  const head = (await p.getByRole('dialog').getByLabel('Fee head').textContent())?.trim();
+  if (head !== 'Tuition') throw new Error(`the fee dialog kept the holiday dialog's state: fee head is "${head}"`);
+});
+
 await flow('design system: every overlay opens and closes from the keyboard, and a date is picked without a mouse', { storage: adminStore }, async (p) => {
   await p.goto(A('/events'), { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Add event' }).first().focus();

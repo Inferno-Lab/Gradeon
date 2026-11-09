@@ -43,8 +43,14 @@ export const leavingProps = (leaving: boolean) => (leaving ? { 'data-leaving': '
 export function Presence({ children }: { children: ReactNode }) {
   const has = rendered(children).length > 0;
   const last = useRef<ReactNode>(null);
+  // Each opening is a new generation: an overlay opened while the last one is still leaving starts fresh, instead of
+  // inheriting the leaving one's state (a fee dialog opened in a holiday dialog's fade kept the holiday's fields).
+  const gen = useRef(0);
+  const had = useRef(false);
+  if (has && !had.current) gen.current += 1;
+  had.current = has;
   if (has) last.current = children;
   const { shown, leaving } = useExit(has);
   if (!shown) return null;
-  return <Leaving.Provider value={leaving}>{has ? children : last.current}</Leaving.Provider>;
+  return <Leaving.Provider value={leaving}><Fragment key={gen.current}>{has ? children : last.current}</Fragment></Leaving.Provider>;
 }

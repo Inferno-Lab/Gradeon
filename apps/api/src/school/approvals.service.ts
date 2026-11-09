@@ -54,8 +54,13 @@ export class ApprovalsService {
     return (Object.entries(KIND_NEEDS) as [ApprovalKind, string | null][]).filter(([, need]) => !need || has(need)).map(([k]) => k);
   }
 
-  async needsYou(t: TenantCtx): Promise<ApprovalRow[]> {
-    const kinds = await this.kinds(t);
+  /** The kinds this person may act on: a module the school has, and the permissions to decide it (a teacher sees no fee waivers). */
+  private async mine(t: TenantCtx, perms: readonly string[]): Promise<ApprovalKind[]> {
+    return (await this.kinds(t)).filter((k) => NEEDS[k].every((p) => perms.includes(p)));
+  }
+
+  async needsYou(t: TenantCtx, perms: readonly string[]): Promise<ApprovalRow[]> {
+    const kinds = await this.mine(t, perms);
     const { rows } = await t.pool.query<Row>(
       "select * from approvals where status = 'pending' and kind in ('leave','fee_waiver','notice') and kind = any($1) order by case kind when 'leave' then 1 when 'fee_waiver' then 2 else 3 end, created_at, id limit 8", [kinds]);
     const items = await Promise.all(rows.map(async (r) => this.toRow({ ...r, created_at: r.created_at, decided_at: r.decided_at }, await this.doneText(t, r))));
@@ -75,15 +80,15 @@ export class ApprovalsService {
     return Promise.all(rows.map(async (r) => this.toRow(r, await this.doneText(t, r))));
   }
 
-  async counts(t: TenantCtx): Promise<{ admissions: number; approvals: number; messages: number }> {
-    const [cfg, kinds] = await Promise.all([this.settings.effective(t), this.kinds(t)]);
+  async counts(t: TenantCtx, perms: readonly string[]): Promise<{ admissions: number; approvals: number; messages: number }> {
+    const [cfg, kinds] = await Promise.all([this.settings.effective(t), this.mine(t, perms)]);
     const { rows } = await t.pool.query<{ admissions: string; approvals: string; messages: string }>(
       "select (select count(*) from enquiries where stage in ('applied','test','offer')) admissions, (select count(*) from approvals where status = 'pending' and kind = any($1)) approvals, (select count(distinct m.thread_id) from thread_messages m join threads x on x.id = m.thread_id where x.status = 'open' and m.from_kind = 'guardian' and m.read_at is null) messages", [kinds]);
     // A badge for a module the school does not have would point at a page it cannot open.
     return {
-      admissions: cfg.features.includes('people.admissions') ? Number(rows[0]!.admissions) : 0,
+      admissions: cfg.features.includes('people.admissions') && perms.includes('admissions.read') ? Number(rows[0]!.admissions) : 0,
       approvals: Number(rows[0]!.approvals),
-      messages: cfg.modules.includes('chat') ? Number(rows[0]!.messages) : 0,
+      messages: cfg.modules.includes('chat') && perms.includes('messages.read') ? Number(rows[0]!.messages) : 0,
     };
   }
 
