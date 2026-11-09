@@ -1,6 +1,6 @@
 # Gradeon: the plan to production
 
-Written Nov 4, 2026, from the code on `main` (d25d5d5) and the features master (`School ERP Features - Master Reference.pdf`), and kept current since (last update Nov 8). This is the order of work that takes **Gradeon** from a working test track to something a real school runs on every day. Each phase says what "done" means so nobody has to guess.
+Written Nov 4, 2026, from the code on `main` (d25d5d5) and the features master (`School ERP Features - Master Reference.pdf`), and kept current since (last update Nov 9). This is the order of work that takes **Gradeon** from a working test track to something a real school runs on every day. Each phase says what "done" means so nobody has to guess.
 
 What matters most, in the owner's words, and where it is in this plan:
 
@@ -12,11 +12,18 @@ What matters most, in the owner's words, and where it is in this plan:
 | **Everything that can be configured is configurable**: colours, branding, features, roles, deployments and the rest | Phase 2A (the full list) |
 | Roles, which modules each role can use, and creating new roles are set from the console | Phase 2A, "Roles" |
 | The console decides which school gets which modules (the biggest one) | Phase 2B |
+| One precise design system for the app and one for admin and console, covering micro-interactions | Done (Nov 9): `docs/DESIGN.md`, `docs/design-system.md`, enforced by tests |
+| **Every colour of the admin, the app and the console is set from the console**, with full freedom (a picker, hex, rgb, hsl) | Done (Nov 9): console → school → Configuration → Colours; Team → Console colours |
+| An **Integrations Hub** in the console to configure, manage and add third parties, instead of hard-coding them, before Phase 4 | Phase 3B |
+| The plan is detailed enough for other agents to build the remaining phases | "How to pick up a piece of this plan", and every step in Phases 3B to 6 |
 | Pending decisions never stop the work | "Decisions" at the end |
 
 **Decided (Nov 4, 2026):** configuration is console-only. **Decided (Nov 5, 2026):** the school keeps its own data inside console limits; every school runs the deployed code and is migrated at start-up (release waves sign schools off, they do not stage code). **Open:** one Gradeon app or one app per school, names, hosting, providers, pilot school. None of them stops the coding work, but **an SMS provider (with DLT registration) stops a pilot**, so it is the first thing to start. The work goes on with working values kept in one place, so each decision later is a change of value, not a rebuild.
 
-## Status (Nov 8, 2026)
+## Status (Nov 9, 2026)
+
+**Design systems and colours (branch `feat/design-system`, Nov 9):** both design systems are built and enforced. Admin and console: one token per meaning (retired duplicates), ten type sizes in three weights, radius and spacing scales, control heights that line up, every control's states (hover, press, focus, disabled, busy), toast timing in one hook, theme changes in one frame, and a guard test that fails on any off-system value. App: type roles, `AppMotion` and curve tokens, radius and spacing scales, every tap through `Pressable`, plurals through `.trn`, and its own guard test. **Every colour is configurable from the console**: each school's admin (light, dark) and app (Chalk, Blackboard, AMOLED, subjects, houses) under Configuration → Colours, and the console's own under Team, with a full colour picker, live previews and contrast warnings; derived colours follow a changed base. Next: **Phase 3B, the Integrations Hub**, then Phase 4.
+
 
 **Phases 0 to 3 are merged.** What is left in them needs something from the owner (an account, a vendor, a decision or a review) or belongs to a later phase; each such item is listed below with the reason. **The critical path to a pilot is now outside the code: an SMS provider with DLT registration** (families sign in only with a code to their phone, and invites are texts; until a provider exists every text lands in the console's test inbox), then India hosting with point-in-time recovery, then a check on real phones.
 
@@ -41,7 +48,7 @@ What matters most, in the owner's words, and where it is in this plan:
 | Retire the Greenfield seed in favour of the importer (1.2) | Decided against: Greenfield holds months of activity (notices, chats, homework, approvals) that no import kind brings in, and 49 browser flows rely on it. Test schools of any size come from the importer (Migration → test school, `tools/generate-school.mjs`) |
 | Moving `assets/mock` and the Mock repositories into `test/` (1.3) | Decided against: plain `flutter run`, the screenshot tool and the widget tests all use the sample content, and what 1.3 is for is already true: release builds refuse to start without a school, compile the sample-content code out, and the build workflow leaves the files out |
 | Settings not used yet: late fee, reminders by date, record retention | The job queue (Phase 4) runs fines and reminders; retention needs leaving dates from year-end (Phase 4) |
-| 2A items not built: fonts, accent and dark-mode colours, app name, icon and splash, logo image, sender names, student sign-in, report-card and certificate headings, grading scales, integrations, deployment settings | Fonts and colours are the owner's design decision; icons, splash and logo need art and file storage; sender names need providers; report cards, certificates and student sign-in are Phase 5; deployment settings follow the hosting choice |
+| 2A items not built: fonts, app name, icon and splash, logo image, sender names, student sign-in, report-card and certificate headings, grading scales, integrations, deployment settings | Colours are done (every one, from the console, Nov 9); fonts are the owner's design decision; icons, splash and logo need art and file storage; sender names need providers; report cards, certificates and student sign-in are Phase 5; deployment settings follow the hosting choice |
 | Plans with feature differences filled in | The mechanism is in; which plan leaves out what is a pricing decision |
 | Photos, documents and past report-card PDFs in Migration | File storage (Phase 4) |
 | Presets for the other nine ERPs; QR codes on letters; WhatsApp invites; OCR of paper forms; Tally | Real exports from those systems; the app's store link (one app or one per school); a WhatsApp provider; the assistant; accounting |
@@ -176,7 +183,7 @@ Today about 45 settings exist (`packages/contracts/src/config.ts`) and most are 
 | **Messages** | Which message goes on which channel, wording of every message, quiet hours, languages |
 | **Security** | Two-step sign-in, how long sign-ins last, password rules (*new*), sign-in methods (*new*) |
 | **Privacy** | Consent questions, privacy notice, grievance officer, how long records are kept, photo consent |
-| **Integrations** (*new*) | The school's payment gateway account and settlement, SMS sender, WhatsApp number, email domain, Tally export format |
+| **Integrations** (*new*, Phase 3B) | Not settings: connections and per-school routes in the console's **Integrations Hub** (payment gateway account and settlement, SMS sender and DLT templates, WhatsApp number, email domain, storage, maps, Tally) |
 | **Deployment** | Where the school runs (cell and region), its web address (subdomain or own domain), which release wave signs it off (the code reaches every school at deploy), maintenance window, backup schedule, how its app is shipped (inside the shared Gradeon app, its own branded app, or both), feature flags |
 | **Dashboard targets** | Daily fee target, attendance and homework goals, classes shown in the roll call |
 
@@ -280,51 +287,298 @@ Done when: a school can arrive from Excel, from one other ERP and from paper, ea
 
 ---
 
+## How to pick up a piece of this plan (for every agent)
+
+Every step below is written so one agent can take it without asking. Before starting any step:
+
+1. **Read** `AGENTS.md`, then `docs/HANDOFF.md` (anything outside `lib/`), then the step here. The design systems are `docs/DESIGN.md` (admin and console) and `docs/design-system.md` (app); both are enforced by tests (`packages/web-ui/src/rules.test.ts`, `test/design_rules_test.dart`), so build from their parts and tokens or the test fails.
+2. **Branch** off the latest `main` in a worktree of its own (`git worktree add -b feat/<step> ../Gradeon-<step> origin/main`); never write in another agent's checkout. Two agents never take steps that touch the same files at the same time; each step lists its files.
+3. **Run your own servers** when another checkout is running: `tools/dev-reset.sh` stops only processes under its own folder; give the second checkout other ports (PostgreSQL, `PORT` in `.env`) and start the admin and console with `GRADEON_API=http://localhost:<port> npx vite --port <port>`.
+4. **Keep the rules that have bitten us:** every new school route declares `@RequireModule(...)` or `@Core()`; a new setting goes in `SchoolSettingsSchema` and `SETTINGS_META`; a new module or feature goes in `MODULES` first; data comes in through the import engine; never edit an applied SQL migration (add `NNNN_name.sql`, then `pnpm --filter @gradeon/db build`); declare build-time env in `turbo.json`; `apps/server` reads the API packages from `dist/` (rebuild).
+5. **Done means:** the step's tests are written and pass; `pnpm typecheck && pnpm test`, `tool/verify.sh`, `node tools/audit-ui.mjs` and `node tools/e2e-flows.mjs` (with a fresh `dev-reset`) are green; the step's "Done when" is true; HANDOFF gets a short section (what changed, why, what to know); this plan's Status table is updated. Commits are atomic Conventional Commits with the attribution trailer; the owner merges.
+6. **Nothing pretends.** A screen for a provider that is not connected says so in plain words; nothing marks money paid or a message delivered that was not.
+
+---
+
+## Phase 3B. Integrations Hub (before Phase 4)
+
+**Why first.** Phase 4 is mostly third parties: SMS with DLT, WhatsApp, email, phone push, payments, file storage, maps for the live bus, later video meetings, accounting and AI. Wired one by one into code, each would be an environment variable, a hard-coded provider and a redeploy to change, which breaks the rule that everything configurable is configured from the console. The Hub makes every third party a **connection** the console creates, tests, routes per school, watches and switches, with secrets sealed and every change audited. Phase 4 then only builds features on top of it.
+
+**What "add a new integration from the console" means.** Three levels, all from the console:
+
+1. **A new account of a built provider** (a second MSG91 account, a school's own Razorpay account): fill a form built from the provider's fields, test, route. No code.
+2. **A provider we have not written an adapter for, reached over plain HTTP** (most Indian SMS and WhatsApp gateways, many email APIs): the **Custom HTTP** provider. The console sets the URL, method, headers, a body template with `{to}`, `{text}`, `{templateId}`, `{vars.name}` placeholders, where the message ID is in the reply, and what counts as success. No code.
+3. **A provider with signatures, SDK-only flows or webhooks we must verify** (Razorpay, FCM, S3 signing): one adapter file in code implementing the capability's interface, plus its catalogue entry. After that, level 1 applies.
+
+### 3B.1 Concepts and names
+
+| Term | What it is | Where |
+|---|---|---|
+| **Capability** | What a connection does: `sms`, `whatsapp`, `email`, `push`, `payments`, `storage`, `maps`, `video`, `accounting`, `ai`, `webhook` (send events out) | `packages/contracts/src/integrations.ts` |
+| **Provider** | A kind of third party with a built adapter: `msg91`, `gupshup`, `twilio`, `kaleyra` (sms); `meta-cloud`, `gupshup-wa`, `interakt` (whatsapp); `ses`, `smtp`, `resend` (email); `fcm` (push, Android and iOS); `razorpay`, `cashfree` (payments); `s3` (any S3-compatible: AWS, Cloudflare R2, DigitalOcean Spaces, MinIO) (storage); `google-maps`, `mapbox` (maps); `custom-http` (sms, whatsapp, email); `webhook` (outbound events); `sandbox` (the test inbox, always present) | `INTEGRATION_PROVIDERS` in the same file |
+| **Connection** | One configured account of a provider: its name, non-secret settings, sealed secrets, state (`draft`, `test`, `live`, `paused`), health | registry table `integration_connections` |
+| **Route** | Which connection serves a capability, platform-wide (the default) or for one school (an override), with an optional fallback | registry table `integration_routes` |
+| **Template** | A provider-side template a message must use: a DLT template ID for SMS, an approved WhatsApp template name and language, mapped to one of our message keys (`MESSAGE_EVENTS`) | registry table `integration_templates` |
+| **Delivery** | One attempt to send a message or event, with its provider ID and status updates from webhooks | registry table `message_log` (replaces `sandbox_messages` as the record; the sandbox connection still fills the Test inbox) |
+
+### 3B.2 Contracts (`packages/contracts/src/integrations.ts`, exported from `index.ts`)
+
+```ts
+export const CAPABILITIES = ['sms', 'whatsapp', 'email', 'push', 'payments', 'storage', 'maps', 'video', 'accounting', 'ai', 'webhook'] as const;
+export interface ProviderField { key: string; label: string; help?: string; kind: 'text' | 'secret' | 'url' | 'select' | 'number' | 'bool' | 'json' | 'template';
+  options?: [string, string][]; required?: boolean; placeholder?: string }
+export interface ProviderDef { key: string; name: string; capabilities: Capability[]; state: 'built' | 'planned';
+  fields: ProviderField[];            // the console's form is built from this (like SETTINGS_META): a new provider needs no new screen
+  testAction: string;                 // what "Test" does, in words ("Sends a text to the number you type")
+  webhooks?: { path: string; verifies: string }[];   // inbound events this provider sends us
+  docs: string }                      // the provider's docs URL, shown beside the form
+export const INTEGRATION_PROVIDERS: ProviderDef[] = [ /* one entry per provider above */ ];
+export const ConnectionInput = z.object({ provider: z.string(), name: z.string().min(2).max(60), scope: z.enum(['platform', 'school']),
+  schoolId: z.string().optional(), settings: z.record(z.string(), z.unknown()), secrets: z.record(z.string(), z.string()).optional() });
+export const RouteInput = z.object({ capability: z.enum(CAPABILITIES), schoolId: z.string().nullable(), connectionId: z.string(),
+  fallbackId: z.string().nullable(), settings: z.record(z.string(), z.unknown()).default({}) });   // sender ID, from-address, bucket prefix…
+export interface ConnectionRow { id: string; provider: string; name: string; scope: 'platform' | 'school'; schoolId: string | null;
+  state: 'draft' | 'test' | 'live' | 'paused'; settings: Record<string, unknown>; secretsSet: string[];   // names only, never values
+  health: { ok: boolean; checkedAt: string | null; error: string | null }; usage: { month: string; count: number; costPaise: number } }
+```
+
+Custom HTTP's fields: `url`, `method`, `headers` (json, secrets allowed as `{secret.apiKey}`), `body` (template), `messageIdPath` (a dotted path into the JSON reply), `successStatus` (default 2xx), `successPath`/`successValue` (optional), `statusWebhook` (bool: gives a URL the provider can call with delivery reports, and `statusIdPath`, `statusPath` and a mapping of their status words to ours).
+
+### 3B.3 Storage (registry migration `packages/db/migrations/registry/0012_integrations.sql`)
+
+```sql
+-- kind: expand
+CREATE TABLE "integration_connections" (
+  "id" text PRIMARY KEY, "provider" text NOT NULL, "name" text NOT NULL,
+  "scope" text NOT NULL CHECK (scope IN ('platform','school')), "school_id" text REFERENCES schools(id),
+  "state" text NOT NULL DEFAULT 'draft' CHECK (state IN ('draft','test','live','paused')),
+  "settings" jsonb NOT NULL DEFAULT '{}', "secrets_sealed" text,            -- seal(JSON.stringify(secrets), SECRETS_KEY)
+  "secret_version" integer NOT NULL DEFAULT 1,
+  "health_ok" boolean, "health_checked_at" timestamptz, "health_error" text,
+  "created_by" text NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_by" text, "updated_at" timestamptz NOT NULL DEFAULT now(),
+  CHECK ((scope = 'school') = (school_id IS NOT NULL)));
+CREATE TABLE "integration_routes" (
+  "id" text PRIMARY KEY, "capability" text NOT NULL, "school_id" text REFERENCES schools(id),   -- null = the platform default
+  "connection_id" text NOT NULL REFERENCES integration_connections(id), "fallback_id" text REFERENCES integration_connections(id),
+  "settings" jsonb NOT NULL DEFAULT '{}', "updated_by" text, "updated_at" timestamptz NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX "integration_routes_one" ON integration_routes (capability, coalesce(school_id, ''));
+CREATE TABLE "integration_templates" (
+  "id" text PRIMARY KEY, "connection_id" text NOT NULL REFERENCES integration_connections(id), "message_key" text NOT NULL,
+  "language" text NOT NULL DEFAULT 'en', "provider_template_id" text NOT NULL, "dlt_template_id" text, "approved_text" text NOT NULL,
+  UNIQUE (connection_id, message_key, language));
+CREATE TABLE "message_log" (
+  "id" text PRIMARY KEY, "school_slug" text NOT NULL, "channel" text NOT NULL, "to_addr" text NOT NULL, "message_key" text,
+  "subject" text, "body" text NOT NULL, "connection_id" text, "provider_message_id" text,
+  "status" text NOT NULL CHECK (status IN ('queued','held','sent','delivered','read','failed','refused')),
+  "error" text, "attempts" integer NOT NULL DEFAULT 0, "segments" integer, "cost_paise" integer,
+  "send_after" timestamptz, "created_at" timestamptz NOT NULL DEFAULT now(), "sent_at" timestamptz, "updated_at" timestamptz NOT NULL DEFAULT now());
+CREATE INDEX ON message_log (school_slug, created_at DESC);
+CREATE INDEX ON message_log (status, send_after) WHERE status IN ('queued','held');
+CREATE INDEX ON message_log (provider_message_id);
+```
+
+Secrets: sealed with `seal()` from `packages/security` (the same AES used for school database URLs); **never** returned by any API (`secretsSet` lists names; the form shows "Set · ending 4F2A" with a Replace button); never logged (add the keys to the error reporter's redaction); replacing a secret bumps `secret_version` and is audited.
+
+### 3B.4 The adapter layer (`packages/integrations`, a new workspace package)
+
+```
+packages/integrations/src/
+  index.ts            resolve(capability, schoolId) → { connection, adapter }; the registry of adapters by provider key
+  types.ts            SmsAdapter { send(to, text, opts: { templateId?, senderId?, vars }) → { providerId, segments } }
+                      WhatsAppAdapter { sendTemplate(to, template, lang, vars) / sendText(to, text) }
+                      EmailAdapter { send(to, subject, text, html?) }   PushAdapter { send(tokens[], title, body, data) → { failedTokens } }
+                      PaymentsAdapter { createOrder(amountPaise, receipt, notes) → { orderId, checkoutUrl }; verify(payload, signature);
+                                        refund(paymentId, amountPaise); parseWebhook(headers, raw) → PaymentEvent }
+                      StorageAdapter { presignPut(key, mime, maxBytes) → url; presignGet(key, seconds); delete(key); usage(prefix) }
+                      MapsAdapter { staticMapUrl(points); eta(from, to) }   Every adapter: test(input) → { ok, detail }; health() → { ok, error }
+  providers/          one file per provider: msg91.ts, gupshup.ts, twilio.ts, ses.ts, smtp.ts, resend.ts, meta-cloud.ts, fcm.ts,
+                      razorpay.ts, cashfree.ts, s3.ts, google-maps.ts, custom-http.ts, webhook.ts, sandbox.ts
+  http.ts             one fetch wrapper: timeout 10 s, two retries on 5xx and network errors with backoff, never retries a 4xx
+```
+
+Rules: adapters use `fetch` (Node 24) and the provider's REST API; add an SDK only when signing or a protocol leaves no choice (S3 v4 signing: a 60-line signer, not the AWS SDK; FCM: HTTP v1 with a service-account JWT signed with `node:crypto`). Each adapter has a unit test against a recorded request (no network in tests). `custom-http.ts` renders the templates with the same `{placeholder}` code the message templates use.
+
+**Resolution order** (`resolve`): the school's route → the platform route → `sandbox`. A route whose connection is `paused` or unhealthy uses its fallback. When `MESSAGING_MODE` is `sandbox` (local and staging) **every** message goes to the sandbox, except to numbers and emails on the platform setting `integrations.allowList` (so the team can try a real provider from staging). Production sets `MESSAGING_MODE=live` (`apps/api/src/env.ts` gains `'live'`).
+
+### 3B.5 The console: Integrations Hub
+
+A new item **Integrations** in the console menu, group Operate (`apps/console/src/app/nav.ts`, a new `plug` icon in `IC`, keys `G N`), route `/integrations`, page `apps/console/src/pages/integrations/IntegrationsPage.tsx` built only from `packages/web-ui` parts:
+
+| Tab | What it shows and does |
+|---|---|
+| **Connections** | Cards grouped by capability: provider, name, scope (Gradeon-wide or a school), state chip, health ("Healthy · checked 3 min ago" / the provider's error in plain words), this month's count and cost. **Add a connection** opens a `Panel`: pick a capability, then a provider (built ones first, then Custom HTTP), then the form built from `fields`; secrets are write-only. Actions: **Test** (runs `testAction`, shows the result inline), **Go live** (a second person approves: new action `integration.live`), **Pause**, **Replace secret**, **Delete** (refused while a route uses it). |
+| **Routing** | A matrix: capabilities down the side, "Gradeon default" and each school with an override across; each cell names the connection and its fallback; editing a cell opens the route panel (connection, fallback, sender ID, from-address, bucket prefix). Bulk: apply a route to many schools. |
+| **Templates** | Our message keys (`MESSAGE_EVENTS`) against each SMS and WhatsApp connection: DLT template ID, provider template ID, approved text, language. Flags any school whose custom wording (`templates.messages`) no longer matches the approved text (DLT rejects those messages), with the difference highlighted. |
+| **Activity** | `message_log` (and payment events): filter by school, channel, status, date; a failure shows the provider's reason and a Retry; totals per school and month for billing. |
+| **Webhooks** | The inbound URLs to paste into each provider's dashboard (`https://<host>/hooks/<connectionId>/<token>`), the last ten events received for each, and their signature check result. |
+
+Each **school page** gets an **Integrations** tab (`apps/console/src/pages/school/IntegrationsTab.tsx`): the routes that apply to it (its overrides and the defaults), its own connections (its Razorpay account for settlement, its sender ID), its message volume against its `smsPerMonth` limit, and recent failures. The admin's read-only School setup shows the school which channels are connected ("Texts: on · Payments: Razorpay, test mode").
+
+Permissions (`packages/contracts/src/console.ts`): add `integrations.read` (super admin, implementation, support, auditor) and `integrations.write` (super admin, implementation); add `integration.live` to `ACTIONS` with `needed: true` in `DEFAULT_POLICY` (two people to take a payments or messaging connection live).
+
+### 3B.6 The API (`apps/console-api/src/integrations.ts`, registered in `console.module.ts`)
+
+| Route | Needs | Does |
+|---|---|---|
+| `GET /console/v1/integrations/catalogue` | `integrations.read` | `INTEGRATION_PROVIDERS` |
+| `GET /console/v1/integrations/connections` | `integrations.read` | `ConnectionRow[]` with health and this month's usage |
+| `POST /console/v1/integrations/connections` | `integrations.write` | Validates `settings` and `secrets` against the provider's `fields`, seals the secrets, state `draft` |
+| `PATCH /console/v1/integrations/connections/:id` | `integrations.write` | Name, settings, secrets (replace), state (`paused`/`test`; `live` only through the approval) |
+| `POST /console/v1/integrations/connections/:id/test` | `integrations.write` | Runs the adapter's `test`, stores health |
+| `DELETE /console/v1/integrations/connections/:id` | `integrations.write` | Refused while a route or template uses it |
+| `GET/PUT /console/v1/integrations/routes` | read / write | The routing matrix; PUT takes `RouteInput[]` |
+| `GET/PUT /console/v1/integrations/templates` | read / write | Template mapping |
+| `GET /console/v1/integrations/activity` | `integrations.read` | Paged `message_log` with filters |
+| `POST /console/v1/integrations/activity/:id/retry` | `integrations.write` | Re-queues a failed message |
+| `POST /hooks/:connectionId/:token` (public, on the server) | the token and the provider's signature | Delivery reports update `message_log`; payment events go to the payments handler (Phase 4.4). Raw body kept for signature checks |
+
+Every write is in `console_audit` (`integration.created`, `.changed`, `.secret_replaced`, `.routed`, `.live`, `.paused`). A job (`scheduleJob(pool, 'integrations.health', 15 min, …)`) checks every live connection and posts to `ALERT_WEBHOOK_URL` when one turns unhealthy; messaging routes fall back automatically and say so in Activity.
+
+### 3B.7 Moving the code onto the Hub
+
+1. `Messenger.send` (`apps/api/src/school/support.ts`) writes a `message_log` row (`queued`, or `held` with `send_after` in quiet hours) and hands it to the sender; the sender resolves the route, calls the adapter, records `sent`/`failed`. Sign-in codes (`auth.service.ts:164`) send at once, skip quiet hours and use the fastest route (a separate `sms.otp` route setting may name a transactional connection).
+2. `smsThisMonth` counts `message_log` (sent or delivered SMS segments), and the school's `smsPerMonth` limit refuses (with a clear message) once reached.
+3. The console's **Test inbox** reads `message_log` rows sent through the sandbox; `sandbox_messages` stays readable for old rows and is dropped in a later contract migration.
+4. The 2A list's "Integrations" row is these routes; no school setting holds a credential.
+
+### 3B.8 Tests and done
+
+Tests: `packages/integrations` unit tests (each adapter's request against a recording; Custom HTTP templating; resolution order and fallback; sandbox and allow-list); `apps/console-api/test/integrations.test.ts` (secrets are sealed and never returned; a provider's required fields are enforced; going live needs a second person; a route to a paused connection uses its fallback; a webhook with a bad signature is refused and a good one updates the delivery); `apps/api/test` (the absence alert lands in `message_log` with the right route; quiet hours hold it with `send_after`; the SMS limit refuses); a browser flow: create a Custom HTTP SMS connection pointing at a local echo server, test it, route a school to it, mark a student absent, see "delivered" in Activity.
+
+Done when: every capability in Phase 4 is reached only through a route; a connection can be added, tested, routed, taken live (two people), paused and replaced from the console with no deploy; secrets never leave the server; a provider failure falls back and alerts; Activity shows every message's fate; the docs (HANDOFF, `docs/integrations.md` with one section per provider: where to get the keys, the DLT steps, the webhook URL) are written.
+
+Rough size: 2–3 weeks (contracts and storage 2 days; adapters 1 week, parallel by provider; console 1 week; moving the Messenger 2 days).
+
+---
+
 ## Phase 4. Make what exists real
 
-Each of these turns a screen that looks finished into a feature that works for a real school.
+Each track turns a screen that looks finished into a feature that works for a real school. Tracks 4.1 to 4.4 need the Hub (3B); they can run in parallel once it is merged because their files do not overlap.
 
-- **Messages (B5), first:** families sign in only with a code to their phone, so **no real family can sign in until this ships**. Start DLT registration of the sender and every template now (it takes weeks and needs the company's details). SMS through a DLT-registered Indian provider, WhatsApp through a business provider, email, and phone push (FCM, APNs) behind the existing `Messenger` interface (`MESSAGING_MODE` gains a real mode); delivery reports; the quiet-hours queue (today quiet hours only label a message as held).
-- **Jobs (B7):** the `jobs` table already runs timed work once across servers; add a queue on PostgreSQL (no new server) for fee reminders by date (`fees.remindDaysBefore`), late fines (`fees.lateFeePct`), scheduled reports, imports and exports, retries of failed messages.
-- **Files (B6):** object storage with signed links, virus scanning and image resizing: homework hand-ins and attachments, chat attachments, student photos and documents (and their import in Migration), the school's logo image, gallery with the consent families already give, the storage limit.
-- **Payments (B8):** Razorpay for school fees with reconciliation, refunds and settlement reports; GST receipts where needed.
-- **One app or one app per school, without deciding yet:** the app takes everything school-specific (name, colours, logo, modules, layout, roles, server address) from the school's configuration at run time, never from the code. The same code then ships two ways, and CI builds both on every change: (a) one Gradeon app where a person finds their school by code or phone number, and (b) a branded app per school with that school preset, built by the console's existing build pipeline. Choosing later only decides which we publish. The one hard deadline: an app's store ID cannot change after its first store release, so that name is fixed before the first publish.
-- **App:** push registration, deep links from notifications, an offline cache for the last-seen data; library catalogue and reservations, gallery and bus stops with the live bus on real data, with their admin pages (the three modules are beta until then).
-- **Year-end:** promotion to the next class, new academic year, carry-forward of dues, archived years read-only, and a leaving date for students who leave, so `privacy.retentionMonths` can act.
+### 4.1 Messages that reach people (B5): first, because families sign in with a code
+
+**Start outside the code now:** register the company and every template on DLT (Jio, Airtel, Vodafone Idea, BSNL portals; takes weeks), choose an SMS provider and a WhatsApp business provider, set SPF/DKIM for the sending email domain. Record the IDs in the Hub's Templates tab.
+
+Steps:
+1. **Templates match DLT.** `MESSAGE_EVENTS` (`packages/contracts`) gets, per message, the variables it uses; the Templates tab maps each to a DLT template; the console refuses a school's custom wording for SMS that does not match an approved template and says which words differ. WhatsApp uses approved templates outside the 24-hour window.
+2. **A real queue.** Messages are `message_log` rows: a worker (track 4.2) sends `queued` rows and `held` rows whose `send_after` has passed, three tries with backoff, then `failed` with the provider's reason. Quiet hours now actually hold messages until `notify.quietTo`.
+3. **Delivery reports** arrive on the Hub's webhook and set `delivered`/`failed`; the admin's message history and the console's Activity show them.
+4. **Email** via the Hub (SES, SMTP or Resend): plain text plus a simple HTML version built from one layout with the school's name and colours.
+5. **Push** (with 4.5): FCM HTTP v1 through the Hub; tokens from the app (4.5); invalid tokens removed on the provider's answer.
+6. **Limits and costs:** SMS segments counted per school per month against `smsPerMonth`; cost per segment from the connection's settings; the plan card and billing read them.
+Tests: queue order and retries; quiet hours; DLT mismatch refused; delivery report updates; limit reached. Done when: a family's sign-in code, an absence alert and a fee reminder reach a real phone on staging through the allow-list, with delivery shown.
+
+### 4.2 Jobs (B7): a queue on PostgreSQL, no new server
+
+`jobs` (registry 0007) runs timed work once across servers (`packages/db/src/jobs.ts`). Add a queue for per-school work:
+1. Registry migration `0013_job_queue.sql`: `job_queue (id, school_id, kind, payload jsonb, run_at timestamptz, status ('queued','running','done','failed'), attempts, locked_until, last_error, created_at)`; index on `(status, run_at)`.
+2. `packages/db/src/queue.ts`: `enqueue(kind, schoolId, payload, runAt)`, `work(kinds, handler)` claiming with `SELECT … FOR UPDATE SKIP LOCKED` and a lease (`locked_until`), so a crashed run is picked up again.
+3. Kinds: `messages.send` (4.1), `fees.reminders` (daily per school: invoices due in `fees.remindDaysBefore` days, once per invoice per day), `fees.lateFines` (daily: `fees.lateFeePct` on overdue invoices, idempotent per invoice and month, audited, shown on the receipt), `reports.scheduled`, `imports.run` and `exports.run` (move the import engine's long runs off the request), `files.scan` and `files.thumb` (4.3), `payments.reconcile` (4.4), `retention.erase` (4.8).
+4. The console's Health page lists queued, running and failed jobs per school, with Retry.
+Done when: reminders and late fines run every day without anyone pressing a button (the two `notUsedYet` settings lose that mark), and a server restart loses no work.
+
+### 4.3 Files (B6)
+
+1. **Storage** through the Hub (`storage` capability; one bucket per region with a prefix per school `schools/<slug>/`).
+2. School migration `0011_files.sql`: `files (id, kind ('homework_submission','homework_attachment','notice_attachment','chat','student_photo','student_document','logo','gallery','receipt','report_card'), owner_id, name, mime, bytes, sha256, storage_key, scanned ('pending','clean','infected'), width, height, thumb_key, created_by, created_at, deleted_at)`.
+3. **Upload flow:** `POST /v1/files` (module per kind) returns a presigned PUT and a file ID; the client uploads straight to storage; `POST /v1/files/:id/done` checks size and type and queues `files.scan` (ClamAV in the worker image, or the provider's scanning) and `files.thumb` (images resized to 320 and 1280 with `sharp` in the worker); downloads are presigned GETs valid five minutes, checked against the reader's permission and module.
+4. **Wire every place that keeps only a name today:** homework hand-ins (`family.service.ts:235`) and attachments, notice attachments (`attachments: []` today), chat attachments, student photos and documents (admin student panel; app profile), the school's logo image (a new setting `brand.logoFileId` used by the admin mark, sign-in pages and the app), gallery albums with photo consent (`privacy.photoConsent` respected per student), printed receipts and report cards as PDFs.
+5. **Usage:** a nightly job sums `bytes` per school; the console's usage card shows it against `storageGb` (today it shows 0) and refuses uploads past the limit.
+6. **Migration:** new import kind `photos` (a zip matched by admission number) and `documents` (HANDOFF §15).
+App: `image_picker` and `camera` are already dependencies; upload with progress, retry, and a size check before upload.
+Done when: every file feature works end to end on staging with real storage, infected files are refused, and storage usage is real.
+
+### 4.4 Payments (B8)
+
+1. **Razorpay through the Hub**, each school with its own account (its money settles to it) or the Route product under one Gradeon account; the console chooses per school.
+2. School migration `0012_online_payments.sql`: `payment_orders (id, invoice_id, student_id, amount, provider_order_id, status ('created','paid','failed','refunded','partial_refund'), provider_payment_id, method, created_by, created_at, paid_at)`.
+3. **App:** `POST /v1/f/fees/:invoiceId/order` (feature `fees.onlinePayment`) creates the order and returns a hosted checkout URL; the app opens it with `url_launcher` (no SDK), and returns by deep link; the screen polls the order until the webhook marks it paid. `family.service.ts:348` stops marking fees paid itself.
+4. **Webhook** (`payment.captured`, `payment.failed`, `refund.processed`) through `/hooks/…`: verified, idempotent per provider payment ID, writes the receipt through `fees.pay` with `method: 'online'` and the provider reference.
+5. **Refunds** from the admin's receipt (permission `fees.refund`, a second person above a console-set amount); **reconciliation** job daily: provider settlements against receipts, mismatches listed in the admin's Fees page and the console.
+6. **GST receipts** (feature `fees.gstReceipts`): GSTIN, HSN/SAC and tax lines on receipts where the school's fee heads are taxable.
+Done when: a parent pays a real ₹1 in test mode and live mode on staging, the receipt appears once even if the webhook repeats, a refund reverses it, and the settlement report reconciles.
+
+### 4.5 The app: push, deep links, offline
+
+1. **Push:** add `firebase_messaging` (the one dependency this needs); register the token after sign-in at `POST /v1/f/devices` (school migration: `devices (id, user_id, platform, token, app_version, last_seen)`); remove on sign-out; the Messenger's `push` channel sends to the person's devices.
+2. **Deep links:** every notification carries a route (`/fees`, `/homework/:id`, `/notices/:id`, `/chat/:threadId`, `/attendance`); the app opens it (cold and warm start), and asks to sign in first when needed. App links on `gradeon.app` for the payment return and invites.
+3. **Offline:** the last loaded data of Home, timetable, fees, homework and notices is kept (encrypted with the existing secure storage key) and shown with "Last updated 10:42" when offline; writes queue and send when back online (attendance marking first).
+Done when: on real Android and iPhone devices a notification opens the right screen from a cold start, and Home works in airplane mode.
+
+### 4.6 One app or one app per school, without deciding yet
+
+The app already takes its colours (palette from the console), name, modules and layout from the server. Remaining: the logo image (4.3), app icon and splash per school in the build workflow (`.github/workflows/mobile-build.yml`: icons from the console's build form), and the **shared app's school finder** (a code or phone number → the school's address) for the one-app option. CI builds both on every change. The store ID is fixed before the first store release.
+
+### 4.7 Beta modules made real: library, transport, gallery
+
+Each gets its admin pages (built from `packages/web-ui`), real data instead of the app's demo, its importer (Phase 3 engine), and leaves beta in the catalogue:
+- **Library:** catalogue, copies, issue and return with due dates, fines, reservations, the app's shelf and search.
+- **Transport:** routes, stops with times, vehicles and drivers, students per stop, route fees (fees module), the live bus: a driver's phone (the teacher app in a "driver" role, or a GPS device through a Hub `maps`/`gps` connection) posts positions; the app shows the bus and the stop ETA; parents are told when the bus is near (a message key).
+- **Gallery:** albums by class and event with photos from storage (4.3), photo consent respected, the app's gallery and viewer on real data.
+
+### 4.8 Year-end
+
+Promotion to the next class (a preview by class, exceptions for detained students, run as a batch with undo), a new academic year (copies structure, fee heads and timetable as a draft), carry-forward of dues, archived years read-only, leaving dates and transfer, and `privacy.retentionMonths` acting through the `retention.erase` job (two people in the console before anything is erased).
 
 ---
 
 ## Phase 5. New modules from the features master
 
-Every new module meets the same **module contract**, or it is not done:
-catalogue entry with features and dependencies → migration and tables → API with module and permission on every route → admin pages built from `packages/web-ui` → app screens with empty states → messages through `Messenger` → **importer and exporter** → reports → audit → tests (API, browser flows, app) → docs and help text → owner's design review.
+### 5.1 The module contract (a module is not done until every line is true)
 
-Suggested order for Indian K-12 schools (where the features master shows Gradeon weakest against what schools expect):
-
-| Wave | Modules | Why first |
+| # | Item | Where |
 |---|---|---|
-| A: needed to switch | Academic setup screens; fee structures by class and category, concessions rules, late fines, GST receipts, refunds; staff attendance and leave; certificates (TC, bonafide, character) and printed ID cards; report cards in board formats (CBSE, state boards) and NEP Holistic Progress Card; digital diary and classwork; transport administration (routes, stops, route fees) with live bus; visitor and gate pass; UDISE+ export; Tally export | Schools ask about these in the first demo; most competitors have them (features master, section 2a) |
-| B: grows value | Payroll and HR; study material and online tests; parent-teacher meeting booking; helpdesk and grievances; surveys; health and infirmary; behaviour; hostel; inventory; alumni; multi-campus view for trusts | Common in larger schools and groups |
-| C: sets Gradeon apart | AI assistant, at-risk alerts, report-card comment drafts, smart fee-reminder timing; biometric and RFID attendance; canteen wallet | Differentiators once the basics are excellent |
+| 1 | Catalogue entry: key, name, state (`planned` → `beta` → `live`), dependencies, features inside it, limits, price | `MODULES` in `packages/config-engine/src/modules.ts` |
+| 2 | Permissions it adds, attached to roles in the role templates | `packages/contracts/src/permissions.ts` |
+| 3 | School migration (new file) and the tables | `packages/db/migrations/school/NNNN_<module>.sql` |
+| 4 | API: every route `@RequireModule('<module>')` or a feature, plus a permission | `apps/api/src/school/<module>.service.ts` and controller |
+| 5 | Admin pages built only from `packages/web-ui` (Page, Card, table, Dialog, Panel, fields), menu entries in `adminNav` | `apps/admin/src/pages/<module>/` |
+| 6 | App screens (if families or teachers use it) with empty, loading and error states and a dock or home entry in `APP_CATALOG` | `lib/features/<module>/` |
+| 7 | Messages it sends: keys in `MESSAGE_EVENTS` with defaults, templates and DLT text | contracts + Hub Templates |
+| 8 | Importer and exporter through the one engine | `IMPORT_KINDS`, `packages/db/src/import/kinds.ts` |
+| 9 | Reports and dashboard widgets | admin Reports page |
+| 10 | Audit entries for every change | `audit` |
+| 11 | Settings it needs, in `SchoolSettingsSchema` and `SETTINGS_META` (console only) | contracts |
+| 12 | Tests: API (module off → refused; permissions), browser flows, app widget tests, import round trip | `apps/api/test`, `tools/e2e-flows.mjs`, `test/` |
+| 13 | Design guards pass (colours, type, scales); light, dark, 360 to desktop; owner's review | `rules.test.ts`, `design_rules_test.dart` |
+| 14 | Docs: HANDOFF section and help text in plain words | `docs/` |
 
-Each wave's modules are given to schools per Phase 2B, so a school only gets what it pays for and new modules can start as "beta" for one pilot school.
+### 5.2 Wave A: needed to switch (in this order)
+
+| Module (key) | Tables (school DB) | Admin | App | Messages | Import | Notes |
+|---|---|---|---|---|---|---|
+| Academic setup screens (`core`) | years, terms, working days, holidays, periods and bells, subjects, houses (most exist) | Classes and calendar grows tabs for each, behind the `*.schoolEdits` switches | reads only | — | `structure` kinds exist | Locks come from the console |
+| Fees structures (`fees` features `structures`, `concessions`, `lateFines`, `gstReceipts`, `refunds`) | fee_heads, structures by class and category, concession rules, fine rules | Fee setup: heads, structures, rules; bulk invoice generation per term | shows breakdown | `fees.invoiced` | `fees.structures` | Late fines run in 4.2 |
+| Staff attendance and leave (`staff`) | staff_attendance, leave_types, leave_balances, leave_requests | Staff roll, leave approvals, balances | teacher app: mark own attendance, apply leave | `leave.staff.*` | `staff.leave_balances` | Biometric later (wave C) |
+| Certificates and ID cards (`certificates`) | certificate_templates, issued_certificates (number series) | Issue TC, bonafide, character, study; ID cards for a class to PDF | download issued certificates | `certificate.issued` | past TCs (PDF, 4.3) | Templates use the school's heading settings |
+| Report cards (`exams` features `reportCards`, `hpc`) | grading scales, report_card_templates, published report cards | Board formats (CBSE, state boards), NEP Holistic Progress Card, remarks, publish | report card viewer and PDF | `exam.reportcard` | past report cards (PDF) | Grading scales are console settings |
+| Digital diary and classwork (`diary`) | diary_entries by class and date | Teachers post daily | families read, acknowledge | `diary.new` | — | |
+| Transport administration (`transport`) | routes, stops, vehicles, assignments, route fees | see 4.7 | see 4.7 | `bus.near` | `transport.*` | |
+| Visitor and gate pass (`gate`) | visitors, passes, pickups by authorised adults | Front desk screen, phone-number lookup, photo (4.3) | parent pre-approves a pickup | `gate.pickup` | — | |
+| UDISE+ export (`compliance`) | — | Export in the official format | — | — | — | Read from existing data |
+| Tally export (`accounting`) | ledger mappings | Map fee heads to ledgers, export day book (XML) | — | — | — | Hub `accounting` capability later for live sync |
+
+### 5.3 Waves B and C
+
+B (grows value): payroll and HR; study material and online tests; parent-teacher meeting booking (Hub `video` for online meetings); helpdesk and grievances; surveys; health and infirmary; behaviour; hostel; inventory; alumni; a multi-campus view for trusts. C (sets Gradeon apart): the AI assistant (Hub `ai`, behind the existing assistant switch), at-risk alerts, report-card comment drafts, smart reminder timing, biometric and RFID attendance, canteen wallet. Each meets 5.1, starts as `beta` for one pilot school (Phase 2B), and lists its tables and screens here before work starts.
 
 ---
 
 ## Phase 6. Ready for real schools
 
-- **Pilot:** one friendly school on production, migrated with Phase 3, watched daily for four weeks; then three more.
-- **Load:** a synthetic 3,000-student school and 50 schools at once on staging; page and API speed budgets (admin pages under one second, app screens under 300 ms from cache).
-- **Security and law:** penetration test; DPDP Act: consent capture in the app, data-rights requests end to end, breach process, data kept in India, signed agreements per school.
-- **Stores:** Play Store and App Store listings, for the shared Gradeon app, per-school apps, or both, whichever is decided by then (both are built and tested from Phase 4).
-- **Support:** help centre and in-app help, runbooks for the team, incident process, status page, response-time promise per plan.
-- **Billing:** plans, add-ons and invoices from the console, matching entitlements.
+1. **Pilot:** one friendly school on production, moved in with Phase 3, watched daily for four weeks (a checklist: messages delivered, payments reconciled, errors, support requests), then three more.
+2. **Load:** a generated 3,000-student school and 50 schools at once on staging (`tools/generate-school.mjs`); budgets: admin pages under one second, app screens under 300 ms from cache, the morning attendance burst of every school at once without errors.
+3. **Security and law:** penetration test by a vendor; DPDP Act: consent (built), data-rights requests end to end (Compliance page), breach process, data kept in India (hosting), signed agreements per school.
+4. **Stores:** Play Store and App Store listings for whichever app decision is made (both built since 4.6); privacy labels; review notes with a demo school.
+5. **Support:** help centre and in-app help, runbooks (restore a school, rotate a secret, a provider is down: use the Hub to switch), incident process, a status page (the admin's status board exists), response time per plan.
+6. **Billing:** plans, add-ons, SMS and storage usage and invoices from the console, matching entitlements and the Hub's usage.
 
 ---
 
 ## The quality bar ("impeccable")
 
-- Every page and screen: designed, reviewed by the owner, works at phone, tablet and desktop widths, light and dark, with real empty, loading and error states.
+- Every page and screen: designed, reviewed by the owner, works at phone, tablet and desktop widths, light and dark, with a school's own colours, with real empty, loading and error states.
+- The design systems are enforced by tests; a value off the system is a failing build, not a review comment.
 - Nothing pretends: no screen shows a feature that does not work for real; demo-only parts are hidden in production.
 - Fast on cheap Android phones and slow networks; judged on release builds.
 - Every important action is audited; risky ones can be undone or need a second person.
@@ -334,30 +588,36 @@ Each wave's modules are given to schools per Phase 2B, so a school only gets wha
 
 ## Order and rough size
 
-Sizes assume one owner plus coding agents, working in parallel where files do not overlap. They are rough and will be revised after Phase 1.
+Sizes assume one owner plus coding agents, working in parallel where files do not overlap.
 
-| Step | Depends on | Rough size |
-|---|---|---|
-| Phase 0 rename | owner's names | 2–4 days |
-| Phase 1 foundations and bug sweep | Phase 0 | 2–3 weeks |
-| Phase 2A config to console | Phase 0 | 1–2 weeks, parallel with Phase 1 |
-| Phase 2B per-school modules | 2A | 2–3 weeks |
-| Phase 3 migration engine + first presets | Phase 1 (test data uses it) | 3–4 weeks, then ongoing per source |
-| Phase 4 make it real | Phase 1; owner's provider accounts | 3–5 weeks, parallel tracks |
-| Phase 5 wave A | 2B, 3, 4 | 6–10 weeks |
-| Phase 6 pilot | waves above as needed by the pilot school | 4 weeks of watching |
+| Step | Depends on | Rough size | Can run in parallel with |
+|---|---|---|---|
+| Phases 0–3 | — | done | — |
+| Design systems (both) and console-configurable colours | — | done (branch `feat/design-system`) | — |
+| **Phase 3B Integrations Hub** | design systems merged | 2–3 weeks | DLT registration (owner), hosting (owner) |
+| 4.1 Messages | 3B; DLT and a provider (owner) | 1–2 weeks | 4.2, 4.3 |
+| 4.2 Jobs queue | — (start with 3B) | 1 week | 3B |
+| 4.3 Files | 3B (storage) | 2 weeks | 4.1, 4.4 |
+| 4.4 Payments | 3B; Razorpay account (owner) | 2 weeks | 4.3 |
+| 4.5 Push, deep links, offline | 4.1 | 1–2 weeks | 4.7 |
+| 4.6 App delivery | 4.3 (logo) | 1 week | any |
+| 4.7 Library, transport, gallery | 4.3 | 3 weeks | 4.8 |
+| 4.8 Year-end | 4.2 | 1–2 weeks | 4.7 |
+| Phase 5 wave A | 4.x as each module needs | 6–10 weeks | module by module |
+| Phase 6 pilot | waves above as needed by the pilot school | 4 weeks of watching | — |
 
 ---
 
 ## Decisions
 
-**Decided:** every configuration, roles included, is set from the console by Gradeon staff; everything that can be configured is configurable; the school's own data stays with the school inside limits the console sets (Nov 5); one process serves every school, so each deploy migrates every school and releases sign schools off rather than stage code (Nov 5).
+**Decided:** every configuration, roles included, is set from the console by Gradeon staff; everything that can be configured is configurable, **every colour of the admin, the app and the console included** (Nov 9); the school's own data stays with the school inside limits the console sets (Nov 5); one process serves every school, so each deploy migrates every school and releases sign schools off rather than stage code (Nov 5); **third parties are connections in the console's Integrations Hub, never hard-coded** (Nov 9).
 
 **Open.** None of them stops the coding work, but item 4 (an SMS provider) stops a pilot. Until the owner decides, the work uses the working value in brackets, kept in one place (configuration or environment), so a later decision is a change of value:
 
 1. **Names** (domain `gradeon.app`, app ID `com.gradeon.app`, npm scope `@gradeon`, mascot and design-system names as they are). The app ID must be final before the first store release.
-2. **One Gradeon app or one app per school** (both are built; see Phase 4).
+2. **One Gradeon app or one app per school** (both are built; see 4.6).
 3. **Hosting in India** (staging stays on the current free track until then).
-4. **Providers:** SMS with DLT registration (**start now: the pilot waits for it**), WhatsApp business provider, email, Razorpay (the test inbox and gateway test mode until then), and an alert webhook (`ALERT_WEBHOOK_URL`).
+4. **Providers:** SMS with DLT registration (**start now: the pilot waits for it**), WhatsApp business provider, email, Razorpay (the sandbox connection and gateway test mode until then), object storage, and an alert webhook (`ALERT_WEBHOOK_URL`). Each becomes a Hub connection, so choosing one is configuration, not code.
 5. **Pilot school** and its current system (realistic generated files until then).
 6. **Plans and prices** for the module catalogue, and which features each plan leaves out (the three current plans, with no feature differences, until then).
+7. **Fonts** stay Manrope and Bricolage Grotesque (admin, console) and Anek (app) until the owner chooses otherwise; colours are already per school.
