@@ -282,3 +282,21 @@ describe('the days a school is closed', () => {
     }
   });
 });
+
+describe('what each person may see on the dashboard', () => {
+  it('gives a teacher no fee totals and no fee waivers, while the principal still has them', async () => {
+    const res = await h.call('GET', '/v1/dashboard', { token: admin });
+    expect(res.status, JSON.stringify(res.json).slice(0, 200)).toBe(200);
+    const principal = res.json;
+    expect(principal.modules).toContain('fees');
+    expect(principal.fees.due).toBeGreaterThan(0);
+    // A fresh sign-in: an earlier test reset this teacher's password, which ends her sessions.
+    const fresh = await h.login('kavita.iyer@greenfield.edu.in', 'a-new-pass-123');
+    const t = (await h.call('GET', '/v1/dashboard', { token: fresh })).json;
+    expect(t.modules).not.toContain('fees');
+    expect(t.modules).toContain('attendance');
+    expect(t.fees).toMatchObject({ collected: 0, due: 0, overdueFamilies: 0 });
+    expect(t.feeHeads).toEqual([]);
+    expect(t.needsYou.some((n: { kind: string }) => n.kind === 'fee_waiver')).toBe(false);
+  });
+});

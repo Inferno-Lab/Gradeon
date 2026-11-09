@@ -157,8 +157,8 @@ export class ApprovalsController {
   constructor(private readonly approvals: ApprovalsService) {}
 
   @Get('needs-you') @Require('approvals.read')
-  needsYou(@Tenant() t: TenantCtx): Promise<ApprovalRow[]> {
-    return this.approvals.needsYou(t);
+  needsYou(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<ApprovalRow[]> {
+    return this.approvals.needsYou(t, u.permissions);
   }
 
   @Get('approvals') @Require('approvals.read')
@@ -234,7 +234,7 @@ export class DashboardController {
   @Get('shell')
   async shell(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<ShellData> {
     const cfg = await this.settings.effective(t, u.permissions);
-    return this.dash.shell(t, cfg.modules, cfg.features);
+    return this.dash.shell(t, cfg.modules, cfg.features, u.permissions);
   }
 
   @Get('search')

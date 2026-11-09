@@ -14,6 +14,9 @@ const REVISION_WINDOW_DAYS = 17;
 
 const NO_FEES: FeeSummary = { monthLabel: '', due: 0, collected: 0, pending: 0, overdue: 0, overdueFamilies: 0, pct: 0, collectedDelta: 0, byHead: [], daily: [], dailyTarget: 0 };
 
+/** The permission that lets a person read each module's numbers on the dashboard. */
+const SEE: Record<string, string> = { fees: 'fees.read', attendance: 'attendance.read', homework: 'homework.read', events: 'events.read' };
+
 @Injectable()
 export class DashboardService {
   constructor(
@@ -23,15 +26,16 @@ export class DashboardService {
     private readonly fees: FeesService,
   ) {}
 
-  async get(t: TenantCtx, user: { id: string; name: string }, count = 6): Promise<DashboardData> {
+  async get(t: TenantCtx, user: { id: string; name: string; permissions: readonly string[] }, count = 6): Promise<DashboardData> {
     const OFF_DAYS = await this.settings.offDays(t);
     const today = istToday();
     const last = latestSchoolDay(today, OFF_DAYS);
     const doc = await this.settings.doc(t);
     const v = doc.values;
     const rollIds = ((v['dashboard.rollClasses'] as string[] | undefined) ?? []).slice(0, 6);
-    const { modules } = await this.settings.effective(t);
-    // A module the school does not have is not queried at all, so its numbers never leave the server.
+    // A module the school does not have, or one this person may not read (a teacher without "See fees" gets no fee totals),
+    // is not queried at all, so its numbers never leave the server; the admin leaves out the widgets of what is not listed.
+    const modules = (await this.settings.effective(t)).modules.filter((m) => !SEE[m] || user.permissions.includes(SEE[m]));
     // `none` stands in for the result (only the fields the dashboard reads), so it is not typed as a full query result.
     const on = <T>(m: string, run: () => Promise<T>, none: unknown): Promise<T> => (modules.includes(m) ? run() : Promise.resolve(none as T));
     const noRows = { rows: [] };
@@ -39,8 +43,8 @@ export class DashboardService {
       t.pool.query<{ name: string; role_name: string | null }>("select u.name, (select string_agg(r.name, ', ') from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = u.id) role_name from users u where u.id = $1", [user.id]),
       on('attendance', () => this.attendance.week(t, count), []),
       on('fees', () => this.fees.summary(t, count), NO_FEES),
-      this.approvals.needsYou(t),
-      this.approvals.counts(t),
+      this.approvals.needsYou(t, user.permissions),
+      this.approvals.counts(t, user.permissions),
       on('attendance', () => this.attendance.unmarked(t), []),
       on('attendance', () => t.pool.query<{ present: string }>("select count(*) filter (where m.status in ('present','late')) present from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [last]), { rows: [{ present: '0' }] }),
       on('attendance', () => t.pool.query<{ pct: number | null }>("select avg(case when m.status in ('present','late') then 1.0 else 0.0 end) pct from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [addDays(last, -7)]), { rows: [{ pct: null }] }),
@@ -122,11 +126,11 @@ export class DashboardService {
   }
 
   /** The small slice every page needs for the menu. */
-  async shell(t: TenantCtx, modules: string[], features: string[]): Promise<ShellData> {
+  async shell(t: TenantCtx, modules: string[], features: string[], perms: readonly string[]): Promise<ShellData> {
     const OFF_DAYS = await this.settings.offDays(t);
     const last = latestSchoolDay(istToday(), OFF_DAYS);
     const v = (await this.settings.doc(t)).values;
-    const [unmarked, counts] = await Promise.all([modules.includes('attendance') ? this.attendance.unmarked(t) : Promise.resolve([]), this.approvals.counts(t)]);
+    const [unmarked, counts] = await Promise.all([modules.includes('attendance') && perms.includes('attendance.read') ? this.attendance.unmarked(t) : Promise.resolve([]), this.approvals.counts(t, perms)]);
     const examsStart = (v['term.examsStart'] as string | undefined) ?? addDays(last, 30);
     const daysToGo = Math.max(0, Math.round((new Date(examsStart).getTime() - new Date(istToday()).getTime()) / 86_400_000));
     return {

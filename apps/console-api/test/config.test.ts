@@ -44,7 +44,8 @@ describe('configuration from the console', () => {
     expect(r.json.version).toBe(before.version + 1);
     expect(r.json.versions[0]).toMatchObject({ note: 'Brand refresh', by: 'kaushal@gradeon.app' });
     expect((await patch({ expectedVersion: before.version, changes: { 'brand.color': '#1F2937' } })).status).toBe(409);
-    expect((await patch({ expectedVersion: r.json.version, changes: { 'brand.color': '#FFFFF0' } })).status).toBe(400);
+    // Any colour is allowed (text on it is white or ink, whichever reads); something that is not a colour is not.
+    expect((await patch({ expectedVersion: r.json.version, changes: { 'brand.color': 'teal' } })).status).toBe(400);
     expect((await patch({ expectedVersion: r.json.version, changes: { 'modules.enabled': ['people', 'gallery'] } })).status).toBe(400);
     await wait();
     const seen = (await h.s('GET', '/v1/config', { school: 'cfgschool', token: school })).json;

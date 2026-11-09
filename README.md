@@ -63,7 +63,7 @@ Operations: every school is backed up daily and a weekly restore drill puts one 
 ```bash
 pnpm typecheck && pnpm test         # types and the unit and API tests (the API tests start a real PostgreSQL)
 node tools/audit-ui.mjs             # every page, 4 widths, light and dark: errors, overflow, clipped text
-node tools/e2e-flows.mjs            # 49 click-through flows in a real browser (run after dev-reset; it changes demo data)
+node tools/e2e-flows.mjs            # 50 click-through flows in a real browser (run after dev-reset; it changes demo data)
 node tools/scan-cutoff.mjs          # text cut by an ellipsis, hidden scrollbars, clipped boxes (the audit does not see these)
 node tools/scan-gaps.mjs            # side-by-side columns that end unevenly, blank inside cards, content short of the edge
 node tools/scan-fit.mjs             # tab knobs off their tab, text wrapping in pills or spilling out, 'undefined' on screen
