@@ -53,8 +53,8 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
   const offered = useMemo(() => PERMISSION_CATALOG.filter((p) => !cfg.data || permissionAvailable(p.key, cfg.data)), [cfg.data]);
   const groups = useMemo(() => [...new Set(offered.map((p) => p.area))].map((a) => ({ area: a, items: offered.filter((p) => p.area === a) })), [offered]);
   const readOnly = !canManage || (cur?.locked ?? false);
-  if (roles.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 26 }} />;
-  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
+  if (roles.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 24 }} />;
+  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   return (
     <section className="rise">
       <Head title="Roles and access" sub="What each kind of person can see and do. Gradeon makes and changes roles for your school." />
@@ -88,7 +88,7 @@ export function RolesPanel(_: Pick<PanelProps, 'say'>) {
               ))}
             </div>
             {err._ && <div className="emsg" role="alert" style={{ marginTop: 12 }}>{err._}</div>}
-            {!canManage && <div className="help" style={{ marginTop: 14 }}>Gradeon makes and changes roles. To change one, use “Ask Gradeon to change this” at the top.</div>}
+            {!canManage && <div className="help" style={{ marginTop: 12 }}>Gradeon makes and changes roles. To change one, use “Ask Gradeon to change this” at the top.</div>}
           </>}
         </div>
       </div>
@@ -116,7 +116,7 @@ export function AppLayoutPanel({ doc, say }: PanelProps) {
     <section className="rise">
       <Head title="App layout" sub="Choose what the school’s app shows, and in what order. Only features your school has switched on are offered." />
       <div className="apl">
-        <div className="grp" style={{ padding: '6px 22px' }}>
+        <div className="grp" style={{ padding: '6px 24px' }}>
           {ORDERS.map((o) => {
             const chosen = s.get<string[]>(o.key);
             const options = APP_CATALOG[o.cat].filter((c) => enabled.has(c.module) && entitled.has(c.module));
@@ -174,7 +174,7 @@ export function NotificationsPanel({ doc, say }: PanelProps) {
   return (
     <section className="rise">
       <Head title="Notifications" sub="Choose which messages go out, and where. Texts count against your plan’s credits." />
-      <div className="grp" style={{ marginTop: 16, padding: '6px 22px' }}>
+      <div className="grp" style={{ marginTop: 16, padding: '6px 24px' }}>
         <div className="nth"><span>Message</span>{CHANNELS.map(([, l]) => <span key={l}>{l}</span>)}</div>
         {MESSAGE_EVENTS.map((e) => {
           const r = rules[e.key] ?? e.defaults;
@@ -186,7 +186,7 @@ export function NotificationsPanel({ doc, say }: PanelProps) {
           );
         })}
       </div>
-      <div className="grp" style={{ marginTop: 18 }}>
+      <div className="grp" style={{ marginTop: 16 }}>
         <div className="rw2"><div><b>Quiet hours</b><small>Families are not texted or pinged between these times, except for urgent messages. Held messages go out in the morning.</small></div>
           <div className="two">
             <TimeField label="From" value={s.get<string>('notify.quietFrom')} onChange={(v) => s.set('notify.quietFrom', v)} disabled={s.locked('notify.quietFrom')} />
@@ -278,7 +278,7 @@ export function PrivacyPanel({ doc, say }: PanelProps) {
       <SaveRow s={s} />
       <div className="card" style={{ marginTop: 24 }}>
         <div className="ch"><h2>Data requests</h2><span className="chip">{reqs.data?.filter((r) => r.status === 'open').length ?? 0} open</span>{canWrite && <button className="btn sm" onClick={() => setAdding(true)}>Log a request</button>}</div>
-        {reqs.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 18, marginTop: 14 }} /> : (reqs.data?.length ?? 0) === 0 ? <div className="help" style={{ marginTop: 12 }}>No one has asked for their data yet. Log a request when a family does, and close it once it is dealt with.</div> : (
+        {reqs.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 18, marginTop: 12 }} /> : (reqs.data?.length ?? 0) === 0 ? <div className="help" style={{ marginTop: 12 }}>No one has asked for their data yet. Log a request when a family does, and close it once it is dealt with.</div> : (
           <div className="lscroll" style={{ maxHeight: 340, marginTop: 10 }}>
             {reqs.data!.map((r) => (
               <div className="tgl" key={r.id}>

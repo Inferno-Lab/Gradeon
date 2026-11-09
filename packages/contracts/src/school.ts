@@ -1,3 +1,4 @@
+import type { ThemeColors } from './theme.js';
 import { z } from 'zod';
 import { IsoDate } from './common.js';
 
@@ -342,6 +343,8 @@ export interface ShellData {
   modules: string[];
   /** Features inside those modules (like people.admissions): pages and menu items for a missing one are hidden. */
   features: string[];
+  /** The colours the console changed for this school. */
+  theme: ThemeColors;
 }
 
 // Search (command palette)

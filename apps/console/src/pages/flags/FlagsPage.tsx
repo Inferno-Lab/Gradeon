@@ -38,8 +38,8 @@ export function FlagsPage() {
         <Card title="Everyone" chip={<span className="chip">{fleet.length}</span>} span="s12">
           {fleet.length === 0 && <EmptyCard title="Flags" chip={{ text: '0 flags', tone: 'v' }} scene="checklist" heading="No flags yet" body="Add a flag to ship a feature switched off, then turn it on for one school before the rest." />}
           {fleet.map((f) => (
-            <div className="tgl" key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '14px 0', borderTop: '1px solid var(--line)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14.5px var(--fb)', display: 'block' }}>{f.label}</b><small style={{ font: '500 13px var(--fb)', color: 'var(--ink3)' }}>{f.key} · changed {ago(f.updatedAt)} by {f.updatedBy}</small></div>
+            <div className="tgl" key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '16px 0', borderTop: '1px solid var(--line)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{f.label}</b><small style={{ font: '500 13px var(--fb)', color: 'var(--ink3)' }}>{f.key} · changed {ago(f.updatedAt)} by {f.updatedBy}</small></div>
               <button className={`sw ${f.enabled ? 'on' : ''}`} role="switch" aria-checked={f.enabled} aria-label={f.label} disabled={!canWrite || set.isPending} onClick={() => set.mutate({ key: f.key, enabled: !f.enabled })}></button>
             </div>
           ))}
@@ -50,13 +50,13 @@ export function FlagsPage() {
             <div className="kv" key={`${f.key}-${f.schoolId}`}><span>{f.label}<br /><small style={{ color: 'var(--ink3)' }}>{school(f.schoolId)}</small></span><b><span className={`st ${f.enabled ? 'g' : 'n'}`}><i></i>{f.enabled ? 'On' : 'Off'}</span></b></div>
           ))}
         </Card>
-        <div className="s12 fpair" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(340px,100%),1fr))', gap: 18 }}>
+        <div className="s12 fpair" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(340px,100%),1fr))', gap: 16 }}>
           {canWrite && (
-            <Card title="Pause a feature" chip={<span className={`chip ${paused.length ? 'r' : 'g'}`}>{paused.length} paused</span>}>
+            <Card title="Pause a feature" chip={<span className={`chip ${paused.length ? 'c' : 'g'}`}>{paused.length} paused</span>}>
               <div className="help" style={{ marginBottom: 12 }}>A kill switch takes a feature away from the app and refuses its requests within seconds. Lift it by switching the flag off.</div>
               <SelectField label="Feature" value={kill.module} onChange={(module) => setKill({ ...kill, module })} options={MODULES.filter((m) => !m.core && m.state !== 'planned').map((m) => ({ value: m.key, label: m.name }))} />
               <SelectField label="For" value={kill.school} onChange={(school) => setKill({ ...kill, school })} options={[{ value: '', label: 'Every school' }, ...(schools.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
-              <button className="btn dngf" style={{ marginTop: 14 }} disabled={set.isPending} onClick={() => set.mutate({ key: `kill.${kill.module}`, enabled: true, schoolId: kill.school || null, label: `${MODULES.find((m) => m.key === kill.module)?.name ?? kill.module} paused` }, { onSuccess: () => say('Paused. It takes effect within a few seconds.') })}>Pause it</button>
+              <button className="btn dngf" style={{ marginTop: 12 }} disabled={set.isPending} onClick={() => set.mutate({ key: `kill.${kill.module}`, enabled: true, schoolId: kill.school || null, label: `${MODULES.find((m) => m.key === kill.module)?.name ?? kill.module} paused` }, { onSuccess: () => say('Paused. It takes effect within a few seconds.') })}>Pause it</button>
             </Card>
           )}
           {canWrite && (
@@ -65,7 +65,7 @@ export function FlagsPage() {
                 <Field label="Key" value={key} onChange={(v) => { setKey(v); setErr(''); }} error={err} placeholder="new.report-cards" />
                 <Field label="What it does" value={label} onChange={setLabel} placeholder="New report card layout" />
               </div>
-              <button className="btn pri" style={{ marginTop: 14 }} onClick={add} disabled={set.isPending}>Add flag</button>
+              <button className="btn pri" style={{ marginTop: 12 }} onClick={add} disabled={set.isPending}>Add flag</button>
             </Card>
           )}
         </div>

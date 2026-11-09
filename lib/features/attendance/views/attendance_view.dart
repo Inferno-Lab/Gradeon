@@ -46,7 +46,7 @@ class AttendanceView extends GetView<AttendanceController> {
                   child: Text(
                     DateFormat('MMMM y').format(month),
                     textAlign: TextAlign.center,
-                    style: anek(15.5, 680, height: 1, color: context.app.ink),
+                    style: AppText.ts(color: context.app.ink, height: 1),
                   ),
                 ),
                 _MonthArrow(
@@ -88,15 +88,13 @@ class _MonthArrow extends StatelessWidget {
     button: true,
     label: label.tr,
     enabled: onTap != null,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    child: Pressable(
       onTap: onTap,
       child: SizedBox(
         width: 40,
         height: 44,
         child: Icon(icon, size: 16, color: context.app.ink.withValues(alpha: onTap == null ? .35 : 1)),
-      ),
-    ),
+      ),),
   );
 }
 
@@ -129,7 +127,7 @@ class _Body extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Chip2(
-                    'academics.streak'.trp({'n': '${controller.streak}'}),
+                    'academics.streak'.trn(controller.streak),
                     icon: PhosphorIconsRegular.flame,
                     background: c.mariSoft,
                     foreground: c.mariText,
@@ -152,13 +150,13 @@ class _Body extends StatelessWidget {
             style: context.type.s,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Rise(index: 2, child: _Calendar(controller: controller)),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Rise(
           index: 3,
           child: Wrap(
-            spacing: 14,
+            spacing: 12,
             runSpacing: 8,
             children: [
               _Legend(
@@ -180,13 +178,13 @@ class _Body extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         if (problems.isEmpty)
           EduCard(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
+                Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
                 const SizedBox(width: 12),
                 Expanded(child: Text('attendance.none'.tr, style: context.type.t)),
               ],
@@ -241,9 +239,7 @@ class _Tile extends StatelessWidget {
         ? null
         : Text(
             '$day',
-            style: anek(
-              15,
-              future ? 520 : 640,
+            style: (future ? AppText.b : AppText.ts)(
               height: 1,
               tabular: true,
               color: switch (status) {
@@ -349,7 +345,7 @@ class _Calendar extends StatelessWidget {
                       child: Text(
                         weekdays[i],
                         textAlign: TextAlign.center,
-                        style: anek(11, 700, em: .08, color: context.app.ink3),
+                        style: AppText.o(color: context.app.ink3),
                       ),
                     ),
                   ),
@@ -376,7 +372,7 @@ class _Calendar extends StatelessWidget {
                       ),
                   if (pickedIndex != null)
                     AnimatedPositioned(
-                      duration: context.reduceMotion ? Duration.zero : AppDurations.medium,
+                      duration: context.reduceMotion ? Duration.zero : AppMotion.spring,
                       curve: kSpring,
                       left: (pickedIndex % 7) * (cell + gap) + cell / 2 - 28,
                       top: (pickedIndex ~/ 7) * (44 + gap) - 6,
@@ -425,7 +421,7 @@ class _DayCell extends StatelessWidget {
     return Semantics(
       button: true,
       label: label,
-      child: GestureDetector(
+      child: Pressable(
         onTap: () {
           controller.picked.value = date;
           if (record != null && record.status != AttendanceStatus.holiday) unawaited(_openDay(record));
@@ -438,8 +434,7 @@ class _DayCell extends StatelessWidget {
             future: future,
             today: date.isSameDay(today),
           ),
-        ),
-      ),
+        ),),
     );
   }
 
@@ -459,7 +454,7 @@ class _ProblemCard extends StatelessWidget {
     final leave = controller.leaveFor(day.date);
     final weekday = DateFormat('EEEE').format(day.date);
     return EduCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       onTap: () => showSheet<void>(AttendanceDaySheet(day: day, controller: controller)),
       child: Row(
         children: [
@@ -520,7 +515,7 @@ class AttendanceDaySheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -555,13 +550,13 @@ class AttendanceDaySheet extends StatelessWidget {
           if (missed.isNotEmpty) ...[
             SectionLabel('attendance.classes_missed'.trp({'n': '${missed.length}'}), top: 20),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(AppRadius.card)),
               child: Column(
                 children: [
                   for (final p in missed.take(3))
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Row(
                         children: [
                           Cover(subject: p.subject),

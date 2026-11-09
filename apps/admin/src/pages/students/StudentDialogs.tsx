@@ -12,7 +12,7 @@ const messageOf = (e: unknown) => (e instanceof Error ? e.message : 'Something w
 
 function Actions({ onClose, busy, label, danger }: { onClose: () => void; busy: boolean; label: string; danger?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
       <button type="button" className="btn" onClick={onClose}>Cancel</button>
       <button type="submit" className={`btn ${danger ? 'dngf' : 'pri'}`} disabled={busy}>{busy && <span className="spin" aria-hidden="true" />}{label}</button>
     </div>
@@ -48,7 +48,7 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
   };
   return (
     <Dialog title="Add a student" onClose={onClose} shake={shake.cls} width={520}>
-      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <Field label="Full name" value={f.name} onChange={set('name')} error={err.name} autoComplete="off" />
         <div className="two">
           <SelectField label="Class" value={f.classId} onChange={set('classId')} options={classes.map((c) => ({ value: c.id, label: c.name }))} error={err.classId} />
@@ -87,11 +87,11 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
       <Dialog title={result.created ? `${result.created} ${result.created === 1 ? 'student was' : 'students were'} added` : result.updated ? `${result.updated} ${result.updated === 1 ? 'student was' : 'students were'} updated` : 'No one was added'} onClose={done} width={520}>
         <p>{result.created && result.updated ? `${result.updated} already here ${result.updated === 1 ? 'was' : 'were'} updated. ` : ''}{result.skipped ? `${result.skipped} ${result.skipped === 1 ? 'line was' : 'lines were'} skipped. Fix them and import again.` : 'Every line was imported.'}</p>
         {result.errors.length > 0 && (
-          <ul style={{ margin: '0 0 8px', paddingLeft: 18, font: '600 13.5px/1.7 var(--fb)', color: 'var(--ink2)', maxHeight: 180, overflow: 'auto' }}>
+          <ul style={{ margin: '0 0 8px', paddingLeft: 20, font: '600 13px/1.7 var(--fb)', color: 'var(--ink2)', maxHeight: 180, overflow: 'auto' }}>
             {result.errors.slice(0, 20).map((x) => <li key={x.line}>Line {x.line}: {x.message}</li>)}
           </ul>
         )}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="btn pri" onClick={done}>Done</button></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn pri" onClick={done}>Done</button></div>
       </Dialog>
     );
   }
@@ -102,7 +102,7 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
         <div className="fld">
           <label htmlFor="csv">Your sheet</label>
           <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto', padding: 12, alignItems: 'stretch' }}>
-            <textarea id="csv" value={csv} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={'name,class,dob,guardian,phone\nAarav Sharma,8 A,2012-04-18,Priya Sharma,+91 98220 11002'} style={{ width: '100%', resize: 'vertical', font: '600 13.5px/1.5 ui-monospace,Consolas,monospace' }} />
+            <textarea id="csv" value={csv} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={'name,class,dob,guardian,phone\nAarav Sharma,8 A,2012-04-18,Priya Sharma,+91 98220 11002'} style={{ width: '100%', resize: 'vertical', font: '600 13px/1.5 ui-monospace,Consolas,monospace' }} />
           </div>
           {err && <ErrorLine>{err}</ErrorLine>}
         </div>
@@ -130,7 +130,7 @@ export function MessageDialog({ ids, label, onClose, onDone }: { ids: string[]; 
   return (
     <Dialog title="Message guardians" onClose={onClose} shake={shake.cls}>
       <p>To the primary guardian of {label}.</p>
-      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <SelectField label="Send by" value={channel} onChange={setChannel} options={[{ value: 'sms', label: 'SMS' }, { value: 'whatsapp', label: 'WhatsApp' }, { value: 'push', label: 'App notification' }]} />
         <div className="fld">
           <label htmlFor="msg">Message</label>
@@ -166,7 +166,7 @@ export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]
   return (
     <Dialog title="Assign a fee" onClose={onClose} shake={shake.cls}>
       <p>For {label}. It appears in each family’s fees straight away.</p>
-      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <SelectField label="Type" value={f.head} onChange={set('head')} options={[{ value: 'tuition', label: 'Tuition' }, { value: 'transport', label: 'Transport' }, { value: 'activities', label: 'Activities' }, { value: 'lab', label: 'Lab' }]} />
         <Field label="Name of the fee" value={f.title} onChange={set('title')} error={err.title} placeholder="Annual day costume" />
         <div className="two">
@@ -214,7 +214,7 @@ export function CollectFeeDialog({ student, onClose, onDone }: { student: Studen
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button className="btn pri" onClick={onClose}>Close</button></div>
         </>
       ) : (
-        <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SelectField label="Invoice" value={chosen?.id ?? ''} onChange={setPick} options={open.map((i) => ({ value: i.id, label: `${i.title} · ₹${inr(i.amount - i.paid)} due ${i.dueOn.slice(5)}` }))} />
           <div className="two">
             <Field label="Amount (₹)" value={amount} onChange={(v) => { setAmount(v); setErr({}); }} error={err.amount} inputMode="numeric" />

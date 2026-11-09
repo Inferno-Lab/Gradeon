@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { PageScope, Presence, ToastSlot, Segmented } from "@gradeon/web-ui";
+import { PageScope, Presence, ToastSlot, Segmented, markStyle } from "@gradeon/web-ui";
 import "./school.css";
 
 export function SchoolView({ v }: { v: any }) {
@@ -25,7 +25,7 @@ export function SchoolView({ v }: { v: any }) {
             </>
           )}
           <Presence>{v.dialog}</Presence>
-          <ToastSlot toast={v.toast && { text: v.toast, tone: v.toastTone }} />
+          <ToastSlot toast={v.toast} />
         </>
       }
     >
@@ -39,8 +39,8 @@ export function SchoolView({ v }: { v: any }) {
           </svg>
           <b style={{ color: "var(--ink)" } as CSSProperties}>{v.name}</b>
         </div>
-        <header className="hd rise" style={{ "--d": ".05s", gap: "18px", flexWrap: "wrap" } as CSSProperties}>
-          <span className="slogo" style={{ background: v.color, boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
+        <header className="hd rise" style={{ "--d": ".05s", gap: "16px", flexWrap: "wrap" } as CSSProperties}>
+          <span className="slogo" style={{ ...markStyle(v.color), boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
             {v.logoText}
           </span>
           <div style={{ minWidth: "0" } as CSSProperties}>
@@ -73,7 +73,7 @@ export function SchoolView({ v }: { v: any }) {
               <div className="ch">
                 <h2 id="prov">{v.provTitle}</h2>
                 {v.canRetry && (
-                  <button className="btn v sm" onClick={v.retry} disabled={v.busy}>
+                  <button className="btn pri sm" onClick={v.retry} disabled={v.busy}>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path className="i" d="M4 4v6h6M5.5 15a7 7 0 1 0 1-8.5L4 9"></path>
                     </svg>
@@ -86,7 +86,7 @@ export function SchoolView({ v }: { v: any }) {
                   </button>
                 )}
               </div>
-              {v.steps.length === 0 && <div className="help" style={{ marginTop: "14px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
+              {v.steps.length === 0 && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
               <div className="steps">
                 {v.steps.map((s: any, $i: number) => (
                   <Fragment key={$i}>
@@ -123,10 +123,10 @@ export function SchoolView({ v }: { v: any }) {
                 ))}
               </div>
             </div>
-            <div className="s5" style={{ display: "flex", flexDirection: "column", gap: "18px", minWidth: "0" } as CSSProperties}>
+            <div className="s5" style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: "0" } as CSSProperties}>
               <div className="tkt rise" style={{ "--d": ".2s" } as CSSProperties}>
                 <div className="l">
-                  <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em" } as CSSProperties}>
+                  <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em" } as CSSProperties}>
                     Gradeon {v.planName}
                   </div>
                   <div className="tl2">
@@ -160,7 +160,7 @@ export function SchoolView({ v }: { v: any }) {
                   <h2 id="use">Usage</h2>
                   <span className="chip">now</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginTop: "16px" } as CSSProperties}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" } as CSSProperties}>
                   <div className="us">
                     <div className="r">
                       Students<b>{v.studentsText}</b>

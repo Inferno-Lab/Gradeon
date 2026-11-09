@@ -55,7 +55,7 @@ class AcademicsView extends GetView<AcademicsController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Shelf(controller: controller, selected: selected),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 20),
                       Rise(
                         index: 1,
                         child: _SubjectCard(item: controller.shelf[selected], examName: controller.latestExam?.name),
@@ -131,10 +131,10 @@ class _Book extends StatelessWidget {
       button: true,
       selected: raised,
       label: subjectName(item.subject),
-      child: GestureDetector(
+      child: Pressable(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: AppDurations.medium,
+          duration: AppMotion.spring,
           curve: kSpring,
           transform: Matrix4.translationValues(0, raised ? -16 : 0, 0),
           width: 82,
@@ -142,9 +142,9 @@ class _Book extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
           decoration: BoxDecoration(
             color: pigment.fill,
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(6), right: Radius.circular(16)),
-            boxShadow: const [
-              BoxShadow(color: Color(0x8010201B), blurRadius: 18, spreadRadius: -12, offset: Offset(0, 10)),
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(6), right: Radius.circular(14)),
+            boxShadow: [
+              BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.5), blurRadius: 18, spreadRadius: -12, offset: const Offset(0, 10)),
             ],
           ),
           foregroundDecoration: spineDecoration,
@@ -152,31 +152,27 @@ class _Book extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(item.mark?.grade ?? '—', style: anek(24, 760, width: 120, height: 1, color: pigment.on)),
+              Text(item.mark?.grade ?? '—', style: AppText.h2(color: pigment.on, height: 1)),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Long names ("Social studies", "Computer") shrink; never split mid-word.
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      subjectName(item.subject),
-                      maxLines: 1,
-                      style: anek(13, 700, width: 110, height: 1.1, color: pigment.on),
-                    ),
+                  // Every tile keeps one size: a long name ("Social studies") ends in an ellipsis, never mid-word on two lines.
+                  Text(
+                    subjectName(item.subject),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.capB(color: pigment.on, height: 1.1),
                   ),
                   if (item.pending.isNotEmpty)
                     Text(
                       'academics.n_due'.trp({'n': '${item.pending.length}'}),
-                      style: anek(13, 520, width: 110, height: 1.1, color: pigment.on.withValues(alpha: .85)),
+                      style: AppText.cap(color: pigment.on.withValues(alpha: .85), height: 1.1),
                     ),
                 ],
               ),
             ],
           ),
-        ),
-      ),
+        ),),
     );
   }
 }
@@ -209,7 +205,7 @@ class _SubjectCard extends StatelessWidget {
               Expanded(
                 child: Overline(
                   item.teacher == null ? subjectName(item.subject) : '${subjectName(item.subject)} · ${item.teacher}',
-                  color: c.dark ? Color.lerp(pigment, Colors.white, .45) : pigment,
+                  color: c.dark ? Color.lerp(pigment, AppColors.white, .45) : pigment,
                 ),
               ),
               if (item.mark != null && examName != null)
@@ -258,7 +254,7 @@ class _Records extends StatelessWidget {
       (
         '${summary?.percent.round() ?? 0}%',
         'attendance.title'.tr,
-        '${DateFormat('MMMM').format(DateTime.now())} · ${'academics.streak'.trp({'n': '${controller.streak}'})}',
+        '${DateFormat('MMMM').format(DateTime.now())} · ${'academics.streak'.trn(controller.streak)}',
         AppRoutes.attendance,
       ),
       (
@@ -307,7 +303,7 @@ class _Records extends StatelessWidget {
               onTap: () => Get.toNamed<void>(rows[i].$4),
               scale: .985,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     SizedBox(
@@ -315,16 +311,10 @@ class _Records extends StatelessWidget {
                       child: Text(
                         rows[i].$1,
                         maxLines: 1,
-                        style: anek(
-                          rows[i].$1.length > 4 ? 20 : 26,
-                          760,
-                          width: 122,
-                          height: 1,
-                          color: context.app.ink,
-                        ),
+                        style: rows[i].$1.length > 4 ? AppText.h3(height: 1, color: context.app.ink) : AppText.h2(height: 1, color: context.app.ink),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

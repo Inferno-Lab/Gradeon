@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { STEP_LABELS, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, PageScope, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, PageScope, useShake, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
@@ -40,12 +40,9 @@ export function SchoolPage() {
   const plans = useQuery({ queryKey: ['plans'], queryFn: app.api.plans, staleTime: 5 * 60_000 });
   const [tab, setTab] = useState(0);
   const [dlg, setDlg] = useState<'support' | 'erase' | null>(null);
-  const [toast, setToast] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
+  const { toast, say } = useToast();
   const [sup, setSup] = useState<{ id: string; until: number } | null>(null);
   const [left, setLeft] = useState(0);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const say = (text: string, tone: 'ok' | 'bad' = 'ok') => { clearTimeout(timer.current); setToast({ text, tone }); timer.current = setTimeout(() => setToast(null), 4200); };
-  useEffect(() => () => clearTimeout(timer.current), []);
 
   const d = school.data;
   useEffect(() => {
@@ -75,7 +72,7 @@ export function SchoolPage() {
     return (
       <PageScope page="school">
         <main className="mn"><header className="hd"><div><h1>School</h1></div></header>
-          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
+          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
         </main>
       </PageScope>
     );
@@ -101,7 +98,7 @@ export function SchoolPage() {
   const smsPct = pct(d.usage.sms, lim.smsPerMonth);
   const nextMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
   const st = statusOf(d);
-  const stChip = running ? 'v' : d.status === 'live' ? 'g' : d.status === 'suspended' ? 'r' : 'a';
+  const stChip = running ? 'v' : d.status === 'live' ? 'g' : d.status === 'suspended' ? 'c' : 'a';
   const stText = running ? 'Setting up' : d.status === 'live' ? 'Live' : st.text;
   const lines = (run?.steps ?? []).flatMap((s) => s.log).sort((a, b) => a.at.localeCompare(b.at)).slice(-6);
   const done = d.checklist.filter((c) => c.state === 'done').length;
@@ -115,7 +112,7 @@ export function SchoolPage() {
               : tab === 7 ? <Audit id={id} /> : null;
 
   const v = {
-    ...chrome, tab, extra, toast: toast?.text, toastTone: toast?.tone,
+    ...chrome, tab, extra, toast,
     name: d.name, shortName: d.shortName, color: d.color, logoText: d.logoText, subtitle: `${d.slug} · cell ${d.cell} · ${planName} plan`,
     fleetHref: url('/'), toFleet: (e: React.MouseEvent) => { e.preventDefault(); app.go('/'); },
     stChip, stText, canSupport: app.can('support.access') && d.status !== 'archived', canErase: app.can('schools.danger') && d.status !== 'archived',
@@ -172,7 +169,7 @@ function Versions({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p
       </Card>
       <Card title="Database" chip={<span className="chip">Migrations</span>} span="s12">
         <div className="help">Applies any schema changes this school has not seen yet. A rehearsal reports what would run and changes nothing.</div>
-        <div className="tgrow" style={{ marginTop: 14 }}>
+        <div className="tgrow" style={{ marginTop: 12 }}>
           <button className="btn" onClick={() => onAct('migration.run', {}, true)} disabled={busy || !app.can('schools.write')}>Rehearse</button>
           <button className="btn pri" onClick={() => onAct('migration.run')} disabled={busy || !app.can('schools.write')}>Run migrations</button>
         </div>
@@ -182,7 +179,7 @@ function Versions({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p
         {d.builds.map((b) => (
           <div key={b.id} className="kv">
             <span>{b.platform === 'android' ? 'Android' : 'iPhone'} · {b.version} · {when(b.createdAt)}<br /><small style={{ color: 'var(--ink3)' }}>{b.note}</small></span>
-            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--vD)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'r' : 'n'}`}>{b.status}</span>}</b>
+            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--vD)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'c' : 'n'}`}>{b.status}</span>}</b>
           </div>
         ))}
       </Card>
@@ -203,7 +200,7 @@ function Health({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p?:
         <div className="kv">Answer time<b>{d.healthMs != null ? `${d.healthMs} ms` : 'Not measured yet'}</b></div>
         <div className="kv">Last problem<b>{d.lastIncident ? ago(d.lastIncident) : 'None recorded'}</b></div>
         <div className="kv">Address<b>{d.adminUrl}</b></div>
-        <div style={{ marginTop: 14 }}><button className="btn" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check now'}</button></div>
+        <div style={{ marginTop: 12 }}><button className="btn" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check now'}</button></div>
       </Card>
       <Card title="How it is checked" span="s12">
         <div className="help">The console asks each school’s API for a heartbeat every minute and keeps the answer time. Two failures in a row open an incident on the Fleet page; a clean check closes it.</div>
@@ -219,7 +216,7 @@ function Health({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, p?:
             </b>
           </div>
         ))}
-        {app.can('schools.write') && <div style={{ marginTop: 14 }}><button className="btn" disabled={busy} onClick={() => { onAct('backup.take'); setTimeout(() => void qc.invalidateQueries({ queryKey: ['backups', d.id] }), 1500); }}>Back up now</button></div>}
+        {app.can('schools.write') && <div style={{ marginTop: 12 }}><button className="btn" disabled={busy} onClick={() => { onAct('backup.take'); setTimeout(() => void qc.invalidateQueries({ queryKey: ['backups', d.id] }), 1500); }}>Back up now</button></div>}
       </Card>
     </section>
   );
@@ -229,7 +226,7 @@ function Audit({ id }: { id: string }) {
   const app = useApp();
   const q = useQuery({ queryKey: ['audit', id], queryFn: () => app.api.audit(id), enabled: app.can('audit.read') });
   if (!app.can('audit.read')) return <EmptyCard title="Audit" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="The audit log is for auditors and admins" body="Ask a super admin if you need to see who changed what for this school." />;
-  if (q.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 26 }} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 24 }} />;
   const rows = q.data ?? [];
   if (!rows.length) return <EmptyCard title="Audit" chip={{ text: '0 entries', tone: 'v' }} scene="checklist" heading="Nothing has happened to this school yet" body="Every change made from the console, who made it and when, is written here." />;
   return (
@@ -269,7 +266,7 @@ function SupportDialog({ school, onClose, onStarted }: { school: SchoolDetail; o
         </div>
         {err && <div className="emsg" role="alert">{err}</div>}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn pri" onClick={go} disabled={start.isPending}>{start.isPending ? 'Opening…' : 'Start session'}</button>
       </div>
@@ -292,15 +289,15 @@ function EraseDialog({ school, onClose, onSent }: { school: SchoolDetail; onClos
     send.mutate();
   };
   return (
-    <Dialog dark title={`Erase ${school.name}?`} tag={{ text: 'Permanent · needs a second approver', tone: 'r' }} onClose={onClose} shake={shake.cls} width={480}>
+    <Dialog dark title={`Erase ${school.name}?`} tag={{ text: 'Permanent · needs a second approver', tone: 'c' }} onClose={onClose} shake={shake.cls} width={480}>
       <p>Its database is dropped, its files are deleted and its key is scheduled for deletion, so every backup becomes unreadable.</p>
       <div>
-        <label htmlFor="er-in">Type <b style={{ color: '#fff' }}>{school.slug}</b> to continue</label>
+        <label htmlFor="er-in">Type <b style={{ color: 'var(--onCi)' }}>{school.slug}</b> to continue</label>
         <input id="er-in" className={`shake ${bad ? 'err' : ''}`} value={typed} onChange={(e) => { setTyped(e.target.value); setBad(''); }} autoComplete="off" aria-invalid={!!bad} />
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: '#fff', borderColor: 'rgba(255,255,255,.18)' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: 'var(--onCi)', borderColor: 'color-mix(in srgb,var(--onCi) 18%,transparent)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={go} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

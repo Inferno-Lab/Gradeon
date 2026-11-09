@@ -1,10 +1,10 @@
 /* The dropdown, the tooltip and the switch. Flat and crisp: borders and fills change on hover and focus, nothing glows. */
 
 /* Dropdown button */
-.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:16px;border:1.5px solid var(--field);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color var(--t1),background var(--t1)}
+.nest .sx{display:flex;align-items:center;gap:10px;width:100%;height:50px;padding:0 10px 0 16px;border-radius:14px;border:1.5px solid var(--field);background:var(--card);color:var(--ink);font:600 15px var(--fb);text-align:left;cursor:pointer;transition:border-color var(--t1),background var(--t1)}
 .nest .sx:hover:not(:disabled){border-color:var(--ink3)}
 .nest .sx:focus-visible,.nest .sx.open{outline:0;border-color:var(--v)}
-.nest .sx.err{border-color:var(--r)}
+.nest .sx.err{border-color:var(--c)}
 .nest .sx:disabled{opacity:.5;cursor:not-allowed}
 .nest .sxv{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nest .sxc{width:28px;height:28px;border-radius:50%;background:var(--sunk);color:var(--ink2);display:grid;place-items:center;flex:none;transition:background var(--t1),color var(--t1)}
@@ -17,31 +17,31 @@
 /* A dropdown inside a field box takes the box's place */
 .nest .inp>.sx{border:0;height:100%;background:none;padding:0}
 /* Dropdown list: fixed to the window, above everything, so nothing clips it */
-.nest .sxp{position:fixed;z-index:120;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--sh3);padding:6px}
+.nest .sxp{position:fixed;z-index:120;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:18px;box-shadow:var(--sh3);padding:6px}
 /* Every popup (dropdown list, menu, calendar) opens and closes the same way: from its button, in --t2, out in --t1. */
 .nest .sxp,.nest .popm{animation:nIn var(--t2) var(--e) both}
 .nest .sxp[data-leaving],.nest .popm[data-leaving]{animation:nOut var(--t1) var(--ei) forwards}
-.nest .sxs{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;margin:2px 2px 6px;border-radius:12px;background:var(--sunk);color:var(--ink3);flex:none}
+.nest .sxs{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;margin:2px 2px 6px;border-radius:14px;background:var(--sunk);color:var(--ink3);flex:none}
 .nest .sxs svg{width:16px;height:16px;flex:none}
 .nest .sxs input{flex:1;min-width:0;border:0;outline:0;background:none;font:600 14px var(--fb);color:var(--ink)}
 .nest .sxs input::placeholder{color:var(--ink3);font-weight:500}
 .nest .sxl{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px;outline:0}
-.nest .sxo{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 12px;border-radius:12px;font:600 14px var(--fb);color:var(--ink);cursor:pointer;flex:none}
+.nest .sxo{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 12px;border-radius:14px;font:600 14px var(--fb);color:var(--ink);cursor:pointer;flex:none}
 .nest .sxo.act{background:var(--sunk)}
 .nest .sxo.on{background:var(--vS);color:var(--vD)}
 .nest .sxo .tick{width:16px;height:16px;flex:none;color:var(--v)}
-.nest .sxe{padding:12px;font:600 13.5px var(--fb);color:var(--ink3)}
+.nest .sxe{padding:12px;font:600 13px var(--fb);color:var(--ink3)}
 
 /* Tooltip */
-.nest .tipx{position:fixed;z-index:130;transform:translate(-50%,calc(-100% - 8px));max-width:260px;padding:7px 11px;border-radius:12px;background:var(--pri);color:var(--priT);font:600 12.5px/1.4 var(--fb);pointer-events:none;display:flex;flex-direction:column;gap:1px;animation:nFade var(--t1) var(--e);white-space:normal}
-.nest .tipx b{font-weight:800}
+.nest .tipx{position:fixed;z-index:130;transform:translate(-50%,calc(-100% - 8px));max-width:260px;padding:8px 12px;border-radius:14px;background:var(--pri);color:var(--priT);font:600 12px/1.4 var(--fb);pointer-events:none;display:flex;flex-direction:column;gap:1px;animation:nFade var(--t1) var(--e);white-space:normal}
+.nest .tipx b{font-weight:700}
 .nest .tipx span{white-space:pre-line;font-weight:600;opacity:.8}
 .nest .tipx.bl{transform:translate(-50%,8px)}
 .nest .tipx.rt{transform:translate(0,-50%)}
 
 /* Switch: a small flat track and a round knob. Off is a quiet grey, on is the brand colour. */
 .nest .sw{width:38px;height:22px;border-radius:999px;border:0;padding:0;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background var(--t2)}
-.nest .sw::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:none;transition:transform var(--t2) var(--e)}
+.nest .sw::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--knob);box-shadow:none;transition:transform var(--t2) var(--e)}
 .nest .sw:hover:not(:disabled){background:color-mix(in srgb,var(--line2) 70%,var(--ink3))}
 .nest .sw.on,.nest .sw.on:hover:not(:disabled){background:var(--v)}
 .nest .sw.on::after{transform:translateX(16px)}
@@ -50,7 +50,7 @@
 .nest .sw:disabled{opacity:.45;cursor:not-allowed}
 
 /* A popover (calendar, swatches): the same card and motion as a menu. */
-.nest .pvr{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh3);padding:12px;animation:nIn var(--t2) var(--e) both}
+.nest .pvr{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh3);padding:12px;animation:nIn var(--t2) var(--e) both}
 .nest .pvr[data-leaving]{animation:nOut var(--t1) var(--ei) forwards}
 /* The small icon button inside a field: calendar, clock, minus and plus. */
 .nest .fic{width:34px;height:34px;margin-right:-8px;border-radius:50%;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;flex:none;transition:background var(--t1),color var(--t1)}
@@ -64,7 +64,7 @@
 .nest .dpkh b{font:700 15px var(--fb)}
 .nest .dpkw,.nest .dpkd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .nest .dpkw span{font:700 11px var(--fb);color:var(--ink3);text-align:center;padding:4px 0}
-.nest .dpkd button{height:36px;border:0;border-radius:10px;background:none;color:var(--ink);font:600 13.5px var(--fb);cursor:pointer;transition:background var(--t1),color var(--t1)}
+.nest .dpkd button{height:36px;border:0;border-radius:10px;background:none;color:var(--ink);font:600 13px var(--fb);cursor:pointer;transition:background var(--t1),color var(--t1)}
 .nest .dpkd button:hover:not(:disabled){background:var(--sunk)}
 .nest .dpkd button.out{color:var(--ink3)}
 .nest .dpkd button.now{box-shadow:inset 0 0 0 1.5px var(--line2)}
@@ -73,17 +73,17 @@
 .nest .dpkd button:focus-visible{outline-offset:1px}
 /* Colour swatches */
 .nest .sw5{display:flex;gap:12px;flex-wrap:wrap}
-.nest .sw5 button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;position:relative;transition:transform var(--t2) var(--e);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.nest .sw5 button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;position:relative;transition:transform var(--t2) var(--e);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--onCi) 35%,transparent)}
 .nest .sw5 button:hover:not(:disabled){transform:scale(1.08)}
 .nest .sw5 button.on{box-shadow:0 0 0 3px var(--card),0 0 0 5.5px var(--c2)}
-.nest .sw5 button svg{position:absolute;inset:0;margin:auto;width:20px;height:20px;color:#fff;opacity:0;transform:scale(.6);transition:opacity var(--t1),transform var(--t2) var(--e)}
+.nest .sw5 button svg{position:absolute;inset:0;margin:auto;width:20px;height:20px;color:currentColor;opacity:0;transform:scale(.6);transition:opacity var(--t1),transform var(--t2) var(--e)}
 .nest .sw5 button.on svg{opacity:1;transform:none}
 .nest .sw5 button:disabled{opacity:.5;cursor:not-allowed}
 /* A tick box beside its words */
 .nest .hwc .cb{width:20px;height:20px;border-radius:6px}
 /* A field box in a table row: smaller, same look. */
-.nest .inp.sm{height:38px;width:170px;border-radius:12px;padding:0 4px 0 12px;gap:4px}
+.nest .inp.sm{height:34px;width:170px;border-radius:14px;padding:0 4px 0 12px;gap:4px}
 .nest .inp.sm input{font-size:14px}
-.nest .inp.sm .fic{width:30px;height:30px;margin-right:0}
+.nest .inp.sm .fic{width:26px;height:26px;margin-right:0}
 /* A long menu or list scrolls; its rows never squeeze to fit. */
 .nest .popm>*{flex:none}

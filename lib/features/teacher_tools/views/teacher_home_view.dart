@@ -81,14 +81,14 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                             height: 44,
                             width: 160,
                             // Frosted, with ink text: over a ribbon the pill can sit on pale hatching as well as colour.
-                            padding: const EdgeInsets.only(left: 5, right: 14),
+                            padding: const EdgeInsets.only(left: 6, right: 16),
                             child: Row(
                               children: [
                                 Avatar(
                                   t.name,
                                   size: 34,
-                                  background: const Color(0xFFFBFCF9),
-                                  foreground: const Color(0xFF10201B),
+                                  background: AppColors.light.paper,
+                                  foreground: AppColors.light.ink,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -99,12 +99,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                                       Text(
                                         t.name.split(' ').first,
                                         maxLines: 1,
-                                        style: anek(
-                                          14,
-                                          680,
-                                          height: 1.05,
-                                          color: context.app.ink,
-                                        ),
+                                        style: AppText.chip(color: context.app.ink, height: 1.05),
                                       ),
                                       Text(
                                         [
@@ -113,12 +108,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                                         ].join(' · '),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: anek(
-                                          11.5,
-                                          520,
-                                          height: 1.05,
-                                          color: context.app.ink3,
-                                        ),
+                                        style: AppText.tiny(color: context.app.ink3, height: 1.05),
                                       ),
                                     ],
                                   ),
@@ -220,7 +210,7 @@ class _Body extends StatelessWidget {
         Rise(child: Overline(line)),
         const SizedBox(height: 8),
         Rise(index: 1, child: Text(greeting(teacher.name.split(' ').first), style: context.type.h1)),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Rise(
           index: 2,
           child: Row(
@@ -252,10 +242,10 @@ class _Body extends StatelessWidget {
                     child: Pressable(
                       onTap: a.$3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                         decoration: BoxDecoration(
                           color: c.paper,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: c.line),
                         ),
                         child: Column(
@@ -263,11 +253,8 @@ class _Body extends StatelessWidget {
                           children: [
                             Icon(a.$1, size: 22, color: c.ink),
                             const SizedBox(height: 8),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(a.$2.tr, maxLines: 1, style: anek(13, 650, height: 1.2, color: c.ink)),
-                            ),
+                            // Icon and word, like the dock: siblings share one size, and a long word ends in an ellipsis rather than shrinking.
+                            Text(a.$2.tr, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.tiny(color: c.ink, height: 1.2)),
                           ],
                         ),
                       ),
@@ -291,7 +278,7 @@ class _Body extends StatelessWidget {
             ),
           ),
         ] else ...[
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           const Rise(
             index: 3,
             child: EmptyState(art: EmptyArt.attendance, title: 'teacher.all_clear', body: 'teacher.all_clear_body'),
@@ -323,7 +310,7 @@ class _Body extends StatelessWidget {
     return [
       g.homework.title,
       if (g.schoolClass != null) classLabel(g.schoolClass!),
-      if (days > 0) 'teacher.oldest'.trp({'n': '$days'}),
+      if (days > 0) 'teacher.oldest'.trn(days),
     ].join(' · ');
   }
 }
@@ -349,12 +336,12 @@ class _Task extends StatelessWidget {
     onTap: onTap,
     scale: .985,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           SizedBox(
             width: 44,
-            child: Text(big, maxLines: 1, style: context.type.dl.copyWith(fontSize: 30)),
+            child: Text(big, maxLines: 1, style: context.type.h2),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -383,7 +370,7 @@ class _LeaveSheet extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Text('teacher.leave_title'.tr, style: context.type.h2),
         const SizedBox(height: 4),
         for (final l in controller.leave)
@@ -478,7 +465,7 @@ class TeacherClassesView extends GetView<TeacherHomeController> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -561,7 +548,7 @@ class _ClassCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
@@ -571,10 +558,10 @@ class _ClassCard extends StatelessWidget {
                   decoration: BoxDecoration(color: tile, borderRadius: BorderRadius.circular(18)),
                   child: Text(
                     classLabel(cls).replaceAll(' ', ''),
-                    style: anek(24, 780, width: 122, height: 1, color: tileOn),
+                    style: AppText.h2(color: tileOn, height: 1),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,10 +584,10 @@ class _ClassCard extends StatelessWidget {
                           '${'teacher.class_n'.trp({'class': classLabel(cls)})} · ${subjectName(subject)}',
                           style: context.type.t,
                         ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         [
-                          if (count > 0) 'teacher.n_students'.trp({'n': '$count'}),
+                          if (count > 0) 'teacher.n_students'.trn(count),
                           room,
                           when,
                         ].join(' · '),
@@ -612,23 +599,18 @@ class _ClassCard extends StatelessWidget {
                           taken == null
                               ? 'teacher.attendance_not_taken'.tr
                               : 'teacher.attendance_done'.trp({'n': '${taken.$1}'}),
-                          style: anek(
-                            13,
-                            650,
-                            height: 1.3,
-                            color: taken == null ? (c.dark ? const Color(0xFFF6BA45) : AppColors.late) : AppColors.ok,
-                          ),
+                          style: AppText.capB(color: taken == null ? (c.dark ? AppColors.blackboard.mariText : AppColors.late) : AppColors.ok),
                         ),
                       ],
                     ],
                   ),
                 ),
-                if (live != null) const Padding(padding: EdgeInsets.only(left: 8), child: PulseDot(AppColors.ok)),
+                if (live != null) Padding(padding: const EdgeInsets.only(left: 8), child: PulseDot(AppColors.ok)),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(92, 0, 14, 14),
+            padding: const EdgeInsets.fromLTRB(92, 0, 16, 16),
             child: Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -639,10 +621,10 @@ class _ClassCard extends StatelessWidget {
                     child: Container(
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(14)),
                       child: Center(
                         widthFactor: 1,
-                        child: Text(a.$1.tr, style: anek(13, 640, height: 1, color: c.ink2)),
+                        child: Text(a.$1.tr, style: AppText.capB(color: c.ink2, height: 1)),
                       ),
                     ),
                   ),

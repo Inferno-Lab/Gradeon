@@ -46,9 +46,9 @@ class Stamp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(8, 5, 8, 4),
+    padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(6),
       border: Border.all(color: color, width: 1.6),
     ),
     child: Text(
@@ -84,7 +84,7 @@ class PulseDot extends StatefulWidget {
 }
 
 class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+  late final _c = AnimationController(vsync: this, duration: AppMotion.loop);
 
   @override
   void didChangeDependencies() {
@@ -104,7 +104,7 @@ class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) => FadeTransition(
-    opacity: Tween<double>(begin: 1, end: .35).chain(CurveTween(curve: Curves.easeInOut)).animate(_c),
+    opacity: Tween<double>(begin: 1, end: .35).chain(CurveTween(curve: kLoop)).animate(_c),
     child: Dot(widget.color),
   );
 }
@@ -139,10 +139,10 @@ class Chip2 extends StatelessWidget {
       onTap: onTap,
       scale: .95,
       child: AnimatedContainer(
-        duration: AppDurations.fast,
+        duration: AppMotion.t2,
         curve: kEase,
         height: height,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: background ?? (on ? c.ink : c.paper),
           borderRadius: BorderRadius.circular(height / 2),
@@ -156,7 +156,7 @@ class Chip2 extends StatelessWidget {
             Flexible(
               child: Text(
                 label.tr,
-                style: anek(14, 600, height: 1, color: fg),
+                style: AppText.chip(color: fg, height: 1),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

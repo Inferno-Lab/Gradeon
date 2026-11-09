@@ -6,7 +6,7 @@ import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { rupees } from '../../app/format';
 
-const TONE: Record<InvoiceRowC['status'], string> = { draft: 'n', sent: 'b', paid: 'g', overdue: 'r' };
+const TONE: Record<InvoiceRowC['status'], string> = { draft: 'n', sent: 'v', paid: 'g', overdue: 'c' };
 const NEXT: Record<InvoiceRowC['status'], InvoiceRowC['status']> = { draft: 'sent', sent: 'paid', paid: 'paid', overdue: 'paid' };
 const NEXT_LABEL: Record<InvoiceRowC['status'], string> = { draft: 'Mark sent', sent: 'Mark paid', paid: '', overdue: 'Mark paid' };
 

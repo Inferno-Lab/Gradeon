@@ -102,7 +102,7 @@ class NotificationsView extends GetView<NotificationsController> {
                           'notifications.read_all'.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: anek(14, 650, height: 1, color: context.app.ink),
+                          style: AppText.chip(color: context.app.ink, height: 1),
                         ),
                       ),
                     ],
@@ -127,7 +127,7 @@ class NotificationsView extends GetView<NotificationsController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (filters.length > 1) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   Rise(
                     index: 1,
                     child: Wrap(
@@ -215,7 +215,7 @@ class _Row extends StatelessWidget {
             child: Glass(
               width: 76,
               height: 52,
-              radius: 26,
+              radius: 999,
               kind: GlassKind.lens,
               onPigment: true,
               shadow: false,
@@ -237,13 +237,13 @@ class _Row extends StatelessWidget {
         },
         child: Material(
           color: c.paper,
-          child: InkWell(
+          child: Pressable(
             onTap: () => Get.toNamed<void>(item.route),
             child: Stack(
               children: [
-                if (!item.read) const Positioned(left: 5, top: 28, child: Dot(AppColors.mari, size: 7)),
+                if (!item.read) Positioned(left: 5, top: 28, child: Dot(AppColors.mari, size: 7)),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -251,9 +251,9 @@ class _Row extends StatelessWidget {
                         width: 40,
                         height: 40,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(color: kind.fill, borderRadius: BorderRadius.circular(13)),
+                        decoration: BoxDecoration(color: kind.fill, borderRadius: BorderRadius.circular(14)),
                         child: kind.glyph != null
-                            ? Text(kind.glyph!, style: anek(18, 700, height: 1, color: kind.on))
+                            ? Text(kind.glyph!, style: AppText.t(color: kind.on, height: 1))
                             : Icon(kind.icon, size: 18, color: kind.on),
                       ),
                       const SizedBox(width: 12),
@@ -273,8 +273,7 @@ class _Row extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
+            ),),
         ),
       ),
     );

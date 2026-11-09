@@ -1,16 +1,16 @@
 import type { SchoolRow } from '@gradeon/contracts';
 
-export type Tone = 'g' | 'a' | 'b' | 'r' | 'n';
+export type Tone = 'g' | 'a' | 'v' | 'c' | 'n';
 
 /** The one status pill a school wears in every table: setup state first, then how it is doing. */
 export function statusOf(s: Pick<SchoolRow, 'status' | 'health'>): { text: string; tone: Tone } {
-  if (s.status === 'onboarding') return { text: 'Setting up', tone: 'b' };
-  if (s.status === 'suspended') return { text: 'Suspended', tone: 'r' };
+  if (s.status === 'onboarding') return { text: 'Setting up', tone: 'v' };
+  if (s.status === 'suspended') return { text: 'Suspended', tone: 'c' };
   if (s.status === 'offboarding') return { text: 'Leaving', tone: 'a' };
   if (s.status === 'archived') return { text: 'Archived', tone: 'n' };
   if (s.health === 'ok') return { text: 'Healthy', tone: 'g' };
   if (s.health === 'degraded') return { text: 'Degraded', tone: 'a' };
-  if (s.health === 'down') return { text: 'Down', tone: 'r' };
+  if (s.health === 'down') return { text: 'Down', tone: 'c' };
   return { text: 'Not checked yet', tone: 'n' };
 }
 

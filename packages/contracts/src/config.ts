@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ThemeColorsSchema, type AppMode, type ThemeColors } from './theme.js';
 
 
 /** Every setting a school can change (config layer 4). Defaults here are the platform defaults (layer 1). */
@@ -13,6 +14,8 @@ export const SchoolSettingsSchema = z.object({
   'school.language': z.enum(['en', 'hi', 'mr']).default('en'),
   'brand.color': z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a colour like #6A4CF5'),
   'brand.logoText': z.string().max(2).default(''),
+  // Every colour of the school's admin and app that Gradeon changed from the design's defaults (keys from THEME_KEYS).
+  'theme.colors': ThemeColorsSchema.default({}),
   'modules.enabled': z.array(z.string()).default([]),
   'approvals.feeWaiver': z.enum(['principal', 'office', 'anyone']).default('principal'),
   'approvals.notice': z.enum(['required', 'off']).default('required'),
@@ -127,6 +130,10 @@ export interface SchoolBrand {
   tagline: string;
   language: string;
   demoMode: boolean;
+  /** The school's colours, so the sign-in pages wear them before anyone signs in. */
+  theme: ThemeColors;
+  /** The app's full palette for each of its themes, worked out from the theme, so the app needs no colour arithmetic. */
+  palette: Record<AppMode, Record<string, string>>;
   privacy: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
 }
 

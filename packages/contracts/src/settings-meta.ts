@@ -3,7 +3,7 @@ import type { SettingKey } from './config.js';
 /** How the console edits a setting. The console builds its Configuration forms from this list, so a new setting needs no new screen. */
 export type SettingKind =
   | 'text' | 'textarea' | 'number' | 'bool' | 'enum' | 'color' | 'time' | 'date' | 'language'
-  | 'multi' | 'modules' | 'appDock' | 'appHome' | 'appQuick' | 'notifyRules' | 'templates' | 'class' | 'classes';
+  | 'multi' | 'modules' | 'appDock' | 'appHome' | 'appQuick' | 'notifyRules' | 'templates' | 'class' | 'classes' | 'theme';
 
 export interface SettingMeta {
   group: (typeof SETTING_GROUPS)[number];
@@ -19,7 +19,7 @@ export interface SettingMeta {
   notUsedYet?: string;
 }
 
-export const SETTING_GROUPS = ['Identity and branding', 'Modules', 'The app', 'Rules', 'Messages', 'Security', 'Privacy', 'People', 'Fees', 'Academic year', 'Dashboard', 'Deployment'] as const;
+export const SETTING_GROUPS = ['Identity and branding', 'Colours', 'Modules', 'The app', 'Rules', 'Messages', 'Security', 'Privacy', 'People', 'Fees', 'Academic year', 'Dashboard', 'Deployment'] as const;
 
 export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'school.name': { group: 'Identity and branding', label: 'School name', kind: 'text', help: 'On the sign-in pages, the app, receipts and report cards.' },
@@ -30,7 +30,8 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'school.email': { group: 'Identity and branding', label: 'Office email', kind: 'text' },
   'school.address': { group: 'Identity and branding', label: 'Address', kind: 'textarea' },
   'school.language': { group: 'Identity and branding', label: 'Default language', kind: 'language', options: [['en', 'English'], ['hi', 'हिन्दी (Hindi)'], ['mr', 'मराठी (Marathi)']] },
-  'brand.color': { group: 'Identity and branding', label: 'Brand colour', kind: 'color', help: 'The school’s mark in the admin menu, on its sign-in pages and in the app. The rest of the design keeps Gradeon’s colours so every school stays readable.' },
+  'brand.color': { group: 'Identity and branding', label: 'Brand colour', kind: 'color', help: 'The school’s mark in the admin menu, on its sign-in pages and in the app. Every other colour is under Colours.' },
+  'theme.colors': { group: 'Colours', label: 'Colours', kind: 'theme', help: 'Every colour of the school’s admin and app, in light and dark. A colour left alone keeps the design’s default; a changed base colour carries its fills and text along unless those are changed too.' },
   'brand.logoText': { group: 'Identity and branding', label: 'Logo letters', kind: 'text', help: 'One or two letters, until a logo image is uploaded.' },
   'modules.enabled': { group: 'Modules', label: 'Switched on', kind: 'modules', help: 'Within what the plan includes (Entitlements). A module needs the ones it builds on.' },
   'app.dock': { group: 'The app', label: 'Tabs along the bottom', kind: 'appDock', max: 4, help: 'For families, in this order; Profile is always last. Teachers keep their own tabs.' },

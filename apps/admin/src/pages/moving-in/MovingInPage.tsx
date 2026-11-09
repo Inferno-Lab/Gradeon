@@ -26,8 +26,8 @@ function letterPage(school: string, rows: LetterRow[]): string {
     <ol><li>Install the <b>Gradeon</b> app from the Play Store or the App Store.</li><li>Sign in with your phone number ending <b>${esc(r.phoneEnd)}</b>.</li><li>Type the code we send you by SMS. There is no password to remember.</li></ol>
     <p>If your phone number has changed, tell the school office.</p></section>`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>Letters · ${esc(school)}</title><style>
-    body{font:15px/1.6 system-ui,sans-serif;color:#111;margin:0}section{padding:48px 56px;page-break-after:always;max-width:640px}
-    h1{font-size:22px;margin:0 0 4px}.m{color:#555;margin:0 0 28px}li{margin:6px 0}</style></head><body>${rows.map(one).join('')}</body></html>`;
+    body{font:15px/1.6 system-ui,sans-serif;color:#111;margin: 0}section{padding:48px 56px;page-break-after:always;max-width:640px}
+    h1{font-size:22px;margin: 0 0 4px}.m{color:#555;margin: 0 0 28px}li{margin:6px 0}</style></head><body>${rows.map(one).join('')}</body></html>`;
 }
 
 export function MovingInPage() {
@@ -95,7 +95,7 @@ export function MovingInPage() {
   return (
     <Page title="Moving in" sub="Bring your records into Gradeon, then invite staff and families." toast={toast} loading={act.isLoading && !act.data}
       error={act.isError && !act.data ? { message: (act.error as Error).message, retry: () => void act.refetch() } : null}>
-      <div className="stack" style={{ gap: 18 }}>
+      <div className="stack" style={{ gap: 16 }}>
         {can('setup.write') && (
           <Card title="Send us your files" chip={<span className="chip">{uploads.data?.length ?? 0} sent</span>}>
             <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Gradeon’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
@@ -109,7 +109,7 @@ export function MovingInPage() {
               <div><button className="btn pri" disabled={!picked || send.isPending} onClick={() => send.mutate()}>{send.isPending ? 'Sending…' : 'Send to Gradeon'}</button></div>
             </div>
             {(uploads.data ?? []).length > 0 && (
-              <div style={{ marginTop: 18 }}>
+              <div style={{ marginTop: 16 }}>
                 {uploads.data!.map((u) => (
                   <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 6, height: 'auto', padding: '10px 0', cursor: 'default' }}>
                     <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'A file to read')}</small></span>
@@ -119,7 +119,7 @@ export function MovingInPage() {
                 ))}
               </div>
             )}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 18 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 16 }}>
               <div className="fld" style={{ minWidth: 220, flex: '1 1 220px', maxWidth: 360 }}><label htmlFor="tpl">Blank sheet to fill in</label><Select id="tpl" value={kind} onChange={setKind} options={IMPORT_KINDS.map((k) => ({ value: k.key, label: k.label }))} /></div>
               <button className="btn" disabled={tpl.isPending} onClick={template}>{tpl.isPending ? 'Preparing…' : 'Download sheet'}</button>
               {!typing && <button className="btn" onClick={() => setTyping(true)}>Type it in instead</button>}
@@ -159,7 +159,7 @@ export function MovingInPage() {
                       <b style={{ font: '700 14px var(--fb)' }}>{c.className}</b>
                       <span>{c.families}</span>
                       <span>{c.invited}</span>
-                      <span className="us" style={{ gap: 5 }}><div className="bar" style={{ height: 10 }}><i style={{ width: `${pct(c.signedIn, c.families)}%` }}></i></div><small style={{ font: '700 11.5px var(--fb)', color: 'var(--ink3)' }}>{c.signedIn} of {c.families}</small></span>
+                      <span className="us" style={{ gap: 4 }}><div className="bar" style={{ height: 10 }}><i style={{ width: `${pct(c.signedIn, c.families)}%` }}></i></div><small style={{ font: '700 11px var(--fb)', color: 'var(--ink3)' }}>{c.signedIn} of {c.families}</small></span>
                       <span>{c.consented}</span>
                       <span style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                         {can('students.write') && c.invited < c.families && <button className="btn sm" disabled={invite.isPending} onClick={() => invite.mutate(c.classId)}>Invite</button>}

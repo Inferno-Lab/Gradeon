@@ -10,6 +10,7 @@ import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_theme.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
@@ -106,7 +107,7 @@ class SettingsView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Row(
                     children: [
-                      Expanded(child: Text('settings.text_size'.tr, style: context.type.t.copyWith(fontSize: 15))),
+                      Expanded(child: Text('settings.text_size'.tr, style: context.type.ts)),
                       Text(
                         '${(theme.textScale.value * 100).round()}%',
                         style: context.type.cap.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
@@ -118,7 +119,7 @@ class SettingsView extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
                   child: Row(
                     children: [
-                      Text('A', style: anek(13, 600, height: 1, color: c.ink)),
+                      Text('A', style: AppText.capB(color: c.ink, height: 1)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: GlassSlider(
@@ -130,7 +131,7 @@ class SettingsView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('A', style: anek(20, 600, height: 1, color: c.ink)),
+                      Text('A', style: AppText.h3(color: c.ink, height: 1)),
                     ],
                   ),
                 ),
@@ -156,14 +157,14 @@ class SettingsView extends StatelessWidget {
                 for (final (i, t) in toggles.indexed) ...[
                   if (i > 0) const Hr(indent: 14),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(t.$1.tr, style: context.type.t.copyWith(fontSize: 15)),
+                              Text(t.$1.tr, style: context.type.ts),
                               Text(t.$2.tr, style: context.type.cap),
                             ],
                           ),
@@ -221,9 +222,9 @@ class _ThemeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final (bg, bar, name) = switch (mode) {
-      AppThemeMode.light => (const Color(0xFFEEF0EC), const Color(0xFFFBFCF9), 'settings.theme_chalk'),
-      AppThemeMode.dark => (const Color(0xFF0D1814), const Color(0xFF14231E), 'settings.theme_blackboard'),
-      AppThemeMode.amoled => (const Color(0xFF000000), const Color(0xFF0B110F), 'settings.theme_amoled'),
+      AppThemeMode.light => (AppColors.light.chalk, AppColors.light.paper, 'settings.theme_chalk'),
+      AppThemeMode.dark => (AppColors.blackboard.chalk, AppColors.blackboard.paper, 'settings.theme_blackboard'),
+      AppThemeMode.amoled => (AppColors.amoled.chalk, AppColors.amoled.paper, 'settings.theme_amoled'),
       AppThemeMode.system => (null, AppColors.mari, 'settings.theme_auto'),
     };
     return Semantics(
@@ -241,17 +242,17 @@ class _ThemeTile extends StatelessWidget {
           child: Column(
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 260),
+                duration: AppMotion.t3,
                 height: 64,
                 decoration: BoxDecoration(
                   color: bg,
                   gradient: bg == null
-                      ? const LinearGradient(
-                          colors: [Color(0xFFEEF0EC), Color(0xFFEEF0EC), Color(0xFF0D1814), Color(0xFF0D1814)],
-                          stops: [0, .5, .5, 1],
+                      ? LinearGradient(
+                          colors: [AppColors.light.chalk, AppColors.light.chalk, AppColors.blackboard.chalk, AppColors.blackboard.chalk],
+                          stops: const [0, .5, .5, 1],
                         )
                       : null,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: on ? c.ink : c.line2, width: on ? 2.5 : 1),
                 ),
                 child: Stack(
@@ -262,9 +263,9 @@ class _ThemeTile extends StatelessWidget {
                       child: Container(
                         width: 16,
                         height: 30,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF2F5BD3),
-                          borderRadius: BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(5)),
+                        decoration: BoxDecoration(
+                          color: AppColors.subject('maths').fill,
+                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(6)),
                         ),
                       ),
                     ),
@@ -274,9 +275,9 @@ class _ThemeTile extends StatelessWidget {
                       child: Container(
                         width: 16,
                         height: 24,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFB8306F),
-                          borderRadius: BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(5)),
+                        decoration: BoxDecoration(
+                          color: AppColors.subject('hindi').fill,
+                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(6)),
                         ),
                       ),
                     ),
@@ -295,7 +296,7 @@ class _ThemeTile extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 name.tr,
-                style: anek(12.5, 640, height: 1.2, color: c.ink),
+                style: AppText.capB(color: c.ink, height: 1.2),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -320,13 +321,13 @@ class _LinkRow extends StatelessWidget {
     onTap: onTap,
     scale: .985,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
           Icon(icon, size: 18, color: color ?? context.app.ink),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(label.tr, style: context.type.t.copyWith(fontSize: 15, color: color)),
+            child: Text(label.tr, style: context.type.ts.copyWith(color: color)),
           ),
           if (color == null) Icon(PhosphorIconsRegular.caretRight, size: 16, color: context.app.ink3),
         ],
@@ -387,8 +388,8 @@ class _AboutViewState extends State<AboutView> {
                         decoration: BoxDecoration(
                           color: AppColors.subject(b.$1).fill,
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(5),
-                            topRight: Radius.circular(12),
+                            topLeft: Radius.circular(6),
+                            topRight: Radius.circular(10),
                           ),
                         ),
                         foregroundDecoration: spineDecoration,
@@ -411,7 +412,7 @@ class _AboutViewState extends State<AboutView> {
               const SizedBox(height: 4),
               Text(
                 s?.tagline ?? AppConfig.schoolTagline,
-                style: context.type.b.copyWith(color: c.mariText, fontVariations: const [FontVariation('wght', 600)]),
+                style: context.type.ts.copyWith(color: c.mariText),
               ),
               if (s != null) ...[
                 const SizedBox(height: 10),
@@ -450,7 +451,7 @@ class _AboutViewState extends State<AboutView> {
                   ),
                 ),
               ],
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 16,
@@ -469,7 +470,7 @@ class _AboutViewState extends State<AboutView> {
                   ])
                     TextButton(
                       onPressed: action,
-                      style: TextButton.styleFrom(foregroundColor: c.mariText, textStyle: anek(13, 600, height: 1.3)),
+                      style: TextButton.styleFrom(foregroundColor: c.mariText, textStyle: AppText.capB()),
                       child: Text(key.tr),
                     ),
                 ],
@@ -513,7 +514,7 @@ class _Fact extends StatelessWidget {
     onTap: onTap,
     scale: onTap == null ? 1 : .985,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -526,7 +527,7 @@ class _Fact extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: context.type.t.copyWith(fontSize: 15)),
+                Text(title, style: context.type.ts),
                 if (sub != null) Text(sub!, style: context.type.cap),
               ],
             ),
@@ -595,7 +596,7 @@ class _HelpViewState extends State<HelpView> {
       leading: const BackGlass(),
       children: [
         const PageTitle('help.title'),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Field(
           controller: _query,
           hint: 'help.search',
@@ -640,10 +641,10 @@ class _HelpViewState extends State<HelpView> {
                   child: Pressable(
                     onTap: t.$5,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
                       decoration: BoxDecoration(
                         color: c.paper,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                         border: Border.all(color: c.line),
                       ),
                       child: Column(
@@ -655,7 +656,7 @@ class _HelpViewState extends State<HelpView> {
                             child: Icon(t.$1, size: 18, color: t.$4),
                           ),
                           const SizedBox(height: 8),
-                          Text(t.$2.tr, style: anek(13, 650, height: 1.2, color: c.ink)),
+                          Text(t.$2.tr, style: AppText.capB(color: c.ink, height: 1.2)),
                         ],
                       ),
                     ),
@@ -684,7 +685,7 @@ class _HelpViewState extends State<HelpView> {
               ],
             ),
           ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Btn(
           'help.report',
           kind: BtnKind.quiet,
@@ -720,30 +721,29 @@ class _Faq extends StatelessWidget {
       Semantics(
         button: true,
         expanded: open,
-        child: InkWell(
+        child: Pressable(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Expanded(child: Text(question, style: context.type.t.copyWith(fontSize: 15))),
+                Expanded(child: Text(question, style: context.type.ts)),
                 AnimatedRotation(
                   turns: open ? .5 : 0,
-                  duration: const Duration(milliseconds: 260),
+                  duration: AppMotion.t3,
                   child: Icon(PhosphorIconsRegular.caretDown, size: 18, color: context.app.ink),
                 ),
               ],
             ),
-          ),
-        ),
+          ),),
       ),
       AnimatedSize(
-        duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 300),
+        duration: context.reduceMotion ? Duration.zero : AppMotion.t3,
         curve: const Cubic(.2, .8, .2, 1),
         alignment: Alignment.topCenter,
         child: open
             ? Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Text(answer, style: context.type.s),
               )
             : const SizedBox(width: double.infinity),

@@ -31,11 +31,11 @@ export function StaffPage() {
         <div><EmptyCard title="Staff" chip={{ text: '0 people', tone: 'v' }} scene="register" heading="Nobody has been added yet" body="Add teachers and office staff. Each gets an invite to sign in, and a role that decides what they can do." actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add staff</AddBtn> : undefined} /></div>
       ) : (
         <section className="card tbl rise" style={{ padding: 0 }}>
-          <div className="ch" style={{ padding: '22px 22px 14px' }}>
+          <div className="ch" style={{ padding: '24px 24px 16px' }}>
             <h2>Everyone</h2>
-            <div className="srch" style={{ minWidth: 260, height: 38 }}><Ico d={SEARCH} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, subject or role" aria-label="Search staff" style={{ border: 0, outline: 0, background: 'none', font: '600 13.5px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
+            <div className="srch" style={{ minWidth: 260, height: 38 }}><Ico d={SEARCH} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, subject or role" aria-label="Search staff" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
           </div>
-          {rows.length === 0 ? <div className="help" style={{ padding: '0 22px 22px' }}>No one matches “{q}”.</div> : (
+          {rows.length === 0 ? <div className="help" style={{ padding: '0 24px 24px' }}>No one matches “{q}”.</div> : (
             <div className="scroll-x lscroll" data-fill="">
               <div className="stfw" style={{ minWidth: 760 }}>
                 <div className="grd th stf" style={{ '--cols': 'minmax(0,1.7fr) minmax(0,1.3fr) 140px 120px 90px' } as React.CSSProperties}><span>Person</span><span className="hs">Teaches</span><span>Role</span><span className="hs">Periods a week</span><span className="hs">Status</span></div>
@@ -44,11 +44,11 @@ export function StaffPage() {
                     <div className="grd rw stf" style={{ '--cols': 'minmax(0,1.7fr) minmax(0,1.3fr) 140px 120px 90px' } as React.CSSProperties}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                         <Avatar name={r.name} />
-                        <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ font: '700 14.5px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.designation}{r.department ? ` · ${r.department}` : ''}</small></span>
+                        <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.designation}{r.department ? ` · ${r.department}` : ''}</small></span>
                       </span>
                       <span className="tgrow hs" style={{ gap: 6 }}>{r.subjects.length ? r.subjects.map((s) => <span className="chip" key={s.id}>{s.name}</span>) : <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)' }}>–</span>}</span>
                       <span className="chip v">{r.roles[0]?.name ?? 'No role'}</span>
-                      <span className="us hs" style={{ gap: 5 }}><div className="bar" style={{ height: 12 }}><i style={{ width: `${Math.min(100, Math.round((r.periodsPerWeek / r.maxPeriods) * 100))}%` }}></i></div><small style={{ font: '700 11.5px var(--fb)', color: 'var(--ink3)' }}>{r.periodsPerWeek} of {r.maxPeriods}</small></span>
+                      <span className="us hs" style={{ gap: 4 }}><div className="bar" style={{ height: 12 }}><i style={{ width: `${Math.min(100, Math.round((r.periodsPerWeek / r.maxPeriods) * 100))}%` }}></i></div><small style={{ font: '700 11px var(--fb)', color: 'var(--ink3)' }}>{r.periodsPerWeek} of {r.maxPeriods}</small></span>
                       <span className={`st hs ${r.status === 'active' ? 'g' : 'n'}`}><i></i>{r.status === 'active' ? 'Active' : 'Off'}</span>
                     </div>
                   </button>

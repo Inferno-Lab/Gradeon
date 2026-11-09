@@ -39,7 +39,7 @@ class ResultsView extends GetView<ResultsController> {
               child: Glass(
                 height: 44,
                 width: 150,
-                radius: 22,
+                radius: 24,
                 onPigment: true,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -49,7 +49,7 @@ class ResultsView extends GetView<ResultsController> {
                         controller.exam?.name ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: anek(15, 700, height: 1, color: onHero ?? context.app.ink).copyWith(shadows: _shadow),
+                        style: AppText.ts(color: onHero ?? context.app.ink, height: 1).copyWith(shadows: _shadow),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -91,7 +91,7 @@ class ResultsView extends GetView<ResultsController> {
                 alignment: Alignment.centerRight,
                 child: Text(
                   'results.out_of'.trp({'n': '${result.subjects.firstOrNull?.maxMarks ?? 0}'}),
-                  style: context.type.cap.copyWith(fontSize: 11.5),
+                  style: context.type.tiny,
                 ),
               ),
             ),
@@ -110,7 +110,7 @@ class ResultsView extends GetView<ResultsController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text('results.pick_exam'.tr, style: context.type.h2),
           const SizedBox(height: 12),
           for (var i = 0; i < controller.exams.length; i++)
@@ -120,7 +120,7 @@ class ResultsView extends GetView<ResultsController> {
                 Get.back<void>();
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
                   children: [
                     Expanded(child: Text(controller.exams[i].name, style: context.type.t)),
@@ -142,7 +142,7 @@ class ResultsView extends GetView<ResultsController> {
   );
 }
 
-const _shadow = [Shadow(color: Color(0x4D000000), blurRadius: 6, offset: Offset(0, 1))];
+final _shadow = [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 1))];
 
 class _Columns extends StatelessWidget {
   const _Columns({required this.result, required this.height});
@@ -205,7 +205,7 @@ class _Column extends StatelessWidget {
       height: h,
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: context.reduceMotion ? 1 : .2, end: 1),
-        duration: Duration(milliseconds: 900 + delay * 60),
+        duration: AppMotion.t4 + AppMotion.stagger * delay,
         curve: kSpring,
         builder: (context, t, child) => Transform(
           alignment: Alignment.topCenter,
@@ -217,18 +217,18 @@ class _Column extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: pigment.fill,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
             ),
             padding: const EdgeInsets.only(bottom: 12),
             alignment: Alignment.bottomCenter,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${mark.marks}', style: anek(20, 760, width: 118, height: 1, color: pigment.on)),
+                Text('${mark.marks}', style: AppText.h3(color: pigment.on, height: 1)),
                 const SizedBox(height: 2),
                 Text(
                   subjectAbbr[mark.subject] ?? '',
-                  style: anek(11, 700, height: 1, em: .06, color: pigment.on.withValues(alpha: .9)),
+                  style: AppText.o(color: pigment.on.withValues(alpha: .9)),
                 ),
               ],
             ),
@@ -259,7 +259,7 @@ class _Summary extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               BigNumber(value: '${result.overallPercent.round()}', unit: '%', size: 68),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 6),
@@ -270,7 +270,7 @@ class _Summary extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         'results.rank'.trp({'rank': '${result.rank}', 'total': '${result.totalStudents}'}),
-                        style: anek(13, 620, height: 1.2, color: c.ink3),
+                        style: AppText.capB(color: c.ink3, height: 1.2),
                       ),
                     ],
                   ),
@@ -314,7 +314,7 @@ class _Summary extends StatelessWidget {
                   for (var i = 0; i < changes.length; i++) ...[
                     if (i > 0) const Hr(indent: 68),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Cover(subject: changes[i].$1.subject),
@@ -345,13 +345,7 @@ class _Summary extends StatelessWidget {
                                 : changes[i].$2 == 0
                                 ? '0'
                                 : '−${changes[i].$2.abs()}',
-                            style: anek(
-                              16,
-                              700,
-                              height: 1,
-                              tabular: true,
-                              color: changes[i].$2 >= 0 ? AppColors.ok : c.badText,
-                            ),
+                            style: AppText.t(color: changes[i].$2 >= 0 ? AppColors.ok : c.badText, height: 1),
                           ),
                         ],
                       ),

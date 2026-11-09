@@ -5,7 +5,7 @@ import './empty.css';
 export interface EmptyCardProps {
   /** The name of the thing that is empty, shown in the card's header. */
   title: string;
-  chip?: { text: string; tone: 'v' | 'c' | 'a' | 'g' | 'r' | 'b' };
+  chip?: { text: string; tone: 'v' | 'c' | 'a' | 'g' };
   scene: Scene;
   heading: string;
   body: string;
@@ -42,7 +42,7 @@ export function NotFoundTile({ home, onHome, onSearch }: { home: string; onHome:
           <a className="btn wht" href={home} onClick={(e) => { e.preventDefault(); onHome(); }}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M15 6l-6 6 6 6"></path></svg>Back to the dashboard
           </a>
-          <button className="btn" onClick={onSearch} style={{ background: 'rgba(255,255,255,.1)', color: '#fff', borderColor: 'transparent' }}>Search<span className="kbd" style={{ background: 'rgba(255,255,255,.14)', color: '#fff' }}>Ctrl K</span></button>
+          <button className="btn" onClick={onSearch} style={{ background: 'color-mix(in srgb,var(--onCi) 10%,transparent)', color: 'var(--onCi)', borderColor: 'transparent' }}>Search<span className="kbd" style={{ background: 'color-mix(in srgb,var(--onCi) 14%,transparent)', color: 'var(--onCi)' }}>Ctrl K</span></button>
         </div>
       </div>
       <div style={{ position: 'relative' }}><Illustration scene="torn-page" /></div>

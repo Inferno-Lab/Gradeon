@@ -7,9 +7,9 @@ import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
-const TONE: Record<ReleaseRow['status'], string> = { draft: 'n', rolling: 'b', paused: 'a', halted: 'r', done: 'g', rolled_back: 'a' };
+const TONE: Record<ReleaseRow['status'], string> = { draft: 'n', rolling: 'v', paused: 'a', halted: 'c', done: 'g', rolled_back: 'a' };
 const LABEL: Record<ReleaseRow['status'], string> = { draft: 'Ready to start', rolling: 'Rolling out', paused: 'Paused', halted: 'Halted', done: 'Finished', rolled_back: 'Rolled back' };
-const SCHOOL: Record<string, string> = { pending: 'n', rolling: 'b', done: 'g', failed: 'r', rolled_back: 'a' };
+const SCHOOL: Record<string, string> = { pending: 'n', rolling: 'v', done: 'g', failed: 'c', rolled_back: 'a' };
 
 export function ReleasesPage() {
   const app = useApp();
@@ -51,12 +51,12 @@ export function ReleasesPage() {
             <div className="help">{r.notes || 'No notes.'} · by {r.createdBy} · {ago(r.createdAt)}</div>
             {r.haltReason && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{r.haltReason}</div>}
             {all.length > 0 && (
-              <div className="us" style={{ margin: '14px 0 4px' }}>
+              <div className="us" style={{ margin: '12px 0 4px' }}>
                 <div className="r">Schools updated<b>{done} of {all.length}</b></div>
                 <div className="bar"><i style={{ width: `${(done / all.length) * 100}%` }}></i></div>
               </div>
             )}
-            <div className="grid" style={{ marginTop: 14 }}>
+            <div className="grid" style={{ marginTop: 12 }}>
               {r.waves.map((w) => (
                 <div key={w.name} className="s4" style={{ minWidth: 0 }}>
                   <div className="lbl" style={{ marginBottom: 6 }}>{w.name} · {w.status}</div>

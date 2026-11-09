@@ -89,7 +89,7 @@ class _ChildCapsuleState extends State<ChildCapsule> {
             child: Glass(
               key: _anchor,
               height: 44,
-              padding: const EdgeInsets.only(left: 5, right: 12),
+              padding: const EdgeInsets.only(left: 6, right: 12),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -98,8 +98,8 @@ class _ChildCapsuleState extends State<ChildCapsule> {
                       current.$1.name,
                       initials: Avatar.siblingInitials(current.$1.name, family),
                       size: 30,
-                      background: const Color(0xFFFBFCF9),
-                      foreground: const Color(0xFF10201B),
+                      background: AppColors.light.paper,
+                      foreground: AppColors.light.ink,
                     ),
                   for (final k in others.take(1))
                     Transform.translate(
@@ -108,14 +108,14 @@ class _ChildCapsuleState extends State<ChildCapsule> {
                         k.$1.name,
                         initials: Avatar.siblingInitials(k.$1.name, family),
                         size: 30,
-                        background: const Color(0xFFF6D3E3),
+                        background: Color.lerp(AppColors.subject('hindi').fill, AppColors.light.paper, .8),
                         foreground: AppColors.subject('hindi').fill,
                       ),
                     ),
                   SizedBox(width: others.isEmpty ? 8 : 0),
                   Text(
                     label,
-                    style: anek(14, 680, height: 1, color: context.app.ink),
+                    style: AppText.chip(color: context.app.ink, height: 1),
                   ),
                   const SizedBox(width: 4),
                   Icon(PhosphorIconsBold.caretDown, size: 13, color: context.app.ink),
@@ -136,7 +136,7 @@ class _ChildCapsuleState extends State<ChildCapsule> {
       barrierDismissible: true,
       barrierLabel: 'common.close'.tr,
       barrierColor: Colors.transparent,
-      transitionDuration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 500),
+      transitionDuration: context.reduceMotion ? Duration.zero : AppMotion.t4,
       pageBuilder: (context, _, _) => _SwitcherPopover(kids: _kids, top: origin.dy + 52, left: origin.dx),
       transitionBuilder: (context, animation, _, child) {
         final t = CurvedAnimation(parent: animation, curve: kSpring, reverseCurve: kEase);
@@ -178,8 +178,8 @@ class _SwitcherPopover extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Glass(
-                  radius: 30,
-                  tint: c.dark ? const Color(0xF214231E) : const Color(0xF7FBFCF9),
+                  radius: 999,
+                  tint: c.dark ? AppColors.blackboard.paper.withValues(alpha: 0.95) : AppColors.light.paper.withValues(alpha: 0.97),
                   padding: const EdgeInsets.all(8),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

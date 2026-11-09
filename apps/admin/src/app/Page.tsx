@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, PageScope, Presence, ToastSlot } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps } from '@gradeon/web-ui';
 import './pages.css';
 
 interface PageProps {
@@ -8,7 +8,7 @@ interface PageProps {
   actions?: ReactNode;
   children: ReactNode;
   overlays?: ReactNode;
-  toast?: { text: string; tone: 'ok' | 'bad' } | null;
+  toast?: ToastProps | null;
   /** A query that failed: shows the error card instead of the page. */
   error?: { message: string; retry: () => void } | null;
   loading?: boolean;
@@ -19,14 +19,14 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
   return (
     <PageScope page="p" overlays={<><Presence>{overlays}</Presence><ToastSlot toast={toast} /></>}>
       <main className="mn" aria-busy={loading || undefined}>
-        <header className="hd rise" style={{ flexWrap: 'wrap', gap: 14 }}>
+        <header className="hd rise" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div style={{ minWidth: 0 }}><h1>{title}</h1>{sub != null && <p>{sub}</p>}</div>
           <span className="grow"></span>
           {actions}
         </header>
         {error ? (
           <div style={{ maxWidth: 520 }}>
-            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
+            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
           </div>
         ) : loading ? <div className="skc" style={{ height: 320, borderRadius: 28 }} /> : children}
       </main>
@@ -45,4 +45,4 @@ export function Card({ title, chip, children, span, style, id }: { title?: strin
 }
 
 /** Messages that vanish after a few seconds, for the result of a button press. */
-export { useToast } from './useToast';
+export { useToast } from '@gradeon/web-ui';

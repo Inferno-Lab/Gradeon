@@ -5,6 +5,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { WEB_TOKENS } from '@gradeon/contracts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -15,6 +16,7 @@ const rel = (p: string) => path.relative(root, p).replace(/\\/g, '/');
 const apps = ['apps/admin/src', 'apps/console/src'].flatMap((d) => walk(path.join(root, d)));
 const ui = walk(path.join(root, 'packages/web-ui/src'));
 const tsx = apps.filter((f) => f.endsWith('.tsx'));
+const allTsx = [...tsx, ...ui.filter((f) => f.endsWith('.tsx'))];
 const css = [...apps, ...ui].filter((f) => f.endsWith('.css'));
 const cache = new Map<string, string>();
 const read = (f: string) => cache.get(f) ?? cache.set(f, readFileSync(f, 'utf8')).get(f)!;
@@ -23,6 +25,21 @@ const read = (f: string) => cache.get(f) ?? cache.set(f, readFileSync(f, 'utf8')
 function hits(files: string[], re: RegExp, keep: (line: string, file: string) => boolean = () => true): string[] {
   return files.flatMap((f) => read(f).split(/\r?\n/).flatMap((line, i) => (re.test(line) && keep(line, f) ? [`${rel(f)}:${i + 1}  ${line.trim().slice(0, 120)}`] : [])));
 }
+
+// Printed receipts and handouts are black on white paper whatever the theme; the logo keeps its own colours.
+const fixed = (f: string) => /InvoicesPage|MovingInPage|GradeonIcon|ColourPicker|\.test\./.test(f);
+// The token blocks in nest.css define the colours; the picker paints the colour space itself; masks only use alpha.
+const definesColour = (line: string, f: string) => (/nest\.css$/.test(f) && /^(\.nest(\.dark)?\{)?--/.test(line.trim())) || /\bcpk/.test(line) || /mask/.test(line);
+const comment = (line: string) => /^\s*(\/\/|\/\*|\*)/.test(line);
+
+// The scales. Art numerals (the 404 page, illustrations) are drawings, not type; font-size 0 hides text.
+const SIZES = [11, 12, 13, 14, 15, 17, 22, 28, 34, 38];
+const WEIGHTS = [500, 600, 700];
+const RADII = [0, 2, 6, 10, 14, 18, 24, 28, 999];
+const SPACE = [0, 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56];
+const art = (line: string) => /\.es-nf \.n\b|\.il\b/.test(line);
+/** Whether any pixel number in the captured values is off the scale (percentages and `auto` are layout, not scale values). */
+const offScale = (line: string, re: RegExp, ok: (n: number) => boolean) => [...line.matchAll(re)].some((m) => [...m[1]!.matchAll(/(-?\d+(?:\.\d+)?)(px|%|em|rem|vh|vw|ch|s|ms)?/g)].some((x) => (x[2] ?? 'px') === 'px' && !ok(Math.abs(Number(x[1])))));
 
 describe('the design system', { timeout: 30_000 }, () => {
   it('has no browser widgets in the apps', () => {
@@ -40,6 +57,7 @@ describe('the design system', { timeout: 30_000 }, () => {
 
   it('builds overlays from the shared parts', () => {
     expect(hits(tsx, /className=\{?["'`](scrim|mod|toast|popm|sxp|pvr)\b/), 'use Dialog, SearchDialog, ToastSlot, Menu or Pop from @gradeon/web-ui').toEqual([]);
+    expect(hits(allTsx.filter((f) => !/Toast\.tsx$/.test(f)), /setToast\(/), 'time toasts with useToast() from @gradeon/web-ui').toEqual([]);
   });
 
   it('times every motion with the tokens', () => {
@@ -59,5 +77,42 @@ describe('the design system', { timeout: 30_000 }, () => {
       if (seen.has(m[1]!)) twice.push(`${m[1]} in ${rel(f)} and ${seen.get(m[1]!)}`); else seen.set(m[1]!, rel(f));
     }
     expect(twice, 'keep one definition (shared ones live in packages/web-ui)').toEqual([]);
+  });
+
+  it('takes every colour from a token', () => {
+    const raw = /#[0-9a-fA-F]{3,8}\b(?![\w-])|\b(rgba?|hsla?)\(|(?<![\w-])(white|black)(?![\w-])/;
+    expect(hits([...css, ...allTsx].filter((f) => !fixed(f)), raw, (line, f) => !comment(line) && !definesColour(line, f) && !/white-space/.test(line)),
+      'use a colour token (var(--ink), var(--onCi), color-mix(in srgb,var(--onCi) 14%,transparent)…); the console can change every token').toEqual([]);
+    expect(hits([...css, ...allTsx], /var\(--(b|bS|r|rS|rF|sbg)\)|\.btn\.v\b|\bbtn v\b/), 'retired: use --v, --vS, --c, --cS, --cF, --frame; the blue button is gone (btn pri)').toEqual([]);
+  });
+
+  it('keeps the stylesheet defaults equal to the colours the console edits', () => {
+    const sheet = read(path.join(root, 'packages/web-ui/src/nest.css'));
+    const block = (re: RegExp) => Object.fromEntries([...(sheet.match(re)?.[1] ?? '').matchAll(/--(\w+):(#[0-9A-Fa-f]{6,8})/g)].map((m) => [m[1]!, m[2]!.toUpperCase()]));
+    const light = block(/\.nest\{([^}]*)\}/), dark = block(/\.nest\.dark\{([^}]*)\}/);
+    const drift = WEB_TOKENS.flatMap((t) => [
+      ...(light[t.key] === t.light.toUpperCase() ? [] : [`light --${t.key}: ${light[t.key]} vs ${t.light}`]),
+      ...(dark[t.key] === t.dark.toUpperCase() ? [] : [`dark --${t.key}: ${dark[t.key]} vs ${t.dark}`]),
+    ]);
+    expect(drift, 'change nest.css and WEB_TOKENS in packages/contracts/src/theme.ts together').toEqual([]);
+  });
+
+  const files = [...css, ...allTsx].filter((f) => !fixed(f));
+
+  it('sets type from the scale: ten sizes, three weights', () => {
+    const size = /(?:\bfont\s*:\s*['"`]?[1-9]00\s+|font-size\s*:\s*|fontSize\s*:\s*['"`]?)(\d+(?:\.\d+)?)/g;
+    expect(hits(files, /font/i, (l) => !art(l) && [...l.matchAll(size)].some((m) => Number(m[1]) !== 0 && !SIZES.includes(Number(m[1])))), `font sizes are ${SIZES.join(', ')} px`).toEqual([]);
+    const weight = /(?:\bfont\s*:\s*['"`]?|font-weight\s*:\s*|fontWeight\s*:\s*['"`]?)([1-9]00)\b/g;
+    expect(hits(files, /font/i, (l) => [...l.matchAll(weight)].some((m) => !WEIGHTS.includes(Number(m[1])))), 'font weights are 500, 600 and 700').toEqual([]);
+  });
+
+  it('rounds corners from the scale', () => {
+    const radius = /(?:border(?:-(?:top|bottom)-(?:left|right))?-radius\s*:\s*|border(?:Top|Bottom)?(?:Left|Right)?Radius\s*:\s*)['"`]?([^;}'"`,\n]+)/g;
+    expect(hits(files, /adius/, (l) => offScale(l, radius, (n) => RADII.includes(n))), `radii are ${RADII.join(', ')} px or 50%`).toEqual([]);
+  });
+
+  it('spaces things from the scale', () => {
+    const space = /(?:(?<![\w-])(?:padding|margin)(?:-(?:top|right|bottom|left|inline|block))?\s*:\s*|(?<![\w-])(?:row-|column-)?gap\s*:\s*|\b(?:padding|margin)(?:Top|Right|Bottom|Left|Inline|Block)?\s*:\s*|\b(?:row|column)?[gG]ap\s*:\s*)['"`]?([^;}'"`,\n]+)/g;
+    expect(hits(files, /padding|margin|gap/i, (l) => offScale(l, space, (n) => n > 56 || SPACE.includes(n))), `spacing up to 56 px is ${SPACE.join(', ')}`).toEqual([]);
   });
 });

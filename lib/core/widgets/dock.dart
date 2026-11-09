@@ -80,7 +80,7 @@ class _GlassDockState extends State<GlassDock> with SingleTickerProviderStateMix
               final left = pad + _x.value * slot + (slot - pillW) / 2;
               return Glass(
                 height: 64,
-                radius: 32,
+                radius: 999,
                 child: Stack(
                   children: [
                     Positioned(
@@ -90,7 +90,7 @@ class _GlassDockState extends State<GlassDock> with SingleTickerProviderStateMix
                       height: pillH,
                       child: IgnorePointer(
                         child: DecoratedBox(
-                          decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(26)),
+                          decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(24)),
                         ),
                       ),
                     ),
@@ -152,7 +152,7 @@ class _DockButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(on ? item.activeIcon : item.icon, size: 22, color: color),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     item.label.tr,
                     maxLines: 1,
@@ -167,7 +167,7 @@ class _DockButton extends StatelessWidget {
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 9, left: 30),
+                    padding: const EdgeInsets.only(top: 10, left: 32),
                     child: _Badge(count: item.badge),
                   ),
                 ),
@@ -234,7 +234,7 @@ class _GlassRailState extends State<GlassRail> with SingleTickerProviderStateMix
           child: Glass(
             width: 76,
             height: height,
-            radius: 38,
+            radius: 999,
             child: Stack(
               children: [
                 Positioned(
@@ -244,7 +244,7 @@ class _GlassRailState extends State<GlassRail> with SingleTickerProviderStateMix
                   height: pill,
                   child: IgnorePointer(
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(30)),
+                      decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(34)),
                     ),
                   ),
                 ),
@@ -299,7 +299,7 @@ class _Badge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.bad,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: context.app.paper, width: 1.5),
       ),
       child: SizedBox(
@@ -309,7 +309,7 @@ class _Badge extends StatelessWidget {
           widthFactor: text.length == 1 ? null : 1,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: text.length == 1 ? 0 : 4),
-            child: Text(text, style: anek(10, 700, height: 1, color: AppColors.white, tabular: true)),
+            child: Text(text, style: AppText.tiny(color: AppColors.white, tabular: true)),
           ),
         ),
       ),

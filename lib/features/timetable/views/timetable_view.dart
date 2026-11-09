@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/schedule.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -48,7 +49,7 @@ class TimetableView extends GetView<TimetableController> {
                     'n': '$classes',
                   }),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -94,7 +95,7 @@ class _Timeline extends StatelessWidget {
               Positioned(
                 left: 0,
                 top: y(minutesOf(p.start)) - 6,
-                child: Text(clockOf(minutesOf(p.start)), style: context.type.mono.copyWith(fontSize: 11.5)),
+                child: Text(clockOf(minutesOf(p.start)), style: context.type.mono),
               ),
             Positioned(
               left: 44,
@@ -116,9 +117,9 @@ class _Timeline extends StatelessWidget {
               left: -12,
               top: y(now) - 9,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(6)),
-                child: Text(clockOf(now), style: context.type.mono.copyWith(fontSize: 11, color: c.chalk)),
+                child: Text(clockOf(now), style: context.type.mono.copyWith(color: c.chalk)),
               ),
             ),
           ],
@@ -141,15 +142,15 @@ class _Block extends StatelessWidget {
     if (period.kind != PeriodKind.klass) {
       final mins = minutesOf(period.end) - minutesOf(period.start);
       return Hatch(
-        radius: BorderRadius.circular(16),
+        radius: BorderRadius.circular(14),
         background: c.paper2,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
               'timetable.break_line'.trp({'name': subjectName(period.subject), 'n': '$mins'}),
-              style: context.type.cap.copyWith(fontSize: 11),
+              style: context.type.tiny,
             ),
           ),
         ),
@@ -160,8 +161,8 @@ class _Block extends StatelessWidget {
     final hw = controller.homeworkDue.contains(period.subject);
     final teacher = controller.teachers[period.teacherId];
     Widget block = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(16)),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(14)),
       child: Row(
         children: [
           Expanded(
@@ -172,14 +173,14 @@ class _Block extends StatelessWidget {
                 Text(
                   subjectName(period.subject),
                   maxLines: 1,
-                  style: anek(16, 700, width: 105, height: 1.1, color: pigment.on),
+                  style: AppText.t(color: pigment.on, height: 1.1),
                 ),
                 if (teacher != null)
                   Text(
                     period.room.isEmpty ? teacher : '$teacher · ${period.room}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: anek(12.5, 520, height: 1.2, color: pigment.on.withValues(alpha: .88)),
+                    style: AppText.cap(color: pigment.on.withValues(alpha: .88), height: 1.2),
                   ),
               ],
             ),
@@ -216,14 +217,14 @@ class _DayPicker extends StatelessWidget {
     final c = context.app;
     return Glass(
       height: 60,
-      radius: 30,
+      radius: 999,
       child: LayoutBuilder(
         builder: (context, box) {
           final slot = (box.maxWidth - 8) / TimetableController.keys.length;
           return Stack(
             children: [
               AnimatedPositioned(
-                duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 550),
+                duration: context.reduceMotion ? Duration.zero : AppMotion.t4,
                 curve: const Cubic(.3, 1.45, .45, 1),
                 left: 4 + index * slot + (slot - 56).clamp(0, 99) / 2,
                 top: 4,
@@ -232,10 +233,10 @@ class _DayPicker extends StatelessWidget {
                 // A plain pill: glass nested in glass drew unreliably on devices.
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: c.dark ? const Color(0x38FFFFFF) : const Color(0xCCFFFFFF),
-                    borderRadius: BorderRadius.circular(26),
-                    border: Border.all(color: const Color(0x66FFFFFF)),
-                    boxShadow: [BoxShadow(color: c.glassShadow, blurRadius: 10, spreadRadius: -3, offset: const Offset(0, 3))],
+                    color: c.dark ? AppColors.white.withValues(alpha: 0.22) : AppColors.white.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.white.withValues(alpha: 0.4)),
+                    boxShadow: [BoxShadow(color: c.shadow, blurRadius: 10, spreadRadius: -3, offset: const Offset(0, 3))],
                   ),
                 ),
               ),
@@ -249,8 +250,7 @@ class _DayPicker extends StatelessWidget {
                           button: true,
                           selected: i == index,
                           label: DateFormat('EEEE d MMMM').format(controller.dateOf(i)),
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
+                          child: Pressable(
                             onTap: () => controller.dayIndex.value = i,
                             child: SizedBox(
                               height: 60,
@@ -259,16 +259,15 @@ class _DayPicker extends StatelessWidget {
                                 children: [
                                   Text(
                                     'day.${TimetableController.keys[i]}'.tr,
-                                    style: anek(12, 600, height: 1.1, color: c.ink3),
+                                    style: AppText.capB(color: c.ink3, height: 1.1),
                                   ),
                                   Text(
                                     '${controller.dateOf(i).day}',
-                                    style: anek(17, 720, height: 1.1, color: i == index ? c.ink : c.ink2),
+                                    style: AppText.t(color: i == index ? c.ink : c.ink2, height: 1.1),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            ),),
                         ),
                       ),
                   ],

@@ -7,6 +7,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/validators.dart';
 import 'package:gradeon/core/widgets/glass.dart';
@@ -23,7 +24,7 @@ class LoginView extends GetView<LoginController> {
   Widget build(BuildContext context) {
     return Obx(
       () => AnimatedSwitcher(
-        duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 320),
+        duration: context.reduceMotion ? Duration.zero : AppMotion.t3,
         child: controller.useOtp.value
             ? _OtpScreen(key: const ValueKey('otp'), controller: controller)
             : _PasswordScreen(key: const ValueKey('pw'), controller: controller),
@@ -60,14 +61,14 @@ class Bookshelf extends StatelessWidget {
               flex: (b.$2 * 10).round(),
               child: Container(
                 height: height * b.$3,
-                margin: const EdgeInsets.only(right: 3),
+                margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
                   color: AppColors.subject(b.$1).fill,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                 ),
-                foregroundDecoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0x2E000000), width: 5)),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+                foregroundDecoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: AppColors.amoled.chalk.withValues(alpha: 0.18), width: 5)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                 ),
               ),
             ),
@@ -93,7 +94,7 @@ class _PasswordScreen extends StatelessWidget {
         children: [
           Bookshelf(height: 103 + inset.top),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 26, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
             child: Form(
               key: controller.formKey,
               child: AutofillGroup(
@@ -112,7 +113,7 @@ class _PasswordScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
                     Rise(
                       index: 2,
                       child: Field(
@@ -125,7 +126,7 @@ class _PasswordScreen extends StatelessWidget {
                         validator: Validators.emailOrPhone,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Rise(index: 3, child: _PasswordField(controller: controller)),
                     const SizedBox(height: 20),
                     Rise(
@@ -148,7 +149,7 @@ class _PasswordScreen extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const SizedBox(height: 26),
+                                const SizedBox(height: 24),
                                 Rise(
                                   index: 5,
                                   child: Row(
@@ -162,14 +163,14 @@ class _PasswordScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 14),
+                                const SizedBox(height: 12),
                                 Rise(index: 6, child: _DemoCard(controller: controller)),
                               ],
                             ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
                     Center(
-                      child: GestureDetector(
+                      child: Pressable(
                         onTap: () => Get.toNamed<void>(AppRoutes.help),
                         child: Text.rich(
                           TextSpan(
@@ -177,14 +178,13 @@ class _PasswordScreen extends StatelessWidget {
                             children: [
                               TextSpan(
                                 text: 'auth.contact_office'.tr,
-                                style: anek(13, 650, height: 1.3, color: c.mariText),
+                                style: AppText.capB(color: c.mariText),
                               ),
                             ],
                           ),
                           style: context.type.cap,
                           textAlign: TextAlign.center,
-                        ),
-                      ),
+                        ),),
                     ),
                   ],
                 ),
@@ -220,16 +220,15 @@ class _PasswordFieldState extends State<_PasswordField> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 4),
-                child: Text('auth.password'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+                child: Text('auth.password'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
               ),
             ),
-            GestureDetector(
+            Pressable(
               onTap: () => unawaited(widget.controller.requestCode()),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text('auth.use_code'.tr, style: anek(13, 650, height: 1.2, color: c.mariText)),
-              ),
-            ),
+                child: Text('auth.use_code'.tr, style: AppText.capB(color: c.mariText, height: 1.2)),
+              ),),
           ],
         ),
         const SizedBox(height: 8),
@@ -244,13 +243,12 @@ class _PasswordFieldState extends State<_PasswordField> {
           trailing: Semantics(
             button: true,
             label: (_shown ? 'auth.hide_password' : 'auth.show_password').tr,
-            child: GestureDetector(
+            child: Pressable(
               onTap: () => setState(() => _shown = !_shown),
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Icon(_shown ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye, size: 18, color: c.ink3),
-              ),
-            ),
+              ),),
           ),
         ),
       ],
@@ -307,8 +305,8 @@ class _DemoCard extends StatelessWidget {
                 () => Text(
                   'auth.demo_line_${controller.demoRole.value?.name ?? 'pick'}'.tr,
                   maxLines: 2,
-                  style: anek(13, 560, height: 1.3, color: AppColors.white).copyWith(
-                    shadows: const [Shadow(color: Color(0x73000000), blurRadius: 6, offset: Offset(0, 1))],
+                  style: AppText.cap(color: AppColors.white).copyWith(
+                    shadows: [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.45), blurRadius: 6, offset: const Offset(0, 1))],
                   ),
                 ),
               ),
@@ -383,15 +381,15 @@ class _OtpScreenState extends State<_OtpScreen> {
               children: [
                 Bookshelf(height: 73 + inset.top),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 30, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('auth.enter_code'.tr, style: context.type.h1),
                       const SizedBox(height: 8),
                       Text('auth.code_sent'.tr, style: context.type.b.copyWith(color: c.ink2)),
-                      const SizedBox(height: 28),
-                      GestureDetector(
+                      const SizedBox(height: 24),
+                      Pressable(
                         onTap: _focus.requestFocus,
                         child: Semantics(
                           label: 'auth.one_time_code'.tr,
@@ -425,8 +423,7 @@ class _OtpScreenState extends State<_OtpScreen> {
                               ),
                             ],
                           ),
-                        ),
-                      ),
+                        ),),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -438,34 +435,32 @@ class _OtpScreenState extends State<_OtpScreen> {
                                       children: [
                                         TextSpan(
                                           text: '0:${_left.toString().padLeft(2, '0')}',
-                                          style: anek(13, 650, height: 1.3, color: c.ink2),
+                                          style: AppText.capB(color: c.ink2),
                                         ),
                                       ],
                                     ),
                                     style: context.type.cap,
                                   )
-                                : GestureDetector(
+                                : Pressable(
                                     onTap: () {
                                       _startTimer();
                                       unawaited(widget.controller.resend());
                                     },
-                                    child: Text('auth.resend'.tr, style: anek(13, 650, height: 1.3, color: c.mariText)),
-                                  ),
+                                    child: Text('auth.resend'.tr, style: AppText.capB(color: c.mariText)),),
                           ),
-                          GestureDetector(
+                          Pressable(
                             onTap: back,
-                            child: Text('auth.use_password'.tr, style: anek(13, 650, height: 1.3, color: c.mariText)),
-                          ),
+                            child: Text('auth.use_password'.tr, style: AppText.capB(color: c.mariText)),),
                         ],
                       ),
-                      const SizedBox(height: 26),
+                      const SizedBox(height: 24),
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(18)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(PhosphorIconsRegular.shieldCheck, color: AppColors.ok),
+                            Icon(PhosphorIconsRegular.shieldCheck, color: AppColors.ok),
                             const SizedBox(width: 12),
                             Expanded(child: Text('auth.code_note'.tr, style: context.type.s)),
                           ],
@@ -517,17 +512,17 @@ class _Cell extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+      duration: AppMotion.t2,
       width: 48,
       height: 60,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: c.paper,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: active ? c.ink : c.line2, width: active ? 2 : 1),
       ),
       child: char != null
-          ? Text(char!, style: anek(28, 720, width: 115, height: 1, color: c.ink))
+          ? Text(char!, style: AppText.h2(color: c.ink, height: 1))
           : active
           ? const _Caret()
           : null,
@@ -543,7 +538,7 @@ class _Caret extends StatefulWidget {
 }
 
 class _CaretState extends State<_Caret> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat();
+  late final _c = AnimationController(vsync: this, duration: AppMotion.loopFast)..repeat();
 
   @override
   void dispose() {

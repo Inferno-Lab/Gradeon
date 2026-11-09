@@ -38,14 +38,14 @@ class LeaveView extends GetView<LeaveController> {
               child: Glass(
                 width: 200,
                 height: 56,
-                radius: 28,
+                radius: 999,
                 tint: AppColors.mari,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
+                    Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
                     const SizedBox(width: 8),
-                    Text('leave.new'.tr, style: anek(16, 700, height: 1, color: AppColors.mariInk)),
+                    Text('leave.new'.tr, style: AppText.t(color: AppColors.mariInk, height: 1)),
                   ],
                 ),
               ),
@@ -60,7 +60,7 @@ class LeaveView extends GetView<LeaveController> {
                   ? null
                   : [
                       controller.childName!,
-                      'leave.taken'.trp({'n': '${controller.takenThisTerm}'}),
+                      'leave.taken'.trn(controller.takenThisTerm),
                       if (controller.waiting > 0) 'leave.waiting_n'.trp({'n': '${controller.waiting}'}),
                     ].join(' · '),
             ),
@@ -73,12 +73,12 @@ class LeaveView extends GetView<LeaveController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (unexplained != null) ...[
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   Rise(index: 2, child: _Unexplained(date: unexplained)),
                 ],
                 const Rise(index: 3, child: SectionLabel('leave.requests')),
                 if (items.isEmpty)
-                  EmptyState(
+                  const EmptyState(
                     art: EmptyArt.plane,
                     title: 'leave.empty',
                     body: 'leave.empty_body',
@@ -123,9 +123,9 @@ class _DateTile extends StatelessWidget {
     decoration: BoxDecoration(color: background ?? context.app.paper2, borderRadius: BorderRadius.circular(14)),
     child: Column(
       children: [
-        Text('$day', style: anek(22, 760, width: 118, height: 1, color: foreground ?? context.app.ink)),
+        Text('$day', style: AppText.num(color: foreground ?? context.app.ink)),
         const SizedBox(height: 2),
-        Text(caption, style: anek(11, 700, height: 1.2, em: .06, color: captionColor ?? context.app.ink3)),
+        Text(caption, style: AppText.o(color: captionColor ?? context.app.ink3, height: 1.2)),
       ],
     ),
   );
@@ -140,7 +140,7 @@ class _Unexplained extends StatelessWidget {
   Widget build(BuildContext context) => Pressable(
     onTap: () => Get.toNamed<void>(AppRoutes.leaveApply, arguments: {'past': date}),
     child: Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: context.app.badSoft, borderRadius: BorderRadius.circular(24)),
       child: Row(
         children: [
@@ -149,7 +149,7 @@ class _Unexplained extends StatelessWidget {
             caption: DateFormat('MMM').format(date).toUpperCase(),
             background: AppColors.bad,
             foreground: AppColors.white,
-            captionColor: Colors.white.withValues(alpha: .85),
+            captionColor: AppColors.white.withValues(alpha: .85),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -182,7 +182,7 @@ class _Request extends StatelessWidget {
     final c = context.app;
     final days = leaveSpan(item);
     final (stamp, tone) = switch (item.status) {
-      LeaveStatus.pending => ('leave.waiting', c.dark ? const Color(0xFFF6BA45) : AppColors.late),
+      LeaveStatus.pending => ('leave.waiting', c.dark ? AppColors.blackboard.mariText : AppColors.late),
       LeaveStatus.approved => ('leave.approved', AppColors.ok),
       LeaveStatus.rejected => ('leave.declined', c.badText),
     };
@@ -191,7 +191,7 @@ class _Request extends StatelessWidget {
         ? DateFormat('EEE d MMM').format(item.from)
         : '${DateFormat(sameMonth ? 'EEE d' : 'EEE d MMM').format(item.from)} – ${DateFormat('EEE d MMM').format(item.to)}';
     return Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -199,7 +199,7 @@ class _Request extends StatelessWidget {
             day: item.from.day,
             caption: '${DateFormat('MMM').format(item.from).toUpperCase()} · ${days}D',
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +276,6 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
               labels: ['leave.upcoming'.tr, 'leave.past'.tr],
               index: controller.mode.value,
               height: 44,
-              fontSize: 14,
               onChanged: controller.setMode,
               semanticLabel: 'leave.kind'.tr,
             ),
@@ -285,14 +284,14 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
         topPadding: MediaQuery.paddingOf(context).top + 60,
         bottomBar: Glass(
           height: 64,
-          radius: 32,
+          radius: 999,
           padding: const EdgeInsets.only(left: 20, right: 8),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   'leave.goes_to'.tr,
-                  style: anek(13, 600, height: 1.3, color: c.ink3),
+                  style: AppText.capB(color: c.ink3),
                   maxLines: 2,
                 ),
               ),
@@ -334,7 +333,7 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text('leave.reason'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+            child: Text('leave.reason'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
           ),
           Wrap(
             spacing: 8,
@@ -351,7 +350,7 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Field(
             controller: controller.note,
             label: controller.teacherName == null
@@ -376,7 +375,7 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
                         children: [
                           Icon(PhosphorIconsRegular.paperclip, size: 18, color: c.ink2),
                           const SizedBox(width: 8),
-                          Text('leave.attach'.tr, style: anek(13, 620, height: 1.3, color: c.ink2)),
+                          Text('leave.attach'.tr, style: AppText.capB(color: c.ink2)),
                         ],
                       ),
                     ),
@@ -423,11 +422,9 @@ class _RangeCalendar extends StatelessWidget {
         ? Semantics(
             button: true,
             label: label.tr,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            child: Pressable(
               onTap: () => controller.shift(delta),
-              child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 16, color: c.ink)),
-            ),
+              child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 16, color: c.ink)),),
           )
         : const SizedBox(width: 32, height: 32);
     return GestureDetector(
@@ -442,7 +439,7 @@ class _RangeCalendar extends StatelessWidget {
             children: [
               Expanded(child: Text(DateFormat('MMMM y').format(month), style: context.type.t)),
               if (n > 0)
-                Text(n == 1 ? 'leave.one_day'.tr : 'leave.n_days'.trp({'n': '$n'}), style: context.type.cap),
+                Text(n == 1 ? 'leave.one_day'.tr : 'leave.n_days'.trn(n), style: context.type.cap),
               const SizedBox(width: 4),
               arrow(PhosphorIconsRegular.caretLeft, -1, 'leave.prev_month'),
               arrow(PhosphorIconsRegular.caretRight, 1, 'leave.next_month'),
@@ -456,7 +453,7 @@ class _RangeCalendar extends StatelessWidget {
                   child: Text(
                     w,
                     textAlign: TextAlign.center,
-                    style: anek(11, 700, height: 1.4, em: .06, color: c.ink3),
+                    style: AppText.o(color: c.ink3, height: 1.4),
                   ),
                 ),
             ],
@@ -493,8 +490,7 @@ class _RangeCalendar extends StatelessWidget {
       selected: inRange,
       label: DateFormat('d MMMM').format(d),
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: Pressable(
         onTap: off ? null : () => controller.pick(d),
         child: SizedBox(
           height: _cell,
@@ -529,7 +525,7 @@ class _RangeCalendar extends StatelessWidget {
                 opacity: off ? .45 : 1,
                 child: Text(
                   '$day',
-                  style: anek(14.5, 600, height: 1, tabular: true, color: edge ? c.chalk : (off ? c.ink3 : c.ink)),
+                  style: AppText.chip(color: edge ? c.chalk : (off ? c.ink3 : c.ink), height: 1, tabular: true),
                 ),
               ),
             ],

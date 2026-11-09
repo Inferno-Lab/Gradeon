@@ -32,15 +32,15 @@ class WelcomeOverlay extends StatefulWidget {
 class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStateMixin {
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2000),
+    duration: AppMotion.introStep,
   );
   late final AnimationController _exit = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: AppMotion.t4,
   );
   late final AnimationController _breathe = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2400),
+    duration: AppMotion.intro,
   );
 
   @override
@@ -92,7 +92,7 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
       builder: (context, _) {
         final t = still ? 1.0 : _enter.value;
         final out = still ? 0.0 : _exit.value;
-        final breath = still || !_breathe.isAnimating ? 0.0 : Curves.easeInOut.transform(_breathe.value);
+        final breath = still || !_breathe.isAnimating ? 0.0 : kEase.transform(_breathe.value);
 
         final glow = _beat(t, 0, .24);
         final stack = _beat(t, .05, .38, kSpring);
@@ -119,7 +119,7 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
                       constraints: BoxConstraints(minHeight: box.maxHeight),
                       child: IntrinsicHeight(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+                          padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
                           child: Column(
                             children: [
                               const Spacer(flex: 2),
@@ -172,7 +172,7 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 24),
                               Opacity(
                                 opacity: hello,
                                 child: Transform.translate(
@@ -196,7 +196,7 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 24),
                               Opacity(
                                 opacity: chips,
                                 child: Transform.translate(
@@ -253,7 +253,7 @@ class _TipChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     return EduCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
@@ -261,12 +261,12 @@ class _TipChip extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: highlight ? AppColors.mari : c.paper2,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 20, color: highlight ? AppColors.mariInk : c.ink),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: context.type.t.copyWith(fontSize: 15))),
+          Expanded(child: Text(label, style: context.type.ts)),
         ],
       ),
     );
@@ -309,11 +309,11 @@ class _Book extends StatelessWidget {
                 color: AppColors.subject(subject).fill,
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(6),
-                  right: Radius.circular(16),
+                  right: Radius.circular(14),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x6610201B).withValues(alpha: .25 + .4 * r),
+                    color: AppColors.light.ink.withValues(alpha: 0.4).withValues(alpha: .25 + .4 * r),
                     blurRadius: 18 + 14 * r,
                     spreadRadius: -12,
                     offset: Offset(0, 8 + 8 * r),

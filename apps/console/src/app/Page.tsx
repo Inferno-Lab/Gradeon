@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, PageScope, Presence, ToastSlot } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps } from '@gradeon/web-ui';
 import { url } from './base';
 
 interface PageProps {
@@ -8,7 +8,7 @@ interface PageProps {
   actions?: ReactNode;
   children: ReactNode;
   overlays?: ReactNode;
-  toast?: { text: string; tone: 'ok' | 'bad' } | null;
+  toast?: ToastProps | null;
   /** A query that failed: shows the error card instead of the page. */
   error?: { message: string; retry: () => void } | null;
   loading?: boolean;
@@ -28,14 +28,14 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
             <b style={{ color: 'var(--ink)' }}>{title}</b>
           </div>
         )}
-        <header className="hd rise" style={{ flexWrap: 'wrap', gap: 14 }}>
+        <header className="hd rise" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div style={{ minWidth: 0 }}><h1>{title}</h1>{sub != null && <p>{sub}</p>}</div>
           <span className="grow"></span>
           {actions}
         </header>
         {error ? (
           <div>
-            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
+            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
           </div>
         ) : loading ? <div className="skc" style={{ height: 320, borderRadius: 28 }} /> : children}
       </main>
@@ -48,7 +48,7 @@ export function Card({ title, chip, children, span, style, id }: { title?: strin
   return (
     <div className={`card ${span ?? ''} rise`} style={style}>
       {/* A card with no padding (a list that runs to its edges) still keeps its heading off the edge. */}
-      {title && <div className="ch" style={style?.padding === 0 ? { padding: '20px 18px 0' } : undefined}><h2 id={id}>{title}</h2>{chip}</div>}
+      {title && <div className="ch" style={style?.padding === 0 ? { padding: '20px 20px 0' } : undefined}><h2 id={id}>{title}</h2>{chip}</div>}
       <div style={{ marginTop: title ? 12 : 0 }}>{children}</div>
     </div>
   );
@@ -70,4 +70,4 @@ export function Tiles({ items }: { items: { label: string; value: ReactNode; not
 }
 
 /** Messages that vanish after a few seconds, for the result of a button press. */
-export { useToast } from './useToast';
+export { useToast } from '@gradeon/web-ui';

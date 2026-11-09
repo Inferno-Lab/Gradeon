@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/widgets/glass.dart';
@@ -81,7 +82,7 @@ class ReceiptView extends StatelessWidget {
                   child: Text(
                     'fees.payment_done'.tr,
                     textAlign: TextAlign.center,
-                    style: anek(17, 700, height: 1, color: AppColors.white),
+                    style: AppText.t(color: AppColors.white, height: 1),
                   ),
                 ),
                 GlassIconButton(
@@ -100,7 +101,7 @@ class ReceiptView extends StatelessWidget {
               children: [
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: context.reduceMotion ? 1 : 0, end: 1),
-                  duration: const Duration(milliseconds: 900),
+                  duration: AppMotion.celebrate,
                   curve: const Cubic(.2, .8, .2, 1),
                   builder: (context, t, child) => ClipRect(
                     child: Align(
@@ -152,14 +153,14 @@ class _Slip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        boxShadow: [BoxShadow(color: Color(0x8010201B), blurRadius: 60, spreadRadius: -30, offset: Offset(0, 30))],
+      decoration: BoxDecoration(
+        boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.5), blurRadius: 60, spreadRadius: -30, offset: const Offset(0, 30))],
       ),
       child: ClipPath(
         clipper: const _PerforatedClipper(),
         child: Container(
           color: c.paper,
-          padding: const EdgeInsets.fromLTRB(22, 36, 22, 34),
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 32),
           child: Stack(
             children: [
               Column(
@@ -168,18 +169,18 @@ class _Slip extends StatelessWidget {
                   Overline(AppConfig.schoolName),
                   const SizedBox(height: 4),
                   Text('fees.school_address'.tr, style: context.type.cap),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
                   Text(Formatters.inr(receipt.amount), style: context.type.dl),
                   const SizedBox(height: 6),
                   Text(receipt.title, style: context.type.t),
-                  const Padding(padding: EdgeInsets.only(top: 18, bottom: 8), child: DashedLine()),
+                  const Padding(padding: EdgeInsets.only(top: 20, bottom: 8), child: DashedLine()),
                   for (final r in rows)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(r.$1, style: anek(14, 450, height: 1.3, color: c.ink3)),
+                          Text(r.$1, style: AppText.s(color: c.ink3, height: 1.3)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -187,7 +188,7 @@ class _Slip extends StatelessWidget {
                               textAlign: TextAlign.right,
                               style: r.$3
                                   ? context.type.mono.copyWith(color: c.ink)
-                                  : anek(14, 600, height: 1.3, color: c.ink),
+                                  : AppText.chip(color: c.ink, height: 1.3),
                             ),
                           ),
                         ],
@@ -202,7 +203,7 @@ class _Slip extends StatelessWidget {
                 top: 66,
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: context.reduceMotion ? 1 : 0, end: 1),
-                  duration: const Duration(milliseconds: 1600),
+                  duration: AppMotion.loop,
                   curve: const Interval(.6, 1, curve: Cubic(.3, 1.45, .45, 1)),
                   builder: (context, t, child) => Opacity(
                     opacity: (t * .85).clamp(0, .85),
@@ -218,7 +219,7 @@ class _Slip extends StatelessWidget {
                       ),
                       child: Text(
                         'fees.paid_stamp'.tr,
-                        style: anek(26, 800, width: 125, height: 1, em: .12, color: AppColors.ok),
+                        style: AppText.h2(color: AppColors.ok, height: 1),
                       ),
                     ),
                   ),

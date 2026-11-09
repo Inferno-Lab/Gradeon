@@ -43,7 +43,7 @@ export function HomeworkPage() {
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">On time</span><div className="big" style={{ marginTop: 8 }}>{pct(onTime)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>handed in by the due day</div></div>
           <div className="tile t-l s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Homework set</span><div className="big" style={{ marginTop: 8 }}>{rows.length}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{rows.filter((r) => r.dueOn >= today).length} still open</div></div>
           <div className="card tbl s12 rise" style={{ '--d': '.14s', padding: 0 } as React.CSSProperties}>
-            <div className="ch" style={{ padding: '22px 22px 14px' }}><h2>All homework</h2><span className="chip v">{rows.length}</span></div>
+            <div className="ch" style={{ padding: '24px 24px 16px' }}><h2>All homework</h2><span className="chip v">{rows.length}</span></div>
             <div className="scroll-x lscroll" data-fill="">
               <div className="hwlw" style={{ minWidth: 640 }}>
                 {rows.map((r) => <Row key={r.id} r={r} today={today} onOpen={() => setOpen(r.id)} />)}
@@ -63,11 +63,11 @@ function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () =
     <button className="rowbtn" onClick={onOpen} aria-label={`Open ${r.title}, ${r.className}`}>
       <div className="grd rw hwl" style={{ '--cols': 'minmax(0,1.7fr) 70px 90px minmax(120px,1fr) 90px' } as React.CSSProperties}>
         <span style={{ minWidth: 0 }}>
-          <b data-tip={r.title} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14.5px/1.25 var(--fb)' }}>{r.title}</b>
+          <b data-tip={r.title} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.title}</b>
           <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.subjectName} · set {dateLabel(r.assignedOn)}</small>
         </span>
         <span className="chip">{r.className}</span>
-        <span className={`chip ${overdue ? 'r' : ''}`}>Due {dateLabel(r.dueOn)}</span>
+        <span className={`chip ${overdue ? 'c' : ''}`}>Due {dateLabel(r.dueOn)}</span>
         <span className="us hs" style={{ gap: 6 }}><div className="bar" style={{ height: 14 }}><i style={{ width: `${p}%` }}></i></div></span>
         <b className="num" style={{ font: '700 13px var(--fb)', textAlign: 'right' }}>{r.handedIn} / {r.total}</b>
       </div>
@@ -143,10 +143,10 @@ function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: stri
   const nothing = !dirty || save.isPending;
   return (
     <Dialog title={d ? d.title : 'Homework'} tag={d ? { text: `${d.subjectName} · Class ${d.className}`, tone: 'v' } : undefined} onClose={onClose} width={720} shake={shake.cls}>
-      {!d ? <div className="skc" style={{ height: 240, borderRadius: 20 }} /> : (
+      {!d ? <div className="skc" style={{ height: 240, borderRadius: 18 }} /> : (
         <>
-          {d.description && <p style={{ margin: '0 0 6px', font: '500 14.5px/1.5 var(--fb)', color: 'var(--ink2)' }}>{d.description}</p>}
-          <div className="tgrow" style={{ margin: '8px 0 14px' }}>
+          {d.description && <p style={{ margin: '0 0 6px', font: '500 14px/1.5 var(--fb)', color: 'var(--ink2)' }}>{d.description}</p>}
+          <div className="tgrow" style={{ margin: '8px 0 12px' }}>
             <span className="chip">Set {dateLabel(d.assignedOn)}</span><span className="chip a">Due {dateLabel(d.dueOn)}</span><span className="chip">Out of {d.maxMarks}</span><span className="chip g">{d.handedIn} of {d.total} handed in</span>
           </div>
           <div className="lscroll" style={{ maxHeight: 'min(48dvh,420px)', border: '1px solid var(--line)', borderRadius: 18 }}>
@@ -163,7 +163,7 @@ function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: stri
             })}
           </div>
           {err && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{err}</div>}
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             {canWrite ? (confirm
               ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this homework?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
               : <button className="btn dng" onClick={() => setConfirm(true)}>Remove homework</button>) : <span />}

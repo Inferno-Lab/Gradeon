@@ -70,7 +70,7 @@ class _DesignSystemViewState extends State<DesignSystemView> {
         Text('dev.note'.tr, style: context.type.cap),
         const SizedBox(height: 16),
         ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           child: SizedBox(
             height: 150,
             child: Stack(
@@ -102,22 +102,22 @@ class _DesignSystemViewState extends State<DesignSystemView> {
                     height: 44,
                     onPigment: true,
                     child: Center(
-                      child: Text('dev.sheet_glass'.tr, style: anek(15, 680, height: 1, color: AppColors.white)),
+                      child: Text('dev.sheet_glass'.tr, style: AppText.ts(color: AppColors.white, height: 1)),
                     ),
                   ),
                 ),
                 const Positioned(
                   left: 20,
                   top: 80,
-                  child: Glass(width: 120, height: 52, radius: 26, onPigment: true),
+                  child: Glass(width: 120, height: 52, radius: 999, onPigment: true),
                 ),
                 Positioned(
                   left: 150,
                   top: 96,
                   child: Text(
                     'dev.lens_glass'.tr,
-                    style: anek(13, 650, height: 1.2, color: AppColors.white).copyWith(
-                      shadows: const [Shadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 1))],
+                    style: AppText.capB(color: AppColors.white, height: 1.2).copyWith(
+                      shadows: [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 1))],
                     ),
                   ),
                 ),
@@ -125,7 +125,7 @@ class _DesignSystemViewState extends State<DesignSystemView> {
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         EduCard(
           child: Column(
             children: [
@@ -192,14 +192,14 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     child: Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title.tr, style: context.type.t.copyWith(fontSize: 15)),
+              Text(title.tr, style: context.type.ts),
               Text(hint.tr, style: context.type.cap),
             ],
           ),

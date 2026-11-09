@@ -57,8 +57,8 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   const [oldDues, setOldDues] = useState('');
   const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (blob, k) => save(blob, `${k}-template.xlsx`), onError: fail });
 
-  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
-  if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
+  if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const ready = v.readiness.filter((r) => r.done).length;
   const pickKind = (k: string) => { setKindKey(k); change(null); };
   return (
@@ -68,7 +68,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
         <div className="help">Worked out from the school’s own data. Staff and family invites are sent from the school’s admin, on Moving in.</div>
         <div style={{ marginTop: 10 }}>
           {v.readiness.map((r) => (
-            <div key={r.key} className="grd rw" style={{ '--cols': '28px minmax(0,1fr) minmax(0,auto)', height: 'auto', padding: '9px 0' } as React.CSSProperties}>
+            <div key={r.key} className="grd rw" style={{ '--cols': '28px minmax(0,1fr) minmax(0,auto)', height: 'auto', padding: '10px 0' } as React.CSSProperties}>
               <span className={`st ${r.done ? 'g' : 'a'}`} aria-label={r.done ? 'Done' : 'Not yet'}><i></i></span>
               <b style={{ font: '700 14px var(--fb)' }}>{r.label}</b>
               <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -133,7 +133,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
         <div className="card s12 rise">
           <div className="ch"><h2>Test school and export</h2></div>
           {v.students === 0 && (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ width: 200 }}><Field label="Students (10 to 3,000)" value={sample} onChange={(x) => setSample(x.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" /></div>
               <button className="btn" disabled={load.isPending || Number(sample) < 10 || Number(sample) > 3000} onClick={() => load.mutate()}>{load.isPending ? 'Importing…' : 'Load a realistic test school'}</button>
             </div>
@@ -191,7 +191,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
       </div>
       {error && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{error}</div>}
       {p && src.kind === 'file' && (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 12 }}>
           <div className="lbl" style={{ marginBottom: 6 }}>Columns in the file</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
             {p.headers.map((h) => (
@@ -204,9 +204,9 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
       )}
       {p && (
         <>
-          <div className="tgrow" style={{ gap: 6, marginTop: 14 }}>
+          <div className="tgrow" style={{ gap: 6, marginTop: 12 }}>
             <span className="chip g">{p.counts.create} to add</span><span className="chip">{p.counts.update} to update</span>
-            <span className={`chip ${p.counts.skip ? 'r' : ''}`}>{p.counts.skip} with problems</span>
+            <span className={`chip ${p.counts.skip ? 'c' : ''}`}>{p.counts.skip} with problems</span>
             {p.totals.map((t) => <span key={t.label} className="chip">{t.label}: {t.value}</span>)}
           </div>
           {rows.length > 0 && (
@@ -221,10 +221,10 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
                   <div className="grd th" style={grid}><span>Line</span>{kind.columns.map((c) => <span key={c.key}>{c.label}</span>)}<span>Problem</span></div>
                   {shown.map((r) => (
                     <div key={r.i} className="grd rw" style={{ ...grid, height: 'auto', padding: '6px 0', gap: 6 }}>
-                      <span style={{ font: '700 12.5px var(--fb)', color: 'var(--ink3)' }}>{r.line}</span>
+                      <span style={{ font: '700 12px var(--fb)', color: 'var(--ink3)' }}>{r.line}</span>
                       {kind.columns.map((c) => <input key={c.key} className={`hws ${r.errors.length && c.required && !r.values[c.key] ? 'bad' : ''}`} style={{ width: '100%', textAlign: 'left' }} aria-label={`Line ${r.line}, ${c.label}`} placeholder={c.example} defaultValue={r.values[c.key] ?? ''}
                         onBlur={(e) => { if (e.target.value !== (r.values[c.key] ?? '')) edit(r.i, c.key, e.target.value); }} />)}
-                      <span style={{ font: '600 12.5px var(--fb)', color: r.errors.length ? 'var(--r)' : 'var(--g)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
+                      <span style={{ font: '600 12px var(--fb)', color: r.errors.length ? 'var(--c)' : 'var(--g)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
                     </div>
                   ))}
                 </div>

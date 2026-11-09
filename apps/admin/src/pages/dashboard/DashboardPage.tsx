@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
-import { Dialog, EmptyCard, IC, PageScope, TONES, rollDigits, tintFor, useIsPhone } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, IC, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { DashboardView } from './dashboard.view';
@@ -46,13 +46,11 @@ function DashboardDesktop() {
   const [widgets, setWidgets] = useState(false);
   const [hidden, setHidden] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(`gradeon.dash.hidden.${app.user.id}`) ?? '[]') as string[]; } catch { return []; } });
   const setHide = (id: string, off: boolean) => setHidden((h) => { const n = off ? [...new Set([...h, id])] : h.filter((x) => x !== id); try { localStorage.setItem(`gradeon.dash.hidden.${app.user.id}`, JSON.stringify(n)); } catch { /* private window: the choice lasts until the page closes */ } return n; });
-  const [toast, setToast] = useState<{ text: string; id: string } | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { toast, say, clear } = useToast();
   const days = RANGES[range]![1];
 
   const q = useQuery({ queryKey: ['dashboard', days], queryFn: () => app.api.dashboard(days), refetchInterval: 20_000, placeholderData: keepPreviousData });
 
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const decide = useMutation({
     mutationFn: async (a: { n: ApprovalRow; decision: 'approve' | 'undo' }) => {
@@ -96,9 +94,10 @@ function DashboardDesktop() {
         act: () => {
           setDone((s) => ({ ...s, [n.id]: true }));
           decide.mutate({ n, decision: 'approve' });
-          clearTimeout(toastTimer.current);
-          setToast({ text: n.doneText, id: n.id });
-          toastTimer.current = setTimeout(() => setToast(null), 5000);
+          say(n.doneText, 'ok', n.id === 'att_reminder' ? undefined : {
+            label: 'Undo',
+            onPress: () => { setDone((s) => ({ ...s, [n.id]: false })); clear(); if (n.kind !== 'attendance') decide.mutate({ n, decision: 'undo' }); },
+          });
         },
       };
     });
@@ -115,12 +114,12 @@ function DashboardDesktop() {
           <div className="stack">
             {WIDGETS.filter((w) => has(w[3])).map(([id, name, blurb]) => (
               <div className="tgl" key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
-                <div style={{ flex: 1 }}><b style={{ font: '700 14.5px var(--fb)' }}>{name}</b><div className="help">{blurb}</div></div>
+                <div style={{ flex: 1 }}><b style={{ font: '700 14px var(--fb)' }}>{name}</b><div className="help">{blurb}</div></div>
                 <button className={`sw ${hidden.includes(id) ? '' : 'on'}`} role="switch" aria-checked={!hidden.includes(id)} aria-label={name} onClick={() => setHide(id, !hidden.includes(id))}></button>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="btn pri" onClick={() => setWidgets(false)}>Done</button></div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn pri" onClick={() => setWidgets(false)}>Done</button></div>
         </Dialog>
       ), me: { name: app.user.name, initials: app.user.initials, role: app.user.roleNames[0] ?? 'Staff', ...me }, schoolName: chrome.shell?.school.shortName ?? d.schoolName,
       greeting: greeting(), subtitle: `${d.term.name} · ${d.subtitle.marked} of ${d.subtitle.classes} classes have marked attendance`,
@@ -142,14 +141,7 @@ function DashboardDesktop() {
       chartEmpty: values.every((x) => x === 0),
       chartEmptyText: kind === 'attendance' ? 'Attendance appears here after the first roll call is marked.' : kind === 'fees' ? 'Payments appear here as fees are collected.' : 'Homework appears here once teachers set it and students hand it in.',
       needs, leftLabel: left ? `${left} open` : 'Clear', allDone: left === 0,
-      toastOn: !!toast, toastText: toast?.text ?? '', canUndo: !!toast && toast.id !== 'att_reminder',
-      undo: () => {
-        if (!toast) return;
-        const n = d.needsYou.find((x) => x.id === toast.id);
-        setDone((s) => ({ ...s, [toast.id]: false }));
-        setToast(null);
-        if (n && n.kind !== 'attendance') decide.mutate({ n, decision: 'undo' });
-      },
+      toast,
       rolls: d.classRolls.map((r) => ({
         n: r.name, pct: r.unmarked === r.size ? 'Not yet' : `${r.pct}%`,
         segs: [{ k: 'p', n: r.present }, { k: 'l', n: r.late }, { k: 'a', n: r.absent }, { k: 'u', n: r.unmarked }].filter((s) => s.n > 0),
@@ -165,7 +157,7 @@ function DashboardDesktop() {
     return (
       <PageScope page="dashboard">
         <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
-          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );

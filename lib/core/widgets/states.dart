@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/services/connectivity_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -41,7 +42,7 @@ class ViewStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+      duration: context.reduceMotion ? Duration.zero : AppMotion.t2,
       child: switch (state) {
         ViewState.loading => KeyedSubtree(key: const ValueKey('loading'), child: skeleton ?? const SkeletonList()),
         ViewState.empty => EmptyState(
@@ -93,7 +94,7 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 28),
+      padding: const EdgeInsets.symmetric(vertical: 32),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 340),
@@ -108,8 +109,8 @@ class EmptyState extends StatelessWidget {
               if (hint != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(14)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -160,8 +161,8 @@ class ClosedNotebooks extends StatelessWidget {
           height: 22,
           decoration: BoxDecoration(
             color: AppColors.subject(subject).fill,
-            borderRadius: BorderRadius.circular(4),
-            boxShadow: const [BoxShadow(color: Color(0x2E000000), offset: Offset(0, -4), spreadRadius: -2)],
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: [BoxShadow(color: AppColors.amoled.chalk.withValues(alpha: 0.18), offset: const Offset(0, -4), spreadRadius: -2)],
           ),
         ),
       ),
@@ -195,7 +196,7 @@ class ErrorState extends StatelessWidget {
           Text('errors.didnt_load'.tr, style: context.type.h2),
           const SizedBox(height: 8),
           Text((messageKey ?? 'errors.generic').tr, style: context.type.b.copyWith(color: context.app.ink2)),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Btn('common.retry', kind: BtnKind.ink, icon: PhosphorIconsRegular.arrowClockwise, onPressed: onRetry),
         ],
       ),
@@ -220,7 +221,7 @@ class SkeletonList extends StatelessWidget {
           const SkeletonBox(width: 240, height: 30, radius: 10),
           const SizedBox(height: 20),
           EduCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Column(
               children: [
                 for (var i = 0; i < rows; i++)
@@ -228,7 +229,7 @@ class SkeletonList extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(
                       children: [
-                        const SkeletonBox(width: 42, height: 52, radius: 8),
+                        const SkeletonBox(width: 42, height: 52, radius: 6),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -285,7 +286,7 @@ class _SweepState extends State<Sweep> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+    _c = AnimationController(vsync: this, duration: AppMotion.loop);
   }
 
   @override
@@ -307,12 +308,12 @@ class _SweepState extends State<Sweep> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (context.reduceMotion) return widget.child;
-    final glint = context.app.dark ? const Color(0x22FFFFFF) : const Color(0xD9FFFFFF);
+    final glint = context.app.dark ? AppColors.white.withValues(alpha: 0.13) : AppColors.white.withValues(alpha: 0.85);
     return AnimatedBuilder(
       animation: _c,
       child: widget.child,
       builder: (context, child) {
-        final t = Curves.easeInOutCubic.transform(_c.value);
+        final t = kEase.transform(_c.value);
         return ShaderMask(
           blendMode: BlendMode.srcATop,
           shaderCallback: (rect) => LinearGradient(
@@ -338,17 +339,17 @@ class OfflineCapsule extends StatelessWidget {
     return Obx(() {
       if (Get.find<ConnectivityService>().isOnline.value) return const SizedBox.shrink();
       return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 16),
         child: Center(
           child: Glass(
             height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(PhosphorIconsRegular.wifiSlash, size: 16, color: context.app.ink),
                 const SizedBox(width: 8),
-                Text('common.offline'.tr, style: anek(13, 650, height: 1, color: context.app.ink)),
+                Text('common.offline'.tr, style: AppText.capB(color: context.app.ink, height: 1)),
               ],
             ),
           ),

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { closeModules, contrastRatio, dependents } from '@gradeon/config-engine';
-import { istToday, type SettingsResponse } from '@gradeon/contracts';
-import { BRAND_SWATCHES, Dialog, EmptyCard, ErrorLine, PageScope, useShake } from '@gradeon/web-ui';
+import { closeModules, dependents } from '@gradeon/config-engine';
+import { DEFAULT_BRAND, contrast, istToday, readableOn, type SettingsResponse } from '@gradeon/contracts';
+import { Dialog, EmptyCard, ErrorLine, PageScope, useShake, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { SettingsView } from './settings.view';
@@ -31,7 +31,7 @@ function draftOf(doc: SettingsResponse): Draft {
   const entitled = doc.modules.filter((m) => m.entitled).map((m) => m.key);
   const set = Array.isArray(v['modules.enabled']) && (v['modules.enabled'] as string[]).length ? (v['modules.enabled'] as string[]) : entitled;
   return {
-    name: str(v['school.name']), logo: str(v['brand.logoText']) || str(v['school.shortName']).slice(0, 1).toUpperCase(), about: str(v['school.tagline']), brand: str(v['brand.color'], '#6A4CF5'),
+    name: str(v['school.name']), logo: str(v['brand.logoText']) || str(v['school.shortName']).slice(0, 1).toUpperCase(), about: str(v['school.tagline']), brand: str(v['brand.color'], DEFAULT_BRAND),
     notify: bool(v['attendance.notifyParents'], true), notice: v['approvals.notice'] !== 'off', twoFactor: bool(v['security.twoFactor'], true), waiver: str(v['approvals.feeWaiver'], 'principal'),
     modules: closeModules(set).sort(),
   };
@@ -53,7 +53,7 @@ export function SettingsPage() {
   const [tab, setTab] = useState(0);
   const [apOpen, setApOpen] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
-  const [toast, setToast] = useState('');
+  const { toast, say } = useToast();
   const [copied, setCopied] = useState('');
   const [used, setUsed] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -80,7 +80,7 @@ export function SettingsPage() {
     return (
       <PageScope page="settings">
         <main className="mn"><header className="hd"><div><h1>Settings</h1></div></header>
-          <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Settings" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(doc.error as Error).message} actions={<button className="btn pri" onClick={() => void doc.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -100,9 +100,9 @@ export function SettingsPage() {
   const lock = (k: string) => !canWrite || data.locked.includes(k);
   const set = (p: Partial<Draft>) => { setDraft({ ...draft, ...p }); setErr({}); };
   const shortName = str(data.values['school.shortName'], draft.name);
-  const swatches = BRAND_SWATCHES.some((s) => s[1].toLowerCase() === draft.brand.toLowerCase()) ? BRAND_SWATCHES : [['Current', draft.brand] as [string, string], ...BRAND_SWATCHES];
-  const cur = swatches.find((s) => s[1].toLowerCase() === draft.brand.toLowerCase()) ?? swatches[0]!;
-  const ratio = contrastRatio(draft.brand, '#FFFFFF');
+  const swatches: [string, string][] = [[draft.brand.toUpperCase(), draft.brand]];
+  const cur = swatches[0]!;
+  const ratio = contrast(draft.brand, readableOn(draft.brand));
   const copy = (key: string, text: string) => { void navigator.clipboard?.writeText(text).catch(() => undefined); setCopied(key); later(() => setCopied(''), 1800); };
   const address = `${window.location.host}${app.base}`;
   const toggle = (key: 'notify' | 'notice' | 'twoFactor', n: string, d: string, setting: string) => ({
@@ -114,7 +114,6 @@ export function SettingsPage() {
     smsLeft: Math.max(0, (usage?.smsLimit ?? 0) - (usage?.smsUsed ?? 0)).toLocaleString('en-IN'),
   };
 
-  const say = (text: string) => { setToast(text); later(() => setToast(''), 3600); };
   const extra: ReactNode = tab === 1 ? <ModulesPanel doc={data} draft={draft} locked={lock('modules.enabled')} onChange={(m) => set({ modules: m })} />
     : tab === 2 ? <AppLayoutPanel doc={data} say={say} />
       : tab === 3 ? <RolesPanel say={say} />
@@ -129,7 +128,7 @@ export function SettingsPage() {
     tabs: TABS.map((t, i) => ({ n: t[0], d: t[1], nw: !!t[2], on: i === tab ? 'on' : '', cur: i === tab ? 'page' : 'false', pick: () => setTab(i) })),
     name: draft.name, onName: (e: React.ChangeEvent<HTMLInputElement>) => set({ name: e.target.value }), logoText: draft.logo, onLogo: (e: React.ChangeEvent<HTMLInputElement>) => set({ logo: e.target.value.slice(0, 2) }),
     roName: lock('school.name'), roLogo: lock('brand.logoText'),
-    brandC: draft.brand, brandN: cur[0], ratio: ratio.toFixed(1), aa: ratio >= 4.5,
+    brandC: draft.brand, brandStyle: { background: draft.brand, color: readableOn(draft.brand), '--onBrand': readableOn(draft.brand) } as React.CSSProperties, brandN: cur[0], ratio: ratio.toFixed(1), aa: ratio >= 4.5,
     swatches: swatches.map((w) => ({ n: w[0], c: w[1], on: w[1].toLowerCase() === draft.brand.toLowerCase() ? 'on' : '', sel: w[1].toLowerCase() === draft.brand.toLowerCase() ? 'true' : 'false', locked: lock('brand.color'), pick: () => set({ brand: w[1] }) })),
     address, copiedAddr: copied === 'addr' ? 'done' : '', copyAddress: () => copy('addr', address),
     schoolCode: app.slug.toUpperCase(), copied: copied === 'code' ? 'done' : '', copyLabel: copied === 'code' ? 'Copied' : 'Copy', copyIc: copied === 'code' ? 'M5 12.5l4.5 4.5L19 7.5' : 'M9 9h10v10H9zM5 15V5h10', copy: () => copy('code', app.slug.toUpperCase()),
@@ -144,7 +143,7 @@ export function SettingsPage() {
     toggleAp: (e: React.MouseEvent) => { e.stopPropagation(); if (!lock('approvals.feeWaiver')) setApOpen((o) => !o); },
     aps: WAIVERS.map((w, i) => ({ n: w[1], on: w[0] === draft.waiver, d: 50 + i * 45, pick: () => { set({ waiver: w[0] }); setApOpen(false); } })),
     ticks: Array.from({ length: TICKS }, (_, k) => ({ c: k < (used / 100) * TICKS ? 'on' : '' })),
-    ask: () => setAsking(true), toast: !!toast, toastText: toast,
+    ask: () => setAsking(true), toast,
     askDialog: asking ? <AskDialog area={TABS[tab]![0]} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Gradeon. You will see the answer here.'); }} /> : null,
   };
   return <SettingsView v={v} />;
@@ -182,8 +181,8 @@ function ModulesPanel({ doc, draft, locked, onChange }: { doc: SettingsResponse;
 function AuditPanel() {
   const { api } = useApp();
   const q = useQuery({ queryKey: ['settings-audit'], queryFn: api.settings.audit });
-  if (q.isLoading) return <div className="skc" style={{ height: 260, borderRadius: 26 }} />;
-  if (q.isError) return <EmptyCard error title="Audit log" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="padlock" heading="You can’t see this log" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 260, borderRadius: 24 }} />;
+  if (q.isError) return <EmptyCard error title="Audit log" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see this log" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const rows = q.data ?? [];
   if (!rows.length) return <EmptyCard title="Audit log" chip={{ text: '0 entries', tone: 'v' }} scene="checklist" heading="Nothing has been changed yet" body="Every change to settings, fees and approvals is written here, with who made it and when." />;
   return (
@@ -220,7 +219,7 @@ function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => voi
         <label htmlFor="ask-msg">What would you like changed?</label>
         <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto' }}>
           <textarea id="ask-msg" value={message} onChange={(e) => { setMessage(e.target.value); setErr(''); }} maxLength={1000} aria-invalid={!!err} placeholder="For example: put Fees in the app’s bottom tabs."
-            style={{ width: '100%', minHeight: 110, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14.5px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
         </div>
         {err && <ErrorLine>{err}</ErrorLine>}
       </div>
@@ -229,12 +228,12 @@ function AskDialog({ area, onClose, onDone }: { area: string; onClose: () => voi
         <button className="btn pri" disabled={send.isPending} onClick={() => { if (message.trim().length < 5) { setErr('Say what you would like changed.'); shake.hit(); } else send.mutate(); }}>{send.isPending ? 'Sending…' : 'Send to Gradeon'}</button>
       </div>
       {(mine.data ?? []).length > 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 16 }}>
           <div className="lbl" style={{ marginBottom: 6 }}>Your requests</div>
           {(mine.data ?? []).slice(0, 5).map((r) => (
             <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>
               <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{r.area}</b> · {r.message}{r.answer && <small style={{ display: 'block', color: 'var(--ink3)' }}>Gradeon: {r.answer}</small>}</span>
-              <b><span className={`chip ${r.status === 'open' ? 'a' : r.status === 'done' ? 'g' : 'r'}`}>{r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Done' : 'Declined'}</span></b>
+              <b><span className={`chip ${r.status === 'open' ? 'a' : r.status === 'done' ? 'g' : 'c'}`}>{r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Done' : 'Declined'}</span></b>
             </div>
           ))}
         </div>

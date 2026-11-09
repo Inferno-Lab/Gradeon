@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
-import { CodeRequest, LoginRequest, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, LoginRequest, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { SettingsService } from '../school/support.js';
@@ -112,8 +112,9 @@ export class MeController {
   async brand(@Tenant() t: TenantCtx): Promise<SchoolBrand> {
     const cfg = await this.settings.effective(t);
     const s = (k: string) => (typeof cfg.settings[k] === 'string' ? (cfg.settings[k] as string) : '');
+    const theme = (cfg.settings['theme.colors'] ?? {}) as SchoolBrand['theme'];
     return {
-      ...cfg.school, demoMode: cfg.settings['demo.mode'] === true,
+      ...cfg.school, demoMode: cfg.settings['demo.mode'] === true, theme, palette: { light: resolveApp(theme, 'light'), dark: resolveApp(theme, 'dark'), amoled: resolveApp(theme, 'amoled') },
       privacy: { notice: s('privacy.notice'), officerName: s('privacy.officerName'), officerEmail: s('privacy.officerEmail'), officerPhone: s('privacy.officerPhone') },
     };
   }

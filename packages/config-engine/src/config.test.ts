@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeFeatures, activeModules, changeEntitlement, closeModules, contrastRatio, dependents, resolveConfig, validateSettingsChanges, DEFAULT_PLANS, MODULES } from './index.js';
+import { activeFeatures, activeModules, changeEntitlement, closeModules, dependents, resolveConfig, validateSettingsChanges, DEFAULT_PLANS, MODULES } from './index.js';
 
 const entitlement = (modules: string[], locks: string[] = [], overrides = {}) => ({
   plan: 'standard', modules, limits: { students: 100, storageGb: 1, smsPerMonth: 10 }, locks, overrides, version: 1,
@@ -58,13 +58,6 @@ describe('validateSettingsChanges', () => {
   it('closes the module list', () => {
     const r = validateSettingsChanges({ 'modules.enabled': ['fees'] }, []);
     expect(r.ok && r.values['modules.enabled']).toEqual(['people', 'fees']);
-  });
-});
-
-describe('contrastRatio', () => {
-  it('matches known values', () => {
-    expect(contrastRatio('#000000', '#FFFFFF')).toBeCloseTo(21, 0);
-    expect(contrastRatio('#6A4CF5', '#FFFFFF')).toBeGreaterThan(4.5);
   });
 });
 

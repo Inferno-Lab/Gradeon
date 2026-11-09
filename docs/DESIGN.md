@@ -18,7 +18,9 @@ Why: the owner wanted admin and console to look like one consistent, premium pro
 
 ## 2. Tokens
 
-All tokens are CSS variables on `.nest` (light) and `.nest.dark` (dark). **Never hard-code colours in components; use the variables.** The theme follows the device (`prefers-color-scheme`) unless the person chose one from the account menu (`localStorage gradeon.theme`); the root gets the `dark` class.
+All tokens are CSS variables on `.nest` (light) and `.nest.dark` (dark). **Never hard-code colours in components; use the variables** (`rules.test.ts` fails on any hex, `rgb()` or named colour outside the token blocks; printed receipts and the logo are the named exceptions). The theme follows the device (`prefers-color-scheme`) unless the person chose one from the account menu (`localStorage gradeon.theme`); the root gets the `dark` class, and every colour swaps in the same frame (`theme-swap` turns transitions off for one frame).
+
+**Every colour is configurable from the console.** The catalogue is `WEB_TOKENS` in `packages/contracts/src/theme.ts` (label, group, light and dark default for each variable below). A school's admin colours are the `theme.colors` setting (console → school → Configuration → Colours); the console's own are under Team → Console colours (`console_settings` key `theme`). Only changed colours are stored; `useThemeColors` writes them as one `<style>` over every `.nest` (sign-in pages included). A changed base carries its derived colours (soft fill, text, chart line, text on it) unless those are changed too; derived text is checked against its own soft fill. The editor is a full picker (saturation square, hue and opacity, hex, `rgb()` or `hsl()`, the eyedropper) with live previews and a warning for any pair below 4.5:1. `nest.css` defaults must equal the catalogue (a test checks).
 
 ### Colour (light / dark)
 
@@ -27,46 +29,61 @@ Neutral surfaces and ink, one blue accent for data, links, focus and selection, 
 | Role | Variable | Light | Dark | Use |
 | --- | --- | --- | --- | --- |
 | Page background | `--bd` | `#E9E9E6` | `#0A0A0B` | Behind the frame |
-| Frame and menu | `--frame`, `--sbg` | `#F3F3F1` | `#111113` | The big rounded surface; the side menu matches it |
+| Frame and menu | `--frame` | `#F3F3F1` | `#111113` | The big rounded surface and the side menu |
 | Card | `--card` | `#FFFFFF` | `#19191C` | Cards, tiles, inputs, dialogs |
 | Sunk | `--sunk` | `#F6F6F4` | `#1E1E22` | Inset areas, tracks, hover fill, chips, avatars |
 | Lines | `--line` / `--line2` | `#E5E5E1` / `#D6D6D1` | `#2A2A2E` / `#34343A` | Hairlines only |
 | Field border | `--field` | `#8A8A84` | `#6B6B72` | Inputs, selects, checkboxes, the search pill (3:1) |
 | Ink | `--ink` / `--ink2` / `--ink3` | `#1A1A1C` / `#4D4D53` / `#6A6A70` | `#F2F2F3` / `#B8B8BE` / `#8E8E96` | Text: primary / secondary / tertiary (≥ 4.8 on every surface) |
-| Primary button, current page | `--pri` / `--priT` | ink / white | inverted | Black pill (white in dark); the menu's current page |
-| **Accent (blue)** | `--v` (`--vS` soft, `--vD` deep, `--v2` mid, `--vL` light); `--b` is the same blue | `#2F5BD3` | `#7C9CF0` | Data, links, selection, the "today" column |
+| Primary button, current page | `--pri` / `--priT`; hover `--priH` (pri 86% over card) | ink / white | inverted | Black pill (white in dark); the menu's current page |
+| **Accent (blue)** | `--v` (`--vS` soft, `--vD` text, `--v2` chart bars, `--vL` wash) | `#2F5BD3` | `#7C9CF0` | Data, links, selection, the "today" column. Never a button. |
 | Text on a solid blue | `--onV` | `#FFFFFF` | `#111113` | White on dark-mode blue fails (2.67:1), so it has its own token |
 | **Amber** | `--a` (`--aS`, `--aD`) | `#E0A21B` | `#C99419` | A warning fill only; amber text is `--aD`, text on amber is `#1A1A1C` |
 | **Green** | `--g` (`--gS`, `--gD`) | `#1E7A45` | `#6CC08E` | Done, healthy, paid; text on a solid green is `--card` |
-| **Red** | `--r` (`--rS`); `--rF` for solid fills | `#B42318` | `#F0857A` (fill `#B42318`) | Errors, overdue, danger, absent; white text only on `--rF` |
-| Coral | `--c` (`--cS`, `--cD`) | = red | = red | Retired: kept as an alias so old uses read as red |
+| **Danger** | `--c` (`--cS` fill, `--cD` text, `--cF` delete button, `--onCF` text on it) | `#B42318` | `#F0857A` (`--cF` `#B42318`) | Errors, overdue, danger, absent. `--r`, `--rS`, `--rF` and `--b`, `--bS`, `--sbg` are retired (the guard fails on them). |
 | Present | `--present` | `#B9B9B3` | `#5A5A61` | "Present" marks and segments (the ordinary case stays quiet) |
-| Ink tile | `--ci` | `#1A1A1C` | `#26262A` | The one dark tile, toasts, tooltips, floating bars |
+| Ink tile | `--ci`, text `--onCi` | `#1A1A1C` | `#26262A` | Inverted cards, toasts, floating bars, the sign-in panel; see-through white on it is `color-mix(in srgb,var(--onCi) N%,transparent)` |
+| Switch knob | `--knob` | `#FFFFFF` | `#FFFFFF` | Every on/off switch |
+| Subjects | `--subj-<id>` | the app's subject colours | same | The timetable; one palette with the app (`app.subject.*`) |
+| Overlay | `--scrim` | `#1111136B` | `#0000009E` | Behind dialogs and panels |
 
 Colour rules:
 
 - Tiles are cards with a hairline (`t-v`, `t-a`, `t-l`, `t-p`, `t-g`); `t-i` is the one ink tile. Colour is kept for data and state, never for decoration.
-- Text on a solid blue is `--onV`; on red use the `--rF` fill with white; on green `--card`; on amber `#1A1A1C`; on ink white.
-- Contrast: body text ≥ 4.5:1, field borders ≥ 3:1. A school's brand colour is checked with `contrastRatio(colour, '#FFFFFF') >= 4.5` before it can be used behind white text (Settings shows "Passes AA · 5.3:1"). The school's colours are its own data and are not part of this palette.
+- Text on a solid blue is `--onV`; on the delete red `--onCF`; on the ink tile `--onCi`; amber is a fill (`--aS`) with `--aD` text.
+- Contrast: body text ≥ 4.5:1, field borders ≥ 3:1. Any brand colour is allowed: text on it is white or ink, whichever reads (`readableOn`, `markStyle`).
 - Status is never colour alone: pill text says Healthy/Degraded/Down; charts have labels and tooltips.
 - Avatars are neutral (`tintFor` gives everyone `--sunk` / `--ink2`), so they follow the theme.
 - No gradients on bars, charts or the school mark: flat colours.
 
 ### Type
 
-- Display: **Bricolage Grotesque** 500/700/800 (`--fd`, class `fd`). Page titles 30–34 px/700, tile numbers 38–54 px, card titles 17–22 px; tight tracking (−.025 to −.04em).
-- Body/UI: **Manrope** 400–800 (`--fb`). Labels 12–13 px/700, row text 14–15 px/600, paragraphs 14–15.5 px/500 with line-height 1.45–1.6. Devanagari: Noto Sans Devanagari (for Hindi/Marathi).
-- Numbers use `font-variant-numeric: tabular-nums` (class `num`).
-- Small caps labels: 11.5 px/800, uppercase, +.06em tracking, `--ink3` (`lbl`).
+**Ten sizes, three weights** (the guard fails on any other): 11, 12, 13, 14, 15, 17, 22, 28, 34, 38 px; 500, 600, 700. Art numerals (the 404 page, illustrations) are drawings, not type.
+
+| Role | Face · weight · size | Use |
+| --- | --- | --- |
+| figure | Bricolage 700 · 38 | Tile numbers, amounts |
+| page | Bricolage 700 · 34 | Page titles |
+| big number | Bricolage 700 · 28 | Numbers inside cards |
+| section | Bricolage 700 · 22 | Card and section titles |
+| title | Manrope 700 · 17 | Row titles, dialog titles |
+| field | Manrope 600 · 15 | Text inside inputs |
+| body | Manrope 500 · 14 (strong 700) | Text and tables |
+| small | Manrope 500 · 13 (strong 700) | Meta, help, menu items |
+| caption | Manrope 600 · 12 | Chips, captions |
+| label | Manrope 700 · 11 uppercase +.08em | Group labels, table headers |
+
+- Numbers use `font-variant-numeric: tabular-nums` (class `num`). Devanagari: Noto Sans Devanagari.
 - Sentence case everywhere. Plain words ("Waiting for approval", "Not marked"), never jargon in front of staff.
 
 ### Shape, depth, spacing
 
-- Radii: frame 28, big tiles/cards 24–28, inputs 16, row cards 18–20, pills/buttons 999, avatars 50%. Bars: 7–14 px radius equal to half the height.
+- Radii (the only values): 2 (hairline marks), 6 (bars, checkbox, code), 10 (menu rows, small squares), 14 (inputs, menus, tooltips), 18 (inner panels, row cards, stat tiles), 24 (cards, dialogs, panels, toasts), 28 (the frame), 999 (pills, buttons, chips) or 50%. A shape inside another takes the outer radius minus the gap.
 - Shadows: `--sh1` hairline (cards), `--sh2` hover lift, `--sh3` floating (frame, dialogs, toast), all neutral (no coloured or glowing shadows). In dark, shadows become pure black or none.
-- Spacing scale (px): 4, 6, 8, 10, 12, 14, 16, 18, 22, 26, 34. Page gutter 34 (desktop) / 16 (phone); grid gap 18; card padding 22; list rows min-height 58–64; touch targets ≥ 40.
+- Spacing scale (px, the only values up to 56): 0, 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56. Grid gap 16; card padding 24; label to field 6; field to field 16; touch targets ≥ 40.
+- Control heights: 22 (counters, trend pills), 26 (chips, status), 34 (`sm` buttons, small fields), 42 (buttons, icon buttons, fields, selects, search: a field and its button line up), 50 (the sign-in form only).
 - Layout: 12-column grid (`grid`, spans `s3 s4 s5 s6 s7 s8 s12`), collapsing to one column under 1100 px. Page width fills the frame.
-- Focus: 2.5 px ink ring (black, white in dark), 3 px offset, on every interactive element. Never remove it.
+- Focus: 2.5 px ink ring (black, white in dark), 3 px offset, following each control's own shape. Never remove it.
 
 ## 3. Structure of a page
 
@@ -91,24 +108,24 @@ page background (flat)
 
 | Component | Spec |
 | --- | --- |
-| **Button** `.btn` | Pill, 42 px (34 `sm`), 700 14 px, 1.5 px border; hover changes the fill only (nothing moves), press scales .97 in `--t1`. Variants: `pri` (ink), `v` (blue, text in `--onV`), `wht` (white, only on ink surfaces: toast, save bar, the 404 card), `ghost`, `dng` (soft red), `dngf` (solid red). `MenuButton` is a button that opens a `Menu` under it (chevron turns while open). |
-| **Chip** `.chip` | 26 px pill, 12 px/700; tones plain, `v c a g r b k`. Counts and states ("56", "Not yet", "Draft"). |
-| **Status pill** `.st` | 28 px pill with a dot: `g` Healthy/Paid/Live, `a` Degraded/Waiting, `b` Updating/Setting up, `r` Down/Overdue, `n` neutral. Always includes a word. |
-| **Card** `.card` | White, 1 px line, radius 24, padding 22, `sh1`. Header row `.ch`: title 17–22 px display + chip + optional small button; wraps on phones. |
+| **Button** `.btn` | Pill, 42 px (34 `sm`), 700 14 px, 1.5 px border. States: hover changes colour in `--t1` (secondary: sunk fill and `--ink3` border; `pri`: `--priH`; `dng`: deeper soft red; `wht`, `dngf`: 8% darker), press scales .97 in `--t1`, focus ring, disabled .4 with no press, busy shows a spinner in place of the icon. Variants: `pri` (ink; **one per card, dialog or toolbar**; list-row actions are secondary), `wht` (on the ink tile only), `ghost`, `dng` (soft red), `dngf` (the delete confirm). There is no blue button. `MenuButton` opens a `Menu` under it (chevron turns while open). |
+| **Chip** `.chip` | 26 px pill, 12 px/700; tones plain, `v c a g k`. Counts and states ("56", "Not yet", "Draft"). |
+| **Status pill** `.st` | 26 px pill with a dot: `g` Healthy/Paid/Live, `a` Degraded/Waiting, `v` Updating/Setting up, `c` Down/Overdue, `n` neutral. Always includes a word. |
+| **Card** `.card` | White, 1 px line, radius 24, padding 24, `sh1`. Header row `.ch`: title 17–22 px display + chip + optional small button; wraps on phones. |
 | **Tile** `.tile t-*` | Coloured feature card, radius 28, a label chip, a big display number, a one-line explanation, optional corner arrow button. 3–4 per row at the top of a page. |
-| **Fields** `.inp`/`Field` | 48 px, radius 16, 1.5 px border; resting border `--field`; focus = blue border plus a crisp 1 px line, no glow; label above (13.5 px/700); hint below in `--ink3`; error: red border, tint, message with a warning icon, and the field **vibrates** (see motion). `Field` takes text-like types only. **No browser widgets:** `DateField` (type "12 Nov" or pick from a Monday-first calendar; `compact` for a table row), `TimeField` (type "8:47" or pick a quarter hour), `MonthField`, `NumberField` (minus and plus) and `NumberInput` (a cell), `ColourField` and `Swatches` (`BRAND_SWATCHES`), `Checkbox` (`.cb`, with or without words), `FilePick` (our button opens the file chooser). All work from the keyboard. |
+| **Fields** `.inp`/`Field` | 42 px (50 on sign-in, 34 `sm`), radius 14, 1.5 px border; resting border `--field`; focus = blue border plus a crisp 1 px line, no glow; label above (13.5 px/700); hint below in `--ink3`; error: red border, tint, message with a warning icon, and the field **vibrates** (see motion). `Field` takes text-like types only. **No browser widgets:** `DateField` (type "12 Nov" or pick from a Monday-first calendar; `compact` for a table row), `TimeField` (type "8:47" or pick a quarter hour), `MonthField`, `NumberField` (minus and plus) and `NumberInput` (a cell), `ColourField` (any colour: `ColourPicker`'s square, hue and opacity sliders, hex/`rgb()`/`hsl()` input, eyedropper), `Checkbox` (`.cb`, with or without words), `FilePick` (our button opens the file chooser). All work from the keyboard. |
 | **Switch** `.sw` | 38×22 flat pill, 16 px knob; grey off, blue on, no spring and no shadow. Always paired with a label. |
 | **Dropdown** `Select` / `SelectField` | Replaces the browser's `<select>`. A 50 px field (or `compact` 40 px pill for page headers) with a round chevron chip; the list is drawn in a portal on the page root with fixed coordinates, so no card, table or dialog can clip it; it flips upward near the bottom, scrolls inside, gets a search box above 10 options, and works with the keyboard (arrows, Home/End, Enter, Esc, type-ahead). Never use a bare `<select>`. |
 | **Tooltip** `data-tip` | One shared tooltip (`Tooltips`, mounted by `Shell`); never the browser's `title`. Put `data-tip="Title (newline) more"` on any chart column, bar or segment; every `.us` usage row gets one for free; the collapsed menu uses it for names. A tip that repeats a cell's own words (a name cut off by its column) shows only when the text is actually cut off, after a short wait. |
 | **Segmented** `Segmented` | Pill track with a white knob that glides under the chosen tab in `--t2`, measured from the real tab (never a guessed width); tabs, view switches, ranges. |
-| **Menu and popovers** `Menu` / `Pop` | Everything that opens from a button (menus, the time list, the calendar, swatches) is one `Pop`: drawn on the page root so nothing clips it, under its button (over it when there is no room, beside it for the collapsed menu, right-aligned for a button at the right), grows from the button, arrows move inside, Escape, Tab or a click outside close it and focus returns. The dashboard's range and New menus are ordinary `MenuButton`s. |
+| **Menu and popovers** `Menu` / `Pop` | Everything that opens from a button (menus, the time list, the calendar, the colour picker) is one `Pop`: drawn on the page root so nothing clips it, under its button (over it when there is no room, beside it for the collapsed menu, right-aligned for a button at the right), grows from the button, arrows move inside, Escape, Tab or a click outside close it and focus returns. The dashboard's range and New menus are ordinary `MenuButton`s. |
 | **Table** `.grd` | CSS-grid rows (`--cols`), 58–64 px, hairline separators, hover tint, header row 11.5 px uppercase. Rows are links where they open something. Wrap in `.scroll-x` with a min-width on phones. |
 | **Usage bar** `.bar` | **14 px tall**, full radius, `--sunk` track, flat blue fill; `warn` variant flat amber; label left, value right. **Bars are never thin** (owner rule). Segmented tick bars (`tk3`, 20 ticks, 24 px tall) for SMS credits; release progress is 60 ticks. |
 | **Charts** | Columns: wide, rounded tops, today highlighted in blue, other days in `--v2`, previous period as a ghost behind, hover bubble. Lines: 3 px blue, drawn once, flat `--vS` area below, dashed previous line, follow-pointer tooltip. Roll bars: segmented present/late/absent, filled. Fee bars: filled, labelled with percent. No pencils, jars or dot rows. Goal line dashed with a chip. Empty chart: columns hidden, one sentence ("Attendance appears here after the first roll call is marked."). |
 | **Ticket** `.tkt` | The plan card: flat dark fill, notched sides (CSS mask), dashed perforation, plan name display 23 px, two icon lines, a white pill button, status chip and counts on the right. |
 | **Dialog** `Dialog` | Centered card over a blurred scrim, tag chip above the title, focus trapped, Esc and scrim close, focus returns where it was. Dark variant for dangerous actions (erase). Typed-confirmation input for irreversible actions. Search is the same layer (`SearchDialog`), 18% from the top. |
 | **Panel** `Panel` | A record opened beside its list (student detail): slides in from the right; Esc and scrim close it. |
-| **Toast** `ToastSlot` | Dark pill, bottom centre (above the dock on a phone), green check or red cross circle + one sentence, optionally one button (Undo); auto-hides after ~4 s; never the only place an error appears. |
+| **Toast** `ToastSlot` + `useToast()` | Dark pill, bottom centre (above the dock on a phone), green check or red cross circle + one sentence, optionally one button (Undo). `useToast` times every toast: 4 s, 6 s with an action, held while the pointer is over it; an error stays until its close button. No page keeps its own toast timer (the guard fails on `setToast(`). |
 | **Save bar** | Floating dark pill "You have unsaved changes · Discard · Save" when a form is dirty. |
 | **Support frame** | Red inset frame around the window plus a red pill "Gradeon support in <school> · read-only · mm:ss left · End session". |
 | **Avatar** `.av` | 34–76 px circle, initials, tint pair; stacks overlap by 8 px with a ring. |
@@ -122,13 +139,14 @@ One timing scale, on `.nest` in `nest.css`: **`--t1` 120 ms** (press, toggle, a 
 
 | Pattern | Behaviour |
 | --- | --- |
-| **Rise** | Content arriving enters 6 px lower with a fade in `--t3`; the stagger is capped at 200 ms. The menu, search and dock are mounted once per app, so changing page only brings in the new page. |
-| **Grow from the button** | Popups (menus, lists, calendar, swatches) scale from .96 at the edge they open from, in `--t2`. Dialogs and search do the same from the centre (or top) in `--t3`. |
+| **Rise** | Content arriving enters 6 px lower with a fade in `--t3`; the stagger is capped at 100 ms, so a form is usable within about 400 ms of the page opening. The menu, search and dock are mounted once per app, so changing page only brings in the new page. |
+| **Grow from the button** | Popups (menus, lists, calendar, the colour picker) scale from .96 at the edge they open from, in `--t2`. Dialogs and search do the same from the centre (or top) in `--t3`. |
 | **Leave** | Every overlay fades out instead of vanishing: `Presence` keeps it for 200 ms marked `data-leaving` (not clickable, not focusable) and gives focus back at once. |
 | **Roll digits** | Each digit scrolls on a vertical strip to its new value (`Roll`, 1.1 em per digit); separators stay still. |
 | **Vibrate (errors)** | `nShkA`/`nShkB`: ±9 px horizontal shake over .6 s. Two keyframe names alternate (`shk1`/`shk2` on a wrapper, `useShake().hit()`), so the same error can vibrate again and again. Used for wrong passwords, wrong codes, invalid fields. Shake the card or the field, never the frame. |
 | **Draw** | Chart lines and illustration strokes draw once (dash offset). |
 | **Sign-in** | A panel with floating sample cards, rolling digits, a toast that appears, and a padlock illustration that rocks when a credential is wrong; the form shakes. |
+| **Hover, focus, theme** | Hover is a colour change in `--t1`; the focus ring appears at once; switching light and dark swaps every colour in one frame. Tooltips wait 400 ms, then move between neighbours at once. |
 | **Reduced motion** | `prefers-reduced-motion` (and the `rm` class) makes animations instant and turns transitions off (`transition: none`). Never rely on motion to convey meaning. |
 
 Animate transform and opacity only; never animate layout properties in lists.
@@ -166,7 +184,7 @@ Copy rules: say what happened and what to do, in the person's words ("That didn'
 - **Dashboard:** welcome tile (avatar, greeting, quick buttons) · three KPI tiles (present today with rolling digits and delta chip; fees collected; ink: approvals waiting with avatar stack) · wide chart tile (tabs Attendance/Fees/Homework, range menu) · "Needs you" list with Approve/Review/Remind/Publish and Undo · class roll bars · fees by type · "Today at school" timeline · dashed "Add a widget".
 - **List page (Students):** header with Import/Export/Add · view tabs (All / My class / Fees overdue / New) with counts · filter pills + dashed Add filter · four-figure summary strip · table card with sortable headers, select-all, row kebab, bulk bar, pagination footer · drawer for detail.
 - **Timetable:** class menu, Week/Day/List segmented, publish button, week stepper, subject legend, grid with colour per subject, clash cell outlined red with a fix panel on the right, load ring and unplaced list.
-- **Settings:** left section list (General, Modules…), grouped rows (label+help left, control right), brand colour swatches with live preview and contrast chip, toggles, plan ticket + SMS credits card, dirty save bar.
+- **Settings:** left section list (General, Modules…), grouped rows (label+help left, control right), the brand colour with live preview and contrast chip (read-only; colours are set in the console), toggles, plan ticket + SMS credits card, dirty save bar.
 - **Roll call / simple list pages:** table card + a summary tile + a save card; big three-way toggle per row (Present green, Late amber, Absent red).
 - **Console fleet:** release tile (progress ticks, wave dots, pause/roll back), schools tile, health tile (stacked bar and counts), requests chart, cells list with ring gauges, schools table, incident card, "waiting schools" tile.
 - **Console school:** breadcrumb, logo + name + status chip, tabs, vertical step timeline with a dark log, ticket, usage card, store checklist.
@@ -175,9 +193,9 @@ Copy rules: say what happened and what to do, in the person's words ("That didn'
 
 ## 8. Rules checklist (a design review should check each)
 
-1. Uses only variables from `nest.css`; works in light and dark.
-2. Radii and spacing from the scales; no new one-off sizes.
-3. One primary action per view; destructive actions are red and confirmed.
+1. Uses only variables from `nest.css` (a colour the console cannot change is a bug); works in light and dark and with a school’s own colours.
+2. Type, radii and spacing from the scales (§2); no new one-off sizes. `rules.test.ts` fails on anything else.
+3. One primary action per card, dialog or toolbar; row actions are secondary; destructive actions are red and confirmed.
 4. All bars ≥ 14 px (usage) and charts have chunky marks.
 5. Every interactive element has a visible focus ring, a label (icon-only buttons have `aria-label`) and a ≥ 40 px target.
 6. Errors: red, near the field, say what to do, vibrate.

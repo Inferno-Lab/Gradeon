@@ -57,7 +57,7 @@ class _SettledSizeState extends State<_SettledSize> with WidgetsBindingObserver 
 
   void _wait() {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 160), () {
+    _timer = Timer(AppMotion.t2, () {
       if (mounted) setState(() => _ready = true);
     });
   }
@@ -83,11 +83,11 @@ class _Mark extends StatefulWidget {
 class _MarkState extends State<_Mark> with TickerProviderStateMixin {
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1800),
+    duration: AppMotion.introStep,
   );
   late final AnimationController _breathe = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2400),
+    duration: AppMotion.intro,
   );
 
   @override
@@ -120,7 +120,7 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
       animation: Listenable.merge([_enter, _breathe]),
       builder: (context, _) {
         final t = still ? 1.0 : _enter.value;
-        final breath = still ? 0.0 : Curves.easeInOut.transform(_breathe.value);
+        final breath = still ? 0.0 : kEase.transform(_breathe.value);
 
         final glow = _beat(t, 0, .28);
         final stack = _beat(t, .06, .42, kSpring);
@@ -186,7 +186,7 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
               Opacity(
                 opacity: name,
                 child: Transform.translate(
@@ -194,7 +194,7 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
                   child: Text(
                     AppConfig.appName,
                     textAlign: TextAlign.center,
-                    style: anek(46, 780, width: 125, height: .9, em: -.03, color: c.ink),
+                    style: AppText.dl(color: c.ink),
                   ),
                 ),
               ),
@@ -218,7 +218,7 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
                   child: Text(
                     AppConfig.schoolTagline,
                     textAlign: TextAlign.center,
-                    style: context.type.cap.copyWith(fontSize: 12),
+                    style: context.type.cap,
                   ),
                 ),
               ),
@@ -267,11 +267,11 @@ class _Book extends StatelessWidget {
                 color: AppColors.subject(subject).fill,
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(6),
-                  right: Radius.circular(16),
+                  right: Radius.circular(14),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x6610201B).withValues(alpha: .25 + .4 * r),
+                    color: AppColors.light.ink.withValues(alpha: 0.4).withValues(alpha: .25 + .4 * r),
                     blurRadius: 18 + 14 * r,
                     spreadRadius: -12,
                     offset: Offset(0, 8 + 8 * r),

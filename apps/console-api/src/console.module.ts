@@ -8,7 +8,7 @@ import { AuthController, ConsoleAuth } from './auth.js';
 import { ConsoleAuthGuard, Db } from './core.js';
 import { ENV, type Env } from './env.js';
 import { Admin, Bootstrap, Health, OpsController, Support } from './ops.js';
-import { Policy, PolicyController } from './policy.js';
+import { ConsoleThemeController, Policy, PolicyController } from './policy.js';
 import { Blueprints, Provisioner } from './provisioning/provisioner.js';
 import { Releases, ReleasesController } from './releases.js';
 import { Sandbox, SandboxController } from './sandbox.js';
@@ -45,7 +45,7 @@ export class ConsoleModule {
     const pools = shared?.pools ?? new PoolManager({ maxPools: env.TENANT_MAX_POOLS, perPool: env.TENANT_PER_POOL });
     return {
       module: ConsoleModule,
-      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, OpsController, ComplianceController, ErrorsController, BackupsController, DrillsController, ConfigController, MigrationController],
+      controllers: [AuthController, SandboxController, SchoolsController, WizardController, ActionsController, ReleasesController, PolicyController, ConsoleThemeController, OpsController, ComplianceController, ErrorsController, BackupsController, DrillsController, ConfigController, MigrationController],
       providers: [
         { provide: ENV, useValue: env }, { provide: REGISTRY, useValue: registry }, { provide: POOLS, useValue: pools }, { provide: OWNS, useValue: !shared }, Shutdown,
         Db, Sandbox, ConsoleAuth, Policy, Blueprints, Provisioner, Schools, Wizard, Builds, Actions, Releases, Health, Support, Admin, Bootstrap, Compliance, ErrorBook, Backups, ConfigService, Migration,

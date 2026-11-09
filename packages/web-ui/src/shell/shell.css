@@ -1,11 +1,11 @@
 /* Shell additions that are not part of the canvas boards: the console workspace block, and the phone layout. */
-.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);box-shadow:none;animation:none}
+.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:none;animation:none}
 .nest .pdot.stage{background:var(--a);box-shadow:none}
 .nest .pdot.local{background:var(--g);box-shadow:none}
 
 .nest .wsw{display:flex;align-items:center;gap:12px;padding:8px;border-radius:18px;background:var(--card);border:1px solid var(--line);margin-bottom:6px;white-space:nowrap;overflow:hidden}
-.nest .wsw b{display:block;font:700 14.5px var(--fb);line-height:1.2}
-.nest .wsw small{display:flex;align-items:center;gap:7px;font:700 12px var(--fb);color:var(--ink3)}
+.nest .wsw b{display:block;font:700 14px var(--fb);line-height:1.2}
+.nest .wsw small{display:flex;align-items:center;gap:6px;font:700 12px var(--fb);color:var(--ink3)}
 /* On a phone the menu gives way to the floating dock. */
 @media (max-width:900px){
   .nest .app>.sb{display:none}
@@ -17,8 +17,8 @@
 /* Overlays belong to the window, not to the page, so they stay put while a long page scrolls (the scrim, dialogs and toasts are fixed in nest.css). */
 .nest .drw,.nest .bulk,.nest .save,.nest .sbar,.nest .glow{position:fixed!important}
 .nest .glow{border-radius:0!important}
-.nest .popm{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh3);padding:8px;display:flex;flex-direction:column;gap:2px}
-.nest .popm button{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:0;border-radius:12px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;text-align:left;transition:background var(--t1)}
+.nest .popm{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh3);padding:8px;display:flex;flex-direction:column;gap:2px}
+.nest .popm button{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:0;border-radius:14px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;text-align:left;transition:background var(--t1)}
 .nest .popm button:hover,.nest .popm button:focus-visible,.nest .popm button.on{background:var(--sunk);color:var(--ink)}
 .nest .popm button small{margin-left:auto;font:700 12px var(--fb);opacity:.6}
 .nest .popm hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
@@ -26,16 +26,16 @@
 .nest .dock{display:none}
 @media (max-width:900px){
   .nest .dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:6px;border-radius:999px;background:var(--ci);box-shadow:none}
-  .nest .dock button{position:relative;width:56px;height:52px;border-radius:999px;border:0;background:none;color:#B8B8BE;display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
+  .nest .dock button{position:relative;width:56px;height:52px;border-radius:999px;border:0;background:none;color:color-mix(in srgb,var(--onCi) 72%,transparent);display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
   .nest .dock button.on{width:112px;background:var(--card);color:var(--ink)}
   .nest .dock button svg{width:22px;height:22px;grid-area:1/1}
-  .nest .dock button span{grid-area:1/1;font:800 13px var(--fb);margin-left:30px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}
+  .nest .dock button span{grid-area:1/1;font:700 13px var(--fb);margin-left:32px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}
   .nest .dock button.on span{opacity:1;max-width:64px}
   .nest .dock button.on svg{margin-right:48px}
-  .nest .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:82dvh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--sh3);animation:nSheet var(--t3) var(--e) both}
+  .nest .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:82dvh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--sh3);animation:nSheet var(--t3) var(--e) both}
   .nest .sheet[data-leaving]{animation:nSheetO var(--t2) var(--ei) forwards}
-  .nest .sheet .grab{width:44px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 12px}
-  .nest .sheet a.nvm{display:flex;align-items:center;gap:14px;min-height:48px;padding:0 6px;border-radius:14px;color:var(--ink);text-decoration:none;font:700 15px var(--fb)}
+  .nest .sheet .grab{width:44px;height:5px;border-radius:2px;background:var(--line2);margin:0 auto 12px}
+  .nest .sheet a.nvm{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 6px;border-radius:14px;color:var(--ink);text-decoration:none;font:700 15px var(--fb)}
   .nest .sheet a.nvm:active{background:var(--sunk)}
   .nest .sheet a.nvm.on{background:var(--pri);color:var(--priT)}
   .nest .sheet a.nvm svg{width:20px;height:20px;flex:none}
@@ -51,7 +51,7 @@
 @keyframes nSheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes nSheetO{to{transform:translateY(40px);opacity:0}}
 
-.nest .mebtn{display:flex;align-items:center;gap:12px;width:100%;padding:6px;margin:-6px;border:0;border-radius:16px;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background var(--t2)}
+.nest .mebtn{display:flex;align-items:center;gap:12px;width:100%;padding:6px;margin:-6px;border:0;border-radius:14px;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background var(--t2)}
 .nest .mebtn:hover,.nest .mebtn[aria-expanded=true]{background:var(--sunk)}
 .nest .sb.col .mebtn{width:auto}
 /* The menu stays in view while a long page scrolls, and scrolls itself on a short window. `clip` keeps the rounded frame without making it a scroll container. */

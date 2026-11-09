@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
-import { closeModules, contrastRatio } from '@gradeon/config-engine';
-import { WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { Field, SelectField, Swatches, useShake } from '@gradeon/web-ui';
+import { closeModules } from '@gradeon/config-engine';
+import { DEFAULT_BRAND, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
+import { ColourField, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -24,7 +24,7 @@ type Data = Record<Key, Record<string, unknown>>;
 const DEFAULTS: Data = {
   basics: { name: '', shortName: '', slug: '', board: 'CBSE', address: '', city: '', contactName: '', contactPhone: '', contactEmail: '', gstin: '', language: 'en' },
   plan: { plan: '', modules: [], addOns: [], locks: [], students: 500 },
-  branding: { color: '#6A4CF5', logoText: '', appName: '', tagline: '' },
+  branding: { color: DEFAULT_BRAND, logoText: '', appName: '', tagline: '' },
   placement: { target: '', cell: '', addressing: 'path', customDomain: '' },
   admin: { name: '', email: '', phone: '', invite: 'both', roles: ['principal'] },
   data: { start: 'demo' },
@@ -112,7 +112,6 @@ export function WizardPage() {
     const r = s.schema!.safeParse(data[k]);
     const out: Record<string, string> = {};
     if (!r.success) for (const i of r.error.issues) out[`${k}.${String(i.path[0] ?? '')}`] ??= friendly(i.message);
-    if (k === 'branding' && !out['branding.color'] && contrastRatio(str(data.branding.color), '#FFFFFF') < 4.5) out['branding.color'] = 'Too light for white text. Pick a darker colour.';
     if (k === 'placement' && !data.placement.cell) out['placement.cell'] = 'Pick where this school should run.';
     setErrs((e) => ({ ...e, ...Object.fromEntries(Object.keys(e).filter((x) => x.startsWith(`${k}.`)).map((x) => [x, ''])), ...out }));
     if (Object.keys(out).length) shake.hit();
@@ -177,7 +176,7 @@ export function WizardPage() {
             })}
           </div>
           {errs['plan.modules'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['plan.modules']}</div>}
-          <div style={{ marginTop: 18 }}>{f('plan', 'students', 'Students expected', { type: 'number', min: 1, hint: plan ? `Up to ${count(plan.limits.students)} on ${plan.name}` : undefined, value: String(data.plan.students ?? ''), onChange: (v: string) => set('plan', 'students', Number(v) || 0) })}</div>
+          <div style={{ marginTop: 16 }}>{f('plan', 'students', 'Students expected', { type: 'number', min: 1, hint: plan ? `Up to ${count(plan.limits.students)} on ${plan.name}` : undefined, value: String(data.plan.students ?? ''), onChange: (v: string) => set('plan', 'students', Number(v) || 0) })}</div>
         </>
       );
       case 'branding': return (
@@ -185,13 +184,13 @@ export function WizardPage() {
           <div className="two">{f('branding', 'appName', 'Name in the app', { hint: 'Shown on the home screen' })}{f('branding', 'logoText', 'Logo letters', { maxLength: 2, hint: 'One or two letters' })}</div>
           {f('branding', 'tagline', 'Tagline (optional)')}
           <div className="lbl" style={{ margin: '8px 0' }}>Brand colour</div>
-          <Swatches label="Brand colour" value={String(data.branding.color)} onPick={(c) => set('branding', 'color', c)} />
+          <ColourField label="Brand colour" value={String(data.branding.color)} onChange={(c) => set('branding', 'color', c)} />
           {errs['branding.color'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['branding.color']}</div>}
-          <div style={{ marginTop: 18, borderRadius: 22, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--sunk)' }} aria-label="App preview">
-            <div style={{ padding: '14px 14px 18px', color: '#fff', background: str(data.branding.color), font: '700 13.5px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 26, height: 26, borderRadius: 9, background: 'rgba(255,255,255,.28)', display: 'grid', placeItems: 'center', font: '800 12px var(--fd)' }}>{str(data.branding.logoText) || '?'}</span>{str(data.branding.appName) || 'Your school'}
+          <div style={{ marginTop: 16, borderRadius: 24, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--sunk)' }} aria-label="App preview">
+            <div style={{ padding: '16px 16px 20px', color: readableOn(str(data.branding.color)), background: str(data.branding.color), font: '700 13px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 26, height: 26, borderRadius: 10, background: 'color-mix(in srgb,var(--onCi) 28%,transparent)', display: 'grid', placeItems: 'center', font: '700 12px var(--fd)' }}>{str(data.branding.logoText) || '?'}</span>{str(data.branding.appName) || 'Your school'}
             </div>
-            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 6, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 6, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 12, background: str(data.branding.color), color: '#fff', textAlign: 'center', lineHeight: '34px', font: '700 12.5px var(--fb)' }}>Pay fees</b></div>
+            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 6, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 6, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 14, background: str(data.branding.color), color: readableOn(str(data.branding.color)), textAlign: 'center', lineHeight: '34px', font: '700 12px var(--fb)' }}>Pay fees</b></div>
           </div>
         </>
       );
@@ -208,7 +207,7 @@ export function WizardPage() {
               </button>
             ))}
           </div>
-          <div style={{ marginTop: 14 }}>{f('placement', 'customDomain', 'Custom domain (optional)', { placeholder: 'erp.banyanridge.in', hint: 'Leave empty to use the platform address' })}</div>
+          <div style={{ marginTop: 12 }}>{f('placement', 'customDomain', 'Custom domain (optional)', { placeholder: 'erp.banyanridge.in', hint: 'Leave empty to use the platform address' })}</div>
         </>
       );
       case 'admin': return (
@@ -264,14 +263,14 @@ export function WizardPage() {
 
 function ReviewStep({ review, loading, error, payloadOk, missing, rehearsal }: { review?: WizardReview; loading: boolean; error: string; payloadOk: boolean; missing: string[]; rehearsal: ProvisionRunRow | null }) {
   if (!payloadOk) return <div className="emsg" role="alert">Finish these steps first: {missing.join(', ')}.</div>;
-  if (loading) return <div className="skc" style={{ height: 240, borderRadius: 20 }} />;
+  if (loading) return <div className="skc" style={{ height: 240, borderRadius: 18 }} />;
   if (error) return <div className="emsg" role="alert">{error}</div>;
   if (!review) return null;
   return (
     <>
       {review.problems.map((p) => <div key={p} className="emsg" role="alert" style={{ marginBottom: 8 }}>{p}</div>)}
       {review.summary.map((s) => <div key={s.label} className="kv">{s.label}<b>{s.detail}</b></div>)}
-      <div className="lbl" style={{ margin: '18px 0 4px' }}>Launch will</div>
+      <div className="lbl" style={{ margin: '16px 0 4px' }}>Launch will</div>
       <div className="steps">
         {review.willDo.map((w, i) => (
           <div key={w.key} className="stp"><span className="dot">{i + 1}</span><div><b>{w.label}{w.optional ? ' (optional)' : ''}</b><small>{w.detail}</small></div><span></span></div>
@@ -281,7 +280,7 @@ function ReviewStep({ review, loading, error, payloadOk, missing, rehearsal }: {
       {rehearsal && (
         <div style={{ marginTop: 16 }}>
           <div className="lbl" style={{ marginBottom: 6 }}>Rehearsal result · {rehearsal.status}</div>
-          {rehearsal.steps.map((s) => <div key={s.key} className="kv">{s.label}<b><span className={`st ${s.status === 'done' ? 'g' : s.status === 'failed' ? 'r' : 'n'}`}><i></i>{s.status}</span></b></div>)}
+          {rehearsal.steps.map((s) => <div key={s.key} className="kv">{s.label}<b><span className={`st ${s.status === 'done' ? 'g' : s.status === 'failed' ? 'c' : 'n'}`}><i></i>{s.status}</span></b></div>)}
         </div>
       )}
     </>

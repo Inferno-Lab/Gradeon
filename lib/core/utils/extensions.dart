@@ -4,6 +4,7 @@ import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/translations/en_redesign.dart';
 
 extension AppContext on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;
@@ -40,5 +41,13 @@ extension SafeTranslate on String {
       out = out.replaceAll('@$key', params[key]!);
     }
     return out;
+  }
+
+  /// A count: `'homework.n_files'.trn(1)` is "1 file" through the key's `_one` form. A language uses its own singular,
+  /// or the English one only while its plural is still English, so a Hindi screen never shows an English word.
+  String trn(num n, [Map<String, String> params = const {}]) {
+    final one = '${this}_one';
+    final translated = one.tr != enRedesign[one] || tr == enRedesign[this];
+    return (n == 1 && one.tr != one && translated ? one : this).trp({'n': '$n', ...params});
   }
 }

@@ -23,9 +23,9 @@ double _position(PageController pager, int fallback) =>
 
 /// A wash of the page's pigment on chalk, so the three stories stay in the same room.
 Color _wash(AppColors c, double p) {
-  const student = Color(0xFF2F5BD3);
-  const parent = Color(0xFFB8306F);
-  const teacher = Color(0xFF23784A);
+  final student = AppColors.subject('maths').fill;
+  final parent = AppColors.subject('hindi').fill;
+  final teacher = AppColors.ok;
   final pigment = p < 1 ? Color.lerp(student, parent, p)! : Color.lerp(parent, teacher, (p - 1).clamp(0.0, 1.0))!;
   return Color.lerp(c.chalk, pigment, c.dark ? .18 : .11)!;
 }
@@ -78,9 +78,9 @@ class OnboardingView extends GetView<OnboardingController> {
                       child: Glass(
                         width: 84,
                         height: 40,
-                        radius: 20,
+                        radius: 18,
                         child: Center(
-                          child: Text('common.skip'.tr, style: anek(14.5, 650, height: 1, color: context.app.ink)),
+                          child: Text('common.skip'.tr, style: AppText.chip(color: context.app.ink, height: 1)),
                         ),
                       ),
                     ),
@@ -106,7 +106,7 @@ class OnboardingView extends GetView<OnboardingController> {
                 Obx(() {
                   final last = controller.page.value == 2;
                   return AnimatedContainer(
-                    duration: AppDurations.medium,
+                    duration: AppMotion.t3,
                     curve: kEase,
                     width: last ? 188 : 140,
                     child: Btn(
@@ -142,10 +142,10 @@ class _TopChip extends StatelessWidget {
       child: IgnorePointer(
         ignoring: !visible,
         child: AnimatedOpacity(
-          duration: AppDurations.fast,
+          duration: AppMotion.t2,
           opacity: visible ? 1 : 0,
           child: AnimatedScale(
-            duration: AppDurations.fast,
+            duration: AppMotion.t2,
             curve: kEase,
             scale: visible || context.reduceMotion ? 1 : .92,
             child: child,
@@ -175,7 +175,7 @@ class _Page extends StatefulWidget {
 }
 
 class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+  late final _c = AnimationController(vsync: this, duration: AppMotion.loop);
   var _wasActive = false;
   var _played = false;
 
@@ -277,7 +277,7 @@ class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(24, compact ? 22 : 34, 24, 112 + inset.bottom),
+                      padding: EdgeInsets.fromLTRB(24, compact ? 24 : 32, 24, 112 + inset.bottom),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -319,8 +319,7 @@ class _Dots extends StatelessWidget {
       child: Row(
         children: [
           for (var i = 0; i < 3; i++)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            Pressable(
               onTap: () => onTap(i),
               child: SizedBox(
                 height: 44,
@@ -335,15 +334,14 @@ class _Dots extends StatelessWidget {
                           height: 6,
                           decoration: BoxDecoration(
                             color: Color.lerp(c.line2, c.ink, near),
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         );
                       },
                     ),
                   ),
                 ),
-              ),
-            ),
+              ),),
         ],
       ),
     );
@@ -401,14 +399,7 @@ class _DayArt extends StatelessWidget {
                               opacity: label,
                               child: Text(
                                 cols[i].$2,
-                                style: anek(
-                                  12,
-                                  760,
-                                  width: 120,
-                                  height: 1,
-                                  em: .06,
-                                  color: AppColors.subject(cols[i].$1).on,
-                                ),
+                                style: AppText.stamp(color: AppColors.subject(cols[i].$1).on),
                               ),
                             ),
                           ),
@@ -427,7 +418,7 @@ class _DayArt extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: context.app.paper,
-                        borderRadius: BorderRadius.circular(11),
+                        borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
                             color: context.app.ink.withValues(alpha: .16),
@@ -437,12 +428,12 @@ class _DayArt extends StatelessWidget {
                         ],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         child: Text(
                           'onboarding.now'.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: anek(11, 720, height: 1, color: context.app.ink),
+                          style: AppText.tiny(color: context.app.ink),
                         ),
                       ),
                     ),
@@ -473,10 +464,10 @@ class _ParentArtState extends State<_ParentArt> with SingleTickerProviderStateMi
   /// 0 = Aarav, 1 = Ananya. One smooth ease — no bounce, no overshoot.
   late final AnimationController _switch = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 720),
+    duration: AppMotion.celebrate,
   );
   late final Animation<double> _hand =
-      CurvedAnimation(parent: _switch, curve: Curves.easeInOutCubic);
+      CurvedAnimation(parent: _switch, curve: kEase);
   var _switched = false;
 
   @override
@@ -505,8 +496,8 @@ class _ParentArtState extends State<_ParentArt> with SingleTickerProviderStateMi
   @override
   Widget build(BuildContext context) {
     final t = widget.t;
-    final a = _phase(t, 0, .5, Curves.easeOutBack);
-    final b = _phase(t, .15, .65, Curves.easeOutBack);
+    final a = _phase(t, 0, .5);
+    final b = _phase(t, .15, .65);
     final pill = _phase(t, .48, .78);
     Widget drop(double v, double rise, Widget child) => Opacity(
       opacity: v.clamp(0.0, 1.0),
@@ -606,10 +597,10 @@ class _KidCard extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.subject(subject).fill,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0x9910201B).withValues(alpha: .4 + .35 * f),
+                  color: AppColors.light.ink.withValues(alpha: 0.6).withValues(alpha: .4 + .35 * f),
                   blurRadius: 28 + 18 * f,
                   spreadRadius: -18,
                   offset: Offset(0, 14 + 10 * f),
@@ -619,11 +610,11 @@ class _KidCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Overline(over, color: const Color(0xCCFFFFFF)),
+                Overline(over, color: AppColors.white.withValues(alpha: 0.8)),
                 const SizedBox(height: 10),
                 Text(big, style: context.type.h2.copyWith(color: AppColors.white)),
                 const SizedBox(height: 4),
-                Text(line, style: context.type.s.copyWith(color: const Color(0xE0FFFFFF))),
+                Text(line, style: context.type.s.copyWith(color: AppColors.white.withValues(alpha: 0.88))),
               ],
             ),
           ),
@@ -677,10 +668,10 @@ class _SwitchCapsule extends StatelessWidget {
               top: (height - avatar) / 2,
               child: Opacity(
                 opacity: .5 + .5 * (1 - p),
-                child: const Avatar(
+                child: Avatar(
                   'Aarav Sharma',
-                  background: Color(0xFFFBFCF9),
-                  foreground: Color(0xFF10201B),
+                  background: AppColors.light.paper,
+                  foreground: AppColors.light.ink,
                 ),
               ),
             ),
@@ -692,7 +683,7 @@ class _SwitchCapsule extends StatelessWidget {
                 child: Avatar(
                   'Ananya Sharma',
                   initials: 'AN',
-                  background: const Color(0xFFFBFCF9),
+                  background: AppColors.light.paper,
                   foreground: AppColors.subject('hindi').fill,
                 ),
               ),
@@ -715,7 +706,7 @@ class _SwitchCapsule extends StatelessWidget {
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: anek(13, 680, height: 1.1, color: AppColors.white),
+                          style: AppText.capB(color: AppColors.white, height: 1.1),
                         ),
                       ),
                     ),
@@ -728,7 +719,7 @@ class _SwitchCapsule extends StatelessWidget {
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: anek(13, 680, height: 1.1, color: AppColors.white),
+                          style: AppText.capB(color: AppColors.white, height: 1.1),
                         ),
                       ),
                     ),
@@ -822,8 +813,8 @@ class _TeacherArt extends StatelessWidget {
                 opacity: tally,
                 child: Glass(
                   height: 56,
-                  radius: 28,
-                  padding: const EdgeInsets.only(left: 18, right: 8),
+                  radius: 999,
+                  padding: const EdgeInsets.only(left: 20, right: 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -837,13 +828,13 @@ class _TeacherArt extends StatelessWidget {
                               ),
                               TextSpan(
                                 text: 'onboarding.tally_late'.tr,
-                                style: const TextStyle(color: AppColors.late),
+                                style: TextStyle(color: AppColors.late),
                               ),
                             ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: anek(15, 680, height: 1, color: context.app.ink),
+                          style: AppText.ts(color: context.app.ink, height: 1),
                         ),
                       ),
                       Btn('common.submit', kind: BtnKind.ink, small: true, onPressed: () {}),
@@ -897,7 +888,7 @@ class _RegisterDot extends StatelessWidget {
               shape: BoxShape.circle,
               border: absent ? Border.all(color: AppColors.bad.withValues(alpha: m), width: 2.5) : null,
             ),
-            child: Text(initials, style: anek(16, 720, width: 115, height: 1, color: fg)),
+            child: Text(initials, style: AppText.t(color: fg, height: 1)),
           ),
           if (absent || late)
             Positioned(
@@ -910,7 +901,7 @@ class _RegisterDot extends StatelessWidget {
                   height: 20,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(color: absent ? AppColors.bad : AppColors.late, shape: BoxShape.circle),
-                  child: Text(absent ? 'A' : 'L', style: anek(11, 760, height: 1, color: AppColors.white)),
+                  child: Text(absent ? 'A' : 'L', style: AppText.tiny(color: AppColors.white)),
                 ),
               ),
             ),

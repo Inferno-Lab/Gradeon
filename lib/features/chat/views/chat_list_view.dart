@@ -6,6 +6,7 @@ import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -72,7 +73,7 @@ class ChatListView extends GetView<ChatListController> {
                 ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           if (ready && controller.threads.isNotEmpty) Rise(child: _Search(controller: controller)),
           ViewStateView(
             state: controller.state.value,
@@ -119,7 +120,7 @@ class ChatListView extends GetView<ChatListController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           for (var i = 0; i < suggested.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 14),
+                            if (i > 0) const SizedBox(width: 12),
                             _Suggested(teacher: suggested[i], controller: controller),
                           ],
                         ],
@@ -205,7 +206,7 @@ class _ThreadRow extends StatelessWidget {
         onTap: () => Get.toNamed<void>('/chat/${thread.id}'),
         scale: .985,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               Avatar(
@@ -240,10 +241,7 @@ class _ThreadRow extends StatelessWidget {
                             preview,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: context.type.s.copyWith(
-                              color: unread > 0 ? c.ink : null,
-                              fontVariations: unread > 0 ? const [FontVariation('wght', 560)] : null,
-                            ),
+                            style: context.type.s.copyWith(color: unread > 0 ? c.ink : null),
                           ),
                         ),
                         if (unread > 0) ...[
@@ -253,13 +251,13 @@ class _ThreadRow extends StatelessWidget {
                             height: 22,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(11)),
-                            child: Text('$unread', style: anek(12, 760, height: 1, color: AppColors.mariInk)),
+                            decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(10)),
+                            child: Text('$unread', style: AppText.capB(color: AppColors.mariInk, height: 1)),
                           ),
                         ],
                       ],
                     ),
-                    Text(thread.subtitle, style: context.type.cap.copyWith(fontSize: 11.5)),
+                    Text(thread.subtitle, style: context.type.tiny),
                   ],
                 ),
               ),
@@ -296,7 +294,7 @@ class _Suggested extends StatelessWidget {
                 '${teacher.name.split(' ').first} · ${subjectName(teacher.subject)}',
                 textAlign: TextAlign.center,
                 maxLines: 2,
-                style: context.type.cap.copyWith(fontSize: 11.5),
+                style: context.type.tiny,
               ),
             ],
           ),
@@ -318,7 +316,7 @@ class _NewChatSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text('chat.new'.tr, style: context.type.h2),
           const SizedBox(height: 8),
           for (final t in threads)
@@ -457,7 +455,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                                     firstRunOfSender
                                         ? '$who · ${DateFormat('H:mm').format(m.sentAt)}'
                                         : _stamp(m.sentAt),
-                                    style: anek(11, 520, height: 1.2, color: c.ink3),
+                                    style: AppText.tiny(color: c.ink3, height: 1.2),
                                   ),
                                 ),
                             ],
@@ -473,22 +471,20 @@ class ChatThreadView extends GetView<ChatThreadController> {
               top: inset.top + 8,
               child: Glass(
                 height: 56,
-                radius: 28,
+                radius: 999,
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
                   children: [
                     Semantics(
                       button: true,
                       label: 'common.back'.tr,
-                      child: GestureDetector(
+                      child: Pressable(
                         onTap: () => Get.back<void>(),
-                        behavior: HitTestBehavior.opaque,
                         child: SizedBox(
                           width: 44,
                           height: 44,
                           child: Icon(PhosphorIconsRegular.caretLeft, color: c.ink),
-                        ),
-                      ),
+                        ),),
                     ),
                     const SizedBox(width: 4),
                     if (thread != null) Avatar(thread.title, size: 32, background: color.fill, foreground: color.on),
@@ -500,14 +496,14 @@ class ChatThreadView extends GetView<ChatThreadController> {
                         children: [
                           Text(
                             thread?.title ?? '',
-                            style: context.type.t.copyWith(fontSize: 15.5),
+                            style: context.type.ts,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (thread != null)
                             Text(
                               thread.online ? 'chat.online'.trp({'sub': thread.subtitle}) : thread.subtitle,
-                              style: context.type.cap.copyWith(fontSize: 12),
+                              style: context.type.cap,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -517,15 +513,13 @@ class ChatThreadView extends GetView<ChatThreadController> {
                     Semantics(
                       button: true,
                       label: 'chat.call_office'.tr,
-                      child: GestureDetector(
+                      child: Pressable(
                         onTap: () => unawaited(controller.callOffice()),
-                        behavior: HitTestBehavior.opaque,
                         child: SizedBox(
                           width: 44,
                           height: 44,
                           child: Icon(PhosphorIconsRegular.phone, size: 20, color: c.ink),
-                        ),
-                      ),
+                        ),),
                     ),
                   ],
                 ),
@@ -550,14 +544,14 @@ class ChatThreadView extends GetView<ChatThreadController> {
                     },
                     child: Container(
                       height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: c.paper,
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(color: c.line2),
                       ),
-                      child: Text(_quick[i].tr, style: anek(14, 600, height: 1, color: c.ink)),
+                      child: Text(_quick[i].tr, style: AppText.chip(color: c.ink, height: 1)),
                     ),
                   ),
                 ),
@@ -568,22 +562,21 @@ class ChatThreadView extends GetView<ChatThreadController> {
                 bottom: bottom,
                 child: Glass(
                   height: 56,
-                  radius: 28,
+                  radius: 999,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Row(
                     children: [
                       Semantics(
                         button: true,
                         label: 'chat.attach'.tr,
-                        child: GestureDetector(
+                        child: Pressable(
                           onTap: () => ToastHelper.show('chat.attach_soon'),
                           child: Container(
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(color: c.ink.withValues(alpha: .06), shape: BoxShape.circle),
                             child: Icon(PhosphorIconsRegular.plus, color: c.ink),
-                          ),
-                        ),
+                          ),),
                       ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -594,7 +587,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                           textCapitalization: TextCapitalization.sentences,
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => unawaited(controller.send()),
-                          style: anek(16, 450, height: 1.3, color: c.ink),
+                          style: AppText.b(color: c.ink, height: 1.3),
                           cursorColor: c.ink,
                           decoration: InputDecoration(
                             isCollapsed: true,
@@ -604,7 +597,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                             focusedBorder: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                             hintText: 'chat.message_to'.trp({'name': thread.title}),
-                            hintStyle: anek(16, 450, height: 1.3, color: c.ink3),
+                            hintStyle: AppText.b(color: c.ink3, height: 1.3),
                           ),
                         ),
                       ),
@@ -616,25 +609,25 @@ class ChatThreadView extends GetView<ChatThreadController> {
                         child: GlassPress(
                           onTap: empty ? null : () => unawaited(controller.send()),
                           child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.t2,
                             opacity: empty ? .45 : 1,
                             child: Container(
                               width: 46,
                               height: 46,
                               decoration: BoxDecoration(
-                                color: const Color(0xD9F2A007),
+                                color: AppColors.mari.withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppColors.white, width: .6),
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x99B06F00),
+                                    color: AppColors.late.withValues(alpha: 0.6),
                                     blurRadius: 10,
                                     spreadRadius: -2,
-                                    offset: Offset(0, 4),
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: const Icon(PhosphorIconsBold.arrowUp, color: AppColors.mariInk, size: 22),
+                              child: Icon(PhosphorIconsBold.arrowUp, color: AppColors.mariInk, size: 22),
                             ),
                           ),
                         ),
@@ -665,18 +658,18 @@ class _Bubble extends StatelessWidget {
         maxWidth: MediaQuery.sizeOf(context).width * .72 > 270 ? 270 : MediaQuery.sizeOf(context).width * .72,
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: mine ? c.ink : c.paper,
           border: mine ? null : Border.all(color: c.line),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
             bottomLeft: Radius.circular(mine ? 20 : 6),
             bottomRight: Radius.circular(mine ? 6 : 20),
           ),
         ),
-        child: Text(text, style: anek(15, 450, height: 1.4, color: mine ? c.chalk : c.ink)),
+        child: Text(text, style: AppText.b(color: mine ? c.chalk : c.ink, height: 1.4)),
       ),
     );
   }
@@ -705,14 +698,14 @@ class _TypingState extends State<_Typing> with SingleTickerProviderStateMixin {
       label: 'chat.typing'.tr,
       child: Container(
         width: 70,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: c.paper,
           border: Border.all(color: c.line),
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-            bottomRight: Radius.circular(20),
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomRight: Radius.circular(18),
             bottomLeft: Radius.circular(6),
           ),
         ),
@@ -725,7 +718,7 @@ class _TypingState extends State<_Typing> with SingleTickerProviderStateMixin {
                 Builder(
                   builder: (context) {
                     final t = ((_c.value - i * .15) % 1 + 1) % 1;
-                    final bob = Curves.easeInOut.transform(t < .5 ? t * 2 : (1 - t) * 2);
+                    final bob = kEase.transform(t < .5 ? t * 2 : (1 - t) * 2);
                     return Transform.translate(
                       offset: Offset(0, -4 * bob),
                       child: Opacity(opacity: .5 + .5 * bob, child: Dot(c.ink3, size: 7)),

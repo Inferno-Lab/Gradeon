@@ -70,7 +70,7 @@ export function EventsPage() {
                 </button>
               ) : <span key={`b${i}`}></span>)}
             </div>
-            <div className="tgrow" style={{ marginTop: 14, gap: 12 }}>{(['event', 'ptm', 'exam', 'holiday'] as EventKind[]).map((k) => <span key={k} className="lgd"><i className={`k-${k}`} style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', marginRight: 6 }}></i>{KIND[k].label}</span>)}</div>
+            <div className="tgrow" style={{ marginTop: 12, gap: 12 }}>{(['event', 'ptm', 'exam', 'holiday'] as EventKind[]).map((k) => <span key={k} className="lgd"><i className={`k-${k}`} style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', marginRight: 6 }}></i>{KIND[k].label}</span>)}</div>
           </div>
           <div className="card rise" style={{ '--d': '.04s' } as React.CSSProperties}>
             <div className="ch"><h2>{month.toLocaleDateString('en-IN', { month: 'long' })} at a glance</h2></div>

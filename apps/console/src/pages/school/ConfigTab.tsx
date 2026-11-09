@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta } from '@gradeon/contracts';
+import { DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
+import { ThemeEditor } from '../../app/ThemeEditor';
 import { ago } from '../../app/format';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -43,8 +44,8 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
     },
   });
 
-  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 26 }} />;
-  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
+  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
   const keys = KEYS.filter((k) => SETTINGS_META[k].group === group);
   const modName = (k: string) => cat.data?.modules.find((m) => m.key === k)?.name ?? k;
@@ -53,7 +54,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       <div className="card s12 rise">
         <div className="ch"><h2>Configuration</h2><span className="chip">Version {cfg.version}</span></div>
         <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School setup, and can ask for changes (Requests).</div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
           <div className="fld" style={{ minWidth: 220 }}>
             <label htmlFor="cfg-group">Section</label>
             <Select id="cfg-group" value={group} onChange={setGroup} options={SETTING_GROUPS.map((g) => ({ value: g, label: `${g} · ${KEYS.filter((k) => SETTINGS_META[k].group === g).length}` }))} />
@@ -120,8 +121,10 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
       return box(<Select value={str} onChange={onChange} disabled={disabled} aria-label={meta.label} options={(meta.options ?? []).map(([v, l]) => ({ value: v, label: l }))} />);
     case 'number':
       return <div style={{ marginTop: 12 }}><NumberField label={meta.label} min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
+    case 'theme':
+      return box(<ThemeEditor scope="school" value={(value ?? {}) as ThemeColors} onChange={onChange} disabled={disabled} brand={typeof cfg.values['brand.color'] === 'string' ? cfg.values['brand.color'] : undefined} />);
     case 'color':
-      return box(<ColourField label={meta.label} value={str || '#6A4CF5'} onChange={onChange} disabled={disabled} />);
+      return box(<ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} />);
     case 'time': case 'date':
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
@@ -146,7 +149,7 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
         const r = rules[e.key] ?? e.defaults;
         return (
           <div key={e.key} className="kv" style={{ flexWrap: 'wrap', gap: 8 }}>{e.label}{e.urgent ? ' · sent in quiet hours' : ''}
-            <b style={{ display: 'flex', gap: 14 }}>{(['push', 'sms', 'email'] as const).map((ch) => (
+            <b style={{ display: 'flex', gap: 12 }}>{(['push', 'sms', 'email'] as const).map((ch) => (
               <Checkbox key={ch} checked={r[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={ch === 'push' ? 'App' : ch === 'sms' ? 'SMS' : 'Email'} />
             ))}</b>
           </div>
@@ -185,7 +188,7 @@ function History({ cfg, schoolId, can, say }: { cfg: SchoolConfig; schoolId: str
         <div key={v.id} className="rw" style={{ height: 'auto', padding: '10px 0', display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <span className="chip v">v{v.version}</span>
           <span style={{ flex: 1, minWidth: 200 }}>
-            <b style={{ font: '700 13.5px var(--fb)' }}>{v.changes.map((c) => SETTINGS_META[c.key as SettingKey]?.label ?? c.key).join(', ') || 'No change'}</b>
+            <b style={{ font: '700 13px var(--fb)' }}>{v.changes.map((c) => SETTINGS_META[c.key as SettingKey]?.label ?? c.key).join(', ') || 'No change'}</b>
             <small style={{ display: 'block', color: 'var(--ink3)' }}>{v.by} · {ago(v.at)}{v.note ? ` · ${v.note}` : ''}</small>
           </span>
           {can && v.id !== cfg.versions[0]?.id && (sure === v.id
@@ -214,7 +217,7 @@ function Templates({ schoolId, can, say }: { schoolId: string; can: boolean; say
       <div className="help">A template carries settings and roles, never who the school is (name, contacts, logo letters).</div>
       {(list.data ?? []).map((t) => <div key={t.id} className="kv">{t.name}<b>{t.keys} settings · {t.roles} roles · {ago(t.createdAt)}</b></div>)}
       {can && (
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
           <div style={{ flex: 1, minWidth: 200 }}><Field label="Save this school’s setup as" value={name} onChange={setName} maxLength={60} placeholder="For example: CBSE day school" /></div>
           <button className="btn" disabled={name.trim().length < 2 || save.isPending} onClick={() => save.mutate()}>Save template</button>
           <button className="btn pri" disabled={!(list.data ?? []).length} onClick={() => setApplying(true)}>Apply a template…</button>
@@ -237,7 +240,7 @@ function ApplyDialog({ schoolId, onClose, onDone }: { schoolId: string; onClose:
   return (
     <Dialog title="Apply a template" onClose={onClose} width={560}>
       <SelectField label="Template" value={tpl} onChange={setTpl} options={[{ value: '', label: 'Choose a template' }, ...(list.data ?? []).map((t) => ({ value: t.id, label: t.name }))]} />
-      <div className="lbl" style={{ margin: '14px 0 6px' }}>Schools</div>
+      <div className="lbl" style={{ margin: '12px 0 6px' }}>Schools</div>
       <div style={{ maxHeight: 260, overflow: 'auto' }}>
         {rows.map((s) => (
           <label key={s.id} className="hwc" style={{ display: 'flex', padding: '6px 0' }}>

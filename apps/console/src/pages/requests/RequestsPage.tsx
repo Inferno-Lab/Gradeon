@@ -27,7 +27,7 @@ export function RequestsPage() {
           {rows.map((r) => {
             const t = tintFor(r.schoolName);
             return (
-              <div key={r.id} className="rw" style={{ height: 'auto', padding: '14px 18px', display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div key={r.id} className="rw" style={{ height: 'auto', padding: '16px 20px', display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{initials(r.schoolName)}</span>
                 <span style={{ flex: 1, minWidth: 220 }}>
                   <a href={url(`/schools/${r.schoolId}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}`); }} style={{ font: '700 14px var(--fb)', color: 'inherit' }}>{r.schoolName}</a>
@@ -37,7 +37,7 @@ export function RequestsPage() {
                 </span>
                 {r.status === 'open'
                   ? (app.can('schools.configure') && <button className="btn sm pri" onClick={() => setAnswering(r)}>Answer</button>)
-                  : <span className={`chip ${r.status === 'done' ? 'g' : 'r'}`}>{r.status === 'done' ? 'Done' : 'Declined'}</span>}
+                  : <span className={`chip ${r.status === 'done' ? 'g' : 'c'}`}>{r.status === 'done' ? 'Done' : 'Declined'}</span>}
               </div>
             );
           })}

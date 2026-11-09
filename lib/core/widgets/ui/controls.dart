@@ -35,8 +35,8 @@ class _PressableState extends State<Pressable> {
         onTapCancel: enabled ? () => setState(() => _down = false) : null,
         child: AnimatedScale(
           scale: _down && !context.reduceMotion ? widget.scale : 1,
-          duration: _down ? const Duration(milliseconds: 90) : AppDurations.medium,
-          curve: _down ? Curves.easeOut : kSpring,
+          duration: _down ? AppMotion.press : AppMotion.spring,
+          curve: _down ? kEase : kSpring,
           child: widget.child,
         ),
       ),
@@ -106,7 +106,7 @@ class Btn extends StatelessWidget {
         onTap: loading ? null : onPressed,
         child: Container(
           height: h,
-          padding: EdgeInsets.symmetric(horizontal: small ? 16 : 22),
+          padding: EdgeInsets.symmetric(horizontal: small ? 16 : 24),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(h / 2),
@@ -199,10 +199,10 @@ class _FieldState extends State<Field> {
             if (widget.label != null)
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
-                child: Text(widget.label!.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+                child: Text(widget.label!.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
               ),
             AnimatedContainer(
-              duration: AppDurations.fast,
+              duration: AppMotion.t2,
               constraints: BoxConstraints(minHeight: widget.minHeight),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -239,14 +239,14 @@ class _FieldState extends State<Field> {
                         state.didChange(value);
                         widget.onChanged?.call(value);
                       },
-                      style: anek(16, 450, height: 1.35, color: c.ink),
+                      style: AppText.b(color: c.ink, height: 1.35),
                       cursorColor: c.ink,
                       decoration: InputDecoration(
                         isCollapsed: true,
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: widget.maxLines > 1 ? 14 : 16),
+                        contentPadding: EdgeInsets.symmetric(vertical: widget.maxLines > 1 ? 16 : 16),
                         hintText: widget.hint?.tr,
-                        hintStyle: anek(16, 450, height: 1.35, color: c.ink3),
+                        hintStyle: AppText.b(color: c.ink3, height: 1.35),
                       ),
                     ),
                   ),
@@ -263,7 +263,7 @@ class _FieldState extends State<Field> {
                     Icon(Icons.error_outline_rounded, size: 15, color: c.badText),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(error.tr, style: anek(13, 600, height: 1.3, color: c.badText)),
+                      child: Text(error.tr, style: AppText.capB(color: c.badText)),
                     ),
                   ],
                 ),

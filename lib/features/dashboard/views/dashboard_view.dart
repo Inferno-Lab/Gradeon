@@ -7,6 +7,7 @@ import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/schedule.dart';
@@ -139,7 +140,7 @@ class _DashboardViewState extends State<DashboardView> {
                             child: Glass(
                               height: 36,
                               radius: 18,
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -147,7 +148,7 @@ class _DashboardViewState extends State<DashboardView> {
                                   const SizedBox(width: 6),
                                   Text(
                                     'home.back_to_now'.tr,
-                                    style: anek(13.5, 650, height: 1, color: context.app.ink),
+                                    style: AppText.capB(color: context.app.ink, height: 1),
                                   ),
                                 ],
                               ),
@@ -204,7 +205,7 @@ class _RibbonPlaceholder extends StatelessWidget {
               margin: const EdgeInsets.only(right: 4),
               decoration: BoxDecoration(
                 color: context.app.paper2,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
               ),
             ),
           ),
@@ -231,11 +232,11 @@ class _ProfileCapsule extends StatelessWidget {
         child: Glass(
           height: 44,
           // Frosted with ink text: over the ribbon the capsule meets pale hatching as well as colour.
-          padding: const EdgeInsets.only(left: 5, right: 14),
+          padding: const EdgeInsets.only(left: 6, right: 16),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Avatar(name, size: 30, background: const Color(0xFFFBFCF9), foreground: const Color(0xFF10201B)),
+              Avatar(name, size: 30, background: AppColors.light.paper, foreground: AppColors.light.ink),
               const SizedBox(width: 8),
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -243,11 +244,11 @@ class _ProfileCapsule extends StatelessWidget {
                 children: [
                   Text(
                     name.split(' ').first,
-                    style: anek(14, 680, height: 1.05, color: context.app.ink),
+                    style: AppText.chip(color: context.app.ink, height: 1.05),
                   ),
                   Text(
                     cls,
-                    style: anek(11.5, 560, height: 1.05, color: context.app.ink3),
+                    style: AppText.tiny(color: context.app.ink3, height: 1.05),
                   ),
                 ],
               ),
@@ -314,7 +315,7 @@ class _StudentBody extends StatelessWidget {
         const SizedBox(height: 8),
         Rise(index: 1, child: Text(greeting(data.student.name.split(' ').first), style: context.type.h1)),
         const Rise(index: 1, child: QuickRow()),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         if (data.isNew)
           const Rise(index: 2, child: HomeWelcome())
         else ...[
@@ -414,9 +415,9 @@ class _WideBody extends StatelessWidget {
                 greeting(
                   (parent ? Get.find<AuthService>().user.value?.name ?? '' : data.student.name).split(' ').first,
                 ).replaceAll('\n', ' '),
-                style: context.type.h1.copyWith(fontSize: 40),
+                style: context.type.dl,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               const QuickRow(),
               const SizedBox(height: 12),
               if (data.isNew) ...[
@@ -428,13 +429,13 @@ class _WideBody extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 28),
+        const SizedBox(width: 24),
         Expanded(
           flex: 4,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
               if (!data.isNew && !parent) ...homeSections(data, only: const {'stats'}),
               if (parent) ...[SectionLabel('home.both_children'.tr), ChildrenStrip(children: data.children)],
             ],
@@ -465,7 +466,7 @@ class NowCard extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: c.mariSoft, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: c.mariSoft, borderRadius: BorderRadius.circular(10)),
               child: Icon(PhosphorIconsRegular.sun, size: 20, color: c.mariText),
             ),
             const SizedBox(width: 12),
@@ -526,24 +527,24 @@ class NowCard extends StatelessWidget {
       }
     }
     return EduCard(
-      padding: EdgeInsets.all(large ? 16 : 14),
+      padding: EdgeInsets.all(large ? 16 : 16),
       child: Row(
         children: [
           if (klass && !(isNow && now > end))
             Cover(subject: p.subject, large: large)
           else
             Hatch(
-              radius: BorderRadius.circular(8),
+              radius: BorderRadius.circular(6),
               background: c.paper2,
               child: SizedBox(width: large ? 64 : 42, height: large ? 82 : 52),
             ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Overline(when, color: c.mariText),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 Text(
                   title,
                   maxLines: 1,
@@ -552,14 +553,14 @@ class NowCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.cap),
-                const SizedBox(height: 9),
+                const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: Stack(
                     children: [
                       Container(height: 4, color: c.line),
                       AnimatedFractionallySizedBox(
-                        duration: const Duration(milliseconds: 400),
+                        duration: AppMotion.t4,
                         widthFactor: pct,
                         child: Container(height: 4, color: c.ink),
                       ),
@@ -596,7 +597,7 @@ class DueSection extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
+                Icon(PhosphorIconsRegular.checkCircle, color: AppColors.ok),
                 const SizedBox(width: 12),
                 Expanded(child: Text('home.nothing_due'.tr, style: context.type.t)),
               ],
@@ -631,7 +632,7 @@ class StatsRow extends StatelessWidget {
           Expanded(
             child: EduCard(
               onTap: () => Get.toNamed<void>(AppRoutes.attendance),
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -640,8 +641,8 @@ class StatsRow extends StatelessWidget {
                   BigNumber(value: data.summary.percent.round().toString(), unit: '%'),
                   const SizedBox(height: 10),
                   Wrap(
-                    spacing: 3,
-                    runSpacing: 3,
+                    spacing: 2,
+                    runSpacing: 2,
                     children: [
                       for (final d in data.monthDays.where((d) => d.status != AttendanceStatus.holiday))
                         Dot(switch (d.status) {
@@ -661,7 +662,7 @@ class StatsRow extends StatelessWidget {
           Expanded(
             child: EduCard(
               onTap: () => Get.toNamed<void>(AppRoutes.results),
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -707,7 +708,7 @@ class BigNumber extends StatelessWidget {
         children: [
           TextSpan(
             text: unit,
-            style: anek(size * .5, 760, width: 110, height: .9, color: context.app.ink),
+            style: context.type.dl.copyWith(fontSize: size * .5, height: .9),
           ),
         ],
       ),
@@ -722,5 +723,5 @@ String daysStamp(DateTime date) {
   final d = Formatters.daysUntil(date);
   if (d == 0) return 'time.today'.tr;
   if (d == 1) return 'time.one_day'.tr;
-  return 'time.n_days'.trp({'n': '$d'});
+  return 'time.n_days'.trn(d);
 }

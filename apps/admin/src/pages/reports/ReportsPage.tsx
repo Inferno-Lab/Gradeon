@@ -50,15 +50,15 @@ export function ReportsPage() {
           <div className="card tbl rise" style={{ padding: 0, minWidth: 0 }}>
             {!d ? <div className="skc" style={{ height: 320, borderRadius: 24 }} /> : (
               <>
-                <div className="ch" style={{ padding: '22px 22px 6px' }}><h2>{d.title}</h2><span className="chip v">{d.rows.length} {d.rows.length === 1 ? 'row' : 'rows'}</span></div>
-                <div className="tgrow" style={{ padding: '10px 22px 14px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
-                {d.rows.length === 0 ? <div style={{ padding: '0 22px 22px' }}><div className="help">Nothing to report yet. This fills in as the school uses Gradeon.</div></div> : (
+                <div className="ch" style={{ padding: '24px 24px 6px' }}><h2>{d.title}</h2><span className="chip v">{d.rows.length} {d.rows.length === 1 ? 'row' : 'rows'}</span></div>
+                <div className="tgrow" style={{ padding: '10px 24px 16px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
+                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><div className="help">Nothing to report yet. This fills in as the school uses Gradeon.</div></div> : (
                   <div className="scroll-x lscroll" data-even-scroll="">
                     <div style={{ minWidth: Math.max(480, d.columns.length * 96) }}>
                       <div className="grd th" style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>{d.columns.map((c) => <span key={c.key} style={{ textAlign: c.align }}>{c.label}</span>)}</div>
                       {d.rows.map((r, i) => (
                         <div className="grd rw" key={i} style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>
-                          {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13.5px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
+                          {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
                         </div>
                       ))}
                     </div>

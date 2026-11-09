@@ -1,6 +1,7 @@
 /* Scrolling and fitting: loaded last, so it can fix what the boards left open. Every scroll area gets a visible, themed bar and a soft shadow at the edge that still has more behind it. */
-html{scrollbar-width:thin;scrollbar-color:#C4C4BE transparent}
-html:has(.nest.dark){color-scheme:dark;scrollbar-color:#45454B transparent}
+html{scrollbar-width:thin}
+html:has(.nest.dark){color-scheme:dark}
+.nest{scrollbar-color:var(--line2) transparent}
 .nest *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ink3) 40%,transparent) transparent}
 .nest *::-webkit-scrollbar{width:12px;height:12px}
 .nest *::-webkit-scrollbar-track{background:transparent}
@@ -22,7 +23,7 @@ html:has(.nest.dark){color-scheme:dark;scrollbar-color:#45454B transparent}
 @media (min-width:901px) and (max-height:960px){
   .nest .app>.sb{padding-top:12px;padding-bottom:10px}
   .nest .app>.sb .nv{height:36px}
-  .nest .app>.sb .sl{padding:10px 12px 3px}
+  .nest .app>.sb .sl{padding:10px 12px 4px}
   .nest .app>.sb .me{padding-top:8px}
   .nest .app>.sb .sbc{display:none}
 }
@@ -48,10 +49,10 @@ html:has(.nest.dark){color-scheme:dark;scrollbar-color:#45454B transparent}
   .nest .tile .big{font-size:38px}
 }
 .nest .need{flex-wrap:wrap}
-.nest .need>div{flex:1 1 130px}
+.nest .need>div{flex:1 1 112px}
 /* The account block stays at the bottom of the menu even when the list above it scrolls. */
 @media (min-width:901px){
-  .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 6px 12px;background:var(--sbg);z-index:2;box-shadow:0 -14px 14px -10px var(--sbg)}
+  .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 6px 12px;background:var(--frame);z-index:2;box-shadow:0 -14px 14px -10px var(--frame)}
   .nest .app>.sb .sbc{margin-top:12px}
 }
 /* On a phone a table keeps the width its columns need and scrolls sideways inside its card, with a visible bar, instead of squeezing names to "Gre…". */
@@ -80,7 +81,7 @@ html:has(.nest.dark){color-scheme:dark;scrollbar-color:#45454B transparent}
 .nest .sb.col .ws .fade,.nest .sb.col .wsw .fade,.nest .sb.col .nv .fade,.nest .sb.col .me .fade{display:none}
 .nest .sb.col .nv{justify-content:center;padding:0}
 .nest .sb.col .sl{height:1px;padding:0;margin:10px 12px;background:var(--line);font-size:0;overflow:hidden}
-.nest .sb.col .nv .ct{display:block;position:absolute;top:7px;right:9px;width:9px;height:9px;padding:0;font-size:0;background:var(--c);box-shadow:0 0 0 2px var(--sbg)}
+.nest .sb.col .nv .ct{display:block;position:absolute;top:7px;right:9px;width:9px;height:9px;padding:0;font-size:0;background:var(--c);box-shadow:0 0 0 2px var(--frame)}
 .nest .sb.col .me{justify-content:center;padding-left:0;padding-right:0}
 .nest .sb.col .mebtn{width:auto;margin:0;padding:4px;justify-content:center}
 .nest .sb.col .me .av{margin:0}

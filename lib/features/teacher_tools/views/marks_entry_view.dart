@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
 import 'package:gradeon/core/widgets/glass.dart';
@@ -97,7 +98,7 @@ class _MarksEntryViewState extends State<MarksEntryView> {
                 sub: controller.saving.value ? 'teacher.saving'.tr : 'teacher.saved_typing'.tr,
                 text: Text(
                   next == null ? 'teacher.all_entered'.tr : 'teacher.next_name'.trp({'name': next.name}),
-                  style: context.type.t.copyWith(fontSize: 15),
+                  style: context.type.ts,
                 ),
                 action: 'teacher.next',
                 kind: BtnKind.ink,
@@ -109,7 +110,7 @@ class _MarksEntryViewState extends State<MarksEntryView> {
             cls == null ? 'teacher.marks'.tr : 'teacher.marks_title'.trp({'class': classLabel(cls)}),
             style: context.type.h2,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -126,7 +127,7 @@ class _MarksEntryViewState extends State<MarksEntryView> {
                     unawaited(controller.pickSubject(id));
                   },
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 EduCard(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Row(
@@ -136,7 +137,7 @@ class _MarksEntryViewState extends State<MarksEntryView> {
                       _Stat(
                         value: '${controller.missing}',
                         label: 'teacher.to_enter',
-                        color: controller.missing > 0 ? (c.dark ? const Color(0xFFF6BA45) : AppColors.late) : null,
+                        color: controller.missing > 0 ? (c.dark ? AppColors.blackboard.mariText : AppColors.late) : null,
                       ),
                     ],
                   ),
@@ -193,30 +194,26 @@ class _SubjectBar extends StatelessWidget {
                 Semantics(
                   selected: controller.subject.value == id,
                   button: true,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                  child: Pressable(
                     onTap: () => onPick(id),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
+                      duration: AppMotion.t3,
                       height: 40,
                       constraints: const BoxConstraints(minWidth: 72),
                       alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: controller.subject.value == id ? AppColors.subject(id).fill : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: Text(
                         subjectName(id),
-                        style: anek(
-                          14,
-                          controller.subject.value == id ? 720 : 620,
+                        style: AppText.chip(
                           height: 1,
                           color: controller.subject.value == id ? AppColors.subject(id).on : c.ink3,
                         ),
                       ),
-                    ),
-                  ),
+                    ),),
                 ),
             ],
           ),
@@ -237,7 +234,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) => Expanded(
     child: Column(
       children: [
-        Text(value, style: anek(22, 760, width: 118, height: 1, tabular: true, color: color ?? context.app.ink)),
+        Text(value, style: AppText.num(color: color ?? context.app.ink)),
         const SizedBox(height: 2),
         Text(label.tr, style: context.type.cap),
       ],
@@ -278,18 +275,17 @@ class _MarkRow extends StatelessWidget {
               : absent
               ? 'teacher.absent'.tr
               : '$value'}',
-      child: GestureDetector(
+      child: Pressable(
         onTap: active ? null : onTap,
-        behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.t2,
           color: active ? c.mariSoft : Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               SizedBox(
                 width: 26,
-                child: Text(student.rollNo, style: context.type.mono.copyWith(fontSize: 12, color: c.ink3)),
+                child: Text(student.rollNo, style: context.type.mono.copyWith(color: c.ink3)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -318,7 +314,7 @@ class _MarkRow extends StatelessWidget {
                         ],
                         onSubmitted: onSubmit,
                         onChanged: onChanged,
-                        style: anek(18, 720, height: 1, tabular: true, color: c.ink),
+                        style: AppText.t(color: c.ink, height: 1),
                         cursorColor: c.ink,
                         decoration: const InputDecoration(
                           isCollapsed: true,
@@ -335,14 +331,13 @@ class _MarkRow extends StatelessWidget {
                             ? 'Ab'
                             : '$value',
                         style: value == null
-                            ? anek(14, 500, height: 1, color: c.ink3)
-                            : anek(18, 720, height: 1, tabular: true, color: absent ? c.badText : c.ink),
+                            ? AppText.s(color: c.ink3, height: 1)
+                            : AppText.t(color: absent ? c.badText : c.ink, height: 1),
                       ),
               ),
             ],
           ),
-        ),
-      ),
+        ),),
     );
   }
 }

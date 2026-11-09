@@ -38,7 +38,7 @@ class QuickRow extends StatelessWidget {
       final keys = SchoolConfig.quick.where(_buttons.containsKey).toList();
       if (keys.isEmpty) return const SizedBox.shrink();
       return Padding(
-        padding: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.only(top: 16),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
@@ -179,9 +179,9 @@ class _MoneyCover extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: overdue ? c.badSoft : c.lateSoft,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text('₹', style: context.type.h2.copyWith(fontSize: 20, color: overdue ? c.badText : c.lateText)),
+      child: Text('₹', style: context.type.h3.copyWith(color: overdue ? c.badText : c.lateText)),
     );
   }
 }
@@ -209,7 +209,7 @@ class _Row extends StatelessWidget {
       onTap: onTap,
       scale: .985,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             leading,
@@ -224,10 +224,7 @@ class _Row extends StatelessWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.type.cap.copyWith(
-                      color: subtitleColor,
-                      fontWeight: subtitleColor == null ? null : FontWeight.w600,
-                    ),
+                    style: context.type.capB.copyWith(color: subtitleColor),
                   ),
                 ],
               ),
@@ -275,7 +272,7 @@ class ChildrenStrip extends StatelessWidget {
                   onTap: () => Get.toNamed<void>(AppRoutes.attendance),
                   scale: .985,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
                         Avatar(
@@ -338,7 +335,7 @@ class NoticeLine extends StatelessWidget {
       onTap: () => Get.toNamed<void>(AppRoutes.noticeDetail.replaceFirst(':id', notice.id)),
       scale: .985,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Stamp('notices.cat_${notice.category}'.tr, color: noticeTone(context, notice.category), size: 10),

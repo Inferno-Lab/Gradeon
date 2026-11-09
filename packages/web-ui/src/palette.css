@@ -2,12 +2,12 @@
 .nest .pin{display:flex;align-items:center;gap:12px;height:62px;padding:0 20px;border-bottom:1px solid var(--line);color:var(--ink3)}
 .nest .pin input{flex:1;border:0;outline:0;background:none;font:600 17px var(--fb);color:var(--ink)}
 .nest .pin svg{width:20px;height:20px}
-.nest .pg{font:800 11px var(--fb);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:14px 20px 6px}
-.nest .po{display:flex;align-items:center;gap:12px;width:calc(100% - 16px);margin:0 8px;height:46px;padding:0 12px;border:0;border-radius:16px;background:none;color:var(--ink);font:700 14.5px var(--fb);cursor:pointer;text-align:left;position:relative;transition:background var(--t1)}
+.nest .pg{font:700 11px var(--fb);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:16px 20px 6px}
+.nest .po{display:flex;align-items:center;gap:12px;width:calc(100% - 16px);margin:0 8px;height:46px;padding:0 12px;border:0;border-radius:14px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;text-align:left;position:relative;transition:background var(--t1)}
 .nest .po.act{background:var(--vS);color:var(--vD)}
 .nest .po .pic{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--sunk);color:var(--ink2);flex:none}
 .nest .po.act .pic{background:var(--card);color:var(--v)}
 .nest .po .pic svg{width:16px;height:16px}
 .nest .po small{margin-left:auto;font:700 12px var(--fb);opacity:.6}
 .nest .pf{display:flex;gap:16px;padding:12px 20px;margin-top:8px;border-top:1px solid var(--line);font:700 12px var(--fb);color:var(--ink3);background:var(--sunk)}
-.nest .none{padding:30px 20px;text-align:center;color:var(--ink3);font:600 14px var(--fb)}
+.nest .none{padding:32px 20px;text-align:center;color:var(--ink3);font:600 14px var(--fb)}

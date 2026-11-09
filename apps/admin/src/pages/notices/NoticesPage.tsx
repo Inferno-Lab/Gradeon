@@ -34,7 +34,7 @@ export function NoticesPage() {
                 <b>{n.title}</b>
                 <span className={`st ${TONE[n.status]}`}><i></i>{LABEL[n.status]}</span>
                 <span className="chip">{AUDIENCE[n.audience] ?? n.audience}</span>
-                <span style={{ marginLeft: 'auto', font: '600 12.5px var(--fb)', color: 'var(--ink3)' }}>{n.author} · {when(n.publishedAt ?? n.createdAt)}</span>
+                <span style={{ marginLeft: 'auto', font: '600 12px var(--fb)', color: 'var(--ink3)' }}>{n.author} · {when(n.publishedAt ?? n.createdAt)}</span>
               </div>
               <p>{n.body}</p>
             </article>

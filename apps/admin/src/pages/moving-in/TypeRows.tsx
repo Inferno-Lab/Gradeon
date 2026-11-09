@@ -17,14 +17,14 @@ export function TypeRows({ kind, busy, onSend, onCancel }: { kind: ImportKind; b
   const send = () => onSend(`${[kind.columns.map((c) => c.key), ...filled.map((r) => kind.columns.map((c) => r[c.key]!.trim()))].map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n`, filled.length);
   const grid = { '--cols': `40px ${kind.columns.map(() => 'minmax(130px,1fr)').join(' ')}` } as React.CSSProperties;
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 12 }}>
       <div className="help" style={{ marginTop: 0 }}>Columns marked * are needed. Leave a row empty to skip it.</div>
       <div className="scroll-x lscroll" style={{ marginTop: 8 }}>
         <div style={{ minWidth: 40 + kind.columns.length * 136 }}>
           <div className="grd th" style={grid}><span>Row</span>{kind.columns.map((c) => <span key={c.key}>{c.label}{c.required ? ' *' : ''}</span>)}</div>
           {rows.map((r, i) => (
             <div key={i} className="grd rw" style={{ ...grid, height: 'auto', padding: '6px 0', gap: 6 }}>
-              <span style={{ font: '700 12.5px var(--fb)', color: 'var(--ink3)' }}>{i + 1}</span>
+              <span style={{ font: '700 12px var(--fb)', color: 'var(--ink3)' }}>{i + 1}</span>
               {kind.columns.map((c) => (c.options
                 ? <Select key={c.key} compact aria-label={`Row ${i + 1}, ${c.label}`} value={r[c.key]!} onChange={(v) => set(i, c.key, v)} options={[{ value: '', label: 'Choose' }, ...c.options.map((o) => ({ value: o, label: o }))]} />
                 : <input key={c.key} className={`hws ${c.required && filled.includes(r) && !r[c.key]!.trim() ? 'bad' : ''}`} style={{ width: '100%', textAlign: 'left' }}

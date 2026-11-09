@@ -34,7 +34,7 @@ export function FleetPage() {
     return (
       <PageScope page="fleet">
         <main className="mn"><header className="hd"><div><h1>Fleet</h1></div></header>
-          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'r' }} scene="plug" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -79,7 +79,7 @@ export function FleetPage() {
     const pct = c.max ? Math.round((c.schools / c.max) * 100) : 0;
     const bad = here.some((s) => s.health === 'degraded' || s.health === 'down');
     const upd = here.some((s) => prevOf.get(s.id)?.state === 'rolling');
-    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--a)' } : upd ? { t: 'Updating', c: 'b', col: 'var(--b)' } : { t: 'Healthy', c: 'g', col: 'var(--g)' };
+    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--a)' } : upd ? { t: 'Updating', c: 'v', col: 'var(--v)' } : { t: 'Healthy', c: 'g', col: 'var(--g)' };
     return { n: `Cell ${c.key}`, s: c.schools, p: pct, st: st.t, cc: st.c, col: st.col, off: (138 * (1 - Math.min(100, pct) / 100)).toFixed(1) };
   });
   const rows = list.map((s, i) => {
@@ -122,7 +122,7 @@ export function FleetPage() {
     cmove: (e: React.MouseEvent<HTMLElement>) => place(e.clientX, e.currentTarget), ctouch: (e: React.TouchEvent<HTMLElement>) => place(e.touches[0]!.clientX, e.currentTarget),
     cells: cellRows, rows, loading: schools.isLoading,
     inc: incident ? {
-      cls: incident.state === 'resolved' ? 'ok' : '', chip: incident.state === 'resolved' ? 'g' : 'r', tag: incident.state === 'resolved' ? 'Resolved' : `Incident${incident.schoolName ? ` · ${incident.schoolName}` : ''}`,
+      cls: incident.state === 'resolved' ? 'ok' : '', chip: incident.state === 'resolved' ? 'g' : 'c', tag: incident.state === 'resolved' ? 'Resolved' : `Incident${incident.schoolName ? ` · ${incident.schoolName}` : ''}`,
       title: incident.title, body: incident.body, dismiss: () => setDismissed(incident.id), open: incSchool ? () => app.go(`/schools/${incSchool.id}`) : undefined,
     } : null,
     recheck: () => probe.mutate(),
@@ -132,12 +132,12 @@ export function FleetPage() {
     alertsDialog: alerts && (
       <Dialog title="Alerts" tag={{ text: chrome.pending || (f.degraded && f.degraded > 0) || incident?.state === 'open' ? 'Needs you' : 'All clear', tone: chrome.pending || incident?.state === 'open' ? 'a' : 'g' }} onClose={() => setAlerts(false)} width={460}>
         <div className="stack">
-          {incident?.state === 'open' && <div className="kv" style={{ alignItems: 'flex-start' }}><span><b style={{ color: 'var(--ink)' }}>{incident.title}</b><br /><small style={{ color: 'var(--ink3)' }}>{incident.body}</small></span><b><span className="st r"><i></i>Open</span></b></div>}
+          {incident?.state === 'open' && <div className="kv" style={{ alignItems: 'flex-start' }}><span><b style={{ color: 'var(--ink)' }}>{incident.title}</b><br /><small style={{ color: 'var(--ink3)' }}>{incident.body}</small></span><b><span className="st c"><i></i>Open</span></b></div>}
           {chrome.pending > 0 && <div className="kv"><span>{chrome.pending} {chrome.pending === 1 ? 'request is' : 'requests are'} waiting for a second person</span><b><button className="btn sm" onClick={() => { setAlerts(false); app.go('/approvals'); }}>Review</button></b></div>}
           {f.degraded > 0 && <div className="kv"><span>{f.degraded} {f.degraded === 1 ? 'school is' : 'schools are'} answering slowly</span><b><button className="btn sm" onClick={() => { setAlerts(false); app.go('/health'); }}>Open health</button></b></div>}
           {!chrome.pending && !f.degraded && incident?.state !== 'open' && <div className="help">Nothing needs you right now. Approvals, incidents and slow schools appear here.</div>}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="btn pri" onClick={() => setAlerts(false)}>Done</button></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn pri" onClick={() => setAlerts(false)}>Done</button></div>
       </Dialog>
     ),
     dialog: confirm && rel ? (

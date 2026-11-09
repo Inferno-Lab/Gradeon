@@ -2,37 +2,37 @@
 .nest .eg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .nest .es{position:relative;background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--sh1);overflow:hidden;display:flex;flex-direction:column;transition:transform var(--t3) var(--e),box-shadow var(--t3);animation:nRise var(--t3) var(--e) both;animation-delay:var(--d)}
 .nest .es:hover{transform:translateY(-5px);box-shadow:var(--sh2)}
-.nest .eh{display:flex;align-items:center;gap:10px;padding:18px 22px;border-bottom:1px solid var(--line)}
-.nest .eh b{font:700 16px var(--fd);letter-spacing:-.02em;flex:1}
+.nest .eh{display:flex;align-items:center;gap:10px;padding:20px 24px;border-bottom:1px solid var(--line)}
+.nest .eh b{font:700 15px var(--fd);letter-spacing:-.02em;flex:1}
 .nest .ghost{display:none}
 /* A wide empty state puts the picture beside the words instead of floating them in the middle of a long card. */
 .nest .es:not(.es-nf){container-type:inline-size}
 @container (min-width:680px){
-  .nest .es .eb{display:grid;grid-template-columns:230px minmax(0,440px);column-gap:48px;justify-content:center;align-content:center;align-items:start;text-align:left;padding:30px 28px 36px}
+  .nest .es .eb{display:grid;grid-template-columns:230px minmax(0,440px);column-gap:48px;justify-content:center;align-content:center;align-items:start;text-align:left;padding:32px 32px 40px}
   .nest .es .eb .art{grid-row:1/span 8;align-self:center;margin:0}
   .nest .es .eb h3{align-self:end}
   .nest .es .eb p{max-width:none}
   .nest .es .eb .es-act{justify-content:flex-start}
 }
-.nest .eb{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 28px 28px;gap:8px}
+.nest .eb{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 32px 32px;gap:8px}
 .nest .eb .art{width:230px;margin-bottom:6px}
-.nest .eb h3{margin:0;font:700 24px/1.15 var(--fd);letter-spacing:-.03em}
-.nest .eb p{margin:0;font:500 14.5px/1.55 var(--fb);color:var(--ink2);max-width:310px}
-.nest .es-act{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center}
-.nest .es-nf{grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:10px;padding:34px 40px;background:var(--ci);color:#fff;border-radius:28px;overflow:hidden;position:relative}
-.nest .es-nf .n{font:800 190px/.9 var(--fd);letter-spacing:-.07em;background:none;color:#fff}
+.nest .eb h3{margin:0;font:700 22px/1.15 var(--fd);letter-spacing:-.03em}
+.nest .eb p{margin:0;font:500 14px/1.55 var(--fb);color:var(--ink2);max-width:310px}
+.nest .es-act{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.nest .es-nf{grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:10px;padding:32px 40px;background:var(--ci);color:var(--onCi);border-radius:28px;overflow:hidden;position:relative}
+.nest .es-nf .n{font:700 190px/.9 var(--fd);letter-spacing:-.07em;background:none;color:var(--onCi)}
 .nest .es-nf .n span{color:var(--v)}
-.nest .es-nf h3{margin:6px 0 8px;font:700 30px/1.1 var(--fd);letter-spacing:-.03em}
-.nest .es-nf p{margin:0;font:500 15.5px/1.55 var(--fb);color:#B8B8BE;max-width:400px}
-.nest .es-err{border-color:color-mix(in srgb,var(--r) 35%,var(--line))}
-.nest .in3{display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);width:300px;transition:border-color var(--t2),box-shadow var(--t3) var(--e)}
+.nest .es-nf h3{margin:6px 0 8px;font:700 28px/1.1 var(--fd);letter-spacing:-.03em}
+.nest .es-nf p{margin:0;font:500 15px/1.55 var(--fb);color:color-mix(in srgb,var(--onCi) 72%,transparent);max-width:400px}
+.nest .es-err{border-color:color-mix(in srgb,var(--c) 35%,var(--line))}
+.nest .in3{display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);width:300px;transition:border-color var(--t2),box-shadow var(--t3) var(--e)}
 .nest .in3:focus-within{border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
-.nest .in3 input{flex:1;min-width:0;border:0;outline:0;background:none;font:700 14.5px var(--fb);color:var(--ink)}
+.nest .in3 input{flex:1;min-width:0;border:0;outline:0;background:none;font:700 14px var(--fb);color:var(--ink)}
 .nest .in3 svg{width:18px;height:18px;color:var(--ink3);flex:none}
 @media (max-width:760px){
-  .nest .es-nf{grid-template-columns:minmax(0,1fr);padding:26px 22px}
+  .nest .es-nf{grid-template-columns:minmax(0,1fr);padding:24px 24px}
   .nest .es-nf .n{font-size:120px}
-  .nest .es-nf h3{font-size:24px}
+  .nest .es-nf h3{font-size:22px}
   .nest .es-nf>div:last-child{max-width:220px;margin:0 auto}
 }
 /* An empty state inside a card is that card's body: no second frame and no second title row. */

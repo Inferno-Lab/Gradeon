@@ -293,7 +293,7 @@ class _ArtPainter extends CustomPainter {
   }
 
   void _notice(Canvas canvas) {
-    void slip(double dx, double dy, double angle, {bool empty = false, Color pin = AppColors.bad}) {
+    void slip(double dx, double dy, double angle, {bool empty = false, Color? pin}) {
       canvas
         ..save()
         ..translate(dx, dy)
@@ -308,7 +308,7 @@ class _ArtPainter extends CustomPainter {
         _rr(canvas, const Rect.fromLTWH(-30, -26, 30, 10), 3, const Color(0x33C23B2A));
         _lines(canvas, const Offset(-30, -4), [58, 44, 52], gap: 10);
       }
-      canvas.drawCircle(const Offset(0, -42), 6, _fill(pin));
+      canvas.drawCircle(const Offset(0, -42), 6, _fill(pin ?? AppColors.bad));
       canvas.restore();
     }
 

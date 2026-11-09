@@ -29,7 +29,7 @@ class Cover extends StatelessWidget {
     return Container(
       width: w,
       height: h,
-      padding: EdgeInsets.only(left: large ? 13 : 9, bottom: large ? 9 : 6),
+      padding: EdgeInsets.only(left: large ? 12 : 10, bottom: large ? 10 : 6),
       alignment: Alignment.bottomLeft,
       decoration: BoxDecoration(
         color: pigment.fill,
@@ -74,8 +74,8 @@ class _SpinePainter extends BoxPainter {
       ..clipRRect(
         RRect.fromRectAndCorners(rect, topLeft: const Radius.circular(6), bottomLeft: const Radius.circular(6)),
       )
-      ..drawRect(Rect.fromLTWH(rect.left, rect.top, width, rect.height), Paint()..color = const Color(0x33000000))
-      ..drawRect(Rect.fromLTWH(rect.right - 1, rect.top, 1, rect.height), Paint()..color = const Color(0x26FFFFFF))
+      ..drawRect(Rect.fromLTWH(rect.left, rect.top, width, rect.height), Paint()..color = AppColors.amoled.chalk.withValues(alpha: 0.2))
+      ..drawRect(Rect.fromLTWH(rect.right - 1, rect.top, 1, rect.height), Paint()..color = AppColors.white.withValues(alpha: 0.15))
       ..restore();
   }
 }

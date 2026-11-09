@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -20,7 +21,9 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Placeholder pigments while a photo loads or when it cannot.
-const _wash = [Color(0xFF2A1638), Color(0xFF1C4D33), Color(0xFF1F3A93), Color(0xFF5E7F23)];
+List<Color> get _wash => [
+  for (final id in const ['computer', 'science', 'maths', 'pe']) Color.lerp(AppColors.subject(id).fill, AppColors.blackboard.chalk, .55)!,
+];
 
 class _Photo extends StatelessWidget {
   const _Photo({required this.url, required this.wash});
@@ -32,11 +35,11 @@ class _Photo extends StatelessWidget {
   Widget build(BuildContext context) => CachedNetworkImage(
     imageUrl: url,
     fit: BoxFit.cover,
-    fadeInDuration: const Duration(milliseconds: 300),
+    fadeInDuration: AppMotion.t3,
     placeholder: (_, _) => ColoredBox(color: wash),
     errorWidget: (_, _, _) => ColoredBox(
       color: wash,
-      child: Center(child: Icon(PhosphorIconsRegular.imageBroken, color: Colors.white.withValues(alpha: .5))),
+      child: Center(child: Icon(PhosphorIconsRegular.imageBroken, color: AppColors.white.withValues(alpha: .5))),
     ),
   );
 }
@@ -68,7 +71,7 @@ class GalleryView extends GetView<GalleryController> {
                   height: 44,
                   width: 150,
                   onPigment: ready,
-                  tint: controller.onlyChild.value ? const Color(0x59F2A007) : null,
+                  tint: controller.onlyChild.value ? AppColors.mari.withValues(alpha: 0.35) : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -79,7 +82,7 @@ class GalleryView extends GetView<GalleryController> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           'gallery.only'.trp({'name': controller.childName!}),
-                          style: anek(14, 680, height: 1, color: ready ? AppColors.white : context.app.ink),
+                          style: AppText.chip(color: ready ? AppColors.white : context.app.ink, height: 1),
                         ),
                       ),
                     ],
@@ -97,7 +100,7 @@ class GalleryView extends GetView<GalleryController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const PageTitle('gallery.title'),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   ViewStateView(
                     state: controller.state.value == ViewState.success ? ViewState.empty : controller.state.value,
                     onRetry: controller.load,
@@ -158,12 +161,12 @@ class _Hero extends StatelessWidget {
     final count = controller.withChild(album);
     return Semantics(
       button: true,
-      label: '${album.title}, ${'gallery.photos'.trp({'n': '${album.photos.length}'})}',
+      label: '${album.title}, ${'gallery.photos'.trn(album.photos.length)}',
       excludeSemantics: true,
-      child: GestureDetector(
+      child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(34)),
           child: SizedBox(
             height: height,
             child: Stack(
@@ -173,13 +176,13 @@ class _Hero extends StatelessWidget {
                   _Photo(url: album.photos.first.url, wash: _wash[0])
                 else
                   ColoredBox(color: _wash[0]),
-                const DecoratedBox(
+                DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0x59000000), Color(0x00000000), Color(0x00000000), Color(0xB3120A1A)],
-                      stops: [0, .3, .5, 1],
+                      colors: [AppColors.amoled.chalk.withValues(alpha: 0.35), Colors.transparent, Colors.transparent, AppColors.blackboard.chalk.withValues(alpha: 0.7)],
+                      stops: const [0, .3, .5, 1],
                     ),
                   ),
                 ),
@@ -192,17 +195,17 @@ class _Hero extends StatelessWidget {
                     children: [
                       Overline(
                         'gallery.latest'.trp({'date': DateFormat('d MMM').format(album.date)}),
-                        color: Colors.white.withValues(alpha: .8),
+                        color: AppColors.white.withValues(alpha: .8),
                       ),
                       const SizedBox(height: 6),
                       Text(album.title, style: context.type.h1.copyWith(color: AppColors.white)),
                       Text(
                         [
-                          'gallery.photos'.trp({'n': '${album.photos.length}'}),
+                          'gallery.photos'.trn(album.photos.length),
                           if (count > 0 && controller.childName != null)
                             'gallery.with'.trp({'n': '$count', 'name': controller.childName!}),
                         ].join(' · '),
-                        style: context.type.s.copyWith(color: Colors.white.withValues(alpha: .85)),
+                        style: context.type.s.copyWith(color: AppColors.white.withValues(alpha: .85)),
                       ),
                     ],
                   ),
@@ -210,8 +213,7 @@ class _Hero extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
+        ),),
     );
   }
 }
@@ -250,27 +252,27 @@ class _AlbumTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const shadow = [Shadow(color: Color(0x66000000), blurRadius: 8, offset: Offset(0, 1))];
+    final shadow = [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 1))];
     return Semantics(
       button: true,
       label:
-          '${album.title}, ${DateFormat('d MMMM').format(album.date)}, ${'gallery.photos'.trp({'n': '${album.photos.length}'})}',
+          '${album.title}, ${DateFormat('d MMMM').format(album.date)}, ${'gallery.photos'.trn(album.photos.length)}',
       excludeSemantics: true,
       child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: Stack(
             fit: StackFit.expand,
             children: [
               if (album.photos.isNotEmpty) _Photo(url: album.photos.first.url, wash: wash) else ColoredBox(color: wash),
-              const DecoratedBox(
+              DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x00000000), Color(0x8C000000)],
-                    stops: [.5, 1],
+                    colors: [Colors.transparent, AppColors.amoled.chalk.withValues(alpha: 0.55)],
+                    stops: const [.5, 1],
                   ),
                 ),
               ),
@@ -288,8 +290,8 @@ class _AlbumTile extends StatelessWidget {
                       style: context.type.t.copyWith(color: AppColors.white, shadows: shadow),
                     ),
                     Text(
-                      '${DateFormat('d MMM').format(album.date)} · ${'gallery.photos'.trp({'n': '${album.photos.length}'})}',
-                      style: context.type.cap.copyWith(color: Colors.white.withValues(alpha: .85), shadows: shadow),
+                      '${DateFormat('d MMM').format(album.date)} · ${'gallery.photos'.trn(album.photos.length)}',
+                      style: context.type.cap.copyWith(color: AppColors.white.withValues(alpha: .85), shadows: shadow),
                     ),
                   ],
                 ),
@@ -343,7 +345,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
     if (context.reduceMotion) {
       _pages.jumpToPage(i);
     } else {
-      _pages.animateToPage(i, duration: const Duration(milliseconds: 450), curve: const Cubic(.2, .8, .2, 1));
+      _pages.animateToPage(i, duration: AppMotion.t4, curve: const Cubic(.2, .8, .2, 1));
     }
   }
 
@@ -353,7 +355,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
       0.0,
       _thumbs.position.maxScrollExtent,
     );
-    _thumbs.animateTo(target, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    _thumbs.animateTo(target, duration: AppMotion.t3, curve: kEase);
   }
 
   Future<void> _details(GalleryPhoto photo) => showSheet<void>(
@@ -361,7 +363,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text(photo.caption, style: context.type.h2),
           const SizedBox(height: 6),
           Text(
@@ -397,7 +399,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
     return Theme(
       data: Theme.of(context).copyWith(extensions: [AppColors.blackboard]),
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.amoled.chalk,
         body: Stack(
           children: [
             Positioned.fill(
@@ -411,7 +413,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                 itemBuilder: (context, i) => AnimatedBuilder(
                   animation: _kenBurns,
                   builder: (context, child) => Transform.scale(
-                    scale: 1 + .06 * Curves.easeInOut.transform(_kenBurns.value),
+                    scale: 1 + .06 * kEase.transform(_kenBurns.value),
                     child: child,
                   ),
                   child: Semantics(
@@ -423,15 +425,15 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
               ),
             ),
             // Keeps the caption and controls legible over bright photos.
-            const Positioned.fill(
+            Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0x66000000), Color(0x00000000), Color(0x00000000), Color(0xB3000000)],
-                      stops: [0, .18, .55, 1],
+                      colors: [AppColors.amoled.chalk.withValues(alpha: 0.4), Colors.transparent, Colors.transparent, AppColors.amoled.chalk.withValues(alpha: 0.7)],
+                      stops: const [0, .18, .55, 1],
                     ),
                   ),
                 ),
@@ -452,7 +454,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                     child: Center(
                       child: Text(
                         'gallery.n_of'.trp({'i': '${_index + 1}', 'n': '${photos.length}'}),
-                        style: anek(14, 680, height: 1, color: white, tabular: true),
+                        style: AppText.chip(color: white, height: 1, tabular: true),
                       ),
                     ),
                   ),
@@ -481,7 +483,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                       DateFormat('d MMM').format(widget.album.date),
                       if (withChild) 'gallery.is_in'.trp({'name': _gallery.childName ?? ''}),
                     ].join(' · '),
-                    style: context.type.s.copyWith(color: Colors.white.withValues(alpha: .8)),
+                    style: context.type.s.copyWith(color: AppColors.white.withValues(alpha: .8)),
                   ),
                 ],
               ),
@@ -501,10 +503,10 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                   button: true,
                   selected: i == _index,
                   label: photos[i].caption,
-                  child: GestureDetector(
+                  child: Pressable(
                     onTap: () => _go(i),
                     child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppMotion.t2,
                       opacity: i == _index ? 1 : .6,
                       child: Container(
                         width: 44,
@@ -520,8 +522,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                           child: _Photo(url: photos[i].url, wash: _wash[0]),
                         ),
                       ),
-                    ),
-                  ),
+                    ),),
                 ),
               ),
             ),
@@ -534,7 +535,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: Glass(
                     height: 60,
-                    radius: 30,
+                    radius: 999,
                     onPigment: true,
                     child: Obx(() {
                       final fav = _gallery.favourites.contains(photo.id);
@@ -554,7 +555,7 @@ class _GalleryViewerState extends State<GalleryViewer> with SingleTickerProvider
                           _BarButton(
                             icon: fav ? PhosphorIconsFill.heart : PhosphorIconsRegular.heart,
                             label: fav ? 'gallery.unfavourite' : 'gallery.favourite',
-                            color: fav ? const Color(0xFFFF6B6B) : null,
+                            color: fav ? AppColors.blackboard.badText : null,
                             onTap: () => fav ? _gallery.favourites.remove(photo.id) : _gallery.favourites.add(photo.id),
                           ),
                           _BarButton(

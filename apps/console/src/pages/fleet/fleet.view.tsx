@@ -49,7 +49,7 @@ export function FleetView({ v }: { v: any }) {
                 </svg>
               </button>
             </div>
-            <div className="fd" style={{ fontSize: "30px", letterSpacing: "-.035em", marginTop: "16px" } as CSSProperties}>
+            <div className="fd" style={{ fontSize: "28px", letterSpacing: "-.035em", marginTop: "16px" } as CSSProperties}>
               {v.relVersion}
             </div>
             <div style={{ font: "600 13px var(--fb)", opacity: ".78" } as CSSProperties}>{v.relLine}</div>
@@ -72,7 +72,7 @@ export function FleetView({ v }: { v: any }) {
             </div>
             </>
 )}
-<div style={{ display: "flex", gap: "8px", marginTop: "18px", flexWrap: "wrap" } as CSSProperties}>
+<div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" } as CSSProperties}>
               {v.canPause && (
                 <button className="btn sm" onClick={v.pause} disabled={v.busy}>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -107,20 +107,20 @@ export function FleetView({ v }: { v: any }) {
                 </svg>
               </button>
             </div>
-            <div className="fd" style={{ fontSize: "23px", letterSpacing: "-.03em", marginTop: "18px" } as CSSProperties}>
+            <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
               Live now
             </div>
-            <div style={{ font: "600 12.5px var(--fb)", opacity: ".7", marginBottom: "14px" } as CSSProperties}>{v.soon}</div>
-            <div className="big" style={{ fontSize: "54px" } as CSSProperties}>
+            <div style={{ font: "600 12px var(--fb)", opacity: ".7", marginBottom: "12px" } as CSSProperties}>{v.soon}</div>
+            <div className="big" style={{ fontSize: "38px" } as CSSProperties}>
               {v.live}
             </div>
-            <div style={{ marginTop: "14px", display: "flex", gap: "8px", alignItems: "center", font: "700 13px var(--fb)" } as CSSProperties}>
+            <div style={{ marginTop: "12px", display: "flex", gap: "8px", alignItems: "center", font: "700 13px var(--fb)" } as CSSProperties}>
               <span className="tr up">+{v.newThisMonth}</span>this month
             </div>
           </div>
           <div className="tile t-i s4 rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "rgba(255,255,255,.14)", color: "#fff" } as CSSProperties}>
+              <span className="chip" style={{ background: "color-mix(in srgb,var(--onCi) 14%,transparent)", color: "var(--onCi)" } as CSSProperties}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M3 12h4l3-7 4 14 3-7h4"></path>
                 </svg>
@@ -133,7 +133,7 @@ export function FleetView({ v }: { v: any }) {
             <div className="hbar" aria-hidden="true">
               <i style={{ flex: v.hOk || 0.001, background: "var(--g)" } as CSSProperties}></i>
               <i style={{ flex: v.hWarn || 0.001, background: "var(--a)" } as CSSProperties}></i>
-              <i style={{ flex: v.hBad || 0.001, background: "var(--r)" } as CSSProperties}></i>
+              <i style={{ flex: v.hBad || 0.001, background: "var(--c)" } as CSSProperties}></i>
             </div>
             <div className="hl">
               <div>
@@ -143,7 +143,7 @@ export function FleetView({ v }: { v: any }) {
                 <i style={{ background: "var(--a)" } as CSSProperties}></i>Degraded<b>{v.hWarn}</b>
               </div>
               <div>
-                <i style={{ background: "var(--r)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
+                <i style={{ background: "var(--c)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
               </div>
             </div>
           </div>
@@ -219,12 +219,12 @@ export function FleetView({ v }: { v: any }) {
         </section>
         <section className="grid">
           <div className="card tbl s12 rise" style={{ "--d": ".3s", padding: "0" } as CSSProperties} aria-labelledby="sch">
-            <div className="ch" style={{ padding: "22px 22px 14px" } as CSSProperties}>
+            <div className="ch" style={{ padding: "24px 24px 16px" } as CSSProperties}>
               <h2 id="sch">Schools</h2>
               <span className="chip">{v.rows.length} · newest first</span>
             </div>
             {v.rows.length === 0 && !v.loading && (
-              <div style={{ padding: "0 22px 22px" } as CSSProperties}>
+              <div style={{ padding: "0 24px 24px" } as CSSProperties}>
                 <EmptyCard
                   title="Schools"
                   chip={{ text: "0 schools", tone: "v" }}
@@ -283,9 +283,9 @@ export function FleetView({ v }: { v: any }) {
                 </div>
               </div>
             )}
-            {v.loading && <div className="skc" style={{ height: "260px", margin: "0 22px 22px", borderRadius: "20px" } as CSSProperties}></div>}
+            {v.loading && <div className="skc" style={{ height: "260px", margin: "0 20px 20px", borderRadius: "18px" } as CSSProperties}></div>}
           </div>
-          <div className="s12" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(320px,100%),1fr))", gap: "14px", alignItems: "start" } as CSSProperties}>
+          <div className="s12" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(320px,100%),1fr))", gap: "12px", alignItems: "start" } as CSSProperties}>
             {v.inc && (
               <div className={`inc ${v.inc.cls ?? ""} rise`} style={{ "--d": ".35s" } as CSSProperties} role="status">
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" } as CSSProperties}>
@@ -302,7 +302,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
                 <div style={{ display: "flex", gap: "8px" } as CSSProperties}>
                   {v.inc.open && (
-                    <button className="btn sm" style={{ background: "rgba(255,255,255,.1)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
+                    <button className="btn sm" style={{ background: "color-mix(in srgb,var(--onCi) 10%,transparent)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
                       Open the school
                     </button>
                   )}
@@ -312,7 +312,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
               </div>
             )}
-            <div className="tile t-l rise" style={{ "--d": ".4s", display: "flex", alignItems: "center", gap: "12px", padding: "18px 20px" } as CSSProperties}>
+            <div className="tile t-l rise" style={{ "--d": ".4s", display: "flex", alignItems: "center", gap: "12px", padding: "20px 20px" } as CSSProperties}>
               <div style={{ width: "92px", flex: "none" } as CSSProperties}>
                 <Illustration scene="calendar" />
               </div>

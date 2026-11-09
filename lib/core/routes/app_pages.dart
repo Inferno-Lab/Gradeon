@@ -88,7 +88,7 @@ class AppPages {
     ),
     GetPage(name: AppRoutes.onboarding, page: () => const OnboardingView(), binding: BindingsBuilder<void>(() => Get.lazyPut(OnboardingController.new, fenix: true)), transition: Transition.fadeIn),
     GetPage(name: AppRoutes.login, page: () => const LoginView(), binding: BindingsBuilder<void>(() => Get.lazyPut(LoginController.new, fenix: true)), transition: Transition.fadeIn),
-    GetPage(name: AppRoutes.shell, page: () => const ShellView(), binding: ShellBinding(), middlewares: [AuthMiddleware()], transition: Transition.fadeIn, transitionDuration: AppDurations.medium),
+    GetPage(name: AppRoutes.shell, page: () => const ShellView(), binding: ShellBinding(), middlewares: [AuthMiddleware()], transition: Transition.fadeIn, transitionDuration: AppMotion.t3),
     _page(AppRoutes.attendance, const AttendanceView(), AttendanceController.new),
     _page(AppRoutes.homework, const HomeworkView(), HomeworkController.new),
     GetPage(
@@ -101,7 +101,7 @@ class AppPages {
       }),
       middlewares: [AuthMiddleware()],
       transition: Transition.fadeIn,
-      transitionDuration: AppDurations.medium,
+      transitionDuration: AppMotion.t3,
     ),
     GetPage(name: AppRoutes.homeworkScan, page: () => const HomeworkScanView(), middlewares: [AuthMiddleware()], transition: Transition.downToUp),
     _page(AppRoutes.timetable, const TimetableView(), TimetableController.new),
@@ -124,10 +124,10 @@ class AppPages {
       binding: BindingsBuilder<void>(() => Get.lazyPut(AppSearchController.new, fenix: true)),
       middlewares: [AuthMiddleware()],
       transition: Transition.fadeIn,
-      transitionDuration: AppDurations.fast,
+      transitionDuration: AppMotion.t2,
     ),
     _page(AppRoutes.notifications, const NotificationsView(), NotificationsController.new),
-    GetPage(name: AppRoutes.settings, page: () => const SettingsView(), middlewares: [AuthMiddleware()], transition: Transition.cupertino, transitionDuration: AppDurations.medium),
+    GetPage(name: AppRoutes.settings, page: () => const SettingsView(), middlewares: [AuthMiddleware()], transition: Transition.cupertino, transitionDuration: AppMotion.t3),
     GetPage(name: AppRoutes.about, page: () => const AboutView(), middlewares: [AuthMiddleware()], transition: Transition.cupertino),
     GetPage(name: AppRoutes.help, page: () => const HelpView(), middlewares: [AuthMiddleware()], transition: Transition.cupertino),
     GetPage(name: AppRoutes.designSystem, page: () => const DesignSystemView(), middlewares: [AuthMiddleware()], transition: Transition.fadeIn),
@@ -149,7 +149,7 @@ class AppPages {
       binding: BindingsBuilder<void>(() => Get.lazyPut<T>(controller, fenix: true)),
       middlewares: [AuthMiddleware()],
       transition: Transition.fadeIn,
-      transitionDuration: AppDurations.medium,
+      transitionDuration: AppMotion.t3,
     );
   }
 
@@ -167,7 +167,7 @@ class AppPages {
         RoleMiddleware([UserRole.teacher]),
       ],
       transition: Transition.fadeIn,
-      transitionDuration: AppDurations.medium,
+      transitionDuration: AppMotion.t3,
     );
   }
 }

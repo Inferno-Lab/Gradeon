@@ -65,7 +65,7 @@ class _GlassSegmentedState extends State<GlassSegmented> {
             return Stack(
               children: [
                 AnimatedPositioned(
-                  duration: still ? Duration.zero : const Duration(milliseconds: 550),
+                  duration: still ? Duration.zero : AppMotion.t4,
                   curve: kSpring,
                   left: pad + math.max(0, widget.index) * slot,
                   top: pad,
@@ -73,7 +73,7 @@ class _GlassSegmentedState extends State<GlassSegmented> {
                   height: dropH,
                   // index -1: nothing chosen yet, so no droplet.
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppMotion.t2,
                     opacity: widget.index < 0 ? 0 : 1,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -104,7 +104,7 @@ class _GlassSegmentedState extends State<GlassSegmented> {
     final on = i == widget.index;
     final Color color;
     if (on) {
-      color = widget.dropletText ?? (widget.onPigment ? const Color(0xFF10201B) : (c.dark ? c.chalk : c.paper));
+      color = widget.dropletText ?? (widget.onPigment ? AppColors.light.ink : (c.dark ? c.chalk : c.paper));
     } else {
       color = widget.onPigment ? AppColors.white : c.ink3;
     }
@@ -128,7 +128,7 @@ class _GlassSegmentedState extends State<GlassSegmented> {
               softWrap: false,
               style: anek(widget.fontSize, on ? 720 : (widget.onPigment ? 650 : 560), height: 1, color: color).copyWith(
                 shadows: widget.onPigment && !on
-                    ? const [Shadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 1))]
+                    ? [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 1))]
                     : null,
               ),
             ),
@@ -185,18 +185,18 @@ class _GlassSwitchState extends State<GlassSwitch> {
           height: 44,
           child: Center(
             child: AnimatedContainer(
-              duration: AppDurations.fast,
+              duration: AppMotion.t2,
               curve: kEase,
               width: 64,
               height: 32,
               decoration: BoxDecoration(
                 color: on ? (widget.onColor ?? c.ink) : c.ink.withValues(alpha: .18),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Stack(
                 children: [
                   AnimatedPositioned(
-                    duration: still ? Duration.zero : AppDurations.medium,
+                    duration: still ? Duration.zero : AppMotion.spring,
                     curve: kSpring,
                     left: on ? 21 : 2,
                     top: 2,
@@ -204,7 +204,7 @@ class _GlassSwitchState extends State<GlassSwitch> {
                     height: 28,
                     child: AnimatedScale(
                       scale: _pressed && !still ? .96 : 1,
-                      duration: AppDurations.fast,
+                      duration: AppMotion.t2,
                       curve: kSpring,
                       child: Glass(
                         kind: GlassKind.lens,
@@ -315,15 +315,15 @@ class _GlassSliderState extends State<GlassSlider> {
                 children: [
                   Container(
                     height: 8,
-                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(2)),
                   ),
                   Container(
                     width: left + widget.thumbWidth / 2,
                     height: 8,
-                    decoration: BoxDecoration(color: widget.fill ?? c.ink, borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(color: widget.fill ?? c.ink, borderRadius: BorderRadius.circular(2)),
                   ),
                   AnimatedPositioned(
-                    duration: _dragging || context.reduceMotion ? Duration.zero : AppDurations.medium,
+                    duration: _dragging || context.reduceMotion ? Duration.zero : AppMotion.spring,
                     curve: kSpring,
                     left: left,
                     top: 5,
@@ -331,11 +331,11 @@ class _GlassSliderState extends State<GlassSlider> {
                     height: 34,
                     child: AnimatedScale(
                       scale: _dragging && !context.reduceMotion ? 1.08 : 1,
-                      duration: AppDurations.fast,
+                      duration: AppMotion.t2,
                       child: Glass(
                         kind: GlassKind.lens,
-                        radius: 17,
-                        tint: const Color(0x80FFFFFF),
+                        radius: 18,
+                        tint: AppColors.white.withValues(alpha: 0.5),
                         child: widget.thumbChild == null ? null : Center(child: widget.thumbChild),
                       ),
                     ),

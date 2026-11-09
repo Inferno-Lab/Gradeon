@@ -38,7 +38,7 @@ export function Tooltips() {
         if (el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1) return;
         if (performance.now() - lastShown > 300 && !wait) {
           cur.current = el;
-          wait = window.setTimeout(() => { wait = 0; if (cur.current === el) place(el, text, root); }, 450);
+          wait = window.setTimeout(() => { wait = 0; if (cur.current === el) place(el, text, root); }, 400);
           return;
         }
       }
