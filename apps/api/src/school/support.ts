@@ -45,6 +45,12 @@ export class SettingsService {
     return doc;
   }
 
+  /** The weekdays (0 is Sunday) the school is closed every week (console: Academic year → Closed every week on). */
+  async offDays(t: TenantCtx): Promise<number[]> {
+    const names = await this.value<string[]>(t, 'calendar.weeklyOff', ['sun']);
+    return names.map((n) => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(n)).filter((i) => i >= 0);
+  }
+
   async value<T>(t: TenantCtx, key: string, fallback: T): Promise<T> {
     const v = (await this.doc(t)).values[key];
     return (v === undefined ? fallback : v) as T;

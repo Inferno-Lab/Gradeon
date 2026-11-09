@@ -24,7 +24,7 @@ export function consoleApi(h: Http) {
     migration: {
       view: (schoolId: string) => h.get<MigrationView>(`${base}/schools/${schoolId}/import`),
       mark: (schoolId: string, b: ReadinessMark) => h.patch<MigrationView>(`${base}/schools/${schoolId}/import/readiness`, b),
-      template: (schoolId: string, kind: string) => h.text(`${base}/schools/${schoolId}/import/template/${kind}`),
+      template: (schoolId: string, kind: string) => h.blob(`${base}/schools/${schoolId}/import/template/${kind}`),
       upload: (schoolId: string, uploadId: string) => h.get<{ fileName: string; content: string }>(`${base}/schools/${schoolId}/import/uploads/${uploadId}`),
       setAside: (schoolId: string, uploadId: string) => h.post<UploadRow[]>(`${base}/schools/${schoolId}/import/uploads/${uploadId}/set-aside`),
       preview: (schoolId: string, b: ImportInputIn) => h.post<ImportPreview>(`${base}/schools/${schoolId}/import/preview`, b),

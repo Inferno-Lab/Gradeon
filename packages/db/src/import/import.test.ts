@@ -7,8 +7,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureDatabase, startDevPostgres, type DevPostgres } from '../dev.js';
 import { migrate } from '../migrate.js';
 import { seedSchool } from '../seed/greenfield.js';
-import { commitImport, exportAll, listBatches, previewImport, undoBatch } from './engine.js';
-import { parseCsv, readTable } from './files.js';
+import { IMPORT_KINDS } from '@gradeon/contracts';
+import { commitImport, exportAll, listBatches, previewImport, templateXlsx, undoBatch } from './engine.js';
+import { parseCsv, readTable, readXlsx } from './files.js';
 import { classKey, isoDay } from './kinds.js';
 import { sampleSchool } from './sample.js';
 
@@ -150,6 +151,53 @@ describe('moving a school in', () => {
     expect(no).toMatch(/^\d{4}\/0501$/);
     const again = await previewImport(pool, { kind: 'students', csv, fileName: 'new.csv' });
     expect(again.counts).toMatchObject({ create: 0, update: 1 });
+  }, 60_000);
+
+  it('gives every kind an Excel template that reads back as itself, with a dropdown wherever the values are fixed', async () => {
+    for (const kind of IMPORT_KINDS) {
+      const book = templateXlsx(kind.key);
+      const rows = readXlsx(book);
+      expect(rows[0], kind.key).toEqual(kind.columns.map((c) => c.label));
+      const examples = kind.columns.map((c) => c.example);
+      while (examples.at(-1) === '') examples.pop();
+      expect(rows[1], kind.key).toEqual(examples);
+      const p = await previewImport(pool, { kind: kind.key, csv: `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${book.toString('base64')}`, fileName: `${kind.key}.xlsx` });
+      expect(p.missing, kind.key).toEqual([]);
+      expect(Object.values(p.mapping).filter((v) => !v), kind.key).toEqual([]);
+      const lists = (book.toString('utf8').match(/<dataValidation /g) ?? []).length;
+      expect(lists, kind.key).toBe(kind.columns.filter((c) => c.options).length);
+    }
+    expect(templateXlsx('periods').toString('utf8')).toContain('&quot;period,break,lunch,recess,assembly&quot;');
+  }, 120_000);
+
+  it('reads how a payment was made in the words schools use, and asks about anything else', async () => {
+    const f = school.files.find((x) => x.kind === 'payments')!;
+    const [head, a, b] = parseCsv(f.csv);
+    const at = head!.indexOf('method');
+    const row = (r: string[], m: string) => r.map((v, i) => (i === at ? m : v));
+    const csv = [head!, row(a!, 'GPay'), row(b!, 'Cheque No 5')].map((r) => r.join(',')).join('\n');
+    const p = await previewImport(pool, { kind: 'payments', csv, fileName: 'pay.csv' });
+    expect(p.rows[0]!.errors).toEqual([]);
+    expect(p.rows[1]!.errors[0]).toMatch(/^Method is one of cash, upi, card, netbanking, cheque/);
+  }, 60_000);
+
+  it('takes children without a family phone, and a contact list gives their families one', async () => {
+    const kids = ['name,class,dob,guardian', 'Devansh Zed,4 A,02/03/2017,Kiran Zed', 'Isha Zed,4 A,05/06/2017,Kiran Zed', 'Mira Qadri,4 A,07/08/2017,Lata Qadri'].join('\n');
+    const k = await commitImport(pool, { kind: 'students', csv: kids, fileName: 'register.csv' }, 'Office');
+    expect(k.created).toBe(3);
+    expect(k.notes.join(' ')).toMatch(/still have no family phone|no family phone/i);
+    const list = ['name,phone,child', 'Lata Qadri,+91 98111 77001,', 'Kiran Zed,98111 77002,', 'Kiran Zed,98111 77003,Devansh Zed', 'Asha Kale,+91 98111 22233,'].join('\n');
+    const p = await previewImport(pool, { kind: 'contacts', csv: list, fileName: 'whatsapp.csv' });
+    expect(p.rows.map((r) => r.errors.length)).toEqual([0, 1, 0, 0]);
+    expect(p.rows[1]!.errors[0]).toMatch(/2 families without a phone are called “Kiran Zed”/);
+    expect(p.counts).toMatchObject({ create: 2, update: 1, skip: 1 });
+    const b = await commitImport(pool, { kind: 'contacts', csv: list, fileName: 'whatsapp.csv' }, 'Migration team');
+    const phone = async (child: string) => (await pool.query<{ phone: string | null }>('select g.phone from guardians g join student_guardians sg on sg.guardian_id = g.id join students s on s.id = sg.student_id where s.name = $1', [child])).rows[0]!.phone;
+    expect(await phone('Mira Qadri')).toBe('9811177001');
+    expect(await phone('Devansh Zed')).toBe('9811177003');
+    expect(await phone('Isha Zed')).toBeNull();
+    await undoBatch(pool, b.id);
+    expect(await phone('Mira Qadri')).toBeNull();
   }, 60_000);
 });
 

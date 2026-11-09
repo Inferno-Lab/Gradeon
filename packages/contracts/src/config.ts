@@ -41,6 +41,8 @@ export const SchoolSettingsSchema = z.object({
   'timetable.schoolEdits': z.boolean().default(true),
   'classes.schoolEdits': z.boolean().default(true),
   'calendar.schoolEdits': z.boolean().default(true),
+  // The days the school is closed every week (holidays and second Saturdays are calendar entries). At least one day is a school day.
+  'calendar.weeklyOff': z.array(z.enum(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'])).max(6).default(['sun']),
   'feeStructures.schoolEdits': z.boolean().default(true),
   // Receipt numbers: {year} becomes the year. The start lets a school arriving from another system keep its numbering.
   'fees.receiptPrefix': z.string().trim().min(1).max(20).default('RCPT-{year}-'),

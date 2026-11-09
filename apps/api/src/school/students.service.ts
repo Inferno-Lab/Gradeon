@@ -10,7 +10,6 @@ import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
-const OFF_DAYS = [0];
 const FEE_HORIZON_DAYS = 30;
 const LOW_ATTENDANCE = 0.88;
 
@@ -30,7 +29,7 @@ export class StudentsService {
   ) {}
 
   /** The latest school day and the ten before it, for the tick marks. */
-  private days(n = 10): { last: string; days: string[]; today: string } {
+  private days(OFF_DAYS: readonly number[], n = 10): { last: string; days: string[]; today: string } {
     const today = istToday();
     return { today, last: latestSchoolDay(today, OFF_DAYS), days: schoolDaysEnding(today, n, OFF_DAYS) };
   }
@@ -74,7 +73,7 @@ export class StudentsService {
       ...query, feeStatus: has.fees ? query.feeStatus : undefined, attendance: has.attendance ? query.attendance : undefined,
       sort: (!has.fees && query.sort === 'due') || (!has.attendance && query.sort === 'attendance') ? 'name' : query.sort,
     };
-    const { today, days } = this.days();
+    const { today, days } = this.days(await this.settings.offDays(t));
     const where: string[] = [];
     const params: unknown[] = [today, addDays(today, FEE_HORIZON_DAYS)];
     const add = (v: unknown) => { params.push(v); return `$${params.length}`; };
@@ -128,7 +127,7 @@ export class StudentsService {
   }
 
   async summary(t: TenantCtx, q: Pick<StudentQuery, 'classId' | 'house'>): Promise<StudentSummary> {
-    const { today, last } = this.days();
+    const { today, last } = this.days(await this.settings.offDays(t));
     const params: unknown[] = [today, last];
     const where: string[] = [];
     if (q.classId) { params.push(q.classId); where.push(`s.class_id = $${params.length}`); }
@@ -172,7 +171,7 @@ export class StudentsService {
   }
 
   async views(t: TenantCtx): Promise<StudentViews> {
-    const { today } = this.days();
+    const { today } = this.days(await this.settings.offDays(t));
     const pinnedId = await this.settings.value<string | null>(t, 'students.pinnedClass', null);
     const [counts, pinned] = await Promise.all([
       t.pool.query<{ all: string; overdue: string; fresh: string }>(
@@ -190,7 +189,8 @@ export class StudentsService {
   }
 
   async detail(t: TenantCtx, id: string): Promise<StudentDetail> {
-    const { today, last, days } = this.days();
+    const OFF_DAYS = await this.settings.offDays(t);
+    const { today, last, days } = this.days(await this.settings.offDays(t));
     const params = [today, addDays(today, FEE_HORIZON_DAYS)];
     const { rows } = await t.pool.query<ListRow & { dob: string; blood_group: string | null; house: string | null; address: string | null; admitted_on: string | null; g_phone: string | null; g_email: string | null }>(
       `${this.baseSql().replace('s.status, g.name guardian_name,', "s.status, to_char(s.dob,'YYYY-MM-DD') dob, s.blood_group, s.address, to_char(s.admitted_on,'YYYY-MM-DD') admitted_on, g.phone g_phone, g.email g_email, g.name guardian_name,")} where s.id = $3`, [...params, id]);

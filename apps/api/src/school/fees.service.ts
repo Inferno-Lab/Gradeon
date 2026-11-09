@@ -5,7 +5,6 @@ import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
-const OFF_DAYS = [0];
 const HEADS = [
   ['tuition', 'Tuition'], ['transport', 'Transport'], ['activities', 'Activities'], ['lab', 'Lab'],
 ] as const;
@@ -21,6 +20,7 @@ export class FeesService {
 
   /** Money for the month of the latest school day: what fell due, what came in, and what is late. */
   async summary(t: TenantCtx, count = 6): Promise<FeeSummary> {
+    const OFF_DAYS = await this.settings.offDays(t);
     const today = istToday();
     const last = latestSchoolDay(today, OFF_DAYS);
     const monthStart = `${last.slice(0, 7)}-01`;

@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import { ADMISSION_STAGES, PAY_METHODS, PERIOD_KINDS, WEEKDAYS } from '@gradeon/contracts';
 import { newId } from '../ids.js';
 
 type Q = pg.Pool | pg.PoolClient;
@@ -193,13 +194,12 @@ const classes = kind<ClassLookups>({
   },
 });
 
-const PERIOD_KINDS = ['period', 'break', 'lunch', 'recess', 'assembly'];
 const periods = kind<Set<number>>({
   async load(db) { return new Set((await db.query<{ idx: number }>('select idx from periods')).rows.map((r) => r.idx)); },
   check(r, l) {
     const n = whole(r.number!);
     const errors = [...(n === null || n < 0 ? ['Number is a whole number like 1.'] : []), ...(!hhmm(r.starts_at!) || !hhmm(r.ends_at!) ? ['Write times as 08:00.'] : hhmm(r.starts_at!)! >= hhmm(r.ends_at!)! ? ['The period ends before it starts.'] : []),
-      ...(r.kind && !PERIOD_KINDS.includes(lc(r.kind)) ? [`Kind is one of ${PERIOD_KINDS.join(', ')}.`] : [])];
+      ...(r.kind && !(PERIOD_KINDS as readonly string[]).includes(lc(r.kind)) ? [`Kind is one of ${PERIOD_KINDS.join(', ')}.`] : [])];
     return ok(String(n), errors, n !== null && l.has(n));
   },
   writes: (rows) => [{ table: 'periods', pk: ['idx'], cols: ['label', 'starts_at', 'ends_at', 'kind'], rows: rows.map((r) => ({ idx: whole(r.number!), label: r.label, starts_at: hhmm(r.starts_at!), ends_at: hhmm(r.ends_at!), kind: r.kind ? lc(r.kind) : 'period' })) }],
@@ -288,7 +288,7 @@ const students = kind<StudentLookups>({
       ...(!l.classes.has(classKey(r.class!)) ? [`Class “${r.class}” is not set up: import classes first.`] : []),
       ...(!isoDay(r.dob!) ? ['Write the date of birth as 2012-04-18 or 18/04/2012.'] : []),
       ...(r.admitted_on && !isoDay(r.admitted_on) ? ['Write the admission date as 2019-06-10 or 10/06/2019.'] : []),
-      ...(digits(r.guardian_phone!).length < 10 ? ['The guardian’s phone needs 10 digits: families sign in with it.'] : []),
+      ...(r.guardian_phone && digits(r.guardian_phone).length < 10 ? ['The guardian’s phone needs 10 digits: families sign in with it.'] : []),
       ...(r.guardian2_phone && digits(r.guardian2_phone).length < 10 ? ['The second guardian’s phone needs 10 digits.'] : []),
       ...(r.status && !STATUS[norm(r.status)] ? ['Status is active or inactive (left, TC and transferred count as inactive).'] : []),
     ];
@@ -299,7 +299,15 @@ const students = kind<StudentLookups>({
   writes(rows, l) {
     const users: Rec[] = [], guardians = new Map<string, Rec>(), studs: Rec[] = [], links: Rec[] = [];
     // One family, one guardian: brothers and sisters join the guardian who already has the phone, here or earlier in the file.
-    const guardian = (name: string, phone: string, email: string, relation: string) => {
+    const guardian = (name: string, phone: string, email: string, relation: string, studentId: string) => {
+      if (!digits(phone ?? '')) {
+        // The family this child already has stays as it is (a contact list may have given it a phone and a login since).
+        const known = [...l.links].find((k) => k.startsWith(`${studentId}|`));
+        if (known) return known.split('|')[1]!;
+        const id = newId('gdn');
+        guardians.set(`none|${studentId}|${name}`, { id, user_id: null, name, phone: null, email: email || null, relation: relation || 'Parent' });
+        return id;
+      }
       const d = digits(phone);
       const planned = guardians.get(d);
       if (planned) return planned.id as string;
@@ -321,10 +329,10 @@ const students = kind<StudentLookups>({
         blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null,
         status: r.status ? STATUS[norm(r.status)] : was?.status ?? 'active', admitted_on: r.admitted_on ? isoDay(r.admitted_on) : was?.admitted_on ?? null,
       });
-      const g1 = guardian(r.guardian_name!, r.guardian_phone!, r.guardian_email!, r.relation!);
+      const g1 = guardian(r.guardian_name!, r.guardian_phone ?? '', r.guardian_email!, r.relation!, id);
       if (!l.links.has(`${id}|${g1}`)) links.push({ student_id: id, guardian_id: g1, is_primary: true });
       if (r.guardian2_phone) {
-        const g2 = guardian(r.guardian2_name || 'Second guardian', r.guardian2_phone, '', r.guardian2_relation!);
+        const g2 = guardian(r.guardian2_name || 'Second guardian', r.guardian2_phone, '', r.guardian2_relation!, id);
         if (g2 !== g1 && !l.links.has(`${id}|${g2}`)) links.push({ student_id: id, guardian_id: g2, is_primary: false });
       }
     }
@@ -338,7 +346,13 @@ const students = kind<StudentLookups>({
   totals(rows) {
     const byClass = new Map<string, number>();
     for (const r of rows) byClass.set(classKey(r.class!), (byClass.get(classKey(r.class!)) ?? 0) + 1);
-    return [{ label: 'Students', value: String(rows.length) }, { label: 'Classes', value: String(byClass.size) }, { label: 'Families (by phone)', value: String(new Set(rows.map((r) => digits(r.guardian_phone!))).size) }];
+    const phones = rows.map((r) => digits(r.guardian_phone ?? '')).filter(Boolean);
+    return [{ label: 'Students', value: String(rows.length) }, { label: 'Classes', value: String(byClass.size) }, { label: 'Families (by phone)', value: String(new Set(phones).size) },
+      ...(phones.length < rows.length ? [{ label: 'Without a family phone', value: String(rows.length - phones.length) }] : [])];
+  },
+  async notes(db) {
+    const n = await withoutPhone(db);
+    return n ? [`${n} students have no family phone yet, so their families cannot sign in. Import a class contact list as Family phone numbers, or add the phones.`] : [];
   },
   async export(db) {
     return (await db.query<Row>(`select s.admission_no, s.name, c.name as class, s.roll_no, s.dob::text, coalesce(s.blood_group, '') as blood_group, coalesce(s.house, '') as house, coalesce(s.address, '') as address,
@@ -352,7 +366,7 @@ const students = kind<StudentLookups>({
   },
 });
 
-const STAGES = ['enquiry', 'applied', 'test', 'offer', 'enrolled', 'declined'];
+const STAGES: readonly string[] = ADMISSION_STAGES;
 const admissions = kind<Map<string, string>>({
   async load(db) {
     const { rows } = await db.query<{ id: string; child_name: string; phone: string }>('select id, child_name, phone from enquiries');
@@ -428,6 +442,12 @@ const feeDues = kind<DueLookups>({
 });
 
 type PayLookups = DueLookups & { payments: Map<string, string> };
+/** How the office was paid, in the words schools write it; anything else is asked about rather than stored as typed. */
+const METHOD: Record<string, string> = {
+  cash: 'cash', upi: 'upi', gpay: 'upi', googlepay: 'upi', phonepe: 'upi', paytm: 'upi', bhim: 'upi', card: 'card', debitcard: 'card', creditcard: 'card', pos: 'card',
+  netbanking: 'netbanking', online: 'netbanking', neft: 'netbanking', rtgs: 'netbanking', imps: 'netbanking', banktransfer: 'netbanking', cheque: 'cheque', check: 'cheque', dd: 'cheque', demanddraft: 'cheque',
+};
+const method = (v: string | undefined) => (v?.trim() ? METHOD[norm(v)] : 'cash');
 const payments = kind<PayLookups>({
   async load(db) {
     const { rows } = await db.query<{ id: string; receipt_no: string }>('select id, receipt_no from payments');
@@ -437,16 +457,17 @@ const payments = kind<PayLookups>({
     const s = l.students.get(lc(r.admission_no!));
     const amount = whole(r.amount!);
     const errors = [...needStudent(l.students, r.admission_no!), ...(s && !l.invoices.has(`${s.id}|${lc(r.fee_title!)}`) ? [`This student has no fee “${r.fee_title}”: import opening dues first.`] : []),
-      ...(amount === null || amount <= 0 ? ['Amount is whole rupees, more than 0.'] : []), ...(!isoDay(r.paid_on!) ? ['Write the payment date as 2026-06-10 or 10/06/2026.'] : [])];
+      ...(amount === null || amount <= 0 ? ['Amount is whole rupees, more than 0.'] : []), ...(!isoDay(r.paid_on!) ? ['Write the payment date as 2026-06-10 or 10/06/2026.'] : []),
+      ...(!method(r.method) ? [`Method is one of ${PAY_METHODS.join(', ')} (UPI apps, NEFT and DD are read too).`] : [])];
     return ok(r.receipt_no!.trim(), errors, l.payments.has(r.receipt_no!.trim()));
   },
   writes: (rows, l) => [{ table: 'payments', pk: ['id'], cols: ['invoice_id', 'amount', 'method', 'reference', 'paid_on'], rows: rows.map((r) => {
     const sid = l.students.get(lc(r.admission_no!))!.id;
-    return { id: l.payments.get(r.receipt_no!.trim()) ?? newId('pay'), invoice_id: l.invoices.get(`${sid}|${lc(r.fee_title!)}`)!.id, amount: whole(r.amount!), method: r.method ? lc(r.method) : 'cash',
+    return { id: l.payments.get(r.receipt_no!.trim()) ?? newId('pay'), invoice_id: l.invoices.get(`${sid}|${lc(r.fee_title!)}`)!.id, amount: whole(r.amount!), method: method(r.method),
       reference: r.reference || null, receipt_no: r.receipt_no!.trim(), paid_on: isoDay(r.paid_on!) };
   }) }],
   totals(rows) {
-    const methods = sumBy(rows, (r) => (r.method ? lc(r.method) : 'cash'), (r) => whole(r.amount!)!);
+    const methods = sumBy(rows, (r) => method(r.method)!, (r) => whole(r.amount!)!);
     return [{ label: 'Payments', value: String(rows.length) }, { label: 'Total paid', value: rupees([...methods.values()].reduce((a, b) => a + b, 0)) }, ...[...methods].map(([m, v]) => ({ label: `Paid by ${m}`, value: rupees(v) }))];
   },
   async notes(db) {
@@ -551,7 +572,7 @@ const marks = kind<MarkLookups>({
 });
 
 type SlotLookups = { classes: Map<string, ClassRow>; subjects: Map<string, SubjectRow>; staff: Map<string, string>; periods: Set<number>; slots: Map<string, string> };
-const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY_NAMES: readonly string[] = WEEKDAYS;
 const timetable = kind<SlotLookups>({
   async load(db) {
     const ps = (await db.query<{ idx: number }>('select idx from periods')).rows;
@@ -617,6 +638,64 @@ const transport = kind<RouteLookups>({
   async export(db) { return (await db.query<Row>('select s.admission_no, t.route from transport_assignments t join students s on s.id = t.student_id order by t.route, s.admission_no')).rows; },
 });
 
+// ── family phone numbers from a contact list ───────────────────────────────
+type Waiting = { id: string; name: string; student: string; class: string };
+type ContactLookups = { waiting: Waiting[]; known: Set<string> };
+const contacts = kind<ContactLookups>({
+  async load(db) {
+    const waiting = (await db.query<Waiting>(`select g.id, g.name, s.name as student, c.name as class from guardians g join student_guardians sg on sg.guardian_id = g.id
+      join students s on s.id = sg.student_id join classes c on c.id = s.class_id where g.phone is null and s.status = 'active'`)).rows;
+    const known = (await db.query<{ phone: string }>("select phone from guardians where phone is not null union select phone from users where phone is not null")).rows;
+    return { waiting, known: new Set(known.map((r) => digits(r.phone))) };
+  },
+  check(r, l) {
+    const d = digits(r.phone!);
+    if (d.length < 10) return ok(d || lc(r.name!), ['The phone needs 10 digits.'], false);
+    // A number the school already has is skipped, not an error: a group's list has every parent in it.
+    if (l.known.has(d)) return ok(d, [], true);
+    const found = matchFamily(r, l.waiting);
+    const errors = found.length === 1 ? [] : found.length === 0
+      ? [`No family without a phone is called “${r.name!.trim()}”${r.student ? ` for ${r.student.trim()}` : ''}.`]
+      : [`${found.length} families without a phone are called “${r.name!.trim()}”: add the child’s name or class to tell them apart.`];
+    return ok(d, errors, false);
+  },
+  writes(rows, l) {
+    const out: Rec[] = [];
+    for (const r of rows) {
+      const d = digits(r.phone!);
+      const found = l.known.has(d) ? [] : matchFamily(r, l.waiting);
+      if (found.length === 1) out.push({ id: found[0]!.id, phone: d });
+    }
+    return [{ table: 'guardians', pk: ['id'], cols: ['phone'], rows: out }];
+  },
+  totals(rows, l) {
+    const matched = rows.filter((r) => !l.known.has(digits(r.phone!)) && matchFamily(r, l.waiting).length === 1).length;
+    return [{ label: 'Families given a phone', value: String(matched) }, { label: 'Already known', value: String(rows.filter((r) => l.known.has(digits(r.phone!))).length) }];
+  },
+  async notes(db) {
+    const n = await withoutPhone(db);
+    return n ? [`${n} students still have no family phone. Their families cannot sign in until one is added.`] : [];
+  },
+  async export(db) {
+    return (await db.query<Row>(`select distinct on (g.id) g.name, g.phone, s.name as student, c.name as class from guardians g join student_guardians sg on sg.guardian_id = g.id
+      join students s on s.id = sg.student_id join classes c on c.id = s.class_id where g.phone is not null order by g.id, s.name`)).rows;
+  },
+});
+
+/** Active students whose main guardian has no phone: their families cannot sign in yet. */
+async function withoutPhone(db: Q): Promise<number> {
+  return Number((await db.query<{ n: string }>("select count(distinct s.id) n from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id where s.status = 'active' and g.phone is null")).rows[0]!.n);
+}
+
+/** The families without a phone this contact could be: by the guardian's name, narrowed by the child and class when given. */
+function matchFamily(r: Row, waiting: Waiting[]): Waiting[] {
+  const named = waiting.filter((w) => norm(w.name) === norm(r.name!));
+  const byChild = r.student ? named.filter((w) => norm(w.student) === norm(r.student!)) : named;
+  const byClass = r.class ? byChild.filter((w) => classKey(w.class) === classKey(r.class!)) : byChild;
+  // One guardian with two children appears twice: it is still one family.
+  return [...new Map(byClass.map((w) => [w.id, w])).values()];
+}
+
 export const KINDS: Record<string, Impl<never>> = {
-  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, transport,
+  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, transport, contacts,
 } as unknown as Record<string, Impl<never>>;

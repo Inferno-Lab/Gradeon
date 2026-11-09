@@ -303,7 +303,20 @@ Branch `feat/finish-phases-0-3`. The aim was to leave in Phases 0 to 3 only what
 - **Dead or wrong things removed:** the "Reduce transparency" switch (nothing read it once glass became solid), a made-up founding year and office hours in the app's About, dead Privacy and Help links on the sign-in pages, receipts that did not name the school, a parent greeted by the child's name on tablets.
 - **Checked:** `pnpm typecheck && pnpm test`, the page audit (every page, four widths, light and dark: clean), the 49 browser flows, the layout scans, `flutter analyze` and `flutter test`, and headless shots of every app screen for parents and teachers in light and dark from 360 wide to tablet. **Not checked:** a real phone, iOS, the live console.
 
-## 18. Design systems and console colours (2026-11-09): what changed and what to know
+## 18. Finishing Phases 0 to 3, second pass (2026-11-08): what changed and what to know
+
+Branch `feat/finish-phases-0-3-part-2`.
+
+- **Contact lists** (`contacts` in `packages/db/src/import/kinds.ts`): students may now come in without a family phone (`guardian_phone` is optional; such a guardian belongs to that child alone, and a re-import never touches a family that has since got a phone). The `contacts` kind matches a contact list to guardians without a phone by name (`matchFamily`: name, then child, then class), skips numbers the school already has, and refuses a name two families share. Both kinds note how many students still have no family phone.
+- **Excel templates** (`xlsx` in `packages/db/src/import/files.ts`, `templateXlsx` in `engine.ts`): a stored-ZIP .xlsx written by hand (text cells, bold frozen header, list validations, a "How to fill" sheet). `ImportColumn.options` lists a column's fixed values; the importer's lists for period kind, admission stage and weekday now come from the same constants in contracts, so the dropdown and the check cannot drift apart; payment method's spelling map (`METHOD`) contains every value of `PAY_METHODS`. Served by `GET /console/v1/schools/:id/import/template/:kind` and `GET /v1/moving-in/template/:kind` (`setup.write`). The test reads every kind's template back through `previewImport`.
+- **Typing in** (`apps/admin/src/pages/moving-in/TypeRows.tsx`): a grid for one kind, sent as an upload (`<kind> (typed).csv`), which the console opens like any file.
+- **Payment methods** in payment history are read from many spellings (`METHOD` in `kinds.ts`) and anything else is an error, not stored as typed.
+- **Weekly off days** (`calendar.weeklyOff`, `SettingsService.offDays`): every service reads it instead of a local `OFF_DAYS = [0]`; the app fills `weeklyOffDays` from `/v1/config` on a school build.
+- **The admin's sign-in page** retries `/v1/brand` unless it answered 404, and shows "not answering yet" with Try again for anything but a missing school.
+- **An error that was not reproduced:** "Failed to execute 'removeChild' on 'Node'" was reported five times from the admin's sign-in page during the first pass, in one fifth of a second, while the server was being reset under an open browser. Six reconstructions (session ending, server down then back, tooltips open, the school missing then back, hot reload, every sign-in flow) and two full flow runs on fresh data did not bring it back. It is left to the error list and alerts: if it comes back, its stack and page are recorded there.
+- **Checked:** `pnpm typecheck && pnpm test`, `flutter analyze` and `flutter test`, the page audit, the browser flows, and a look at the new pieces in the browser. **Not checked:** a real phone, iOS, the live console.
+
+## 19. Design systems and console colours (2026-11-09): what changed and what to know
 
 Branch `feat/design-system`. The owner asked for one precise design system for the app and one for admin and console, with no inconsistency anywhere, and for **every colour to be set from the console per school, with full freedom**.
 

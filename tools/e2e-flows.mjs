@@ -690,8 +690,8 @@ await flow('console: go-live reconciles the dues with the old system, and a rest
   await tick.getByRole('button', { name: 'Undo' }).click();
   await p.goto(`${CONSOLE}/health`, { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Run a drill now' }).click();
-  await expectVisible(p.getByText(/into a scratch database/), 'the drill’s result', 60000);
-  await expectVisible(p.locator('.rw', { hasText: 'Restored' }), 'the drill listed');
+  await expectVisible(p.getByText(/^Restored [\d,]+ rows of /), 'the drill’s result', 90000);
+  await expectVisible(p.locator('.rw', { hasText: /rows · [\d,]+ students/ }), 'the drill listed');
 });
 
 await flow('admin: the sign-in page shows the school’s mark and its privacy notice', {}, async (p) => {
