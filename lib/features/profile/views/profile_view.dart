@@ -19,11 +19,11 @@ import 'package:gradeon/features/profile/controllers/profile_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-const _houseColors = {
-  'Emerald': Color(0xFF23784A),
-  'Sapphire': Color(0xFF2F5BD3),
-  'Ruby': Color(0xFFB8306F),
-  'Amber': Color(0xFFE0A81E),
+final _houseColors = {
+  'Emerald': AppColors.ok,
+  'Sapphire': AppColors.subject('maths').fill,
+  'Ruby': AppColors.subject('hindi').fill,
+  'Amber': AppColors.houses[3],
 };
 
 class ProfileView extends GetView<ProfileController> {
@@ -53,7 +53,7 @@ class ProfileView extends GetView<ProfileController> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -110,7 +110,7 @@ class ProfileView extends GetView<ProfileController> {
                     index: 3,
                     child: EduCard(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
                             Avatar(
@@ -128,7 +128,7 @@ class ProfileView extends GetView<ProfileController> {
                                     role == UserRole.parent && user?.name == student.guardianName
                                         ? '${student.guardianName} · ${'profile.you'.tr}'
                                         : '${student.guardianName} · ${'profile.guardian'.tr}',
-                                    style: context.type.t.copyWith(fontSize: 15),
+                                    style: context.type.ts,
                                   ),
                                   Text(student.guardianPhone, style: context.type.cap),
                                 ],
@@ -173,19 +173,19 @@ class _IdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final on = color == const Color(0xFFE0A81E) ? AppColors.mariInk : AppColors.white;
+    final on = color == AppColors.houses[3] ? AppColors.mariInk : AppColors.white;
     final now = DateTime.now();
     final start = now.month >= 6 ? now.year : now.year - 1;
-    TextStyle k() => anek(10.5, 700, height: 1.2, em: .09, color: on.withValues(alpha: .75));
+    TextStyle k() => AppText.o(color: on.withValues(alpha: .75), height: 1.2);
     final local = photo != null && photo!.isNotEmpty && !photo!.startsWith('http');
-    final initials = Text(Avatar.initialsOf(name), style: anek(28, 780, width: 120, height: 1, color: color));
+    final initials = Text(Avatar.initialsOf(name), style: AppText.h2(color: color, height: 1));
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
-          BoxShadow(color: Color(0xB310201B), blurRadius: 40, spreadRadius: -24, offset: Offset(0, 20)),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.7), blurRadius: 40, spreadRadius: -24, offset: const Offset(0, 20)),
         ],
       ),
       clipBehavior: Clip.antiAlias,
@@ -198,7 +198,7 @@ class _IdCard extends StatelessWidget {
             child: Container(
               width: 180,
               height: 180,
-              decoration: const BoxDecoration(color: Color(0x14FFFFFF), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: AppColors.white.withValues(alpha: 0.08), shape: BoxShape.circle),
             ),
           ),
           Column(
@@ -217,7 +217,7 @@ class _IdCard extends StatelessWidget {
                   Text('$start–${(start + 1) % 100}', style: k()),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -225,7 +225,7 @@ class _IdCard extends StatelessWidget {
                     width: 78,
                     height: 96,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: const Color(0xFFFBFCF9), borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(color: AppColors.light.paper, borderRadius: BorderRadius.circular(14)),
                     clipBehavior: Clip.antiAlias,
                     child: local
                         ? Image.file(
@@ -237,7 +237,7 @@ class _IdCard extends StatelessWidget {
                           )
                         : initials,
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +257,7 @@ class _IdCard extends StatelessWidget {
                                     children: [
                                       Text(f.$1.toUpperCase(), style: k()),
                                       const SizedBox(height: 2),
-                                      Text(f.$2, style: anek(15, 650, height: 1.25, color: on), maxLines: 2),
+                                      Text(f.$2, style: AppText.ts(color: on), maxLines: 2),
                                     ],
                                   ),
                                 ),
@@ -269,7 +269,7 @@ class _IdCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -296,7 +296,7 @@ class _IdCard extends StatelessWidget {
                                   'profile.new_photo'.tr,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: anek(13, 650, height: 1, color: on),
+                                  style: AppText.capB(color: on, height: 1),
                                 ),
                               ),
                             ],
@@ -368,13 +368,13 @@ class _Tiles extends StatelessWidget {
                           Container(
                             width: 34,
                             height: 34,
-                            decoration: BoxDecoration(color: t.$4, borderRadius: BorderRadius.circular(11)),
+                            decoration: BoxDecoration(color: t.$4, borderRadius: BorderRadius.circular(10)),
                             child: Icon(t.$1, size: 18, color: t.$5),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             t.$2.tr,
-                            style: context.type.t.copyWith(fontSize: 14),
+                            style: context.type.chip,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

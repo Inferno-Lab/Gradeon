@@ -43,7 +43,7 @@ class Glass extends StatelessWidget {
     final fill = given != null && given.a >= .95
         ? given
         : onPigment
-        ? const Color(0xFF10201B)
+        ? AppColors.light.ink
         : c.paper;
     return Container(
       width: width,
@@ -52,11 +52,11 @@ class Glass extends StatelessWidget {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(radius),
-        border: thick ? Border.all(color: onPigment ? const Color(0x33FFFFFF) : c.line2) : null,
+        border: thick ? Border.all(color: onPigment ? AppColors.white.withValues(alpha: 0.2) : c.line2) : null,
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: c.dark ? const Color(0x66000000) : const Color(0x2410201B),
+                  color: c.dark ? AppColors.amoled.chalk.withValues(alpha: 0.4) : AppColors.light.ink.withValues(alpha: 0.14),
                   blurRadius: thick ? 10 : 18,
                   spreadRadius: thick ? 0 : -6,
                   offset: Offset(0, thick ? 2 : 8),
@@ -106,13 +106,13 @@ class GlassIconButton extends StatelessWidget {
           children: [
             Icon(icon, size: 22, color: color ?? context.app.ink),
             if (badge)
-              const Positioned(
+              Positioned(
                 top: 8,
                 right: 9,
                 child: SizedBox.square(
                   dimension: 9,
                   child: DecoratedBox(
-                    decoration: BoxDecoration(color: Color(0xFFC23B2A), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.bad, shape: BoxShape.circle),
                   ),
                 ),
               ),
@@ -156,8 +156,8 @@ class _GlassPressState extends State<GlassPress> {
         onTapUp: widget.onTap == null ? null : (_) => setState(() => _down = false),
         onTapCancel: widget.onTap == null ? null : () => setState(() => _down = false),
         child: AnimatedContainer(
-          duration: down ? const Duration(milliseconds: 100) : AppDurations.medium,
-          curve: down ? Curves.easeOut : kSpring,
+          duration: down ? AppMotion.press : AppMotion.spring,
+          curve: down ? kEase : kSpring,
           transformAlignment: Alignment.center,
           transform: Matrix4.diagonal3Values(down ? .97 : 1, down ? .97 : 1, 1),
           child: widget.child,

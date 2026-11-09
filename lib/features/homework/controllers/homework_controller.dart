@@ -78,7 +78,7 @@ class HomeworkController extends GetxController with Loadable {
 
   // shortcut: scanned pages are counted, not merged into a PDF; add PDF export when the API stores files.
   Future<void> sendScan(Homework homework, int pages) =>
-      send(homework, 'homework.scan_file'.trp({'n': '$pages'}));
+      send(homework, 'homework.scan_file'.trn(pages));
 
   Future<void> send(Homework homework, String fileName) async {
     if (!SchoolConfig.allows('homework.onlineSubmission')) return;

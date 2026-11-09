@@ -27,7 +27,7 @@ class TeacherActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Glass(
     height: 64,
-    radius: 32,
+    radius: 999,
     padding: const EdgeInsets.only(left: 20, right: 8),
     child: Row(
       children: [
@@ -36,7 +36,7 @@ class TeacherActionBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (sub != null) Text(sub!, style: context.type.cap.copyWith(fontSize: 11.5)),
+              if (sub != null) Text(sub!, style: context.type.tiny),
               DefaultTextStyle.merge(maxLines: 1, overflow: TextOverflow.ellipsis, child: text),
             ],
           ),

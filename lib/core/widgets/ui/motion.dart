@@ -16,7 +16,7 @@ class Rise extends StatefulWidget {
 }
 
 class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: AppDurations.rise);
+  late final _c = AnimationController(vsync: this, duration: AppMotion.t4);
   late final _a = CurvedAnimation(parent: _c, curve: kEase);
   Timer? _timer;
 
@@ -24,11 +24,11 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     // Stagger the first few items only; a long list should not wait on its tail.
-    final delay = 35 * widget.index.clamp(0, 5);
-    if (delay == 0) {
+    final delay = AppMotion.stagger * widget.index.clamp(0, 5);
+    if (delay == Duration.zero) {
       _c.forward();
     } else {
-      _timer = Timer(Duration(milliseconds: delay), () {
+      _timer = Timer(delay, () {
         if (mounted) _c.forward();
       });
     }

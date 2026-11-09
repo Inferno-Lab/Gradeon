@@ -133,21 +133,25 @@ class DayRibbonState extends State<DayRibbon> {
     final left = xOf(a);
     final width = (b - a) * widget.pxPerMinute - 3;
     final past = b <= now;
-    const radius = BorderRadius.vertical(bottom: Radius.circular(20));
+    const radius = BorderRadius.vertical(bottom: Radius.circular(18));
+    // Labels sit above the band the now badge travels in, so the badge never covers a start time.
+    const foot = EdgeInsets.fromLTRB(10, 0, 8, 40);
+    // A free period too narrow for its label reads like a break: the word runs up the hatch.
+    if (p.subject == 'free' && width < 64) return _upright(context, 'teacher.free', left, width, past);
     if (p.subject == 'free') {
       // A teacher's free period: hatch, labelled at the foot like a class.
       Widget free = Hatch(
         radius: radius,
         background: c.paper2,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 0, 8, 14),
+          padding: foot,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('teacher.free'.tr, maxLines: 1, style: anek(13, 720, width: 104, height: 1, color: c.ink3)),
-              const SizedBox(height: 3),
-              Text(clockOf(a), style: context.type.mono.copyWith(fontSize: 11, color: c.ink3)),
+              Text('teacher.free'.tr, maxLines: 1, style: AppText.capB(color: c.ink3, height: 1)),
+              const SizedBox(height: 2),
+              Text(clockOf(a), maxLines: 1, softWrap: false, style: context.type.mono.copyWith(color: c.ink3)),
             ],
           ),
         ),
@@ -156,26 +160,7 @@ class DayRibbonState extends State<DayRibbon> {
       return Positioned(left: left, top: 0, width: width, height: widget.height, child: free);
     }
     if (p.kind != PeriodKind.klass) {
-      return Positioned(
-        left: left,
-        top: 0,
-        width: width,
-        height: widget.height,
-        child: Hatch(
-          radius: radius,
-          background: c.paper2,
-          child: Center(
-            child: RotatedBox(
-              quarterTurns: 3,
-              child: Text(
-                (p.kind == PeriodKind.recess ? 'timetable.recess' : 'timetable.break').tr.toUpperCase(),
-                maxLines: 1,
-                style: anek(11, 700, height: 1, em: .12, color: c.ink3),
-              ),
-            ),
-          ),
-        ),
-      );
+      return _upright(context, p.kind == PeriodKind.recess ? 'timetable.recess' : 'timetable.break', left, width, false);
     }
     final pigment = AppColors.subject(p.subject);
     final detail = widget.blockDetail?.call(p);
@@ -190,7 +175,7 @@ class DayRibbonState extends State<DayRibbon> {
               borderRadius: radius,
             )
           : null,
-      padding: const EdgeInsets.fromLTRB(10, 0, 8, 14),
+      padding: foot,
       alignment: Alignment.bottomLeft,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -201,7 +186,7 @@ class DayRibbonState extends State<DayRibbon> {
             maxLines: 1,
             overflow: TextOverflow.clip,
             softWrap: false,
-            style: anek(17, 720, width: 104, height: 1, color: pigment.on),
+            style: AppText.t(color: pigment.on, height: 1),
           ),
           if (detail != null) ...[
             const SizedBox(height: 4),
@@ -209,13 +194,15 @@ class DayRibbonState extends State<DayRibbon> {
               detail,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: anek(12.5, 520, height: 1.1, color: pigment.on.withValues(alpha: .88)),
+              style: AppText.cap(color: pigment.on.withValues(alpha: .88), height: 1.1),
             ),
           ],
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
           Text(
             clockOf(a),
-            style: context.type.mono.copyWith(fontSize: 11, color: pigment.on.withValues(alpha: .85)),
+            maxLines: 1,
+            softWrap: false,
+            style: context.type.mono.copyWith(color: pigment.on.withValues(alpha: .85)),
           ),
         ],
       ),
@@ -223,6 +210,23 @@ class DayRibbonState extends State<DayRibbon> {
     // Past periods lose colour but keep full strength: fading them too left white text washed out on a pale card.
     if (past) block = ColorFiltered(colorFilter: const ColorFilter.matrix(_desaturate), child: block);
     return Positioned(left: left, top: 0, width: width, height: widget.height, child: block);
+  }
+
+  /// A hatched slot with its word running up the middle: breaks, recess, and free periods too narrow to label across.
+  Widget _upright(BuildContext context, String key, double left, double width, bool past) {
+    final c = context.app;
+    Widget slot = Hatch(
+      radius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+      background: c.paper2,
+      child: Center(
+        child: RotatedBox(
+          quarterTurns: 3,
+          child: Text(key.tr.toUpperCase(), maxLines: 1, softWrap: false, style: AppText.o(color: c.ink3)),
+        ),
+      ),
+    );
+    if (past) slot = Opacity(opacity: c.dark ? .6 : .55, child: slot);
+    return Positioned(left: left, top: 0, width: width, height: widget.height, child: slot);
   }
 }
 
@@ -256,7 +260,7 @@ class RibbonScale extends StatelessWidget {
         final avail = w - leftInset;
         var offset = leftInset + avail / 2 - (nowM - start) * pxPerMinute;
         offset = total > avail ? offset.clamp(w - total, leftInset) : leftInset + (avail - total) / 2;
-        final style = context.type.mono.copyWith(fontSize: 10.5);
+        final style = context.type.mono;
         return SizedBox(
           height: 16,
           child: Stack(
@@ -296,7 +300,7 @@ class _NowMarker extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.mari,
                 borderRadius: BorderRadius.circular(2),
-                boxShadow: const [BoxShadow(color: Color(0x4010201B), blurRadius: 4)],
+                boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.25), blurRadius: 4)],
               ),
             ),
           ),
@@ -305,19 +309,19 @@ class _NowMarker extends StatelessWidget {
           bottom: 10,
           child: AnimatedScale(
             scale: lifted ? 1.08 : 1,
-            duration: AppDurations.fast,
+            duration: AppMotion.t2,
             curve: kSpring,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.mari,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: const [BoxShadow(color: Color(0x4010201B), blurRadius: 8, offset: Offset(0, 2))],
+                boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 2))],
               ),
               child: Text(
                 [?label, time].join(' · '),
                 maxLines: 1,
-                style: anek(10.5, 760, height: 1.1, color: AppColors.mariInk, tabular: true),
+                style: AppText.tiny(color: AppColors.mariInk, height: 1.1, tabular: true),
               ),
             ),
           ),

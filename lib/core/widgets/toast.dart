@@ -28,7 +28,7 @@ abstract final class ToastHelper {
     final toast = _Toast(messageKey, kind, body);
     _items.add(toast);
     if (_items.length > 2) _items.removeAt(0);
-    Timer(const Duration(milliseconds: 3200), () => _items.remove(toast));
+    Timer(AppMotion.toastHold, () => _items.remove(toast));
   }
 }
 
@@ -88,7 +88,7 @@ class _ToastCard extends StatelessWidget {
             liveRegion: true,
             child: Glass(
               height: 56,
-              radius: 28,
+              radius: 999,
               tint: c.paper.withValues(alpha: .97),
               padding: const EdgeInsets.only(left: 10, right: 16),
               child: Row(
@@ -112,7 +112,7 @@ class _ToastCard extends StatelessWidget {
                           toast.message.tr,
                           maxLines: toast.body == null ? 2 : 1,
                           overflow: TextOverflow.ellipsis,
-                          style: context.type.t.copyWith(fontSize: 15),
+                          style: context.type.ts,
                         ),
                         if (toast.body != null)
                           Text(
@@ -134,8 +134,8 @@ class _ToastCard extends StatelessWidget {
     if (context.reduceMotion) return card;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 600),
-      curve: kSpring,
+      duration: AppMotion.t4,
+      curve: kEase,
       builder: (context, t, child) => Opacity(
         opacity: t.clamp(0, 1),
         child: Transform.translate(

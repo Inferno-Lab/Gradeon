@@ -61,7 +61,7 @@ class _PrivacySheetState extends State<PrivacySheet> {
     return PopScope(
       canPop: !widget.consent,
       child: SheetBody(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
         // The answer stays in view however long the school's notice is.
         footer: widget.consent
             ? Column(
@@ -94,9 +94,9 @@ class _PrivacySheetState extends State<PrivacySheet> {
               const SizedBox(height: 10),
               Text('privacy.consent_intro'.trp({'school': AppConfig.schoolName}), style: context.type.b.copyWith(color: c.ink2)),
             ],
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             EduCard(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Text(notice, style: context.type.s),
             ),
             if (AppConfig.privacyOfficer.isNotEmpty) ...[
@@ -112,7 +112,7 @@ class _PrivacySheetState extends State<PrivacySheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('privacy.photos'.tr, style: context.type.t.copyWith(fontSize: 15)),
+                          Text('privacy.photos'.tr, style: context.type.ts),
                           Text('privacy.photos_hint'.tr, style: context.type.cap),
                         ],
                       ),

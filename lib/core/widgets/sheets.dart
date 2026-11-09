@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/ui.dart';
@@ -15,8 +16,8 @@ Future<T?> showSheet<T>(Widget child, {bool dismissible = true}) {
     enableDrag: dismissible,
     backgroundColor: Colors.transparent,
     barrierColor: Get.context?.app.scrim,
-    enterBottomSheetDuration: const Duration(milliseconds: 550),
-    exitBottomSheetDuration: const Duration(milliseconds: 380),
+    enterBottomSheetDuration: AppMotion.t4,
+    exitBottomSheetDuration: AppMotion.t3,
   );
 }
 
@@ -40,7 +41,7 @@ class SheetBody extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.app.paper,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
-          boxShadow: const [BoxShadow(color: Color(0x3310201B), blurRadius: 40, offset: Offset(0, -12))],
+          boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.2), blurRadius: 40, offset: const Offset(0, -12))],
         ),
         child: SafeArea(
           top: false,
@@ -56,7 +57,7 @@ class SheetBody extends StatelessWidget {
                   child: child,
                 ),
               ),
-              if (footer != null) Padding(padding: const EdgeInsets.fromLTRB(22, 12, 22, 16), child: footer),
+              if (footer != null) Padding(padding: const EdgeInsets.fromLTRB(24, 12, 24, 16), child: footer),
             ],
           ),
         ),
@@ -79,7 +80,7 @@ Future<bool> confirmSheet({
       builder: (context) {
         final c = context.app;
         return SheetBody(
-          padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

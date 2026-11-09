@@ -20,6 +20,11 @@ import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+// The answer sheet is drawn as paper: warm white, pencil and blue pen, all from the school's palette.
+Color get _sheet => Color.lerp(AppColors.light.paper, AppColors.mari, .04)!;
+Color get _pencil => Color.lerp(AppColors.light.ink, AppColors.late, .3)!;
+Color get _pen => Color.lerp(AppColors.subject('maths').fill, AppColors.light.ink, .55)!;
+
 class GradingView extends GetView<GradingController> {
   const GradingView({super.key});
 
@@ -40,14 +45,14 @@ class GradingView extends GetView<GradingController> {
                 sub: 'teacher.next_in_queue'.tr,
                 text: Text(
                   controller.names[queue.first.$2.studentId] ?? '',
-                  style: context.type.t.copyWith(fontSize: 15),
+                  style: context.type.ts,
                 ),
                 action: 'teacher.start_grading',
                 onPressed: () => openGradeSheet(controller, 0),
               ),
         children: [
           Rise(child: Text('teacher.to_grade_n'.trp({'n': '${controller.total}'}), style: context.type.h1)),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -65,7 +70,7 @@ class GradingView extends GetView<GradingController> {
                         ? _GradingCard(item: g, controller: controller)
                         : EduCard(
                             onTap: () => openGradeSheet(controller, queue.indexWhere((q) => q.$1 == g)),
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
                                 Cover(subject: g.homework.subject),
@@ -113,7 +118,7 @@ class _GradingCard extends StatelessWidget {
     final queue = controller.queue;
     final shown = item.waiting.take(3).toList();
     return EduCard(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,7 +135,7 @@ class _GradingCard extends StatelessWidget {
                       [
                         if (item.schoolClass != null) classLabel(item.schoolClass!),
                         'teacher.due_on'.trp({'date': DateFormat('EEE d MMM').format(h.dueOn)}),
-                        'teacher.n_marks'.trp({'n': '${h.maxMarks}'}),
+                        'teacher.n_marks'.trn(h.maxMarks),
                       ].join(' · '),
                       style: context.type.cap,
                     ),
@@ -139,7 +144,7 @@ class _GradingCard extends StatelessWidget {
               ),
               Stamp(
                 'teacher.n_left'.trp({'n': '$waiting'}),
-                color: c.dark ? const Color(0xFFF6BA45) : AppColors.late,
+                color: c.dark ? AppColors.blackboard.mariText : AppColors.late,
               ),
             ],
           ),
@@ -155,13 +160,13 @@ class _GradingCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.ok,
                         borderRadius: BorderRadius.horizontal(
-                          left: const Radius.circular(4),
+                          left: const Radius.circular(2),
                           right: Radius.circular(waiting == 0 ? 4 : 0),
                         ),
                       ),
                     ),
                   ),
-                if (graded > 0 && waiting > 0) const SizedBox(width: 3),
+                if (graded > 0 && waiting > 0) const SizedBox(width: 2),
                 if (waiting > 0)
                   Expanded(
                     flex: waiting,
@@ -170,16 +175,16 @@ class _GradingCard extends StatelessWidget {
                         color: AppColors.late,
                         borderRadius: BorderRadius.horizontal(
                           left: Radius.circular(graded == 0 ? 4 : 0),
-                          right: const Radius.circular(4),
+                          right: const Radius.circular(2),
                         ),
                       ),
                     ),
                   ),
                 if (total - graded - waiting > 0) ...[
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 2),
                   Expanded(
                     flex: total - graded - waiting,
-                    child: Hatch(radius: BorderRadius.circular(4), child: const SizedBox.expand()),
+                    child: Hatch(radius: BorderRadius.circular(2), child: const SizedBox.expand()),
                   ),
                 ],
               ],
@@ -199,7 +204,7 @@ class _GradingCard extends StatelessWidget {
           for (final (i, s) in shown.indexed) ...[
             Container(
               height: 1,
-              margin: EdgeInsets.only(left: i == 0 ? 0 : 30),
+              margin: EdgeInsets.only(left: i == 0 ? 0 : 32),
               color: c.line,
             ),
             Pressable(
@@ -207,7 +212,7 @@ class _GradingCard extends StatelessWidget {
                   openGradeSheet(controller, queue.indexWhere((q) => q.$1 == item && q.$2.studentId == s.studentId)),
               scale: .985,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 11),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Row(
                   children: [
                     const _Page(),
@@ -259,8 +264,8 @@ class _Page extends StatelessWidget {
             width: 30,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F5EE),
-              borderRadius: BorderRadius.circular(4),
+              color: _sheet,
+              borderRadius: BorderRadius.circular(2),
               border: Border.all(color: context.app.line2),
             ),
           ),
@@ -269,8 +274,8 @@ class _Page extends StatelessWidget {
           width: 30,
           height: 38,
           decoration: BoxDecoration(
-            color: const Color(0xFFF7F5EE),
-            borderRadius: BorderRadius.circular(4),
+            color: _sheet,
+            borderRadius: BorderRadius.circular(2),
             border: Border.all(color: context.app.line2),
           ),
         ),
@@ -382,38 +387,38 @@ class _GradeSheetViewState extends State<GradeSheetView> {
             top: 0,
             height: paperH + 40,
             child: ColoredBox(
-              color: const Color(0xFF3B2D22),
+              color: _pencil,
               child: Center(
                 child: Transform.rotate(
                   angle: -.0175,
                   child: Container(
                     width: 310,
                     margin: EdgeInsets.only(top: inset.top + 40),
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF7F5EE),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    decoration: BoxDecoration(
+                      color: _sheet,
                       boxShadow: [
-                        BoxShadow(color: Color(0x99000000), blurRadius: 40, spreadRadius: -20, offset: Offset(0, 20)),
+                        BoxShadow(color: AppColors.amoled.chalk.withValues(alpha: 0.6), blurRadius: 40, spreadRadius: -20, offset: const Offset(0, 20)),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(h.title, style: anek(13, 700, height: 1.3, color: const Color(0xFF1D2B53))),
+                        Text(h.title, style: AppText.capB(color: _pen)),
                         const SizedBox(height: 4),
                         Text(
                           s.fileName ?? 'teacher.no_file'.tr,
-                          style: context.type.mono.copyWith(fontSize: 11.5, color: const Color(0xFF1D2B53)),
+                          style: context.type.mono.copyWith(color: _pen),
                         ),
                         for (final w in const [.9, .72, .84, .66, .88, .58])
                           FractionallySizedBox(
                             widthFactor: w,
                             child: Container(
                               height: 2,
-                              margin: const EdgeInsets.only(top: 15),
+                              margin: const EdgeInsets.only(top: 16),
                               decoration: BoxDecoration(
-                                color: const Color(0x802F5BD3),
-                                borderRadius: BorderRadius.circular(1),
+                                color: AppColors.subject('maths').fill.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                           ),
@@ -439,7 +444,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
                   child: Center(
                     child: Text(
                       'teacher.n_of'.trp({'i': '${_i + 1}', 'n': '${_queue.length}'}),
-                      style: anek(14, 680, height: 1, tabular: true, color: AppColors.white),
+                      style: AppText.chip(color: AppColors.white, height: 1, tabular: true),
                     ),
                   ),
                 ),
@@ -463,11 +468,11 @@ class _GradeSheetViewState extends State<GradeSheetView> {
             child: Container(
               decoration: BoxDecoration(
                 color: c.paper,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
                 border: Border(top: BorderSide(color: c.line)),
               ),
               child: ListView(
-                padding: EdgeInsets.fromLTRB(20, 18, 20, inset.bottom + 120),
+                padding: EdgeInsets.fromLTRB(20, 20, 20, inset.bottom + 120),
                 children: [
                   Row(
                     children: [
@@ -483,7 +488,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
                       Stamp('$grade · $_marks/${h.maxMarks}', color: tone),
                     ],
                   ),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 24),
                   GlassSlider(
                     value: h.maxMarks == 0 ? 0 : _marks / h.maxMarks,
                     divisions: h.maxMarks,
@@ -491,22 +496,22 @@ class _GradeSheetViewState extends State<GradeSheetView> {
                     describe: (v) => '${(v * h.maxMarks).round()}',
                     fill: tone,
                     thumbWidth: 60,
-                    thumbChild: Text('$_marks', style: anek(15, 760, height: 1, tabular: true, color: c.ink)),
+                    thumbChild: Text('$_marks', style: AppText.ts(color: c.ink, height: 1, tabular: true)),
                     onChanged: (v) => setState(() => _marks = (v * h.maxMarks).round()),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('0', style: context.type.cap.copyWith(fontSize: 11)),
-                      Text('${h.maxMarks ~/ 2}', style: context.type.cap.copyWith(fontSize: 11)),
-                      Text('${h.maxMarks}', style: context.type.cap.copyWith(fontSize: 11)),
+                      Text('0', style: context.type.tiny),
+                      Text('${h.maxMarks ~/ 2}', style: context.type.tiny),
+                      Text('${h.maxMarks}', style: context.type.tiny),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 8),
-                    child: Text('teacher.quick_notes'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+                    child: Text('teacher.quick_notes'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
                   ),
                   Wrap(
                     spacing: 8,
@@ -537,7 +542,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
                 _queue.length - 1 == 0
                     ? 'teacher.last_one'.tr
                     : 'teacher.left_after'.trp({'n': '${_queue.length - 1}'}),
-                style: anek(13, 620, height: 1.3, color: c.ink3),
+                style: AppText.capB(color: c.ink3),
               ),
               action: next == null
                   ? 'teacher.save'
@@ -560,7 +565,7 @@ String agoLabel(DateTime? t) {
   if (t == null) return '';
   final days = DateUtils.dateOnly(DateTime.now()).difference(DateUtils.dateOnly(t)).inDays;
   if (days <= 0) return 'common.today'.tr.toLowerCase();
-  return days == 1 ? 'teacher.one_day'.tr : 'teacher.n_days'.trp({'n': '$days'});
+  return days == 1 ? 'teacher.one_day'.tr : 'teacher.n_days'.trn(days);
 }
 
 String sentLabel(DateTime? t) {

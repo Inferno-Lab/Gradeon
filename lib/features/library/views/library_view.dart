@@ -132,8 +132,8 @@ class _MineRow extends StatelessWidget {
       trailing = Stamp('library.overdue'.tr, color: c.badText);
     } else if (days != null && days <= 5) {
       trailing = Stamp(
-        days == 0 ? 'library.today'.tr : 'library.days'.trp({'n': '$days'}),
-        color: c.dark ? const Color(0xFFF6BA45) : AppColors.late,
+        days == 0 ? 'library.today'.tr : 'library.days'.trn(days),
+        color: c.dark ? AppColors.blackboard.mariText : AppColors.late,
       );
     } else {
       trailing = Btn(
@@ -145,7 +145,7 @@ class _MineRow extends StatelessWidget {
       );
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Cover(subject: book.category.toLowerCase(), label: '', width: 38, height: 50),
@@ -190,17 +190,17 @@ class _Book extends StatelessWidget {
   Widget build(BuildContext context) {
     final id = _styles[style];
     final night = id == 'night';
-    final pigment = night ? const SubjectColor(Color(0xFF10201B), Color(0xFFE8EFEA)) : AppColors.subject(id);
+    final pigment = night ? SubjectColor(AppColors.light.ink, AppColors.blackboard.ink) : AppColors.subject(id);
     final away = !book.available;
     final shapes = switch (id) {
-      'computer' => [_shape(right: -24, top: 40, w: 80, h: 80, color: const Color(0x24FFFFFF))],
-      'art' => [_shape(left: -10, top: 70, w: 120, h: 40, color: const Color(0x66FFFFFF), radius: 40)],
+      'computer' => [_shape(right: -24, top: 40, w: 80, h: 80, color: AppColors.white.withValues(alpha: 0.14))],
+      'art' => [_shape(left: -10, top: 70, w: 120, h: 40, color: AppColors.white.withValues(alpha: 0.4), radius: 999)],
       'night' => [
         _shape(left: 30, top: 76, w: 6, h: 6, color: AppColors.mari),
         _shape(left: 70, top: 96, w: 4, h: 4, color: AppColors.white),
         _shape(left: 52, top: 58, w: 5, h: 5, color: AppColors.white),
       ],
-      'english' => [_shape(left: -30, bottom: -30, w: 90, h: 90, color: const Color(0x1FFFFFFF))],
+      'english' => [_shape(left: -30, bottom: -30, w: 90, h: 90, color: AppColors.white.withValues(alpha: 0.12))],
       'pe' => [
         Positioned(
           right: 10,
@@ -208,9 +208,9 @@ class _Book extends StatelessWidget {
           child: Container(
             width: 50,
             height: 20,
-            decoration: const BoxDecoration(
-              color: Color(0x4010201B),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: AppColors.light.ink.withValues(alpha: 0.25),
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.elliptical(25, 10),
                 topRight: Radius.elliptical(25, 10),
                 bottomRight: Radius.elliptical(5, 2),
@@ -223,18 +223,18 @@ class _Book extends StatelessWidget {
       _ => const <Widget>[],
     };
     const radius = BorderRadius.only(
-      topLeft: Radius.circular(5),
-      bottomLeft: Radius.circular(5),
-      topRight: Radius.circular(12),
-      bottomRight: Radius.circular(12),
+      topLeft: Radius.circular(6),
+      bottomLeft: Radius.circular(6),
+      topRight: Radius.circular(10),
+      bottomRight: Radius.circular(10),
     );
     final cover = Container(
       height: 150,
       decoration: BoxDecoration(
         color: pigment.fill,
         borderRadius: radius,
-        boxShadow: const [
-          BoxShadow(color: Color(0x8010201B), blurRadius: 18, spreadRadius: -12, offset: Offset(0, 10)),
+        boxShadow: [
+          BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.5), blurRadius: 18, spreadRadius: -12, offset: const Offset(0, 10)),
         ],
       ),
       foregroundDecoration: spineDecoration,
@@ -244,7 +244,7 @@ class _Book extends StatelessWidget {
           children: [
             ...shapes,
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,7 +253,7 @@ class _Book extends StatelessWidget {
                     book.title,
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
-                    style: anek(14, 740, width: 108, height: 1.05, color: pigment.on),
+                    style: AppText.chip(color: pigment.on, height: 1.05),
                   ),
                   SizedBox(
                     width: double.infinity,
@@ -262,7 +262,7 @@ class _Book extends StatelessWidget {
                           ? 'library.back_on'.trp({'date': DateFormat('d MMM').format(book.dueDate!)})
                           : book.author,
                       maxLines: 2,
-                      style: anek(10.5, 600, height: 1.2, color: pigment.on.withValues(alpha: .85)),
+                      style: AppText.tiny(color: pigment.on.withValues(alpha: .85), height: 1.2),
                     ),
                   ),
                 ],
@@ -346,9 +346,9 @@ class _SearchBarState extends State<_SearchBar> {
     final c = context.app;
     return Glass(
       height: 56,
-      radius: 28,
-      tint: c.dark ? null : const Color(0x4DFBFCF9),
-      padding: const EdgeInsets.only(left: 18, right: 6),
+      radius: 999,
+      tint: c.dark ? null : AppColors.light.paper.withValues(alpha: 0.3),
+      padding: const EdgeInsets.only(left: 20, right: 6),
       child: Row(
         children: [
           Icon(PhosphorIconsRegular.magnifyingGlass, color: c.ink, size: 22),
@@ -358,7 +358,7 @@ class _SearchBarState extends State<_SearchBar> {
               controller: _text,
               onChanged: (v) => setState(() => widget.controller.query.value = v),
               textInputAction: TextInputAction.search,
-              style: anek(15.5, 520, color: c.ink),
+              style: AppText.b(color: c.ink),
               cursorColor: c.ink,
               decoration: InputDecoration(
                 isCollapsed: true,
@@ -367,7 +367,7 @@ class _SearchBarState extends State<_SearchBar> {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 hintText: 'library.search'.trp({'n': NumberFormat.decimalPattern('en_IN').format(widget.count)}),
-                hintStyle: anek(15.5, 520, color: c.ink3),
+                hintStyle: AppText.b(color: c.ink3),
               ),
             ),
           ),

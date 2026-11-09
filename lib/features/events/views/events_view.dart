@@ -70,7 +70,7 @@ class EventsView extends GetView<EventsController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (featured != null) ...[
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   Rise(
                     index: 1,
                     child: _Featured(event: featured, controller: controller),
@@ -114,7 +114,7 @@ class _Featured extends StatelessWidget {
     final answer = controller.mine(event);
     return Container(
       height: 206,
-      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(26)),
+      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(24)),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -124,7 +124,7 @@ class _Featured extends StatelessWidget {
             child: Container(
               width: 150,
               height: 150,
-              decoration: const BoxDecoration(color: Color(0x1AFFFFFF), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: AppColors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
             ),
           ),
           Positioned.fill(
@@ -132,7 +132,7 @@ class _Featured extends StatelessWidget {
               onTap: () => _openEvent(event),
               scale: 1,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 80),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -167,7 +167,6 @@ class _Featured extends StatelessWidget {
               labels: const ['events.going', 'events.maybe', 'events.cant_short'],
               index: answer == null ? -1 : _answers.indexOf(answer),
               height: 52,
-              fontSize: 14.5,
               onPigment: true,
               semanticLabel: 'events.rsvp'.tr,
               onChanged: (i) => unawaited(controller.rsvp(event.id, _answers[i])),
@@ -195,8 +194,8 @@ class _DateBlock extends StatelessWidget {
       width: 52,
       child: Column(
         children: [
-          Text('${date.day}', style: anek(26, 780, width: 122, height: 1, color: context.app.ink)),
-          Text(sub.toUpperCase(), style: anek(10.5, 700, height: 1.3, em: .08, color: context.app.ink3)),
+          Text('${date.day}', style: AppText.h2(color: context.app.ink, height: 1)),
+          Text(sub.toUpperCase(), style: AppText.o(color: context.app.ink3, height: 1.3)),
         ],
       ),
     );
@@ -214,7 +213,7 @@ class _Row extends StatelessWidget {
     final c = context.app;
     final stamp = switch (answer) {
       RsvpStatus.going => ('events.going'.tr, AppColors.ok),
-      RsvpStatus.maybe => ('events.maybe'.tr, c.dark ? const Color(0xFFF6BA45) : AppColors.late),
+      RsvpStatus.maybe => ('events.maybe'.tr, c.dark ? AppColors.blackboard.mariText : AppColors.late),
       RsvpStatus.cant => ('events.not_going'.tr, AppColors.off),
       null => null,
     };
@@ -222,11 +221,11 @@ class _Row extends StatelessWidget {
       onTap: () => _openEvent(event),
       scale: .985,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             _DateBlock(date: event.date),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,7 +295,7 @@ class _MonthSheetState extends State<_MonthSheet> {
                     child: Builder(
                       builder: (context) {
                         final day = r * 7 + col - lead + 1;
-                        if (day < 1 || day > count) return const SizedBox(height: 44);
+                        if (day < 1 || day > count) return const SizedBox(height: 40);
                         final d = DateTime(_month.year, _month.month, day);
                         final has = on(d);
                         return Semantics(
@@ -304,8 +303,7 @@ class _MonthSheetState extends State<_MonthSheet> {
                           label:
                               '${DateFormat('d MMMM').format(d)}${has.isEmpty ? '' : ', ${has.map((e) => e.title).join(', ')}'}',
                           excludeSemantics: true,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
+                          child: Pressable(
                             onTap: has.isEmpty
                                 ? null
                                 : () {
@@ -328,9 +326,7 @@ class _MonthSheetState extends State<_MonthSheet> {
                                     ),
                                     child: Text(
                                       '$day',
-                                      style: anek(
-                                        14,
-                                        has.isNotEmpty ? 700 : 560,
+                                      style: (has.isNotEmpty ? AppText.chip : AppText.s)(
                                         height: 1,
                                         tabular: true,
                                         color: has.isNotEmpty ? _pigment(has.first.category).on : c.ink2,
@@ -339,8 +335,7 @@ class _MonthSheetState extends State<_MonthSheet> {
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            ),),
                         );
                       },
                     ),
@@ -452,7 +447,7 @@ class EventDetailView extends GetView<EventsController> {
           Container(
             height: 256 + inset.top,
             color: pigment.fill,
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 22),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -462,7 +457,7 @@ class EventDetailView extends GetView<EventsController> {
                   child: Container(
                     width: 200,
                     height: 200,
-                    decoration: const BoxDecoration(color: Color(0x14FFFFFF), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.white.withValues(alpha: 0.08), shape: BoxShape.circle),
                   ),
                 ),
                 Positioned(
@@ -471,7 +466,7 @@ class EventDetailView extends GetView<EventsController> {
                   child: Container(
                     width: 70,
                     height: 70,
-                    decoration: const BoxDecoration(color: Color(0x809BC53D), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.subject('pe').fill.withValues(alpha: 0.5), shape: BoxShape.circle),
                   ),
                 ),
                 Align(
@@ -481,17 +476,17 @@ class EventDetailView extends GetView<EventsController> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(16)),
+                        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(14)),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               '${event.date.day}',
-                              style: anek(30, 780, width: 122, height: 1, color: const Color(0xFF10201B)),
+                              style: AppText.h2(color: AppColors.light.ink, height: 1),
                             ),
                             Text(
                               DateFormat('MMM · EEE').format(event.date).toUpperCase(),
-                              style: anek(11, 700, height: 1.3, em: .08, color: const Color(0xFF10201B)),
+                              style: AppText.o(color: AppColors.light.ink, height: 1.3),
                             ),
                           ],
                         ),
@@ -533,8 +528,8 @@ class EventDetailView extends GetView<EventsController> {
                   Rise(
                     index: 2,
                     child: Text(
-                      going == 1 ? 'events.one_going'.tr : 'events.n_going'.trp({'n': '$going'}),
-                      style: anek(13, 600, height: 1.3, color: c.ink3),
+                      going == 1 ? 'events.one_going'.tr : 'events.n_going'.trn(going),
+                      style: AppText.capB(color: c.ink3),
                     ),
                   ),
                 ],
@@ -556,7 +551,7 @@ class _Fact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -564,7 +559,7 @@ class _Fact extends StatelessWidget {
           padding: const EdgeInsets.only(top: 2),
           child: Icon(icon, size: 18, color: context.app.ink),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

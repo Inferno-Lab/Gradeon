@@ -7,6 +7,7 @@ import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/storage_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/schedule.dart';
@@ -230,7 +231,7 @@ class _SearchViewState extends State<SearchView> {
                     ] else
                       const EmptyState(art: EmptyArt.search, title: 'search.start', body: 'search.start_body'),
                   ] else if (!c.ready.value)
-                    const Padding(padding: EdgeInsets.only(top: 22), child: SkeletonList())
+                    const Padding(padding: EdgeInsets.only(top: 24), child: SkeletonList())
                   else if (hw.isEmpty && nt.isEmpty && pp.isEmpty && ev.isEmpty)
                     EmptyState(art: EmptyArt.search, title: 'search.nothing', body: 'search.nothing_body'.trp({'q': q}))
                   else ...[
@@ -306,7 +307,7 @@ class _SearchViewState extends State<SearchView> {
             top: inset.top + 12,
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: context.reduceMotion ? 1 : 0, end: 1),
-              duration: const Duration(milliseconds: 550),
+              duration: AppMotion.t4,
               curve: const Cubic(.3, 1.45, .45, 1),
               builder: (context, t, child) => Opacity(
                 opacity: t.clamp(0, 1),
@@ -317,9 +318,9 @@ class _SearchViewState extends State<SearchView> {
               ),
               child: Glass(
                 height: 56,
-                radius: 28,
-                tint: app.dark ? null : const Color(0x80FBFCF9),
-                padding: const EdgeInsets.only(left: 18, right: 8),
+                radius: 999,
+                tint: app.dark ? null : AppColors.light.paper.withValues(alpha: 0.5),
+                padding: const EdgeInsets.only(left: 20, right: 8),
                 child: Row(
                   children: [
                     Icon(PhosphorIconsRegular.magnifyingGlass, color: app.ink, size: 22),
@@ -331,7 +332,7 @@ class _SearchViewState extends State<SearchView> {
                         textInputAction: TextInputAction.search,
                         onChanged: (v) => setState(() => c.query.value = v),
                         onSubmitted: (_) => c.remember(),
-                        style: anek(17, 560, color: app.ink),
+                        style: AppText.t(color: app.ink),
                         cursorColor: app.ink,
                         decoration: InputDecoration(
                           isCollapsed: true,
@@ -340,22 +341,21 @@ class _SearchViewState extends State<SearchView> {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           hintText: 'search.hint'.tr,
-                          hintStyle: anek(17, 520, color: app.ink3),
+                          hintStyle: AppText.t(color: app.ink3),
                         ),
                       ),
                     ),
                     Semantics(
                       button: true,
                       label: _text.text.isEmpty ? 'common.close'.tr : 'common.clear'.tr,
-                      child: GestureDetector(
+                      child: Pressable(
                         onTap: _text.text.isEmpty ? () => Get.back<void>() : () => _set(''),
                         child: Container(
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(color: app.ink.withValues(alpha: .08), shape: BoxShape.circle),
                           child: Icon(PhosphorIconsRegular.x, size: 18, color: app.ink),
-                        ),
-                      ),
+                        ),),
                     ),
                   ],
                 ),
@@ -439,7 +439,7 @@ class _IconTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: 40,
     height: 40,
-    decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(12)),
+    decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(10)),
     child: Icon(icon, size: 18, color: on),
   );
 }
@@ -466,7 +466,7 @@ class _Result extends StatelessWidget {
     onTap: onTap,
     scale: .985,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           leading,
@@ -521,7 +521,7 @@ class _Ribbon extends StatelessWidget {
                     ? DecoratedBox(
                         decoration: BoxDecoration(
                           color: minutesOf(p.end) <= now
-                              ? Color.lerp(AppColors.subject(p.subject).fill, const Color(0xFF9AA39E), .65)
+                              ? Color.lerp(AppColors.subject(p.subject).fill, AppColors.off, .65)
                               : AppColors.subject(p.subject).fill,
                           borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
                         ),

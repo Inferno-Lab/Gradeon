@@ -127,7 +127,7 @@ class Grab extends StatelessWidget {
       width: 40,
       height: 5,
       margin: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(color: context.app.line2, borderRadius: BorderRadius.circular(3)),
+      decoration: BoxDecoration(color: context.app.line2, borderRadius: BorderRadius.circular(2)),
     ),
   );
 }

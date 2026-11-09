@@ -27,18 +27,18 @@ class PostNoticeView extends GetView<PostNoticeController> {
       final body = controller.body.text.trim();
       final tone = switch (controller.category.value) {
         'exams' => c.badText,
-        'fees' => c.dark ? const Color(0xFFF6BA45) : AppColors.late,
+        'fees' => c.dark ? AppColors.blackboard.mariText : AppColors.late,
         'holiday' || 'events' => AppColors.ok,
         _ => c.mariText,
       };
       return PageFrame(
         leading: const BackGlass(close: true),
-        actions: [Text('teacher.preview_live'.tr, style: anek(13, 620, height: 1.3, color: c.ink3))],
+        actions: [Text('teacher.preview_live'.tr, style: AppText.capB(color: c.ink3))],
         topPadding: MediaQuery.paddingOf(context).top + 56,
         bottomBar: TeacherActionBar(
           text: Text(
-            'teacher.notified'.trp({'n': '${controller.reach}'}),
-            style: anek(13, 620, height: 1.3, color: c.ink3),
+            'teacher.notified'.trn(controller.reach),
+            style: AppText.capB(color: c.ink3),
           ),
           action: 'teacher.post',
           loading: controller.saving.value,
@@ -46,10 +46,10 @@ class PostNoticeView extends GetView<PostNoticeController> {
         ),
         children: [
           Text('teacher.new_notice'.tr, style: context.type.h2),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text('teacher.who'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+            child: Text('teacher.who'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
           ),
           Wrap(
             spacing: 8,
@@ -66,7 +66,7 @@ class PostNoticeView extends GetView<PostNoticeController> {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text('teacher.type'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+            child: Text('teacher.type'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
           ),
           Wrap(
             spacing: 8,
@@ -76,7 +76,7 @@ class PostNoticeView extends GetView<PostNoticeController> {
                 Chip2('notices.cat_$k', on: controller.category.value == k, onTap: () => controller.category.value = k),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Field(controller: controller.title, hint: 'teacher.notice_title', textInputAction: TextInputAction.next),
           const SizedBox(height: 10),
           Field(
@@ -93,7 +93,7 @@ class PostNoticeView extends GetView<PostNoticeController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('teacher.pin'.tr, style: context.type.t.copyWith(fontSize: 15)),
+                    Text('teacher.pin'.tr, style: context.type.ts),
                     Text('teacher.pin_hint'.tr, style: context.type.cap),
                   ],
                 ),
@@ -114,13 +114,13 @@ class PostNoticeView extends GetView<PostNoticeController> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   decoration: BoxDecoration(
                     color: c.paper,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: c.line),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x7310201B), blurRadius: 24, spreadRadius: -14, offset: Offset(0, 10)),
+                    boxShadow: [
+                      BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: -14, offset: const Offset(0, 10)),
                     ],
                   ),
                   child: Column(

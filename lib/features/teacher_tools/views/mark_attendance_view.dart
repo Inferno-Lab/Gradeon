@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
 import 'package:gradeon/core/widgets/glass.dart';
@@ -18,11 +19,11 @@ import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-const _houses = {
-  'Emerald': Color(0xFF23784A),
-  'Sapphire': Color(0xFF2F5BD3),
-  'Ruby': Color(0xFFB8306F),
-  'Amber': Color(0xFFE0A81E),
+final _houses = {
+  'Emerald': AppColors.ok,
+  'Sapphire': AppColors.subject('maths').fill,
+  'Ruby': AppColors.subject('hindi').fill,
+  'Amber': AppColors.houses[3],
 };
 
 class MarkAttendanceView extends GetView<MarkAttendanceController> {
@@ -31,7 +32,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final late = c.dark ? const Color(0xFFF6BA45) : AppColors.late;
+    final late = c.dark ? AppColors.blackboard.mariText : AppColors.late;
     return Obx(() {
       controller.marks.length;
       final cls = controller.schoolClass;
@@ -55,7 +56,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
                         'teacher.all_present'.tr,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: anek(14, 650, height: 1, color: c.ink),
+                        style: AppText.chip(color: c.ink, height: 1),
                       ),
                     ),
                   ],
@@ -87,7 +88,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
                           ),
                       ],
                     ),
-                    style: anek(15, 680, height: 1.2, tabular: true, color: c.ink),
+                    style: AppText.ts(color: c.ink, height: 1.2, tabular: true),
                   ),
                   action: 'teacher.submit',
                   kind: BtnKind.ink,
@@ -112,9 +113,9 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ViewStateView(
               state: controller.state.value,
               onRetry: controller.load,
@@ -169,11 +170,10 @@ class _Kid extends StatelessWidget {
       button: true,
       label: '${student.name}, $state. ${'teacher.tap_to_change'.tr}',
       excludeSemantics: true,
-      child: GestureDetector(
+      child: Pressable(
         onTap: onTap,
-        behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: AppMotion.t3,
           curve: const Cubic(.2, .8, .2, 1),
           padding: const EdgeInsets.fromLTRB(2, 8, 2, 6),
           decoration: BoxDecoration(
@@ -190,7 +190,7 @@ class _Kid extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
+                    duration: AppMotion.t3,
                     width: 52,
                     height: 52,
                     alignment: Alignment.center,
@@ -201,17 +201,11 @@ class _Kid extends StatelessWidget {
                     ),
                     child: Text(
                       Avatar.initialsOf(student.name),
-                      style: anek(
-                        16,
-                        720,
-                        width: 112,
-                        height: 1,
-                        color: absent
+                      style: AppText.t(color: absent
                             ? AppColors.bad
-                            : house == const Color(0xFFE0A81E)
+                            : house == AppColors.houses[3]
                             ? AppColors.mariInk
-                            : AppColors.white,
-                      ),
+                            : AppColors.white, height: 1),
                     ),
                   ),
                   if (absent || late)
@@ -227,7 +221,7 @@ class _Kid extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: c.chalk, width: 2),
                         ),
-                        child: Text(absent ? 'A' : 'L', style: anek(11, 780, height: 1, color: AppColors.white)),
+                        child: Text(absent ? 'A' : 'L', style: AppText.tiny(color: AppColors.white)),
                       ),
                     ),
                 ],
@@ -238,13 +232,12 @@ class _Kid extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: anek(12.5, 620, height: 1.1, color: c.ink),
+                style: AppText.capB(color: c.ink, height: 1.1),
               ),
-              Text('teacher.roll'.trp({'n': student.rollNo}), style: context.type.cap.copyWith(fontSize: 11)),
+              Text('teacher.roll'.trp({'n': student.rollNo}), style: context.type.tiny),
             ],
           ),
-        ),
-      ),
+        ),),
     );
   }
 }

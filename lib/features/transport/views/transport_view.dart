@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -33,7 +34,7 @@ class TransportView extends GetView<TransportController> {
           onRefresh: controller.load,
           children: [
             const PageTitle('transport.title'),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             ViewStateView(
               state: controller.state.value,
               onRetry: controller.load,
@@ -86,7 +87,7 @@ class TransportView extends GetView<TransportController> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 'transport.live'.trp({'route': route.routeName.split(' · ').first}),
-                                style: anek(14, 680, height: 1, color: c.ink),
+                                style: AppText.chip(color: c.ink, height: 1),
                               ),
                             ),
                           ],
@@ -167,14 +168,14 @@ class _MapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas
-      ..drawRect(Offset.zero & size, Paint()..color = const Color(0xFFE3E8E2))
+      ..drawRect(Offset.zero & size, Paint()..color = AppColors.light.chalk)
       ..save()
       ..scale(scale);
     Paint road(Color color, double width) => Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = width;
-    const paper = Color(0xFFFBFCF9);
+    final paper = AppColors.light.paper;
     canvas
       ..drawPath(
         Path()
@@ -200,16 +201,16 @@ class _MapPainter extends CustomPainter {
           ..cubicTo(230, 120, 300, 240, 280, 480),
         road(paper, 12),
       )
-      ..drawRect(const Rect.fromLTWH(150, 180, 70, 60), Paint()..color = const Color(0xFFD2DDD2))
-      ..drawRect(const Rect.fromLTWH(300, 380, 60, 50), Paint()..color = const Color(0xFFD2DDD2))
+      ..drawRect(const Rect.fromLTWH(150, 180, 70, 60), Paint()..color = Color.lerp(AppColors.ok, AppColors.light.chalk, .85)!)
+      ..drawRect(const Rect.fromLTWH(300, 380, 60, 50), Paint()..color = Color.lerp(AppColors.ok, AppColors.light.chalk, .85)!)
       ..drawPath(
         Path()
           ..moveTo(-10, 410)
           ..cubicTo(60, 400, 120, 440, 180, 430),
-        road(const Color(0xFFBFD6E6), 16),
+        road(Color.lerp(AppColors.subject('maths').fill, AppColors.light.paper, .75)!, 16),
       );
 
-    const ink = Color(0xFF10201B);
+    final ink = AppColors.light.ink;
     final path = _RouteMap.routePath();
     final metric = path.computeMetrics().first;
     final progress = route.progress.clamp(0.0, 1.0);
@@ -243,7 +244,7 @@ class _MapPainter extends CustomPainter {
           final label = TextPainter(
             text: TextSpan(
               text: stops[i].name,
-              style: anek(11, 700, height: 1, color: const Color(0xFF36443F)),
+              style: AppText.tiny(color: AppColors.light.ink2),
             ),
             textDirection: TextDirection.ltr,
           )..layout();
@@ -272,7 +273,7 @@ class _BusBubble extends StatefulWidget {
 
 class _BusBubbleState extends State<_BusBubble> with TickerProviderStateMixin {
   late final _ride = AnimationController(vsync: this, duration: const Duration(seconds: 3));
-  late final _pop = AnimationController(vsync: this, duration: const Duration(milliseconds: 600), value: 1);
+  late final _pop = AnimationController(vsync: this, duration: AppMotion.t4, value: 1);
   late final Worker _worker;
 
   @override
@@ -303,7 +304,7 @@ class _BusBubbleState extends State<_BusBubble> with TickerProviderStateMixin {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([_ride, _pop]),
     builder: (context, child) {
-      final t = Curves.easeInOut.transform(_ride.value);
+      final t = kEase.transform(_ride.value);
       final pop = 1 + .18 * math.sin(math.pi * _pop.value) * (1 - _pop.value);
       return Transform.translate(
         offset: Offset(10 * t, -8 * t),
@@ -315,21 +316,21 @@ class _BusBubbleState extends State<_BusBubble> with TickerProviderStateMixin {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10201B).withValues(alpha: .5),
+            color: AppColors.light.ink.withValues(alpha: .5),
             blurRadius: 26,
             spreadRadius: -8,
             offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: const Glass(
+      child: Glass(
         width: 64,
         height: 64,
-        radius: 32,
+        radius: 999,
         kind: GlassKind.lens,
         shadow: false,
-        tint: Color(0x2EFFFFFF),
-        child: Icon(PhosphorIconsBold.bus, color: Color(0xFF10201B), size: 24),
+        tint: AppColors.white.withValues(alpha: 0.18),
+        child: Icon(PhosphorIconsBold.bus, color: AppColors.light.ink, size: 24),
       ),
     ),
   );
@@ -352,7 +353,7 @@ class _StopsSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: c.paper,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
         border: Border(top: BorderSide(color: c.line)),
       ),
       child: ListView(
@@ -370,7 +371,7 @@ class _StopsSheet extends StatelessWidget {
                     Text.rich(
                       TextSpan(
                         text: '${route.etaMinutes}',
-                        children: [TextSpan(text: ' ${'transport.min'.tr}', style: const TextStyle(fontSize: 22))],
+                        children: [TextSpan(text: ' ${'transport.min'.tr}', style: AppText.num())],
                       ),
                       style: context.type.dl,
                     ),
@@ -382,7 +383,7 @@ class _StopsSheet extends StatelessWidget {
                 children: [
                   Text(
                     route.busNumber,
-                    style: context.type.mono.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: c.ink),
+                    style: context.type.mono.copyWith(color: c.ink),
                   ),
                   const SizedBox(height: 4),
                   Text(route.routeName, style: context.type.cap),
@@ -421,7 +422,7 @@ class _StopsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Avatar(route.driver.name, background: c.paper2, foreground: c.ink),
@@ -490,10 +491,10 @@ class _StopRow extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: stop.reached && !last ? context.type.s : context.type.t.copyWith(fontSize: 15),
+            style: stop.reached && !last ? context.type.s : context.type.ts,
           ),
         ),
-        Text(time, style: context.type.mono.copyWith(color: c.ink3, fontSize: 13)),
+        Text(time, style: context.type.mono.copyWith(color: c.ink3)),
       ],
     );
   }

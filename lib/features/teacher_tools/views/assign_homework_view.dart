@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/toast.dart';
@@ -31,15 +32,15 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
         actions: [
           AnimatedOpacity(
             opacity: controller.draftSaved.value ? 1 : 0,
-            duration: const Duration(milliseconds: 260),
-            child: Text('teacher.draft_saved'.tr, style: anek(13, 620, height: 1.3, color: c.ink3)),
+            duration: AppMotion.t3,
+            child: Text('teacher.draft_saved'.tr, style: AppText.capB(color: c.ink3)),
           ),
         ],
         topPadding: MediaQuery.paddingOf(context).top + 56,
         bottomBar: TeacherActionBar(
           text: Text(
-            'teacher.reach'.trp({'n': '${controller.roster.value}'}),
-            style: anek(13, 620, height: 1.3, color: c.ink3),
+            'teacher.reach'.trn(controller.roster.value),
+            style: AppText.capB(color: c.ink3),
           ),
           action: 'teacher.assign',
           loading: controller.saving.value,
@@ -47,7 +48,7 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
         ),
         children: [
           Text('teacher.new_homework'.tr, style: context.type.h2),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -79,10 +80,10 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
             minHeight: 70,
             keyboard: TextInputType.multiline,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text('teacher.due'.tr, style: anek(13, 620, height: 1.2, color: c.ink2)),
+            child: Text('teacher.due'.tr, style: AppText.capB(color: c.ink2, height: 1.2)),
           ),
           Row(
             children: [
@@ -97,11 +98,11 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
                     child: Pressable(
                       onTap: () => controller.due.value = d,
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: AppMotion.t2,
                         height: 58,
                         decoration: BoxDecoration(
                           color: due != null && DateUtils.isSameDay(d, due) ? c.ink : c.paper,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           border: due != null && DateUtils.isSameDay(d, due) ? null : Border.all(color: c.line),
                         ),
                         child: Column(
@@ -109,23 +110,13 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
                           children: [
                             Text(
                               '${d.day}',
-                              style: anek(
-                                18,
-                                720,
-                                height: 1.1,
-                                color: due != null && DateUtils.isSameDay(d, due) ? c.chalk : c.ink,
-                              ),
+                              style: AppText.t(color: due != null && DateUtils.isSameDay(d, due) ? c.chalk : c.ink, height: 1.1),
                             ),
                             Text(
                               DateFormat('EEE').format(d).toUpperCase(),
-                              style: anek(
-                                11,
-                                650,
-                                height: 1.1,
-                                color: due != null && DateUtils.isSameDay(d, due)
+                              style: AppText.tiny(color: due != null && DateUtils.isSameDay(d, due)
                                     ? c.chalk.withValues(alpha: .7)
-                                    : c.ink3,
-                              ),
+                                    : c.ink3, height: 1.1),
                             ),
                           ],
                         ),
@@ -154,9 +145,9 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
               style: context.type.cap,
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           EduCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 Expanded(child: Text('teacher.marks'.tr, style: context.type.t)),
@@ -248,7 +239,7 @@ class _Link extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: context.app.ink2),
           const SizedBox(width: 6),
-          Text(label.tr, style: anek(13, 640, height: 1.3, color: context.app.ink2)),
+          Text(label.tr, style: AppText.capB(color: context.app.ink2)),
         ],
       ),
     ),

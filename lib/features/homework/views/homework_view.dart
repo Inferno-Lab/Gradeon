@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/widgets/empty_art.dart';
@@ -44,19 +45,23 @@ class HomeworkView extends GetView<HomeworkController> {
           ),
         ],
         onRefresh: controller.load,
-        bottomBarHeight: 56,
-        bottomBar: GlassSegmented(
-          labels: [
-            'homework.tab_due'.trp({'n': '${counts[0]}'}),
-            'homework.tab_sent'.trp({'n': '${counts[1]}'}),
-            'homework.tab_graded'.trp({'n': '${counts[2]}'}),
-          ],
-          index: tab,
-          semanticLabel: 'homework.status'.tr,
-          onChanged: (i) => controller.tab.value = i,
-        ),
         children: [
           PageTitle('homework.title', subtitle: _summary(controller, tab, counts)),
+          // The filter sits under the title (rule 12): the bottom of the screen belongs to the dock and the one action.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+            child: GlassSegmented(
+              labels: [
+                'homework.tab_due'.trp({'n': '${counts[0]}'}),
+                'homework.tab_sent'.trp({'n': '${counts[1]}'}),
+                'homework.tab_graded'.trp({'n': '${counts[2]}'}),
+              ],
+              index: tab,
+              height: 44,
+              semanticLabel: 'homework.status'.tr,
+              onChanged: (i) => controller.tab.value = i,
+            ),
+          ),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
@@ -188,28 +193,27 @@ class _HomeworkRow extends StatelessWidget {
       case 2:
         meta = '${mine?.marks ?? 0}/${item.maxMarks}${(mine?.feedback ?? '').isEmpty ? '' : ' · “${mine!.feedback}”'}';
         stamp = mine?.grade ?? '—';
-        tone = (mine?.grade ?? '').startsWith('A') ? AppColors.ok : (c.dark ? const Color(0xFFF6BA45) : AppColors.late);
+        tone = (mine?.grade ?? '').startsWith('A') ? AppColors.ok : (c.dark ? AppColors.blackboard.mariText : AppColors.late);
       default:
         meta = [
           if (teacher.isNotEmpty) teacher,
-          if (item.attachments.isNotEmpty) 'homework.n_files'.trp({'n': '${item.attachments.length}'}),
-          'homework.n_marks'.trp({'n': '${item.maxMarks}'}),
+          if (item.attachments.isNotEmpty) 'homework.n_files'.trn(item.attachments.length),
+          'homework.n_marks'.trn(item.maxMarks),
         ].join(' · ');
         if (days < 0) {
           stamp = 'homework.stamp_late'.tr;
           tone = c.badText;
         } else if (days <= 1) {
           stamp = daysStamp(item.dueOn);
-          tone = c.dark ? const Color(0xFFF6BA45) : AppColors.late;
+          tone = c.dark ? AppColors.blackboard.mariText : AppColors.late;
         } else {
           stamp = DateFormat('EEE').format(item.dueOn);
           tone = AppColors.off;
         }
     }
     return EduCard(
-      radius: 22,
       onTap: () => Get.toNamed<void>(AppRoutes.homeworkDetail.replaceFirst(':id', item.id)),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Cover(subject: item.subject),
@@ -280,7 +284,7 @@ class HomeworkDetailView extends GetView<HomeworkDetailController> {
           else ...[
             _Hero(item: item, height: heroH, teacher: controller.teacher),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: _DetailBody(item: item, mine: mine),
             ),
           ],
@@ -303,7 +307,7 @@ class _Hero extends StatelessWidget {
     final pigment = AppColors.subject(hw.subject);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: context.reduceMotion ? 1 : .6, end: 1),
-      duration: const Duration(milliseconds: 600),
+      duration: AppMotion.t4,
       curve: const Cubic(.2, .8, .2, 1),
       builder: (context, t, child) => Transform(
         alignment: Alignment.topCenter,
@@ -312,11 +316,11 @@ class _Hero extends StatelessWidget {
       ),
       child: Container(
         height: height,
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         alignment: Alignment.bottomLeft,
         decoration: BoxDecoration(color: pigment.fill),
-        foregroundDecoration: const BoxDecoration(
-          border: Border(left: BorderSide(color: Color(0x2E000000), width: 10)),
+        foregroundDecoration: BoxDecoration(
+          border: Border(left: BorderSide(color: AppColors.amoled.chalk.withValues(alpha: 0.18), width: 10)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -357,8 +361,8 @@ class _DetailBody extends StatelessWidget {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Stamp(dueLabel, color: days < 0 ? c.badText : (c.dark ? const Color(0xFFF6BA45) : AppColors.late)),
-              Chip2('homework.n_marks'.trp({'n': '${item.maxMarks}'}), height: 30),
+              Stamp(dueLabel, color: days < 0 ? c.badText : (c.dark ? AppColors.blackboard.mariText : AppColors.late)),
+              Chip2('homework.n_marks'.trn(item.maxMarks), height: 30),
               Chip2('status.${status.name}', height: 30),
             ],
           ),
@@ -366,7 +370,7 @@ class _DetailBody extends StatelessWidget {
         const SizedBox(height: 16),
         Rise(index: 1, child: Text(item.description, style: context.type.b)),
         if (status != HomeworkStatus.pending && mine != null) ...[
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Rise(
             index: 2,
             child: EduCard(
@@ -417,7 +421,7 @@ class _DetailBody extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Rise(
           index: 4,
           child: Text(
@@ -447,25 +451,25 @@ class _FileRow extends StatelessWidget {
       onTap: () => ToastHelper.show('homework.downloaded', kind: ToastKind.success),
       scale: .985,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 46,
               alignment: Alignment.bottomCenter,
-              padding: const EdgeInsets.only(bottom: 5),
+              padding: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
                 color: c.paper2,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
-                  topRight: Radius.circular(12),
+                  topRight: Radius.circular(10),
                   bottomLeft: Radius.circular(6),
                   bottomRight: Radius.circular(6),
                 ),
                 border: Border.all(color: c.line2),
               ),
-              child: Text(ext, style: anek(9.5, 760, height: 1, em: .06, color: c.ink2)),
+              child: Text(ext, style: AppText.o(color: c.ink2)),
             ),
             const SizedBox(width: 12),
             Expanded(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.t)),
@@ -486,7 +490,7 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Glass(
       height: 64,
-      radius: 32,
+      radius: 999,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [

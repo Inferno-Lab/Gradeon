@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_theme.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
 import 'package:gradeon/core/widgets/glass.dart';
@@ -131,7 +132,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
     final next = _pages.length + 1;
     const white = AppColors.white;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.amoled.chalk,
       body: Stack(
         children: [
           Positioned.fill(
@@ -183,7 +184,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                       const SizedBox(width: 8),
                       Text(
                         (camera == null ? 'scan.starting' : 'scan.hold_still').tr,
-                        style: anek(14, 650, height: 1, color: white),
+                        style: AppText.chip(color: white, height: 1),
                       ),
                     ],
                   ),
@@ -230,7 +231,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                                 decoration: BoxDecoration(color: AppColors.mari, shape: BoxShape.circle),
                                 child: Text(
                                   '${_pages.length}',
-                                  style: anek(12, 760, height: 1, color: AppColors.mariInk),
+                                  style: AppText.capB(color: AppColors.mariInk, height: 1),
                                 ),
                               ),
                             ),
@@ -247,9 +248,9 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                       height: 84,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xE6FFFFFF), width: 4),
+                        border: Border.all(color: AppColors.white.withValues(alpha: 0.9), width: 4),
                       ),
-                      child: const Glass(kind: GlassKind.lens, radius: 42, tint: Color(0x1AFFFFFF), shadow: false),
+                      child: Glass(kind: GlassKind.lens, radius: 999, tint: AppColors.white.withValues(alpha: 0.1), shadow: false),
                     ),
                   ),
                 ),
@@ -263,7 +264,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('common.done'.tr, style: anek(16, 700, height: 1, color: white)),
+                        Text('common.done'.tr, style: AppText.t(color: white, height: 1)),
                         const SizedBox(width: 6),
                         const Icon(PhosphorIconsBold.caretRight, size: 14, color: white),
                       ],
@@ -280,7 +281,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
             child: Text(
               'scan.footer'.trp({'n': '$next'}),
               textAlign: TextAlign.center,
-              style: anek(12, 520, height: 1.3, color: const Color(0xB3FFFFFF)),
+              style: AppText.cap(color: AppColors.white.withValues(alpha: 0.7)),
             ),
           ),
         ],
@@ -297,7 +298,7 @@ class _Guide extends StatefulWidget {
 }
 
 class _GuideState extends State<_Guide> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))..repeat(reverse: true);
+  late final _c = AnimationController(vsync: this, duration: AppMotion.loop)..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -328,7 +329,7 @@ class _GuideState extends State<_Guide> with SingleTickerProviderStateMixin {
                 builder: (context, _) => Positioned(
                   left: left - 12,
                   width: w + 24,
-                  top: top + h * Curves.easeInOut.transform(_c.value),
+                  top: top + h * kEase.transform(_c.value),
                   height: 2,
                   child: DecoratedBox(
                     decoration: BoxDecoration(

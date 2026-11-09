@@ -6,6 +6,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/haptics.dart';
@@ -89,15 +90,14 @@ class _PaySheetState extends State<PaySheet> {
               Semantics(
                 button: true,
                 label: 'common.close'.tr,
-                child: GestureDetector(
+                child: Pressable(
                   onTap: () => Get.back<void>(),
                   child: Container(
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(color: c.paper2, shape: BoxShape.circle),
                     child: Icon(PhosphorIconsRegular.x, size: 18, color: c.ink),
-                  ),
-                ),
+                  ),),
               ),
             ],
           ),
@@ -114,8 +114,8 @@ class _PaySheetState extends State<PaySheet> {
                   onTap: _receipt != null || _busy ? null : () => setState(() => _method = m.$1),
                   scale: .985,
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    duration: AppMotion.t2,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: _method == m.$1 ? c.paper2 : Colors.transparent,
                       borderRadius: BorderRadius.circular(18),
@@ -129,11 +129,11 @@ class _PaySheetState extends State<PaySheet> {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: c.paper,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: c.line),
                           ),
                           child: m.$2 != null
-                              ? Text(m.$2!, style: anek(11, 760, height: 1, em: .04, color: c.ink))
+                              ? Text(m.$2!, style: AppText.o(color: c.ink))
                               : Icon(
                                   m.$1 == 'card' ? PhosphorIconsRegular.creditCard : PhosphorIconsRegular.bank,
                                   size: 18,
@@ -167,7 +167,7 @@ class _PaySheetState extends State<PaySheet> {
                 ),
               ),
             ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           _SlideToPay(
             x: _x,
             dragging: _drag,
@@ -206,7 +206,7 @@ class _PaySheetState extends State<PaySheet> {
                             ),
                           );
                         },
-                        child: Text('fees.see_receipt'.tr, style: anek(13, 650, height: 1.3, color: c.mariText)),
+                        child: Text('fees.see_receipt'.tr, style: AppText.capB(color: c.mariText)),
                       ),
                     ),
                   ),
@@ -259,11 +259,11 @@ class _SlideToPay extends StatelessWidget {
             onHorizontalDragUpdate: paid || busy ? null : (d) => onMove((x + d.delta.dx).clamp(0, max)),
             onHorizontalDragEnd: paid || busy ? null : (d) => onEnd(max, d.primaryVelocity ?? 0),
             child: AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
+            duration: AppMotion.t4,
             height: 64,
             decoration: BoxDecoration(
-              color: paid ? AppColors.ok : const Color(0xFF10201B),
-              borderRadius: BorderRadius.circular(32),
+              color: paid ? AppColors.ok : AppColors.light.ink,
+              borderRadius: BorderRadius.circular(34),
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -273,16 +273,16 @@ class _SlideToPay extends StatelessWidget {
                   top: 0,
                   bottom: 0,
                   width: x + 40,
-                  child: const ColoredBox(color: Color(0x59F2A007)),
+                  child: ColoredBox(color: AppColors.mari.withValues(alpha: 0.35)),
                 ),
                 Center(
                   child: Opacity(
                     opacity: paid || busy ? 1 : (1 - x / 180).clamp(.15, 1),
-                    child: Text(label, style: anek(16, 680, width: 106, height: 1, color: AppColors.white)),
+                    child: Text(label, style: AppText.t(color: AppColors.white, height: 1)),
                   ),
                 ),
                 AnimatedPositioned(
-                  duration: dragging || context.reduceMotion ? Duration.zero : const Duration(milliseconds: 600),
+                  duration: dragging || context.reduceMotion ? Duration.zero : AppMotion.t4,
                   curve: const Cubic(.3, 1.45, .45, 1),
                   left: 4 + x.clamp(0, max),
                   top: 4,
@@ -290,17 +290,17 @@ class _SlideToPay extends StatelessWidget {
                   height: 56,
                   child: Glass(
                       kind: GlassKind.lens,
-                      radius: 28,
+                      radius: 999,
                       tint: AppColors.white,
                       child: Center(
                         child: busy
-                            ? const SizedBox.square(
+                            ? SizedBox.square(
                                 dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2.4, color: Color(0xFF10201B)),
+                                child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.light.ink),
                               )
                             : Icon(
                                 paid ? PhosphorIconsBold.check : PhosphorIconsBold.caretRight,
-                                color: const Color(0xFF10201B),
+                                color: AppColors.light.ink,
                                 size: 22,
                               ),
                       ),

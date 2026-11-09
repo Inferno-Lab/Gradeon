@@ -7,6 +7,7 @@ import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/theme_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/status.dart';
@@ -47,7 +48,7 @@ class _FeesViewState extends State<FeesView> {
         Installment? find() => controller.account?.installments.where((x) => x.id == args['pay']).firstOrNull;
         // The account may still be loading, or reloading for a switched child.
         for (var i = 0; i < 40 && find() == null; i++) {
-          await Future<void>.delayed(const Duration(milliseconds: 100));
+          await Future<void>.delayed(AppMotion.press);
         }
         final item = find();
         if (item != null && mounted) unawaited(openPaySheet(item));
@@ -96,7 +97,7 @@ class _FeesViewState extends State<FeesView> {
                             'fees.receipts'.tr,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: anek(14, 650, height: 1, color: context.app.ink),
+                            style: AppText.chip(color: context.app.ink, height: 1),
                           ),
                         ),
                       ],
@@ -105,7 +106,7 @@ class _FeesViewState extends State<FeesView> {
                 ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           ViewStateView(
             state: state,
             onRetry: controller.load,
@@ -127,7 +128,7 @@ class _FeesViewState extends State<FeesView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text('fees.receipts'.tr, style: context.type.h2),
           const SizedBox(height: 8),
           for (final r in account.receipts)
@@ -180,7 +181,7 @@ class _Body extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Rise(child: next == null ? const _AllPaid() : _DueCard(item: next)),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Rise(
           index: 1,
           child: Row(
@@ -211,7 +212,7 @@ class _Body extends StatelessWidget {
             child: Row(
               children: [
                 for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 3),
+                  if (i > 0) const SizedBox(width: 2),
                   Expanded(
                     flex: items[i].amount,
                     child: _Segment(item: items[i], first: i == 0, last: i == items.length - 1),
@@ -221,7 +222,7 @@ class _Body extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Rise(
           index: 2,
           child: EduCard(
@@ -320,11 +321,11 @@ class _AllPaid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => EduCard(
     color: context.app.okSoft,
-    padding: const EdgeInsets.all(18),
+    padding: const EdgeInsets.all(20),
     child: Row(
       children: [
         Icon(PhosphorIconsBold.checkCircle, color: AppColors.ok, size: 28),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,8 +351,8 @@ class _DueCard extends StatelessWidget {
     final days = Formatters.daysUntil(item.dueDate);
     final ink = AppColors.mariInk;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(26)),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -365,14 +366,14 @@ class _DueCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Stamp(
-                overdue ? 'fees.days_late'.trp({'n': '${-days}'}) : 'fees.due_in'.trp({'n': '$days'}),
-                color: overdue ? const Color(0xFF7A1E12) : ink,
+                overdue ? 'fees.days_late'.trn(-days) : 'fees.due_in'.trn(days),
+                color: overdue ? Color.lerp(AppColors.bad, AppColors.light.ink, .45)! : ink,
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(Formatters.inr(item.amount), style: context.type.dl.copyWith(color: ink)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -466,14 +467,14 @@ class _TimelineRow extends StatelessWidget {
                         ],
                       ),
                       style: status == MoneyStatus.overdue
-                          ? anek(13, 620, height: 1.3, color: c.badText)
+                          ? AppText.capB(color: c.badText)
                           : context.type.cap,
                     ),
                   ],
                 ),
               ),
             ),
-            Text(Formatters.inr(item.amount), style: anek(16.5, 650, height: 1, tabular: true, color: c.ink)),
+            Text(Formatters.inr(item.amount), style: AppText.t(color: c.ink, height: 1)),
           ],
         ),
       ),

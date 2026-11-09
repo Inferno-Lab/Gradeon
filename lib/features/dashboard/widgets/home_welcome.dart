@@ -25,16 +25,16 @@ class HomeWelcome extends StatelessWidget {
     final c = context.app;
     final steps = _firstSteps();
     return EduCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Center(child: EmptyArtView(EmptyArt.calendar, height: 120)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text('home.welcome_title'.trp({'school': AppConfig.schoolName.split(' ').first}), style: context.type.h2),
           const SizedBox(height: 6),
           Text('home.welcome_body'.tr, style: context.type.b.copyWith(color: c.ink2)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Overline('home.first_steps'.tr),
           const SizedBox(height: 4),
           _StepList(steps: steps),
@@ -68,7 +68,7 @@ class _StepList extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: i == 0 ? AppColors.mari : c.paper2,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(s.$1, size: 20, color: i == 0 ? AppColors.mariInk : c.ink),
                   ),
@@ -77,7 +77,7 @@ class _StepList extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.$2.tr, style: context.type.t.copyWith(fontSize: 15)),
+                        Text(s.$2.tr, style: context.type.ts),
                         Text(s.$3.tr, style: context.type.cap),
                       ],
                     ),

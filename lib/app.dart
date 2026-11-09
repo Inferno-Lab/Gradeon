@@ -37,7 +37,7 @@ class GradeonApp extends StatelessWidget {
           );
           return AnimatedTheme(
             data: data,
-            duration: theme.reduceMotion.value ? Duration.zero : AppDurations.slow,
+            duration: theme.reduceMotion.value ? Duration.zero : AppMotion.t3,
             curve: kEase,
             child: MediaQuery(
               data: MediaQuery.of(context).copyWith(

@@ -77,7 +77,7 @@ class AuthService extends GetxService {
       return;
     }
     unawaited(Get.offAllNamed<void>(AppRoutes.login));
-    await Future<void>.delayed(AppDurations.medium);
+    await Future<void>.delayed(AppMotion.t3);
     _clear();
   }
 

@@ -36,7 +36,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 Color _stampTone(BuildContext context, String category) => switch (category) {
   'exams' => context.app.badText,
-  'fees' => context.app.dark ? const Color(0xFFF6BA45) : AppColors.late,
+  'fees' => context.app.dark ? AppColors.blackboard.mariText : AppColors.late,
   'holiday' || 'sports' || 'events' => AppColors.ok,
   _ => context.app.mariText,
 };
@@ -101,10 +101,10 @@ class NoticesView extends GetView<NoticesController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Rise(index: 1, child: _Filters(controller: controller)),
                 if (pinned.isNotEmpty) ...[
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
                   Rise(
                     index: 1,
                     child: IntrinsicHeight(
@@ -175,13 +175,13 @@ class _Slip extends StatelessWidget {
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 decoration: BoxDecoration(
                   color: c.paper,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: c.line),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x7310201B), blurRadius: 24, spreadRadius: -14, offset: Offset(0, 10)),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: -14, offset: const Offset(0, 10)),
                   ],
                 ),
                 child: Column(
@@ -206,15 +206,15 @@ class _Slip extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: pin,
                       shape: BoxShape.circle,
-                      boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 3))],
+                      boxShadow: [BoxShadow(color: AppColors.amoled.chalk.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 3))],
                     ),
-                    foregroundDecoration: const BoxDecoration(
+                    foregroundDecoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        center: Alignment(-.35, -.35),
+                        center: const Alignment(-.35, -.35),
                         radius: .9,
-                        colors: [Color(0x00000000), Color(0x00000000), Color(0x33000000)],
-                        stops: [0, .6, 1],
+                        colors: [Colors.transparent, Colors.transparent, AppColors.amoled.chalk.withValues(alpha: 0.2)],
+                        stops: const [0, .6, 1],
                       ),
                     ),
                   ),
@@ -268,7 +268,7 @@ class _Row extends StatelessWidget {
           children: [
             if (unread) Positioned(left: 5, top: 22, child: Dot(AppColors.mari, size: 7)),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -276,8 +276,8 @@ class _Row extends StatelessWidget {
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(12)),
-                    child: Text(cat.abbr, style: anek(10, 780, height: 1, em: .06, color: cat.on)),
+                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(10)),
+                    child: Text(cat.abbr, style: AppText.o(color: cat.on)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -294,15 +294,13 @@ class _Row extends StatelessWidget {
                     Semantics(
                       button: true,
                       label: 'notices.add_calendar'.tr,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+                      child: Pressable(
                         onTap: () =>
                             unawaited(addToCalendar(title: notice.title, first: notice.date, details: notice.body)),
                         child: Padding(
                           padding: const EdgeInsets.all(4),
                           child: Stamp('notices.plus_cal'.tr, color: AppColors.off, size: 10),
-                        ),
-                      ),
+                        ),),
                     ),
                   ],
                 ],
@@ -377,16 +375,16 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
             ? null
             : Glass(
                 height: 64,
-                radius: 32,
+                radius: 999,
                 padding: const EdgeInsets.only(left: 20, right: 8),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         sittings.isNotEmpty
-                            ? 'notices.exam_days'.trp({'n': '${sittings.length}'})
+                            ? 'notices.exam_days'.trn(sittings.length)
                             : 'notices.school_closed'.tr,
-                        style: anek(13, 600, height: 1.3, color: c.ink3),
+                        style: AppText.capB(color: c.ink3),
                       ),
                     ),
                     Btn(
@@ -427,7 +425,7 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       Rise(index: 1, child: Text(notice.title, style: context.type.h1)),
                       const SizedBox(height: 12),
                       Rise(
@@ -439,7 +437,7 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
                             Expanded(
                               child: Text(
                                 '${notice.author} · ${_whenInline(notice.date)}',
-                                style: anek(13, 600, height: 1.3, color: c.ink2),
+                                style: AppText.capB(color: c.ink2),
                               ),
                             ),
                           ],
@@ -477,7 +475,7 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
                                 Icon(PhosphorIconsRegular.paperclip, size: 18, color: c.ink3),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(file, style: anek(13, 600, height: 1.3, color: c.ink3)),
+                                  child: Text(file, style: AppText.capB(color: c.ink3)),
                                 ),
                               ],
                             ),
@@ -506,7 +504,7 @@ class _Sitting extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
             children: [
               SizedBox(
@@ -514,10 +512,10 @@ class _Sitting extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${day.day}', style: anek(20, 760, width: 118, height: 1, color: c.ink)),
+                    Text('${day.day}', style: AppText.h3(color: c.ink, height: 1)),
                     Text(
                       DateFormat('EEE').format(day).toUpperCase(),
-                      style: anek(10.5, 700, height: 1.2, em: .06, color: c.ink3),
+                      style: AppText.o(color: c.ink3, height: 1.2),
                     ),
                   ],
                 ),
@@ -527,7 +525,7 @@ class _Sitting extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(child: Text(subjects.map(subjectName).join(' · '), style: context.type.t)),
               Text(
-                subjects.length > 1 ? 'notices.sittings'.trp({'n': '${subjects.length}'}) : '8:30–11:00',
+                subjects.length > 1 ? 'notices.sittings'.trn(subjects.length) : '8:30–11:00',
                 style: context.type.mono.copyWith(color: c.ink3),
               ),
             ],
