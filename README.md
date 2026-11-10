@@ -13,7 +13,7 @@ Start here depending on who you are:
 
 - **New developer or coding agent:** [`AGENTS.md`](AGENTS.md) (rules and commands), then [`docs/HANDOFF.md`](docs/HANDOFF.md) (what was built, why, what is left and how to do it).
 - **Want to see it running on the internet:** [`docs/deploy-free-test.md`](docs/deploy-free-test.md). The current test deployment is `https://gradeon.onrender.com` (admin at `/`, console at `/console/`).
-- **The design:** the concept is [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards are in [`design/`](design/README.md). The long-term plan is [`docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`](docs/superpowers/specs/2026-10-14-gradeon-platform-design.md).
+- **The design:** the concept is [`docs/DESIGN.md`](docs/DESIGN.md) and the approved boards are in [`design/`](design/README.md). Every feature, what is left and what is planned: [`docs/features-plan.md`](docs/features-plan.md).
 
 ## How it fits together
 
@@ -54,7 +54,7 @@ Sign in:
 
 On the hosted test track (`https://gradeon.onrender.com`) the school logins are the same. The console there uses `BOOTSTRAP_PASSWORD` and `DEMO_CODE` from Render's Environment page.
 
-Texts and emails are never sent for real yet: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear. A real SMS provider (with DLT registration) is the step that lets real families sign in; see `docs/production-plan.md`.
+Texts and emails are never sent for real yet: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear. A real SMS provider (with DLT registration) is the step that lets real families sign in; see `docs/integrations.md` and section 1 of `docs/features-plan.md`.
 
 Operations: every school is backed up daily and a weekly restore drill puts one back into a scratch database (console → Health). Set `ALERT_WEBHOOK_URL` to a Slack or Discord webhook to hear about new errors, a school not answering, a failed backup or drill.
 
