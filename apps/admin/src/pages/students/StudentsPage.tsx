@@ -7,6 +7,7 @@ import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { AddStudentDialog, AssignFeeDialog, CollectFeeDialog, ImportDialog, MessageDialog } from './StudentDialogs';
 import { StudentsView } from './students.view';
+import { StudentFiles } from './StudentFiles';
 
 const PAGE = 10;
 const HOUSES = ['Emerald', 'Ruby', 'Sapphire', 'Amber'];
@@ -182,7 +183,7 @@ export function StudentsPage() {
     bulkFee: () => setDialog({ kind: 'fee', ids: [...sel], label: `${sel.size} selected ${sel.size === 1 ? 'student' : 'students'}` }),
     bulkExport: () => void download([...sel]),
     bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
-    drOn: !!openId, close: closeDrawer,
+    drOn: !!openId, close: closeDrawer, files: openId ? <StudentFiles id={openId} say={(m) => say(m)} /> : null,
     canCollect: has.fees && app.user.permissions.includes('fees.collect'),
     d: (() => {
       const s = detail.data;

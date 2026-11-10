@@ -25,6 +25,8 @@ export interface LoginController {
   /** The school's brand colour and logo letters, for its mark. */
   color?: string;
   logoText?: string;
+  /** The school's logo image, when it has one: shown instead of the letters. */
+  logoUrl?: string | null;
   /** The school's privacy notice and grievance officer, behind "Privacy". */
   privacy?: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
   demoMode: boolean;
@@ -139,7 +141,7 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   return {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
-    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color),
+    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color), logoUrl: c.logoUrl ?? null,
     privacyOpen, privacy: c.privacy, togglePrivacy: () => setPrivacyOpen((o) => !o),
     // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
     gradeon: c.product === 'console' || c.schoolName === 'Gradeon',

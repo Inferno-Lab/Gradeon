@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
+import { HttpError, uploadFile } from '@gradeon/api-client';
 import type { NoticeRow } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
+import { Attach } from '../../app/kit';
 
 const TONE: Record<NoticeRow['status'], string> = { draft: 'n', pending: 'a', published: 'g' };
 const LABEL: Record<NoticeRow['status'], string> = { draft: 'Draft', pending: 'Waiting for approval', published: 'Sent' };
@@ -52,9 +53,15 @@ function Compose({ onClose, onDone }: { onClose: () => void; onDone: (msg: strin
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const canPublish = app.user.permissions.includes('notices.publish');
+  const [files, setFiles] = useState<File[]>([]);
   const create = useMutation({
-    mutationFn: (publish: boolean) => app.api.notices.create({ title: f.title.trim(), body: f.body.trim(), audience: f.audience as 'everyone', classId: f.audience === 'class' ? f.classId : undefined, publish }),
-    onSuccess: (n) => onDone(n.status === 'published' ? 'Sent to everyone it is for.' : n.status === 'pending' ? 'Saved and sent for approval.' : 'Saved as a draft.'),
+    mutationFn: async (publish: boolean) => {
+      const n = await app.api.notices.create({ title: f.title.trim(), body: f.body.trim(), audience: f.audience as 'everyone', classId: f.audience === 'class' ? f.classId : undefined, publish });
+      const failed: string[] = [];
+      for (const file of files) await uploadFile(app.api, 'notice_attachment', n.id, file).catch(() => failed.push(file.name));
+      return { n, failed };
+    },
+    onSuccess: ({ n, failed }) => onDone(`${n.status === 'published' ? 'Sent to everyone it is for.' : n.status === 'pending' ? 'Saved and sent for approval.' : 'Saved as a draft.'}${failed.length ? ` ${failed.join(', ')} could not be attached.` : ''}`),
     onError: (e) => { setErr(e instanceof HttpError && Object.keys(e.fields).length ? e.fields : { _: (e as Error).message }); shake.hit(); },
   });
   const go = (publish: boolean) => {
@@ -80,6 +87,7 @@ function Compose({ onClose, onDone }: { onClose: () => void; onDone: (msg: strin
           <SelectField label="Who it is for" value={f.audience} onChange={(audience) => setF({ ...f, audience })} options={Object.entries(AUDIENCE).map(([value, label]) => ({ value, label }))} />
           {f.audience === 'class' && <SelectField label="Class" value={f.classId} onChange={(classId) => setF({ ...f, classId })} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} error={err.classId} />}
         </div>
+        <Attach files={files} onChange={setFiles} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
         {!canPublish && <div className="help">Notices to families wait for the principal’s approval before they send.</div>}
       </div>

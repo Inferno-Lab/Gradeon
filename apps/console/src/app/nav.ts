@@ -11,6 +11,7 @@ const DEFS: { name: string; items: Def[] }[] = [
     { id: 'cells', label: 'Cells', icon: 'cells', keys: 'G C', to: '/cells' },
     { id: 'rel', label: 'Releases', icon: 'rel', keys: 'G R', to: '/releases' },
     { id: 'mig', label: 'Migrations', icon: 'mig', keys: 'G M', to: '/migrations' },
+    { id: 'int', label: 'Integrations', icon: 'plug', keys: 'G N', to: '/integrations' },
   ] },
   { name: 'Ship', items: [
     { id: 'app', label: 'Mobile builds', icon: 'app', keys: 'G B', to: '/builds' },

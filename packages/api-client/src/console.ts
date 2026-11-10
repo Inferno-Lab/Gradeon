@@ -1,7 +1,8 @@
 import type {
   ActionRequest, ActionRow, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ThemeColors, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
-  WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow } from '@gradeon/contracts';
+  WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow,
+  ActivityQuery, ActivityView, ConnectionInput, ConnectionPatch, HookEventRow, IntegrationsView, JobRow, RouteInput as IntRouteInput, TemplateInput } from '@gradeon/contracts';
 import type { Http } from './http';
 
 /** What the console sends to preview or import: the file name may be left out. */
@@ -121,6 +122,25 @@ export function consoleApi(h: Http) {
       change: (id: string, b: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }) => h.put<void>(`${base}/team/${id}`, b),
     },
     audit: (school?: string) => h.get<AuditRow[]>(`${base}/audit`, { school }),
+    integrations: {
+      view: () => h.get<IntegrationsView>(`${base}/integrations`),
+      create: (b: ConnectionInput) => h.post<{ id: string }>(`${base}/integrations/connections`, b),
+      update: (id: string, b: ConnectionPatch) => h.put<void>(`${base}/integrations/connections/${id}`, b),
+      remove: (id: string) => h.del<void>(`${base}/integrations/connections/${id}`),
+      test: (id: string, to?: string) => h.post<{ ok: boolean; detail: string }>(`${base}/integrations/connections/${id}/test`, { to }),
+      live: (id: string) => h.post<ActionRow>(`${base}/integrations/connections/${id}/live`),
+      events: (id: string) => h.get<HookEventRow[]>(`${base}/integrations/connections/${id}/events`),
+      route: (b: IntRouteInput) => h.put<void>(`${base}/integrations/routes`, b),
+      unroute: (id: string) => h.del<void>(`${base}/integrations/routes/${id}`),
+      template: (b: TemplateInput) => h.put<void>(`${base}/integrations/templates`, b),
+      untemplate: (id: string) => h.del<void>(`${base}/integrations/templates/${id}`),
+      activity: (q: Partial<ActivityQuery>) => h.get<ActivityView>(`${base}/integrations/activity`, q),
+      retry: (id: string) => h.post<void>(`${base}/integrations/activity/${id}/retry`),
+      allowList: (allowList: string[]) => h.put<{ allowList: string[] }>(`${base}/integrations/allow-list`, { allowList }),
+    },
+    jobs: { list: () => h.get<JobRow[]>(`${base}/health/jobs`), retry: (id: string) => h.post<void>(`${base}/health/jobs/${id}/retry`) },
+    retention: (schoolId: string) => h.get<{ due: number; months: number }>(`${base}/schools/${schoolId}/retention`),
+    logo: (schoolId: string, b: { name: string; mime: 'image/png' | 'image/jpeg'; data: string }) => h.post<{ fileId: string }>(`${base}/schools/${schoolId}/logo`, b),
   };
 }
 

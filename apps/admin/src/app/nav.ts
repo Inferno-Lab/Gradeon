@@ -28,6 +28,7 @@ const DEFS: { name: string; items: Def[] }[] = [
   { name: 'Money', items: [
     { id: 'fee', label: 'Fees', icon: 'fee', keys: 'G E', to: '/fees', module: 'fees' },
     { id: 'inv', label: 'Invoices', icon: 'inv', keys: 'G I', to: '/invoices', module: 'fees' },
+    { id: 'online', label: 'Online payments', icon: 'fee', keys: 'G O', to: '/online-payments', module: 'fees.onlinePayment' },
     { id: 'rep', label: 'Reports', icon: 'rep', keys: 'G R', to: '/reports', module: 'core' },
   ] },
   { name: 'Reach', items: [
@@ -35,8 +36,14 @@ const DEFS: { name: string; items: Def[] }[] = [
     { id: 'msg', label: 'Messages', icon: 'msg', keys: 'G G', to: '/messages', module: 'chat' },
     { id: 'evt', label: 'Events', icon: 'evt', keys: 'G V', to: '/events', module: 'events' },
   ] },
+  { name: 'Campus', items: [
+    { id: 'lib', label: 'Library', icon: 'book', keys: 'G L', to: '/library', module: 'library' },
+    { id: 'bus', label: 'Transport', icon: 'bus', keys: 'G B', to: '/transport', module: 'transport' },
+    { id: 'gal', label: 'Gallery', icon: 'photo', keys: 'G P', to: '/gallery', module: 'gallery' },
+  ] },
   { name: 'School', items: [
     { id: 'setup', label: 'Classes and calendar', icon: 'cells', keys: 'G Y', to: '/setup', module: 'core' },
+    { id: 'year', label: 'Year-end', icon: 'year', keys: 'G Z', to: '/year', module: 'core' },
     { id: 'move', label: 'Moving in', icon: 'mig', keys: 'G U', to: '/moving-in', module: 'core' },
     { id: 'set', label: 'School setup', icon: 'set', keys: 'G ,', to: '/settings', module: 'core' },
   ] },

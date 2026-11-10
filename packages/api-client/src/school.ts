@@ -6,6 +6,8 @@ import type {
   LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
   Activation, ImportBatchRow, LetterRow, SetupSection, UploadCreate, UploadRow,
+  AlbumInput, AlbumRow, BookInput, BookRow, BusRouteInput, BusRouteRow, FileKind, FileRow, FileStart, FileUpload, IssueInput, LeaverInput, LibraryView, LoanRow, NewYearInput, OnlinePaymentRow, PhotoRow,
+  PromotionInput, PromotionPreview, ReconRow, RefundRequest, RefundRow, RiderInput, SchoolChannels, TransportView, YearView,
 } from '@gradeon/contracts';
 import type { Http, Query } from './http';
 
@@ -156,7 +158,69 @@ export function schoolApi(h: Http) {
     settings: {
       get: () => h.get<SettingsResponse>('/v1/settings'),
       audit: () => h.get<AuditRow[]>('/v1/settings/audit'),
+      channels: () => h.get<SchoolChannels>('/v1/settings/channels'),
+    },
+    files: {
+      start: (b: FileStart) => h.post<FileUpload>('/v1/files', b),
+      done: (id: string) => h.post<FileRow>(`/v1/files/${id}/done`),
+      url: (id: string, download = false) => h.get<{ url: string }>(`/v1/files/${id}/url`, download ? { download: '1' } : undefined),
+      list: (kind: FileKind, owner: string) => h.get<FileRow[]>('/v1/files', { kind, owner }),
+      remove: (id: string) => h.del<void>(`/v1/files/${id}`),
+    },
+    online: {
+      payments: () => h.get<OnlinePaymentRow[]>('/v1/fees/online'),
+      refunds: () => h.get<RefundRow[]>('/v1/fees/refunds'),
+      refund: (b: RefundRequest) => h.post<RefundRow>('/v1/fees/refunds', b),
+      decide: (id: string, approve: boolean) => h.post<RefundRow>(`/v1/fees/refunds/${id}/decide`, { approve }),
+      reconciliation: () => h.get<ReconRow[]>('/v1/fees/reconciliation'),
+      resolve: (id: string) => h.post<void>(`/v1/fees/reconciliation/${id}/resolve`),
+      receipt: (paymentId: string) => h.blob(`/v1/fees/payments/${paymentId}/receipt.pdf`),
+      reportCard: (examId: string, studentId: string) => h.blob(`/v1/exams/${examId}/report-cards/${studentId}`),
+    },
+    library: {
+      view: () => h.get<LibraryView>('/v1/library'),
+      add: (b: BookInput) => h.post<BookRow>('/v1/library/books', b),
+      save: (id: string, b: BookInput) => h.put<BookRow>(`/v1/library/books/${id}`, b),
+      remove: (id: string) => h.del<void>(`/v1/library/books/${id}`),
+      issue: (b: IssueInput) => h.post<LoanRow>('/v1/library/loans', b),
+      giveBack: (id: string) => h.post<{ fine: number }>(`/v1/library/loans/${id}/return`),
+      cancel: (id: string) => h.del<void>(`/v1/library/reservations/${id}`),
+    },
+    transport: {
+      view: () => h.get<TransportView>('/v1/transport'),
+      add: (b: BusRouteInput) => h.post<BusRouteRow>('/v1/transport/routes', b),
+      save: (id: string, b: BusRouteInput) => h.put<BusRouteRow>(`/v1/transport/routes/${id}`, b),
+      remove: (id: string) => h.del<void>(`/v1/transport/routes/${id}`),
+      rider: (b: RiderInput) => h.put<void>('/v1/transport/riders', b),
+    },
+    gallery: {
+      albums: () => h.get<AlbumRow[]>('/v1/gallery'),
+      add: (b: AlbumInput) => h.post<AlbumRow>('/v1/gallery', b),
+      save: (id: string, b: AlbumInput) => h.put<AlbumRow>(`/v1/gallery/${id}`, b),
+      publish: (id: string, published: boolean) => h.post<AlbumRow>(`/v1/gallery/${id}/publish`, { published }),
+      remove: (id: string) => h.del<void>(`/v1/gallery/${id}`),
+      photos: (id: string) => h.get<PhotoRow[]>(`/v1/gallery/${id}/photos`),
+      tag: (fileId: string, studentIds: string[]) => h.put<void>(`/v1/gallery/photos/${fileId}/tags`, { studentIds }),
+    },
+    year: {
+      view: () => h.get<YearView>('/v1/year'),
+      create: (b: NewYearInput) => h.post<void>('/v1/year', b),
+      start: (id: string) => h.post<void>(`/v1/year/${id}/start`),
+      remove: (id: string) => h.del<void>(`/v1/year/${id}`),
+      preview: () => h.get<PromotionPreview>('/v1/year/promotion'),
+      promote: (b: PromotionInput) => h.post<{ runId: string; moved: number; left: number }>('/v1/year/promotion', b),
+      undo: (runId: string) => h.post<void>(`/v1/year/promotion/${runId}/undo`),
+      leaver: (b: LeaverInput) => h.post<void>('/v1/year/leavers', b),
+      rejoin: (id: string) => h.post<void>(`/v1/year/leavers/${id}/rejoin`),
     },
   };
+}
+
+/** Uploads a file straight to storage (the address comes from the API), then tells the API it arrived. */
+export async function uploadFile(api: ReturnType<typeof schoolApi>, kind: FileKind, ownerId: string, file: File): Promise<FileRow> {
+  const { fileId, upload } = await api.files.start({ kind, ownerId, name: file.name, mime: file.type, bytes: file.size });
+  const res = await fetch(upload.url, { method: upload.method, headers: upload.headers, body: file });
+  if (!res.ok) throw new Error('The upload did not go through. Try again.');
+  return api.files.done(fileId);
 }
 

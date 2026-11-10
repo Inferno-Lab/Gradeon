@@ -74,6 +74,7 @@ export function HealthPage() {
             </details>
           ))}
       </Card>
+      <Jobs say={say} />
       <Card title="Restore drills" chip={<button className="btn sm" onClick={() => drill.mutate()} disabled={drill.isPending}>{drill.isPending ? 'Restoring…' : 'Run a drill now'}</button>} style={{ padding: 0 }}>
         <div className="help" style={{ padding: '0 20px 12px' }}>Once a week a fresh backup of one live school is put back into a scratch database and counted, so we know backups restore. The school is never touched.</div>
         {!(drills.data ?? []).length ? <div className="help" style={{ padding: '0 20px 20px' }}>No drill has run yet.</div>
@@ -87,5 +88,41 @@ export function HealthPage() {
           ))}
       </Card>
     </Page>
+  );
+}
+
+const JOB_LABELS: Record<string, string> = {
+  'fees.reminders': 'Fee reminders', 'fees.lateFines': 'Late fines', 'files.scan': 'Virus check', 'files.thumb': 'Thumbnails', 'payments.reconcile': 'Payment reconciliation',
+  'retention.erase': 'Erase leavers', 'imports.run': 'Import',
+};
+const JOB_TONE = { queued: 'v', running: 'a', done: 'g', failed: 'c' } as const;
+
+/** Each school's background work (reminders, late fines, reconciliation, file checks, erasure): what is waiting, running or failed. */
+function Jobs({ say }: { say: (m: string, tone?: 'bad') => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const jobs = useQuery({ queryKey: ['jobs'], queryFn: app.api.jobs.list, refetchInterval: 20_000 });
+  const retry = useMutation({ mutationFn: app.api.jobs.retry, onSuccess: () => { void qc.invalidateQueries({ queryKey: ['jobs'] }); say('Queued again.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const rows = jobs.data ?? [];
+  const failed = rows.filter((j) => j.status === 'failed').length;
+  return (
+    <Card title="Background jobs" chip={<span className={`chip ${failed ? 'c' : 'g'}`}>{failed ? `${failed} failed` : 'Nothing failed'}</span>} style={{ padding: 0 }}>
+      <div className="help" style={{ padding: '0 20px 12px' }}>Reminders, late fines and reconciliation are queued for every school each morning; a failed job is tried again after 1 and 10 minutes, then waits here.</div>
+      {jobs.isError ? <div className="help" style={{ padding: '0 20px 20px' }}>{(jobs.error as Error).message}</div>
+        : !rows.length ? <div className="help" style={{ padding: '0 20px 20px' }}>No job has run in the last day.</div> : (
+          <div className="tbl scroll-x"><div style={{ minWidth: 640 }} className="lscroll">
+            <div className="grd th" style={{ '--cols': '100px minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr) 90px' } as React.CSSProperties}><span>Status</span><span>Job</span><span>School</span><span>Result</span><span></span></div>
+            {rows.map((j) => (
+              <div key={j.id} className="grd rw" style={{ '--cols': '100px minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr) 90px', height: 'auto', minHeight: 52, padding: '8px 20px' } as React.CSSProperties}>
+                <span className={`chip ${JOB_TONE[j.status]}`}>{j.status}</span>
+                <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{JOB_LABELS[j.kind] ?? j.kind}</b><div className="help" style={{ margin: 0 }}>{ago(j.finishedAt ?? j.runAt)}{j.attempts > 1 ? ` · try ${j.attempts}` : ''}</div></span>
+                <span className="help" style={{ margin: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.schoolName ?? 'Every school'}</span>
+                <span style={{ minWidth: 0, font: '500 13px/1.4 var(--fb)', color: j.lastError ? 'var(--cD)' : 'var(--ink2)', overflowWrap: 'anywhere' }}>{j.lastError ?? j.result ?? ''}</span>
+                <span>{app.can('schools.write') && j.status === 'failed' && <button className="btn sm" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}>Retry</button>}</span>
+              </div>
+            ))}
+          </div></div>
+        )}
+    </Card>
   );
 }
