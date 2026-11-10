@@ -5,13 +5,13 @@ const HERE = new URL('.', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'), d
 const all = fs.readdirSync(dir).filter((f) => f.endsWith('.dc.html')).map((f) => f.slice(0, -8));
 const args = process.argv.slice(2), tag = args[0]?.startsWith('@') ? args.shift().slice(1) : 'sheet';
 const names = args.length ? args : all;
-const width = (n) => n.startsWith('Sidebar') ? 248 : /^(Parent|Teacher|RollCall|EmptyHome)/.test(n) ? 390 : 1440;
+const width = (n) => n.startsWith('Sidebar') ? 248 : n.startsWith('EmptyApp') ? 2190 : /^(Parent|Teacher|RollCall|EmptyHome)/.test(n) ? 390 : 1440;
 const types = { '.css': 'text/css', '.html': 'text/html', '.png': 'image/png' };
 const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); const f = path.join(u.startsWith('/shots/') ? out : dir, u.replace('/shots/', '')); fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); r.end(); return; } r.writeHead(200, { 'content-type': types[path.extname(f)] || 'text/html' }); r.end(d); }); }).listen(8125);
 const HF = HERE + 'heights.json', heights = fs.existsSync(HF) ? JSON.parse(fs.readFileSync(HF, 'utf8')) : {};
 const b = await chromium.launch();
 for (const n of names) {
-  const w = width(n), p = await b.newPage({ viewport: { width: w, height: 600 } });
+  const w = width(n), p = await b.newPage({ viewport: { width: w, height: 600 }, reducedMotion: 'reduce' });
   p.on('pageerror', (e) => console.log(n, 'ERR', e.message)); p.on('console', (m) => m.type() === 'error' && console.log(n, 'console', m.text()));
   await p.goto(`http://127.0.0.1:8125/preview.html?f=${n}&w=${w}`); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(900);
   const r = await p.evaluate(() => {

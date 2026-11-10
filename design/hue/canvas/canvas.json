@@ -25,6 +25,18 @@
   {
    "id": "app",
    "name": "Parent and teacher app"
+  },
+  {
+   "id": "empty-admin",
+   "name": "Empty states · admin"
+  },
+  {
+   "id": "empty-console",
+   "name": "Empty states · console"
+  },
+  {
+   "id": "empty-app",
+   "name": "Empty states · app"
   }
  ],
  "boards": {
@@ -259,6 +271,159 @@
    "h": 844,
    "title": "Brand-new school",
    "page": "app"
+  },
+  "EmptyFrame.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1376,
+   "title": "The frame · words, scene, phone, still",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin1.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 2345,
+   "title": "Admin · Teach",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin1Dark.dc.html": {
+   "x": 9120,
+   "y": 0,
+   "w": 1440,
+   "h": 2345,
+   "title": "Admin · Teach, dark",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin2.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1382,
+   "title": "Admin · People",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin3.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1788,
+   "title": "Admin · Money",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin4.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 1440,
+   "h": 1884,
+   "title": "Admin · Reach",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyAdmin5.dc.html": {
+   "x": 7600,
+   "y": 0,
+   "w": 1440,
+   "h": 1858,
+   "title": "Admin · School",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
+  "EmptyConsole1.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 2331,
+   "title": "Console · Operate",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyConsole1Dark.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 1440,
+   "h": 2331,
+   "title": "Console · Operate, dark",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyConsole2.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1904,
+   "title": "Console · Ship and connect",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyConsole3.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1865,
+   "title": "Console · Care",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyConsole4.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1388,
+   "title": "Console · Billing, compliance, team",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyApp1.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 2190,
+   "h": 1080,
+   "title": "Parent · every day",
+   "page": "empty-app",
+   "expand": "fill"
+  },
+  "EmptyApp1Dark.dc.html": {
+   "x": 9080,
+   "y": 0,
+   "w": 2190,
+   "h": 1080,
+   "title": "Parent · every day, dark",
+   "page": "empty-app",
+   "expand": "fill"
+  },
+  "EmptyApp2.dc.html": {
+   "x": 2270,
+   "y": 0,
+   "w": 2190,
+   "h": 1080,
+   "title": "Parent · school life",
+   "page": "empty-app",
+   "expand": "fill"
+  },
+  "EmptyApp3.dc.html": {
+   "x": 4540,
+   "y": 0,
+   "w": 2190,
+   "h": 1080,
+   "title": "Parent · bus, books, leave, alerts, search",
+   "page": "empty-app",
+   "expand": "fill"
+  },
+  "EmptyApp4.dc.html": {
+   "x": 6810,
+   "y": 0,
+   "w": 2190,
+   "h": 1052,
+   "title": "Teacher",
+   "page": "empty-app",
+   "expand": "fill"
   }
  },
  "order": [
@@ -287,7 +452,24 @@
   "TeacherHome.dc.html",
   "TeacherHomeDark.dc.html",
   "RollCall.dc.html",
-  "EmptyHome.dc.html"
+  "EmptyHome.dc.html",
+  "EmptyFrame.dc.html",
+  "EmptyAdmin1.dc.html",
+  "EmptyAdmin1Dark.dc.html",
+  "EmptyAdmin2.dc.html",
+  "EmptyAdmin3.dc.html",
+  "EmptyAdmin4.dc.html",
+  "EmptyAdmin5.dc.html",
+  "EmptyConsole1.dc.html",
+  "EmptyConsole1Dark.dc.html",
+  "EmptyConsole2.dc.html",
+  "EmptyConsole3.dc.html",
+  "EmptyConsole4.dc.html",
+  "EmptyApp1.dc.html",
+  "EmptyApp1Dark.dc.html",
+  "EmptyApp2.dc.html",
+  "EmptyApp3.dc.html",
+  "EmptyApp4.dc.html"
  ],
  "notes": {
   "t_found": {
@@ -361,6 +543,30 @@
    "kind": "title1",
    "maxW": 1800,
    "page": "app"
+  },
+  "t_ea": {
+   "x": 0,
+   "y": -260,
+   "text": "Empty states · school admin",
+   "kind": "title1",
+   "maxW": 9000,
+   "page": "empty-admin"
+  },
+  "t_ec": {
+   "x": 0,
+   "y": -260,
+   "text": "Empty states · Gradeon console",
+   "kind": "title1",
+   "maxW": 7000,
+   "page": "empty-console"
+  },
+  "t_ep": {
+   "x": 0,
+   "y": -260,
+   "text": "Empty states · parent and teacher app",
+   "kind": "title1",
+   "maxW": 11000,
+   "page": "empty-app"
   }
  },
  "designSystems": []
