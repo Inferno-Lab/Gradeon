@@ -265,6 +265,8 @@ const enRedesign = <String, String>{
   'fees.paid_amount': 'Paid · @amount',
   'fees.see_receipt': 'See receipt',
   'fees.payment_done': 'Payment done',
+  'fees.pay_open_failed': 'The payment page did not open. Try again.',
+  'fees.pay_failed': 'The payment did not go through. No money was taken.',
   'fees.share_receipt': 'Share receipt',
   'fees.school_address': '42, Baner Road, Pune 411045',
   'fees.student': 'Student',

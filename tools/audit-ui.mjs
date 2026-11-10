@@ -31,7 +31,7 @@ async function consoleSession() {
   return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
-const adminPaths = ['', '/students', '/timetable', '/settings', '/setup', '/moving-in', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/design', '/nope'];
+const adminPaths = ['', '/students', '/timetable', '/settings', '/setup', '/moving-in', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/library', '/transport', '/gallery', '/year', '/online-payments', '/design', '/nope'];
 const jobs = [];
 if (only !== 'console') {
   const key = await adminSession();
@@ -39,7 +39,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleSession();
-  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/modules', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
+  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/integrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/modules', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 

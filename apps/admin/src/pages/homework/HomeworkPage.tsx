@@ -4,7 +4,8 @@ import { addDays, istToday, type HomeworkDetail, type HomeworkRow } from '@grade
 import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';
+import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem } from '../../app/kit';
+import { uploadFile } from '@gradeon/api-client';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['homework', 'dashboard'].includes(String(q.queryKey[0])) });
 
@@ -32,7 +33,7 @@ export function HomeworkPage() {
         {canWrite && <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn>}
       </>}
       overlays={<>
-        {setting && <SetHomework defaultClass={classId} onClose={() => setSetting(false)} onDone={(d) => { setSetting(false); refresh(qc); say('Homework set. Families are told.'); setOpen(d.id); }} />}
+        {setting && <SetHomework defaultClass={classId} onClose={() => setSetting(false)} onDone={(d, failed) => { setSetting(false); refresh(qc); say(failed.length ? `Homework set, but ${failed.join(', ')} could not be attached.` : 'Homework set. Families are told.', failed.length ? 'bad' : undefined); setOpen(d.id); }} />}
         {open && <HomeworkSheet id={open} canWrite={canWrite} onClose={() => setOpen(null)} onSaved={(m) => { refresh(qc); say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Homework removed.'); }} />}
       </>}>
       {rows.length === 0 ? (
@@ -75,7 +76,7 @@ function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () =
   );
 }
 
-function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; onClose: () => void; onDone: (d: HomeworkDetail) => void }) {
+function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; onClose: () => void; onDone: (d: HomeworkDetail, failed: string[]) => void }) {
   const app = useApp();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
@@ -83,9 +84,16 @@ function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; 
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
+  const [files, setFiles] = useState<File[]>([]);
   const make = useMutation({
-    mutationFn: () => app.api.homework.create({ classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || 20 }),
-    onSuccess: onDone, onError: (e) => { setErr(problem(e)); shake.hit(); },
+    mutationFn: async () => {
+      const d = await app.api.homework.create({ classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || 20 });
+      // Attached once the homework exists; one that fails is said by name, and the homework stays set.
+      const failed: string[] = [];
+      for (const file of files) await uploadFile(app.api, 'homework_attachment', d.id, file).catch(() => failed.push(file.name));
+      return { d, failed };
+    },
+    onSuccess: ({ d, failed }) => onDone(d, failed), onError: (e) => { setErr(problem(e)); shake.hit(); },
   });
   const go = () => {
     const p: Record<string, string> = {};
@@ -109,6 +117,7 @@ function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; 
           <DateField label="Due on" value={f.dueOn} min={istToday()} onChange={set('dueOn')} error={err.dueOn} />
           <NumberField label="Marks out of" min={1} max={100} value={f.maxMarks} onChange={set('maxMarks')} error={err.maxMarks} />
         </div>
+        <Attach files={files} onChange={setFiles} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>

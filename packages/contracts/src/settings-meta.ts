@@ -3,7 +3,7 @@ import type { SettingKey } from './config.js';
 /** How the console edits a setting. The console builds its Configuration forms from this list, so a new setting needs no new screen. */
 export type SettingKind =
   | 'text' | 'textarea' | 'number' | 'bool' | 'enum' | 'color' | 'time' | 'date' | 'language'
-  | 'multi' | 'modules' | 'appDock' | 'appHome' | 'appQuick' | 'notifyRules' | 'templates' | 'class' | 'classes' | 'theme';
+  | 'multi' | 'modules' | 'appDock' | 'appHome' | 'appQuick' | 'notifyRules' | 'templates' | 'class' | 'classes' | 'theme' | 'logo';
 
 export interface SettingMeta {
   group: (typeof SETTING_GROUPS)[number];
@@ -55,7 +55,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'privacy.officerName': { group: 'Privacy', label: 'Grievance officer', kind: 'text', help: 'Shown with the privacy notice.' },
   'privacy.officerEmail': { group: 'Privacy', label: 'Grievance officer’s email', kind: 'text' },
   'privacy.officerPhone': { group: 'Privacy', label: 'Grievance officer’s phone', kind: 'text' },
-  'privacy.retentionMonths': { group: 'Privacy', label: 'Keep records of students who left for (months)', kind: 'number', min: 12, max: 120, risky: true, notUsedYet: 'Nothing records when a student leaves until year-end arrives (Phase 4), so nothing is deleted yet.' },
+  'privacy.retentionMonths': { group: 'Privacy', label: 'Keep records of students who left for (months)', kind: 'number', min: 12, max: 120, risky: true, help: 'After this, a leaver’s records are listed for erasure; erasing needs a second person in the console.' },
   'privacy.photoConsent': { group: 'Privacy', label: 'Ask for photo consent', kind: 'bool', help: 'The consent step in the app also asks whether the school may share photos of the child. The answer is kept per family.' },
   'privacy.consentRequired': { group: 'Privacy', label: 'Families must consent before using the app', kind: 'bool', help: 'The app shows the privacy notice once after sign-in and records the family’s consent; Moving in counts who has consented.' },
   'classes.schoolEdits': { group: 'Academic year', label: 'The school may edit its classes, subjects and periods', kind: 'bool', help: 'Off: only Gradeon changes them (Migration, or the school asks).' },
@@ -70,8 +70,18 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'fees.receiptStart': { group: 'Fees', label: 'First receipt number', kind: 'number', min: 1, max: 99_999_999, help: 'For a school arriving from another system: carry on from its last receipt.' },
   'fees.receiptNote': { group: 'Fees', label: 'Printed on receipts', kind: 'textarea', help: 'Under the school’s name and address on every receipt: the trust, its registration or GST number.' },
   'fees.paymentMethods': { group: 'Fees', label: 'How the office records payments', kind: 'multi', options: [['cash', 'Cash'], ['upi', 'UPI'], ['card', 'Card'], ['netbanking', 'Net banking'], ['cheque', 'Cheque']] },
-  'fees.lateFeePct': { group: 'Fees', label: 'Late fee (%)', kind: 'number', min: 0, max: 25, notUsedYet: 'No late fee is charged yet: late fines come with the job queue (Phase 4).' },
-  'fees.remindDaysBefore': { group: 'Fees', label: 'Remind families this many days before a due date', kind: 'number', min: 0, max: 30, notUsedYet: 'Reminders are sent by staff from the overdue list; reminders by date come with the job queue (Phase 4).' },
+  'fees.lateFeePct': { group: 'Fees', label: 'Late fee (%)', kind: 'number', min: 0, max: 25, help: 'Charged once a month on each overdue invoice while the school has Late fines. 0 charges nothing.' },
+  'fees.remindDaysBefore': { group: 'Fees', label: 'Remind families this many days before a due date', kind: 'number', min: 0, max: 30, help: 'Sent each morning while the school has Fee reminders, once per invoice per day.' },
+  'fees.gstin': { group: 'Fees', label: 'GSTIN', kind: 'text', help: 'Printed on receipts with the tax lines while the school has GST receipts.' },
+  'fees.gstSac': { group: 'Fees', label: 'Service code (SAC)', kind: 'text' },
+  'fees.gstRatePct': { group: 'Fees', label: 'GST rate (%)', kind: 'number', min: 0, max: 28 },
+  'fees.gstHeads': { group: 'Fees', label: 'Fee heads that carry GST', kind: 'multi', options: [['tuition', 'Tuition'], ['transport', 'Transport'], ['activities', 'Activities'], ['lab', 'Lab']], help: 'Fees are GST-inclusive; the receipt shows the tax inside them.' },
+  'fees.refundApprovalAbove': { group: 'Fees', label: 'Refunds above this need a second person (₹)', kind: 'number', min: 0, max: 10_000_000 },
+  'brand.logoFileId': { group: 'Identity and branding', label: 'Logo image', kind: 'logo', help: 'A square PNG or JPEG. Shown in the admin menu, on the sign-in pages and in the app.' },
+  'library.loanDays': { group: 'Rules', label: 'Library loan (days)', kind: 'number', min: 1, max: 60 },
+  'library.finePerDay': { group: 'Rules', label: 'Library fine per late day (₹)', kind: 'number', min: 0, max: 100 },
+  'library.maxRenewals': { group: 'Rules', label: 'Renewals a family may make', kind: 'number', min: 0, max: 5 },
+  'transport.nearMinutes': { group: 'Messages', label: 'Tell families the bus is near (minutes away)', kind: 'number', min: 2, max: 30 },
   'term.name': { group: 'Academic year', label: 'Current term', kind: 'text', help: 'Shown in the admin menu.' },
   'term.examsStart': { group: 'Academic year', label: 'Exams start on', kind: 'date', help: 'The admin counts down to it.' },
   'fees.dailyTarget': { group: 'Dashboard', label: 'Daily fee collection target (₹)', kind: 'number', min: 0, max: 100_000_000 },

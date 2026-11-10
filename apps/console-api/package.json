@@ -21,6 +21,7 @@
     "@gradeon/config-engine": "workspace:*",
     "@gradeon/contracts": "workspace:*",
     "@gradeon/db": "workspace:*",
+    "@gradeon/integrations": "workspace:*",
     "@gradeon/nest-kit": "workspace:*",
     "@gradeon/security": "workspace:*",
     "@gradeon/tenancy": "workspace:*",

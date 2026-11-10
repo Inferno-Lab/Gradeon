@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG } from '@gradeon/config-engine';
 import { DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ThemeEditor } from '../../app/ThemeEditor';
 import { ago } from '../../app/format';
@@ -67,7 +67,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       <div className={`card s12 rise ${shake.cls}`}>
         <div className="ch"><h2>{group}</h2></div>
         {keys.map((k) => (
-          <SettingRow key={k} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} modName={modName}
+          <SettingRow key={k} schoolId={schoolId} say={say} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} modName={modName}
             onChange={(v) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }} />
         ))}
         {can && (
@@ -89,7 +89,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   );
 }
 
-function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; modName: (k: string) => string; onChange: (v: unknown) => void }) {
+function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, modName, onChange }: { schoolId: string; say: Say; meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; modName: (k: string) => string; onChange: (v: unknown) => void }) {
   const chips = (
     <span style={{ display: 'inline-flex', gap: 6, marginLeft: 8 }}>
       {meta.risky && <span className="chip a">Needs a second person</span>}
@@ -129,6 +129,8 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
       return box(<div className={`inp ${error ? 'err' : ''}`} style={{ height: 'auto' }}><textarea value={str} onChange={(e) => onChange(e.target.value)} disabled={disabled} aria-label={meta.label} style={ta} /></div>);
+    case 'logo':
+      return box(<LogoPick schoolId={schoolId} has={!!str} disabled={disabled} say={say} />);
     case 'multi':
       return pick((meta.options ?? []).map(([key, l]) => ({ key, label: l })));
     case 'modules':
@@ -169,6 +171,28 @@ function SettingRow({ meta, value, error, disabled, cfg, modName, onChange }: { 
     default:
       return <div style={{ marginTop: 12 }}><Field label={meta.label} value={str} onChange={onChange} disabled={disabled} error={error} hint={help || undefined} /></div>;
   }
+}
+
+/** The logo goes straight to the school's storage and into its settings (it is a file, not a value to type). */
+function LogoPick({ schoolId, has, disabled, say }: { schoolId: string; has: boolean; disabled: boolean; say: Say }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const up = useMutation({
+    mutationFn: async (file: File) => {
+      if (!['image/png', 'image/jpeg'].includes(file.type)) throw new Error('Choose a PNG or JPEG image.');
+      if (file.size > 2 * 1024 * 1024) throw new Error('The logo must be 2 MB or smaller.');
+      const data = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] ?? ''); r.onerror = () => no(new Error('That file could not be read.')); r.readAsDataURL(file); });
+      return app.api.logo(schoolId, { name: file.name, mime: file.type as 'image/png', data });
+    },
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['config', schoolId] }); say('The logo was saved. The admin and the app show it from their next load.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <span className={`chip ${has ? 'g' : ''}`}>{has ? 'Logo set' : 'Letters only'}</span>
+      <FilePick accept="image/png,image/jpeg" disabled={disabled || up.isPending} onPick={(f) => up.mutate(f)} className="btn sm">{up.isPending ? 'Uploading…' : has ? 'Replace logo' : 'Upload logo'}</FilePick>
+    </div>
+  );
 }
 
 function History({ cfg, schoolId, can, say }: { cfg: SchoolConfig; schoolId: string; can: boolean; say: Say }) {

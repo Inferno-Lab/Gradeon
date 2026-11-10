@@ -50,6 +50,21 @@ export const SchoolSettingsSchema = z.object({
   // Printed under the school's name on every receipt: the trust, its registration or GST number.
   'fees.receiptNote': z.string().max(300).default(''),
   // How the office may record a payment (families pay in the app by UPI, card or net banking).
+  // GST on receipts (feature fees.gstReceipts): the school's GSTIN, the service code and rate, and which fee heads are taxable.
+  'fees.gstin': z.string().trim().regex(/^$|^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'A GSTIN has 15 characters, like 27AAAAA0000A1Z5').default(''),
+  'fees.gstSac': z.string().trim().max(8).default('999293'),
+  'fees.gstRatePct': z.number().min(0).max(28).default(18),
+  'fees.gstHeads': z.array(z.string()).default([]),
+  // Refunds above this many rupees need a second person in the school (fees.refund on both).
+  'fees.refundApprovalAbove': z.number().int().min(0).max(10_000_000).default(5000),
+  // The school's logo image (a file kept in its storage); the letters stand in until there is one.
+  'brand.logoFileId': z.string().default(''),
+  // Library rules.
+  'library.loanDays': z.number().int().min(1).max(60).default(14),
+  'library.finePerDay': z.number().int().min(0).max(100).default(1),
+  'library.maxRenewals': z.number().int().min(0).max(5).default(1),
+  // Families are told the bus is near when it is this many minutes from their stop.
+  'transport.nearMinutes': z.number().int().min(2).max(30).default(10),
   'fees.paymentMethods': z.array(z.enum(['cash', 'upi', 'card', 'netbanking', 'cheque'])).min(1).default(['cash', 'upi', 'card', 'netbanking', 'cheque']),
   'demo.mode': z.boolean().default(false),
   'vocab.student': z.string().max(24).default('Student'),
@@ -127,6 +142,8 @@ export interface SchoolBrand {
   shortName: string;
   color: string;
   logoText: string;
+  /** A link to the school's logo image (valid an hour), or null while it has only letters. */
+  logoUrl: string | null;
   tagline: string;
   language: string;
   demoMode: boolean;

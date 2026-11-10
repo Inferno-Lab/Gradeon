@@ -132,7 +132,7 @@ export class ApprovalsService {
     if (decision === 'approve') {
       const pct = Number(payload.percent ?? 0);
       const inv = await client.query(
-        `select i.id, i.amount from fee_invoices i where i.student_id = $1 and i.head = 'tuition' and i.amount > coalesce((select sum(amount) from payments where invoice_id = i.id),0) order by i.due_on limit 1`, [r.subject_ref]);
+        `select i.id, i.amount from fee_invoices i where i.student_id = $1 and i.head = 'tuition' and i.amount > coalesce((select sum(amount - refunded) from payments where invoice_id = i.id),0) order by i.due_on limit 1`, [r.subject_ref]);
       const target = inv.rows[0] as { id: string; amount: number } | undefined;
       if (!target) throw new ApiError('conflict', 'This student has no unpaid tuition invoice to reduce.');
       const waived = Math.round((target.amount * pct) / 100);

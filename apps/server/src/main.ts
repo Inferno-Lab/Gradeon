@@ -20,9 +20,11 @@ const shared = { registry: new Registry({ url: apiEnv.REGISTRY_DATABASE_URL, sec
 @Module({ imports: [AppModule.register(apiEnv, shared), ConsoleModule.register(consoleEnv, shared)] })
 class ServerModule {}
 
-const app = await NestFactory.create<NestFastifyApplication>(ServerModule, new FastifyAdapter({ trustProxy: true, bodyLimit: 256_000 }), {
+const app = await NestFactory.create<NestFastifyApplication>(ServerModule, new FastifyAdapter({ trustProxy: true, bodyLimit: 256_000, routerOptions: { maxParamLength: 2048 } }), {
   // JSON lines in production, so the host's log search can filter by school and request; readable text locally.
   logger: new ConsoleLogger({ json: apiEnv.NODE_ENV === 'production', logLevels: ['error', 'warn', 'log'] }),
+  // Provider webhooks are checked against the exact bytes they signed.
+  rawBody: true,
 });
 app.useGlobalFilters(new ApiExceptionFilter());
 await registerHttp(app, apiEnv);

@@ -55,14 +55,17 @@ export class Schools {
     month.setUTCDate(1);
     month.setUTCHours(0, 0, 0, 0);
     const [sms, builds, runs] = await Promise.all([
-      this.db.pool.query<{ n: string }>("select count(*) n from sandbox_messages where school_slug = $1 and channel = 'sms' and created_at >= $2", [r.slug, month]),
+      this.db.pool.query<{ n: string }>("select coalesce(sum(coalesce(segments, 1)), 0) n from message_log where school_slug = $1 and channel = 'sms' and status not in ('refused','failed') and created_at >= $2", [r.slug, month]),
       this.db.pool.query<{ id: string; school_id: string; platform: BuildRow['platform']; version: string; status: BuildRow['status']; url: string | null; note: string; created_at: Date }>('select * from builds where school_id = $1 order by created_at desc limit 10', [r.id]),
       this.provisioner.forSchool(r.id),
     ]);
     let staff = 0;
+    let bytes = 0;
     if (r.dbUrlSealed && r.status !== 'onboarding') {
       try {
-        staff = Number((await this.pools.get(r.slug, unseal(r.dbUrlSealed, this.env.SECRETS_KEY)).query('select count(*) n from staff')).rows[0]?.n ?? 0);
+        const pool = this.pools.get(r.slug, unseal(r.dbUrlSealed, this.env.SECRETS_KEY));
+        staff = Number((await pool.query('select count(*) n from staff')).rows[0]?.n ?? 0);
+        bytes = Number((await pool.query('select coalesce(sum(bytes), 0) n from files where deleted_at is null')).rows[0]?.n ?? 0);
       } catch { /* the database is not answering: the health tab says so */ }
     }
     const ent = r.entitlement;
@@ -72,7 +75,7 @@ export class Schools {
         plan: r.plan, modules: closeModules(ent.modules), active: activeModules(ent), features: ent.features ?? {}, dates: ent.dates ?? {}, trialUntil: ent.trialUntil ?? null,
         limits: ent.limits, locks: ent.locks, version: ent.version,
       },
-      usage: { students: r.studentsCount, storageGb: 0, sms: Number(sms.rows[0]?.n ?? 0), staff },
+      usage: { students: r.studentsCount, storageGb: Math.round((bytes / 1024 ** 3) * 100) / 100, sms: Number(sms.rows[0]?.n ?? 0), staff },
       checklist: Object.entries(CHECKLIST_LABELS).map(([key, label]) => ({ key, label, state: (r.checklist[key] as 'done' | 'waiting' | 'todo' | undefined) ?? 'todo' })),
       runs, builds: builds.rows.map((b) => ({ id: b.id, schoolId: b.school_id, platform: b.platform, version: b.version, status: b.status, url: b.url, note: b.note, createdAt: b.created_at.toISOString() })),
     };

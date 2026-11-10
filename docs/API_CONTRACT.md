@@ -85,7 +85,8 @@ Remote parsers currently expect the raw array (or a single object). When a backe
 | Method | Call |
 | --- | --- |
 | `FeeRepository.forStudent` | `GET /students/:studentId/fees` → fee account |
-| `pay` | `POST /fees/:installmentId/pay` `{ "studentId", "method" }` |
+| `pay` | `POST /fees/:installmentId/order` `{ "studentId" }` → `{ "orderId", "url", "amount" }`; the app opens `url` (the provider's checkout) and asks `GET /orders/:orderId` → `{ "status": "created"\|"paid"\|"failed", "receipt" }` until it is paid. The old `POST /fees/:id/pay` answers 409 |
+| receipt PDF | `GET /receipts/:paymentId/pdf`; report card `GET /results/:examId/:studentId/pdf` |
 | `NoticeRepository.all` | `GET /notices` → notice[] |
 | `post` | `POST /notices` → notice object |
 | `EventRepository.all` | `GET /events` → event[] |
@@ -95,11 +96,15 @@ Remote parsers currently expect the raw array (or a single object). When a backe
 | `inbox` | `GET /users/:userId/threads` plus `GET /users/:userId/messages` → message[] |
 | `send` | `POST /threads/:threadId/messages` `{ "senderId", "text" }` |
 | `LibraryRepository.all` | `GET /library/books` → book[] |
-| `reserve` | `POST /library/books/:bookId/reserve` `{ "studentId" }` |
-| `TransportRepository.forStudent` | `GET /students/:studentId/transport` → transport |
+| `reserve` | `POST /library/books/:bookId/reserve` `{ "studentId" }` → reservation |
+| `renew` | `POST /library/books/:bookId/renew` `{}` (the child's open loan of that book) |
+| `TransportRepository.forStudent` | `GET /students/:studentId/transport` → transport (stops with `reached`, the bus's ETA when it is live) |
+| driver | `GET /bus/routes` (routes this staff member drives), `POST /bus/:routeId/position` `{ "lat", "lng" }` |
 | `LeaveRepository.forStudent` | `GET /students/:studentId/leave` → leave[] |
 | `apply` | `POST /leave` → leave object |
-| `GalleryRepository.all` | `GET /gallery` → album[] |
+| `GalleryRepository.all` | `GET /gallery` → album[] (shared albums; photo `url`s last five minutes; photos with a child without photo consent are left out) |
+| phones | `POST /devices` `{ "token", "platform", "appVersion"? }` after sign-in, `DELETE /devices/:token` at sign-out |
+| files | `POST /v1/files` `{ "kind", "ownerId", "name", "mime", "bytes" }` → `{ "fileId", "upload": { "url", "method", "headers" } }`; PUT the bytes to `url`; `POST /v1/files/:id/done`. Homework hand-in: kind `homework_submission`, owner `<homeworkId>:<studentId>`, then `POST /homework/:id/submissions` `{ "studentId", "fileIds" }` |
 | `NotificationRepository.forUser` | `GET /users/:userId/notifications` → notification[] |
 | `dismiss` | `POST /notifications/:id/dismiss` `{}` |
 | `markAllRead` | `POST /users/:userId/notifications/read` `{}` |

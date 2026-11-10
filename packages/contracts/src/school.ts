@@ -337,7 +337,7 @@ export interface DashboardData {
 
 /** What the menu needs on every page: who the school is, the term card, and the counts beside menu items. */
 export interface ShellData {
-  school: { name: string; shortName: string; logoText: string; place: string; color: string; address: string; phone: string; receiptNote: string; studentWord: string; classWord: string; paymentMethods: string[] };
+  school: { name: string; shortName: string; logoText: string; logoUrl: string | null; place: string; color: string; address: string; phone: string; receiptNote: string; studentWord: string; classWord: string; paymentMethods: string[] };
   term: DashboardData['term'];
   badges: DashboardData['badges'];
   modules: string[];

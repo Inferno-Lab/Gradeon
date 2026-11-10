@@ -70,7 +70,7 @@ class HomeworkController extends GetxController with Loadable {
     try {
       final file = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (file == null) return;
-      await send(homework, file.name);
+      await send(homework, file.name, path: file.path);
     } on Exception {
       ToastHelper.show('errors.generic', kind: ToastKind.error);
     }
@@ -80,7 +80,7 @@ class HomeworkController extends GetxController with Loadable {
   Future<void> sendScan(Homework homework, int pages) =>
       send(homework, 'homework.scan_file'.trn(pages));
 
-  Future<void> send(Homework homework, String fileName) async {
+  Future<void> send(Homework homework, String fileName, {String? path}) async {
     if (!SchoolConfig.allows('homework.onlineSubmission')) return;
     final id = studentId ?? Get.find<AuthService>().activeStudentId.value;
     if (id == null) return;
@@ -89,6 +89,7 @@ class HomeworkController extends GetxController with Loadable {
         homeworkId: homework.id,
         studentId: id,
         fileName: fileName,
+        filePath: path,
       );
       ToastHelper.show('homework.sent', kind: ToastKind.success);
     } on AppException catch (error) {

@@ -195,8 +195,26 @@ export function NotificationsPanel({ doc, say }: PanelProps) {
         </div>
         <div className="rw2"><div><b>Text credits</b><small>This month.</small></div><div className="help" style={{ alignSelf: 'center' }}>{used.smsUsed.toLocaleString('en-IN')} used of {used.smsLimit.toLocaleString('en-IN')}</div></div>
       </div>
+      <Channels />
       <SaveRow s={s} />
     </section>
+  );
+}
+
+const CHANNEL_STATE = { on: { text: 'On', tone: 'g' }, test: { text: 'Test mode', tone: 'a' }, sandbox: { text: 'Not connected yet', tone: '' } } as const;
+
+/** Which channels reach the school's families and through what, as Gradeon set them up (read-only here). */
+function Channels() {
+  const app = useApp();
+  const q = useQuery({ queryKey: ['settings', 'channels'], queryFn: app.api.settings.channels });
+  return (
+    <div className="grp" style={{ marginTop: 16 }}>
+      <div className="rw2"><div><b>Connected channels</b><small>Gradeon connects texts, WhatsApp, email, payments and file storage for the school. Ask Gradeon to change them.</small></div><span></span></div>
+      {q.isError ? <div className="help" style={{ padding: '8px 0' }}>{(q.error as Error).message}</div> : (q.data?.channels ?? []).map((c) => (
+        <div key={c.capability} className="rw2"><div><b>{c.label}</b><small>{c.provider ?? (c.state === 'sandbox' ? 'Messages go to Gradeon’s test inbox for now.' : '')}</small></div>
+          <span style={{ alignSelf: 'center' }}><span className={`chip ${CHANNEL_STATE[c.state].tone}`}>{CHANNEL_STATE[c.state].text}</span></span></div>
+      ))}
+    </div>
   );
 }
 

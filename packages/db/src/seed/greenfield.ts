@@ -483,15 +483,46 @@ async function seedLearning(ctx: Ctx, classes: ClassRow[], students: StudentRow[
   });
   await bulkInsert(db, 'exam_results', ['student_id', 'exam', 'grade', 'pct'], results, { chunk: 4000 });
 
+  // The library: a catalogue with copies, and the books students have out (some late, so fines show).
+  const catalogue: [string, string, string][] = [
+    ['The Hobbit', 'J. R. R. Tolkien', 'Fiction'], ['Wings of Fire', 'A. P. J. Abdul Kalam', 'Biography'], ['Matilda', 'Roald Dahl', 'Fiction'], ['Malgudi Days', 'R. K. Narayan', 'Fiction'],
+    ['Charlotte’s Web', 'E. B. White', 'Fiction'], ['The Jungle Book', 'Rudyard Kipling', 'Fiction'], ['Hatchet', 'Gary Paulsen', 'Adventure'], ['Swami and Friends', 'R. K. Narayan', 'Fiction'],
+    ['A Brief History of Time', 'Stephen Hawking', 'Science'], ['The Story of My Experiments with Truth', 'M. K. Gandhi', 'Biography'], ['Panchatantra', 'Vishnu Sharma', 'Stories'], ['Ignited Minds', 'A. P. J. Abdul Kalam', 'Non-fiction'],
+  ];
   const loans: unknown[][] = [];
-  const books = ['The Hobbit', 'Wings of Fire', 'Matilda', 'Malgudi Days', 'Charlotte’s Web', 'The Jungle Book', 'Hatchet', 'Swami and Friends'];
+  const out = catalogue.map(() => 0);
   for (const s of students) {
     const n = s.name === 'Aarav Sharma' ? 2 : r.chance(0.3) ? r.int(1, 2) : 0;
-    for (let i = 0; i < n; i++) loans.push([newId('lib'), s.id, r.pick(books), addDays(last, r.int(2, 12)), null]);
+    for (let i = 0; i < n; i++) {
+      // The last title (Ignited Minds) is always on the shelf, so a family can reserve or be issued it in the demo.
+      const book = s.name === 'Aarav Sharma' ? i : r.int(0, catalogue.length - 2);
+      out[book]!++;
+      loans.push([newId('lib'), s.id, catalogue[book]![0], addDays(last, r.chance(0.1) ? -r.int(1, 6) : r.int(2, 12)), null, `bok_${book + 1}`, addDays(last, -10)]);
+    }
   }
-  await bulkInsert(db, 'library_loans', ['id', 'student_id', 'title', 'due_on', 'returned_on'], loans, { chunk: 3000 });
-  const routes = students.filter((s) => s.name === 'Aarav Sharma' || r.chance(0.4)).map((s) => [s.id, s.name === 'Aarav Sharma' ? 'Route 4' : `Route ${r.int(1, 8)}`]);
-  await bulkInsert(db, 'transport_assignments', ['student_id', 'route'], routes, { chunk: 3000 });
+  // Every title has a few copies on the shelf beyond those out on loan.
+  const bookRows = catalogue.map(([title, author, category], i) => [`bok_${i + 1}`, title, author, category, `${'ABCD'[i % 4]}-${1 + (i % 5)}`, out[i]! + r.int(3, 9)]);
+  await bulkInsert(db, 'library_books', ['id', 'title', 'author', 'category', 'shelf', 'copies'], bookRows);
+  await bulkInsert(db, 'library_loans', ['id', 'student_id', 'title', 'due_on', 'returned_on', 'book_id', 'issued_on'], loans, { chunk: 3000 });
+
+  // Eight bus routes around Pune, each with its stops, times and place on the map.
+  const base: [number, number][] = [[18.559, 73.7868], [18.5679, 73.8143], [18.5362, 73.8939], [18.5089, 73.8259], [18.5913, 73.7389], [18.4529, 73.8652], [18.5204, 73.8567], [18.6298, 73.7997]];
+  const areas = ['Baner', 'Aundh', 'Kalyani Nagar', 'Kothrud', 'Hinjawadi', 'Katraj', 'Shivajinagar', 'Pimpri'];
+  const routeRows = areas.map((a, i) => [`rte_${i + 1}`, `Route ${i + 1} · ${a}`, `MH12 ${'ABCDEFGH'[i]}${'K'} ${4100 + i * 37}`, ['Suresh Patil', 'Raju Kamble', 'Anil Jadhav', 'Imran Shaikh', 'Ganesh More', 'Sunil Pawar', 'Vijay Shinde', 'Prakash Gaikwad'][i], `98220${String(30001 + i)}`, 4500 + i * 250]);
+  await bulkInsert(db, 'transport_routes', ['id', 'name', 'vehicle', 'driver_name', 'driver_phone', 'fee'], routeRows);
+  const stopRows: unknown[][] = [];
+  areas.forEach((a, i) => {
+    for (let k = 0; k < 4; k++) {
+      const [lat, lng] = base[i]!;
+      stopRows.push([`stp_${i + 1}_${k + 1}`, `rte_${i + 1}`, `${a} ${['gaon', 'chowk', 'phata', 'naka'][k]}`, k + 1, `07:${String(5 + k * 7).padStart(2, '0')}`, `14:${String(10 + k * 7).padStart(2, '0')}`, lat + k * 0.006, lng + k * 0.005]);
+    }
+  });
+  await bulkInsert(db, 'transport_stops', ['id', 'route_id', 'name', 'position', 'pickup', 'drop_time', 'lat', 'lng'], stopRows);
+  const routes = students.filter((s) => s.name === 'Aarav Sharma' || r.chance(0.4)).map((s) => {
+    const n = s.name === 'Aarav Sharma' ? 4 : r.int(1, 8);
+    return [s.id, routeRows[n - 1]![1], `rte_${n}`, `stp_${n}_${r.int(1, 4)}`];
+  });
+  await bulkInsert(db, 'transport_assignments', ['student_id', 'route', 'route_id', 'stop_id'], routes, { chunk: 3000 });
 }
 
 async function seedOffice(ctx: Ctx, classes: ClassRow[], students: StudentRow[], teachers: Teacher[]): Promise<void> {

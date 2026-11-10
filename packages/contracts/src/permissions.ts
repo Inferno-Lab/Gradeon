@@ -38,6 +38,14 @@ export const PERMISSIONS = [
   'events.read',
   'events.write',
   'setup.write',
+  'fees.refund',
+  'library.read',
+  'library.write',
+  'transport.read',
+  'transport.write',
+  'gallery.read',
+  'gallery.write',
+  'year.manage',
 ] as const;
 export const Permission = z.enum(PERMISSIONS);
 export type Permission = z.infer<typeof Permission>;
@@ -61,6 +69,10 @@ export const PERMISSION_NEEDS: Partial<Record<Permission, string>> = {
   'admissions.read': 'people.admissions', 'admissions.write': 'people.admissions',
   'messages.read': 'chat', 'messages.write': 'chat',
   'events.read': 'events', 'events.write': 'events',
+  'fees.refund': 'fees.refunds',
+  'library.read': 'library', 'library.write': 'library',
+  'transport.read': 'transport', 'transport.write': 'transport',
+  'gallery.read': 'gallery', 'gallery.write': 'gallery',
 };
 
 /** Whether a school with these modules and features can use the permission. */
@@ -102,6 +114,14 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'messages.write', area: 'Messages', label: 'Write to families' },
   { key: 'events.read', area: 'Events', label: 'See the calendar' },
   { key: 'events.write', area: 'Events', label: 'Add and change events' },
+  { key: 'fees.refund', area: 'Fees', label: 'Refund online payments', sensitive: true },
+  { key: 'library.read', area: 'Library', label: 'See the catalogue and loans' },
+  { key: 'library.write', area: 'Library', label: 'Add books, issue and take back' },
+  { key: 'transport.read', area: 'Transport', label: 'See routes, stops and the bus' },
+  { key: 'transport.write', area: 'Transport', label: 'Change routes and who rides them' },
+  { key: 'gallery.read', area: 'Gallery', label: 'See albums' },
+  { key: 'gallery.write', area: 'Gallery', label: 'Add albums and photos, publish them to families' },
+  { key: 'year.manage', area: 'School setup', label: 'Promote students, start a new year and record leavers', sensitive: true },
   { key: 'setup.write', area: 'School setup', label: 'Edit classes, subjects, periods, terms, holidays and fee structures (where Gradeon allows)' },
 ];
 
@@ -123,14 +143,14 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     permissions: [
       'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write',
       'approvals.read', 'timetable.read', 'timetable.edit', 'reports.read', 'admissions.read', 'admissions.write', 'messages.read', 'messages.write',
-      'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write',
+      'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write', 'library.read', 'library.write', 'transport.read', 'transport.write', 'gallery.read', 'gallery.write',
     ],
   },
   {
     key: 'accountant',
     name: 'Accountant',
     description: 'Fees, payments and reports.',
-    permissions: ['students.read', 'fees.read', 'fees.collect', 'reports.read', 'notices.read', 'events.read'],
+    permissions: ['students.read', 'fees.read', 'fees.collect', 'fees.refund', 'reports.read', 'notices.read', 'events.read'],
   },
   {
     key: 'teacher',

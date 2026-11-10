@@ -76,7 +76,7 @@ export function useChrome() {
     <Sidebar
       label="Main menu" collapsed={collapsed} groups={groups} active={active}
       onNavigate={(href) => goRef.current(base && href.startsWith(base) ? href.slice(base.length) || '/' : href)}
-      header={<SchoolHeader logo={data?.school.logoText ?? ''} name={data?.school.shortName ?? ''} place={data?.school.place ?? ''} color={data?.school.color} collapsed={collapsed} onToggle={() => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1'); } catch { /* ignore */ } return !c; })} />}
+      header={<SchoolHeader logo={data?.school.logoText ?? ''} logoUrl={data?.school.logoUrl} name={data?.school.shortName ?? ''} place={data?.school.place ?? ''} color={data?.school.color} collapsed={collapsed} onToggle={() => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1'); } catch { /* ignore */ } return !c; })} />}
       promo={data && (
         <div className="sbc">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}><span className="chip a">{data.term.name}</span>{data.term.examsLabel}</div>

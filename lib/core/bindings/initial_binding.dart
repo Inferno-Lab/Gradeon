@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/network/api_client.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/connectivity_service.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
@@ -68,6 +69,10 @@ class InitialBinding extends Bindings {
       RemoteDataSource(ApiClient(onSignedOut: () => unawaited(Get.find<AuthService>().signOut()), onLocked: () => unawaited(SchoolConfig.load()))),
       permanent: true,
     );
+    // Attendance marked without a signal is sent as soon as the phone is back online.
+    if (Get.isRegistered<ConnectivityService>()) {
+      Get.find<ConnectivityService>().onBackOnline.add(() async { await remote.client.flushOutbox(); });
+    }
     Get
       ..lazyPut<AuthRepository>(() => RemoteAuthRepository(remote), fenix: true)
       ..lazyPut<DirectoryRepository>(

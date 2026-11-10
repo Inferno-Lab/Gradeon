@@ -6,10 +6,13 @@ import type { Registry } from '@gradeon/tenancy';
 import { REGISTRY, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { AttendanceService } from './attendance.service.js';
 import { ApprovalsService } from './approvals.service.js';
-import { FeesService } from './fees.service.js';
+import { FilesService } from './files.service.js';
+import { GalleryService } from './gallery.service.js';
 import { LearningService, gradeOf } from './learning.service.js';
+import { LibraryService } from './library.service.js';
 import { OfficeService } from './office.service.js';
 import { AuditService, SettingsService } from './support.js';
+import { TransportService } from './transport.service.js';
 
 const DAYS = ['', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const key = (subjectId: string) => subjectId.replace(/^sub_/, '');
@@ -33,11 +36,14 @@ export class FamilyService {
     @Inject(REGISTRY) private readonly registry: Registry,
     private readonly attendance: AttendanceService,
     private readonly approvals: ApprovalsService,
-    private readonly fees: FeesService,
     private readonly learning: LearningService,
     private readonly office: OfficeService,
     private readonly settings: SettingsService,
     private readonly audit: AuditService,
+    private readonly library: LibraryService,
+    private readonly transportService: TransportService,
+    private readonly gallerySvc: GalleryService,
+    private readonly files: FilesService,
   ) {}
 
   async who(t: TenantCtx, user: AuthedUser): Promise<Who> {
@@ -224,10 +230,16 @@ export class FamilyService {
     if (!hw.rowCount) return [];
     const subs = await t.pool.query<{ homework_id: string; student_id: string; handed_at: Date | null; score: number | null; feedback: string }>(
       'select homework_id, student_id, handed_at, score, feedback from homework_submissions where homework_id = any($1)', [hw.rows.map((h) => h.id)]);
+    const ids = hw.rows.map((h) => h.id);
+    const attached = await this.files.list(t, 'homework_attachment', ids);
+    const handed = await this.files.list(t, 'homework_submission', subs.rows.map((s) => `${s.homework_id}:${s.student_id}`));
+    const files = (list: typeof attached, owner: string) => list.filter((f) => f.ownerId === owner && f.status === 'clean').map((f) => ({ id: f.id, name: f.name, mime: f.mime }));
     return hw.rows.map((h) => ({
-      id: h.id, classId: h.class_id, subject: key(h.subject_id), title: h.title, description: h.description, assignedOn: h.assigned_on, dueOn: h.due_on, teacherId: h.created_by ?? '', maxMarks: h.max_marks, attachments: [] as string[],
+      id: h.id, classId: h.class_id, subject: key(h.subject_id), title: h.title, description: h.description, assignedOn: h.assigned_on, dueOn: h.due_on, teacherId: h.created_by ?? '', maxMarks: h.max_marks,
+      attachments: files(attached, h.id).map((f) => f.name), files: files(attached, h.id),
       submissions: subs.rows.filter((s) => s.homework_id === h.id).map((s) => ({
         studentId: s.student_id, status: s.score != null ? 'graded' : s.handed_at ? 'submitted' : 'pending', ...(s.handed_at ? { submittedAt: s.handed_at.toISOString() } : {}),
+        files: files(handed, `${h.id}:${s.student_id}`),
         ...(s.score != null ? { marks: s.score, grade: gradeOf(Math.round((s.score / h.max_marks) * 100)), feedback: s.feedback } : {}),
       })),
     }));
@@ -245,9 +257,11 @@ export class FamilyService {
     return h;
   }
 
-  async submitHomework(t: TenantCtx, user: AuthedUser, id: string, studentId: string) {
+  async submitHomework(t: TenantCtx, user: AuthedUser, id: string, studentId: string, fileIds: string[] = []) {
     const w = await this.who(t, user);
     await this.mayStudent(w, studentId);
+    // The handed-in work, uploaded first through /v1/files (kind homework_submission, owner "<homework>:<student>").
+    for (const f of fileIds) await this.files.done(t, user.id, f);
     const h = (await t.pool.query<{ due_on: string }>('select due_on::text from homework where id = $1', [id])).rows[0];
     if (!h) throw notFound('That homework');
     await t.pool.query(
@@ -331,7 +345,7 @@ export class FamilyService {
   async feesOf(t: TenantCtx, user: AuthedUser, studentId: string) {
     await this.mayStudent(await this.who(t, user), studentId);
     const inv = await t.pool.query<{ id: string; title: string; amount: number; waived_amount: number; due_on: string; paid: string; last: string | null; method: string | null; reference: string | null }>(
-      `select i.id, i.title, i.amount, i.waived_amount, i.due_on::text, coalesce((select sum(amount) from payments p where p.invoice_id = i.id), 0) paid,
+      `select i.id, i.title, i.amount, i.waived_amount, i.due_on::text, coalesce((select sum(amount - refunded) from payments p where p.invoice_id = i.id), 0) paid,
          (select paid_on::text from payments p where p.invoice_id = i.id order by paid_on desc limit 1) last, (select method from payments p where p.invoice_id = i.id order by paid_on desc limit 1) method,
          (select coalesce(reference, receipt_no) from payments p where p.invoice_id = i.id order by paid_on desc limit 1) reference
        from fee_invoices i where i.student_id = $1 order by i.due_on, i.id`, [studentId]);
@@ -345,17 +359,10 @@ export class FamilyService {
     };
   }
 
-  async pay(t: TenantCtx, user: AuthedUser, invoiceId: string, b: { studentId: string; method: string }) {
+  /** Older app builds paid here directly; payments now go through the provider's checkout (POST fees/:id/order). */
+  async pay(t: TenantCtx, user: AuthedUser, _invoiceId: string, b: { studentId: string; method: string }): Promise<never> {
     await this.mayStudent(await this.who(t, user), b.studentId);
-    const inv = (await t.pool.query<{ amount: number; waived_amount: number; paid: string }>(
-      'select i.amount, i.waived_amount, coalesce((select sum(amount) from payments p where p.invoice_id = i.id), 0) paid from fee_invoices i where i.id = $1 and i.student_id = $2', [invoiceId, b.studentId])).rows[0];
-    if (!inv) throw notFound('That fee');
-    const outstanding = inv.amount - inv.waived_amount - Number(inv.paid);
-    const method = (['upi', 'card', 'netbanking'].includes(b.method) ? b.method : 'upi') as 'upi';
-    const done = await this.fees.pay(t, user, { studentId: b.studentId, invoiceId, amount: outstanding, method, reference: `APP${Date.now().toString(36).toUpperCase()}` });
-    const p = (await t.pool.query<{ id: string; title: string; amount: number; paid_on: string; method: string; reference: string }>(
-      `select p.id, i.title, p.amount, p.paid_on::text, p.method, coalesce(p.reference, p.receipt_no) reference from payments p join fee_invoices i on i.id = p.invoice_id where p.receipt_no = $1`, [done.receiptNo])).rows[0]!;
-    return { id: p.id, installmentId: invoiceId, title: p.title, amount: p.amount, paidOn: p.paid_on, method: p.method, reference: p.reference };
+    throw new ApiError('conflict', 'Update the Gradeon app to pay fees online.');
   }
 
   // Notices and events
@@ -365,9 +372,12 @@ export class FamilyService {
     const { rows } = await t.pool.query<{ id: string; title: string; body: string; audience: string; author: string | null; published_at: Date; class_id: string | null }>(
       `select n.id, n.title, n.body, n.audience, u.name author, n.published_at, n.class_id from notices n left join users u on u.id = n.author_id where n.status = 'published' order by n.published_at desc limit 60`);
     const myClasses = w.children.length ? new Set((await t.pool.query<{ class_id: string }>('select class_id from students where id = any($1)', [w.children])).rows.map((r) => r.class_id)) : new Set<string>();
-    return rows
-      .filter((n) => w.kind === 'staff' || (n.audience !== 'staff' && (n.audience !== 'class' || (n.class_id && myClasses.has(n.class_id)))))
-      .map((n) => ({ id: n.id, title: n.title, body: n.body, category: 'general', audience: n.audience === 'staff' ? 'teachers' : n.audience === 'parents' ? 'parents' : 'all', pinned: false, date: n.published_at.toISOString().slice(0, 10), author: n.author ?? 'School office', attachments: [] as string[] }));
+    const shown = rows.filter((n) => w.kind === 'staff' || (n.audience !== 'staff' && (n.audience !== 'class' || (n.class_id && myClasses.has(n.class_id)))));
+    const attached = (await this.files.list(t, 'notice_attachment', shown.map((n) => n.id))).filter((f) => f.status === 'clean');
+    return shown.map((n) => {
+      const files = attached.filter((f) => f.ownerId === n.id).map((f) => ({ id: f.id, name: f.name, mime: f.mime }));
+      return { id: n.id, title: n.title, body: n.body, category: 'general', audience: n.audience === 'staff' ? 'teachers' : n.audience === 'parents' ? 'parents' : 'all', pinned: false, date: n.published_at.toISOString().slice(0, 10), author: n.author ?? 'School office', attachments: files.map((f) => f.name), files };
+    });
   }
 
   async postNotice(t: TenantCtx, user: AuthedUser, b: { title: string; body: string; audience?: string }) {
@@ -477,26 +487,49 @@ export class FamilyService {
 
   // Library, transport, leave, gallery
 
+  /** The catalogue as the app lists it, with the books a family's children have out (and loans brought in before the catalogue). */
   async books(t: TenantCtx, user: AuthedUser) {
     const w = await this.who(t, user);
-    if (!w.children.length) return [];
-    const { rows } = await t.pool.query<{ id: string; student_id: string; title: string; due_on: string }>('select id, student_id, title, due_on::text from library_loans where student_id = any($1) and returned_on is null order by due_on', [w.children]);
-    return rows.map((b) => ({ id: b.id, title: b.title, author: '', category: 'Library', isbn: '', available: false, coverUrl: '', borrowedBy: b.student_id, dueDate: b.due_on }));
+    const loans = w.children.length ? await this.library.loans(t, w.children) : [];
+    const open = loans.filter((l) => !l.returnedOn);
+    const catalogue = (await this.library.books(t)).map((b) => {
+      const mine = open.find((l) => l.bookId === b.id);
+      return { id: b.id, title: b.title, author: b.author, category: b.category, isbn: b.isbn, available: b.copies - b.out > 0, coverUrl: '', ...(mine ? { borrowedBy: mine.studentId, dueDate: mine.dueOn } : {}) };
+    });
+    const legacy = open.filter((l) => !l.bookId).map((l) => ({ id: l.id, title: l.title, author: '', category: 'Library', isbn: '', available: false, coverUrl: '', borrowedBy: l.studentId, dueDate: l.dueOn }));
+    return [...legacy, ...catalogue];
   }
 
+  /** Renews a child's loan of this book (or the loan itself, for loans brought in before the catalogue). */
   async renew(t: TenantCtx, user: AuthedUser, id: string) {
     const w = await this.who(t, user);
-    const r = await t.pool.query('update library_loans set due_on = due_on + 7 where id = $1 and student_id = any($2) and returned_on is null', [id, w.children]);
-    if (!r.rowCount) throw notFound('That book');
+    const loan = (await t.pool.query<{ id: string }>('select id from library_loans where (book_id = $1 or id = $1) and student_id = any($2) and returned_on is null order by due_on limit 1', [id, w.children])).rows[0];
+    if (!loan) throw notFound('That book');
+    await this.library.renew(t, loan.id, w.children);
     return { ok: true };
   }
 
   async transport(t: TenantCtx, user: AuthedUser, studentId: string) {
     await this.mayStudent(await this.who(t, user), studentId);
-    const r = (await t.pool.query<{ route: string }>('select route from transport_assignments where student_id = $1', [studentId])).rows[0];
+    const r = await this.transportService.forStudent(t, studentId);
     if (!r) return null;
-    // shortcut: only the route is known to the platform; stops, the bus and live position arrive with the transport module.
-    return { studentId, routeName: r.route, busNumber: '', etaMinutes: 0, progress: 0, driver: { name: '', phone: '', avatarUrl: '' }, stops: [] };
+    const at = Math.round(r.progress * Math.max(0, r.stops.length - 1));
+    return { ...r, stops: r.stops.map((s, i) => ({ name: s.name, time: s.time, reached: r.live && i < at })) };
+  }
+
+  /** Shared albums the family may see, with photo links valid for a few minutes and consent respected. */
+  async gallery(t: TenantCtx, user: AuthedUser) {
+    const w = await this.who(t, user);
+    const classes = w.kind === 'staff' ? undefined : (await t.pool.query<{ class_id: string }>('select distinct class_id from students where id = any($1)', [w.children])).rows.map((r) => r.class_id);
+    const albums = (await this.gallerySvc.albums(t, classes)).filter((a) => a.published);
+    const out = [];
+    for (const a of albums) {
+      const photos = await this.gallerySvc.photos(t, a.id, w.kind !== 'staff');
+      const shown = [];
+      for (const p of photos) shown.push({ id: p.id, url: await this.files.url(t, user, p.id).catch(() => ''), caption: p.name.replace(/\.[^.]+$/, ''), tagged: p.students.map((s) => s.id) });
+      out.push({ id: a.id, title: a.title, date: a.createdAt, blurb: a.className ?? 'Whole school', photos: shown.filter((p) => p.url) });
+    }
+    return out.filter((a) => a.photos.length);
   }
 
   private leaveJson(r: { id: string; status: string; payload: Record<string, unknown>; created_at: Date; subject_ref: string | null }) {
@@ -540,7 +573,8 @@ export class FamilyService {
     const w = await this.who(t, user);
     if (!w.phone) return [];
     const { rows } = await this.registry.pool.query<{ id: string; body: string; created_at: Date; channel: string }>(
-      `select distinct on (body, date_trunc('minute', created_at)) id, body, created_at, channel from sandbox_messages where school_slug = $1 and to_addr = $2 and channel in ('push','sms') order by body, date_trunc('minute', created_at), (channel = 'push') desc limit 60`, [t.info.slug, w.phone]);
+      `select distinct on (body, date_trunc('minute', created_at)) id, body, created_at, channel from message_log where school_slug = $1 and to_addr = $2 and channel in ('push','sms')
+         and status in ('sent','delivered','read') order by body, date_trunc('minute', created_at), (channel = 'push') desc limit 60`, [t.info.slug, w.phone]);
     const state = await t.pool.query<{ message_id: string; state: string }>('select message_id, state from notification_state where user_id = $1', [w.id]);
     const by = new Map(state.rows.map((s) => [s.message_id, s.state]));
     const kind = (b: string) => (/fee|receipt|payment/i.test(b) ? ['fees', '/fees'] : /homework/i.test(b) ? ['homework', '/homework'] : /result|exam/i.test(b) ? ['exam', '/academics'] : /absent|late|attendance/i.test(b) ? ['attendance', '/attendance'] : /notice/i.test(b) ? ['notice', '/notices'] : /event|meeting/i.test(b) ? ['event', '/events'] : ['general', '/notifications']);

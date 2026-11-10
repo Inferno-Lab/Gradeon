@@ -342,6 +342,7 @@ export function StudentsView({ v }: { v: any }) {
                   </button>
                 </div>
               </div>
+              {v.files}
               <div>
                 <h3>Activity</h3>
                 {v.d.activity.length === 0 && <div className="help">Nothing yet. Payments, homework and attendance notes appear here.</div>}

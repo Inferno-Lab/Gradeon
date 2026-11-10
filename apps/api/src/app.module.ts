@@ -27,6 +27,18 @@ import { ChangeRequestsController, ErrorReports, ErrorsController } from './scho
 import { MovingInController, MovingInService } from './school/moving-in.js';
 import { SetupController, SetupService } from './school/setup.js';
 import { TimetableService } from './school/timetable.service.js';
+import {
+  ChannelsController, FamilyCampusController, FeesOnlineController, FilesController, FinderController, GalleryController, LibraryController, ReportCardsController, SchoolLogoController, TransportController, YearController,
+} from './school/campus.controllers.js';
+import { DocumentsService } from './school/documents.service.js';
+import { FilesService } from './school/files.service.js';
+import { GalleryService } from './school/gallery.service.js';
+import { HooksController } from './school/hooks.controller.js';
+import { HubService } from './school/hub.service.js';
+import { LibraryService } from './school/library.service.js';
+import { PaymentsService } from './school/payments.service.js';
+import { TransportService } from './school/transport.service.js';
+import { YearService } from './school/year.service.js';
 import { POOLS, REGISTRY, TenantGuard, TenantService } from './tenancy/tenant.js';
 
 const OWNS = Symbol('OWNS');
@@ -57,6 +69,7 @@ export class AppModule {
       controllers: [
         AuthController, MeController, ClassesController, StudentsController, AttendanceController, FeesController, ApprovalsController,
         TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController, ChangeRequestsController, SetupController, MovingInController,
+        HooksController, FilesController, SchoolLogoController, ChannelsController, FeesOnlineController, ReportCardsController, LibraryController, TransportController, GalleryController, YearController, FamilyCampusController, FinderController,
       ],
       providers: [
         { provide: ENV, useValue: env },
@@ -65,6 +78,7 @@ export class AppModule {
         { provide: OWNS, useValue: !shared },
         Shutdown,
         TenantService, AuthService, AuditService, Messenger, SettingsService, StudentsService, AttendanceService, FeesService, ApprovalsService, TimetableService, DashboardService, MetricsService, LearningService, PeopleService, OfficeService, FamilyService, SweepService, ErrorReports, SetupService, MovingInService,
+        HubService, FilesService, PaymentsService, DocumentsService, LibraryService, TransportService, GalleryService, YearService,
         // Order matters: find the school, then the person, then what they may do.
         { provide: APP_GUARD, useClass: TenantGuard },
         { provide: APP_GUARD, useClass: AuthGuard },

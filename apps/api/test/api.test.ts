@@ -152,7 +152,7 @@ describe('students', () => {
     const audit = (await h.call('GET', '/v1/settings/audit', { token })).json;
     expect(audit.some((a: any) => a.action === 'contact.revealed')).toBe(true);
     expect(d.facts.homework.total).toBeGreaterThan(0);
-    expect(d.routeName).toBe('Route 4');
+    expect(d.routeName).toBe('Route 4 · Kothrud');
   });
   it('adds a student and refuses a bad class', async () => {
     const bad = await h.call('POST', '/v1/students', { token, body: { name: 'Test Child', classId: 'nope', dob: '2014-01-02', guardianName: 'Parent One', guardianPhone: '+91 99999 11111' } });

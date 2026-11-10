@@ -54,6 +54,7 @@ html:has(.nest.dark){color-scheme:dark}
 @media (min-width:901px){
   .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 6px 12px;background:var(--frame);z-index:2;box-shadow:0 -14px 14px -10px var(--frame)}
   .nest .app>.sb .sbc{margin-top:12px}
+  .nest .app>.sb .nv{scroll-margin:8px 0 88px}
 }
 /* On a phone a table keeps the width its columns need and scrolls sideways inside its card, with a visible bar, instead of squeezing names to "Gre…". */
 @media (max-width:700px){

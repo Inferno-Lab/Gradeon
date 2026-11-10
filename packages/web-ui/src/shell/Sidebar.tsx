@@ -1,5 +1,5 @@
 import { readableOn } from '@gradeon/contracts';
-import { useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Menu } from '../Menu';
 import { GradeonIcon } from '../GradeonIcon';
 
@@ -39,11 +39,22 @@ export interface SidebarProps {
 const HAS_MODIFIER = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
 
 /** The collapsible menu. Markup and class names are the design's; every item is a link so it works with the keyboard and a new tab. */
+let placedOnLoad = false;
+
 export function Sidebar({ label, collapsed, groups, active, onNavigate, header, promo, me, pushDown, meMenu }: SidebarProps) {
   const [menu, setMenu] = useState(false);
   const meBtn = useRef<HTMLButtonElement>(null);
+  const side = useRef<HTMLElement>(null);
+  // A long menu scrolls: when the app opens on a page low in the menu, that page is brought into view, clear of the account block
+  // pinned below. Once per load: moving between pages keeps the menu where the person left it.
+  useEffect(() => {
+    const on = side.current?.querySelector('.nv.on');
+    if (placedOnLoad || !on) return;
+    placedOnLoad = true;
+    on.scrollIntoView({ block: 'nearest' });
+  }, [active, groups]);
   return (
-    <aside className={`sb ${collapsed ? 'col' : ''}`} aria-label={label}>
+    <aside ref={side} className={`sb ${collapsed ? 'col' : ''}`} aria-label={label}>
       {header}
       {groups.map((g) => (
         <div key={g.name} style={{ display: 'contents' }}>
@@ -95,10 +106,10 @@ export function Sidebar({ label, collapsed, groups, active, onNavigate, header, 
 }
 
 /** The school block at the top of the admin menu, and the button that collapses the menu. */
-export function SchoolHeader({ logo, name, place, color, onToggle, collapsed }: { logo: string; name: string; place: string; color?: string; onToggle: () => void; collapsed: boolean }) {
+export function SchoolHeader({ logo, logoUrl, name, place, color, onToggle, collapsed }: { logo: string; logoUrl?: string | null; name: string; place: string; color?: string; onToggle: () => void; collapsed: boolean }) {
   return (
     <div className="ws">
-      <span className="lg" style={markStyle(color)}>{logo}</span>
+      <span className="lg" style={markStyle(color)}>{logoUrl ? <img className="lgi" src={logoUrl} alt="" /> : logo}</span>
       <div className="fade"><b>{name}</b><small>{place}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path className="i" d="M4 5h16v14H4zM9.5 5v14"></path></svg>

@@ -91,17 +91,19 @@ export class Actions {
   }
 
   async request(user: ConsoleUser, body: ActionRequest): Promise<ActionRow> {
-    const school = await this.schools.raw(body.schoolId);
+    // Taking a platform connection live is the one action about no school.
+    if (!body.schoolId && body.action !== 'integration.live') throw new ApiError('validation', 'Choose the school this is for.');
+    const school = body.schoolId ? await this.schools.raw(body.schoolId) : null;
     const pol = await this.policy.get();
     if (pol.freeze && body.action !== 'school.suspend') throw new ApiError('locked', 'Changes are frozen. A super admin can lift the freeze under Policy.');
-    const busy = await this.db.pool.query("select 1 from actions where school_id = $1 and status = 'running'", [school.id]);
+    const busy = school ? await this.db.pool.query("select 1 from actions where school_id = $1 and status = 'running'", [school.id]) : { rowCount: 0 };
     if (busy.rowCount) throw new ApiError('conflict', 'Another action is already running for this school.');
-    if (body.action === 'school.erase' && !body.dryRun && body.confirmCode?.trim() !== school.slug) {
+    if (school && (body.action === 'school.erase' || body.action === 'retention.erase') && !body.dryRun && body.confirmCode?.trim() !== school.slug) {
       throw new ApiError('validation', 'That does not match. Nothing was erased.', { fields: { confirmCode: `Type ${school.slug} exactly.` } });
     }
     let needs = pol.approvals[body.action]?.needed && !body.dryRun;
-    let summary = this.describe(body.action, school.name);
-    if (body.action === 'entitlements.push') {
+    let summary = this.describe(body.action, school?.name ?? 'every school', body.params);
+    if (school && body.action === 'entitlements.push') {
       // Checked now, so a bad change never waits for approval; taking anything away from a school always needs a second person.
       const c = await this.entitlementChange(school, body.params);
       if (c.problems.length) throw new ApiError('validation', c.problems.join(' '));
@@ -111,8 +113,8 @@ export class Actions {
     const id = newId('act');
     await this.db.pool.query(
       'insert into actions (id, action, school_id, school_name, params, status, requested_by, dry_run, summary) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-      [id, body.action, school.id, school.name, JSON.stringify(body.params), needs ? 'pending_approval' : 'running', user.email, body.dryRun, summary]);
-    await this.db.audit(user.email, `action.${body.action}.requested`, 'school', school.id, { dryRun: body.dryRun, needsApproval: !!needs });
+      [id, body.action, school?.id ?? null, school?.name ?? null, JSON.stringify(body.params), needs ? 'pending_approval' : 'running', user.email, body.dryRun, summary]);
+    await this.db.audit(user.email, `action.${body.action}.requested`, school ? 'school' : 'integration', school?.id ?? String(body.params.connectionId ?? ''), { dryRun: body.dryRun, needsApproval: !!needs });
     if (!needs) await this.run(id);
     return this.get(id);
   }
@@ -140,8 +142,10 @@ export class Actions {
     return this.get(id);
   }
 
-  private describe(action: ActionRequest['action'], school: string): string {
+  private describe(action: ActionRequest['action'], school: string, params: Record<string, unknown> = {}): string {
     return ({
+      'integration.live': `Take ${String(params.name ?? 'a connection')} live for ${school}`,
+      'retention.erase': `Erase the records of people who left ${school} past the retention period`,
       'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
       'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'config.apply': `Change risky settings for ${school}`, 'school.move': `Move ${school} to another cell`,
     } as const)[action];
@@ -161,8 +165,13 @@ export class Actions {
   }
 
   private async execute(a: ActionRecord): Promise<string> {
-    const school = await this.schools.raw(a.schoolId!);
     const params = a.params as Record<string, unknown>;
+    if (!a.schoolId) {
+      const handler = this.handlers.get(a.action);
+      if (!handler) throw new Error(`Unknown action ${a.action}.`);
+      return handler('', params, a.requestedBy);
+    }
+    const school = await this.schools.raw(a.schoolId);
     const done = () => this.registry.invalidate(school.slug);
     switch (a.action as ActionRequest['action']) {
       case 'school.suspend':

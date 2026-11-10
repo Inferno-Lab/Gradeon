@@ -29,10 +29,10 @@ export class FeesService {
     const [byHead, totals, daily, prev, target] = await Promise.all([
       t.pool.query<{ head: string; due: string; collected: string }>(
         `select i.head, coalesce(sum(i.amount - i.waived_amount),0) due,
-           coalesce(sum((select coalesce(sum(p.amount),0) from payments p where p.invoice_id = i.id)),0) collected
+           coalesce(sum((select coalesce(sum(p.amount - p.refunded),0) from payments p where p.invoice_id = i.id)),0) collected
          from fee_invoices i where i.due_on >= $1 and i.due_on < $2 group by i.head`, [monthStart, nextMonth]),
       t.pool.query<{ collected: string; overdue: string; fam: string; pending: string }>(
-        `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id)
+        `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id)
          select (select coalesce(sum(amount),0) from payments where paid_on >= $1 and paid_on < $2) collected,
            coalesce(sum(greatest(i.amount - i.waived_amount - coalesce(paid.p,0),0)) filter (where i.due_on < $3::date),0) overdue,
            count(distinct i.student_id) filter (where i.due_on < $3::date and i.amount - i.waived_amount - coalesce(paid.p,0) > 0) fam,
@@ -66,7 +66,7 @@ export class FeesService {
 
   async invoices(t: TenantCtx, studentId: string): Promise<InvoiceRow[]> {
     const { rows } = await t.pool.query<{ id: string; student_id: string; title: string; amount: number; waived: number; paid: string; due_on: string }>(
-      `select i.id, i.student_id, i.title, i.amount, i.waived_amount waived, coalesce((select sum(amount) from payments where invoice_id = i.id),0) paid, to_char(i.due_on,'YYYY-MM-DD') due_on
+      `select i.id, i.student_id, i.title, i.amount, i.waived_amount waived, coalesce((select sum(amount - refunded) from payments where invoice_id = i.id),0) paid, to_char(i.due_on,'YYYY-MM-DD') due_on
        from fee_invoices i where i.student_id = $1 order by i.due_on desc, i.title, i.id`, [studentId]);
     const today = istToday();
     return rows.map((r) => {
@@ -82,9 +82,22 @@ export class FeesService {
     if (!allowed.includes(method)) throw new ApiError('validation', 'The school does not take payments that way.', { fields: { method: 'Choose another way to pay.' } });
   }
 
-  async pay(t: TenantCtx, user: { id: string; name: string }, body: PaymentCreate): Promise<{ receiptNo: string; amount: number; outstanding: number }> {
-    const { rows } = await t.pool.query<{ id: string; amount: number; waived: number; paid: string; title: string }>(
-      `select i.id, i.amount, i.waived_amount waived, coalesce((select sum(amount) from payments where invoice_id = i.id),0) paid, i.title
+  /** GST inside a payment (fees are GST-inclusive) when the school has GST receipts and the invoice's head is taxable. */
+  private async tax(t: TenantCtx, head: string, amount: number): Promise<Record<string, unknown> | null> {
+    const cfg = await this.settings.effective(t);
+    if (!cfg.features.includes('fees.gstReceipts')) return null;
+    const v = (await this.settings.doc(t)).values;
+    const heads = (v['fees.gstHeads'] as string[] | undefined) ?? [];
+    const rate = Number(v['fees.gstRatePct'] ?? 18);
+    if (!heads.includes(head) || !rate || !v['fees.gstin']) return null;
+    const taxable = Math.round((amount * 100) / (100 + rate));
+    const half = Math.round((amount - taxable) / 2);
+    return { gstin: v['fees.gstin'], sac: v['fees.gstSac'] ?? '', ratePct: rate, taxable, cgst: half, sgst: amount - taxable - half };
+  }
+
+  async pay(t: TenantCtx, user: { id: string; name: string }, body: PaymentCreate, online?: { providerPaymentId: string }): Promise<{ receiptNo: string; amount: number; outstanding: number; paymentId: string }> {
+    const { rows } = await t.pool.query<{ id: string; amount: number; waived: number; paid: string; title: string; head: string }>(
+      `select i.id, i.amount, i.waived_amount waived, coalesce((select sum(amount - refunded) from payments where invoice_id = i.id),0) paid, i.title, i.head
        from fee_invoices i where i.id = $1 and i.student_id = $2`, [body.invoiceId, body.studentId]);
     const inv = rows[0];
     if (!inv) throw notFound('That invoice');
@@ -95,6 +108,8 @@ export class FeesService {
     const v = (await this.settings.doc(t)).values;
     const prefix = String(v['fees.receiptPrefix'] ?? 'RCPT-{year}-').replace('{year}', istToday().slice(0, 4));
     const start = Number(v['fees.receiptStart'] ?? 9001);
+    const tax = await this.tax(t, inv.head, body.amount);
+    const paymentId = newId('pay');
     const client = await t.pool.connect();
     let receiptNo: string;
     try {
@@ -104,8 +119,8 @@ export class FeesService {
       const last = (await client.query<{ n: string | null }>(
         "select max(substring(receipt_no from char_length($1) + 1)::bigint) n from payments where starts_with(receipt_no, $1) and substring(receipt_no from char_length($1) + 1) ~ '^[0-9]+$'", [prefix])).rows[0]!.n;
       receiptNo = `${prefix}${String(Math.max(start, last === null ? start : Number(last) + 1)).padStart(5, '0')}`;
-      await client.query('insert into payments (id, invoice_id, amount, method, reference, receipt_no, paid_on, recorded_by) values ($1,$2,$3,$4,$5,$6,$7,$8)',
-        [newId('pay'), inv.id, body.amount, body.method, body.reference ?? null, receiptNo, istToday(), user.id]);
+      await client.query('insert into payments (id, invoice_id, amount, method, reference, receipt_no, paid_on, recorded_by, tax, provider_payment_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+        [paymentId, inv.id, body.amount, body.method, body.reference ?? null, receiptNo, istToday(), online ? null : user.id, tax ? JSON.stringify(tax) : null, online?.providerPaymentId ?? null]);
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -113,10 +128,57 @@ export class FeesService {
     } finally {
       client.release();
     }
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'payment.recorded', entity: 'invoice', entityId: inv.id, detail: { amount: body.amount, receipt: receiptNo } });
+    await this.audit.record(t, { actorId: online ? null : user.id, actorName: user.name, action: 'payment.recorded', entity: 'invoice', entityId: inv.id, detail: { amount: body.amount, receipt: receiptNo } });
     const g = await t.pool.query<{ phone: string | null }>('select g.phone from student_guardians sg join guardians g on g.id = sg.guardian_id where sg.student_id = $1 and sg.is_primary', [body.studentId]);
     if (g.rows[0]?.phone) await this.messenger.notify(t, 'fees.receipt', [{ to: g.rows[0].phone, vars: { receipt: receiptNo, amount: `₹${body.amount.toLocaleString('en-IN')}`, title: inv.title } }]);
-    return { receiptNo, amount: body.amount, outstanding: outstanding - body.amount };
+    return { receiptNo, amount: body.amount, outstanding: outstanding - body.amount, paymentId };
+  }
+
+  /** Daily (job fees.reminders): families of invoices falling due in `fees.remindDaysBefore` days, once per invoice per day. */
+  async dailyReminders(t: TenantCtx, day: string): Promise<string> {
+    const cfg = await this.settings.effective(t);
+    if (!cfg.features.includes('fees.reminders')) return 'Fee reminders are off for this school.';
+    const days = await this.settings.value<number>(t, 'fees.remindDaysBefore', 3);
+    const { rows } = await t.pool.query<{ id: string; phone: string | null; name: string }>(
+      `select i.id, g.phone, s.name from fee_invoices i join students s on s.id = i.student_id and s.status = 'active'
+       join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id
+       where i.due_on = $1::date + $2::int and i.amount - i.waived_amount > coalesce((select sum(amount - refunded) from payments where invoice_id = i.id), 0)
+         and not exists (select 1 from fee_reminders r where r.invoice_id = i.id and r.day = $1::date)`, [day, days]);
+    for (const r of rows) await t.pool.query('insert into fee_reminders (invoice_id, day) values ($1,$2) on conflict do nothing', [r.id, day]);
+    const sent = await this.messenger.notify(t, 'fees.reminder', rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name } })));
+    return `${sent} reminders for invoices due in ${days} days.`;
+  }
+
+  /** Daily (job fees.lateFines): `fees.lateFeePct` of what is still owed on each overdue invoice, once per invoice per month. */
+  async lateFines(t: TenantCtx, day: string): Promise<string> {
+    const cfg = await this.settings.effective(t);
+    if (!cfg.features.includes('fees.lateFines')) return 'Late fines are off for this school.';
+    const pct = await this.settings.value<number>(t, 'fees.lateFeePct', 0);
+    if (!pct) return 'The late fee is 0%.';
+    const month = day.slice(0, 7);
+    const { rows } = await t.pool.query<{ id: string; student_id: string; title: string; owed: number }>(
+      `select i.id, i.student_id, i.title, (i.amount - i.waived_amount - coalesce((select sum(amount - refunded) from payments where invoice_id = i.id), 0))::int owed
+       from fee_invoices i where i.due_on < $1::date and i.head <> 'fine'
+         and not exists (select 1 from fee_fines f where f.invoice_id = i.id and f.month = $2)`, [day, month]);
+    let n = 0;
+    for (const r of rows.filter((x) => x.owed > 0)) {
+      const amount = Math.max(1, Math.round((r.owed * pct) / 100));
+      const fineId = newId('inv');
+      const client = await t.pool.connect();
+      try {
+        await client.query('begin');
+        await client.query("insert into fee_invoices (id, student_id, head, title, amount, due_on) values ($1,$2,'fine',$3,$4,$5)", [fineId, r.student_id, `Late fee: ${r.title} (${month})`, amount, day]);
+        await client.query('insert into fee_fines (id, invoice_id, fine_invoice_id, month, amount) values ($1,$2,$3,$4,$5)', [newId('fin'), r.id, fineId, month, amount]);
+        await client.query('commit');
+        n++;
+      } catch {
+        await client.query('rollback').catch(() => undefined);
+      } finally {
+        client.release();
+      }
+    }
+    if (n) await this.audit.record(t, { action: 'fees.lateFines', entity: 'invoice', detail: { count: n, pct, month } });
+    return `${n} late fines at ${pct}%.`;
   }
 
   async remind(t: TenantCtx, user: { id: string; name: string }, ids: string[]): Promise<{ sent: number }> {

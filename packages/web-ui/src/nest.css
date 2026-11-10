@@ -33,6 +33,7 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .sb.col{width:88px}
 .nest .ws{display:flex;align-items:center;gap:12px;height:52px;padding:0 6px;white-space:nowrap}
 .nest .lg{width:40px;height:40px;border-radius:14px;background:var(--ink);color:var(--card);display:grid;place-items:center;font:700 17px var(--fd);flex:none;box-shadow:none}
+.nest .lg .lgi{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .nest .ws b{display:block;font:700 15px var(--fb);line-height:1.2}
 .nest .ws small{font:500 12px var(--fb);color:var(--ink3)}
 .nest .colb{margin-left:auto;width:32px;height:32px;border-radius:10px;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;flex:none;transition:background var(--t2),color var(--t2)}

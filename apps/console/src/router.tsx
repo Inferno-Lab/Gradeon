@@ -62,6 +62,7 @@ const routeTree = root.addChildren([
     page('/cells', () => import('./pages/cells/CellsPage'), 'CellsPage'),
     page('/releases', () => import('./pages/releases/ReleasesPage'), 'ReleasesPage'),
     page('/migrations', () => import('./pages/releases/MigrationsPage'), 'MigrationsPage'),
+    page('/integrations', () => import('./pages/integrations/IntegrationsPage'), 'IntegrationsPage'),
     page('/builds', () => import('./pages/builds/BuildsPage'), 'BuildsPage'),
     page('/flags', () => import('./pages/flags/FlagsPage'), 'FlagsPage'),
     page('/blueprints', () => import('./pages/blueprints/BlueprintsPage'), 'BlueprintsPage'),

@@ -72,6 +72,7 @@ class AuthService extends GetxService {
     await _storage.remove(StorageKeys.activeStudent);
     await _storage.remove(StorageKeys.accessToken);
     await _storage.remove(StorageKeys.refreshToken);
+    await _storage.clearCache();
     if (Get.testMode) {
       _clear();
       return;
