@@ -22,6 +22,8 @@ const Env = z.object({
   ADMIN_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'),
   API_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:4000'),
   BASE_DOMAIN: z.string().default('gradeon.app'),
+  /** Must match the school API's: sandbox sends everything to the Test inbox, live needs a live connection per capability. */
+  MESSAGING_MODE: z.enum(['sandbox', 'live']).default('sandbox'),
   /** Build profile commits and mobile build dispatches. Both stay switched off without a token. */
   GITHUB_TOKEN: z.string().optional(),
   GITHUB_REPO: z.string().optional(),

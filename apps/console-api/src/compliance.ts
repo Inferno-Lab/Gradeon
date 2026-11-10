@@ -3,6 +3,7 @@ import { ComplianceCreate, ComplianceUpdate, SUBPROCESSORS, type ComplianceRow, 
 import { newId } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';
+import { Integrations } from './integrations.js';
 
 interface ItemSql {
   id: string; school_id: string; school_name: string; kind: ComplianceRow['kind']; title: string; status: ComplianceRow['status']; note: string; created_by: string;
@@ -12,7 +13,7 @@ interface ItemSql {
 /** Agreements with each school, breach notices with their 72-hour clock, and the sub-processors the platform uses. */
 @Injectable()
 export class Compliance {
-  constructor(private readonly db: Db) {}
+  constructor(private readonly db: Db, private readonly integrations: Integrations) {}
 
   private row(r: ItemSql): ComplianceRow {
     return { id: r.id, schoolId: r.school_id, schoolName: r.school_name, kind: r.kind, title: r.title, status: r.status, note: r.note, createdBy: r.created_by, createdAt: r.created_at.toISOString(), deadlineAt: r.deadline_at?.toISOString() ?? null, closedAt: r.closed_at?.toISOString() ?? null };
@@ -52,8 +53,9 @@ export class Compliance {
     if (cur.status === 'closed' || (cur.kind === 'dpa' && cur.status === 'signed')) throw new ApiError('conflict', 'This item is already finished.');
     await this.db.pool.query("update compliance_items set status = $2, note = case when $3 <> '' then $3 else note end, closed_at = case when $2 in ('closed','signed') then now() else closed_at end where id = $1", [id, body.status, body.note]);
     if (cur.kind === 'breach' && body.status === 'notified') {
-      await this.db.pool.query("insert into sandbox_messages (id, school_slug, channel, to_addr, subject, body) values ($1,$2,'email',$3,$4,$5)",
-        [newId('msg'), cur.slug, cur.contact?.email ?? 'the school contact', `Security notice: ${cur.title}`, `Gradeon has recorded an incident that may affect ${cur.school_name}: ${cur.title}. ${body.note || cur.note}\nYou can use this to meet your 72-hour notification duty.`]);
+      // Through the Hub like every message: the school's email route, or the Test inbox on the test track.
+      await this.integrations.hub.send({ schoolId: cur.school_id, schoolSlug: cur.slug, channel: 'email', to: cur.contact?.email ?? 'the school contact', subject: `Security notice: ${cur.title}`,
+        body: `Gradeon has recorded an incident that may affect ${cur.school_name}: ${cur.title}. ${body.note || cur.note}\nYou can use this to meet your 72-hour notification duty.`, messageKey: 'compliance.breach' });
     }
     await this.db.audit(user.email, `compliance.${cur.kind}.${body.status}`, 'school', cur.school_id, { title: cur.title });
     return this.row(await this.one(id));
