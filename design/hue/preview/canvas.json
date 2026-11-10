@@ -276,7 +276,7 @@
    "x": 0,
    "y": 0,
    "w": 1440,
-   "h": 1376,
+   "h": 1220,
    "title": "The frame · words, scene, phone, still",
    "page": "empty-admin",
    "expand": "fill"
@@ -285,7 +285,7 @@
    "x": 1520,
    "y": 0,
    "w": 1440,
-   "h": 2345,
+   "h": 2688,
    "title": "Admin · Teach",
    "page": "empty-admin",
    "expand": "fill"
@@ -294,7 +294,7 @@
    "x": 9120,
    "y": 0,
    "w": 1440,
-   "h": 2345,
+   "h": 2688,
    "title": "Admin · Teach, dark",
    "page": "empty-admin",
    "expand": "fill"
@@ -303,7 +303,7 @@
    "x": 3040,
    "y": 0,
    "w": 1440,
-   "h": 1382,
+   "h": 1598,
    "title": "Admin · People",
    "page": "empty-admin",
    "expand": "fill"
@@ -312,7 +312,7 @@
    "x": 4560,
    "y": 0,
    "w": 1440,
-   "h": 1788,
+   "h": 2267,
    "title": "Admin · Money",
    "page": "empty-admin",
    "expand": "fill"
@@ -321,7 +321,7 @@
    "x": 6080,
    "y": 0,
    "w": 1440,
-   "h": 1884,
+   "h": 2113,
    "title": "Admin · Reach",
    "page": "empty-admin",
    "expand": "fill"
@@ -330,7 +330,7 @@
    "x": 7600,
    "y": 0,
    "w": 1440,
-   "h": 1858,
+   "h": 2180,
    "title": "Admin · School",
    "page": "empty-admin",
    "expand": "fill"
@@ -339,7 +339,7 @@
    "x": 0,
    "y": 0,
    "w": 1440,
-   "h": 2331,
+   "h": 2792,
    "title": "Console · Operate",
    "page": "empty-console",
    "expand": "fill"
@@ -348,7 +348,7 @@
    "x": 6080,
    "y": 0,
    "w": 1440,
-   "h": 2331,
+   "h": 2792,
    "title": "Console · Operate, dark",
    "page": "empty-console",
    "expand": "fill"
@@ -357,7 +357,7 @@
    "x": 1520,
    "y": 0,
    "w": 1440,
-   "h": 1904,
+   "h": 2152,
    "title": "Console · Ship and connect",
    "page": "empty-console",
    "expand": "fill"
@@ -366,7 +366,7 @@
    "x": 3040,
    "y": 0,
    "w": 1440,
-   "h": 1865,
+   "h": 2128,
    "title": "Console · Care",
    "page": "empty-console",
    "expand": "fill"
@@ -375,7 +375,7 @@
    "x": 4560,
    "y": 0,
    "w": 1440,
-   "h": 1388,
+   "h": 1474,
    "title": "Console · Billing, compliance, team",
    "page": "empty-console",
    "expand": "fill"
@@ -384,7 +384,7 @@
    "x": 0,
    "y": 0,
    "w": 2190,
-   "h": 1080,
+   "h": 1108,
    "title": "Parent · every day",
    "page": "empty-app",
    "expand": "fill"
@@ -393,7 +393,7 @@
    "x": 9080,
    "y": 0,
    "w": 2190,
-   "h": 1080,
+   "h": 1108,
    "title": "Parent · every day, dark",
    "page": "empty-app",
    "expand": "fill"
@@ -420,7 +420,7 @@
    "x": 6810,
    "y": 0,
    "w": 2190,
-   "h": 1052,
+   "h": 1108,
    "title": "Teacher",
    "page": "empty-app",
    "expand": "fill"

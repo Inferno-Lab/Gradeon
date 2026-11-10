@@ -54,22 +54,22 @@ const NOTES = {
   t_ep: [0, -260, 'Empty states · parent and teacher app', 11000, 'empty-app'],
 };
 
-// empty-state frame: [[es:icon|Page|where]] [[w:heading|text|button|link?]] scene [[/w:caption?]] [[/es]]; phone: [[ph:title|p or t|tab|back]] ... [[/ph]]
+// empty states: [[es:icon|Page|where]] label ... [[/es]]; [[t:classes|heading|text|button|link?]] words; phone: [[ph:title|p or t|tab|back]] header extras [[sheet]] content [[/ph]]
 const TABS = {
   p: [['house', 'Home'], ['megaphone', 'Notices'], ['wallet', 'Fees'], ['chat-circle', 'Chat'], ['user-circle', 'Profile']],
   t: [['house', 'Home'], ['chalkboard-teacher', 'Classes'], ['notebook', 'Homework'], ['chat-circle', 'Chat'], ['user-circle', 'Profile']],
 };
-const WHO = { p: '<span class="chip ond"><span class="av sm sp sp-art">AS</span>Aarav[[ib:caret-down]]</span>', t: '<span class="chip ond"><span class="av sm sp sp-maths">KI</span>Kavita[[ib:caret-down]]</span>' };
+const WHO = { p: '<span class="chip ond"><span class="av sm sp sp-art">MT</span>Maya[[ib:caret-down]]</span>', t: '<span class="chip ond"><span class="av sm sp sp-maths">EO</span>Ms Ortiz[[ib:caret-down]]</span>' };
 let tabs = '';
 const macros = (s) => s
-  .replace(/\[\[es:([\w-]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_, ic, page, where) => `<div class="es-item"><div class="es-where">[[i:${ic}]]<b>${page}</b><span>${where}</span></div><div class="es-wrap">`)
-  .replace(/\[\[\/es\]\]/g, '</div></div>')
-  .replace(/\[\[w:([^|\]]+)\|([^|\]]+)\|([^|\]]+)(?:\|([^\]]+))?\]\]/g, (_, h, p, b, l) => `<section class="es"><div class="es-w"><h2 class="es-h">${h}</h2><p class="es-p">${p}</p><div class="es-a"><button class="btn pri lg">${b}</button>${l ? `<a class="es-l" href="#">${l}</a>` : ''}</div></div><div class="es-s" aria-hidden="true">`)
-  .replace(/\[\[\/w(?::([^\]]+))?\]\]/g, (_, cap) => `<span class="es-cap">${cap || 'Example names and numbers'}</span></div></section>`)
-  .replace(/\[\[ph:([^|\]]+)\|([pt])\|(-?\d)\|([01])\]\]|\[\[\/ph\]\]/g, (m, title, role, tab, back) => {
-    if (m === '[[/ph]]') return `</div></div></div><nav class="tabs">${tabs}</nav></div>`;
+  .replace(/\[\[es:([\w-]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_, ic, page, where) => `<div class="es-item"><div class="es-where">[[i:${ic}]]<b>${page}</b><span>${where}</span></div>`)
+  .replace(/\[\[\/es\]\]/g, '</div>')
+  .replace(/\[\[t:([\w ]*)\|([^|\]]+)\|([^|\]]+)\|([^|\]]+)(?:\|([^\]]+))?\]\]/g, (_, cls, h, p, b, l) => `<div class="ew ${cls}"><h2>${h}</h2><p>${p}</p><div class="acts"><button class="btn pri lg">${b}</button>${l ? `<a class="lk" href="#">${l}</a>` : ''}</div></div>`)
+  .replace(/\[\[ph:([^|\]]+)\|([pt])\|(-?\d)\|([01])\]\]|\[\[sheet\]\]|\[\[\/ph\]\]/g, (m, title, role, tab, back) => {
+    if (m === '[[sheet]]') return '</header><div class="sheet rise"><div class="pb" style="padding:18px 18px 20px;gap:16px">';
+    if (m === '[[/ph]]') return `</div></div><nav class="tabs">${tabs}</nav></div>`;
     tabs = TABS[role].map(([ic, n], i) => `<a${i === +tab ? ' class="on"' : ''}>[[i${i === +tab ? 'f' : ''}:${ic}]]${n}</a>`).join('');
-    return `<div class="hue s-emerald phone"><div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div><header class="phead" style="padding-bottom:44px"><div class="ptop">${back === '1' ? '<button class="pib ond" aria-label="Back">[[ib:caret-left]]</button>' : ''}<h1>${title}</h1><span class="sp"></span>${WHO[role]}</div></header><div class="sheet rise"><div class="pb" style="padding:16px 16px 20px"><div class="es-wrap">`;
+    return `<div class="hue s-emerald phone"><div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div><header class="phead" style="padding-bottom:44px"><div class="ptop">${back === '1' ? '<button class="pib ond" aria-label="Back">[[ib:caret-left]]</button>' : ''}<h1>${title}</h1><span class="sp"></span>${WHO[role]}</div>`;
   });
 
 const svg = (d) => `<svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="${d}"/></svg>`;

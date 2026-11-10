@@ -1,50 +1,72 @@
 <div class="hue s-emerald doc" style="gap:32px;padding:48px 40px">
-  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">App · bus, books, leave, alerts, search</h1><p class="lead">The pages a parent opens now and then. An empty alerts page is good news, and says so.</p></div>
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">App · bus, books, leave, alerts, search</h1><p class="lead">A route beside the words, a shelf above them, a request that sends itself, a page that is good news when empty, and a search that suggests.</p></div>
   <div class="phones">
 
   [[ph:School bus|p|-1|1]]
-  [[w:Aarav's bus, stop and timings|Aarav isn't on a bus route. If he takes the school bus, ask the office to add him; his stop and pick-up time will show here.|Message the office]]
-    <div class="c v" style="gap:14px;padding:14px 16px">
-      <div class="row2"><b class="grow">Route 7 · morning</b><span class="stack"><span class="tag out o5">On the way</span><span class="tag ok pop k5">Arriving in 4 min</span></span></div>
-      <div class="track" style="margin:6px 8px 0"><span class="stop on" style="left:0%"></span><span class="stop on" style="left:33%"></span><span class="stop" style="left:66%;box-shadow:inset 0 0 0 3px var(--bright)"></span><span class="stop" style="left:100%"></span>
-        <span class="mark out o3" style="left:0%"></span><span class="mark k3 out o5" style="left:33%"></span><span class="mark k5" style="left:55%"></span></div>
-      <div class="row2 hd" style="justify-content:space-between"><span>Depot</span><span>Baner</span><span>Your stop</span><span>School</span></div>
+  [[sheet]]
+    <div style="display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:start">
+      <div class="sc" aria-hidden="true" style="position:relative;height:300px;margin-top:6px">
+        <span class="wire" style="position:absolute;left:26px;top:0;bottom:0;width:4px;border-radius:2px"></span>
+        <span class="ring" style="position:absolute;left:19px;top:0;width:18px;height:18px;background:var(--s1);box-shadow:inset 0 0 0 4px var(--brand)"></span>
+        <span class="ring" style="position:absolute;left:19px;top:33%;width:18px;height:18px;background:var(--s1);box-shadow:inset 0 0 0 4px var(--brand)"></span>
+        <span class="ring" style="position:absolute;left:16px;top:66%;width:24px;height:24px;background:var(--bright);box-shadow:inset 0 0 0 4px var(--brand)"></span>
+        <span class="ring" style="position:absolute;left:19px;bottom:0;width:18px;height:18px;background:var(--s1);box-shadow:inset 0 0 0 4px var(--line2)"></span>
+        <span class="out o2" style="position:absolute;left:14px;top:-4px;width:28px;height:40px;border-radius:9px;background:var(--brand)"></span>
+        <span class="k2 out o4" style="position:absolute;left:14px;top:calc(33% - 10px);width:28px;height:40px;border-radius:9px;background:var(--brand)"></span>
+        <span class="k4" style="position:absolute;left:14px;top:calc(50% - 10px);width:28px;height:40px;border-radius:9px;background:var(--brand)"></span>
+      </div>
+      <div class="col" style="gap:14px">
+        <div class="sc col" aria-hidden="true" style="gap:4px"><span class="hd">Depot · 7:05</span><span class="hd" style="margin-top:80px">Mill Road · 7:14</span><span class="tag ok pop k5" style="margin-top:56px;align-self:flex-start">4 min to your stop</span><span class="hd" style="color:var(--brand-ink)">Park Lane · your stop</span></div>
+        [[t:sm|Maya's bus, stop and times|Maya isn't on a bus route. If she takes the school bus, ask the office to add her.|Message the office]]
+        <span class="ecap">Example route</span>
+      </div>
     </div>
-  [[/w:Example route]]
   [[/ph]]
 
   [[ph:Library|p|-1|1]]
-  [[w:Books Aarav has borrowed|No books borrowed. When Aarav takes a book from the library, its title and return date appear here, with a reminder before it is due.|Turn on return reminders]]
-    <div class="c k1"><span class="blk solid sp-evs" style="width:12px;min-height:48px;padding:0"></span><span class="grow"><b>The Jungle Book</b><small>Borrowed 10 November</small></span></div>
-    <div class="stack"><span class="tag warn out o4" style="justify-self:start">Return by 24 November</span><span class="tag ok pop k4" style="justify-self:start">Returned · thank you</span></div>
-    <div class="c k5"><span class="blk solid sp-art" style="width:12px;min-height:48px;padding:0"></span><span class="grow"><b>Malgudi Days</b><small>Borrowed 25 November</small></span></div>
-  [[/w:Example books]]
+  [[sheet]]
+    <div class="sc" aria-hidden="true" style="display:flex;align-items:flex-end;gap:4px;height:150px;border-bottom:6px solid var(--s3)">
+      <span class="spine sp-evs fu k1" style="height:110px"></span><span class="spine sp-art fu k1" style="height:126px"></span><span class="spine sp-music fu k1" style="height:96px"></span><span class="spine sp-maths k2" style="height:120px;--f:none;--t:translateY(-30px)"></span><span class="spine sp-english fu k1" style="height:130px"></span><span class="spine sp-sport fu k2" style="height:104px"></span><span class="spine sp-science fu k2" style="height:118px"></span><span class="spine sp-social fu k2" style="height:128px"></span>
+    </div>
+    <div class="sc" aria-hidden="true"><div class="c pop k3"><span class="grow"><b>The Secret Garden</b><small>Borrowed on 10 March</small></span><span class="stack"><span class="tag warn out o5">Back by 24th</span><span class="tag ok pop k5">Returned</span></span></div></div>
+    [[t:|Books Maya has borrowed|No books borrowed. When Maya takes a book from the library, its title and return date appear here, with a reminder before it is due.|Turn on return reminders]]
+    <span class="ecap">Example book</span>
   [[/ph]]
 
   [[ph:Leave|p|-1|1]]
-  [[w:Tell school when Aarav will be away|No leave asked for. Ask here with the dates and the reason; the class teacher replies, and the roll is marked for you.|Ask for leave]]
-    <div class="row2"><span class="tile date pop k1"><small>Thu</small>12</span><span class="hd">to</span><span class="tile date pop k1"><small>Fri</small>13</span></div>
-    <div class="c wipe k2"><span class="grow"><b>Family wedding in Nashik</b><small>2 school days</small></span></div>
-    <div class="stack"><span class="tag info out o4" style="justify-self:start">Sent to Ms Iyer</span><span class="tag ok pop k4" style="justify-self:start">Approved by Ms Iyer</span></div>
-  [[/w]]
+  [[sheet]]
+    [[t:sm|Tell school when Maya will be away|No leave asked for. Ask here with the dates and the reason; the class teacher replies, and the roll is marked for you.|Ask for leave]]
+    <div class="sc" aria-hidden="true" style="background:var(--s1);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:inset 0 0 0 1px var(--line)">
+      <div class="r2"><span class="tile date pop k1"><small>Thu</small>12</span><span class="wire on gx k1" style="height:3px;flex:1"></span><span class="tile date pop k1"><small>Fri</small>13</span></div>
+      <span class="wipe k2">Family wedding abroad · 2 school days</span>
+      <div class="stack"><span class="tag info out o4" style="justify-self:start">Sent to Ms Ortiz</span><span class="r2 pop k4"><span class="av sm sp sp-maths">EO</span><span class="tag ok">Approved · enjoy the wedding!</span></span></div>
+    </div>
+    <span class="ecap">Example request</span>
   [[/ph]]
 
   [[ph:Notifications|p|-1|1]]
-  [[w:You're all caught up|Alerts for attendance, fees, homework and notices land here. Choose which ones reach your phone.|Choose your alerts]]
-    <div class="c fd k1"><span class="dot" style="--c:var(--brand)"></span><span class="grow"><b>Aarav is in school</b><small>8:02 am</small></span></div>
-    <div class="c fd k2"><span class="dot" style="--c:var(--warn)"></span><span class="grow"><b>Maths homework due tomorrow</b><small>Yesterday</small></span></div>
-    <div class="c fd k3"><span class="dot" style="--c:var(--info)"></span><span class="grow"><b>New notice: School closed Friday</b><small>Monday</small></span></div>
-    <span class="tag ok k5" style="align-self:flex-start">All read</span>
-  [[/w]]
+  [[sheet]]
+    <div class="sc" aria-hidden="true" style="display:grid;place-items:center;height:220px">
+      <div class="c out o4" style="grid-area:1/1;width:100%;transform:translateY(-62px);--t:translateY(-62px);--g:translate(80px,-62px)"><span class="dot" style="--c:var(--brand)"></span><b class="grow">Maya is in school</b></div>
+      <div class="c out o3" style="grid-area:1/1;width:100%;--g:translateX(80px)"><span class="dot" style="--c:var(--warn)"></span><b class="grow">Homework due tomorrow</b></div>
+      <div class="c out o2" style="grid-area:1/1;width:100%;transform:translateY(62px);--t:translateY(62px);--g:translate(80px,62px)"><span class="dot" style="--c:var(--info)"></span><b class="grow">New notice from school</b></div>
+      <span class="ring pop k5" style="grid-area:1/1;width:150px;height:150px;background:var(--ok-s);display:grid;place-items:center"><span class="huge" style="font-size:64px;color:var(--ok-i)">0</span></span>
+    </div>
+    [[t:c|You're all caught up|Alerts for attendance, fees, homework and notices land here. Choose which ones reach your phone.|Choose your alerts]]
+    <span class="ecap" style="text-align:center">Example alerts</span>
   [[/ph]]
 
   [[ph:Search|p|-1|1]]
-  [[w:Search notices, homework, events and people|Nothing matches “sprots day”. Try a shorter word or check the spelling.|Clear the search]]
-    <div class="inp focus" style="height:44px;border-radius:14px"><span class="typed wipe k1">sports</span></div>
-    <div class="c fd k2"><span class="grow"><b><mark style="background:var(--brand-soft);color:var(--brand-ink);border-radius:4px">Sports</mark> day on 28 November</b><small>Notice · Monday</small></span></div>
-    <div class="c fd k3"><span class="grow"><b><mark style="background:var(--brand-soft);color:var(--brand-ink);border-radius:4px">Sports</mark> kit list</b><small>Homework · PE</small></span></div>
-    <div class="c fd k4"><span class="grow"><b>Mr Pawar · <mark style="background:var(--brand-soft);color:var(--brand-ink);border-radius:4px">Sports</mark></b><small>Teacher</small></span></div>
-  [[/w:Example results]]
+    <div class="inp" style="height:48px;border-radius:16px;background:var(--deep2);color:var(--on-deep);box-shadow:none">[[i:magnifying-glass]]sprots day</div>
+  [[sheet]]
+    [[t:sm|Nothing matches “sprots day”|Search finds notices, homework, events and people. Try a shorter word or check the spelling.|Clear the search]]
+    <div class="sc" aria-hidden="true" style="display:flex;flex-direction:column;gap:8px">
+      <span class="hd">Did you mean</span>
+      <span class="chipx pop k1" style="align-self:flex-start;box-shadow:inset 0 0 0 1.5px var(--brand);color:var(--brand-ink)">sports day</span>
+      <div class="c fd k2"><span class="grow"><b><mark style="background:var(--brand-soft);color:var(--brand-ink);border-radius:4px">Sports day</mark> on the 28th</b><small>Notice · Monday</small></span></div>
+      <div class="c fd k3"><span class="grow"><b><mark style="background:var(--brand-soft);color:var(--brand-ink);border-radius:4px">Sports</mark> kit list</b><small>Homework · PE</small></span></div>
+      <span class="ecap">Example results</span>
+    </div>
   [[/ph]]
 
   </div>

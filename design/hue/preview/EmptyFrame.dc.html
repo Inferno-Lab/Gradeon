@@ -13,53 +13,64 @@
 <style>body{margin:0}</style>
 </helmet>
 <div class="hue s-emerald doc" style="gap:32px">
-  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">The empty-state frame</h1><p class="lead">One shared frame for every page that can be empty: the words on the left, a short scene of the page at work on the right. Each page brings its own words and its own scene; the frame never changes.</p></div>
-  <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:32px;align-items:start">
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">The empty-state kit</h1><p class="lead">There is no shared layout. Every empty page is composed from what that page does. What they share is the kit: the words, the scene parts, the motion beats and the rules below.</p></div>
+  <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:32px;align-items:start">
     <section class="card" style="gap:0">
       <div class="ch" style="margin-bottom:8px"><h2>The rules</h2></div>
+      <div class="spec"><small><b>Composition</b>its own, every page</small><span>Draw the page's own thing: the timetable grid, a receipt, a shelf, a route. The words go where that thing leaves room.</span></div>
       <div class="spec"><small><b>Heading</b>what the page is for</small><span>“Every student, with their family”, never “Nothing here yet”.</span></div>
-      <div class="spec"><small><b>Text</b>one or two sentences</small><span>Why it is empty, and what appears here once it is used.</span></div>
-      <div class="spec"><small><b>Button</b>one, that fixes it</small><span>Import, add, set up, ask Gradeon. A second link only when it is truly needed. Never a dead end.</span></div>
-      <div class="spec"><small><b>Scene</b>one story, then loop</small><span>Up to six steps over 10 seconds, built from the page's own parts: rows, tags, cards, bars. No pictures or icons.</span></div>
-      <div class="spec"><small><b>Examples</b>said so</small><span>Names and numbers are made up and a caption says they are examples.</span></div>
-      <div class="spec"><small><b>Decorative</b>for the eye only</small><span>The scene is hidden from screen readers and nothing in it can be clicked.</span></div>
-      <div class="spec"><small><b>Colour</b>tokens only</small><span>Light, dark and every school colour work without changes. See the dark boards.</span></div>
-      <div class="spec"><small><b>Narrow</b>below 640 px</small><span>The halves stack, the scene on top, the button full width at the bottom.</span></div>
-      <div class="spec"><small><b>Less motion</b>when the phone asks</small><span>With reduced motion on, the scene shows its last frame and stays still.</span></div>
+      <div class="spec"><small><b>Text</b>one or two sentences</small><span>Why it is empty, and what appears once it is used.</span></div>
+      <div class="spec"><small><b>Button</b>one, that fixes it</small><span>A second link only when it is truly needed. Never a dead end.</span></div>
+      <div class="spec"><small><b>Scene</b>one story, then loop</small><span>Up to six beats in 10 seconds, built from the product's own parts. No pictures or icons inside it.</span></div>
+      <div class="spec"><small><b>Examples</b>said so, neutral</small><span>Made-up, international names; amounts without a currency; a caption says they are examples.</span></div>
+      <div class="spec"><small><b>Decorative</b>for the eye only</small><span>Hidden from screen readers; nothing in it can be clicked.</span></div>
+      <div class="spec"><small><b>Colour</b>tokens only</small><span>Works in light, dark and every school colour without changes.</span></div>
+      <div class="spec"><small><b>Narrow</b>below 640 px</small><span>Every composition falls back to one column; on the phone each page has its own arrangement.</span></div>
+      <div class="spec"><small><b>Less motion</b>when asked</small><span>The last frame, still.</span></div>
       <div class="spec"><small><b>When</b>only when truly empty</small><span>Loading and error states stay as they are. A filter with no results is not an empty page.</span></div>
     </section>
     <div class="col" style="gap:24px">
-      <div class="es-item"><div class="es-where"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M226.5 56.5L130.5 24.5Q130 24.3 129.4 24.1Q128.8 24 128 24Q127.3 24 126.6 24.1Q126 24.3 125.5 24.5L125.5 24.5L29.5 56.5Q27 57.3 25.5 59.3Q24 61.3 24 64Q24 64 24 64Q24 64 24 64L24 64L24 144Q24 147.3 26.4 149.6Q28.8 152 32 152Q35.3 152 37.6 149.6Q40 147.3 40 144L40 144L40 75L73.5 86.3Q69 93.5 66.5 102Q64 110.5 64 120Q64 137 72.3 151.4Q80.5 165.8 94 174.3L94.3 174.3Q80.8 179.8 69.3 189.1Q57.8 198.5 49.3 211.8Q48.8 212.5 48.4 213.6Q48 214.8 48 216Q48 219.5 50.3 221.8Q52.5 224 56 224Q58 224 59.8 223Q61.5 222 62.8 220.5L62.8 220.3Q74 203 91.1 193.5Q108.3 184 128 184Q147.8 184 164.9 193.5Q182 203 193.3 220.3Q194.5 222 196.1 223Q197.8 224 200 224Q203.3 224 205.6 221.6Q208 219.3 208 216Q208 214.8 207.6 213.6Q207.3 212.5 206.8 211.5L206.8 211.8Q198.3 198.5 186.8 189.1Q175.3 179.8 161.8 174.3Q175.5 165.8 183.8 151.4Q192 137 192 120Q192 110.8 189.4 102.1Q186.8 93.5 182.3 86L182.5 86.3L226.5 71.8Q229 70.8 230.5 68.8Q232 66.8 232 64Q232 61.5 230.5 59.4Q229 57.3 226.5 56.5L226.5 56.5ZM176 120Q176 120 176 120Q176 120 176 120Q176 140 162 154Q148 168 128 168Q108 168 94 154Q80 140 80 120Q80 112 82.5 104.8Q85 97.5 89.5 91.5L89.3 91.5L125.5 103.5Q126 103.8 126.6 103.9Q127.3 104 128 104Q128.8 104 129.4 103.9Q130 103.8 130.5 103.5L130.5 103.5L166.8 91.5Q171 97.5 173.5 104.8Q176 112 176 120Q176 120 176 120Q176 120 176 120L176 120ZM128 87.5L57.3 64L128 40.5L198.8 64Z"/></svg><b>Playing</b><span>the scene runs its story, then starts again</span></div><div class="es-wrap">
-      <section class="es"><div class="es-w"><h2 class="es-h">Every student, with their family</h2><p class="es-p">No students yet. Bring in your list from a spreadsheet and each child gets a record with class, house, parents' phones, attendance and fees.</p><div class="es-a"><button class="btn pri lg">Import students</button><a class="es-l" href="#">Add one student</a></div></div><div class="es-s" aria-hidden="true">
-        <div class="stack" style="align-items:center"><div class="c out o3" style="font-size:13px;gap:0;padding:0;overflow:hidden"><span style="padding:8px 12px;flex:1.4;border-right:1px solid var(--line)">Aarav Sharma</span><span style="padding:8px 12px;flex:.5;border-right:1px solid var(--line)">8 A</span><span style="padding:8px 12px;flex:1.2">98000 00014</span></div>
-        <div class="c pop k3" style="padding:14px"><span class="av lg sp sp-art">AS</span><span class="grow"><b class="d" style="font-size:17px">Aarav Sharma</b><small>8 A · Roll 14 · Agni house</small></span></div></div>
-        <div class="row2"><span class="tag ok k4">Parent linked</span><span class="tag sp sp-art k5"><i class="dot"></i>Agni house</span><span class="tag warn k6">Fees due 15 Nov</span></div>
-      <span class="es-cap">Example names and numbers</span></div></section>
-      </div></div>
+      <section class="card">
+        <div class="ch"><h2>One kit, many compositions</h2><small>a few of the 56</small></div>
+        <div class="gr" style="grid-template-columns:repeat(4,1fr);gap:10px">
+          <div class="mini"><b class="d" style="font-size:16px">Ghost page</b><small>Dashboard: the page fills in behind the words</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">Words in the grid</b><small>Timetable: the words take three cells of the week</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">Words as content</b><small>Notices and messages: the draft, the first bubbles</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">Big figure</b><small>Fees, health, to check: one number does the talking</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">An object</b><small>Receipt, ticket, report card, sticky notes, shelf</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">A path</b><small>Bus route, onboarding steps, build line, version ladder</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">A board</b><small>Admissions, flags, billing months, class wall</small></div>
+          <div class="mini"><b class="d" style="font-size:16px">In the header</b><small>App home, teacher day, marks: the words live in the school colour</small></div>
+        </div>
+      </section>
       <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start">
-        <div class="es-item"><div class="es-where"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M176 16L80 16Q70 16 63 23Q56 30 56 40L56 40L56 216Q56 226 63 233Q70 240 80 240L80 240L176 240Q186 240 193 233Q200 226 200 216L200 216L200 40Q200 30 193 23Q186 16 176 16ZM72 64L184 64L184 192L72 192ZM80 32L176 32Q179.3 32 181.6 34.4Q184 36.8 184 40L184 40L184 48L72 48L72 40Q72 36.8 74.4 34.4Q76.8 32 80 32ZM176 224L80 224Q76.8 224 74.4 221.6Q72 219.3 72 216L72 216L72 208L184 208L184 216Q184 219.3 181.6 221.6Q179.3 224 176 224Z"/></svg><b>Under 640 px</b><span>the halves stack</span></div><div class="es-wrap">
-          <section class="es"><div class="es-w"><h2 class="es-h">Tell every family at once</h2><p class="es-p">No notices sent yet. Write one, choose who gets it, and it reaches parents' phones with a count of who has read it.</p><div class="es-a"><button class="btn pri lg">Write a notice</button></div></div>
-          <div class="es-s" aria-hidden="true"><div class="c v k1"><b>School closed on Friday</b><small>All classes · English, हिन्दी, मराठी</small></div><div class="c k2"><b class="grow">Sent to 1,498 families</b><span class="tag ok">Sent</span></div><span class="es-cap">Example names and numbers</span></div></section>
-        </div></div>
-        <div class="es-item"><div class="es-where"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M200 32L160 32Q153.3 32 148.6 36.6Q144 41.3 144 48L144 48L144 208Q144 214.8 148.6 219.4Q153.3 224 160 224L160 224L200 224Q206.8 224 211.4 219.4Q216 214.8 216 208L216 208L216 48Q216 41.3 211.4 36.6Q206.8 32 200 32ZM200 208L160 208L160 48L200 48ZM96 32L56 32Q49.3 32 44.6 36.6Q40 41.3 40 48L40 48L40 208Q40 214.8 44.6 219.4Q49.3 224 56 224L56 224L96 224Q102.8 224 107.4 219.4Q112 214.8 112 208L112 208L112 48Q112 41.3 107.4 36.6Q102.8 32 96 32ZM96 208L56 208L56 48L96 48Z"/></svg><b>Reduced motion</b><span>last frame, still</span></div><div class="es-wrap">
-          <section class="es still" style="grid-template-columns:1fr;padding:20px"><div class="es-s" aria-hidden="true" style="order:-1;min-height:0">
-            <div class="c pop k3"><span class="av sp sp-art">AS</span><span class="grow"><b>Aarav Sharma</b><small>8 A · Roll 14</small></span></div>
-            <div class="row2"><span class="tag ok k4">Parent linked</span><span class="tag warn k6">Fees due 15 Nov</span></div><span class="es-cap">Example names and numbers</span></div>
-            <div class="es-w"><h2 class="es-h" style="font-size:20px;line-height:24px">Every student, with their family</h2></div></section>
-        </div></div>
+        <div class="es-item"><div class="es-where"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M176 16L80 16Q70 16 63 23Q56 30 56 40L56 40L56 216Q56 226 63 233Q70 240 80 240L80 240L176 240Q186 240 193 233Q200 226 200 216L200 216L200 40Q200 30 193 23Q186 16 176 16ZM72 64L184 64L184 192L72 192ZM80 32L176 32Q179.3 32 181.6 34.4Q184 36.8 184 40L184 40L184 48L72 48L72 40Q72 36.8 74.4 34.4Q76.8 32 80 32ZM176 224L80 224Q76.8 224 74.4 221.6Q72 219.3 72 216L72 216L72 208L184 208L184 216Q184 219.3 181.6 221.6Q179.3 224 176 224Z"/></svg><b>Under 640 px</b><span>one column</span></div>
+          <section class="es tint" style="max-width:460px">
+            <div class="lay" style="grid-template-columns:1fr 1fr;align-items:center">
+              <div class="sc" aria-hidden="true"><div class="paper print k1" style="padding:14px;font-size:12px"><b>INV-0001</b><div class="r2"><span class="grow">Tuition</span><b>2,400.00</b></div><span class="stamp pop k3" style="display:inline-block;margin-top:8px">PAID</span></div></div>
+              <div class="ew sm"><h2>Invoices and receipts, numbered and kept</h2><p>Nothing has been billed yet. Invoices are made from your fee structure.</p><div class="acts"><button class="btn pri lg">Create invoices</button></div></div>
+            </div>
+          </section></div>
+        <div class="es-item"><div class="es-where"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M200 32L160 32Q153.3 32 148.6 36.6Q144 41.3 144 48L144 48L144 208Q144 214.8 148.6 219.4Q153.3 224 160 224L160 224L200 224Q206.8 224 211.4 219.4Q216 214.8 216 208L216 208L216 48Q216 41.3 211.4 36.6Q206.8 32 200 32ZM200 208L160 208L160 48L200 48ZM96 32L56 32Q49.3 32 44.6 36.6Q40 41.3 40 48L40 48L40 208Q40 214.8 44.6 219.4Q49.3 224 56 224L56 224L96 224Q102.8 224 107.4 219.4Q112 214.8 112 208L112 208L112 48Q112 41.3 107.4 36.6Q102.8 32 96 32ZM96 208L56 208L56 48L96 48Z"/></svg><b>Reduced motion</b><span>last frame, still</span></div>
+          <section class="es still">
+            <div class="lay" style="grid-template-columns:1fr;gap:16px;padding:24px">
+              <div class="sc" aria-hidden="true" style="display:flex;align-items:flex-end;gap:4px;height:110px;border-bottom:6px solid var(--s3)"><span class="spine sp-evs fu k1" style="height:80px"></span><span class="spine sp-art fu k1" style="height:96px"></span><span class="spine sp-music fu k2" style="height:70px"></span><span class="spine sp-maths fu k2" style="height:90px"></span><span class="spine sp-english fu k3" style="height:100px"></span><span class="spine sp-sport fu k3" style="height:84px"></span></div>
+              <div class="ew sm"><h2>Books, and who has them</h2></div>
+            </div>
+          </section></div>
       </div>
       <section class="card">
-        <div class="ch"><h2>The 10-second story</h2><small>every scene uses the same six beats</small></div>
-        <div class="gr" style="display:grid;grid-template-columns:repeat(6,1fr) 1.4fr;gap:6px">
+        <div class="ch"><h2>The 10-second story</h2><small>six beats shared by every scene</small></div>
+        <div class="gr" style="grid-template-columns:repeat(6,1fr) 1.4fr;gap:6px">
           <span class="mini"><b class="d">1</b><small>0.6 s</small></span><span class="mini"><b class="d">2</b><small>1.8 s</small></span><span class="mini"><b class="d">3</b><small>3.0 s</small></span><span class="mini"><b class="d">4</b><small>4.2 s</small></span><span class="mini"><b class="d">5</b><small>5.4 s</small></span><span class="mini"><b class="d">6</b><small>6.6 s</small></span><span class="mini" style="background:var(--brand-soft)"><b class="d">Hold</b><small>to 9.2 s, then fade and loop</small></span>
         </div>
-        <span class="cap">Each part enters on its beat by rising, growing, popping or wiping in. A part that is replaced fades at the beat its successor arrives. Numbers count up to their final value.</span>
+        <span class="cap">Parts rise, grow, pop, print, wipe or slide in on their beat; a part being replaced fades as its successor arrives; numbers count up.</span>
       </section>
     </div>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1376}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1220}}'>
 class Component extends DCLogic {
 renderVals() { return {}; }
 }
