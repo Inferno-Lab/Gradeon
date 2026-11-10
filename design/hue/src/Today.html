@@ -1,0 +1,85 @@
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Dashboard" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Good morning, Neha</h1><p>Tuesday 10 November · Term 2, week 6</p></div>
+      <span class="sp"></span>
+      <div class="search">[[i:magnifying-glass]]Search students, staff, receipts<kbd>Ctrl K</kbd></div>
+      <button class="ib" aria-label="Notifications">[[i:bell]]<span class="pip"></span></button>
+      <button class="btn pri">[[ib:plus]]New notice</button>
+    </header>
+
+    <section class="card deep" style="flex-direction:row;gap:48px">
+      <div class="col" style="flex:1;gap:22px">
+        <div class="col" style="gap:10px">
+          <span class="lbl">In school today</span>
+          <div class="fig" style="font-size:72px">94.3%<small>1,349 of 1,431 marked</small></div>
+        </div>
+        <div class="col" style="gap:12px">
+          <div class="bar" style="height:14px;border-radius:7px">
+            <i style="flex:1326;background:var(--bright)"></i><i style="flex:23;background:var(--warn-d)"></i><i style="flex:82;background:var(--bad-d)"></i><i style="flex:67;background:var(--deep3)"></i>
+          </div>
+          <div class="rw" style="gap:20px;font-size:13px;line-height:18px;flex-wrap:wrap">
+            <span class="rw" style="gap:7px"><i class="dot" style="--c:var(--bright)"></i>On time <b class="num">1,326</b></span>
+            <span class="rw" style="gap:7px"><i class="dot" style="--c:var(--warn-d)"></i>Late <b class="num">23</b></span>
+            <span class="rw" style="gap:7px"><i class="dot" style="--c:var(--bad-d)"></i>Absent <b class="num">82</b></span>
+            <span class="rw" style="gap:7px"><i class="dot" style="--c:var(--deep3)"></i>Not marked <b class="num">67</b></span>
+          </div>
+        </div>
+        <div class="rw" style="gap:10px;margin-top:auto">
+          <button class="btn bri">[[i:bell-ringing]]Remind 6 B and 9 C</button>
+          <button class="btn ond">Open attendance</button>
+        </div>
+      </div>
+      <div class="col" style="gap:12px;flex:none">
+        <div class="rw" style="gap:8px"><span class="lbl" style="color:var(--on-deep)">Absent by class</span><span class="sp"></span><span class="lbl" style="font-weight:500">fewer</span><span class="rw" style="gap:3px"><i class="hk h1"></i><i class="hk h2"></i><i class="hk h3"></i><i class="hk h4"></i><i class="hk h5"></i></span><span class="lbl" style="font-weight:500">more</span></div>
+        <div class="heat" style="grid-template-columns:18px repeat(11,40px);gap:4px">
+          <sc-for list="{{heat}}" as="c" hint-placeholder-count="48"><span class="{{c.cls}}">{{c.t}}</span></sc-for>
+        </div>
+        <span class="lbl" style="font-weight:500">Two classes have not taken the roll. Families are texted at 9:00.</span>
+      </div>
+    </section>
+
+    <div class="g" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+      <section class="card">
+        <div class="ch"><h2>Needs you</h2><small>4 things</small></div>
+        <div class="rows">
+          <div class="row"><span class="tile warn">[[i:calendar-x]]</span><span class="grow"><b>2 classes have not taken the roll</b><small>6 B with Mr Deshmukh, 9 C with Ms Fernandes</small></span><button class="btn ton sm">Remind</button></div>
+          <div class="row"><span class="tile info">[[i:user-plus]]</span><span class="grow"><b>6 admission enquiries are waiting</b><small>The oldest came in 3 days ago</small></span><button class="btn ton sm">Review</button></div>
+          <div class="row"><span class="tile">[[i:chats-circle]]</span><span class="grow"><b>4 messages from parents</b><small>2 are about the change to bus route 7</small></span><button class="btn ton sm">Reply</button></div>
+          <div class="row"><span class="tile">[[i:airplane-tilt]]</span><span class="grow"><b>3 staff leave requests</b><small>For Thursday and Friday this week</small></span><button class="btn ton sm">Decide</button></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>Fees in November</h2><a href="#">Open fees[[ib:arrow-right]]</a></div>
+        <div class="fig" style="font-size:44px">₹13.2 L<small>of ₹36 L due</small></div>
+        <div class="col" style="gap:8px"><div class="bar"><i style="width:37%"></i></div><span class="cap">37% collected, 10 days into the month</span></div>
+        <div class="rw" style="gap:10px;margin-top:auto">
+          <div class="mini grow"><span class="lbl">Due this week</span><b class="d">₹4.6 L</b><small>212 families</small></div>
+          <div class="mini grow"><span class="lbl">Overdue</span><b class="d" style="color:var(--bad-i)">₹2.9 L</b><small>38 families</small></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="ch"><h2>Coming up this week</h2><a href="#">Calendar[[ib:arrow-right]]</a></div>
+      <div class="g" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+        <div class="rw" style="gap:12px"><span class="tile date"><small>Thu</small>12</span><span class="grow"><b class="cut" style="display:block;font-weight:600">Parent teacher meeting, 6 to 8</b><small class="t2" style="font-size:13px">4:00 pm · 126 families have said yes</small></span></div>
+        <div class="rw" style="gap:12px"><span class="tile date"><small>Fri</small>13</span><span class="grow"><b class="cut" style="display:block;font-weight:600">Fee reminders go out</b><small class="t2" style="font-size:13px">10:00 am · to 212 families</small></span></div>
+        <div class="rw" style="gap:12px"><span class="tile date"><small>Sat</small>14</span><span class="grow"><b class="cut" style="display:block;font-weight:600">Children's Day assembly</b><small class="t2" style="font-size:13px">8:30 am on the main ground</small></span></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+renderVals() {
+  // absent count per class; null = roll not taken; sums to 82
+  const rows = { A: [1, 2, 0, 3, 1, 2, 4, 1, 2, 3, 1], B: [2, 1, 3, 0, 2, null, 1, 5, 2, 1, 2], C: [0, 2, 1, 2, 6, 1, 3, 2, null, 2], D: [3, 1, 2, 4, 0, 2, 1, 3, 2, 6] };
+  const heat = [{ cls: 'hl', t: '' }, ...Array.from({ length: 11 }, (_, i) => ({ cls: 'hl', t: i + 1 }))];
+  for (const [s, v] of Object.entries(rows)) {
+    heat.push({ cls: 'hl', t: s });
+    for (let i = 0; i < 11; i++) { const n = v[i]; heat.push(n === undefined ? { cls: 'hx', t: '' } : n === null ? { cls: 'h0', t: '?' } : { cls: 'h' + (n === 0 ? 1 : n === 1 ? 2 : n === 2 ? 3 : n < 5 ? 4 : 5), t: n }); }
+  }
+  return { heat };
+}
+</script>

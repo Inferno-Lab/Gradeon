@@ -1,0 +1,59 @@
+<div class="hue s-cobalt shell">
+  <div class="sidew"><dc-import name="Sidebar" app="console" active="Modules" theme="light" seed="cobalt" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Modules</h1><p>11 modules · 38 schools · a school changes nothing itself</p></div>
+      <span class="sp"></span>
+      <div class="seg"><span class="on">All plans</span><span>Core</span><span>Plus</span></div>
+      <button class="btn pri">[[i:sliders-horizontal]]Change a plan</button>
+    </header>
+    <div class="rw t2" style="gap:20px;font-size:14px"><span class="rw" style="gap:8px"><span class="mx on" style="width:22px;height:22px;border-radius:7px">[[ib:check]]</span>On</span><span class="rw" style="gap:8px"><span class="mx" style="width:22px;height:22px;border-radius:7px"></span>Off</span><span class="rw" style="gap:8px"><span class="mx wait" style="width:22px;height:22px;border-radius:7px">[[i:clock]]</span>Waiting for your approval</span></div>
+    <section class="card flush" style="--cols:minmax(250px,1.9fr) 56px repeat(11,minmax(0,1fr))">
+      <div class="tr h" style="gap:8px;min-height:72px;align-items:end;padding-bottom:10px"><span>School</span><span>Plan</span>
+        <sc-for list="{{mods}}" as="m" hint-placeholder-count="11"><span class="col" style="align-items:center;gap:6px;font-size:11px;line-height:14px;text-align:center"><svg class="i" viewBox="0 0 256 256" style="width:18px;height:18px;color:var(--t2)"><path d="{{m.d}}"/></svg>{{m.n}}</span></sc-for>
+      </div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+        <div class="tr" style="gap:8px"><span class="rw" style="gap:12px;min-width:0"><span class="{{r.crest}}" style="width:32px;height:32px;border-radius:9px;font-size:13px">{{r.i}}</span><b class="cut">{{r.n}}</b></span><span><span class="{{r.pc}}">{{r.plan}}</span></span>
+          <sc-for list="{{r.cells}}" as="m" hint-placeholder-count="11"><span style="display:flex;justify-content:center"><span class="{{m.cls}}"><svg class="i" viewBox="0 0 256 256"><path d="{{m.d}}"/></svg></span></span></sc-for>
+        </div>
+      </sc-for>
+      <div class="tr" style="gap:8px;background:var(--s2);border-radius:0 0 20px 20px"><b>Schools using it</b><span class="t3" style="font-size:12px">of 38</span>
+        <sc-for list="{{totals}}" as="t" hint-placeholder-count="11"><b class="num" style="text-align:center">{{t.n}}</b></sc-for>
+      </div>
+    </section>
+    <div class="g" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="mini"><span class="lbl">Core</span><b class="d">6 modules</b><small>23 schools · Attendance, Fees, Notices, Timetable, Homework, Messages</small></div>
+      <div class="mini"><span class="lbl">Plus</span><b class="d">All 11</b><small>15 schools · adds Exams, Events, Transport, Library, Gallery</small></div>
+      <div class="mini"><span class="lbl">Add-ons</span><b class="d">9 turned on</b><small>A Core school can add one module without changing plan</small></div>
+    </div>
+  </main>
+</div>
+<script>
+renderVals() {
+  const M = [["Attendance", "[[p:calendar-check]]"], ["Fees", "[[p:currency-inr]]"], ["Notices", "[[p:megaphone]]"], ["Timetable", "[[p:clock]]"], ["Homework", "[[p:notebook]]"], ["Exams", "[[p:exam]]"], ["Events", "[[p:confetti]]"], ["Messages", "[[p:chats-circle]]"], ["Transport", "[[p:bus]]"], ["Library", "[[p:books]]"], ["Gallery", "[[p:image]]"]];
+  const ON = "[[pb:check]]", WAIT = "[[p:clock]]";
+  const core = [0, 1, 2, 3, 4, 7];
+  const S = [
+    ["Greenfield International School", "emerald", "Plus", []],
+    ["Sunrise Public School", "saffron", "Core", [6], 8],
+    ["St Mary's Convent", "maroon", "Plus", []],
+    ["Bluebell High School", "cobalt", "Core", [10]],
+    ["Vidya Niketan", "cobalt", "Core", [], 5],
+    ["Little Flower School", "maroon", "Core", [6, 10]],
+    ["Modern English School", "emerald", "Plus", []],
+    ["Shree Ganesh Vidyalaya", "saffron", "Core", [8]],
+  ];
+  return {
+    mods: M.map(([n, d]) => ({ n, d })),
+    rows: S.map(([n, seed, plan, extra, wait]) => ({
+      n, plan, i: n[0], crest: "crest s-" + seed, pc: plan === "Plus" ? "tag br" : "tag",
+      cells: M.map((_, j) => {
+        if (j === wait) return { cls: "mx wait", d: WAIT };
+        const on = plan === "Plus" || core.includes(j) || extra.includes(j);
+        return { cls: on ? "mx on" : "mx", d: on ? ON : "" };
+      }),
+    })),
+    totals: [38, 38, 38, 36, 34, 27, 31, 38, 19, 12, 22].map((n) => ({ n })),
+  };
+}
+</script>

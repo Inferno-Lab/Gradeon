@@ -1,0 +1,37 @@
+<nav class="{{cls}}" style="height:100%;min-height:940px" aria-label="Menu">
+  <div class="ws"><span class="crest">{{crest}}</span><span class="grow"><b>{{wsName}}</b><small class="cut">{{wsSub}}</small></span><svg class="i" style="width:16px;height:16px;opacity:.7" viewBox="0 0 256 256" aria-hidden="true"><path d="[[p:caret-up-down]]"/></svg></div>
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+    <div class="ng"><span>{{g.t}}</span>
+      <sc-for list="{{g.items}}" as="it" hint-placeholder-count="4">
+        <a href="#" class="{{it.cls}}"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="{{it.d}}"/></svg>{{it.t}}<em>{{it.n}}</em></a>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div class="me"><span class="av" style="background:var(--bright);color:var(--on-bright)">{{meI}}</span><span class="grow"><b class="cut">{{meName}}</b><small class="cut">{{meRole}}</small></span>[[i:dots-three-vertical]]</div>
+</nav>
+<script props='{"app":{"editor":"enum","options":["admin","console"],"default":"admin"},"active":{"editor":"text","default":"Dashboard"},"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"seed":{"editor":"enum","options":["emerald","cobalt","saffron","maroon"],"default":"emerald"}}'>
+renderVals() {
+  const app = this.props.app ?? 'admin', active = this.props.active ?? 'Dashboard', dark = this.props.theme === 'dark';
+  const seed = this.props.seed ?? (app === 'console' ? 'cobalt' : 'emerald');
+  // [label, outline, filled, count]
+  const A = [
+    ['Teach', [['Dashboard', '[[p:squares-four]]', '[[pf:squares-four]]'], ['Attendance', '[[p:calendar-check]]', '[[pf:calendar-check]]', '4'], ['Timetable', '[[p:clock]]', '[[pf:clock]]'], ['Homework', '[[p:notebook]]', '[[pf:notebook]]'], ['Exams', '[[p:exam]]', '[[pf:exam]]']]],
+    ['People', [['Students', '[[p:student]]', '[[pf:student]]'], ['Staff', '[[p:chalkboard-teacher]]', '[[pf:chalkboard-teacher]]'], ['Admissions', '[[p:user-plus]]', '[[pf:user-plus]]', '6']]],
+    ['Money', [['Fees', '[[p:currency-inr]]', '[[pf:currency-inr]]'], ['Invoices', '[[p:receipt]]', '[[pf:receipt]]'], ['Reports', '[[p:chart-bar]]', '[[pf:chart-bar]]']]],
+    ['Reach', [['Notices', '[[p:megaphone]]', '[[pf:megaphone]]'], ['Messages', '[[p:chats-circle]]', '[[pf:chats-circle]]', '4'], ['Events', '[[p:confetti]]', '[[pf:confetti]]']]],
+    ['School', [['Classes and calendar', '[[p:stack]]', '[[pf:stack]]'], ['Moving in', '[[p:download-simple]]', '[[pf:download-simple]]'], ['School setup', '[[p:gear-six]]', '[[pf:gear-six]]']]],
+  ];
+  const C = [
+    ['Operate', [['Fleet', '[[p:buildings]]', '[[pf:buildings]]'], ['Onboarding', '[[p:rocket-launch]]', '[[pf:rocket-launch]]'], ['Modules', '[[p:puzzle-piece]]', '[[pf:puzzle-piece]]'], ['Cells', '[[p:hard-drives]]', '[[pf:hard-drives]]'], ['Releases', '[[p:package]]', '[[pf:package]]'], ['Migrations', '[[p:arrows-left-right]]', '[[pf:arrows-left-right]]']]],
+    ['Ship', [['Mobile builds', '[[p:device-mobile]]', '[[pf:device-mobile]]'], ['Flags', '[[p:flag]]', '[[pf:flag]]'], ['Blueprints', '[[p:compass-tool]]', '[[pf:compass-tool]]']]],
+    ['Care', [['Health', '[[p:heartbeat]]', '[[pf:heartbeat]]'], ['Approvals', '[[p:seal-check]]', '[[pf:seal-check]]', '2'], ['Requests', '[[p:tray]]', '[[pf:tray]]'], ['Support', '[[p:lifebuoy]]', '[[pf:lifebuoy]]'], ['Billing', '[[p:credit-card]]', '[[pf:credit-card]]'], ['Compliance', '[[p:shield-check]]', '[[pf:shield-check]]'], ['Team', '[[p:users-three]]', '[[pf:users-three]]']]],
+  ];
+  const con = app === 'console';
+  return {
+    cls: `hue s-${seed} ${dark ? 'dark ' : ''}side`,
+    crest: 'G', wsName: con ? 'Gradeon' : 'Greenfield International', wsSub: con ? 'Console · Mumbai cell' : 'Pune · 2026–27',
+    meI: con ? 'KB' : 'NM', meName: con ? 'Kaushal Bhatt' : 'Neha Menon', meRole: con ? 'Super admin' : 'Principal',
+    groups: (con ? C : A).map(([t, items]) => ({ t, items: items.map(([t, o, f, n]) => ({ t, n: n ?? '', d: t === active ? f : o, cls: t === active ? 'nv on' : 'nv' })) })),
+  };
+}
+</script>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One school · in its own colour</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="hue.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&amp;family=Noto+Sans+Devanagari:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="hue s-cobalt shell">
+  <div class="sidew"><dc-import name="Sidebar" app="console" active="Fleet" theme="light" seed="cobalt" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <div class="crumb">Fleet<svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M184.5 136.5L104.5 216.5Q102.8 218 100.6 219Q98.5 220 96 220Q91 220 87.5 216.5Q84 213 84 208Q84 205.5 84.9 203.3Q85.8 201 87.5 199.5L159 128L87.5 56.5Q86 54.8 85 52.6Q84 50.5 84 48Q84 43 87.5 39.5Q91 36 96 36Q98.5 36 100.8 36.9Q103 37.8 104.5 39.5L184.5 119.5Q186.3 121 187.1 123.3Q188 125.5 188 128Q188 130.5 187.1 132.6Q186.3 134.8 184.5 136.5L184.5 136.5Z"/></svg><b>Greenfield International School</b></div>
+    <section class="{{hcls}}" style="flex-direction:row;align-items:center;gap:20px">
+      <span class="crest" style="width:64px;height:64px;border-radius:18px;font-size:28px">G</span>
+      <div class="col grow" style="gap:4px"><b class="d" style="font-size:30px;line-height:36px">Greenfield International School</b><span style="font-size:14px;line-height:20px;color:var(--on-deep2)">Pune · Plus · 1,498 students · live since June 2024 · in its own colour: {{seedName}}</span></div>
+      <span class="tag ok">Healthy</span>
+      <button class="btn ond"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M200 64L200 168Q200 171.3 197.6 173.6Q195.3 176 192 176Q188.8 176 186.4 173.6Q184 171.3 184 168L184 168L184 83.3L69.8 197.8Q68.5 198.8 67.1 199.4Q65.8 200 64 200Q60.8 200 58.4 197.6Q56 195.3 56 192Q56 190.3 56.6 188.9Q57.3 187.5 58.3 186.3L58.3 186.3L172.8 72L88 72Q84.8 72 82.4 69.6Q80 67.3 80 64Q80 60.8 82.4 58.4Q84.8 56 88 56L88 56L192 56Q195.3 56 197.6 58.4Q200 60.8 200 64Z"/></svg>Open school admin</button>
+    </section>
+    <div class="tabr"><a>Overview</a><a>Modules</a><a>Settings</a><a class="on">Theme</a><a>People</a><a>Builds</a><a>Billing</a></div>
+    <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);flex:1">
+      <section class="card">
+        <div class="ch"><h2>Seed colour</h2><small>one hue makes every token</small></div>
+        <div class="rw" style="gap:14px"><sc-for list="{{seeds}}" as="o" hint-placeholder-count="4"><button class="{{o.cls}}" onClick="{{o.go}}" aria-pressed="{{o.on}}" aria-label="{{o.n}}"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M232.5 80.5L104.5 208.5Q102.8 210.3 100.6 211.1Q98.5 212 96 212Q93.5 212 91.3 211.1Q89 210.3 87.5 208.5L31.5 152.5Q29.8 150.8 28.9 148.6Q28 146.5 28 144Q28 139 31.5 135.5Q35 132 40 132Q42.5 132 44.6 132.9Q46.8 133.8 48.5 135.5L96 183L215.5 63.5Q217.3 62 219.4 61Q221.5 60 224 60Q229 60 232.5 63.5Q236 67 236 72Q236 74.5 235.1 76.8Q234.3 79 232.5 80.5L232.5 80.5Z"/></svg></button></sc-for>
+          <div class="fld" style="margin-left:auto;width:140px"><div class="inp"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M88 180Q88 185 84.5 188.5Q81 192 76 192Q71 192 67.5 188.5Q64 185 64 180Q64 175 67.5 171.5Q71 168 76 168L76 168Q81 168 84.5 171.5Q88 175 88 180ZM240 156.3L240 208Q240 214.8 235.4 219.4Q230.8 224 224 224L224 224L76 224Q76 224 76 224Q76 224 76 224Q73.8 224 71.8 223.9Q69.8 223.8 67.8 223.3L68 223.3Q52.5 220.5 42.3 208.4Q32 196.3 32 180Q32 178 32.1 176Q32.3 174 32.8 172L32.8 172.3L57.8 29.3Q58.8 23.5 63.1 19.8Q67.5 16 73.3 16Q74 16 74.8 16.1Q75.5 16.3 76.3 16.3L76 16.3L130.8 26Q136.5 27 140.3 31.4Q144 35.8 144 41.8Q144 42.5 143.9 43.3Q143.8 44 143.8 44.5L143.8 44.5L131.8 113.5L199.5 89Q200.8 88.5 202.1 88.3Q203.5 88 205 88Q210 88 214.1 90.9Q218.3 93.8 220 98.5L220 98.5L239 150.8Q239.5 152 239.8 153.4Q240 154.8 240 156.3L240 156.3ZM103 184.8L128 41.8L73.5 32L48.5 175Q48.3 176.3 48.1 177.5Q48 178.8 48 180Q48 190.3 54.5 198Q61 205.8 70.8 207.5L71 207.5Q72 207.8 73.3 207.9Q74.5 208 75.8 208Q80.3 208 84.3 206.6Q88.3 205.3 91.5 203L91.5 203Q96 199.8 99 195.1Q102 190.5 103 185L103 184.8ZM116.8 195L224 156L205 104L128.5 131.8L118.8 187.5Q118.3 189.8 117.8 191.6Q117.3 193.5 116.8 195.3ZM224 173L127.8 208L224 208Z"/></svg>Hue<span class="sp"></span><b class="num">{{hue}}</b></div></div>
+        </div>
+        <div>
+          <sc-for list="{{roles}}" as="r" hint-placeholder-count="6">
+            <div class="kv" style="align-items:center;gap:12px"><span class="{{pcls}}" style="display:flex"><span style="width:28px;height:28px;border-radius:8px;background:var({{r.v}});box-shadow:inset 0 0 0 1px var(--line)"></span></span><span class="grow"><b style="margin:0;font-weight:600">{{r.n}}</b><small class="t2" style="display:block;font-size:13px;line-height:18px">{{r.d}}</small></span><span class="tag ok">AA</span></div>
+          </sc-for>
+        </div>
+        <span class="rw t2" style="gap:8px;font-size:13px;line-height:18px"><svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="M208 40L48 40Q41.3 40 36.6 44.6Q32 49.3 32 56L32 56L32 112Q32 131.8 36.3 147.8Q40.8 163.8 47.5 176.3Q54.3 188.8 62.5 198.3Q71 207.5 79 214.3Q96.3 228.3 110.8 233.9Q125.3 239.5 126 239.8Q126.5 239.8 127 239.9Q127.5 240 128 240Q128.5 240 129.1 239.9Q129.8 239.8 130.3 239.8L130.3 239.8Q131 239.5 145.4 233.9Q159.8 228.3 177.3 214.3Q185.3 207.5 193.5 198.3Q201.8 188.8 208.5 176.3Q215.3 163.8 219.8 147.8Q224 131.8 224 112L224 56Q224 49.3 219.4 44.6Q214.8 40 208 40L208 40ZM208 112Q208 126 205.5 138.5Q203 151 197.9 162.3Q192.8 173.5 185 183.3Q177.5 193 167.5 201.5Q159 208.5 149.3 214Q139.5 219.5 129 223.3L128 223.5Q116.8 219.8 107 214.1Q97.3 208.5 88.8 201.8L89 201.8Q78.8 193.5 71.3 183.5Q63.5 173.8 58.4 162.5Q53.3 151.3 50.5 138.8Q48 126 48 112L48 56L208 56ZM82.3 141.8Q81.3 140.5 80.6 139.1Q80 137.8 80 136Q80 132.8 82.4 130.4Q84.8 128 88 128Q89.8 128 91.1 128.6Q92.5 129.3 93.8 130.3L112 148.8L162.3 98.3Q163.5 97.3 164.9 96.6Q166.3 96 168 96Q171.3 96 173.6 98.4Q176 100.8 176 104Q176 105.8 175.4 107.1Q174.8 108.5 173.8 109.8L117.8 165.8Q116.5 166.8 115.1 167.4Q113.8 168 112 168Q110.3 168 108.9 167.4Q107.5 166.8 106.3 165.8L106.3 165.8Z"/></svg>The console checks every text pair against AA before you can publish.</span>
+        <div class="col" style="gap:4px">
+          <div class="rw" style="gap:12px;min-height:40px"><span class="grow">Dark mode follows the phone</span><span class="sw on"></span></div>
+          <div class="rw" style="gap:12px;min-height:40px"><span class="grow">Show the school crest in the app header</span><span class="sw"></span></div>
+        </div>
+        <div class="rw" style="gap:8px;margin-top:auto"><button class="btn pri">Publish to school</button><button class="btn quiet" onClick="{{reset}}">Reset</button><span class="sp"></span><span class="cap">Parents see it on their next app start</span></div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>Preview</h2><small>the admin and the parent app, live</small></div>
+        <div class="{{pcls}}" style="display:flex;gap:16px;background:var(--s3);border-radius:20px;padding:16px;flex:1;align-items:stretch">
+          <div class="mock" style="min-height:0"><nav><i class="cr"></i><i class="on"></i><i></i><i></i><i></i><i></i></nav>
+            <div><b class="d" style="font-size:14px">Good morning, Neha</b>
+              <div class="hero">In school today<b>94.3%</b><i class="ln" style="background:var(--bright);width:78%;margin-top:6px"></i></div>
+              <div class="rw" style="gap:8px;flex:1;align-items:stretch">
+                <div class="pan"><i class="ln" style="width:60%;background:var(--t3)"></i><i class="ln"></i><i class="ln" style="width:80%"></i><i class="ln" style="width:70%"></i><i class="ln" style="width:50%"></i></div>
+                <div class="pan"><i class="ln" style="width:50%;background:var(--t3)"></i><i class="ln" style="width:85%"></i><i class="bt" style="margin-top:auto"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="mph" style="flex:none">
+            <div class="hd">Tuesday 10 November<b>Aarav is <em>in school</em></b></div>
+            <div class="sh"><div class="pan"><i class="ln" style="width:50%;background:var(--t3)"></i><i class="ln"></i></div><div class="pan"><i class="ln" style="width:40%;background:var(--t3)"></i><i class="ln" style="width:80%"></i><i class="bt" style="width:100%;height:16px"></i></div><div class="pan"><i class="ln" style="width:70%"></i></div></div>
+            <div class="tb"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1003}}'>
+class Component extends DCLogic {
+renderVals() {
+  const S = [["emerald", "Emerald", 162], ["cobalt", "Cobalt", 262], ["saffron", "Saffron", 62], ["maroon", "Maroon", 12]];
+  const seed = (this.state && this.state.seed) || "emerald";
+  const cur = S.find((s) => s[0] === seed);
+  return {
+    seeds: S.map(([s, n]) => ({ n, on: s === seed, cls: "swb s-" + s + (s === seed ? " on" : ""), go: () => this.setState({ seed: s }) })),
+    hue: cur[2], seedName: cur[1],
+    hcls: "card deep s-" + seed, pcls: "s-" + seed + " scope",
+    reset: () => this.setState({ seed: "emerald" }),
+    roles: [["--deep", "Deep", "Frame, menu and tab bar"], ["--bright", "Bright", "You are here, the main number"], ["--brand", "Brand", "Buttons and links"], ["--brand-soft", "Soft", "Selected rows, quiet buttons"], ["--hero", "Hero", "The headline card"], ["--heat4", "Heat", "How much, quiet to loud"]].map(([v, n, d]) => ({ v, n, d })),
+  };
+}
+}
+</script>
+</body>
+</html>

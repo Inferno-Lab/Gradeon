@@ -1,0 +1,71 @@
+<div class="hue s-emerald doc" style="gap:24px">
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">App components</h1><p class="lead">The parent and teacher app uses the same tokens with bigger type and bigger targets. The deep colour holds the top and the bottom of the phone; the work sits on the sheet between them.</p></div>
+  <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;align-items:start;font-size:16px">
+    <div class="col" style="gap:12px">
+      <span class="lbl">The head: who and what, in the school's colour</span>
+      <div style="border-radius:24px;overflow:hidden"><div class="phead" style="padding:12px 16px 20px;gap:12px">
+        <div class="ptop"><span class="chip ond"><span class="av sm sp sp-art">AS</span>Aarav[[ib:caret-down]]</span><span class="sp"></span><button class="pib ond" aria-label="Notifications">[[i:bell]]<span class="pip"></span></button></div>
+        <div class="col" style="gap:4px"><span class="lbl" style="color:var(--on-deep2)">Tuesday 10 November</span><b class="d" style="font-size:28px;line-height:32px">Aarav is <span style="color:var(--bright)">in school</span></b></div>
+      </div></div>
+      <span class="lbl" style="margin-top:8px">The tab bar: the bright block is where you are</span>
+      <div style="border-radius:24px;overflow:hidden"><nav class="tabs"><a class="on">[[if:house]]Home</a><a>[[i:megaphone]]Notices</a><a>[[i:wallet]]Fees</a><a>[[i:chat-circle]]Chat</a><a>[[i:user-circle]]Profile</a></nav></div>
+      <span class="lbl" style="margin-top:8px">The action bar: one job, one bright button</span>
+      <div style="border-radius:24px;overflow:hidden"><div class="pact"><span class="grow" style="font-size:14px;line-height:20px"><b style="display:block;font-size:16px">32 of 32</b>marked</span><button class="btn bri xl">Save roll</button></div></div>
+    </div>
+
+    <div class="col" style="gap:12px">
+      <span class="lbl">Hero card: the one thing to do</span>
+      <div class="pcard deep">
+        <div class="col" style="gap:4px"><span class="lbl" style="color:var(--on-deep2)">Due on 15 November</span><span class="fig" style="font-size:44px;color:var(--bright)">₹18,400</span></div>
+        <button class="btn bri xl">Pay ₹18,400</button>
+      </div>
+      <span class="lbl" style="margin-top:8px">Card with rows</span>
+      <div class="pcard">
+        <span class="ph2">For you</span>
+        <div class="prows">
+          <div class="prow"><span class="tile sp sp-maths">[[i:notebook]]</span><span class="grow"><b>Maths: Exercise 7.2</b><small>Due tomorrow</small></span>[[ib:caret-right]]</div>
+          <div class="prow"><span class="tile date"><small>Thu</small>12</span><span class="grow"><b>Parent teacher meeting</b><small>4:00 pm</small></span><span class="tag ok">Going</span></div>
+        </div>
+      </div>
+      <span class="lbl" style="margin-top:8px">Shortcuts</span>
+      <div class="qa"><button><span class="tile">[[i:wallet]]</span>Fees</button><button><span class="tile">[[i:notebook]]</span>Homework</button><button><span class="tile">[[i:exam]]</span>Results</button><button><span class="tile">[[i:bus]]</span>Bus</button></div>
+    </div>
+
+    <div class="col" style="gap:12px">
+      <span class="lbl">Rows you tap to change</span>
+      <div class="pcard">
+        <div class="prows">
+          <div class="prow" style="min-height:56px"><span class="av sp sp-art">AS</span><span class="grow"><b>Aarav Sharma</b></span><span class="st ok">[[ib:check]]Present</span></div>
+          <div class="prow" style="min-height:56px"><span class="av sp sp-hindi">AR</span><span class="grow"><b>Aditi Rao</b></span><span class="st warn">[[ib:clock]]Late</span></div>
+          <div class="prow" style="min-height:56px"><span class="av sp sp-maths">ZS</span><span class="grow"><b>Zoya Shaikh</b></span><span class="st bad">[[ib:x]]Absent</span></div>
+        </div>
+      </div>
+      <span class="lbl" style="margin-top:8px">Periods take their subject's colour</span>
+      <div class="g" style="grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="per sp-science"><b>Science</b><small>8:00</small></div>
+        <div class="per sp-maths now"><b>Maths</b><small>9:30 · now</small></div>
+        <div class="per free"><b>Free</b><small>10:35</small></div>
+      </div>
+      <span class="lbl" style="margin-top:8px">Tags</span>
+      <div class="rw" style="gap:6px;flex-wrap:wrap"><span class="tag ptag ok">Paid</span><span class="tag ptag warn">Due in 5 days</span><span class="tag ptag bad">Overdue</span><span class="tag ptag sp sp-english"><i class="dot"></i>English</span></div>
+    </div>
+
+    <div class="col" style="gap:12px">
+      <span class="lbl">Buttons are 56 tall, fields 52</span>
+      <button class="btn pri xl">Turn on notifications</button>
+      <button class="btn ton xl">Download receipt</button>
+      <div class="inp" style="height:52px;border-radius:16px;font-size:16px">[[i:phone]]+91 98220 41507</div>
+      <div class="rw" style="gap:12px;min-height:48px"><span class="grow">Homework reminders</span><span class="sw on"></span></div>
+      <div class="seg" style="align-self:stretch;width:auto"><span class="on" style="flex:1;justify-content:center;height:40px">English</span><span style="flex:1;justify-content:center;height:40px">हिन्दी</span><span style="flex:1;justify-content:center;height:40px">मराठी</span></div>
+      <span class="lbl" style="margin-top:8px">Nothing here yet: say what will come</span>
+      <div class="ghost"><span class="tile">[[i:megaphone]]</span><span class="grow"><b>Notices from school</b><small>Holidays, events and circulars</small></span></div>
+      <span class="toast" style="align-self:flex-start;margin-top:8px">[[if:check-circle]]Receipt saved to your phone</span>
+    </div>
+  </div>
+  <div class="card" style="flex-direction:row;gap:32px;margin-top:auto">
+    <span class="grow"><b style="display:block">Thumb first</b><span class="cap">Every target is 44 or taller. The main action sits at the bottom, where the thumb already is.</span></span>
+    <span class="grow"><b style="display:block">Glanceable</b><span class="cap">A parent should learn the answer from the head alone: in school, fee due, bus on its way.</span></span>
+    <span class="grow"><b style="display:block">Three languages</b><span class="cap">English, Hindi and Marathi share the sizes. Devanagari gets taller lines, never smaller type.</span></span>
+    <span class="grow"><b style="display:block">Light and dark</b><span class="cap">Dark follows the phone. The head and tab bar stay in the school's colour in both.</span></span>
+  </div>
+</div>

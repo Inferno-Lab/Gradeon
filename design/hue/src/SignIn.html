@@ -1,0 +1,26 @@
+<div class="hue s-emerald" style="display:grid;grid-template-columns:1.1fr 1fr;min-height:900px;background:var(--deep);padding:10px">
+  <div class="col" style="padding:46px 56px;color:var(--on-deep);gap:32px">
+    <div class="rw" style="gap:12px"><span class="crest">G</span><span><b class="d" style="display:block;font-size:17px;line-height:22px">Greenfield International School</b><small style="font-size:13px;line-height:18px;color:var(--on-deep2)">Pune · School admin</small></span></div>
+    <h1 class="d" style="font-size:64px;line-height:68px;letter-spacing:-0.035em;margin-top:auto">The whole school,<br>in <span style="color:var(--bright)">one place</span>.</h1>
+    <div class="cellart"><sc-for list="{{cells}}" as="c" hint-placeholder-count="44"><i class="{{c.cls}}"></i></sc-for></div>
+    <span style="font-size:14px;line-height:20px;color:var(--on-deep2)">Attendance, fees, notices and the timetable for 1,498 students and 42 classes.</span>
+  </div>
+  <div class="col" style="background:var(--bg);border-radius:24px;padding:24px 32px;align-items:center">
+    <div class="seg" style="align-self:flex-end"><span class="on">English</span><span>हिन्दी</span><span>मराठी</span></div>
+    <form class="col" style="width:380px;gap:18px;margin:auto 0">
+      <div class="col" style="gap:6px"><h2 class="d" style="font-size:30px;line-height:36px">Sign in</h2><p class="t2" style="font-size:14px;line-height:20px">Use the phone number or email the school has on record for you.</p></div>
+      <div class="fld"><label>Phone or email</label><div class="inp focus" style="height:48px">[[i:at]]neha.menon@greenfield.edu.in</div></div>
+      <div class="fld"><label>Password</label><div class="inp" style="height:48px">[[i:lock-key]]<span style="letter-spacing:3px">••••••••••</span><span class="sp"></span>[[i:eye]]</div></div>
+      <div class="rw" style="gap:10px;font-size:14px"><span class="cb on">[[ib:check]]</span>Keep me signed in on this computer</div>
+      <button class="btn pri lg" type="button">Sign in[[ib:arrow-right]]</button>
+      <div class="rw" style="gap:8px;justify-content:center;font-size:14px"><span class="t2">No password?</span><b style="color:var(--brand-ink)">Send me a one-time code</b></div>
+    </form>
+    <span class="rw t3" style="gap:6px;font-size:13px">[[i:shield-check]]Powered by Gradeon · your school's data stays in its own database</span>
+  </div>
+</div>
+<script>
+renderVals() {
+  const bright = [3, 15, 16, 27, 30, 41], mid = [1, 4, 8, 12, 14, 19, 22, 26, 28, 33, 36, 40];
+  return { cells: Array.from({ length: 44 }, (_, i) => ({ cls: bright.includes(i) ? "c" : mid.includes(i) ? "b" : "" })) };
+}
+</script>

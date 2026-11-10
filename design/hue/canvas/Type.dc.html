@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type · one family, two voices</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="hue.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&amp;family=Noto+Sans+Devanagari:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="hue s-emerald doc" style="gap:24px">
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">Type</h1><p class="lead">One family, Mona Sans, in two voices. Set wide and heavy for what you glance at: numbers, names, titles. Set at normal width for what you read.</p></div>
+  <div class="g" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start">
+    <section class="card" style="gap:0">
+      <div class="ch" style="margin-bottom:8px"><h2>Display voice</h2><small>width 112%, weight 700, tight spacing</small></div>
+      <div class="spec"><small><b>Figure</b>96 · app and web heroes</small><span class="d" style="font-size:96px;line-height:1;letter-spacing:-0.04em">94.3%</span></div>
+      <div class="spec"><small><b>Headline</b>52 / 56</small><span class="d" style="font-size:52px;line-height:56px;letter-spacing:-0.035em">Aarav is in school</span></div>
+      <div class="spec"><small><b>Page title</b>30 / 36</small><span class="d" style="font-size:30px;line-height:36px">Good morning, Neha</span></div>
+      <div class="spec"><small><b>Amount</b>44, tabular in tables</small><span class="d" style="font-size:44px;line-height:48px;letter-spacing:-0.03em">₹13.2 L</span></div>
+      <div class="spec"><small><b>Card title, app</b>19 / 24</small><span class="d" style="font-size:19px;line-height:24px">For you today</span></div>
+      <div class="spec"><small><b>Panel title, web</b>17 / 22</small><span class="d" style="font-size:17px;line-height:22px">Needs you</span></div>
+      <div class="rw" style="gap:12px;margin-top:8px;padding-top:16px;border-top:1px solid var(--line)">
+        <span class="d" style="font-size:30px;font-stretch:112%">Roll call</span><span class="cap">wide, for glancing</span><span class="sp"></span>
+        <span style="font-size:30px;font-weight:500">Roll call</span><span class="cap">normal, for reading</span>
+      </div>
+    </section>
+    <div class="col" style="gap:24px">
+      <section class="card" style="gap:0">
+        <div class="ch" style="margin-bottom:8px"><h2>Text voice</h2><small>normal width</small></div>
+        <div class="spec"><small><b>Body</b>15 / 22 web, 16 / 22 app</small><span>Two classes have not taken the roll. Families are texted at 9:00.</span></div>
+        <div class="spec"><small><b>Row title</b>600</small><span style="font-weight:600">3 staff leave requests</span></div>
+        <div class="spec"><small><b>Small</b>13 / 18</small><span class="t2" style="font-size:13px;line-height:18px">6 B with Mr Deshmukh, 9 C with Ms Fernandes</span></div>
+        <div class="spec"><small><b>Label</b>13 / 16, 600</small><span class="lbl">In school today</span></div>
+        <div class="spec"><small><b>Caption</b>12 / 16</small><span class="t2" style="font-size:12px;line-height:16px">37% collected, 10 days into the month</span></div>
+      </section>
+      <section class="card" style="gap:0">
+        <div class="ch" style="margin-bottom:8px"><h2>Hindi and Marathi</h2><small>Noto Sans Devanagari, same sizes</small></div>
+        <div class="spec"><small><b>हिन्दी</b>Headline and body</small><span><b class="d" style="display:block;font-size:26px;line-height:38px">आरव आज स्कूल में है</b>दो कक्षाओं ने अभी तक हाज़िरी नहीं ली है।</span></div>
+        <div class="spec"><small><b>मराठी</b>Headline and body</small><span><b class="d" style="display:block;font-size:26px;line-height:38px">आरव आज शाळेत आहे</b>दोन वर्गांनी अजून हजेरी घेतलेली नाही.</span></div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>Numbers and money</h2><small>Indian grouping, lakh as L</small></div>
+        <div class="rw" style="gap:24px;align-items:flex-start">
+          <div class="col num" style="text-align:right;font-weight:600;gap:4px"><span>₹18,400</span><span>₹1,26,150</span><span>₹4,60,000</span></div>
+          <span class="cap" style="flex:1">Figures line up in tables and stay natural in headlines. Large sums shorten to lakh: ₹13.2 L of ₹36 L. Times are written 9:30, dates 10 November.</span>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1085}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

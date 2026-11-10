@@ -1,0 +1,63 @@
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Fees" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Fees</h1><p>November 2026 · Term 2 second instalment is due on 15 November</p></div>
+      <span class="sp"></span>
+      <button class="btn">[[i:export]]Export</button>
+      <button class="btn pri">[[ib:plus]]Record a payment</button>
+    </header>
+    <div class="g" style="grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr))">
+      <section class="card deep" style="gap:12px">
+        <span class="lbl">Collected in November</span>
+        <div class="fig" style="font-size:56px">₹13.2 L</div>
+        <div class="bar"><i style="flex:37;background:var(--bright)"></i><i style="flex:63;background:var(--deep3)"></i></div>
+        <span style="font-size:14px;line-height:20px;color:var(--on-deep2)">37% of ₹36 L · ₹22.8 L still to come</span>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Due this week</span>
+        <div class="fig" style="font-size:44px">₹4.6 L</div>
+        <span class="t2" style="font-size:14px">212 families</span>
+        <button class="btn ton sm" style="margin-top:auto;align-self:flex-start">Send reminders</button>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Overdue</span>
+        <div class="fig" style="font-size:44px;color:var(--bad-i)">₹2.9 L</div>
+        <span class="t2" style="font-size:14px">38 families</span>
+        <span class="tag bad" style="margin-top:auto;align-self:flex-start">4 over 30 days</span>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Paid online</span>
+        <div class="fig" style="font-size:44px">86%</div>
+        <span class="t2" style="font-size:14px">of November's payments</span>
+        <span class="tag ok" style="margin-top:auto;align-self:flex-start">[[ib:trend-up]]Up from 79% in August</span>
+      </section>
+    </div>
+    <div class="g" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+      <section class="card">
+        <div class="ch"><h2>Collected each week</h2><small>in lakh · this week so far</small></div>
+        <div class="cols">
+          <div><b>2.1</b><i style="height:21px"></i>29 Sep</div><div><b>6.9</b><i style="height:69px"></i>6 Oct</div><div><b>3.2</b><i style="height:32px"></i>13 Oct</div><div><b>1.4</b><i style="height:14px"></i>20 Oct</div><div><b>0.9</b><i style="height:9px"></i>27 Oct</div><div><b>8.4</b><i style="height:84px"></i>3 Nov</div><div class="on"><b>4.8</b><i style="height:48px"></i>10 Nov</div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>How families paid</h2><small>November</small></div>
+        <div class="bar" style="height:14px;border-radius:7px"><i class="sp-maths" style="flex:58;background:var(--c)"></i><i class="sp-art" style="flex:28;background:var(--c)"></i><i class="sp-evs" style="flex:9;background:var(--c)"></i><i class="sp-hindi" style="flex:5;background:var(--c)"></i></div>
+        <div class="col" style="gap:6px;font-size:14px">
+          <div class="rw sp-maths" style="gap:8px"><i class="dot"></i><span class="grow">UPI</span><b class="num">58%</b><span class="t2 num" style="width:64px;text-align:right">₹7.7 L</span></div>
+          <div class="rw sp-art" style="gap:8px"><i class="dot"></i><span class="grow">Card and net banking</span><b class="num">28%</b><span class="t2 num" style="width:64px;text-align:right">₹3.7 L</span></div>
+          <div class="rw sp-evs" style="gap:8px"><i class="dot"></i><span class="grow">Cash at the office</span><b class="num">9%</b><span class="t2 num" style="width:64px;text-align:right">₹1.2 L</span></div>
+          <div class="rw sp-hindi" style="gap:8px"><i class="dot"></i><span class="grow">Cheque</span><b class="num">5%</b><span class="t2 num" style="width:64px;text-align:right">₹0.6 L</span></div>
+        </div>
+      </section>
+    </div>
+    <section class="card flush" style="--cols:minmax(0,1.4fr) 70px minmax(0,1fr) 110px 110px 96px">
+      <div class="ch" style="padding:18px 20px 6px"><h2>Overdue</h2><small>38 families · longest first</small><a href="#">Remind all 38[[ib:arrow-right]]</a></div>
+      <div class="tr h"><span>Student</span><span>Class</span><span>Parent</span><span class="r">Amount</span><span>Overdue by</span><span></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-hindi">MO</span><b>Myra Oberoi</b></span><span>10 B</span><span class="t2">Rohan Oberoi</span><b class="r num">₹28,250</b><span><span class="tag bad">42 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-evs">RK</span><b>Rudra Kulkarni</b></span><span>6 D</span><span class="t2">Sneha Kulkarni</span><b class="r num">₹26,150</b><span><span class="tag bad">28 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-maths">TD</span><b>Tanvi Deshpande</b></span><span>9 A</span><span class="t2">Anil Deshpande</span><b class="r num">₹18,400</b><span><span class="tag warn">21 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-art">YG</span><b>Yash Gupta</b></span><span>4 C</span><span class="t2">Pooja Gupta</span><b class="r num">₹12,600</b><span><span class="tag warn">14 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+    </section>
+  </main>
+</div>

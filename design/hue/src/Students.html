@@ -1,0 +1,73 @@
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Students" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Students</h1><p>1,498 enrolled · 42 classes</p></div>
+      <span class="sp"></span>
+      <div class="search">[[i:magnifying-glass]]Search students, staff, receipts<kbd>Ctrl K</kbd></div>
+      <button class="btn">[[i:export]]Export</button>
+      <button class="btn pri">[[ib:plus]]Add student</button>
+    </header>
+    <div class="rw" style="gap:8px">
+      <div class="seg"><sc-for list="{{filters}}" as="o" hint-placeholder-count="3"><button aria-pressed="{{o.on}}" onClick="{{o.go}}">{{o.t}}</button></sc-for></div>
+      <span class="sp"></span>
+      <button class="btn quiet">[[i:funnel]]All classes[[i:caret-down]]</button>
+      <button class="btn quiet">[[i:sort-ascending]]Name</button>
+    </div>
+    <div class="g" style="grid-template-columns:minmax(0,1fr) 340px;flex:1">
+      <section class="card flush" style="--cols:minmax(0,1fr) 56px 110px 84px 170px">
+        <div class="tr h"><span>Student</span><span>Class</span><span>Today</span><span class="r">Attendance</span><span>Fees</span></div>
+        <sc-for list="{{rows}}" as="s" hint-placeholder-count="10">
+          <div class="{{s.cls}}" onClick="{{s.go}}" style="cursor:pointer"><span class="rw" style="gap:10px;min-width:0"><span class="{{s.av}}">{{s.in}}</span><b class="cut">{{s.n}}</b></span><span>{{s.c}}</span><span><span class="{{s.tc}}">{{s.tt}}</span></span><span class="r num">{{s.att}}%</span><span><span class="{{s.fc}}">{{s.ft}}</span></span></div>
+        </sc-for>
+        <div class="tr" style="min-height:48px;color:var(--t2);font-size:13px;margin-top:auto"><span>Showing {{shown}} of 1,498</span></div>
+      </section>
+      <aside class="card" style="align-self:start">
+        <div class="rw" style="gap:14px"><span class="{{d.avl}}">{{d.in}}</span><span class="grow"><b class="d" style="display:block;font-size:19px;line-height:24px">{{d.n}}</b><small class="t2" style="font-size:13px;line-height:18px">{{d.meta}}</small></span></div>
+        <div class="rw" style="gap:8px"><button class="btn pri" style="flex:1">Message parent</button><button class="btn ton" style="flex:1">Open profile</button></div>
+        <div class="rw" style="gap:10px"><div class="mini grow"><span class="lbl">Attendance</span><b class="d">{{d.att}}%</b><small>this term</small></div><div class="mini grow"><span class="lbl">Unit test 2</span><b class="d">{{d.ut}}%</b><small>October</small></div></div>
+        <div class="col" style="gap:8px"><span class="lbl">Last 6 school days</span><div class="rw" style="gap:6px"><sc-for list="{{d.days}}" as="k" hint-placeholder-count="6"><span class="{{k.cls}}">{{k.t}}</span></sc-for></div></div>
+        <div>
+          <div class="kv">Today<b><span class="{{d.tc}}">{{d.tt}}</span></b></div>
+          <div class="kv">Parent<b>{{d.par}}</b></div>
+          <div class="kv">Phone<b>{{d.ph}}</b></div>
+          <div class="kv">Admission no<b>{{d.adm}}</b></div>
+          <div class="kv">Fees<b><span class="{{d.fc}}">{{d.ft}}</span></b></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script>
+renderVals() {
+  const st = this.state || {};
+  const f = st.f ?? 0;
+  const H = { Agni: "art", Surya: "hindi", Prithvi: "evs", Vayu: "maths" };
+  const T = { present: ["tag ok", "Present"], absent: ["tag bad", "Absent"], late: ["tag warn", "Late"], leave: ["tag info", "On leave"], none: ["tag", "Not marked"] };
+  const F = { paid: "tag ok", due: "tag warn", overdue: "tag bad" };
+  const K = { P: "pk ok", A: "pk bad", L: "pk warn" };
+  const S = [
+    ["Aarav Sharma", "8 A", 14, "Agni", "present", 96, "due", "₹18,400 due 15 Nov", "Priya Sharma", "+91 98220 41507", 88, "GF-2019-0412", "PPPPPP"],
+    ["Myra Oberoi", "10 B", 22, "Surya", "absent", 81, "overdue", "₹28,250 · 42 days", "Rohan Oberoi", "+91 98190 22764", 74, "GF-2017-0188", "PAPPAA"],
+    ["Rudra Kulkarni", "6 D", 9, "Prithvi", "present", 89, "overdue", "₹26,150 · 28 days", "Sneha Kulkarni", "+91 99230 61845", 79, "GF-2021-0731", "PPLPPP"],
+    ["Ananya Sharma", "5 B", 3, "Vayu", "present", 98, "paid", "Paid", "Priya Sharma", "+91 98220 41507", 93, "GF-2022-0256", "PPPPPP"],
+    ["Kabir Fernandes", "9 C", 11, "Agni", "none", 92, "paid", "Paid", "Maria Fernandes", "+91 98810 37290", 85, "GF-2018-0344", "PPPPLP"],
+    ["Ishita Patil", "7 A", 17, "Surya", "late", 94, "paid", "Paid", "Sunil Patil", "+91 97640 55218", 90, "GF-2020-0519", "PPPPPL"],
+    ["Zoya Shaikh", "8 A", 32, "Vayu", "leave", 91, "due", "₹18,400 due 15 Nov", "Imran Shaikh", "+91 98500 73316", 86, "GF-2019-0467", "PPPPPA"],
+    ["Dev Malhotra", "11 A", 6, "Prithvi", "present", 87, "overdue", "₹12,600 · 14 days", "Ritu Malhotra", "+91 99700 18452", 71, "GF-2016-0093", "PAPPPP"],
+    ["Saanvi Joshi", "3 C", 21, "Agni", "present", 97, "paid", "Paid", "Amit Joshi", "+91 98600 92407", 95, "GF-2024-0612", "PPPPPP"],
+    ["Arjun Nair", "6 B", 2, "Surya", "none", 93, "paid", "Paid", "Lakshmi Nair", "+91 98330 46109", 82, "GF-2021-0705", "PPPLPP"],
+  ].map(([n, c, roll, house, today, att, fee, ft, par, ph, ut, adm, days], i) => ({ i, n, c, roll, house, today, att, fee, ft, par, ph, ut, adm, days, in: n.split(" ").map((w) => w[0]).join("") }));
+  const list = S.filter((s) => f === 0 || (f === 1 ? s.today === "absent" || s.today === "leave" : s.fee === "overdue"));
+  const sel = list.some((s) => s.i === st.sel) ? st.sel : list[0].i;
+  const cur = S[sel];
+  const view = (s) => ({ n: s.n, in: s.in, c: s.c, att: s.att, tc: T[s.today][0], tt: T[s.today][1], fc: F[s.fee], ft: s.ft });
+  return {
+    filters: ["All 1,498", "Absent today 82", "Fees overdue 38"].map((t, i) => ({ t, on: f === i, go: () => this.setState({ f: i }) })),
+    rows: list.map((s) => ({ ...view(s), cls: "tr" + (s.i === sel ? " sel" : ""), av: "av sm sp sp-" + H[s.house], go: () => this.setState({ sel: s.i }) })),
+    shown: list.length,
+    d: { ...view(cur), avl: "av lg sp sp-" + H[cur.house], meta: cur.c + " · Roll " + cur.roll + " · " + cur.house + " house", ut: cur.ut, par: cur.par, ph: cur.ph, adm: cur.adm,
+      days: cur.days.split("").map((k, j) => ({ cls: K[k], t: "WTFSMT"[j] })) },
+  };
+}
+</script>

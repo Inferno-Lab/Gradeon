@@ -1,0 +1,367 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-09T19:30:00Z"
+ },
+ "title": "Gradeon design system",
+ "launch": {
+  "view": "canvas",
+  "page": "system"
+ },
+ "pages": [
+  {
+   "id": "system",
+   "name": "The system"
+  },
+  {
+   "id": "admin",
+   "name": "School admin"
+  },
+  {
+   "id": "console",
+   "name": "Gradeon console"
+  },
+  {
+   "id": "app",
+   "name": "Parent and teacher app"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Gradeon Hue · the idea",
+   "page": "system",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Colour.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 992,
+   "title": "Colour · one seed, every token",
+   "page": "system",
+   "expand": "fill"
+  },
+  "Type.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1085,
+   "title": "Type · one family, two voices",
+   "page": "system",
+   "expand": "fill"
+  },
+  "Components.dc.html": {
+   "x": 0,
+   "y": 1300,
+   "w": 1440,
+   "h": 1500,
+   "title": "Web components",
+   "page": "system",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "ComponentsDark.dc.html": {
+   "x": 1520,
+   "y": 1300,
+   "w": 1440,
+   "h": 1500,
+   "title": "Web components · dark",
+   "page": "system",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AppKit.dc.html": {
+   "x": 3040,
+   "y": 1300,
+   "w": 1440,
+   "h": 967,
+   "title": "App components",
+   "page": "system",
+   "expand": "fill"
+  },
+  "Today.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Today",
+   "page": "admin",
+   "expand": "fill"
+  },
+  "TodayDark.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Today · dark",
+   "page": "admin",
+   "expand": "fill"
+  },
+  "Students.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Students",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Fees.dc.html": {
+   "x": 0,
+   "y": 1300,
+   "w": 1440,
+   "h": 960,
+   "title": "Fees",
+   "page": "admin",
+   "expand": "fill"
+  },
+  "Attendance.dc.html": {
+   "x": 1520,
+   "y": 1300,
+   "w": 1440,
+   "h": 960,
+   "title": "Attendance · roll call",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Timetable.dc.html": {
+   "x": 3040,
+   "y": 1300,
+   "w": 1440,
+   "h": 960,
+   "title": "Timetable",
+   "page": "admin",
+   "expand": "fill"
+  },
+  "SignIn.dc.html": {
+   "x": 0,
+   "y": 2600,
+   "w": 1440,
+   "h": 900,
+   "title": "Sign in",
+   "page": "admin",
+   "expand": "fill"
+  },
+  "Sidebar.dc.html": {
+   "x": 1520,
+   "y": 2600,
+   "w": 248,
+   "h": 940,
+   "title": "Menu (shared part)",
+   "page": "admin"
+  },
+  "Fleet.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 964,
+   "title": "Fleet",
+   "page": "console",
+   "expand": "fill"
+  },
+  "FleetDark.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 964,
+   "title": "Fleet · dark",
+   "page": "console",
+   "expand": "fill"
+  },
+  "School.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1003,
+   "title": "One school · in its own colour",
+   "page": "console",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Modules.dc.html": {
+   "x": 0,
+   "y": 1300,
+   "w": 1440,
+   "h": 960,
+   "title": "Modules",
+   "page": "console",
+   "expand": "fill"
+  },
+  "ParentHome.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Parent · home",
+   "page": "app"
+  },
+  "ParentHomeDark.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Parent · home, dark",
+   "page": "app"
+  },
+  "ParentFees.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Parent · fees",
+   "page": "app"
+  },
+  "ParentResults.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Parent · results",
+   "page": "app"
+  },
+  "TeacherHome.dc.html": {
+   "x": 0,
+   "y": 1184,
+   "w": 390,
+   "h": 844,
+   "title": "Teacher · home",
+   "page": "app"
+  },
+  "TeacherHomeDark.dc.html": {
+   "x": 1410,
+   "y": 1184,
+   "w": 390,
+   "h": 844,
+   "title": "Teacher · home, dark",
+   "page": "app"
+  },
+  "RollCall.dc.html": {
+   "x": 470,
+   "y": 1184,
+   "w": 390,
+   "h": 844,
+   "title": "Teacher · roll call",
+   "page": "app",
+   "is_interactive": true
+  },
+  "EmptyHome.dc.html": {
+   "x": 940,
+   "y": 1184,
+   "w": 390,
+   "h": 844,
+   "title": "Brand-new school",
+   "page": "app"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Colour.dc.html",
+  "Type.dc.html",
+  "Components.dc.html",
+  "ComponentsDark.dc.html",
+  "AppKit.dc.html",
+  "Today.dc.html",
+  "TodayDark.dc.html",
+  "Students.dc.html",
+  "Fees.dc.html",
+  "Attendance.dc.html",
+  "Timetable.dc.html",
+  "SignIn.dc.html",
+  "Sidebar.dc.html",
+  "Fleet.dc.html",
+  "FleetDark.dc.html",
+  "School.dc.html",
+  "Modules.dc.html",
+  "ParentHome.dc.html",
+  "ParentHomeDark.dc.html",
+  "ParentFees.dc.html",
+  "ParentResults.dc.html",
+  "TeacherHome.dc.html",
+  "TeacherHomeDark.dc.html",
+  "RollCall.dc.html",
+  "EmptyHome.dc.html"
+ ],
+ "notes": {
+  "t_found": {
+   "x": 0,
+   "y": -260,
+   "text": "Foundations",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "system"
+  },
+  "t_parts": {
+   "x": 0,
+   "y": 1040,
+   "text": "Parts",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "system"
+  },
+  "t_admin": {
+   "x": 0,
+   "y": -260,
+   "text": "School admin",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "admin"
+  },
+  "t_admin2": {
+   "x": 0,
+   "y": 1040,
+   "text": "Money, roll call, timetable",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "admin"
+  },
+  "t_admin3": {
+   "x": 0,
+   "y": 2340,
+   "text": "Sign in and the menu",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "admin"
+  },
+  "t_console": {
+   "x": 0,
+   "y": -260,
+   "text": "Gradeon console",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "console"
+  },
+  "t_console2": {
+   "x": 0,
+   "y": 1040,
+   "text": "Modules",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "console"
+  },
+  "t_parents": {
+   "x": 0,
+   "y": -260,
+   "text": "Parents",
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "app"
+  },
+  "t_teachers": {
+   "x": 0,
+   "y": 924,
+   "text": "Teachers, and a brand-new school",
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "app"
+  }
+ },
+ "designSystems": []
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>local preview</title>
+<link rel="stylesheet" href="hue.css">
+<style>body{margin:0;background:#888} #root{margin:0 auto}</style></head>
+<body><div id="root"></div>
+<script>
+const Q = new URLSearchParams(location.search);
+const FILE = Q.get('f'); const PROPS = JSON.parse(Q.get('p') || '{}'); const W = Q.get('w') || '1440';
+document.getElementById('root').style.width = W + 'px';
+window.setInterval = function () { return 0; };
+class DCLogic { constructor(props) { this.props = props || {}; this.state = {}; }
+  setState(s) { Object.assign(this.state, typeof s === 'function' ? s(this.state) : s); schedule(); }
+  forceUpdate() { schedule(); } }
+window.DCLogic = DCLogic;
+const registry = {};
+async function load(name) {
+  if (registry[name]) return;
+  const txt = await (await fetch(name + '.dc.html')).text();
+  const doc = new DOMParser().parseFromString(txt, 'text/html');
+  const xdc = doc.querySelector('x-dc'); const sc = doc.querySelector('script[data-dc-script]');
+  const Cls = new Function('DCLogic', sc.textContent + ';return Component;')(DCLogic);
+  registry[name] = { xdc, Cls };
+  const hel = doc.querySelector('helmet');
+  if (hel) for (const c of hel.children) { if (c.tagName === 'LINK' || c.tagName === 'STYLE') document.head.appendChild(c.cloneNode(true)); }
+  for (const imp of xdc.querySelectorAll('dc-import')) await load(imp.getAttribute('name'));
+}
+let counter = 0; const insts = [];
+function getInst(Cls, props) { const i = counter++; let ins = insts[i]; if (!ins || ins.Cls !== Cls) { ins = { Cls, obj: new Cls(props), mounted: false }; insts[i] = ins; } ins.obj.props = props; return ins; }
+function ev(scope, expr) {
+  expr = expr.trim();
+  if (expr === 'true') return true; if (expr === 'false') return false;
+  if (/^-?\d+(\.\d+)?$/.test(expr)) return Number(expr);
+  let v = scope; for (const k of expr.split('.')) { if (v == null) return undefined; v = v[k]; } return v;
+}
+const HOLE = /\{\{([^}]*)\}\}/g;
+function interp(str, scope) { return str.replace(HOLE, (m, e) => { const v = ev(scope, e); return v == null ? '' : String(v); }); }
+function renderNodes(nodes, scope, parent) { for (const n of [...nodes]) renderNode(n, scope, parent); }
+function renderNode(n, scope, parent) {
+  if (n.nodeType === 3) { parent.appendChild(document.createTextNode(interp(n.textContent, scope))); return; }
+  if (n.nodeType !== 1) return;
+  const tag = n.localName;
+  if (tag === 'helmet') return;
+  if (tag === 'sc-if') { const v = ev(scope, n.getAttribute('value').replace(/^\{\{|\}\}$/g, '')); if (v) renderNodes(n.childNodes, scope, parent); return; }
+  if (tag === 'sc-for') {
+    const list = ev(scope, n.getAttribute('list').replace(/^\{\{|\}\}$/g, '')) || []; const as = n.getAttribute('as');
+    list.forEach((it, i) => { const sc = Object.create(scope); sc[as] = it; sc.$index = i; renderNodes(n.childNodes, sc, parent); }); return;
+  }
+  if (tag === 'dc-import') {
+    const name = n.getAttribute('name'); const props = {};
+    for (const a of n.attributes) {
+      if (a.name === 'name' || a.name.startsWith('hint-') || a.name === 'style') continue;
+      const camel = a.name.replace(/-([a-z])/g, (_, c) => c.toUpperCase()); const m = a.value.match(/^\{\{(.*)\}\}$/);
+      props[camel] = m ? ev(scope, m[1]) : interp(a.value, scope);
+    }
+    const wrap = document.createElement('div'); if (n.getAttribute('style')) wrap.setAttribute('style', interp(n.getAttribute('style'), scope));
+    parent.appendChild(wrap); renderComponent(name, props, wrap); return;
+  }
+  const el = document.createElementNS(n.namespaceURI, n.localName);
+  for (const a of n.attributes) {
+    const name = a.name, val = a.value; const m = val.match(/^\{\{([^}]*)\}\}$/);
+    if (m) {
+      const v = ev(scope, m[1]);
+      if (name === 'ref') { if (typeof v === 'function') v(el); continue; }
+      if (/^on[A-Z]/.test(name)) { if (typeof v === 'function') { let evn = name.slice(2).toLowerCase(); if (evn === 'change' && (el.localName === 'input' || el.localName === 'textarea')) evn = 'input'; if (evn === 'focus') evn = 'focusin'; el.addEventListener(evn, v); } continue; }
+      if (typeof v === 'boolean') { if (name.startsWith('aria-') || name.startsWith('data-')) el.setAttribute(name, String(v)); else if (v) el.setAttribute(name, ''); continue; }
+      if (v == null) continue; el.setAttribute(name, String(v)); continue;
+    }
+    if (name.startsWith('hint-')) continue;
+    el.setAttribute(name, val.includes('{{') ? interp(val, scope) : val);
+  }
+  parent.appendChild(el);
+  renderNodes(n.childNodes, scope, el);
+}
+function renderComponent(name, props, container) {
+  const reg = registry[name]; const ins = getInst(reg.Cls, props); const vals = ins.obj.renderVals();
+  renderNodes(reg.xdc.childNodes, Object.assign({}, vals), container);
+  if (!ins.mounted) { ins.mounted = true; queueMicrotask(() => ins.obj.componentDidMount && ins.obj.componentDidMount()); }
+}
+let pending = false; function schedule() { if (pending) return; pending = true; queueMicrotask(() => { pending = false; draw(); }); }
+function draw() { counter = 0; const frag = document.createElement('div'); renderComponent(FILE, PROPS, frag); document.getElementById('root').replaceChildren(...frag.childNodes); window.__drawn = (window.__drawn || 0) + 1; }
+load(FILE).then(draw).catch(e => { document.body.insertAdjacentHTML('afterbegin', '<pre style="color:red;background:#fff;padding:12px">' + e.stack + '</pre>'); });
+</script></body></html>
