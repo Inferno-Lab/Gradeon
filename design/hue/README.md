@@ -1,6 +1,6 @@
 # Gradeon Hue
 
-The approved design system for the Flutter app, the school admin and the console (approved by the owner on 10 November 2026; not built yet). It replaces Chalk & Glass in the app and the current look of admin and console once it is implemented. Canvas: https://claude.ai/artifact/4RCDhHVgQxkny97QSknsd8 (private to the owner).
+The approved design system for the Flutter app, the school admin and the console (approved by the owner on 10 November 2026; not built yet). It replaces Chalk & Glass in the app and the current look of admin and console once it is implemented. The empty states for every page ([EMPTY-STATES.md](EMPTY-STATES.md)) were approved with it, and the plan is to build both together, once the work in progress on `main` has landed. Canvas: https://claude.ai/artifact/4RCDhHVgQxkny97QSknsd8 (private to the owner).
 
 ## Files
 
@@ -14,6 +14,8 @@ The approved design system for the Flutter app, the school admin and the console
 | `preview/preview.html` | A small local renderer for the boards (`preview.html?f=Today&w=1440`). |
 | `qa.mjs` | Renders boards in Playwright, records heights, flags overflow, clipping and wrapping, writes contact sheets to `shots/` (ignored). |
 | `contrast.mjs` | Checks every text/background pair against WCAG AA for each seed, light and dark. |
+| `empty.css` | The empty-state kit: words block, scene parts, the six motion beats, the one-column fallback and reduced motion. |
+| `anim.mjs` | Captures a board at three moments of the 10 s loop (`node anim.mjs Board x y w h`) to check motion. |
 | `icons.mjs`, `chk.mjs` | Icon paths read from the vendored `packages/phosphor_flutter` fonts; `node chk.mjs name…` checks names exist. |
 
 ```bash
@@ -51,4 +53,6 @@ Contrast: all four demo seeds pass AA in light and dark (tightest margin 1.15). 
 
 ## Boards
 
-System: Main, Colour, Type, Components (+ dark), AppKit. Admin: Today (+ dark), Students, Fees, Attendance, Timetable, SignIn, Sidebar. Console: Fleet (+ dark), School, Modules. App: ParentHome (+ dark), ParentFees, ParentResults, TeacherHome (+ dark), RollCall, EmptyHome. Empty states: see `src/Empty*.html` when present.
+System: Main, Colour, Type, Components (+ dark), AppKit. Admin: Today (+ dark), Students, Fees, Attendance, Timetable, SignIn, Sidebar. Console: Fleet (+ dark), School, Modules. App: ParentHome (+ dark), ParentFees, ParentResults, TeacherHome (+ dark), RollCall, EmptyHome. Empty states: EmptyFrame (the kit), EmptyAdmin1–5 (+ dark), EmptyConsole1–4 (+ dark), EmptyApp1–4 (+ dark); see [EMPTY-STATES.md](EMPTY-STATES.md).
+
+Examples must be neutral and international (owner's rule). The empty-state boards follow it; the first system, admin, console and app boards above still show the old Indian demo school (names, ₹, lakh, Hindi and Marathi) and should be made neutral before or while building.

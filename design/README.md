@@ -1,6 +1,6 @@
 # Design canvas
 
-> **Next:** the owner approved a new design system, **Gradeon Hue**, for the app, the admin and the console (10 November 2026). Its spec, sources and canvas are in [`hue/`](hue/README.md). It is not built yet; until it is, the boards below describe what ships.
+> **Next:** the owner approved a new design system, **Gradeon Hue**, for the app, the admin and the console (10 November 2026). Its spec, sources and canvas are in [`hue/`](hue/README.md), with the approved empty state for every page in [`hue/EMPTY-STATES.md`](hue/EMPTY-STATES.md). Both are built together, once the work in progress on `main` lands; until then the boards below describe what ships.
 
 `design/canvas/` is the approved design: every board the owner signed off, saved as the files they were drawn in. It is the **source of truth for how the admin and the console must look**. If a page and a board disagree, the board wins, except for the deliberate changes listed below.
 
