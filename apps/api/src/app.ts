@@ -10,8 +10,8 @@ import { loadEnv, type Env } from './env.js';
 export async function createApp(env: Env = loadEnv(), shared?: { registry: Registry; pools: PoolManager }): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(env, shared),
-    new FastifyAdapter({ trustProxy: true, bodyLimit: 256_000 }),
-    { logger: env.NODE_ENV === 'test' ? ['error'] : ['error', 'warn', 'log'] },
+    new FastifyAdapter({ trustProxy: true, bodyLimit: 256_000, routerOptions: { maxParamLength: 2048 } }),
+    { logger: env.NODE_ENV === 'test' ? ['error'] : ['error', 'warn', 'log'], rawBody: true },
   );
   await registerHttp(app, env);
   app.enableShutdownHooks();

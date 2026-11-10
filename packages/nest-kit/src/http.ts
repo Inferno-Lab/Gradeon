@@ -6,7 +6,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { CSRF_HEADER } from './cookies.js';
 
 /** Routes that take a school's files (a whole student list, a year of attendance as CSV): everything else keeps the small limit. */
-const BIG_BODIES = /^\/v1\/(students\/import|moving-in\/uploads)$|^\/console\/v1\/schools\/:id\/import\/(preview|commit)$/;
+const BIG_BODIES = /^\/v1\/(students\/import|moving-in\/uploads)$|^\/console\/v1\/schools\/:id\/(import\/(preview|commit)|logo)$|^\/hooks\/sandbox-storage\/:token$/;
 
 export interface HttpEnv {
   NODE_ENV: 'development' | 'test' | 'production';
@@ -55,6 +55,8 @@ export async function registerHttp(app: NestFastifyApplication, env: HttpEnv): P
     skip: (req: { url: string }) => req.url.startsWith('/health') || req.url.startsWith('/metrics'),
     errorResponseBuilder: () => ({ statusCode: 429, code: 'rate_limited', message: 'Too many tries from this device. Wait a moment and try again.' }),
   });
+  // Files uploaded to the test track's storage arrive as whatever they are (images, PDFs): kept as bytes, never parsed.
+  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, (_req: unknown, body: Buffer, done: (err: Error | null, body?: Buffer) => void) => done(null, body));
   fastify.addHook('onRoute', (route: { url?: string; bodyLimit?: number }) => {
     // A school's files: a whole student list or a year of attendance as CSV.
     if (route.url && BIG_BODIES.test(route.url)) route.bodyLimit = 26_000_000;

@@ -161,10 +161,16 @@ export class AuthService {
     const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';
     await t.pool.query('insert into otp_challenges (id, user_id, code_hash, channel, purpose, expires_at) values ($1,$2,$3,$4,$5,$6)', [id, user.id, sha256(`${id}:${code}`), channel, purpose, new Date(Date.now() + OTP_MINUTES * 60_000)]);
     const what = purpose === 'reset' ? 'code to set a new password' : 'sign-in code';
-    await this.messenger.send(t, {
-      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
-      body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
-    });
+    try {
+      // Sent now (never queued or held): the person is waiting on the sign-in screen.
+      await this.messenger.send(t, {
+        channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
+        body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
+        key: purpose === 'reset' ? 'auth.reset' : 'auth.code', vars: { code, school: t.info.shortName, minutes: String(OTP_MINUTES) }, now: true,
+      });
+    } catch {
+      throw new ApiError('school_unavailable', 'We could not send the code just now. Try again in a minute.');
+    }
     return {
       challengeId: id, channel, maskedTo: channel === 'sms' ? maskPhone(user.phone!) : maskEmail(user.email!),
       expiresInSeconds: OTP_MINUTES * 60, ...(demo ? { demoCode: DEMO_CODE } : {}),

@@ -36,7 +36,7 @@ export class StudentsService {
 
   private baseSql(): string {
     return `
-      with paid as (select invoice_id, sum(amount) p from payments group by invoice_id),
+      with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
       fee as (
         select i.student_id,
           coalesce(sum(greatest(i.amount - i.waived_amount - coalesce(paid.p, 0), 0)) filter (where i.due_on < $1::date), 0) overdue,
@@ -135,7 +135,7 @@ export class StudentsService {
     const w = where.length ? `where ${where.join(' and ')}` : '';
     const split = addDays(last, -12);
     const { rows } = await t.pool.query<{ in_view: string; present: string; marked: string; since: string; overdue_amt: string; overdue_fam: string; a_now: number | null; a_prev: number | null }>(
-      `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id),
+      `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
        od as (select i.student_id, sum(greatest(i.amount - i.waived_amount - coalesce(paid.p,0),0)) amt from fee_invoices i left join paid on paid.invoice_id=i.id where i.due_on < $1::date group by i.student_id having sum(greatest(i.amount - i.waived_amount - coalesce(paid.p,0),0)) > 0)
        select count(*) in_view,
          count(*) filter (where td.status in ('present','late')) present, count(td.status) marked,
@@ -175,7 +175,7 @@ export class StudentsService {
     const pinnedId = await this.settings.value<string | null>(t, 'students.pinnedClass', null);
     const [counts, pinned] = await Promise.all([
       t.pool.query<{ all: string; overdue: string; fresh: string }>(
-        `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id),
+        `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
          od as (select distinct i.student_id from fee_invoices i left join paid on paid.invoice_id=i.id where i.due_on < $1::date and i.amount - i.waived_amount - coalesce(paid.p,0) > 0)
          select (select count(*) from students) "all", (select count(*) from od) overdue,
            (select count(*) from students where admitted_on >= (select starts_on from academic_years where current limit 1)) fresh`, [today]),

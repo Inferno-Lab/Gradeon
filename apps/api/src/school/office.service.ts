@@ -36,7 +36,7 @@ export class OfficeService {
   // Invoices and receipts
 
   private invoiceBase(): string {
-    return `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id),
+    return `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
       inv as (
         select i.id, i.student_id, s.name student_name, c.name class_name, i.head, i.title, i.amount, i.waived_amount waived, coalesce(paid.p, 0)::int paid, i.due_on::text due_on, i.due_on d,
           greatest(i.amount - i.waived_amount - coalesce(paid.p, 0), 0)::int outstanding,
@@ -108,7 +108,7 @@ export class OfficeService {
     }
     if (id === 'fees-collection') {
       const { rows } = await t.pool.query<{ head: string; billed: string; collected: string }>(
-        `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id)
+        `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id)
          select i.head, sum(i.amount - i.waived_amount) billed, coalesce(sum(paid.p), 0) collected from fee_invoices i left join paid on paid.invoice_id = i.id group by i.head order by i.head`);
       const billed = rows.reduce((a, r) => a + Number(r.billed), 0);
       const col = rows.reduce((a, r) => a + Number(r.collected), 0);
@@ -118,7 +118,7 @@ export class OfficeService {
     }
     if (id === 'fees-defaulters') {
       const { rows } = await t.pool.query<{ name: string; class_name: string; guardian: string | null; amount: string; oldest: string }>(
-        `with paid as (select invoice_id, sum(amount) p from payments group by invoice_id)
+        `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id)
          select s.name, c.name class_name, g.name guardian, sum(i.amount - i.waived_amount - coalesce(paid.p, 0)) amount, min(i.due_on)::text oldest
          from fee_invoices i join students s on s.id = i.student_id join classes c on c.id = s.class_id left join paid on paid.invoice_id = i.id
            left join student_guardians sg on sg.student_id = s.id and sg.is_primary left join guardians g on g.id = sg.guardian_id
@@ -183,7 +183,7 @@ export class OfficeService {
 
   private async pushToGuardian(t: TenantCtx, threadId: string, body: string): Promise<void> {
     const g = (await t.pool.query<{ phone: string | null }>('select g.phone from threads th join guardians g on g.id = th.guardian_id where th.id = $1', [threadId])).rows[0];
-    if (g?.phone) await this.messenger.send(t, { channel: 'push', to: g.phone, body });
+    if (g?.phone) await this.messenger.send(t, { channel: 'push', to: g.phone, body, key: 'chat.message', vars: { route: `/chat/${threadId}` } });
   }
 
   async startThread(t: TenantCtx, user: User, body: ThreadCreate): Promise<ThreadDetail> {

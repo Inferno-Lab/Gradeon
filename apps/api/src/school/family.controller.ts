@@ -8,7 +8,7 @@ import { FamilyService } from './family.service.js';
 const Today = z.object({ students: z.string().default('') });
 const Subject = z.object({ subject: z.string().min(1).max(40) });
 const Marks = z.object({ subject: z.string().min(1).max(40), values: z.record(z.string(), z.number().min(0).max(200)) });
-const Submit = z.object({ studentId: z.string().min(1), fileName: z.string().max(200).optional() });
+const Submit = z.object({ studentId: z.string().min(1), fileName: z.string().max(200).optional(), fileIds: z.array(z.string()).max(5).default([]) });
 const Grade = z.object({ studentId: z.string().min(1), marks: z.number().int().min(0).max(100), feedback: z.string().max(300).optional() });
 const Assign = z.object({ classId: z.string().min(1), subject: z.string().min(1), title: z.string().min(3).max(120), description: z.string().max(1000).optional(), dueOn: z.string().min(10), maxMarks: z.number().int().min(1).max(100).optional() });
 const Consent = z.object({ photos: z.boolean().optional() });
@@ -50,7 +50,7 @@ export class FamilyController {
   @Get('classes/:id/homework') @RequireModule('homework') homework(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.homework(t, u, id); }
   @Get('homework/:id') @RequireModule('homework') homeworkOne(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.homeworkOne(t, u, id); }
   @Post('homework') @RequireModule('homework') @HttpCode(200) assign(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(Assign)) b: z.infer<typeof Assign>) { return this.f.assignHomework(t, u, b); }
-  @Post('homework/:id/submissions') @RequireModule('homework.onlineSubmission') @HttpCode(200) submit(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Submit)) b: z.infer<typeof Submit>) { return this.f.submitHomework(t, u, id, b.studentId); }
+  @Post('homework/:id/submissions') @RequireModule('homework.onlineSubmission') @HttpCode(200) submit(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Submit)) b: z.infer<typeof Submit>) { return this.f.submitHomework(t, u, id, b.studentId, b.fileIds); }
   @Post('homework/:id/grades') @RequireModule('homework.grading') @HttpCode(200) grade(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Grade)) b: z.infer<typeof Grade>) { return this.f.gradeHomework(t, u, id, b); }
 
   @Get('classes/:id/exams') @RequireModule('exams') exams(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.exams(t, u, id); }
@@ -75,7 +75,6 @@ export class FamilyController {
   @Post('threads') @RequireModule('chat.familyChat') @HttpCode(200) start(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(Start)) b: z.infer<typeof Start>) { return this.f.startThread(t, u, b.teacherId); }
 
   @Get('library/books') @RequireModule('library') books(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.f.books(t, u); }
-  @Post('library/books/:id/reserve') @RequireModule('library.reservations') @HttpCode(409) reserve() { return { code: 'conflict', message: 'The library catalogue is not online yet. Ask at the library desk to reserve a book.' }; }
   @Post('library/books/:id/renew') @RequireModule('library.reservations') @HttpCode(200) renew(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.renew(t, u, id); }
   @Get('students/:id/transport') @RequireModule('transport') transport(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.transport(t, u, id); }
 
@@ -83,7 +82,7 @@ export class FamilyController {
   @Post('leave') @HttpCode(200) applyLeave(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(Leave)) b: z.infer<typeof Leave>) { return this.f.applyLeave(t, u, b); }
   @Post('leave/:id/review') @HttpCode(200) review(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Review)) b: z.infer<typeof Review>) { return this.f.reviewLeave(t, u, id, b); }
 
-  @Get('gallery') @RequireModule('gallery') gallery() { return []; }
+  @Get('gallery') @RequireModule('gallery') gallery(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.f.gallery(t, u); }
   @Get('users/:id/notifications') notifications(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.f.notifications(t, u); }
   @Post('notifications/:id/dismiss') @HttpCode(200) dismiss(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.f.notificationState(t, u, [id], 'dismissed'); }
   @Post('users/:id/notifications/read') @HttpCode(200) readAll(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.f.readAll(t, u); }

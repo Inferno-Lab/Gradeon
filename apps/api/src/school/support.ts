@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
 import { resolveConfig } from '@gradeon/config-engine';
 import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc } from '@gradeon/contracts';
-import type { Registry } from '@gradeon/tenancy';
-import { REGISTRY, type TenantCtx } from '../tenancy/tenant.js';
+import type { TenantCtx } from '../tenancy/tenant.js';
+import { HubService } from './hub.service.js';
 
 @Injectable()
 export class AuditService {
@@ -61,35 +61,74 @@ export class SettingsService {
   }
 }
 
-/** Sends messages. Only the sandbox exists today: it files them in the console's inbox instead of sending them. */
+type Channel = 'sms' | 'email' | 'whatsapp' | 'push';
+export interface OutMsg { channel: Channel; to: string; subject?: string; body: string; key?: string; vars?: Record<string, string>; sendAfter?: Date | null; now?: boolean }
+
+// Where a notification opens in the app (the app's own routes).
+const OPENS: Record<string, string> = {
+  'attendance.absent': '/attendance', 'fees.reminder': '/fees', 'fees.receipt': '/fees', 'fees.refunded': '/fees', 'homework.new': '/homework', 'exam.results': '/results',
+  'notice.published': '/notices', 'event.created': '/events', 'leave.decided': '/leave', 'bus.near': '/transport', 'library.ready': '/library', 'timetable.published': '/timetable',
+};
+
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/** One email layout for every school: its name across the top in its brand colour, the message, and who sent it. */
+export function emailHtml(school: string, color: string, body: string): string {
+  // An email is not a page: mail clients need literal colours, so the school's brand colour is written in.
+  const c = /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#3D5AFE';
+  return `<!doctype html><html><body style="margin:0;background:#f4f4f6;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:${c};color:#ffffff;padding:16px 24px;font-size:18px;font-weight:600">${esc(school)}</td></tr>
+<tr><td style="padding:24px;color:#1d1d22;font-size:15px;line-height:1.55">${esc(body).replace(/\n/g, '<br>')}</td></tr>
+<tr><td style="padding:0 24px 20px;color:#6b6b76;font-size:12px">Sent by ${esc(school)} with Gradeon.</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+/**
+ * Sends messages through the Integrations Hub: every message is a row in message_log, routed to the school's connection (or the
+ * Test inbox on the test track), held in quiet hours, retried when a provider fails, and refused past the plan's SMS limit.
+ */
 @Injectable()
 export class Messenger {
   constructor(
-    @Inject(REGISTRY) private readonly registry: Registry,
+    private readonly hubs: HubService,
     private readonly settings: SettingsService,
   ) {}
 
-  async send(t: TenantCtx, m: { channel: 'sms' | 'email' | 'whatsapp' | 'push'; to: string; subject?: string; body: string }): Promise<void> {
-    await this.registry.pool.query(
-      'insert into sandbox_messages (id, school_slug, channel, to_addr, subject, body) values ($1,$2,$3,$4,$5,$6)',
-      [newId('msg'), t.info.slug, m.channel, m.to, m.subject ?? null, m.body],
-    );
+  async send(t: TenantCtx, m: OutMsg): Promise<void> {
+    await this.sendMany(t, [m]);
   }
 
-  /** Texts sent by one school since the start of this month, for the plan card. */
-  async smsThisMonth(slug: string): Promise<number> {
-    const { rows } = await this.registry.pool.query<{ n: string }>(
-      "select count(*) n from sandbox_messages where school_slug = $1 and channel = 'sms' and created_at >= date_trunc('month', now())", [slug]);
-    return Number(rows[0]?.n ?? 0);
+  /** Texts (parts) sent by one school since the start of this month, for the plan card. */
+  smsThisMonth(slug: string): Promise<number> {
+    return this.hubs.hub.smsThisMonth(slug);
   }
 
-  async sendMany(t: TenantCtx, list: { channel: 'sms' | 'email' | 'whatsapp' | 'push'; to: string; subject?: string; body: string }[]): Promise<void> {
-    for (const m of list) await this.send(t, m);
+  /** Many messages at once (a notice to every family): the plan's text limit counted across them, then recorded in bulk. */
+  async sendMany(t: TenantCtx, list: OutMsg[]): Promise<void> {
+    if (!list.length) return;
+    const limit = t.info.entitlement.limits.smsPerMonth;
+    // Sign-in codes are never refused: a family locked out of the app is worse than a text over the plan.
+    const counted = (m: OutMsg) => m.channel === 'sms' && limit > 0 && !m.key?.startsWith('auth.');
+    let used = list.some(counted) ? await this.hubs.hub.smsThisMonth(t.info.slug) : 0;
+    const doc = list.some((m) => m.channel === 'email') ? (await this.settings.doc(t)).values : {};
+    const out = list.map((m) => {
+      const refuse = counted(m) && used++ >= limit ? `This month's ${limit} texts are used up. Gradeon can raise the limit in the console.` : undefined;
+      const html = m.channel === 'email' ? emailHtml(String(doc['school.name'] ?? t.info.name), String(doc['brand.color'] ?? ''), m.body) : undefined;
+      return {
+        schoolId: t.info.id, schoolSlug: t.info.slug, channel: m.channel, to: m.to, body: m.body, subject: m.subject, html, messageKey: m.key,
+        vars: { ...(m.vars ?? {}), ...(m.key && OPENS[m.key] ? { route: OPENS[m.key]! } : {}) }, sendAfter: m.sendAfter, now: m.now, refuse,
+      };
+    });
+    // A sign-in code goes alone and at once, and its failure reaches the person waiting for it.
+    if (out.length === 1 && out[0]!.now) await this.hubs.hub.send(out[0]!);
+    else await this.hubs.hub.sendMany(out);
   }
 
   /**
    * Sends one of the school's own messages: the wording comes from Message templates, the channels from Notifications, and outside
-   * quiet hours only. Messages sent in quiet hours are filed as held until morning (the sandbox has no real queue).
+   * quiet hours only: in quiet hours a message is held until they end, then the dispatcher sends it.
    * Returns how many recipients were reached on at least one channel.
    */
   async notify(t: TenantCtx, key: string, who: { to: string; email?: string | null; vars: Record<string, string | number> }[]): Promise<number> {
@@ -109,16 +148,20 @@ export class Messenger {
     const now = istMinutes();
     const quiet = !ev.urgent && (mins(qf) > mins(qt) ? now >= mins(qf) || now < mins(qt) : now >= mins(qf) && now < mins(qt));
     const school = String(doc['school.shortName'] ?? t.info.shortName);
+    const sendAfter = quiet ? new Date(Date.now() + (((mins(qt) - now + 1440) % 1440) || 1440) * 60_000) : null;
     let reached = 0;
+    const out: OutMsg[] = [];
     for (const w of who) {
-      const body = text.replace(/\{(\w+)\}/g, (_, k: string) => String((k === 'school' ? w.vars.school ?? school : w.vars[k]) ?? ''));
-      const subject = quiet ? `Held until ${qt}` : undefined;
-      let any = false;
-      if (rule.push) { await this.send(t, { channel: 'push', to: w.to, subject, body }); any = true; }
-      if (rule.sms) { await this.send(t, { channel: 'sms', to: w.to, subject, body }); any = true; }
-      if (rule.email && w.email) { await this.send(t, { channel: 'email', to: w.email, subject: subject ?? ev.label, body }); any = true; }
-      if (any) reached++;
+      const vars = Object.fromEntries(Object.entries({ ...w.vars, school: w.vars.school ?? school }).map(([k, v]) => [k, String(v)]));
+      const body = text.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? '');
+      const m = { key, vars, body, sendAfter };
+      const before = out.length;
+      if (rule.push) out.push({ ...m, channel: 'push', to: w.to, subject: school });
+      if (rule.sms) out.push({ ...m, channel: 'sms', to: w.to });
+      if (rule.email && w.email) out.push({ ...m, channel: 'email', to: w.email, subject: ev.label });
+      if (out.length > before) reached++;
     }
+    await this.sendMany(t, out);
     return reached;
   }
 }
