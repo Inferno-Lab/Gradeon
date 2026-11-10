@@ -71,7 +71,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'fees',
     state: 'live',
     addOnPerStudentYear: 80,
-    features: [{ key: 'fees.onlinePayment', name: 'Families pay in the app', state: 'live' }, { key: 'fees.reminders', name: 'Fee reminders', state: 'live' }, { key: 'fees.lateFines', name: 'Late fines', state: 'planned' }, { key: 'fees.concessions', name: 'Concession rules', state: 'planned' }, { key: 'fees.gstReceipts', name: 'GST receipts', state: 'planned' }, { key: 'fees.refunds', name: 'Refunds', state: 'planned' }, { key: 'fees.tally', name: 'Tally export', state: 'planned' }],
+    features: [{ key: 'fees.onlinePayment', name: 'Families pay in the app', state: 'live' }, { key: 'fees.reminders', name: 'Fee reminders', state: 'live' }, { key: 'fees.lateFines', name: 'Late fines', state: 'live' }, { key: 'fees.concessions', name: 'Concession rules', state: 'planned' }, { key: 'fees.gstReceipts', name: 'GST receipts', state: 'live' }, { key: 'fees.refunds', name: 'Refunds', state: 'live' }, { key: 'fees.tally', name: 'Tally export', state: 'planned' }],
     name: 'Fees',
     blurb: 'Invoices, payments, receipts and reminders.',
     requires: ['people'],
@@ -80,7 +80,7 @@ export const MODULES: ModuleManifest[] = [
       { label: 'Fees', icon: 'fees', href: '/fees', anyOf: ['fees.read'] },
       { label: 'Invoices', icon: 'invoices', href: '/invoices', anyOf: ['fees.read'] },
     ],
-    settings: ['fees.lateFeePct', 'fees.remindDaysBefore'],
+    settings: ['fees.lateFeePct', 'fees.remindDaysBefore', 'fees.gstin', 'fees.gstSac', 'fees.gstRatePct', 'fees.gstHeads', 'fees.refundApprovalAbove'],
   },
   {
     key: 'notices',
@@ -110,10 +110,9 @@ export const MODULES: ModuleManifest[] = [
   { key: 'exams', state: 'live', addOnPerStudentYear: 60, features: [{ key: 'exams.resultsInApp', name: 'Results in the app', state: 'live' }, { key: 'exams.reportCards', name: 'Report cards in board formats', state: 'planned' }, { key: 'exams.hpc', name: 'NEP Holistic Progress Card', state: 'planned' }], name: 'Exams and results', blurb: 'Marks, results and report cards.', requires: ['people'], backend: true, nav: [{ label: 'Exams', icon: 'exams', href: '/exams', anyOf: ['exams.read'] }], settings: [] },
   { key: 'events', state: 'live', addOnPerStudentYear: 20, features: [{ key: 'events.rsvp', name: 'RSVPs from families', state: 'live' }], name: 'Events', blurb: 'Calendar, events and RSVPs.', requires: [], backend: true, nav: [{ label: 'Events', icon: 'events', href: '/events', anyOf: ['events.read'] }], settings: [] },
   { key: 'chat', state: 'live', addOnPerStudentYear: 40, features: [{ key: 'chat.familyChat', name: 'Families start conversations', state: 'live' }], name: 'Messages', blurb: 'Chat between staff and families.', requires: ['people'], backend: true, nav: [{ label: 'Messages', icon: 'messages', href: '/messages', anyOf: ['messages.read'] }], settings: [] },
-  // Beta: what works today is said in the blurb; the rest of each arrives with its admin pages (production plan, Phase 4).
-  { key: 'transport', state: 'beta', addOnPerStudentYear: 60, features: [{ key: 'transport.routes', name: 'Routes, stops and route fees', state: 'planned' }, { key: 'transport.liveBus', name: 'Live bus tracking', state: 'planned' }], name: 'Transport', blurb: 'Each child’s bus route, brought in by Migration. Stops and the live bus come later.', requires: ['people'], backend: false, nav: [], settings: [] },
-  { key: 'library', state: 'beta', addOnPerStudentYear: 30, features: [{ key: 'library.reservations', name: 'Renew from the app (reserving comes with the catalogue)', state: 'beta' }], name: 'Library', blurb: 'Books a child has out and their due dates, brought in by Migration. The catalogue comes later.', requires: ['people'], backend: false, nav: [], settings: [] },
-  { key: 'gallery', state: 'beta', addOnPerStudentYear: 20, features: [], name: 'Gallery', blurb: 'Photos with consent. Families’ photo consent is recorded; sharing photos comes with file storage.', requires: [], backend: false, nav: [], settings: [] },
+  { key: 'transport', state: 'live', addOnPerStudentYear: 60, features: [{ key: 'transport.routes', name: 'Routes, stops and route fees', state: 'live' }, { key: 'transport.liveBus', name: 'Live bus tracking', state: 'live' }], name: 'Transport', blurb: 'Routes, stops, who rides which bus, route fees and the live bus.', requires: ['people'], backend: true, nav: [{ label: 'Transport', icon: 'transport', href: '/transport', anyOf: ['transport.read'] }], settings: ['transport.nearMinutes'] },
+  { key: 'library', state: 'live', addOnPerStudentYear: 30, features: [{ key: 'library.reservations', name: 'Reserve and renew from the app', state: 'live' }], name: 'Library', blurb: 'The catalogue, issue and return, fines and reservations.', requires: ['people'], backend: true, nav: [{ label: 'Library', icon: 'library', href: '/library', anyOf: ['library.read'] }], settings: ['library.loanDays', 'library.finePerDay', 'library.maxRenewals'] },
+  { key: 'gallery', state: 'live', addOnPerStudentYear: 20, features: [], name: 'Gallery', blurb: 'Albums by class and event, shared with families who consented to photos.', requires: ['people'], backend: true, nav: [{ label: 'Gallery', icon: 'gallery', href: '/gallery', anyOf: ['gallery.read'] }], settings: [] },
   // Not built yet (features master): the switch exists so plans and prices can name them; it cannot be turned on until they ship.
   { key: 'certificates', state: 'planned', addOnPerStudentYear: 0, features: [], name: 'Certificates and ID cards', blurb: 'Transfer, bonafide and character certificates; printed ID cards.', requires: ['people'], backend: false, nav: [], settings: [] },
   { key: 'diary', state: 'planned', addOnPerStudentYear: 0, features: [], name: 'Digital diary', blurb: 'Daily diary and classwork notes to families.', requires: ['people'], backend: false, nav: [], settings: [] },

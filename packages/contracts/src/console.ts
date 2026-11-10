@@ -249,13 +249,14 @@ export interface BuildRow {
   createdAt: string;
 }
 
-export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply'] as const;
+export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply', 'integration.live', 'retention.erase'] as const;
 export const ActionKey = z.enum(ACTIONS);
 export type ActionKey = z.infer<typeof ActionKey>;
 
 export const ActionRequest = z.object({
   action: ActionKey,
-  schoolId: z.string(),
+  /** Every action is about one school, except taking an integration live, which may serve them all. */
+  schoolId: z.string().optional(),
   params: z.record(z.string(), z.unknown()).default({}),
   dryRun: z.boolean().default(false),
   /** Danger actions need the school code typed exactly. */
@@ -405,17 +406,19 @@ export const CONSOLE_PERMISSIONS = [
   'support.access', 'billing.read', 'billing.write', 'team.write', 'audit.read', 'policy.write', 'sandbox.read', 'compliance.write',
   // Set up a school: its configuration, roles, who is in which role, and the requests schools send.
   'schools.configure',
+  // Third parties: connections, routes, templates and the delivery log.
+  'integrations.read', 'integrations.write',
 ] as const;
 export type ConsolePermission = (typeof CONSOLE_PERMISSIONS)[number];
 
 export const CONSOLE_ROLE_PERMISSIONS: Record<ConsoleRole, readonly ConsolePermission[]> = {
   super_admin: CONSOLE_PERMISSIONS,
-  implementation: ['schools.read', 'schools.configure', 'sandbox.read', 'audit.read'],
-  support: ['schools.read', 'support.access', 'sandbox.read', 'audit.read'],
+  implementation: ['schools.read', 'schools.configure', 'sandbox.read', 'audit.read', 'integrations.read', 'integrations.write'],
+  support: ['schools.read', 'support.access', 'sandbox.read', 'audit.read', 'integrations.read'],
   release_manager: ['schools.read', 'releases.write', 'builds.write', 'flags.write', 'sandbox.read'],
   finance: ['schools.read', 'billing.read', 'billing.write'],
   compliance: ['schools.read', 'audit.read', 'billing.read', 'compliance.write'],
-  auditor: ['schools.read', 'audit.read', 'billing.read', 'sandbox.read'],
+  auditor: ['schools.read', 'audit.read', 'billing.read', 'sandbox.read', 'integrations.read'],
 };
 
 export function consolePermissions(roles: readonly ConsoleRole[]): ConsolePermission[] {

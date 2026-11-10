@@ -22,8 +22,8 @@ describe('modules', () => {
     expect(activeModules(ent, '2026-12-01')).toEqual(['people', 'fees']);
   });
   it('built features are on unless taken away, planned ones never', () => {
-    expect(activeFeatures({}, ['fees'])).toEqual(['fees.onlinePayment', 'fees.reminders']);
-    expect(activeFeatures({ features: { 'fees.onlinePayment': false, 'fees.lateFines': true } }, ['fees'])).toEqual(['fees.reminders']);
+    expect(activeFeatures({}, ['fees'])).toEqual(['fees.onlinePayment', 'fees.reminders', 'fees.lateFines', 'fees.gstReceipts', 'fees.refunds']);
+    expect(activeFeatures({ features: { 'fees.onlinePayment': false, 'fees.concessions': true } }, ['fees'])).toEqual(['fees.reminders', 'fees.lateFines', 'fees.gstReceipts', 'fees.refunds']);
   });
   it('every catalogue key is unique and every feature is named after its module', () => {
     const keys = [...MODULES.map((m) => m.key), ...MODULES.flatMap((m) => m.features.map((f) => f.key))];
@@ -72,7 +72,7 @@ describe('changeEntitlement', () => {
   });
   it('refuses what is not built, bad dates and the core module', () => {
     expect(changeEntitlement(cur, { modules: ['hostel'] }).problems[0]).toMatch(/not built yet/);
-    expect(changeEntitlement(cur, { features: { 'fees.lateFines': true } }).problems[0]).toMatch(/not built yet/);
+    expect(changeEntitlement(cur, { features: { 'fees.concessions': true } }).problems[0]).toMatch(/not built yet/);
     expect(changeEntitlement(cur, { dates: { fees: { from: '2026-12-01', until: '2026-11-01' } } }).problems[0]).toMatch(/ends before it starts/);
     expect(changeEntitlement(cur, { dates: { fees: { until: '2020-01-01' } } }).removed).toEqual(['fees']);
   });
