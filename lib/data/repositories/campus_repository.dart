@@ -1,8 +1,10 @@
+import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/mock_writes.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 abstract class FeeRepository {
   Future<FeeAccount?> forStudent(String studentId);
@@ -53,19 +55,27 @@ class RemoteFeeRepository implements FeeRepository {
     return FeeAccount.fromJson(Map<String, dynamic>.from(json as Map));
   }
 
+  /// Opens the provider's checkout in the browser (no payment SDK in the app), then waits for the provider to confirm:
+  /// the receipt comes back once its webhook marks the order paid. Null when the family left without paying.
   @override
   Future<Receipt?> pay({
     required String studentId,
     required String installmentId,
     required String method,
   }) async {
-    final json = await _remote.post('/fees/$installmentId/pay', {
-      'studentId': studentId,
-      'method': method,
-    });
-    return json is Map
-        ? Receipt.fromJson(Map<String, dynamic>.from(json))
-        : null;
+    final order = Map<String, dynamic>.from(await _remote.post('/fees/$installmentId/order', {'studentId': studentId}) as Map);
+    final opened = await launchUrl(Uri.parse(order['url'] as String), mode: LaunchMode.externalApplication);
+    if (!opened) throw const AppException('fees.pay_open_failed');
+    // ponytail: polls every 3 s for 5 minutes; the checkout's page links back with gradeon://open/fees.
+    for (var i = 0; i < 100; i++) {
+      await Future<void>.delayed(const Duration(seconds: 3));
+      final status = Map<String, dynamic>.from(await _remote.get('/orders/${order['orderId']}') as Map);
+      if (status['status'] == 'paid' && status['receipt'] is Map) {
+        return Receipt.fromJson(Map<String, dynamic>.from(status['receipt'] as Map));
+      }
+      if (status['status'] == 'failed') throw const AppException('fees.pay_failed');
+    }
+    return null;
   }
 }
 

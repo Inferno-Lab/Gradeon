@@ -34,6 +34,22 @@ jobs:
       - name: Leave the sample content out
         # A school's app only talks to its school; the sample content and its code never ship (InitialBinding drops it in release too).
         run: sed -i '\#- assets/mock/#d' pubspec.yaml && rm -rf assets/mock && ! grep -q 'assets/mock' pubspec.yaml
+      - name: The school's name and logo on the phone
+        # From the school's brand (set in the console): its short name under the icon, its logo as the icon and splash mark.
+        # Without a logo the Gradeon icon stays.
+        if: env.API_BASE_URL != ''
+        run: |
+          BRAND=$(curl -fsS -H "x-school: ${{ inputs.school }}" "${API_BASE_URL%/}/v1/brand")
+          NAME=$(echo "$BRAND" | jq -r '.shortName // empty' | sed 's/[&<>"]//g')
+          LOGO=$(echo "$BRAND" | jq -r '.logoUrl // empty')
+          if [ -n "$NAME" ]; then sed -i "s#android:label=\"Gradeon\"#android:label=\"$NAME\"#" android/app/src/main/AndroidManifest.xml; fi
+          if [ -n "$LOGO" ]; then
+            curl -fsSL "$LOGO" -o /tmp/logo
+            rm -rf android/app/src/main/res/mipmap-anydpi-v26  # the adaptive Gradeon icon would win over the school's
+            for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+              convert /tmp/logo -resize "${d#*:}x${d#*:}^" -gravity center -extent "${d#*:}x${d#*:}" "android/app/src/main/res/mipmap-${d%%:*}/ic_launcher.png"
+            done
+          fi
       - run: flutter pub get
       - name: Build the school's app
         run: flutter build apk --release --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${API_BASE_URL}

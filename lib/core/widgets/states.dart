@@ -337,7 +337,9 @@ class OfflineCapsule extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!Get.isRegistered<ConnectivityService>()) return const SizedBox.shrink();
     return Obx(() {
-      if (Get.find<ConnectivityService>().isOnline.value) return const SizedBox.shrink();
+      final net = Get.find<ConnectivityService>();
+      if (net.isOnline.value) return const SizedBox.shrink();
+      final since = net.lastSynced.value;
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Center(
@@ -349,7 +351,13 @@ class OfflineCapsule extends StatelessWidget {
               children: [
                 Icon(PhosphorIconsRegular.wifiSlash, size: 16, color: context.app.ink),
                 const SizedBox(width: 8),
-                Text('common.offline'.tr, style: AppText.capB(color: context.app.ink, height: 1)),
+                Flexible(
+                  child: Text(
+                    since == null ? 'common.offline'.tr : 'common.offline_since'.trp({'time': TimeOfDay.fromDateTime(since).format(context)}),
+                    style: AppText.capB(color: context.app.ink, height: 1),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),

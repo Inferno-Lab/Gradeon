@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/routes/middlewares.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/storage_service.dart';
 
@@ -15,6 +16,7 @@ class SplashController extends GetxController {
   }
 
   void _go() {
+    DeepLinks.booted = true;
     final seen =
         Get.find<StorageService>().read<bool>(StorageKeys.onboardingSeen) ??
         false;

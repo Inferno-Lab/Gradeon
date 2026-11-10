@@ -97,6 +97,38 @@ class StorageService extends GetxService {
     await _box?.write(key, value);
   }
 
+  // The last school data the app loaded, kept encrypted (it names children) so Home works without a network.
+  static const _cachePrefix = 'cache:';
+
+  Future<void> writeCache(String key, String json) async {
+    final memory = _memory;
+    if (memory != null) {
+      memory['$_cachePrefix$key'] = json;
+      return;
+    }
+    await _secure?.write(key: '$_cachePrefix$key', value: json);
+  }
+
+  Future<String?> readCache(String key) async {
+    final memory = _memory;
+    if (memory != null) return memory['$_cachePrefix$key'] as String?;
+    return _secure?.read(key: '$_cachePrefix$key');
+  }
+
+  /// On sign-out: the next person on this phone must not see the last one's data.
+  Future<void> clearCache() async {
+    final memory = _memory;
+    if (memory != null) {
+      memory.removeWhere((k, _) => k.startsWith(_cachePrefix));
+      return;
+    }
+    final secure = _secure;
+    if (secure == null) return;
+    for (final key in (await secure.readAll()).keys.where((k) => k.startsWith(_cachePrefix))) {
+      await secure.delete(key: key);
+    }
+  }
+
   Future<void> remove(String key) async {
     if (_isSecret(key)) {
       if (key == StorageKeys.accessToken) _accessToken = null;

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
+import 'package:gradeon/core/routes/middlewares.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -25,6 +26,13 @@ class ShellController extends GetxController {
     super.onInit();
     unawaited(SchoolConfig.load().then((_) => askConsentIfNeeded()));
     _life = AppLifecycleListener(onResume: () => unawaited(SchoolConfig.load()));
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // A link or notification that started the app: its screen opens over Home.
+    DeepLinks.openPending();
   }
 
   @override
