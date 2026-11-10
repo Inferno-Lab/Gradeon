@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import { createHash } from 'node:crypto';
 import { ADMISSION_STAGES, PAY_METHODS, PERIOD_KINDS, WEEKDAYS } from '@gradeon/contracts';
 import { newId } from '../ids.js';
 
@@ -623,17 +624,44 @@ const libraryLoans = kind<LoanLookups>({
   },
 });
 
-type RouteLookups = { students: Map<string, { id: string }>; routes: Set<string> };
+const libraryBooks = kind<Map<string, string>>({
+  async load(db) {
+    const { rows } = await db.query<{ id: string; title: string; author: string }>('select id, title, author from library_books');
+    return new Map(rows.map((r) => [`${lc(r.title)}|${lc(r.author)}`, r.id]));
+  },
+  check(r, l) {
+    const copies = r.copies ? whole(r.copies) : 1;
+    return ok(`${lc(r.title!)}|${lc(r.author ?? '')}`, copies === null || copies < 0 ? ['Copies is a whole number, like 3.'] : [], l.has(`${lc(r.title!)}|${lc(r.author ?? '')}`));
+  },
+  writes: (rows, l) => [{ table: 'library_books', pk: ['id'], cols: ['isbn', 'category', 'shelf', 'copies'], rows: rows.map((r) => ({
+    id: l.get(`${lc(r.title!)}|${lc(r.author ?? '')}`) ?? newId('bok'), title: r.title!.trim(), author: (r.author ?? '').trim(), isbn: (r.isbn ?? '').trim(),
+    category: (r.category ?? '').trim() || 'General', shelf: (r.shelf ?? '').trim(), copies: r.copies ? whole(r.copies) : 1,
+  })) }],
+  totals: (rows) => [{ label: 'Titles', value: String(rows.length) }, { label: 'Copies', value: String(rows.reduce((n, r) => n + (r.copies ? whole(r.copies) ?? 0 : 1), 0)) }],
+  async export(db) { return (await db.query<Row>('select title, author, isbn, category, shelf, copies::text from library_books order by title')).rows; },
+});
+
+// A route's ID comes from its name, so the same route named on many rows (and in the admin) is one route.
+const routeId = (name: string) => `rte_${createHash('md5').update(name.trim()).digest('hex')}`;
+type RouteLookups = { students: Map<string, { id: string }>; routes: Set<string>; named: Map<string, string> };
 const transport = kind<RouteLookups>({
   async load(db) {
     const { rows } = await db.query<{ student_id: string }>('select student_id from transport_assignments');
-    return { students: await studentMap(db), routes: new Set(rows.map((r) => r.student_id)) };
+    const named = (await db.query<{ id: string; name: string }>('select id, name from transport_routes')).rows;
+    return { students: await studentMap(db), routes: new Set(rows.map((r) => r.student_id)), named: new Map(named.map((r) => [lc(r.name), r.id])) };
   },
   check(r, l) {
     const s = l.students.get(lc(r.admission_no!));
     return ok(lc(r.admission_no!), needStudent(l.students, r.admission_no!), !!s && l.routes.has(s.id));
   },
-  writes: (rows, l) => [{ table: 'transport_assignments', pk: ['student_id'], cols: ['route'], rows: rows.map((r) => ({ student_id: l.students.get(lc(r.admission_no!))!.id, route: r.route!.trim() })) }],
+  writes: (rows, l) => {
+    const id = (name: string) => l.named.get(lc(name)) ?? routeId(name);
+    const names = [...new Map(rows.map((r) => [lc(r.route!), r.route!.trim()])).values()];
+    return [
+      { table: 'transport_routes', pk: ['id'], cols: [], rows: names.map((name) => ({ id: id(name), name })) },
+      { table: 'transport_assignments', pk: ['student_id'], cols: ['route', 'route_id'], rows: rows.map((r) => ({ student_id: l.students.get(lc(r.admission_no!))!.id, route: r.route!.trim(), route_id: id(r.route!) })) },
+    ];
+  },
   totals: (rows) => [{ label: 'Students on a bus', value: String(rows.length) }, { label: 'Routes', value: String(new Set(rows.map((r) => lc(r.route!))).size) }],
   async export(db) { return (await db.query<Row>('select s.admission_no, t.route from transport_assignments t join students s on s.id = t.student_id order by t.route, s.admission_no')).rows; },
 });
@@ -697,5 +725,5 @@ function matchFamily(r: Row, waiting: Waiting[]): Waiting[] {
 }
 
 export const KINDS: Record<string, Impl<never>> = {
-  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, transport, contacts,
+  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, library_books: libraryBooks, transport, contacts,
 } as unknown as Record<string, Impl<never>>;

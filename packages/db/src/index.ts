@@ -6,6 +6,7 @@ export type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 export * as sql from 'drizzle-orm';
 export * from './backup.js';
 export * from './jobs.js';
+export * from './queue.js';
 export * from './import/engine.js';
 export { ImportError, parseCsv, readTable, readXlsx, toCsv, xlsx } from './import/files.js';
 export { sampleSchool, type SampleSchool } from './import/sample.js';
