@@ -709,10 +709,11 @@ await flow('design system: the menu keeps its scroll between pages, and search o
   const sb = p.locator('aside.sb');
   const top = await sb.evaluate((el) => { el.scrollTop = el.scrollHeight; return el.scrollTop; });
   if (top < 20) throw new Error('the menu should scroll on a short window');
-  await sb.getByRole('link', { name: 'Fees' }).click();
-  await p.waitForURL(/\/fees/);
-  await sb.getByRole('link', { name: 'Notices' }).click();
-  await p.waitForURL(/\/notices/);
+  // Two items in view at the bottom of the scrolled menu (clicking one out of view would scroll the menu to it).
+  await sb.getByRole('link', { name: 'Year-end' }).click();
+  await p.waitForURL(/\/year/);
+  await sb.getByRole('link', { name: 'School setup' }).click();
+  await p.waitForURL(/\/settings/);
   const after = await sb.evaluate((el) => el.scrollTop);
   if (Math.abs(after - top) > 1) throw new Error(`the menu scrolled back from ${top} to ${after} when the page changed`);
   await p.keyboard.press('Control+k');
@@ -803,6 +804,86 @@ await flow('design system: every overlay opens and closes from the keyboard, and
   await expectVisible(p.getByRole('dialog', { name: 'Student profile' }), 'the student panel');
   await p.keyboard.press('Escape');
   await p.getByRole('dialog', { name: 'Student profile' }).waitFor({ state: 'hidden' });
+});
+
+// ── Phase 3B and 4 ───────────────────────────────────────────────────────
+await flow('console: integrations add a custom connection, test it and route texts to it', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/integrations`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Sandbox mode'), 'the mode banner');
+  await p.getByRole('button', { name: 'Add a connection' }).first().click();
+  const d = p.getByRole('dialog');
+  await pick(p, d, 'Provider', 'Custom HTTP');
+  await d.getByLabel('Name', { exact: true }).fill('E2E texts');
+  await d.getByLabel('Address', { exact: true }).fill('https://127.0.0.1:9/send');
+  await d.getByLabel('Body', { exact: true }).fill('{"to":"{to}","text":"{text}"}');
+  await d.getByRole('button', { name: 'Add connection' }).click();
+  await expectVisible(p.getByText('E2E texts'), 'the new connection');
+  await p.getByRole('button', { name: 'Test', exact: true }).first().click();
+  const td = p.getByRole('dialog');
+  await td.getByLabel(/Send to/).fill('9822011002');
+  await td.getByRole('button', { name: 'Run the test' }).click();
+  await expectVisible(td.getByRole('status'), 'the test result', 20000);
+  await td.getByRole('button', { name: 'Close' }).click();
+  await p.getByRole('tab', { name: /Routing/ }).click();
+  await p.getByRole('button', { name: 'Set' }).first().click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Save route' }).click();
+  await expectVisible(p.getByText(/now goes through E2E texts/), 'the route saved');
+  for (const tab of ['Templates', 'Activity', 'Webhooks']) {
+    await p.getByRole('tab', { name: new RegExp(tab) }).click();
+    await p.waitForTimeout(300);
+  }
+});
+
+await flow('admin: library adds a book, issues it and takes it back', { storage: adminStore }, async (p) => {
+  await p.goto(A('/library'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Add a book' }).first().click();
+  const d = p.getByRole('dialog');
+  await d.getByLabel('Title').fill('E2E Atlas');
+  await d.getByRole('button', { name: 'Add book' }).click();
+  await expectVisible(p.getByText(/E2E Atlas is in the catalogue/), 'the added toast');
+  await p.getByLabel('Search the catalogue').fill('E2E Atlas');
+  await p.locator('.rw', { hasText: 'E2E Atlas' }).getByRole('button', { name: 'Issue', exact: true }).click();
+  const i = p.getByRole('dialog');
+  await i.getByLabel('To').fill('Aarav Sharma');
+  await i.getByRole('button', { name: /Aarav Sharma/ }).first().click();
+  await i.getByRole('button', { name: 'Issue', exact: true }).click();
+  await expectVisible(p.getByText(/E2E Atlas is with Aarav Sharma/), 'the issue toast');
+  await p.getByRole('tab', { name: /On loan/ }).click();
+  await p.locator('.rw', { hasText: 'E2E Atlas' }).getByRole('button', { name: 'Take back' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Take back' }).click();
+  await expectVisible(p.getByText(/E2E Atlas is back/), 'the return toast');
+});
+
+await flow('admin: transport adds a route with a stop and puts a student on it', { storage: adminStore }, async (p) => {
+  await p.goto(A('/transport'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Add a route' }).first().click();
+  const d = p.getByRole('dialog');
+  await d.getByLabel('Route name').fill('E2E Route');
+  await d.getByRole('button', { name: 'Add a stop' }).click();
+  await d.getByLabel('Stop 1').fill('E2E Corner');
+  await d.getByRole('button', { name: 'Save route' }).click();
+  await expectVisible(p.getByText(/E2E Route was saved with 1 stops/), 'the saved route');
+  await p.getByRole('tab', { name: /Who rides/ }).click();
+  await expectVisible(p.getByText('Who rides which bus'), 'the riders card');
+});
+
+await flow('admin: gallery makes an album and opens it', { storage: adminStore }, async (p) => {
+  await p.goto(A('/gallery'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'New album' }).first().click();
+  await p.getByRole('dialog').getByLabel('Title').fill('E2E Sports day');
+  await p.getByRole('dialog').getByRole('button', { name: 'Create album' }).click();
+  await p.getByRole('button', { name: 'Open E2E Sports day' }).click();
+  await expectVisible(p.getByRole('dialog', { name: 'E2E Sports day' }), 'the album panel');
+  await p.keyboard.press('Escape');
+});
+
+await flow('admin: year-end drafts the next year and previews promotion', { storage: adminStore }, async (p) => {
+  await p.goto(A('/year'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Promote students' }).click();
+  await expectVisible(p.getByRole('dialog').getByText(/Leaves the school|Each class moves/), 'the promotion preview');
+  await p.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+  await p.goto(A('/online-payments'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Online payments' }), 'online payments');
 });
 
 await browser.close();

@@ -46,6 +46,8 @@ Texts and emails are caught in the console under **Test inbox**; nothing is sent
 
 Optional: to hear about trouble (a new kind of error, a school not answering, a failed backup or restore drill), add `ALERT_WEBHOOK_URL` in Render → **Environment** with a Slack or Discord incoming webhook. Backups run daily and a restore drill weekly; both show on the console's **Health** page.
 
+Messages, files and payments: the test track runs with `MESSAGING_MODE=sandbox` (the default), so texts and emails land in the console's **Test inbox**, files are kept in the database and payments open a test checkout. To try a real provider, add it in the console under **Integrations**, route it, and put your own number on the allow-list; nothing else changes. For real families set `MESSAGING_MODE=live` (and the same on both services if they run apart), with a live connection for every capability. `CLAMAV_HOST` adds a virus scan to uploads. See `docs/integrations.md`.
+
 ## 5. Optional: Android app builds
 
 The console's **Build Android app** starts a GitHub Actions workflow (`.github/workflows/mobile-build.yml`) that builds the APK and posts the install link back.
@@ -56,7 +58,7 @@ The console's **Build Android app** starts a GitHub Actions workflow (`.github/w
 
 ### What the app does against the test track
 
-A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (teachers: password, then the code; families: a code to their phone; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). It follows what the console set for the school: tabs, Home cards and quick buttons, languages, the privacy notice and consent. What a teacher marks in the app shows up in the admin. The workflow leaves the sample content out of the package. Not yet: library catalogue, gallery photos, live transport, push.
+A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (teachers: password, then the code; families: a code to their phone; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). It follows what the console set for the school: tabs, Home cards and quick buttons, languages, the privacy notice and consent. What a teacher marks in the app shows up in the admin. The workflow leaves the sample content out of the package. Payments open the provider's checkout (the test checkout on the test track), and files, the library, transport with the live bus and the gallery work from the school's data. Not yet: push notifications (the app needs the owner's Firebase project files; see `docs/integrations.md`).
 
 ## Updating
 
