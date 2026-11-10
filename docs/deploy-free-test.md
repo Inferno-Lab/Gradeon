@@ -66,4 +66,4 @@ Pushing to `main` redeploys automatically. Database changes are applied by the s
 
 ## Using real infrastructure later
 
-The same steps run on AWS: a cell in the console gets the `aws-cell` target, and the blueprints under **Blueprints** describe what is created for each school. See `docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`.
+The same steps run on AWS: a cell in the console gets the `aws-cell` target, and the blueprints under **Blueprints** describe what is created for each school.
