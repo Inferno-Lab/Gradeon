@@ -43,7 +43,7 @@ export function seedTokens(h, dark) {
 }
 
 const SEM = { ok: 150, warn: 75, bad: 25, info: 250 };
-export const SPECTRUM = { art: 0, sanskrit: 30, hindi: 60, social: 90, evs: 120, sport: 150, science: 185, music: 215, maths: 250, computers: 275, english: 305, marathi: 335 };
+export const SPECTRUM = { rose: 0, red: 30, orange: 60, amber: 90, lime: 120, green: 150, teal: 185, cyan: 215, blue: 250, indigo: 275, violet: 305, pink: 335 };
 const tri = (H, dark) => (dark ? [rel(0.72, 0.85, 0.16, H), rel(0.3, 0.6, 0.065, H), rel(0.87, 0.7, 0.11, H)] : [rel(0.6, 0.9, 0.17, H), rel(0.945, 0.9, 0.045, H), rel(0.4, 0.9, 0.13, H)]);
 export function fixedTokens(dark) {
   const t = {};

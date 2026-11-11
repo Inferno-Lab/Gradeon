@@ -1,7 +1,7 @@
 <div class="hue s-emerald phone">
   <div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div>
   <header class="phead">
-    <div class="ptop"><button class="pib ond" aria-label="Back">[[ib:caret-left]]</button><h1>Results</h1><span class="sp"></span><span class="chip ond"><span class="av sm sp sp-art">AS</span>Aarav[[ib:caret-down]]</span></div>
+    <div class="ptop"><button class="pib ond" aria-label="Back">[[ib:caret-left]]</button><h1>Results</h1><span class="sp"></span><span class="chip ond"><span class="av sm sp sp-rose">AS</span>Aarav[[ib:caret-down]]</span></div>
     <div class="rw" style="gap:18px">
       <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true" style="flex:none"><circle cx="52" cy="52" r="42" fill="none" stroke-width="10" style="stroke:var(--deep3)"/><circle cx="52" cy="52" r="42" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="232.2 263.9" transform="rotate(-90 52 52)" style="stroke:var(--bright)"/><text x="52" y="60" text-anchor="middle" style="fill:var(--on-deep);font:700 24px 'Mona Sans';font-stretch:112%">88%</text></svg>
       <div class="col" style="gap:6px">
@@ -25,11 +25,11 @@
       </section>
     </div>
   </div>
-  <nav class="tabs"><a class="on">[[if:house]]Home</a><a>[[i:megaphone]]Notices</a><a>[[i:wallet]]Fees</a><a>[[i:chat-circle]]Chat</a><a>[[i:user-circle]]Profile</a></nav>
+  <nav class="tabs"><a class="on">[[if:@home]]Home</a><a>[[i:@notices]]Notices</a><a>[[i:@fees]]Fees</a><a>[[i:@messages]]Chat</a><a>[[i:@profile]]Profile</a></nav>
 </div>
 <script>
 renderVals() {
-  const S = [["Maths", "maths", 18], ["Science", "science", 17], ["English", "english", 19], ["Hindi", "hindi", 16], ["Marathi", "marathi", 17], ["Social science", "social", 18]];
+  const S = [["Maths", "blue", 18], ["Science", "teal", 17], ["English", "violet", 19], ["Hindi", "orange", 16], ["Marathi", "pink", 17], ["Social science", "amber", 18]];
   return { subs: S.map(([n, k, m]) => ({ n, cls: "sp-" + k, m: m + "/20", w: m * 5 })) };
 }
 </script>

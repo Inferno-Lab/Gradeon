@@ -14,7 +14,8 @@ The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAd
 6. **Tokens only**, so light, dark and every school colour work.
 7. **Narrow** (below about 640 px): every web composition falls back to one column. On the phone each page has its own arrangement (see the app boards).
 8. **Reduced motion:** the last frame, still (replaced parts hidden, counters at their final value).
-9. **Only when truly empty.** Loading and error states stay as they are. A filter or search with no results is not an empty page (Search has its own no-match state).
+9. **Page icons** in labels and buttons come from `icon-map.mjs` (`[[es:@fees|…]]`), so the empty state, the menu and the app tabs show the same icon.
+10. **Only when truly empty.** Loading and error states stay as they are. A filter or search with no results is not an empty page (Search has its own no-match state).
 
 ## How to build it
 

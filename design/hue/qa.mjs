@@ -22,6 +22,16 @@ for (const n of names) {
       if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== 'visible' && !el.hasAttribute('data-scroll')) out.push(`cut[${el.className}] ${txt(el)}`);
       if (el.matches('.btn,.tag,.tabr a,.seg button,.seg span,.st,kbd,.search,.nv,.chip,.th') && el.scrollHeight > el.clientHeight + 3) out.push(`wrap[${el.className}] ${txt(el)}`);
     }
+    // icon rules (README "Icons"): four sizes, bold at 16 px and under, hidden from screen readers, named controls, web tooltips
+    for (const s of root.querySelectorAll('svg.i')) {
+      const w = Math.round(s.getBoundingClientRect().width), at = s.parentElement.className || s.parentElement.tagName;
+      if (!w || s.closest('.stat')) continue;
+      if (![14, 16, 20, 24].includes(w)) out.push(`icon-size ${w}[${at}]`);
+      if (w <= 16 && s.dataset.k !== 'b') out.push(`icon-weight ${s.dataset.k}@${w}[${at}]`);
+      if (s.getAttribute('aria-hidden') !== 'true') out.push(`icon-hidden[${at}]`);
+    }
+    for (const c of root.querySelectorAll('button,a')) if (!c.textContent.trim() && !c.getAttribute('aria-label')) out.push(`no-name[${c.className}]`);
+    for (const c of root.querySelectorAll('.ib')) if (!c.dataset.tip) out.push(`no-tip[${c.getAttribute('aria-label')}]`);
     return { h: Math.ceil(root.scrollHeight), out: [...new Set(out)].slice(0, 10) };
   });
   heights[n] = r.h; console.log(n, r.h, r.out.length ? '\n  ' + r.out.join('\n  ') : 'ok');

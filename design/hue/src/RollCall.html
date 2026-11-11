@@ -14,7 +14,7 @@
       <span class="t2" style="font-size:14px;line-height:20px">Tap a name to change it. Everyone starts as present.</span>
       <div class="prows" style="margin:0">
         <sc-for list="{{kids}}" as="k" hint-placeholder-count="7">
-          <button class="prow" style="min-height:56px;width:100%;text-align:left" onClick="{{k.go}}"><span class="{{k.av}}">{{k.in}}</span><span class="grow"><b>{{k.n}}</b><small class="e0">{{k.note}}</small></span><span class="{{k.cls}}"><svg class="i" viewBox="0 0 256 256"><path d="{{k.d}}"/></svg>{{k.t}}</span></button>
+          <button class="prow" style="min-height:56px;width:100%;text-align:left" onClick="{{k.go}}"><span class="{{k.av}}">{{k.in}}</span><span class="grow"><b>{{k.n}}</b><small class="e0">{{k.note}}</small></span><span class="{{k.cls}}"><svg class="i" data-k="b" viewBox="0 0 256 256" aria-hidden="true"><path d="{{k.d}}"/></svg>{{k.t}}</span></button>
         </sc-for>
       </div>
       <span class="rw t2" style="gap:6px;font-size:14px;justify-content:center">25 more, all present[[ib:caret-down]]</span>
@@ -24,10 +24,10 @@
 </div>
 <script>
 renderVals() {
-  const K = [["Zoya Shaikh", "maths", "A", "On leave · note from parent"], ["Aarav Sharma", "art", "P"], ["Aditi Rao", "hindi", "P"], ["Advait Joshi", "evs", "P"], ["Anika Verma", "maths", "P"], ["Arnav Desai", "art", "P"], ["Avni Kapoor", "hindi", "P"]];
+  const K = [["Zoya Shaikh", "blue", "A", "On leave · note from parent"], ["Aarav Sharma", "rose", "P"], ["Aditi Rao", "orange", "P"], ["Advait Joshi", "lime", "P"], ["Anika Verma", "blue", "P"], ["Arnav Desai", "rose", "P"], ["Avni Kapoor", "orange", "P"]];
   const m = (this.state && this.state.m) || K.map((k) => k[2]);
   const next = { P: "A", A: "L", L: "P" };
-  const V = { P: ["st ok", "Present", "[[pb:check]]"], A: ["st bad", "Absent", "[[pb:x]]"], L: ["st warn", "Late", "[[pb:clock]]"] };
+  const V = { P: ["st ok", "Present", "[[pb:@present]]"], A: ["st bad", "Absent", "[[pb:@absent]]"], L: ["st warn", "Late", "[[pb:@late]]"] };
   const n = { p: 25, a: 0, l: 0 };
   m.forEach((v) => n[v.toLowerCase()]++);
   return {

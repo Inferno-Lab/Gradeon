@@ -1,6 +1,7 @@
 // src/*.html (markup + optional <script> class body) -> canvas boards, hue.css, canvas.json. node build.mjs
 import fs from 'node:fs';
 import { iconPath } from './icons.mjs';
+import { PAGES, GLYPHS, SIZES } from './icon-map.mjs';
 import { tokensCss } from './palette.mjs';
 const HERE = new URL('.', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
 const OUTS = [HERE + 'canvas/', HERE + 'preview/'];
@@ -14,6 +15,7 @@ export const BOARDS = [
   ['Type', 'system', 2 * G, 0, W, 960, 'Type · one family, two voices'],
   ['Components', 'system', 0, 1300, W, 1500, 'Web components', { live: 1, dark: ['ComponentsDark', G, 1300, 'Web components · dark'] }],
   ['AppKit', 'system', 2 * G, 1300, W, 960, 'App components'],
+  ['Icons', 'system', 2 * G, 2400, W, 960, 'Icons · one meaning, one icon'],
   ['Today', 'admin', 0, 0, W, 960, 'Today', { dark: ['TodayDark', G, 0, 'Today · dark'] }],
   ['Students', 'admin', 2 * G, 0, W, 960, 'Students', { live: 1 }],
   ['Fees', 'admin', 0, 1300, W, 960, 'Fees'],
@@ -56,13 +58,16 @@ const NOTES = {
 
 // empty states: [[es:icon|Page|where]] label ... [[/es]]; [[t:classes|heading|text|button|link?]] words; phone: [[ph:title|p or t|tab|back]] header extras [[sheet]] content [[/ph]]
 const TABS = {
-  p: [['house', 'Home'], ['megaphone', 'Notices'], ['wallet', 'Fees'], ['chat-circle', 'Chat'], ['user-circle', 'Profile']],
-  t: [['house', 'Home'], ['chalkboard-teacher', 'Classes'], ['notebook', 'Homework'], ['chat-circle', 'Chat'], ['user-circle', 'Profile']],
+  p: [['@home', 'Home'], ['@notices', 'Notices'], ['@fees', 'Fees'], ['@messages', 'Chat'], ['@profile', 'Profile']],
+  t: [['@home', 'Home'], ['@classes', 'Classes'], ['@homework', 'Homework'], ['@messages', 'Chat'], ['@profile', 'Profile']],
 };
-const WHO = { p: '<span class="chip ond"><span class="av sm sp sp-art">MT</span>Maya[[ib:caret-down]]</span>', t: '<span class="chip ond"><span class="av sm sp sp-maths">EO</span>Ms Ortiz[[ib:caret-down]]</span>' };
+const WHO = { p: '<span class="chip ond"><span class="av sm sp sp-rose">MT</span>Maya[[ib:caret-down]]</span>', t: '<span class="chip ond"><span class="av sm sp sp-blue">EO</span>Ms Ortiz[[ib:caret-down]]</span>' };
 let tabs = '';
+// the Icons board lists the map itself, so the board and the code can never disagree
+const iconCells = (o, k) => Object.entries(o).map(([m, n]) => `<div class="icc">${k === 'b' ? `[[ib:@${m}]]` : `[[i:@${m}]][[if:@${m}]]`}<b>${m}</b><small>${n}</small></div>`).join('');
 const macros = (s) => s
-  .replace(/\[\[es:([\w-]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_, ic, page, where) => `<div class="es-item"><div class="es-where">[[i:${ic}]]<b>${page}</b><span>${where}</span></div>`)
+  .replace(/\[\[iconmap:(pages|glyphs)\]\]/g, (_, w) => w === 'pages' ? iconCells(PAGES, 'r') : iconCells(GLYPHS, 'b'))
+  .replace(/\[\[es:(@?[\w-]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_, ic, page, where) => `<div class="es-item"><div class="es-where">[[ib:${ic}]]<b>${page}</b><span>${where}</span></div>`)
   .replace(/\[\[\/es\]\]/g, '</div>')
   .replace(/\[\[t:([\w ]*)\|([^|\]]+)\|([^|\]]+)\|([^|\]]+)(?:\|([^\]]+))?\]\]/g, (_, cls, h, p, b, l) => `<div class="ew ${cls}"><h2>${h}</h2><p>${p}</p><div class="acts"><button class="btn pri lg">${b}</button>${l ? `<a class="lk" href="#">${l}</a>` : ''}</div></div>`)
   .replace(/\[\[ph:([^|\]]+)\|([pt])\|(-?\d)\|([01])\]\]|\[\[sheet\]\]|\[\[\/ph\]\]/g, (m, title, role, tab, back) => {
@@ -72,10 +77,12 @@ const macros = (s) => s
     return `<div class="hue s-emerald phone"><div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div><header class="phead" style="padding-bottom:44px"><div class="ptop">${back === '1' ? '<button class="pib ond" aria-label="Back">[[ib:caret-left]]</button>' : ''}<h1>${title}</h1><span class="sp"></span>${WHO[role]}</div>`;
   });
 
-const svg = (d) => `<svg class="i" viewBox="0 0 256 256" aria-hidden="true"><path d="${d}"/></svg>`;
+// @fees means "the icon for fees" in icon-map.mjs; data-k (r, f, b) lets qa.mjs check the weight rules
+const named = (n) => { if (n[0] !== '@') return n; const v = PAGES[n.slice(1)] ?? GLYPHS[n.slice(1)]; if (!v) throw new Error(`no icon meaning "${n}"`); return v; };
+const svg = (d, k) => `<svg class="i" data-k="${k}" viewBox="0 0 256 256" aria-hidden="true"><path d="${d}"/></svg>`;
 const icons = (s) => s
-  .replace(/\[\[i([fb]?):([\w-]+)\]\]/g, (_, k, n) => svg(iconPath(n, k || 'r')))
-  .replace(/\[\[p([fb]?):([\w-]+)\]\]/g, (_, k, n) => iconPath(n, k || 'r'));
+  .replace(/\[\[i([fb]?):(@?[\w-]+)\]\]/g, (_, k, n) => svg(iconPath(named(n), k || 'r'), k || 'r'))
+  .replace(/\[\[p([fb]?):(@?[\w-]+)\]\]/g, (_, k, n) => iconPath(named(n), k || 'r'));
 
 function board(name, w, h, title, src) {
   const m = src.match(/<script(?:\s+props='([^']*)')?>([\s\S]*?)<\/script>\s*$/);
@@ -136,4 +143,36 @@ for (const out of OUTS) {
   for (const f of fs.readdirSync(out)) if (/\.dc\.html$|^ink\.css$/.test(f)) fs.rmSync(out + f);
   for (const [f, t] of Object.entries(files)) if (!(out.endsWith('gprev/') && f === 'canvas.json')) fs.writeFileSync(out + f, t);
 }
+// code/: the icon set the Hue build copies into packages/web-ui and lib/core/widgets
+const camel = (n) => n.replace(/-(\w)/g, (_, c) => c.toUpperCase()), gen = 'Generated by design/hue/build.mjs from design/hue/icon-map.mjs. Do not edit.';
+const tsRows = (o, ks) => Object.entries(o).map(([k, n]) => `  ${k}: ${ks.length > 1 ? `{ ${ks.map((q) => `${q}: '${iconPath(n, q)}'`).join(', ')} }` : `'${iconPath(n, ks[0])}'`},`).join('\n');
+fs.mkdirSync(`${HERE}code`, { recursive: true });
+fs.writeFileSync(`${HERE}code/icons.ts`, `// ${gen}
+// Phosphor paths on a 256 grid, drawn filled: <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">.
+/** Pages, modules and tabs: r regular, f when selected. */
+export const IC = {
+${tsRows(PAGES, ['r', 'f'])}
+} as const;
+/** Small symbols and statuses: bold, 14 or 16 px. */
+export const GLYPH = {
+${tsRows(GLYPHS, ['b'])}
+} as const;
+export const ICON_SIZE = { ${Object.entries(SIZES).map(([k, v]) => `${k}: ${v}`).join(', ')} } as const;
+`);
+const dart = (o, cls, suffix = '') => Object.entries(o).map(([k, n]) => `  static const IconData ${k}${suffix} = ${cls}.${camel(n)};`).join('\n');
+fs.writeFileSync(`${HERE}code/app_icons.dart`, `// ${gen}
+import 'package:flutter/widgets.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+/// One icon per meaning: pages and tabs (regular, \`…On\` when selected), small symbols (bold), the four sizes.
+abstract final class AppIcons {
+${dart(PAGES, 'PhosphorIconsRegular')}
+
+${dart(PAGES, 'PhosphorIconsFill', 'On')}
+
+${dart(GLYPHS, 'PhosphorIconsBold')}
+
+${Object.entries(SIZES).map(([k, v]) => `  static const double size${k[0].toUpperCase()}${k.slice(1)} = ${v};`).join('\n')}
+}
+`);
 console.log(`built ${cv.order.length} boards${missing.length ? `; no source yet: ${missing.join(', ')}` : ''}`);

@@ -97,11 +97,20 @@
    "page": "system",
    "expand": "fill"
   },
+  "Icons.dc.html": {
+   "x": 3040,
+   "y": 2400,
+   "w": 1440,
+   "h": 1168,
+   "title": "Icons · one meaning, one icon",
+   "page": "system",
+   "expand": "fill"
+  },
   "Today.dc.html": {
    "x": 0,
    "y": 0,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Today",
    "page": "admin",
    "expand": "fill"
@@ -110,7 +119,7 @@
    "x": 1520,
    "y": 0,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Today · dark",
    "page": "admin",
    "expand": "fill"
@@ -119,7 +128,7 @@
    "x": 3040,
    "y": 0,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Students",
    "page": "admin",
    "expand": "fill",
@@ -129,7 +138,7 @@
    "x": 0,
    "y": 1300,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Fees",
    "page": "admin",
    "expand": "fill"
@@ -138,7 +147,7 @@
    "x": 1520,
    "y": 1300,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Attendance · roll call",
    "page": "admin",
    "expand": "fill",
@@ -148,7 +157,7 @@
    "x": 3040,
    "y": 1300,
    "w": 1440,
-   "h": 960,
+   "h": 1049,
    "title": "Timetable",
    "page": "admin",
    "expand": "fill"
@@ -166,7 +175,7 @@
    "x": 1520,
    "y": 2600,
    "w": 248,
-   "h": 940,
+   "h": 1029,
    "title": "Menu (shared part)",
    "page": "admin"
   },
@@ -321,7 +330,7 @@
    "x": 6080,
    "y": 0,
    "w": 1440,
-   "h": 2113,
+   "h": 2107,
    "title": "Admin · Reach",
    "page": "empty-admin",
    "expand": "fill"
@@ -339,7 +348,7 @@
    "x": 0,
    "y": 0,
    "w": 1440,
-   "h": 2792,
+   "h": 2732,
    "title": "Console · Operate",
    "page": "empty-console",
    "expand": "fill"
@@ -348,7 +357,7 @@
    "x": 6080,
    "y": 0,
    "w": 1440,
-   "h": 2792,
+   "h": 2732,
    "title": "Console · Operate, dark",
    "page": "empty-console",
    "expand": "fill"
@@ -433,6 +442,7 @@
   "Components.dc.html",
   "ComponentsDark.dc.html",
   "AppKit.dc.html",
+  "Icons.dc.html",
   "Today.dc.html",
   "TodayDark.dc.html",
   "Students.dc.html",
