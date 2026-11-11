@@ -5,25 +5,37 @@ import { ApiError, alert, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { withSchoolDb } from './school-db.js';
+import { PlatformHub } from './platform-hub.js';
 
 const KEEP = 14;
 
 /** Every live school is backed up once a day; the console can take one on demand and put one back (with a second approver). */
 @Injectable()
 export class Backups implements OnModuleInit {
-  /** Where backups are kept: a separate database when BACKUP_DATABASE_URL is set, so losing the registry does not lose them too. */
-  private readonly store: pg.Pool;
-
   constructor(
     private readonly db: Db,
     @Inject(ENV) private readonly env: Env,
-  ) {
-    this.store = env.BACKUP_DATABASE_URL ? new pg.Pool({ connectionString: env.BACKUP_DATABASE_URL, max: 2 }) : db.pool;
+    private readonly platform: PlatformHub,
+  ) {}
+
+  /**
+   * Where backups are kept: Gradeon's File storage connection (Integrations), so losing the registry does not lose them. On the
+   * test track without a bucket that is the registry's own sandbox store.
+   */
+  private async files() {
+    const r = await this.platform.hub.resolve('storage', null, 'gradeon');
+    if (!r.adapter.storage) throw new Error('The File storage connection cannot keep files.');
+    return { storage: r.adapter.storage, ctx: r.ctx };
+  }
+
+  /** A backup's data: from storage, or (for backups taken before storage held them) from its row. */
+  private async read(b: { data: Buffer | null; storage_key: string | null }): Promise<Buffer> {
+    if (!b.storage_key) return b.data!;
+    const f = await this.files();
+    return f.storage.get(f.ctx, b.storage_key);
   }
 
   async onModuleInit(): Promise<void> {
-    // ponytail: the backup database takes the whole registry set and uses one table; give it its own set if it grows.
-    if (this.store !== this.db.pool) await migrate(this.store, 'registry');
     if (this.env.NODE_ENV === 'test') return;
     scheduleJob(this.db.pool, 'backups', 24 * 60 * 60 * 1000, () => this.daily(), () => undefined);
     scheduleJob(this.db.pool, 'restore-drill', 7 * 24 * 60 * 60 * 1000, () => this.drill('weekly drill').then(() => undefined), () => undefined);
@@ -36,7 +48,7 @@ export class Backups implements OnModuleInit {
 
   /** An empty database on the schools' server, dropped afterwards. */
   private async scratch<T>(fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
-    const admin = this.env.SHARED_PG_ADMIN_URL ?? this.env.REGISTRY_DATABASE_URL;
+    const admin = this.env.REGISTRY_DATABASE_URL;
     const name = `gradeon_scratch_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
     const run = async (sql: string) => {
       const c = new pg.Client({ connectionString: admin });
@@ -67,7 +79,7 @@ export class Backups implements OnModuleInit {
     let result: { tables: number; rows: number; students: number; error: string | null };
     try {
       const b = await this.take(school.id, 'manual', 'Restore drill');
-      const data = (await this.store.query<{ data: Buffer }>('select data from school_backups where id = $1', [b.id])).rows[0]!.data;
+      const data = await this.read((await this.db.pool.query<{ data: Buffer | null; storage_key: string | null }>('select data, storage_key from school_backups where id = $1', [b.id])).rows[0]!);
       result = await this.scratch(async (pool) => {
         await migrate(pool, 'school');
         const r = await restoreDatabase(pool, data);
@@ -98,25 +110,30 @@ export class Backups implements OnModuleInit {
   async take(schoolId: string, kind: 'daily' | 'manual', by: string): Promise<BackupRow> {
     const data = await this.withPool(schoolId, backupDatabase);
     const id = newId('bak');
-    await this.store.query('insert into school_backups (id, school_id, kind, taken_by, bytes, data) values ($1,$2,$3,$4,$5,$6)', [id, schoolId, kind, by, data.length, data]);
-    await this.store.query(
-      'delete from school_backups where school_id = $1 and id not in (select id from school_backups where school_id = $1 order by taken_at desc limit $2)', [schoolId, KEEP]);
+    const key = `backups/${schoolId}/${id}.jsonl.gz`;
+    const f = await this.files();
+    await f.storage.put(f.ctx, key, data, 'application/gzip');
+    await this.db.pool.query('insert into school_backups (id, school_id, kind, taken_by, bytes, data, storage_key) values ($1,$2,$3,$4,$5,null,$6)', [id, schoolId, kind, by, data.length, key]);
+    const old = await this.db.pool.query<{ id: string; storage_key: string | null }>(
+      'delete from school_backups where school_id = $1 and id not in (select id from school_backups where school_id = $1 order by taken_at desc limit $2) returning id, storage_key', [schoolId, KEEP]);
+    for (const o of old.rows) if (o.storage_key) await f.storage.remove(f.ctx, o.storage_key).catch(() => undefined);
     return (await this.list(schoolId)).find((b) => b.id === id)!;
   }
 
   async list(schoolId: string): Promise<BackupRow[]> {
-    const { rows } = await this.store.query<{ id: string; kind: BackupRow['kind']; taken_by: string; bytes: number; taken_at: Date }>(
+    const { rows } = await this.db.pool.query<{ id: string; kind: BackupRow['kind']; taken_by: string; bytes: number; taken_at: Date }>(
       'select id, kind, taken_by, bytes, taken_at from school_backups where school_id = $1 order by taken_at desc', [schoolId]);
     return rows.map((r) => ({ id: r.id, kind: r.kind, takenBy: r.taken_by, bytes: r.bytes, takenAt: r.taken_at.toISOString() }));
   }
 
   /** Takes a fresh backup first, so even a restore can be undone. */
   async restore(schoolId: string, backupId: string, by: string): Promise<string> {
-    const b = (await this.store.query<{ data: Buffer; taken_at: Date }>('select data, taken_at from school_backups where id = $1 and school_id = $2', [backupId, schoolId])).rows[0];
+    const b = (await this.db.pool.query<{ data: Buffer | null; storage_key: string | null; taken_at: Date }>('select data, storage_key, taken_at from school_backups where id = $1 and school_id = $2', [backupId, schoolId])).rows[0];
     if (!b) throw notFound('That backup');
+    const raw = await this.read(b);
     // A backup from before the last deploy that added a migration is brought forward first.
     const current = (await loadMigrations('school')).map((m) => m.tag);
-    const data = (await backupMigrations(b.data)).join() === current.join() ? b.data : await this.scratch((pool) => bringForward(b.data, pool, current));
+    const data = (await backupMigrations(raw)).join() === current.join() ? raw : await this.scratch((pool) => bringForward(raw, pool, current));
     await this.take(schoolId, 'manual', `${by} (before restoring)`);
     const r = await this.withPool(schoolId, (pool) => restoreDatabase(pool, data));
     return `Restored ${r.rows} rows in ${r.tables} tables from the backup of ${b.taken_at.toISOString().slice(0, 16).replace('T', ' ')} UTC. A backup of the data just before is kept.`;

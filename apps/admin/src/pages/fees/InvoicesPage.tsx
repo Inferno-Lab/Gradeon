@@ -5,7 +5,7 @@ import { Dialog, EmptyCard, Segmented, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { useShellChrome } from '../../app/Layout';
-import { Avatar, Ico, dateLabel } from '../../app/kit';
+import { Avatar, Ico, dateLabel, useFeeHeads } from '../../app/kit';
 import { CollectFeeDialog } from '../students/StudentDialogs';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${inr(Math.round(n))}`);
@@ -13,20 +13,20 @@ const STATUS: Record<string, { tone: string; label: string }> = { paid: { tone: 
 const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
 type Filter = 'all' | 'overdue' | 'due' | 'partial' | 'paid';
 
-export function InvoicesPage() {
+export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; tabs?: React.ReactNode }) {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [view, setView] = useState<'invoices' | 'receipts'>('invoices');
   const [status, setStatus] = useState<Filter>('all');
   const [head, setHead] = useState('');
+  const heads = useFeeHeads();
   const [q, setQ] = useState('');
   const [term, setTerm] = useState('');
   const [page, setPage] = useState(1);
   const [paying, setPaying] = useState<StudentDetail | null>(null);
   const [receipt, setReceipt] = useState<ReceiptRow | null>(null);
   useEffect(() => { const t = setTimeout(() => { setTerm(q); setPage(1); }, 250); return () => clearTimeout(t); }, [q]);
-  const query: Partial<InvoiceListQuery> = { status: status === 'all' ? undefined : status, head: (head || undefined) as 'tuition' | undefined, query: term || undefined, page, limit: 25 };
+  const query: Partial<InvoiceListQuery> = { status: status === 'all' ? undefined : status, head: head || undefined, query: term || undefined, page, limit: 25 };
   const inv = useQuery({ queryKey: ['invoices', query], queryFn: () => app.api.invoices.list(query), placeholderData: (p) => p, enabled: view === 'invoices' });
   const rec = useQuery({ queryKey: ['receipts', term], queryFn: () => app.api.invoices.receipts(term || undefined), enabled: view === 'receipts' });
   const open = useMutation({ mutationFn: (id: string) => app.api.students.detail(id), onSuccess: setPaying, onError: (e) => say((e as Error).message, 'bad') });
@@ -35,9 +35,9 @@ export function InvoicesPage() {
   const pages = Math.max(1, Math.ceil((inv.data?.total ?? 0) / 25));
   const cur = view === 'invoices' ? inv : rec;
   return (
-    <Page title="Invoices" sub="Every fee billed, and every receipt given" toast={toast} loading={cur.isLoading && !cur.data}
+    <Page title="Fees" sub={view === 'invoices' ? 'Every fee billed' : 'Every receipt given'} toast={toast} loading={cur.isLoading && !cur.data}
       error={cur.isError && !cur.data ? { message: (cur.error as Error).message, retry: () => void cur.refetch() } : null}
-      actions={<Segmented value={view} onChange={(v) => { setView(v); setPage(1); }} label="Invoices or receipts" options={[{ value: 'invoices', label: 'Invoices' }, { value: 'receipts', label: 'Receipts' }]} />}
+      actions={tabs}
       overlays={<>
         {paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); void qc.invalidateQueries({ predicate: (x) => ['invoices', 'receipts', 'fee-summary', 'students', 'dashboard'].includes(String(x.queryKey[0])) }); say(m); }} />}
         {receipt && <ReceiptSheet r={receipt} onClose={() => setReceipt(null)} />}
@@ -56,7 +56,7 @@ export function InvoicesPage() {
           {view === 'invoices' && (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '8px 24px 16px', alignItems: 'center' }}>
               <Segmented value={status} onChange={(v) => { setStatus(v); setPage(1); }} label="Status" options={[{ value: 'all', label: 'All' }, { value: 'overdue', label: 'Overdue' }, { value: 'due', label: 'Due' }, { value: 'partial', label: 'Part paid' }, { value: 'paid', label: 'Paid' }]} />
-              <Select compact aria-label="Kind of fee" value={head} onChange={(v) => { setHead(v); setPage(1); }} options={[{ value: '', label: 'All fees' }, { value: 'tuition', label: 'Tuition' }, { value: 'transport', label: 'Transport' }, { value: 'activities', label: 'Activities' }, { value: 'lab', label: 'Lab' }]} />
+              <Select compact aria-label="Kind of fee" value={head} onChange={(v) => { setHead(v); setPage(1); }} options={[{ value: '', label: 'All fees' }, ...heads]} />
             </div>
           )}
           {view === 'invoices' ? (

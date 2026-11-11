@@ -78,16 +78,19 @@ export function CellsPage() {
 
 function AddCell({ onClose, onDone }: { onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
-  const [f, setF] = useState({ key: '', target: 'free-test', region: '', maxSchools: '25' });
+  const [f, setF] = useState({ key: '', target: 'free-test', region: '', maxSchools: '25', connectionId: '' });
+  const view = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view });
+  const dbs = (view.data?.connections ?? []).filter((c) => (c.provider === 'postgres-server' || c.provider === 'neon') && c.state !== 'draft');
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
-  const make = useMutation({ mutationFn: () => app.api.createCell({ key: f.key.trim().toLowerCase(), target: f.target as 'local', region: f.region.trim(), maxSchools: Number(f.maxSchools) }), onSuccess: (r) => onDone(`Cell ${r.key} added. ${r.note}`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
+  const make = useMutation({ mutationFn: () => app.api.createCell({ key: f.key.trim().toLowerCase(), target: f.target as 'local', region: f.region.trim(), maxSchools: Number(f.maxSchools), connectionId: f.connectionId || null }), onSuccess: (r) => onDone(`Cell ${r.key} added. ${r.note}`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
   const go = () => {
     const p: Record<string, string> = {};
     if (!/^[a-z][a-z0-9-]{1,22}[a-z0-9]$/.test(f.key.trim().toLowerCase())) p.key = 'Use 3 to 24 letters, numbers or dashes, starting with a letter.';
     if (f.region.trim().length < 2) p.region = 'Name the place, like Mumbai or this computer.';
     if (!(Number(f.maxSchools) >= 1)) p.maxSchools = 'At least 1.';
+    if (f.target === 'aws-cell' && !f.connectionId) p.connectionId = 'A cloud cell needs the connection that makes its databases.';
     setErr(p);
     if (Object.keys(p).length) shake.hit(); else make.mutate();
   };
@@ -97,7 +100,9 @@ function AddCell({ onClose, onDone }: { onClose: () => void; onDone: (m: string)
         <Field label="Name" value={f.key} onChange={set('key')} error={err.key} placeholder="mumbai-2" />
         <SelectField label="Runs on" value={f.target} onChange={set('target')} options={Object.entries(TARGET).map(([value, label]) => ({ value, label }))} />
         <div className="two"><Field label="Region" value={f.region} onChange={set('region')} error={err.region} placeholder="Mumbai" /><NumberField label="Most schools" min={1} value={f.maxSchools} onChange={set('maxSchools')} error={err.maxSchools} /></div>
-        {f.target === 'aws-cell' && <div className="help">A cloud cell also needs the address of its database server in the console’s settings before a school can be placed in it.</div>}
+        <SelectField label={f.target === 'aws-cell' ? 'Where its schools’ databases are made' : 'Where its schools’ databases are made (optional)'} value={f.connectionId} onChange={set('connectionId')} error={err.connectionId}
+          options={[{ value: '', label: f.target === 'aws-cell' ? 'Choose a School databases connection' : 'The registry’s own server' }, ...dbs.map((c) => ({ value: c.id, label: c.name }))]} />
+        {!dbs.length && <div className="help">Add a PostgreSQL server or Neon under Integrations → School databases to choose it here.</div>}
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>

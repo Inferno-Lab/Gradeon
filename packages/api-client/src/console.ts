@@ -1,5 +1,5 @@
 import type {
-  ActionRequest, ActionRow, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
+  ActionRequest, ActionRow, LoginChallenge, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, MigrationRow, PlanRow, PolicyDoc, ThemeColors, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow,
   ActivityQuery, ActivityView, ConnectionInput, ConnectionPatch, HookEventRow, IntegrationsView, JobRow, RouteInput as IntRouteInput, TemplateInput } from '@gradeon/contracts';
@@ -17,6 +17,8 @@ export function consoleApi(h: Http) {
   return {
     login: (b: LoginRequest) => h.post<ConsoleLoginResponse>(`${base}/auth/login`, b),
     verify: (b: VerifyRequest) => h.post<ConsoleTokens>(`${base}/auth/verify`, b),
+    resetStart: (identifier: string) => h.post<LoginChallenge>(`${base}/auth/reset/start`, { identifier }),
+    resetFinish: (b: { challengeId: string; code: string; password: string }) => h.post<void>(`${base}/auth/reset/finish`, b),
     logout: () => h.post<void>(`${base}/auth/logout`),
     logoutAll: () => h.post<void>(`${base}/auth/logout-all`),
     fleet: () => h.get<FleetSummary>(`${base}/fleet`),
@@ -38,7 +40,7 @@ export function consoleApi(h: Http) {
       get: (schoolId: string) => h.get<SchoolConfig>(`${base}/schools/${schoolId}/config`),
       patch: (schoolId: string, b: ConfigPatch) => h.patch<SchoolConfig | { pending: true; actionId: string }>(`${base}/schools/${schoolId}/config`, b),
       rollback: (schoolId: string, versionId: string) => h.post<SchoolConfig>(`${base}/schools/${schoolId}/config/rollback`, { versionId }),
-      preview: (schoolId: string, roleId: string) => h.get<Pick<EffectiveConfig, 'nav' | 'app' | 'modules' | 'school'>>(`${base}/schools/${schoolId}/config/preview`, { roleId }),
+      preview: (schoolId: string, roleId: string) => h.get<Pick<EffectiveConfig, 'menu' | 'app' | 'modules' | 'school'>>(`${base}/schools/${schoolId}/config/preview`, { roleId }),
       createRole: (schoolId: string, b: RoleDefSave) => h.post<RoleDef[]>(`${base}/schools/${schoolId}/roles`, b),
       saveRole: (schoolId: string, roleId: string, b: RoleDefSave) => h.put<RoleDef[]>(`${base}/schools/${schoolId}/roles/${roleId}`, b),
       deleteRole: (schoolId: string, roleId: string) => h.del<RoleDef[]>(`${base}/schools/${schoolId}/roles/${roleId}`),
@@ -137,6 +139,10 @@ export function consoleApi(h: Http) {
       activity: (q: Partial<ActivityQuery>) => h.get<ActivityView>(`${base}/integrations/activity`, q),
       retry: (id: string) => h.post<void>(`${base}/integrations/activity/${id}/retry`),
       allowList: (allowList: string[]) => h.put<{ allowList: string[] }>(`${base}/integrations/allow-list`, { allowList }),
+      mode: (mode: 'sandbox' | 'live') => h.put<{ mode: 'sandbox' | 'live'; action?: ActionRow }>(`${base}/integrations/mode`, { mode }),
+      gaps: () => h.get<{ gaps: string[] }>(`${base}/integrations/live-gaps`),
+      importTemplates: (id: string) => h.post<{ imported: number; found: number }>(`${base}/integrations/connections/${id}/import-templates`),
+      missingTemplates: (id: string) => h.get<{ keys: string[] }>(`${base}/integrations/connections/${id}/missing-templates`),
     },
     jobs: { list: () => h.get<JobRow[]>(`${base}/health/jobs`), retry: (id: string) => h.post<void>(`${base}/health/jobs/${id}/retry`) },
     retention: (schoolId: string) => h.get<{ due: number; months: number }>(`${base}/schools/${schoolId}/retention`),

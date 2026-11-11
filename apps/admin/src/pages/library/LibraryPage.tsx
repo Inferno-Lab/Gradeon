@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -142,20 +142,29 @@ function BookDialog({ book, onClose, onDone }: { book: BookRow | null; onClose: 
 function IssueDialog({ book, loanDays, onClose, onDone }: { book: BookRow; loanDays: number; onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
   const shake = useShake();
+  const [to, setTo] = useState<'student' | 'staff'>('student');
   const [student, setStudent] = useState<{ id: string; name: string; className: string } | null>(null);
+  const [staffId, setStaffId] = useState('');
+  const staff = useQuery({ queryKey: ['staff'], queryFn: () => app.api.staff.list(), enabled: to === 'staff' });
   const [due, setDue] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
-  const issue = useMutation({ mutationFn: () => app.api.library.issue({ bookId: book.id, studentId: student!.id, dueOn: due || undefined }), onSuccess: (l) => onDone(`${book.title} is with ${l.student} until ${dateLabel(l.dueOn)}.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
+  const issue = useMutation({
+    mutationFn: () => app.api.library.issue({ bookId: book.id, studentId: to === 'student' ? student!.id : null, staffUserId: to === 'staff' ? staffId : null, dueOn: due || undefined }),
+    onSuccess: (l) => onDone(`${book.title} is with ${l.student} until ${dateLabel(l.dueOn)}.`), onError: (e) => { setErr(problem(e)); shake.hit(); },
+  });
   return (
     <Dialog title={`Issue ${book.title}`} onClose={onClose} width={500} shake={shake.cls}>
       <div className="stack">
-        <StudentPick label="To" value={student} onChange={(s) => { setStudent(s); setErr({}); }} error={err.studentId} />
+        <Segmented label="Who is borrowing" value={to} onChange={(v) => { setTo(v); setErr({}); }} options={[{ value: 'student', label: 'A student' }, { value: 'staff', label: 'Staff' }]} />
+        {to === 'student'
+          ? <StudentPick label="To" value={student} onChange={(s) => { setStudent(s); setErr({}); }} error={err.studentId} />
+          : <SelectField label="To" value={staffId} onChange={setStaffId} error={err.staffUserId} options={[{ value: '', label: 'Choose a member of staff' }, ...(staff.data ?? []).filter((p) => p.status === 'active').map((p) => ({ value: p.id, label: p.name }))]} />}
         <DateField label={`Due back (blank: in ${loanDays} days)`} value={due} onChange={setDue} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={issue.isPending || !student} onClick={() => issue.mutate()}>{issue.isPending ? 'Issuing…' : 'Issue'}</button>
+        <button className="btn pri" disabled={issue.isPending || (to === 'student' ? !student : !staffId)} onClick={() => issue.mutate()}>{issue.isPending ? 'Issuing…' : 'Issue'}</button>
       </div>
     </Dialog>
   );

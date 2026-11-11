@@ -1,8 +1,9 @@
 import type { ThemeColors } from './theme.js';
+import { ATTENDANCE_MARKS, type MenuGroup } from './config.js';
 import { z } from 'zod';
 import { IsoDate } from './common.js';
 
-export const AttendanceStatus = z.enum(['present', 'absent', 'late', 'leave']);
+export const AttendanceStatus = z.enum(ATTENDANCE_MARKS);
 export type AttendanceStatus = z.infer<typeof AttendanceStatus>;
 
 export const FeeStatus = z.enum(['paid', 'due', 'overdue', 'partial']);
@@ -108,13 +109,22 @@ export interface ImportResult {
 export const MessageRequest = z.object({
   ids: z.array(z.string()).min(1).max(500),
   body: z.string().trim().min(2, 'Write the message').max(500),
-  channel: z.enum(['sms', 'whatsapp', 'push']).default('sms'),
 });
 export type MessageRequest = z.infer<typeof MessageRequest>;
 
+/** A fee head's key: one of the school's own fee heads (`/v1/fees/heads`). */
+export const FeeHeadKey = z.string().regex(/^[a-z0-9_]{1,40}$/, 'Choose a kind of fee');
+
+/** A kind of fee the school charges. The list is the school's own data, edited with its fee structures. */
+export interface FeeHead { key: string; name: string; sort: number; concession: boolean }
+export const FeeHeadsPut = z.object({
+  heads: z.array(z.object({ key: FeeHeadKey.optional(), name: z.string().trim().min(2, 'Name the fee head').max(40), concession: z.boolean().default(false) })).min(1).max(30),
+});
+export type FeeHeadsPut = z.infer<typeof FeeHeadsPut>;
+
 export const AssignFee = z.object({
   ids: z.array(z.string()).min(1).max(500),
-  head: z.enum(['tuition', 'transport', 'activities', 'lab']),
+  head: FeeHeadKey,
   title: z.string().trim().min(3, 'Name the fee').max(80),
   amount: z.number().int().positive('Enter an amount'),
   dueOn: IsoDate,
@@ -151,7 +161,32 @@ export interface AttendanceDay {
   classId: string;
   date: string;
   submitted: boolean;
-  marks: { studentId: string; name: string; rollNo: string; status: AttendanceStatus | null }[];
+  /** onLeave: an approved leave covers the day; until the roll is taken its mark is filled in from the leave. */
+  marks: { studentId: string; name: string; rollNo: string; status: AttendanceStatus | null; onLeave: boolean }[];
+}
+
+/** Attendance every period (feature attendance.periodWise): only present, late and absent; leave comes from the day. */
+export const PERIOD_MARKS = ['present', 'late', 'absent'] as const;
+export const PeriodMarksPut = z.object({
+  classId: z.string(),
+  date: IsoDate,
+  period: z.number().int().min(0).max(30),
+  marks: z.array(z.object({ studentId: z.string(), status: z.enum(PERIOD_MARKS) })).min(1).max(200),
+});
+export type PeriodMarksPut = z.infer<typeof PeriodMarksPut>;
+
+/** One day's periods for a class: who teaches each, whether it was marked, and each student's mark. */
+export interface PeriodRoll {
+  classId: string;
+  date: string;
+  students: { studentId: string; name: string; rollNo: string; day: AttendanceStatus | null }[];
+  periods: {
+    period: number; label: string; startsAt: string; endsAt: string; subject: string; teacherId: string; teacherName: string;
+    /** Whether the person asking may mark it: the period's teacher (or its cover), or someone who approves requests. */
+    mine: boolean;
+    markedBy: string | null;
+    marks: Record<string, (typeof PERIOD_MARKS)[number]>;
+  }[];
 }
 
 export interface AttendanceWeekPoint {
@@ -174,7 +209,7 @@ export interface FeeSummary {
   overdueFamilies: number;
   pct: number;
   collectedDelta: number;
-  byHead: { head: 'tuition' | 'transport' | 'activities' | 'lab'; label: string; due: number; collected: number; pct: number }[];
+  byHead: { head: string; label: string; due: number; collected: number; pct: number }[];
   daily: { date: string; label: string; full: string; amount: number; isToday: boolean }[];
   dailyTarget: number;
 }
@@ -199,13 +234,24 @@ export interface InvoiceRow {
 }
 
 // Notices
+/**
+ * A notice as written in the admin or the teachers' app. Who it goes to: everyone, parents, students, staff, or one class.
+ * Writing to the whole school needs notices.publish, pinning needs notices.pin; anyone else writes to their own classes.
+ */
 export const NoticeCreate = z.object({
   title: z.string().trim().min(3, 'Give the notice a title').max(120),
   body: z.string().trim().min(3, 'Write the notice').max(4000),
-  audience: z.enum(['everyone', 'parents', 'staff', 'class']).default('everyone'),
+  audience: z.enum(['everyone', 'parents', 'students', 'staff', 'class']).default('everyone'),
   classId: z.string().optional(),
+  /** One of the school's notice categories. */
+  category: z.string().trim().min(1).max(24).default('academic'),
+  pinned: z.boolean().default(false),
+  needsAck: z.boolean().default(false),
+  /** Publish now (true), keep as a draft (false); with publishAt, it goes out then instead. */
   publish: z.boolean().default(false),
-});
+  publishAt: z.string().datetime({ offset: true }).nullable().optional(),
+  fileIds: z.array(z.string()).max(5).default([]),
+}).refine((n) => n.audience !== 'class' || !!n.classId, { message: 'Choose the class', path: ['classId'] });
 export type NoticeCreate = z.infer<typeof NoticeCreate>;
 
 export interface NoticeRow {
@@ -213,14 +259,25 @@ export interface NoticeRow {
   title: string;
   body: string;
   audience: string;
-  status: 'draft' | 'pending' | 'published';
+  classId: string | null;
+  className: string | null;
+  category: string;
+  pinned: boolean;
+  needsAck: boolean;
+  status: 'draft' | 'pending' | 'scheduled' | 'published';
   author: string;
+  authorId: string | null;
   publishedAt: string | null;
+  publishAt: string | null;
+  editedAt: string | null;
   createdAt: string;
+  files: { id: string; name: string; mime: string }[];
+  /** For a published notice: how many it reached, how many opened it, and (when asked) acknowledged it. */
+  reach: { audience: number; read: number; acked: number };
 }
 
 // Approvals
-export type ApprovalKind = 'leave' | 'fee_waiver' | 'admission' | 'notice' | 'attendance';
+export type ApprovalKind = 'leave' | 'fee_waiver' | 'admission' | 'notice' | 'attendance' | 'photo';
 export interface ApprovalRow {
   id: string;
   kind: ApprovalKind;
@@ -231,11 +288,16 @@ export interface ApprovalRow {
   /** Button label, and the line shown after it is done. */
   action: string;
   doneText: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'withdrawn';
   createdAt: string;
   decidedAt: string | null;
+  /** Who asked, and who decided with the reason they gave (a decline always has one). */
+  requesterName?: string;
+  decidedByName?: string | null;
+  decisionNote?: string;
 }
-export const ApprovalDecision = z.object({ decision: z.enum(['approve', 'reject', 'undo']) });
+export const ApprovalDecision = z.object({ decision: z.enum(['approve', 'reject', 'undo']), note: z.string().trim().max(300).optional() })
+  .refine((d) => d.decision !== 'reject' || !!d.note, { message: 'Say why, so the person who asked knows what to do next.', path: ['note'] });
 export type ApprovalDecision = z.infer<typeof ApprovalDecision>;
 
 // Timetable
@@ -317,7 +379,8 @@ export interface DashboardData {
   schoolName: string;
   /** The latest school day shown, and whether it is today. */
   day: { date: string; label: string; isToday: boolean; clock: string };
-  term: { name: string; examsLabel: string; daysToGo: number; progress: number };
+  /** The term today is in (empty when the calendar has none) and the next exam (empty label and null days when none is scheduled). */
+  term: { name: string; examsLabel: string; daysToGo: number | null; progress: number };
   subtitle: { marked: number; classes: number };
   present: { value: number; total: number; deltaPct: number; versus: string };
   fees: { collected: number; due: number; pct: number; deltaPct: number; overdueFamilies: number; monthLabel: string };
@@ -343,6 +406,8 @@ export interface ShellData {
   modules: string[];
   /** Features inside those modules (like people.admissions): pages and menu items for a missing one are hidden. */
   features: string[];
+  /** The menu for this person, built from the module definitions (config-engine `adminMenu`). */
+  menu: MenuGroup[];
   /** The colours the console changed for this school. */
   theme: ThemeColors;
 }

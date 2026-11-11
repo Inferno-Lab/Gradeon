@@ -119,7 +119,7 @@ describe('the new-school wizard', () => {
     expect(dash.json.classRolls).toEqual([]);
     const cfg = await h.s('GET', '/v1/config', { school: 'freshschool', token: verified.json.accessToken });
     expect(cfg.json.school.color).toBe('#0EA5E9');
-    expect(cfg.json.modules).toEqual(['people', 'attendance', 'fees', 'notices', 'timetable']);
+    expect(cfg.json.modules).toEqual(['school', 'people', 'attendance', 'timetable', 'fees', 'notices']);
     const role = 'school_freshschool_app';
     const dbname = 'school_freshschool';
     const own = await h.registry.query('select has_database_privilege($1, $2, \'CONNECT\') ok', [role, dbname]);

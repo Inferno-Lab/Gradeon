@@ -49,7 +49,8 @@ export class TenantService {
     const info = await this.registry.school(slug);
     if (!info) throw new ApiError('not_found', 'We could not find that school. Check the address and try again.');
     if (info.status !== 'live') {
-      const msg = info.status === 'suspended' ? 'This school’s account is paused. Please contact Gradeon support.' : 'This school is still being set up. Try again in a few minutes.';
+      const msg = info.status === 'suspended' ? 'This school’s account is paused. Please contact Gradeon support.'
+        : info.status === 'moving' ? 'This school is moving to a new server. It is back in a few minutes.' : 'This school is still being set up. Try again in a few minutes.';
       throw new ApiError('school_unavailable', msg);
     }
     const pool = this.pools.get(slug, info.dbUrl);

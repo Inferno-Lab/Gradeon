@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
 import { resolveConfig } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, istMinutes, type AuditRow, type EffectiveConfig, type SettingsDoc } from '@gradeon/contracts';
+import { MESSAGE_EVENTS, SchoolSettingsSchema, gradeFor, istMinutes, type AuditRow, type EffectiveConfig, type GradingScale, type SettingsDoc } from '@gradeon/contracts';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { HubService } from './hub.service.js';
 
@@ -51,24 +51,28 @@ export class SettingsService {
     return names.map((n) => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(n)).filter((i) => i >= 0);
   }
 
+  /** The school's grading scale and pass mark (console: Exams and results), with the function that turns a percentage into a grade. */
+  async grading(t: TenantCtx): Promise<{ pass: number; grade: (pct: number) => string }> {
+    const v = (await this.doc(t)).values;
+    const scale = (Array.isArray(v['grading.scale']) ? v['grading.scale'] : SchoolSettingsSchema.shape['grading.scale'].parse(undefined)) as GradingScale;
+    return { pass: typeof v['grading.passPct'] === 'number' ? v['grading.passPct'] : 33, grade: (pct) => gradeFor(pct, scale) };
+  }
+
   async value<T>(t: TenantCtx, key: string, fallback: T): Promise<T> {
     const v = (await this.doc(t)).values[key];
     return (v === undefined ? fallback : v) as T;
   }
 
   async effective(t: TenantCtx, permissions?: string[]): Promise<EffectiveConfig> {
-    return resolveConfig({ settings: await this.doc(t), entitlement: t.info.entitlement, audience: permissions ? { permissions } : undefined, flags: t.info.flags });
+    return resolveConfig({ settings: await this.doc(t), entitlement: t.info.entitlement, audience: permissions ? { permissions } : undefined, flags: t.info.flags, live: t.info.status === 'live' });
   }
 }
 
 type Channel = 'sms' | 'email' | 'whatsapp' | 'push';
 export interface OutMsg { channel: Channel; to: string; subject?: string; body: string; key?: string; vars?: Record<string, string>; sendAfter?: Date | null; now?: boolean }
 
-// Where a notification opens in the app (the app's own routes).
-const OPENS: Record<string, string> = {
-  'attendance.absent': '/attendance', 'fees.reminder': '/fees', 'fees.receipt': '/fees', 'fees.refunded': '/fees', 'homework.new': '/homework', 'exam.results': '/results',
-  'notice.published': '/notices', 'event.created': '/events', 'leave.decided': '/leave', 'bus.near': '/transport', 'library.ready': '/library', 'timetable.published': '/timetable',
-};
+// Where a notification opens in the app: each message says so (MESSAGE_EVENTS).
+const OPENS: Record<string, string> = Object.fromEntries(MESSAGE_EVENTS.filter((e) => e.opens).map((e) => [e.key, e.opens!]));
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -149,9 +153,14 @@ export class Messenger {
     const quiet = !ev.urgent && (mins(qf) > mins(qt) ? now >= mins(qf) || now < mins(qt) : now >= mins(qf) && now < mins(qt));
     const school = String(doc['school.shortName'] ?? t.info.shortName);
     const sendAfter = quiet ? new Date(Date.now() + (((mins(qt) - now + 1440) % 1440) || 1440) * 60_000) : null;
+    // A person who turned this message off in the app (Settings → Notifications) does not get it; urgent ones cannot be turned off.
+    const off = ev.urgent || !who.length ? new Set<string>() : new Set((await t.pool.query<{ phone: string }>(
+      `select right(regexp_replace(u.phone, '\\D', '', 'g'), 10) phone from users u join user_prefs p on p.user_id = u.id and p.key = 'notify.off'
+       where p.value ? $1 and u.phone is not null`, [key])).rows.map((r) => r.phone));
+    const digits = (s: string) => s.replace(/\D/g, '').slice(-10);
     let reached = 0;
     const out: OutMsg[] = [];
-    for (const w of who) {
+    for (const w of who.filter((x) => !off.has(digits(x.to)))) {
       const vars = Object.fromEntries(Object.entries({ ...w.vars, school: w.vars.school ?? school }).map(([k, v]) => [k, String(v)]));
       const body = text.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? '');
       const m = { key, vars, body, sendAfter };

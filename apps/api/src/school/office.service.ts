@@ -6,8 +6,8 @@ import {
 } from '@gradeon/contracts';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
-import { gradeOf } from './learning.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
+import { ChatService } from './chat.service.js';
 
 type User = { id: string; name: string };
 const esc = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -31,6 +31,7 @@ export class OfficeService {
     private readonly audit: AuditService,
     private readonly messenger: Messenger,
     private readonly settings: SettingsService,
+    private readonly chat: ChatService,
   ) {}
 
   // Invoices and receipts
@@ -99,9 +100,9 @@ export class OfficeService {
     if (id === 'attendance-low') {
       const monthStart = `${last.slice(0, 7)}-01`;
       const { rows } = await t.pool.query<{ name: string; class_name: string; days: string; present: string; absent: string }>(
-        `select s.name, c.name class_name, count(*) days, count(*) filter (where m.status in ('present','late')) present, count(*) filter (where m.status = 'absent') absent
+        `select s.name, c.name class_name, count(*) days, count(*) filter (where m.status in ('present','late','half_day')) present, count(*) filter (where m.status = 'absent') absent
          from attendance_marks m join attendance_sessions x on x.id = m.session_id join students s on s.id = m.student_id join classes c on c.id = s.class_id
-         where x.date between $1 and $2 and m.status <> 'leave' group by s.id, s.name, c.name, c.grade, c.section having count(*) filter (where m.status in ('present','late'))::float / count(*) < 0.85 order by 4 asc, s.name limit 300`, [monthStart, last]);
+         where x.date between $1 and $2 and m.status <> 'leave' group by s.id, s.name, c.name, c.grade, c.section having count(*) filter (where m.status in ('present','late','half_day'))::float / count(*) < 0.85 order by 4 asc, s.name limit 300`, [monthStart, last]);
       return { ...base, summary: [{ label: 'Students below 85%', value: String(rows.length) }, { label: 'Period', value: `${dayMonth(monthStart)} to ${dayMonth(last)}` }],
         columns: [{ key: 'student', label: 'Student' }, { key: 'class', label: 'Class' }, { key: 'days', label: 'School days', align: 'right' }, { key: 'absent', label: 'Absent', align: 'right' }, { key: 'rate', label: 'Present', align: 'right' }],
         rows: rows.map((r) => ({ student: r.name, class: r.class_name, days: Number(r.days), absent: Number(r.absent), rate: `${pct(Number(r.present), Number(r.days))}%` })) };
@@ -135,12 +136,13 @@ export class OfficeService {
         rows: rows.map((r) => ({ class: r.name, teacher: r.teacher ?? 'Not assigned', students: Number(r.n) })) };
     }
     if (id === 'results') {
+      const grading = await this.settings.grading(t);
       const { rows } = await t.pool.query<{ exam: string; class_name: string; avg: string; pass: string; n: string }>(
-        `select e.name exam, c.name class_name, round(avg(r.pct)) avg, round(100.0 * count(*) filter (where r.pct >= 33) / count(*)) pass, count(*) n
+        `select e.name exam, c.name class_name, round(avg(r.pct)) avg, round(100.0 * count(*) filter (where r.pct >= ${Number(grading.pass)}) / count(*)) pass, count(*) n
          from exams e join classes c on c.id = e.class_id join students s on s.class_id = c.id join exam_results r on r.student_id = s.id and r.exam = e.name where e.status = 'published' group by e.id, e.name, c.name, c.grade, c.section order by c.grade, c.section`);
       return { ...base, summary: [{ label: 'Published exams', value: String(rows.length) }],
         columns: [{ key: 'exam', label: 'Exam' }, { key: 'class', label: 'Class' }, { key: 'students', label: 'Students', align: 'right' }, { key: 'average', label: 'Average', align: 'right' }, { key: 'grade', label: 'Grade', align: 'right' }, { key: 'pass', label: 'Passed', align: 'right' }],
-        rows: rows.map((r) => ({ exam: r.exam, class: r.class_name, students: Number(r.n), average: `${r.avg}%`, grade: gradeOf(Number(r.avg)), pass: `${r.pass}%` })) };
+        rows: rows.map((r) => ({ exam: r.exam, class: r.class_name, students: Number(r.n), average: `${r.avg}%`, grade: grading.grade(Number(r.avg)), pass: `${r.pass}%` })) };
     }
     const { rows } = await t.pool.query<{ name: string; set: string; handed: string; ontime: string; total: string }>(
       `select c.name, count(distinct h.id) set, count(*) filter (where s.handed_at is not null) handed, count(*) filter (where s.on_time) ontime, count(s.student_id) total
@@ -181,22 +183,12 @@ export class OfficeService {
     return { ...this.threadRow({ ...head, unread: '0' }), messages: msgs.rows.map((m) => ({ id: m.id, from: m.from_kind, sender: m.sender_name, body: m.body, at: m.created_at.toISOString() })) };
   }
 
-  private async pushToGuardian(t: TenantCtx, threadId: string, body: string): Promise<void> {
-    const g = (await t.pool.query<{ phone: string | null }>('select g.phone from threads th join guardians g on g.id = th.guardian_id where th.id = $1', [threadId])).rows[0];
-    if (g?.phone) await this.messenger.send(t, { channel: 'push', to: g.phone, body, key: 'chat.message', vars: { route: `/chat/${threadId}` } });
-  }
-
   async startThread(t: TenantCtx, user: User, body: ThreadCreate): Promise<ThreadDetail> {
     const g = (await t.pool.query<{ guardian_id: string }>('select sg.guardian_id from student_guardians sg where sg.student_id = $1 order by sg.is_primary desc limit 1', [body.studentId])).rows[0];
     if (!g) throw new ApiError('validation', 'That student has no guardian on record to write to.', { fields: { studentId: 'No guardian on record.' } });
     const id = newId('thr');
     await t.pool.query('insert into threads (id, guardian_id, student_id, subject, assigned_to) values ($1,$2,$3,$4,$5)', [id, g.guardian_id, body.studentId, body.subject, user.id]);
-    await t.pool.query(
-      `insert into thread_messages (id, thread_id, from_kind, sender_name, body, read_at, created_at)
-       values ($1,$2,'staff',$3,$4,now(), greatest(now(), coalesce((select max(created_at) + interval '1 millisecond' from thread_messages where thread_id = $2), now())))`,
-      [newId('tmsg'), id, user.name, body.body],
-    );
-    await this.pushToGuardian(t, id, `${user.name}: ${body.subject}`);
+    await this.chat.post(t, { id: user.id, name: user.name, kind: 'staff' }, id, body.body);
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'message.started', entity: 'thread', entityId: id, detail: { subject: body.subject } });
     return this.thread(t, id);
   }
@@ -204,14 +196,7 @@ export class OfficeService {
   async reply(t: TenantCtx, user: User, id: string, body: ThreadReply): Promise<ThreadDetail> {
     const th = (await t.pool.query<{ assigned_to: string | null }>('select assigned_to from threads where id = $1', [id])).rows[0];
     if (!th) throw notFound('That conversation');
-    // Seeded demo threads can sit later today than CI's clock; keep the new message last.
-    await t.pool.query(
-      `insert into thread_messages (id, thread_id, from_kind, sender_name, body, read_at, created_at)
-       values ($1,$2,'staff',$3,$4,now(), greatest(now(), coalesce((select max(created_at) + interval '1 millisecond' from thread_messages where thread_id = $2), now())))`,
-      [newId('tmsg'), id, user.name, body.body],
-    );
-    await t.pool.query("update threads set last_at = now(), status = 'open', assigned_to = coalesce(assigned_to, $2) where id = $1", [id, user.id]);
-    await this.pushToGuardian(t, id, `${user.name}: ${body.body.slice(0, 80)}`);
+    await this.chat.post(t, { id: user.id, name: user.name, kind: 'staff' }, id, body.body);
     return this.thread(t, id);
   }
 
@@ -224,21 +209,27 @@ export class OfficeService {
   // Events
 
   async events(t: TenantCtx): Promise<EventRow[]> {
-    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: EventRow['kind']; venue: string; note: string; audience: string; going: string; maybe: string; cant: string }>(
-      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience,
-         count(r.*) filter (where r.status = 'going') going, count(r.*) filter (where r.status = 'maybe') maybe, count(r.*) filter (where r.status = 'cant') cant
+    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: EventRow['kind']; venue: string; note: string; audience: string; category: string; needs_rsvp: boolean; lat: number | null; lng: number | null; going: string; maybe: string; cant: string; adults: string }>(
+      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience, e.category, e.needs_rsvp, e.lat, e.lng,
+         count(r.*) filter (where r.status = 'going') going, count(r.*) filter (where r.status = 'maybe') maybe, count(r.*) filter (where r.status = 'cant') cant,
+         coalesce(sum(r.adults) filter (where r.status = 'going'), 0) adults
        from events e left join event_rsvps r on r.event_id = e.id where e.kind not in ('routine','cover') group by e.id order by e.starts_at desc limit 200`);
-    return rows.map((r) => ({ id: r.id, title: r.title, startsAt: r.starts_at.toISOString(), endsAt: r.ends_at?.toISOString() ?? null, kind: r.kind, venue: r.venue, note: r.note, audience: r.audience, going: Number(r.going), maybe: Number(r.maybe), cant: Number(r.cant) }));
+    return rows.map((r) => ({
+      id: r.id, title: r.title, startsAt: r.starts_at.toISOString(), endsAt: r.ends_at?.toISOString() ?? null, kind: r.kind, venue: r.venue, note: r.note, audience: r.audience,
+      category: r.category, needsRsvp: r.needs_rsvp, lat: r.lat, lng: r.lng, going: Number(r.going), maybe: Number(r.maybe), cant: Number(r.cant), adults: Number(r.adults),
+    }));
   }
 
   async saveEvent(t: TenantCtx, user: User, id: string | null, body: EventSave): Promise<EventRow> {
     if (body.endsAt && body.endsAt < body.startsAt) throw new ApiError('validation', 'The event cannot end before it starts.', { fields: { endsAt: 'Pick a time after the start.' } });
     if (id) {
-      const r = await t.pool.query("update events set title = $2, starts_at = $3, ends_at = $4, kind = $5, venue = $6, note = $7, audience = $8 where id = $1 and kind not in ('routine','cover')", [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience]);
+      const r = await t.pool.query("update events set title = $2, starts_at = $3, ends_at = $4, kind = $5, venue = $6, note = $7, audience = $8, category = $9, needs_rsvp = $10, lat = $11, lng = $12 where id = $1 and kind not in ('routine','cover')",
+        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, body.category, body.needsRsvp, body.lat, body.lng]);
       if (!r.rowCount) throw notFound('That event');
     } else {
       id = newId('evt');
-      await t.pool.query('insert into events (id, title, starts_at, ends_at, kind, venue, note, audience, created_by) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)', [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, user.id]);
+      await t.pool.query('insert into events (id, title, starts_at, ends_at, kind, venue, note, audience, created_by, category, needs_rsvp, lat, lng) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',
+        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, user.id, body.category, body.needsRsvp, body.lat, body.lng]);
       if (body.audience !== 'staff') {
         const g = await t.pool.query<{ phone: string | null }>("select distinct g.phone from guardians g join student_guardians sg on sg.guardian_id = g.id join students s on s.id = sg.student_id where s.status = 'active' and g.phone is not null limit 2000");
         const date = new Date(body.startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
@@ -257,12 +248,12 @@ export class OfficeService {
 
   // Data requests
 
-  private dsr(r: { id: string; kind: DataRequestRow['kind']; subject_name: string; requested_by: string; status: DataRequestRow['status']; note: string; created_at: Date; resolved_at: Date | null }): DataRequestRow {
-    return { id: r.id, kind: r.kind, subjectName: r.subject_name, requestedBy: r.requested_by, status: r.status, note: r.note, createdAt: r.created_at.toISOString(), resolvedAt: r.resolved_at?.toISOString() ?? null };
+  private dsr(r: { id: string; kind: DataRequestRow['kind']; subject_name: string; requested_by: string; status: DataRequestRow['status']; note: string; answer: string; user_id: string | null; created_at: Date; resolved_at: Date | null }): DataRequestRow {
+    return { id: r.id, kind: r.kind, subjectName: r.subject_name, requestedBy: r.requested_by, status: r.status, note: r.note, answer: r.answer, fromApp: !!r.user_id, createdAt: r.created_at.toISOString(), resolvedAt: r.resolved_at?.toISOString() ?? null };
   }
 
   async dataRequests(t: TenantCtx): Promise<DataRequestRow[]> {
-    const { rows } = await t.pool.query('select id, kind, subject_name, requested_by, status, note, created_at, resolved_at from data_requests order by (status = \'open\') desc, created_at desc limit 100');
+    const { rows } = await t.pool.query('select id, kind, subject_name, requested_by, status, note, answer, user_id, created_at, resolved_at from data_requests order by (status = \'open\') desc, created_at desc limit 100');
     return rows.map((r) => this.dsr(r));
   }
 
@@ -274,7 +265,10 @@ export class OfficeService {
   }
 
   async decideDataRequest(t: TenantCtx, user: User, id: string, body: DataRequestDecision): Promise<DataRequestRow> {
-    const r = await t.pool.query("update data_requests set status = $2, note = case when $3 <> '' then $3 else note end, resolved_at = now(), resolved_by = $4 where id = $1 and status = 'open'", [id, body.status, body.note, user.id]);
+    const r = await t.pool.query("update data_requests set status = $2, answer = $3, resolved_at = now(), resolved_by = $4 where id = $1 and status = 'open'", [id, body.status, body.note, user.id]);
+    // A request made from the app: its maker hears the answer there.
+    const who = (await t.pool.query<{ phone: string | null; kind: string }>('select u.phone, d.kind from data_requests d join users u on u.id = d.user_id where d.id = $1', [id])).rows[0];
+    if (r.rowCount && who?.phone) await this.messenger.notify(t, 'privacy.answered', [{ to: who.phone, vars: { request: who.kind === 'access' ? 'copy of your data' : who.kind, status: body.status === 'done' ? 'done' : 'declined', note: body.note } }]);
     if (!r.rowCount) throw new ApiError('conflict', 'That request is not open any more.');
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: `privacy.${body.status}`, entity: 'data_request', entityId: id });
     return (await this.dataRequests(t)).find((x) => x.id === id)!;

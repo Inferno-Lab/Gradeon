@@ -28,7 +28,7 @@ export function useChrome() {
 
   const data = shell.data;
   useThemeColors(data?.theme);
-  const groups = useMemo(() => adminNav([...(data?.modules ?? ['people', 'timetable']), ...(data?.features ?? [])], base, data?.badges, data && { student: data.school.studentWord, class: data.school.classWord }), [data, base]);
+  const groups = useMemo(() => adminNav(data?.menu ?? [], base, data?.badges), [data, base]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
   const goRef = useRef(go);
   goRef.current = go;
@@ -62,7 +62,7 @@ export function useChrome() {
   const t = tintFor(user.name);
   const has = (id: string) => groups.some((g) => g.items.some((i) => i.id === id));
   const hrefOf = (id: string) => groups.flatMap((g) => g.items).find((i) => i.id === id)?.href ?? '/';
-  const home = ['dash'], people = ['stu', 'staff', 'adm'], money = ['fee', 'inv', 'rep'];
+  const home = ['dash', 'appr', 'rep'], people = ['stu', 'staff', 'adm'], money = ['fee'];
   const dockTabs: DockTab[] = [
     { id: 'home', label: 'Home', icon: 'M4 11l8-7 8 7v9H4zM9 20v-6h6v6', onPress: () => goRef.current('/') },
     ...(has('stu') ? [{ id: 'people', label: 'People', icon: IC.stu, onPress: () => goRef.current(hrefOf('stu').replace(base, '') || '/') }] : []),
@@ -77,12 +77,12 @@ export function useChrome() {
       label="Main menu" collapsed={collapsed} groups={groups} active={active}
       onNavigate={(href) => goRef.current(base && href.startsWith(base) ? href.slice(base.length) || '/' : href)}
       header={<SchoolHeader logo={data?.school.logoText ?? ''} logoUrl={data?.school.logoUrl} name={data?.school.shortName ?? ''} place={data?.school.place ?? ''} color={data?.school.color} collapsed={collapsed} onToggle={() => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1'); } catch { /* ignore */ } return !c; })} />}
-      promo={data && (
+      promo={data && data.term.daysToGo !== null && (
         <div className="sbc">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}><span className="chip a">{data.term.name}</span>{data.term.examsLabel}</div>
-          <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{data.term.daysToGo === 0 ? 'Exams start today' : `${data.term.daysToGo} ${data.term.daysToGo === 1 ? 'day' : 'days'} to go`}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}>{data.term.name && <span className="chip a">{data.term.name}</span>}{data.term.examsLabel}</div>
+          <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{data.term.daysToGo === 0 ? 'Starts today' : `${data.term.daysToGo} ${data.term.daysToGo === 1 ? 'day' : 'days'} to go`}</div>
           <div style={{ height: 10, borderRadius: 6, background: 'var(--sunk)' }}><div style={{ width: `${data.term.progress}%`, height: '100%', borderRadius: 6, background: 'var(--v)' }} /></div>
-          <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>Plan the rooms<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          {has('ex') && <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>See the exam schedule<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>}
         </div>
       )}
       me={{ initials: user.initials, name: user.name, role: user.roleNames[0] ?? 'Staff', bg: t.bg, fg: t.fg }}

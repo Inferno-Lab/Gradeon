@@ -55,36 +55,39 @@ const authed = createRoute({
   },
 });
 
-const page = (path: string, load: () => Promise<Record<string, unknown>>, name: string) =>
-  createRoute({ getParentRoute: () => authed, path, component: lazyRouteComponent(load as never, name) });
+// Each page also answers at `<page>/<tab>`: the tabs its module defines (app/tabs.tsx reads which one).
+const page = (path: string, load: () => Promise<Record<string, unknown>>, name: string) => {
+  const component = lazyRouteComponent(load as never, name);
+  const at = createRoute({ getParentRoute: () => authed, path, component });
+  return path === '/' ? [at] : [at, createRoute({ getParentRoute: () => authed, path: `${path}/$tab`, component })];
+};
 
 const routeTree = root.addChildren([
   login,
   authed.addChildren([
-    page('/', () => import('./pages/dashboard/DashboardPage'), 'DashboardPage'),
-    page('/students', () => import('./pages/students/StudentsPage'), 'StudentsPage'),
-    page('/attendance', () => import('./pages/attendance/AttendancePage'), 'AttendancePage'),
-    page('/fees', () => import('./pages/fees/FeesPage'), 'FeesPage'),
-    page('/notices', () => import('./pages/notices/NoticesPage'), 'NoticesPage'),
-    page('/timetable', () => import('./pages/timetable/TimetablePage'), 'TimetablePage'),
-    page('/homework', () => import('./pages/homework/HomeworkPage'), 'HomeworkPage'),
-    page('/exams', () => import('./pages/exams/ExamsPage'), 'ExamsPage'),
-    page('/staff', () => import('./pages/staff/StaffPage'), 'StaffPage'),
-    page('/admissions', () => import('./pages/admissions/AdmissionsPage'), 'AdmissionsPage'),
-    page('/invoices', () => import('./pages/invoices/InvoicesPage'), 'InvoicesPage'),
-    page('/reports', () => import('./pages/reports/ReportsPage'), 'ReportsPage'),
-    page('/messages', () => import('./pages/messages/MessagesPage'), 'MessagesPage'),
-    page('/events', () => import('./pages/events/EventsPage'), 'EventsPage'),
-    page('/settings', () => import('./pages/settings/SettingsPage'), 'SettingsPage'),
-    page('/setup', () => import('./pages/setup/SetupPage'), 'SetupPage'),
-    page('/moving-in', () => import('./pages/moving-in/MovingInPage'), 'MovingInPage'),
-    page('/library', () => import('./pages/library/LibraryPage'), 'LibraryPage'),
-    page('/transport', () => import('./pages/transport/TransportPage'), 'TransportPage'),
-    page('/gallery', () => import('./pages/gallery/GalleryPage'), 'GalleryPage'),
-    page('/year', () => import('./pages/year/YearPage'), 'YearPage'),
-    page('/online-payments', () => import('./pages/fees/OnlinePaymentsPage'), 'OnlinePaymentsPage'),
-    page('/p/$name', () => import('./pages/status/StatusPages'), 'ComingSoonPage'),
-    page('/design', () => import('./design/DesignPage'), 'DesignPage'),
+    ...page('/', () => import('./pages/dashboard/DashboardPage'), 'DashboardPage'),
+    ...page('/approvals', () => import('./pages/approvals/ApprovalsPage'), 'ApprovalsPage'),
+    ...page('/students', () => import('./pages/students/StudentsPage'), 'StudentsPage'),
+    ...page('/attendance', () => import('./pages/attendance/AttendancePage'), 'AttendancePage'),
+    ...page('/fees', () => import('./pages/fees/FeesPage'), 'FeesPage'),
+    ...page('/notices', () => import('./pages/notices/NoticesPage'), 'NoticesPage'),
+    ...page('/timetable', () => import('./pages/timetable/TimetablePage'), 'TimetablePage'),
+    ...page('/homework', () => import('./pages/homework/HomeworkPage'), 'HomeworkPage'),
+    ...page('/exams', () => import('./pages/exams/ExamsPage'), 'ExamsPage'),
+    ...page('/staff', () => import('./pages/staff/StaffPage'), 'StaffPage'),
+    ...page('/admissions', () => import('./pages/admissions/AdmissionsPage'), 'AdmissionsPage'),
+    ...page('/reports', () => import('./pages/reports/ReportsPage'), 'ReportsPage'),
+    ...page('/messages', () => import('./pages/messages/MessagesPage'), 'MessagesPage'),
+    ...page('/events', () => import('./pages/events/EventsPage'), 'EventsPage'),
+    ...page('/profile', () => import('./pages/profile/ProfilePage'), 'ProfilePage'),
+    ...page('/privacy', () => import('./pages/privacy/PrivacyPage'), 'PrivacyPage'),
+    ...page('/audit', () => import('./pages/audit/AuditPage'), 'AuditPage'),
+    ...page('/moving-in', () => import('./pages/moving-in/MovingInPage'), 'MovingInPage'),
+    ...page('/library', () => import('./pages/library/LibraryPage'), 'LibraryPage'),
+    ...page('/transport', () => import('./pages/transport/TransportPage'), 'TransportPage'),
+    ...page('/gallery', () => import('./pages/gallery/GalleryPage'), 'GalleryPage'),
+    ...page('/year', () => import('./pages/year/YearPage'), 'YearPage'),
+    ...page('/design', () => import('./design/DesignPage'), 'DesignPage'),
   ]),
 ]);
 

@@ -2,6 +2,7 @@
 // Looks for empty space: a hole under the last card, cards side by side with unequal heights, a card with a big blank inside,
 // and content that stops short of the right edge. Usage: node tools/scan-gaps.mjs [--only admin|console] [--sizes 1440x900,1920x1080] [--dark]
 import { chromium } from '@playwright/test';
+import { adminPaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -11,7 +12,6 @@ const API = process.env.API ?? 'http://localhost:4000';
 const ADMIN = process.env.ADMIN ?? 'http://127.0.0.1:5173';
 const CONSOLE = process.env.CONSOLE ?? 'http://127.0.0.1:5174';
 const slug = process.env.SCHOOL ?? 'greenfield';
-const adminTabs = ['general', 'modules', 'layout', 'roles', 'notifications', 'templates', 'privacy', 'audit'];
 
 const post = async (path, body, headers = {}) => (await fetch(`${API}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) })).json();
 async function adminKey() {
@@ -30,7 +30,7 @@ async function consoleKey() {
 const jobs = [];
 if (only !== 'console') {
   const key = await adminKey();
-  for (const p of ['', '/students', '/timetable', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', ...adminTabs.map((t) => `/settings?tab=${t}`)]) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key, tab: p.startsWith('/settings') ? p.split('=')[1] : null });
+  for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const c = await consoleKey();
@@ -138,10 +138,6 @@ for (const [w, h] of SIZES) {
   for (const j of jobs) {
     await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, j.key); if (j.key?.[2]) await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: j.key[2], expiresInSeconds: 900 } }));
     await page.goto(j.url.split('?')[0], { waitUntil: 'networkidle' }).catch(() => {});
-    if (j.tab) {
-      const names = { general: 'General', modules: 'Modules', layout: 'App layout', roles: 'Roles and access', notifications: 'Notifications', templates: 'Message templates', privacy: 'Privacy and consent', audit: 'Audit log' };
-      await page.getByRole('button', { name: new RegExp(`^${names[j.tab]}`) }).first().click().catch(() => page.getByText(names[j.tab], { exact: false }).first().click().catch(() => {}));
-    }
     await page.waitForTimeout(500);
     const found = await page.evaluate(scan);
     if (found.length) { n += found.length; console.log(`${j.name} @${w}x${h}\n   ${found.join('\n   ')}`); }

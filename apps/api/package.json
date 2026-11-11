@@ -18,22 +18,25 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@fastify/cors": "^11.0.0",
     "@gradeon/config-engine": "workspace:*",
     "@gradeon/contracts": "workspace:*",
     "@gradeon/db": "workspace:*",
     "@gradeon/integrations": "workspace:*",
+    "@gradeon/nest-kit": "workspace:*",
     "@gradeon/security": "workspace:*",
     "@gradeon/tenancy": "workspace:*",
-    "@fastify/cors": "^11.0.0",
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-fastify": "^11.1.0",
+    "@pdf-lib/fontkit": "1.1.1",
     "drizzle-orm": "^0.45.0",
     "fastify": "^5.12.5",
+    "pdf-lib": "1.17.1",
     "reflect-metadata": "^0.2.2",
+    "regenerator-runtime": "0.14.1",
     "rxjs": "^7.8.0",
-    "zod": "^4.1.0",
-    "@gradeon/nest-kit": "workspace:*"
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@swc/core": "^1.16.18",

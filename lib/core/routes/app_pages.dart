@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/routes/middlewares.dart';
-import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/features/attendance/controllers/attendance_controller.dart';
@@ -51,26 +50,22 @@ import 'package:gradeon/features/transport/views/transport_view.dart';
 class ShellBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(ShellController.new, fenix: true);
-    final teacher = Get.find<AuthService>().role == UserRole.teacher;
+    // Every screen the school may put in a role's tabs (console: The app → what each role sees); lazy, so only opened ones are made.
     Get
+      ..lazyPut(ShellController.new, fenix: true)
       ..lazyPut(ChatListController.new, fenix: true)
       ..lazyPut(ProfileController.new, fenix: true)
-      ..lazyPut(NoticesController.new, fenix: true);
-    if (teacher) {
-      Get
-        ..lazyPut(TeacherHomeController.new, fenix: true);
-    } else {
-      Get
-        ..lazyPut(DashboardController.new, fenix: true)
-        ..lazyPut(AcademicsController.new, fenix: true)
-        ..lazyPut(FeesController.new, fenix: true)
-        // Screens a school may put in the family tabs (console → The app).
-        ..lazyPut(EventsController.new, fenix: true)
-        ..lazyPut(LibraryController.new, fenix: true)
-        ..lazyPut(TransportController.new, fenix: true)
-        ..lazyPut(GalleryController.new, fenix: true);
-    }
+      ..lazyPut(NoticesController.new, fenix: true)
+      ..lazyPut(TeacherHomeController.new, fenix: true)
+      ..lazyPut(DashboardController.new, fenix: true)
+      ..lazyPut(AcademicsController.new, fenix: true)
+      ..lazyPut(FeesController.new, fenix: true)
+      ..lazyPut(HomeworkController.new, fenix: true)
+      ..lazyPut(TimetableController.new, fenix: true)
+      ..lazyPut(EventsController.new, fenix: true)
+      ..lazyPut(LibraryController.new, fenix: true)
+      ..lazyPut(TransportController.new, fenix: true)
+      ..lazyPut(GalleryController.new, fenix: true);
   }
 }
 

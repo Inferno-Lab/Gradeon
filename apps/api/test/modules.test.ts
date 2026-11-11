@@ -70,9 +70,12 @@ describe('exams', () => {
     const detail = (await get(`/v1/students/${view.students[0].studentId}`)).json;
     expect(detail.id).toBe(view.students[0].studentId);
     expect((await send('DELETE', `/v1/exams/${id}`)).status).toBe(409);
-    // Editing a mark after publishing sends the exam back to marking, so families never see a number that was changed behind their back.
-    const edit = await send('PUT', `/v1/exams/${id}/marks`, { marks: [{ studentId: view.students[2].studentId, subjectId: 'sub_maths', score: 10, absent: false }] });
-    expect(edit.json.exam.status).toBe('marking');
+    // Published marks are locked: they are reopened first, saying why, so families never see a number changed behind their back.
+    const fix = { marks: [{ studentId: view.students[2].studentId, subjectId: 'sub_maths', score: 10, absent: false }] };
+    expect((await send('PUT', `/v1/exams/${id}/marks`, fix)).status).toBe(423);
+    const reopened = await send('POST', `/v1/exams/${id}/reopen`, { note: 'A paper was added up wrong' });
+    expect(reopened.json).toMatchObject({ status: 'marking', reopenedNote: 'A paper was added up wrong' });
+    expect((await send('PUT', `/v1/exams/${id}/marks`, fix)).json.exam.status).toBe('marking');
   });
   it('rejects an exam that ends before it starts or names an unknown subject', async () => {
     const d = istToday();
@@ -228,7 +231,7 @@ describe('privacy and templates', () => {
     const made = await send('POST', '/v1/privacy/requests', { kind: 'erasure', subjectName: 'Test Child', requestedBy: 'Parent', note: 'Moved schools' });
     expect(made.status).toBe(201);
     const done = await send('POST', `/v1/privacy/requests/${made.json.id}/decision`, { status: 'done', note: 'Erased' });
-    expect(done.json).toMatchObject({ status: 'done', note: 'Erased' });
+    expect(done.json).toMatchObject({ status: 'done', note: 'Moved schools', answer: 'Erased' });
     expect((await send('POST', `/v1/privacy/requests/${made.json.id}/decision`, { status: 'declined' })).status).toBe(409);
   });
   it('sends school messages with the wording and channels the school chose', async () => {
@@ -244,11 +247,12 @@ describe('privacy and templates', () => {
     expect(rows[0]).toMatchObject({ channel: 'sms', body: 'Hello! Anika Rao has a fee waiting. Please pay soon. Greenfield' });
     expect(Number((await h.registry.query("select count(*) n from sandbox_messages where school_slug = 'greenfield'")).rows[0].n)).toBe(before + 1);
   });
-  it('puts the app layout and console flags into the config the apps fetch', async () => {
-    await h.setSettings({ 'app.dock': ['home', 'fees', 'nonsense'], 'app.quick': ['payFees'] });
+  it('puts each role’s app layout and the console flags into the config the apps fetch', async () => {
+    await h.setSettings({ 'app.layout': { parent: { dock: ['home', 'fees', 'nonsense', 'trips'], home: [], quick: ['payFees'] }, student: { dock: [], home: [], quick: [] }, teacher: { dock: ['home', 'classes'], home: [], quick: [] }, driver: { dock: [], home: [], quick: [] } } });
     const cfg = (await get('/v1/config')).json;
-    expect(cfg.app.dock).toEqual(['home', 'fees']);
-    expect(cfg.app.quick).toEqual(['payFees']);
+    expect(cfg.app.layout.parent.dock).toEqual(['home', 'fees']);
+    expect(cfg.app.layout.parent.quick).toEqual(['payFees']);
+    expect(cfg.app.layout.teacher.dock).toEqual(['home', 'classes']);
     expect(cfg.flags).toBeTypeOf('object');
   });
 });

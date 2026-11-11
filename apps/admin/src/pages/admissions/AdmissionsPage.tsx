@@ -4,7 +4,7 @@ import { ENQUIRY_STAGES, addDays, istToday, type EnquiryRow, type EnquiryStage }
 import { DateField, Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, AreaField, Avatar, dateLabel, problem } from '../../app/kit';
+import { AddBtn, AreaField, Avatar, dateLabel, problem, useGrades, useSetting } from '../../app/kit';
 
 const COLUMNS: { stage: EnquiryStage; label: string; hint: string }[] = [
   { stage: 'enquiry', label: 'Enquiry', hint: 'Asked about a seat' },
@@ -13,7 +13,8 @@ const COLUMNS: { stage: EnquiryStage; label: string; hint: string }[] = [
   { stage: 'offer', label: 'Offer', hint: 'Seat offered' },
   { stage: 'enrolled', label: 'Enrolled', hint: 'Now a student' },
 ];
-const SOURCE: Record<string, string> = { 'walk-in': 'Walk-in', phone: 'Phone', website: 'Website', referral: 'Referral', event: 'Event' };
+/** A source as stored (older rows keep a key like `walk-in`), shown as words. */
+const sourceLabel = (s: string) => (s.includes(' ') || /[A-Z]/.test(s) ? s : s.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase()));
 const NEXT: Partial<Record<EnquiryStage, { to: EnquiryStage; label: string }>> = {
   enquiry: { to: 'applied', label: 'Mark applied' }, applied: { to: 'test', label: 'Book test' }, test: { to: 'offer', label: 'Make offer' }, offer: { to: 'enrolled', label: 'Enrol' },
 };
@@ -73,7 +74,7 @@ export function AdmissionsPage() {
                           <span style={{ minWidth: 0 }}><b data-tip={r.childName}>{r.childName}</b><small>Grade {r.gradeSought} · {r.guardianName}</small></span>
                         </button>
                         <div className="tgrow" style={{ gap: 6 }}>
-                          <span className="chip">{SOURCE[r.source] ?? r.source}</span>
+                          <span className="chip">{sourceLabel(r.source)}</span>
                           {r.testOn && <span className="chip a">Test {dateLabel(r.testOn)}</span>}
                           {r.studentId && <span className="chip g">Student</span>}
                         </div>
@@ -100,12 +101,14 @@ export function AdmissionsPage() {
 
 function NewEnquiry({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const app = useApp();
-  const [f, setF] = useState({ childName: '', gradeSought: '1', guardianName: '', phone: '', email: '', source: 'walk-in', note: '' });
+  const grades = useGrades();
+  const sources = useSetting<string[]>('admissions.sources', ['Walk-in']);
+  const [f, setF] = useState({ childName: '', gradeSought: '', guardianName: '', phone: '', email: '', source: '', note: '' });
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
   const make = useMutation({
-    mutationFn: () => app.api.admissions.create({ childName: f.childName.trim(), gradeSought: Number(f.gradeSought), guardianName: f.guardianName.trim(), phone: f.phone.trim(), email: f.email.trim(), source: f.source as 'walk-in', note: f.note.trim() }),
+    mutationFn: () => app.api.admissions.create({ childName: f.childName.trim(), gradeSought: Number(f.gradeSought || grades[0]?.value || 1), guardianName: f.guardianName.trim(), phone: f.phone.trim(), email: f.email.trim(), source: f.source || sources[0] || 'Walk-in', note: f.note.trim() }),
     onSuccess: onDone, onError: (e) => { setErr(problem(e)); shake.hit(); },
   });
   const go = () => {
@@ -122,14 +125,14 @@ function NewEnquiry({ onClose, onDone }: { onClose: () => void; onDone: () => vo
       <div className="stack">
         <div className="two">
           <Field label="Child’s name" value={f.childName} onChange={set('childName')} error={err.childName} maxLength={80} />
-          <SelectField label="Grade wanted" value={f.gradeSought} onChange={set('gradeSought')} options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Grade ${i + 1}` }))} />
+          <SelectField label="Grade wanted" value={f.gradeSought || grades[0]?.value || ''} onChange={set('gradeSought')} options={grades} />
         </div>
         <Field label="Guardian’s name" value={f.guardianName} onChange={set('guardianName')} error={err.guardianName} maxLength={80} />
         <div className="two">
           <Field label="Phone" value={f.phone} onChange={set('phone')} error={err.phone} />
           <Field label="Email (optional)" type="email" value={f.email} onChange={set('email')} error={err.email} />
         </div>
-        <SelectField label="How they found us" value={f.source} onChange={set('source')} options={Object.entries(SOURCE).map(([value, label]) => ({ value, label }))} />
+        <SelectField label="How they found us" value={f.source || sources[0] || ''} onChange={set('source')} options={sources.map((s) => ({ value: s, label: s }))} />
         <AreaField label="Note (optional)" value={f.note} onChange={set('note')} rows={2} maxLength={400} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
@@ -197,7 +200,7 @@ function Details({ row, canWrite, onClose, onDecline, onReopen, onNote }: { row:
         <div className="kv"><span>Guardian</span><b>{row.guardianName}</b></div>
         <div className="kv"><span>Phone</span><b>{row.phone || 'Not given'}</b></div>
         {row.email && <div className="kv"><span>Email</span><b>{row.email}</b></div>}
-        <div className="kv"><span>Found us through</span><b>{SOURCE[row.source] ?? row.source}</b></div>
+        <div className="kv"><span>Found us through</span><b>{sourceLabel(row.source)}</b></div>
         {row.testOn && <div className="kv"><span>Entrance test</span><b>{dateLabel(row.testOn)}</b></div>}
         <AreaField label="Note" value={note} onChange={setNote} rows={3} maxLength={400} />
       </div>

@@ -19,7 +19,7 @@ beforeAll(async () => {
   await seedSchool(pool, {
     school: { name: 'Greenfield International School', shortName: 'Greenfield', tagline: '', phone: '', email: '', address: '', color: '#6A4CF5', logoText: 'G', language: 'en' },
     admin: { name: 'Neha Menon', email: 'neha.menon@greenfield.edu.in', phone: '+91 98220 41200', passwordHash: 'x' },
-    modules: ['people', 'attendance', 'fees', 'notices', 'timetable'], demoMode: true, data: 'demo', demoPasswordHash: 'x',
+    modules: ['people', 'attendance', 'fees', 'notices', 'timetable'], data: 'demo', demoPasswordHash: 'x',
   });
 }, 180_000);
 afterAll(async () => { await pool?.end(); await server?.stop(); });
@@ -78,7 +78,7 @@ describe('Greenfield demo seed', () => {
       await migrate(p2, 'school');
       await seedSchool(p2, {
         school: { name: 'Fresh School', shortName: 'Fresh', tagline: '', phone: '', email: '', address: '', color: '#6A4CF5', logoText: 'F', language: 'en' },
-        admin: { name: 'Admin One', email: 'a@fresh.test', phone: '+91 90000 00001', passwordHash: 'x' }, modules: ['people'], demoMode: false, data: 'empty',
+        admin: { name: 'Admin One', email: 'a@fresh.test', phone: '+91 90000 00001', passwordHash: 'x' }, modules: ['people'], data: 'empty',
       });
       expect((await p2.query('select count(*)::int n from students')).rows[0].n).toBe(0);
       expect((await p2.query('select count(*)::int n from users')).rows[0].n).toBe(1);

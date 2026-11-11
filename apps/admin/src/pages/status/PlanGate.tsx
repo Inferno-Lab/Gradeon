@@ -25,8 +25,8 @@ function NotInPlan() {
     <PageScope page="dashboard">
       <main className="mn">
         <div><EmptyCard title="Not in your plan" chip={{ text: 'Not included', tone: 'a' }} scene="padlock" heading="This is not part of your school’s plan"
-          body="Your school does not have this module right now. Anything it held is kept safely. To add it, ask Gradeon from School setup."
-          actions={<button className="btn pri" onClick={() => app.go('/settings')}>Open School setup</button>} /></div>
+          body="Your school does not have this module right now. Anything it held is kept safely. To add it, ask Gradeon from your school profile."
+          actions={<button className="btn pri" onClick={() => app.go('/profile/plan')}>See the plan and modules</button>} /></div>
       </main>
     </PageScope>
   );

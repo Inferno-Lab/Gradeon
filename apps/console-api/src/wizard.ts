@@ -118,11 +118,11 @@ export class Wizard {
     const id = newId('sch');
     const entitlement = { modules: closeModules(payload.plan.modules), features: plan.features ?? {}, limits: plan.limits, locks: payload.plan.locks, overrides: {}, version: 1 };
     const school = (await this.db.query<typeof reg.schools.$inferSelect>(
-      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, entitlement, contact, gstin, board, address, addressing, custom_domain, app_name, created_by, ring, api_version, admin_version)
-       values ($1,$2,$3,$4,$5,$6,'onboarding',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'rest',$20,$20) returning *`,
+      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, entitlement, contact, gstin, board, address, addressing, custom_domain, app_name, created_by, ring, api_version, admin_version, demo)
+       values ($1,$2,$3,$4,$5,$6,'onboarding',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'rest',$20,$20,$21) returning *`,
       [id, payload.basics.slug, payload.basics.name, payload.basics.shortName, payload.branding.color, payload.branding.logoText, payload.plan.plan, payload.placement.cell, payload.placement.target, cell.region,
         JSON.stringify(entitlement), JSON.stringify({ name: payload.basics.contactName, phone: payload.basics.contactPhone, email: payload.basics.contactEmail }), payload.basics.gstin, payload.basics.board,
-        [payload.basics.address, payload.basics.city].filter(Boolean).join(', '), payload.placement.addressing, payload.placement.customDomain, payload.branding.appName, user.email, this.env.APP_VERSION])).rows[0]!;
+        [payload.basics.address, payload.basics.city].filter(Boolean).join(', '), payload.placement.addressing, payload.placement.customDomain, payload.branding.appName, user.email, this.env.APP_VERSION, payload.data.start === 'demo'])).rows[0]!;
     if (opts.dryRun) {
       // A dry run needs a school record to read from; it is removed as soon as the run has finished.
       try {

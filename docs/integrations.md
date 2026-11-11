@@ -17,14 +17,14 @@ Code: `packages/integrations` (the adapters and the `Hub`), `apps/console-api/sr
 
 **States.** A new connection starts in **test**. **Go live** asks for a second person (action `integration.live`, approved under Approvals, needs the last test to have passed). **Pause** sends its routes to their fallback. Changing a live connection's keys or settings puts it back in test.
 
-**Modes** (`MESSAGING_MODE`, set the same on the school API and the console API):
+**Modes** (one switch at the top of Integrations, kept in the registry and read by both APIs; going live needs a second person and lists what is not live yet):
 
 - `sandbox` (default, the test track): messages go to the console's **Test inbox**, except to numbers and addresses on the **allow-list** (Integrations → Allow-list), which are sent for real through test or live connections. Files, payments and maps use a routed test or live connection, or the built-in sandbox: files kept in the registry (`sandbox_files`), a **test checkout** that says no money moves (pay or fail), travel times estimated from the distance.
 - `live`: only live connections serve. A capability with no live connection **fails and says so**; nothing falls back to the sandbox quietly.
 
 **Sending.** `Messenger.send` writes a `message_log` row (a message to many families, like a notice, is written in bulk: one statement per thousand rows; routes and the allow-list are remembered for ten seconds). Sign-in codes and anything bound for the Test inbox go at once; the rest is sent by the school API's worker (every 20 seconds, `FOR UPDATE SKIP LOCKED`, so any number of servers can run it). A failure is tried again after 1 and 10 minutes, then the fallback, then it is marked failed with the provider's words; the console's Activity has **Retry**. In quiet hours a message is **held** until they end. Past the plan's `smsPerMonth` texts are **refused** (sign-in codes never are); SMS parts are counted per school per month, and each connection's `costPaise` gives the cost.
 
-**Health.** Every 15 minutes each live connection runs its test (payments are skipped: their test makes a ₹1 link); a connection that turns unhealthy, or five failures with nothing sent in 15 minutes, posts to `ALERT_WEBHOOK_URL`.
+**Health.** Every 15 minutes each live connection runs its test (payments are skipped: their test makes a ₹1 link); a connection that turns unhealthy, or five failures with nothing sent in 15 minutes, is sent through the Alerts connections (Slack, Discord or e-mail).
 
 **Webhooks.** Each connection that providers call back has its own address: `https://<server>/hooks/<connectionId>/<token>` (Integrations → Webhooks shows it with a Copy button and the last ten events). The token in the address is secret; providers that sign their calls (Meta, Razorpay, Cashfree) are also checked against the raw body. Delivery reports update `message_log`; payment events write the receipt once per provider payment ID, however often they repeat.
 
@@ -88,7 +88,7 @@ Refunds start from the admin's **Online payments** (permission `fees.refund`); a
 
 ### File storage
 
-Any **S3-compatible** bucket (AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces): endpoint (blank for AWS), region, bucket, access key ID and secret, path-style for MinIO. Allow `PUT` and `GET` from the admin's and the app's origins in the bucket's CORS rules (uploads go straight to the bucket). Files are kept under `schools/<slug>/<kind>/`; downloads are presigned addresses valid five minutes, given only to someone allowed to see the file. Set `CLAMAV_HOST` (host:port of a ClamAV daemon) on the school API to scan every upload; without it uploads are checked by type only.
+Any **S3-compatible** bucket (AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces): endpoint (blank for AWS), region, bucket, access key ID and secret, path-style for MinIO. Allow `PUT` and `GET` from the admin's and the app's origins in the bucket's CORS rules (uploads go straight to the bucket). Files are kept under `schools/<slug>/<kind>/`; downloads are presigned addresses valid five minutes, given only to someone allowed to see the file. Add a File scanning connection (ClamAV: host and port; Test scans the EICAR test file) to scan every upload; in live mode family uploads are refused until one exists.
 
 ### Maps
 

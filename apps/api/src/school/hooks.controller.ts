@@ -1,4 +1,5 @@
 import { All, Body, Controller, Get, HttpCode, Inject, Param, Post, Put, Query, Req, Res } from '@nestjs/common';
+import { appIdFor } from '@gradeon/contracts';
 import { sandboxLink } from '@gradeon/integrations';
 import { ApiError, forbidden } from '@gradeon/nest-kit';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -36,6 +37,29 @@ export class HooksController {
     private readonly tenants: TenantService,
     @Inject(ENV) private readonly env: Env,
   ) {}
+
+  // ── The school's app, from the QR code on a welcome letter ─────────────────
+
+  /**
+   * Sends a phone to the school's app in its own store (Google Play by the package name, the App Store by the link the last iPhone
+   * build reported); a computer, or a phone whose store has no listing yet, gets a page with what there is.
+   */
+  @Get('app/:slug')
+  async app(@Param('slug') slug: string, @Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const info = await this.tenants.registry.school(slug);
+    if (!info) return res.status(404).type('text/html').send(page('Not found', '<h1>We could not find that school</h1><p>Check the letter and try again.</p>'));
+    const builds = (await this.tenants.registry.pool.query<{ platform: string; url: string | null }>(
+      "select distinct on (b.platform) b.platform, b.url from builds b where b.school_id = $1 and b.status = 'done' order by b.platform, b.created_at desc", [info.id])).rows;
+    const android = builds.some((b) => b.platform === 'android') ? `https://play.google.com/store/apps/details?id=${appIdFor(slug)}` : null;
+    const ios = builds.find((b) => b.platform === 'ios' && b.url?.startsWith('https://'))?.url ?? null;
+    const ua = String(req.headers['user-agent'] ?? '');
+    const go = /android/i.test(ua) ? android : /iphone|ipad|ipod/i.test(ua) ? ios : null;
+    if (go) return res.redirect(go, 302);
+    const links = [android && `<a class="btn" href="${esc(android)}">Google Play</a>`, ios && `<a class="btn" href="${esc(ios)}">App Store</a>`].filter(Boolean).join('');
+    return res.type('text/html').send(page(info.name, `<h1>${esc(info.name)}</h1>${links
+      ? `<p>Get the school's app on your phone.</p><form>${links}</form>`
+      : '<p>The school’s app is not in the stores yet. The school will tell you when it is.</p>'}`));
+  }
 
   // ── The test track's checkout ──────────────────────────────────────────────
 

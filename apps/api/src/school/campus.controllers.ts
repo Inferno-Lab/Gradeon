@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Res } from '@nestjs/common';
 import {
-  AlbumInput, BookInput, BusPosition, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
+  AlbumInput, BookInput, BusPosition, TripDelay, TripMark, TripStart, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
   type AlbumRow, type BookRow, type BusRouteRow, type FileRow, type FileUpload, type LibraryView, type LoanRow, type OnlinePaymentRow, type PhotoRow, type PromotionPreview,
   type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS,
 } from '@gradeon/contracts';
@@ -28,6 +28,9 @@ const Decide = z.object({ approve: z.boolean() });
 const Search = z.object({ q: z.string().max(80).default('') });
 
 /** Uploads and downloads for staff and families alike: what each may touch is checked per kind (FilesService). */
+const PhotoReport = z.object({ reason: z.string().trim().min(3, 'Say what is wrong').max(300) });
+const Resolve = z.object({ remove: z.boolean() });
+
 @Controller('v1/files')
 @Core()
 export class FilesController {
@@ -199,6 +202,12 @@ export class GalleryController {
 
   @Put('photos/:fileId/tags') @HttpCode(204) @Require('gallery.write')
   tag(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('fileId') id: string, @Body(new ZodPipe(PhotoTags)) b: z.infer<typeof PhotoTags>): Promise<void> { return this.g.tag(t, u, id, b.studentIds); }
+
+  @Get('reports') @Require('gallery.read')
+  reports(@Tenant() t: TenantCtx) { return this.g.reports(t); }
+
+  @Post('reports/:id/resolve') @HttpCode(204) @Require('gallery.write')
+  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Resolve)) b: z.infer<typeof Resolve>): Promise<void> { return this.g.resolve(t, u, id, b.remove); }
 }
 
 @Controller('v1/year')
@@ -326,13 +335,24 @@ export class FamilyCampusController {
     return this.tr.forStudent(t, id);
   }
 
-  @Get('bus/routes') @RequireModule('transport.liveBus')
-  driving(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.tr.myRoutes(t, u); }
+  /** The bus driver's screen: their routes today, trips, stops with riders. */
+  @Get('driver/day') @RequireModule('transport.liveBus')
+  driverDay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.tr.driverDay(t, u); }
 
-  @Post('bus/:routeId/position') @RequireModule('transport.liveBus') @HttpCode(200)
-  position(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('routeId') id: string, @Body(new ZodPipe(BusPosition)) b: z.infer<typeof BusPosition>) {
-    return this.tr.position(t, u, id, b);
-  }
+  @Post('driver/trips') @RequireModule('transport.liveBus') @HttpCode(200)
+  startTrip(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(TripStart)) b: z.infer<typeof TripStart>) { return this.tr.startTrip(t, u, b.routeId, b.kind); }
+
+  @Post('driver/trips/:id/end') @RequireModule('transport.liveBus') @HttpCode(200)
+  endTrip(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.tr.endTrip(t, u, id); }
+
+  @Post('driver/trips/:id/position') @RequireModule('transport.liveBus') @HttpCode(200)
+  tripPosition(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(BusPosition)) b: z.infer<typeof BusPosition>) { return this.tr.tripPosition(t, u, id, b); }
+
+  @Post('driver/trips/:id/marks') @RequireModule('transport.liveBus') @HttpCode(200)
+  mark(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(TripMark)) b: z.infer<typeof TripMark>) { return this.tr.mark(t, u, id, b); }
+
+  @Post('driver/trips/:id/delay') @RequireModule('transport.liveBus') @HttpCode(200)
+  delay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(TripDelay)) b: z.infer<typeof TripDelay>) { return this.tr.delay(t, u, id, b); }
 
   @Get('albums') @RequireModule('gallery')
   async albums(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<AlbumRow[]> {
@@ -340,6 +360,12 @@ export class FamilyCampusController {
     if (k === null) return this.g.albums(t);
     const classes = (await t.pool.query<{ class_id: string }>('select distinct class_id from students where id = any($1)', [k])).rows.map((r) => r.class_id);
     return this.g.albums(t, classes);
+  }
+
+  @Post('photos/:fileId/report') @RequireModule('gallery') @HttpCode(200)
+  async reportPhoto(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('fileId') id: string, @Body(new ZodPipe(PhotoReport)) b: z.infer<typeof PhotoReport>) {
+    await this.g.report(t, u, id, b.reason);
+    return { ok: true };
   }
 
   @Get('albums/:id/photos') @RequireModule('gallery')

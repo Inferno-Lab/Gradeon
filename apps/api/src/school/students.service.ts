@@ -43,7 +43,7 @@ export class StudentsService {
           coalesce(sum(greatest(i.amount - i.waived_amount - coalesce(paid.p, 0), 0)) filter (where i.due_on >= $1::date and i.due_on <= $2::date), 0) due
         from fee_invoices i left join paid on paid.invoice_id = i.id group by i.student_id),
       att as (
-        select m.student_id, avg(case when m.status in ('present','late') then 1.0 else 0.0 end) pct
+        select m.student_id, avg(case when m.status in ('present','late','half_day') then 1.0 else 0.0 end) pct
         from attendance_marks m join attendance_sessions s on s.id = m.session_id group by m.student_id)
       select s.id, s.admission_no, s.name, s.class_id, c.name class_name, s.roll_no, s.house, s.status, g.name guardian_name,
         coalesce(fee.overdue, 0) overdue, coalesce(fee.due, 0) due, att.pct, count(*) over() total
@@ -138,16 +138,16 @@ export class StudentsService {
       `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
        od as (select i.student_id, sum(greatest(i.amount - i.waived_amount - coalesce(paid.p,0),0)) amt from fee_invoices i left join paid on paid.invoice_id=i.id where i.due_on < $1::date group by i.student_id having sum(greatest(i.amount - i.waived_amount - coalesce(paid.p,0),0)) > 0)
        select count(*) in_view,
-         count(*) filter (where td.status in ('present','late')) present, count(td.status) marked,
-         count(*) filter (where td.status in ('present','late') and td.submitted_at >= ($2::date + time '03:30' )::timestamptz) since,
+         count(*) filter (where td.status in ('present','late','half_day')) present, count(td.status) marked,
+         count(*) filter (where td.status in ('present','late','half_day') and td.submitted_at >= ($2::date + time '03:30' )::timestamptz) since,
          coalesce(sum(od.amt),0) overdue_amt, count(od.student_id) overdue_fam,
          avg(a.now_pct) a_now, avg(a.prev_pct) a_prev
        from students s
        left join od on od.student_id = s.id
        left join lateral (select m.status, ses.submitted_at from attendance_marks m join attendance_sessions ses on ses.id = m.session_id where m.student_id = s.id and ses.date = $2::date) td on true
        left join lateral (select
-          avg(case when ses.date > '${split}' then (case when m.status in ('present','late') then 1.0 else 0.0 end) end) now_pct,
-          avg(case when ses.date <= '${split}' then (case when m.status in ('present','late') then 1.0 else 0.0 end) end) prev_pct
+          avg(case when ses.date > '${split}' then (case when m.status in ('present','late','half_day') then 1.0 else 0.0 end) end) now_pct,
+          avg(case when ses.date <= '${split}' then (case when m.status in ('present','late','half_day') then 1.0 else 0.0 end) end) prev_pct
           from attendance_marks m join attendance_sessions ses on ses.id = m.session_id where m.student_id = s.id) a on true
        ${w}`, params);
     const r = rows[0]!;
@@ -170,9 +170,12 @@ export class StudentsService {
     };
   }
 
-  async views(t: TenantCtx): Promise<StudentViews> {
+  /** The page's starting views. The pinned class is the person's own (remembered when they pick one), else the class they teach. */
+  async views(t: TenantCtx, userId: string): Promise<StudentViews> {
     const { today } = this.days(await this.settings.offDays(t));
-    const pinnedId = await this.settings.value<string | null>(t, 'students.pinnedClass', null);
+    const own = await t.pool.query<{ value: string }>("select value #>> '{}' as value from user_prefs where user_id = $1 and key = 'students.class'", [userId]);
+    const taught = own.rows[0] ? null : await t.pool.query<{ id: string }>('select id from classes where class_teacher_id = $1 order by grade, section limit 1', [userId]).catch(() => ({ rows: [] as { id: string }[] }));
+    const pinnedId = own.rows[0]?.value ?? taught?.rows[0]?.id ?? null;
     const [counts, pinned] = await Promise.all([
       t.pool.query<{ all: string; overdue: string; fresh: string }>(
         `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
@@ -323,9 +326,36 @@ export class StudentsService {
     const { rows } = await t.pool.query<{ student_id: string; phone: string | null; name: string }>(
       'select sg.student_id, g.phone, s.name from student_guardians sg join guardians g on g.id = sg.guardian_id join students s on s.id = sg.student_id where sg.student_id = any($1) and sg.is_primary', [body.ids]);
     const targets = rows.filter((r) => r.phone);
-    await this.messenger.sendMany(t, targets.map((r) => ({ channel: body.channel, to: r.phone!, body: body.body })));
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'message.sent', entity: 'student', detail: { count: targets.length, channel: body.channel } });
-    return { sent: targets.length };
+    // How it travels (the app, SMS, WhatsApp, email) is the console's rule for "A message from the office", not the sender's pick.
+    const sent = await this.messenger.notify(t, 'office.message', targets.map((r) => ({ to: r.phone!, vars: { text: body.body } })));
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'message.sent', entity: 'student', detail: { count: sent } });
+    return { sent };
+  }
+
+  /**
+   * Gives a student their own app account (when the school uses the student role): signed in with their own phone or email by a
+   * code, seeing only themselves. The student is told how to start.
+   */
+  async studentAccount(t: TenantCtx, user: { id: string; name: string }, studentId: string, b: { phone?: string; email?: string }): Promise<{ sent: boolean }> {
+    const roles = await this.settings.value<string[]>(t, 'app.roles', []);
+    if (!roles.includes('student')) throw new ApiError('conflict', 'Your school does not use the app for students. Ask Gradeon to switch it on.');
+    const s = (await t.pool.query<{ name: string; user_id: string | null }>("select name, user_id from students where id = $1 and status = 'active'", [studentId])).rows[0];
+    if (!s) throw notFound('That student');
+    const phone = b.phone?.replace(/[^\d+]/g, '') || null;
+    const email = b.email?.trim().toLowerCase() || null;
+    if (!phone && !email) throw new ApiError('validation', 'Give the student’s own phone or email.', { fields: { phone: 'Phone or email is needed.' } });
+    const taken = (await t.pool.query<{ id: string }>("select id from users where id <> coalesce($3, '') and ((lower(email) = $1 and $1 is not null) or (right(regexp_replace(coalesce(phone,''), '\\D', '', 'g'), 10) = right($2, 10) and $2 is not null))", [email, phone, s.user_id])).rows[0];
+    if (taken) throw new ApiError('conflict', 'That phone or email already signs in to another account. Use the student’s own.');
+    let id = s.user_id;
+    if (id) await t.pool.query('update users set phone = $2, email = $3 where id = $1', [id, phone, email]);
+    else {
+      id = newId('usr');
+      await t.pool.query("insert into users (id, kind, name, phone, email, status, invited_at) values ($1,'student',$2,$3,$4,'active',now())", [id, s.name, phone, email]);
+      await t.pool.query('update students set user_id = $2 where id = $1', [studentId, id]);
+    }
+    const sent = await this.messenger.notify(t, 'student.invite', [{ to: phone ?? email!, email, vars: { student: s.name.split(' ')[0]! } }]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'student.account', entity: 'student', entityId: studentId });
+    return { sent: sent > 0 };
   }
 
   /** Asks each family (once, however many children are selected) to install the app and sign in with their phone. */

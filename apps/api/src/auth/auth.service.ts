@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
-import { initials, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { initials, type AppRoleKey, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@gradeon/security';
 import { ENV, type Env } from '../env.js';
 import { ApiError } from '@gradeon/nest-kit';
@@ -88,9 +88,7 @@ export class AuthService {
       throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     }
     await t.pool.query('update users set failed_logins = 0, locked_until = null where id = $1', [user.id]);
-    if (clientOf(body.client) === 'mobile' && user.kind === 'staff' && (await this.settings.doc(t)).values['app.teachers'] === false) {
-      throw new ApiError('forbidden', 'Your school uses Gradeon on the web for staff. Sign in to the admin instead.');
-    }
+    if (clientOf(body.client) === 'mobile') await this.mayUseApp(t, user);
     if (passwordNeedsRehash(user.password_hash)) {
       await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(body.password)]);
     }
@@ -107,7 +105,26 @@ export class AuthService {
     const user = await this.findUser(t, identifier);
     if (!user || user.status !== 'active') throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     if (user.kind === 'staff') throw new ApiError('validation', 'Staff sign in with their password, then a code.', { fields: { identifier: 'Staff sign in with their password.' } });
+    await this.mayUseApp(t, user);
     return this.sendCode(t, user, 'sign_in');
+  }
+
+  /** The app role a person signs in as: guardians are parents, students students, staff who drive a route drivers, other staff teachers. */
+  async appRole(t: TenantCtx, user: { id: string; kind: string }): Promise<AppRoleKey> {
+    if (user.kind === 'guardian') return 'parent';
+    if (user.kind === 'student') return 'student';
+    const { rowCount } = await t.pool.query('select 1 from transport_routes where driver_user_id = $1 limit 1', [user.id]);
+    return rowCount ? 'driver' : 'teacher';
+  }
+
+  /** The console chooses which roles use the app (`app.roles`); anyone else is told plainly where to go instead. */
+  private async mayUseApp(t: TenantCtx, user: { id: string; kind: string }): Promise<void> {
+    const role = await this.appRole(t, user);
+    const roles = (await this.settings.doc(t)).values['app.roles'];
+    if (Array.isArray(roles) && roles.includes(role)) return;
+    throw new ApiError('forbidden', role === 'teacher' || role === 'driver'
+      ? 'Your school does not use the app for staff yet. Sign in to the school’s admin on the web instead.'
+      : role === 'student' ? 'Your school does not use the app for students. A parent can sign in instead.' : 'Your school does not use the app for families yet. The school office can tell you when it does.');
   }
 
   /** "Forgot it?": a code to the person's phone or email lets them choose a new password. */
@@ -147,7 +164,7 @@ export class AuthService {
   }
 
   private async sendCode(t: TenantCtx, user: { id: string; phone: string | null; email: string | null }, purpose: 'sign_in' | 'reset'): Promise<LoginChallenge> {
-    const demo = (await this.settings.doc(t)).values['demo.mode'] === true;
+    const demo = t.info.demo;
     if (!demo) {
       const { rows: [r] } = await t.pool.query<{ n: string; first: Date | null }>(
         `select count(*) n, min(created_at) first from otp_challenges where user_id = $1 and created_at > now() - interval '${OTP_WINDOW_MINUTES} minutes'`, [user.id]);

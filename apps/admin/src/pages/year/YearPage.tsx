@@ -6,12 +6,30 @@ import { DateField, Dialog, EmptyCard, Field, Select, useShake } from '@gradeon/
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { StudentPick, dateLabel, problem, stamp } from '../../app/kit';
+import { usePageTabs } from '../../app/tabs';
+import { useSetupSections } from './SetupSections';
 
 const STATUS: Record<YearRow['status'], { text: string; tone: string }> = { current: { text: 'Current', tone: 'g' }, draft: { text: 'Draft', tone: 'a' }, archived: { text: 'Archived', tone: '' } };
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 type Kid = { id: string; name: string; className: string };
 
+/** Which of the school's setup records each tab of Academic year lists (config-engine: the school module's year page). */
+const KINDS: Record<string, string[]> = { terms: ['years', 'terms'], holidays: ['holidays'], classes: ['classes'], subjects: ['subjects'], bells: ['periods'] };
+const SUBS: Record<string, string> = {
+  terms: 'The school’s years and terms. Everything that runs by term reads from them.', holidays: 'Days the school is closed: no roll call, and the app shows them.',
+  classes: 'Every class and its class teacher.', subjects: 'What is taught, and how often each week.', bells: 'When each period, break and lunch begins and ends.',
+};
+
 export function YearPage() {
+  const { tab, tabs } = usePageTabs('/year');
+  const { toast, say } = useToast();
+  const setup = useSetupSections(KINDS[tab] ?? [], say);
+  if (tab === 'year-end') return <YearEnd tabs={tabs} />;
+  return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} actions={tabs} overlays={setup.overlay}>{setup.view}</Page>;
+}
+
+/** Promotions, starting the new year and leavers. */
+function YearEnd({ tabs }: { tabs: React.ReactNode }) {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
@@ -33,9 +51,9 @@ export function YearPage() {
   const draft = v?.years.find((y) => y.status === 'draft');
   const latestRun = v?.runs[0];
   return (
-    <Page title="Year-end" sub="Promote students, start the new year and record who leaves. Dues carry forward on their own." toast={toast} loading={view.isLoading && !v}
+    <Page title="Academic year" sub="Promote students, start the new year and record who leaves. Dues carry forward on their own." toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={can ? <button className="btn pri" onClick={() => setDlg('promote')}>Promote students</button> : undefined}
+      actions={<>{tabs}{can && <button className="btn pri" onClick={() => setDlg('promote')}>Promote students</button>}</>}
       overlays={v && <>
         {dlg === 'year' && <NewYear years={v.years} onClose={() => setDlg(null)} onDone={done} />}
         {dlg === 'promote' && <Promote years={v.years} onClose={() => setDlg(null)} onDone={done} />}

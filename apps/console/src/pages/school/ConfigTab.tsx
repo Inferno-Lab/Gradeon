@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { APP_CATALOG } from '@gradeon/config-engine';
-import { DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
+import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
+import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ThemeEditor } from '../../app/ThemeEditor';
@@ -20,7 +20,6 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   const app = useApp();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['config', schoolId], queryFn: () => app.api.config.get(schoolId) });
-  const cat = useQuery({ queryKey: ['catalog'], queryFn: app.api.catalog, staleTime: 10 * 60_000 });
   const [edits, setEdits] = useState<Record<string, unknown>>({});
   const [note, setNote] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
@@ -48,16 +47,20 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
   const keys = KEYS.filter((k) => SETTINGS_META[k].group === group);
-  const modName = (k: string) => cat.data?.modules.find((m) => m.key === k)?.name ?? k;
+  const sections = [
+    ...SETTING_GROUPS.map((g) => ({ value: g as string, label: g as string })),
+    ...MODULES.filter((m) => m.settings.length && cfg.entitled.includes(m.key)).map((m) => ({ value: m.key, label: m.key === 'school' ? 'Academic year' : m.name })),
+  ];
+  const groupLabel = sections.find((x) => x.value === group)?.label ?? group;
   return (
     <section className="grid">
       <div className="card s12 rise">
         <div className="ch"><h2>Configuration</h2><span className="chip">Version {cfg.version}</span></div>
-        <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School setup, and can ask for changes (Requests).</div>
+        <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).</div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
           <div className="fld" style={{ minWidth: 220 }}>
             <label htmlFor="cfg-group">Section</label>
-            <Select id="cfg-group" value={group} onChange={setGroup} options={SETTING_GROUPS.map((g) => ({ value: g, label: `${g} · ${KEYS.filter((k) => SETTINGS_META[k].group === g).length}` }))} />
+            <Select id="cfg-group" value={group} onChange={setGroup} options={sections.map((x) => ({ value: x.value, label: `${x.label} · ${KEYS.filter((k) => SETTINGS_META[k].group === x.value).length}` }))} />
           </div>
           <span style={{ flex: 1 }} />
           {changed.length > 0 && <span className="help">{changed.length} {changed.length === 1 ? 'change' : 'changes'} not saved</span>}
@@ -65,9 +68,9 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       </div>
 
       <div className={`card s12 rise ${shake.cls}`}>
-        <div className="ch"><h2>{group}</h2></div>
+        <div className="ch"><h2>{groupLabel}</h2></div>
         {keys.map((k) => (
-          <SettingRow key={k} schoolId={schoolId} say={say} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} modName={modName}
+          <SettingRow key={k} schoolId={schoolId} say={say} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg}
             onChange={(v) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }} />
         ))}
         {can && (
@@ -89,15 +92,9 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   );
 }
 
-function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, modName, onChange }: { schoolId: string; say: Say; meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; modName: (k: string) => string; onChange: (v: unknown) => void }) {
-  const chips = (
-    <span style={{ display: 'inline-flex', gap: 6, marginLeft: 8 }}>
-      {meta.risky && <span className="chip a">Needs a second person</span>}
-      {meta.notUsedYet && <span className="chip">Saved only</span>}
-    </span>
-  );
-  const label = <>{meta.label}{chips}</>;
-  const help = [meta.help, meta.notUsedYet].filter(Boolean).join(' ');
+function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange }: { schoolId: string; say: Say; meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; onChange: (v: unknown) => void }) {
+  const label = <>{meta.label}{meta.risky && <span className="chip a" style={{ marginLeft: 8 }}>Needs a second person</span>}</>;
+  const help = meta.help;
   const str = typeof value === 'string' ? value : '';
   const list = Array.isArray(value) ? (value as string[]) : [];
   const toggle = (key: string, max?: number) => onChange(list.includes(key) ? list.filter((x) => x !== key) : max && list.length >= max ? list : [...list, key]);
@@ -111,7 +108,7 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, modName,
   const pick = (options: { key: string; label: string }[], max?: number) => box(
     <div className="tgrow">{options.map((o) => {
       const at = list.indexOf(o.key);
-      return <button key={o.key} type="button" className={`chip ${at >= 0 ? 'v' : ''}`} aria-pressed={at >= 0} disabled={disabled} onClick={() => toggle(o.key, max)} style={{ cursor: disabled ? 'default' : 'pointer' }}>{at >= 0 && meta.kind !== 'modules' && meta.kind !== 'classes' && meta.kind !== 'multi' ? `${at + 1}. ` : ''}{o.label}</button>;
+      return <button key={o.key} type="button" className={`chip ${at >= 0 ? 'v' : ''}`} aria-pressed={at >= 0} disabled={disabled} onClick={() => toggle(o.key, max)} style={{ cursor: disabled ? 'default' : 'pointer' }}>{at >= 0 && meta.kind !== 'classes' && meta.kind !== 'multi' && meta.kind !== 'appRoles' ? `${at + 1}. ` : ''}{o.label}</button>;
     })}{max && <span className="help">{list.length} of {max}</span>}</div>,
   );
   switch (meta.kind) {
@@ -132,15 +129,20 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, modName,
     case 'logo':
       return box(<LogoPick schoolId={schoolId} has={!!str} disabled={disabled} say={say} />);
     case 'multi':
-      return pick((meta.options ?? []).map(([key, l]) => ({ key, label: l })));
-    case 'modules':
-      return pick(cfg.entitled.map((m) => ({ key: m, label: modName(m) })));
-    case 'appDock': return pick(APP_CATALOG.dock.map((c) => ({ key: c.key, label: c.label })), meta.max);
-    case 'appHome': return pick(APP_CATALOG.home.map((c) => ({ key: c.key, label: c.label })), meta.max);
-    case 'appQuick': return pick(APP_CATALOG.quick.map((c) => ({ key: c.key, label: c.label })), meta.max);
+      // `fees.gstHeads` names the school's own fee heads; every other list names its options.
+      return pick(meta.options ? meta.options.map(([key, l]) => ({ key, label: l })) : cfg.feeHeads.map((h) => ({ key: h.key, label: h.name })));
+    case 'appRoles': return pick(APP_ROLES.map((r) => ({ key: r, label: APP_ROLE_LABELS[r] })));
+    case 'appLayout':
+      return box(<AppLayoutEditor value={(value ?? {}) as Record<AppRole, AppLayout>} has={{ modules: cfg.entitled, features: cfg.features }} disabled={disabled} onChange={onChange} />);
     case 'classes': return pick(cfg.classes.map((c) => ({ key: c.id, label: c.name })), meta.max);
-    case 'class':
-      return box(<Select value={str} onChange={(v) => onChange(v || null)} disabled={disabled} aria-label={meta.label} options={[{ value: '', label: 'All classes' }, ...cfg.classes.map((c) => ({ value: c.id, label: c.name }))]} />);
+    case 'strings':
+      return box(<ListEditor items={list} max={meta.max ?? 12} disabled={disabled} placeholder="Add one" onChange={onChange} />);
+    case 'houses':
+      return box(<HousesEditor value={(Array.isArray(value) ? value : []) as { key: string; name: string; color: string }[]} max={meta.max ?? 12} disabled={disabled} onChange={onChange} />);
+    case 'categories':
+      return box(<CategoriesEditor value={(Array.isArray(value) ? value : []) as Category[]} max={meta.max ?? 16} disabled={disabled} onChange={onChange} />);
+    case 'gradingScale':
+      return box(<GradingEditor value={(Array.isArray(value) ? value : []) as { grade: string; minPct: number }[]} max={meta.max ?? 12} disabled={disabled} onChange={onChange} />);
     case 'notifyRules': {
       const rules = (value ?? {}) as Record<string, { push: boolean; sms: boolean; email: boolean }>;
       const set = (ev: string, ch: 'push' | 'sms' | 'email', on: boolean) => {
@@ -291,16 +293,131 @@ function Preview({ cfg, schoolId }: { cfg: SchoolConfig; schoolId: string }) {
   return (
     <div className="card s12 rise">
       <div className="ch"><h2>Preview</h2></div>
+      <div className="help">The admin menu this role gets, and what each role sees in the app (bottom tabs in colour, then Home cards).</div>
       <div style={{ maxWidth: 320 }}><SelectField label="As this role sees it" value={roleId} onChange={setRoleId} options={cfg.roles.map((r) => ({ value: r.id, label: r.name }))} /></div>
       {p.data && (
         <>
-          <div className="kv">Admin menu<b className="tgrow">{p.data.nav.length ? p.data.nav.map((n) => <span key={n.href} className="chip">{n.label}</span>) : 'Only the dashboard'}</b></div>
-          <div className="kv">App tabs<b className="tgrow">{p.data.app.dock.map((k) => <span key={k} className="chip v">{label[k] ?? k}</span>)}</b></div>
-          <div className="kv">Home cards<b className="tgrow">{p.data.app.home.map((k) => <span key={k} className="chip">{label[k] ?? k}</span>)}</b></div>
-          <div className="kv">Quick buttons<b className="tgrow">{p.data.app.quick.map((k) => <span key={k} className="chip">{label[k] ?? k}</span>)}</b></div>
-          <div className="kv">Colour<b><span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: 6, background: p.data.school.color, verticalAlign: 'middle', marginRight: 8 }} />{p.data.school.color}</b></div>
+          {p.data.menu.map((g) => <div key={g.group} className="kv">{g.group}<b className="tgrow">{g.pages.map((n) => <span key={n.id} className="chip">{n.label}</span>)}</b></div>)}
+          {APP_ROLES.map((r) => (
+            <div key={r} className="kv">App · {APP_ROLE_LABELS[r]}<b className="tgrow">{p.data!.app.roles.includes(r)
+              ? [...p.data!.app.layout[r].dock.map((k) => <span key={`d${k}`} className="chip v">{label[k] ?? k}</span>), ...p.data!.app.layout[r].home.map((k) => <span key={`h${k}`} className="chip">{label[k] ?? k}</span>)]
+              : 'Does not use the app'}</b></div>
+          ))}
         </>
       )}
+    </div>
+  );
+}
+
+/** For each app role: its bottom tabs, Home cards and quick buttons, in order, from what the school's modules offer that role. */
+function AppLayoutEditor({ value, has, disabled, onChange }: { value: Record<AppRole, AppLayout>; has: { modules: readonly string[]; features: readonly string[] }; disabled: boolean; onChange: (v: unknown) => void }) {
+  const [role, setRole] = useState<AppRole>('parent');
+  const cur = value[role] ?? { dock: [], home: [], quick: [] };
+  const slots = [['dock', 'Bottom tabs', 4], ['home', 'Home cards', 12], ['quick', 'Quick buttons', 6]] as const;
+  const set = (slot: keyof AppLayout, key: string, max: number) => {
+    const list = cur[slot];
+    const next = list.includes(key) ? list.filter((x) => x !== key) : list.length >= max ? list : [...list, key];
+    onChange({ ...value, [role]: { ...cur, [slot]: next } });
+  };
+  return (
+    <div>
+      <div style={{ maxWidth: 260 }}><Select value={role} onChange={(r) => setRole(r as AppRole)} aria-label="Role" options={APP_ROLES.map((r) => ({ value: r, label: APP_ROLE_LABELS[r] }))} /></div>
+      {slots.map(([slot, title, max]) => {
+        const offered = APP_CATALOG[slot].filter((c) => c.roles.includes(role) && has.modules.includes(c.module) && hasKey(has, c.feature));
+        return (
+          <div key={slot} style={{ marginTop: 10 }}>
+            <div className="help" style={{ margin: '0 0 4px' }}><b>{title}</b> · {cur[slot].length} of {max}{slot === 'dock' ? ' · Profile is always last' : ''}</div>
+            <div className="tgrow">{offered.length ? offered.map((o) => {
+              const at = cur[slot].indexOf(o.key);
+              return <button key={o.key} type="button" className={`chip ${at >= 0 ? 'v' : ''}`} aria-pressed={at >= 0} disabled={disabled} onClick={() => set(slot, o.key, max)}>{at >= 0 ? `${at + 1}. ` : ''}{o.label}</button>;
+            }) : <span className="help" style={{ margin: 0 }}>The school’s modules offer nothing here for this role.</span>}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A short list of words (leave reasons): add, rename in place, remove. */
+function ListEditor({ items, max, disabled, placeholder, onChange }: { items: string[]; max: number; disabled: boolean; placeholder: string; onChange: (v: unknown) => void }) {
+  const [draft, setDraft] = useState('');
+  const add = () => { const v = draft.trim(); if (v && !items.includes(v) && items.length < max) { onChange([...items, v]); setDraft(''); } };
+  return (
+    <div>
+      {items.map((it, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+          <div style={{ flex: 1 }}><Field label={`Item ${i + 1}`} value={it} maxLength={40} disabled={disabled} onChange={(v) => onChange(items.map((x, j) => (j === i ? v : x)))} /></div>
+          <button type="button" className="btn sm" disabled={disabled || items.length <= 1} onClick={() => onChange(items.filter((_, j) => j !== i))}>Remove</button>
+        </div>
+      ))}
+      {items.length < max && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 8 }}>
+          <div style={{ flex: 1 }}><Field label="New" value={draft} maxLength={40} disabled={disabled} placeholder={placeholder} onChange={setDraft} /></div>
+          <button type="button" className="btn sm" disabled={disabled || !draft.trim()} onClick={add}>Add</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const keyOf = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'item';
+
+/** The school's houses and their colours. */
+function HousesEditor({ value, max, disabled, onChange }: { value: { key: string; name: string; color: string }[]; max: number; disabled: boolean; onChange: (v: unknown) => void }) {
+  const put = (i: number, patch: Partial<{ name: string; color: string }>) => onChange(value.map((h, j) => (j === i ? { ...h, ...patch, ...(patch.name !== undefined ? { key: keyOf(patch.name) } : {}) } : h)));
+  return (
+    <div>
+      {!value.length && <div className="help" style={{ margin: 0 }}>No houses: profiles and the roll-call grid show none.</div>}
+      {value.map((h, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 6, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 160 }}><Field label="House" value={h.name} maxLength={24} disabled={disabled} onChange={(v) => put(i, { name: v })} /></div>
+          <ColourField label="Colour" value={h.color} disabled={disabled} onChange={(c) => put(i, { color: c })} />
+          <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange(value.filter((_, j) => j !== i))}>Remove</button>
+        </div>
+      ))}
+      {value.length < max && <button type="button" className="btn sm" style={{ marginTop: 8 }} disabled={disabled} onClick={() => onChange([...value, { key: `house-${value.length + 1}`, name: `House ${value.length + 1}`, color: DEFAULT_BRAND }])}>Add a house</button>}
+    </div>
+  );
+}
+
+/** Categories of notices or events: a name and the colour pair they are drawn in. */
+function CategoriesEditor({ value, max, disabled, onChange }: { value: Category[]; max: number; disabled: boolean; onChange: (v: unknown) => void }) {
+  const put = (i: number, patch: Partial<Category>) => onChange(value.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  return (
+    <div>
+      {value.map((c, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 6, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 160 }}><Field label="Category" value={c.name} maxLength={24} disabled={disabled} onChange={(v) => put(i, { name: v })} /></div>
+          <div style={{ width: 160 }}><SelectField label="Colour" value={c.tone} disabled={disabled} onChange={(t) => put(i, { tone: t as Category['tone'] })} options={CATEGORY_TONES.map((t) => ({ value: t, label: CATEGORY_TONE_LABELS[t] }))} /></div>
+          <span className={`chip ${c.tone}`} style={{ marginBottom: 10 }}>{c.name || 'Category'}</span>
+          <button type="button" className="btn sm" disabled={disabled || value.length <= 1} onClick={() => onChange(value.filter((_, j) => j !== i))}>Remove</button>
+        </div>
+      ))}
+      {value.length < max && <button type="button" className="btn sm" style={{ marginTop: 8 }} disabled={disabled} onClick={() => onChange([...value, { key: `cat-${Date.now().toString(36).slice(-6)}`, name: 'New category', tone: 'v' }])}>Add a category</button>}
+      <div className="help">A category’s key stays when it is renamed, so notices and events already written keep it.</div>
+    </div>
+  );
+}
+
+/** Grades from the lowest percentage that earns each, highest first. */
+function GradingEditor({ value, max, disabled, onChange }: { value: { grade: string; minPct: number }[]; max: number; disabled: boolean; onChange: (v: unknown) => void }) {
+  const sorted = (rows: { grade: string; minPct: number }[]) => [...rows].sort((a, b) => b.minPct - a.minPct);
+  const put = (i: number, patch: Partial<{ grade: string; minPct: number }>) => onChange(value.map((g, j) => (j === i ? { ...g, ...patch } : g)));
+  const lowest = value.length ? Math.min(...value.map((g) => g.minPct)) : 0;
+  return (
+    <div>
+      {value.map((g, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 6 }}>
+          <div style={{ width: 120 }}><Field label="Grade" value={g.grade} maxLength={4} disabled={disabled} onChange={(v) => put(i, { grade: v })} /></div>
+          <div style={{ width: 160 }}><NumberField label="From (%)" min={0} max={100} value={String(g.minPct)} disabled={disabled} onChange={(v) => put(i, { minPct: v === '' ? 0 : Number(v) })} /></div>
+          <button type="button" className="btn sm" disabled={disabled || value.length <= 1} onClick={() => onChange(value.filter((_, j) => j !== i))}>Remove</button>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        {value.length < max && <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange([...value, { grade: '?', minPct: 0 }])}>Add a grade</button>}
+        <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange(sorted(value))}>Put in order</button>
+      </div>
+      {lowest > 0 && <div className="help">No grade starts at 0%, so marks below {lowest}% would get no grade. Add one that starts at 0.</div>}
     </div>
   );
 }

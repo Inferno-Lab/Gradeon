@@ -33,8 +33,14 @@ describe('cells', () => {
     expect(made.status).toBe(200);
     expect((await h.c('POST', '/console/v1/cells', { token: t, body: { key: 'local-2', target: 'local', region: 'x1', maxSchools: 3 } })).status).toBe(400);
     expect((await h.c('POST', '/console/v1/cells', { token: t, body: { key: 'Bad Name', target: 'local', region: 'x1', maxSchools: 3 } })).status).toBe(400);
-    const aws = await h.c('POST', '/console/v1/cells', { token: t, body: { key: 'mumbai-1', target: 'aws-cell', region: 'ap-south-1', maxSchools: 100 } });
-    expect(aws.json.note).toMatch(/CELL_MUMBAI_1_ADMIN_URL/);
+    // A cell on AWS names the School databases connection that makes its schools' databases (no server variable).
+    const bare = await h.c('POST', '/console/v1/cells', { token: t, body: { key: 'mumbai-1', target: 'aws-cell', region: 'ap-south-1', maxSchools: 100 } });
+    expect(bare.status).toBe(400);
+    const conn = await h.c('POST', '/console/v1/integrations/connections', { token: t, body: { provider: 'postgres-server', name: 'Mumbai databases', scope: 'platform', settings: {}, secrets: { adminUrl: h.server.url } } });
+    expect(conn.status).toBe(200);
+    const aws = await h.c('POST', '/console/v1/cells', { token: t, body: { key: 'mumbai-1', target: 'aws-cell', region: 'ap-south-1', maxSchools: 100, connectionId: conn.json.id } });
+    expect(aws.status).toBe(200);
+    expect((await h.c('GET', '/console/v1/cells', { token: t })).json.find((c: any) => c.key === 'mumbai-1').connectionName).toBe('Mumbai databases');
     expect((await h.c('PUT', '/console/v1/cells/local-2', { token: t, body: { maxSchools: 5, region: 'laptop' } })).status).toBe(200);
     const list = (await h.c('GET', '/console/v1/cells', { token: t })).json;
     expect(list.find((c: any) => c.key === 'local-2')).toMatchObject({ maxSchools: 5, region: 'laptop', accepting: true, schools: 0 });
@@ -60,10 +66,15 @@ describe('cells', () => {
     expect(closed.json.status).toBe('failed');
     expect(closed.json.summary).toMatch(/closed to new schools/);
     const toAws = await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'school.move', schoolId: school.id, params: { cell: 'mumbai-1' } } });
+    // A cell on another database connection gets a real copy: closed for writes, backed up, copied, every table checked, switched.
+    const before = (await h.s('GET', '/v1/brand', { school: 'moveme' })).json;
     const aws = await h.c('POST', `/console/v1/actions/${toAws.json.id}/approve`, { token: second });
-    expect(aws.json.status).toBe('failed');
-    expect(aws.json.summary).toMatch(/database copy/);
-  });
+    expect(aws.json).toMatchObject({ status: 'done' });
+    expect(aws.json.summary).toMatch(/copied to school_moveme_\w+ and every table checked/);
+    expect((await h.c('GET', '/console/v1/schools/moveme', { token: t })).json).toMatchObject({ cell: 'mumbai-1', status: 'live' });
+    expect((await h.s('GET', '/v1/brand', { school: 'moveme' })).json).toEqual(before);
+    expect((await h.c('GET', `/console/v1/schools/${school.id}/backups`, { token: t })).json.some((b: any) => /before moving/.test(b.takenBy))).toBe(true);
+  }, 120_000);
   it('keeps a closed cell out of the new-school wizard', async () => {
     const review = await h.c('POST', '/console/v1/wizard/review', { token: t, body: wizardPayload('nextschool', { placement: { target: 'local', cell: 'local-1', addressing: 'path', customDomain: '' } }) });
     expect(review.json.problems.join(' ')).toMatch(/closed to new schools/);

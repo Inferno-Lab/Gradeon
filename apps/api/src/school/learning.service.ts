@@ -6,12 +6,10 @@ import {
 } from '@gradeon/contracts';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
-import { AuditService, Messenger } from './support.js';
+import { AuditService, Messenger, SettingsService } from './support.js';
 
 type User = { id: string; name: string };
 
-export const gradeOf = (pct: number): string => (pct >= 91 ? 'A1' : pct >= 81 ? 'A2' : pct >= 71 ? 'B1' : pct >= 61 ? 'B2' : pct >= 51 ? 'C1' : pct >= 41 ? 'C2' : pct >= 33 ? 'D' : 'E');
-const PASS = 33;
 
 /** Homework and exams: setting them, recording hand-ins and marks, and turning marks into results. */
 @Injectable()
@@ -19,23 +17,24 @@ export class LearningService {
   constructor(
     private readonly audit: AuditService,
     private readonly messenger: Messenger,
+    private readonly settings: SettingsService,
   ) {}
 
   // Homework
 
-  async homework(t: TenantCtx, q: { classId?: string; subjectId?: string }): Promise<HomeworkRow[]> {
+  async homework(t: TenantCtx, q: { classId?: string; subjectId?: string; draftsOf?: string }): Promise<HomeworkRow[]> {
     const { rows } = await t.pool.query<{
       id: string; class_id: string; class_name: string; subject_id: string; subject_name: string; title: string; description: string; assigned_on: string; due_on: string; max_marks: number;
-      handed: string; on_time: string; total: string;
+      graded: boolean; handed: string; on_time: string; total: string;
     }>(
-      `select h.id, h.class_id, c.name class_name, h.subject_id, s.name subject_name, h.title, h.description, h.assigned_on::text, h.due_on::text, h.max_marks,
+      `select h.id, h.class_id, c.name class_name, h.subject_id, s.name subject_name, h.title, h.description, h.assigned_on::text, h.due_on::text, h.max_marks, h.graded,
          count(*) filter (where sub.handed_at is not null) handed, count(*) filter (where sub.on_time) on_time, count(sub.student_id) total
        from homework h join classes c on c.id = h.class_id join subjects s on s.id = h.subject_id left join homework_submissions sub on sub.homework_id = h.id
-       where ($1::text is null or h.class_id = $1) and ($2::text is null or h.subject_id = $2)
-       group by h.id, c.id, s.id order by h.assigned_on desc, c.grade, c.section, h.id limit 120`, [q.classId ?? null, q.subjectId ?? null]);
+       where ($1::text is null or h.class_id = $1) and ($2::text is null or h.subject_id = $2) and (h.status = 'set' or h.created_by = $3)
+       group by h.id, c.id, s.id order by h.assigned_on desc, c.grade, c.section, h.id limit 120`, [q.classId ?? null, q.subjectId ?? null, q.draftsOf ?? '']);
     return rows.map((r) => ({
       id: r.id, classId: r.class_id, className: r.class_name, subjectId: r.subject_id, subjectName: r.subject_name, title: r.title, description: r.description,
-      assignedOn: r.assigned_on, dueOn: r.due_on, maxMarks: r.max_marks, handedIn: Number(r.handed), onTime: Number(r.on_time), total: Number(r.total),
+      assignedOn: r.assigned_on, dueOn: r.due_on, maxMarks: r.max_marks, graded: r.graded, handedIn: Number(r.handed), onTime: Number(r.on_time), total: Number(r.total),
     }));
   }
 
@@ -56,6 +55,21 @@ export class LearningService {
   }
 
   async createHomework(t: TenantCtx, user: User, body: HomeworkCreate): Promise<HomeworkDetail> {
+    const id = newId('hw');
+    await this.writeHomework(t, user, id, body, true);
+    return this.homeworkDetail(t, id);
+  }
+
+  /** Changes homework already set (or still a draft); setting a draft tells the families. */
+  async updateHomework(t: TenantCtx, user: User, id: string, body: HomeworkCreate): Promise<HomeworkDetail> {
+    const h = (await t.pool.query<{ created_by: string | null; status: string; class_id: string }>('select created_by, status, class_id from homework where id = $1', [id])).rows[0];
+    if (!h) throw notFound('That homework');
+    if (h.class_id !== body.classId) throw new ApiError('validation', 'Homework stays with its class. Delete it and set it for the other class instead.');
+    await this.writeHomework(t, user, id, body, false, h.status);
+    return this.homeworkDetail(t, id);
+  }
+
+  private async writeHomework(t: TenantCtx, user: User, id: string, body: HomeworkCreate, isNew: boolean, was = 'draft'): Promise<void> {
     const [cls, sub] = await Promise.all([
       t.pool.query<{ name: string }>('select name from classes where id = $1', [body.classId]),
       t.pool.query<{ name: string }>('select name from subjects where id = $1', [body.subjectId]),
@@ -64,13 +78,19 @@ export class LearningService {
     if (!sub.rows[0]) throw new ApiError('validation', 'Choose a subject from the list.', { fields: { subjectId: 'Choose a subject from the list.' } });
     const today = istToday();
     if (body.dueOn < today) throw new ApiError('validation', 'The due date cannot be in the past.', { fields: { dueOn: 'Pick today or a later day.' } });
-    const id = newId('hw');
+    const status = body.draft ? 'draft' : 'set';
     const client = await t.pool.connect();
     try {
       await client.query('begin');
-      await client.query('insert into homework (id, class_id, subject_id, title, description, assigned_on, due_on, max_marks, created_by) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-        [id, body.classId, body.subjectId, body.title, body.description, today, body.dueOn, body.maxMarks, user.id]);
-      await client.query("insert into homework_submissions (homework_id, student_id) select $1, id from students where class_id = $2 and status = 'active'", [id, body.classId]);
+      if (isNew) {
+        await client.query('insert into homework (id, class_id, subject_id, title, description, assigned_on, due_on, max_marks, created_by, status, graded) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+          [id, body.classId, body.subjectId, body.title, body.description, today, body.dueOn, body.maxMarks, user.id, status, body.graded]);
+        await client.query("insert into homework_submissions (homework_id, student_id) select $1, id from students where class_id = $2 and status = 'active'", [id, body.classId]);
+      } else {
+        await client.query('update homework set subject_id = $2, title = $3, description = $4, due_on = $5, max_marks = $6, status = $7, graded = $8, assigned_on = case when status = $9 then $10 else assigned_on end where id = $1',
+          [id, body.subjectId, body.title, body.description, body.dueOn, body.maxMarks, status, body.graded, 'draft', today]);
+      }
+      if (body.fileIds.length) await client.query("update files set owner_id = $1 where id = any($2) and kind = 'homework_attachment'", [id, body.fileIds]);
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -78,11 +98,20 @@ export class LearningService {
     } finally {
       client.release();
     }
-    const g = await t.pool.query<{ phone: string | null; name: string }>(
-      `select g.phone, s.name from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id where s.class_id = $1 and s.status = 'active'`, [body.classId]);
-    await this.messenger.notify(t, 'homework.new', g.rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name, subject: sub.rows[0]!.name, title: body.title, due: body.dueOn } })));
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'homework.set', entity: 'homework', entityId: id, detail: { class: cls.rows[0].name, title: body.title } });
-    return this.homeworkDetail(t, id);
+    // Families hear about homework when it is set, not while it is a draft, and not again for a correction.
+    if (status === 'set' && was === 'draft') {
+      const g = await t.pool.query<{ phone: string | null; name: string }>(
+        `select g.phone, s.name from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id where s.class_id = $1 and s.status = 'active'`, [body.classId]);
+      await this.messenger.notify(t, 'homework.new', g.rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name, subject: sub.rows[0]!.name, title: body.title, due: body.dueOn } })));
+    }
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: isNew ? `homework.${status === 'draft' ? 'drafted' : 'set'}` : 'homework.changed', entity: 'homework', entityId: id, detail: { class: cls.rows[0].name, title: body.title } });
+  }
+
+  /** Sends handed-in work back for a redo, saying why: the family hands it in again. */
+  async returnHomework(t: TenantCtx, user: User, id: string, studentId: string, note: string): Promise<void> {
+    const r = await t.pool.query('update homework_submissions set returned_at = now(), return_note = $3, score = null, graded_at = null where homework_id = $1 and student_id = $2 and handed_at is not null', [id, studentId, note]);
+    if (!r.rowCount) throw new ApiError('conflict', 'Only work that was handed in can be sent back.');
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'homework.returned', entity: 'homework', entityId: id, detail: { studentId, note } });
   }
 
   async markHomework(t: TenantCtx, user: User, id: string, body: HomeworkMarks): Promise<HomeworkDetail> {
@@ -102,7 +131,8 @@ export class LearningService {
           `insert into homework_submissions (homework_id, student_id, handed_at, on_time, score, feedback) values ($1,$2,$3,$4,$5,$6)
            on conflict (homework_id, student_id) do update set handed_at = case when $7 then coalesce(homework_submissions.handed_at, excluded.handed_at) else null end,
              on_time = case when $7 then (case when homework_submissions.handed_at is not null then homework_submissions.on_time else excluded.on_time end) else false end,
-             score = case when $7 then excluded.score else null end, feedback = excluded.feedback`,
+             score = case when $7 then excluded.score else null end, feedback = excluded.feedback,
+             graded_at = case when $7 and excluded.score is not null then now() else homework_submissions.graded_at end, returned_at = case when $7 and excluded.score is not null then null else homework_submissions.returned_at end`,
           [id, m.studentId, m.handed ? new Date() : null, m.handed && today <= hw.due_on, m.handed ? (m.score ?? null) : null, m.feedback ?? '', m.handed]);
       }
       await client.query('commit');
@@ -125,21 +155,21 @@ export class LearningService {
   // Exams
 
   async exams(t: TenantCtx, classId?: string): Promise<ExamRow[]> {
-    const { rows } = await t.pool.query<{ id: string; name: string; class_id: string; class_name: string; starts_on: string; ends_on: string; status: ExamRow['status']; students: string }>(
-      `select e.id, e.name, e.class_id, c.name class_name, e.starts_on::text, e.ends_on::text, e.status,
+    const { rows } = await t.pool.query<{ id: string; name: string; class_id: string; class_name: string; starts_on: string; ends_on: string; status: ExamRow['status']; students: string; reopened_note: string }>(
+      `select e.id, e.name, e.class_id, c.name class_name, e.starts_on::text, e.ends_on::text, e.status, e.reopened_note,
          (select count(*) from students s where s.class_id = e.class_id and s.status = 'active') students
        from exams e join classes c on c.id = e.class_id where ($1::text is null or e.class_id = $1) order by e.starts_on desc, c.grade, c.section limit 100`, [classId ?? null]);
     if (!rows.length) return [];
     const ids = rows.map((r) => r.id);
     const [subs, entered] = await Promise.all([
-      t.pool.query<{ exam_id: string; subject_id: string; name: string; on_date: string | null; max_marks: number }>(
-        'select x.exam_id, x.subject_id, s.name, x.on_date::text, x.max_marks from exam_subjects x join subjects s on s.id = x.subject_id where x.exam_id = any($1) order by x.on_date nulls last, s.name', [ids]),
+      t.pool.query<{ exam_id: string; subject_id: string; name: string; on_date: string | null; max_marks: number; starts_at: string | null; ends_at: string | null; room: string }>(
+        'select x.exam_id, x.subject_id, s.name, x.on_date::text, x.max_marks, x.starts_at, x.ends_at, x.room from exam_subjects x join subjects s on s.id = x.subject_id where x.exam_id = any($1) order by x.on_date nulls last, x.starts_at nulls last, s.name', [ids]),
       t.pool.query<{ exam_id: string; n: string }>('select exam_id, count(*) n from exam_marks where exam_id = any($1) and (score is not null or absent) group by exam_id', [ids]),
     ]);
     const enteredBy = new Map(entered.rows.map((e) => [e.exam_id, Number(e.n)]));
     return rows.map((r) => {
-      const subjects = subs.rows.filter((s) => s.exam_id === r.id).map((s) => ({ subjectId: s.subject_id, name: s.name, onDate: s.on_date, maxMarks: s.max_marks }));
-      return { id: r.id, name: r.name, classId: r.class_id, className: r.class_name, startsOn: r.starts_on, endsOn: r.ends_on, status: r.status, subjects, entered: enteredBy.get(r.id) ?? 0, expected: Number(r.students) * subjects.length };
+      const subjects = subs.rows.filter((s) => s.exam_id === r.id).map((s) => ({ subjectId: s.subject_id, name: s.name, onDate: s.on_date, maxMarks: s.max_marks, startsAt: s.starts_at, endsAt: s.ends_at, room: s.room }));
+      return { id: r.id, name: r.name, classId: r.class_id, className: r.class_name, startsOn: r.starts_on, endsOn: r.ends_on, status: r.status, subjects, entered: enteredBy.get(r.id) ?? 0, expected: Number(r.students) * subjects.length, reopenedNote: r.reopened_note };
     });
   }
 
@@ -160,7 +190,7 @@ export class LearningService {
     try {
       await client.query('begin');
       await client.query('insert into exams (id, name, class_id, starts_on, ends_on, created_by) values ($1,$2,$3,$4,$5,$6)', [id, body.name, body.classId, body.startsOn, body.endsOn, user.id]);
-      for (const s of body.subjects) await client.query('insert into exam_subjects (exam_id, subject_id, on_date, max_marks) values ($1,$2,$3,$4)', [id, s.subjectId, s.onDate ?? null, s.maxMarks]);
+      for (const s of body.subjects) await client.query('insert into exam_subjects (exam_id, subject_id, on_date, max_marks, starts_at, ends_at, room) values ($1,$2,$3,$4,$5,$6,$7)', [id, s.subjectId, s.onDate ?? null, s.maxMarks, s.startsAt ?? null, s.endsAt ?? null, s.room]);
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -187,8 +217,52 @@ export class LearningService {
     return { exam, students: stu.rows.map((s) => ({ studentId: s.id, name: s.name, rollNo: s.roll_no, marks: by.get(s.id) ?? {} })) };
   }
 
+  /**
+   * Changes an exam's name, days and papers (time, room, maximum marks) while its results are not out. A paper that already has
+   * marks keeps its maximum, so marks never end up above it.
+   */
+  async updateExam(t: TenantCtx, user: User, id: string, body: ExamCreate): Promise<ExamRow> {
+    const e = await this.exam(t, id);
+    if (e.status === 'published') throw new ApiError('conflict', 'The results are out. Reopen them first to change the exam.');
+    if (body.endsOn < body.startsOn) throw new ApiError('validation', 'The last day cannot be before the first day.', { fields: { endsOn: 'Pick a day on or after the first day.' } });
+    const marked = new Set((await t.pool.query<{ subject_id: string }>('select distinct subject_id from exam_marks where exam_id = $1', [id])).rows.map((r) => r.subject_id));
+    const gone = [...marked].filter((s) => !body.subjects.some((x) => x.subjectId === s));
+    if (gone.length) throw new ApiError('conflict', 'A subject that already has marks cannot be taken out of the exam.');
+    const client = await t.pool.connect();
+    try {
+      await client.query('begin');
+      await client.query('update exams set name = $2, starts_on = $3, ends_on = $4 where id = $1', [id, body.name, body.startsOn, body.endsOn]);
+      await client.query('delete from exam_subjects where exam_id = $1 and not (subject_id = any($2))', [id, body.subjects.map((s) => s.subjectId)]);
+      for (const s of body.subjects) {
+        const was = e.subjects.find((x) => x.subjectId === s.subjectId);
+        await client.query(
+          `insert into exam_subjects (exam_id, subject_id, on_date, max_marks, starts_at, ends_at, room) values ($1,$2,$3,$4,$5,$6,$7)
+           on conflict (exam_id, subject_id) do update set on_date = excluded.on_date, max_marks = excluded.max_marks, starts_at = excluded.starts_at, ends_at = excluded.ends_at, room = excluded.room`,
+          [id, s.subjectId, s.onDate ?? null, marked.has(s.subjectId) && was ? was.maxMarks : s.maxMarks, s.startsAt ?? null, s.endsAt ?? null, s.room]);
+      }
+      await client.query('commit');
+    } catch (err) {
+      await client.query('rollback').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.changed', entity: 'exam', entityId: id, detail: { name: body.name } });
+    return this.exam(t, id);
+  }
+
+  /** Published results are locked; reopening them (with why) lets marks be corrected, and families are told why when they go out again. */
+  async reopenExam(t: TenantCtx, user: User, id: string, note: string): Promise<ExamRow> {
+    const e = await this.exam(t, id);
+    if (e.status !== 'published') throw new ApiError('conflict', 'These results are not out yet, so there is nothing to reopen.');
+    await t.pool.query("update exams set status = 'marking', reopened_note = $2 where id = $1", [id, note]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.reopened', entity: 'exam', entityId: id, detail: { name: e.name, note } });
+    return this.exam(t, id);
+  }
+
   async putMarks(t: TenantCtx, user: User, id: string, body: ExamMarksPut): Promise<ExamMarksView> {
     const exam = await this.exam(t, id);
+    if (exam.status === 'published') throw new ApiError('locked', 'The results are out, so the marks are locked. Someone allowed to publish results can reopen them, saying why.');
     const max = new Map(exam.subjects.map((s) => [s.subjectId, s.maxMarks]));
     const students = new Set((await t.pool.query<{ id: string }>('select id from students where class_id = $1', [exam.classId])).rows.map((r) => r.id));
     for (const m of body.marks) {
@@ -221,6 +295,7 @@ export class LearningService {
 
   async results(t: TenantCtx, id: string): Promise<ExamResults> {
     const { exam, students } = await this.marksView(t, id);
+    const grading = await this.settings.grading(t);
     const max = new Map(exam.subjects.map((s) => [s.subjectId, s.maxMarks]));
     const scored = students.filter((s) => Object.keys(s.marks).length).map((s) => {
       let total = 0;
@@ -232,7 +307,7 @@ export class LearningService {
         total += m.score ?? 0;
       }
       const pct = outOf ? Math.round((total / outOf) * 100) : 0;
-      return { studentId: s.studentId, name: s.name, rollNo: s.rollNo, total, max: outOf, pct, grade: gradeOf(pct), rank: 0 };
+      return { studentId: s.studentId, name: s.name, rollNo: s.rollNo, total, max: outOf, pct, grade: grading.grade(pct), rank: 0 };
     }).sort((a, b) => b.total / Math.max(b.max, 1) - a.total / Math.max(a.max, 1) || a.name.localeCompare(b.name));
     let rank = 0;
     let prev = -1;
@@ -240,7 +315,7 @@ export class LearningService {
     return {
       exam,
       average: scored.length ? Math.round(scored.reduce((a, r) => a + r.pct, 0) / scored.length) : 0,
-      passPct: scored.length ? Math.round((scored.filter((r) => r.pct >= PASS).length / scored.length) * 100) : 0,
+      passPct: scored.length ? Math.round((scored.filter((r) => r.pct >= grading.pass).length / scored.length) * 100) : 0,
       rows: scored,
     };
   }
@@ -265,7 +340,9 @@ export class LearningService {
     }
     const g = await t.pool.query<{ phone: string | null; name: string }>(
       `select g.phone, s.name from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id where s.class_id = $1 and s.status = 'active'`, [res.exam.classId]);
-    const families = await this.messenger.notify(t, 'exam.results', g.rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name, exam: res.exam.name } })));
+    // Results going out again after a correction say what changed.
+    const again = !!res.exam.reopenedNote;
+    const families = await this.messenger.notify(t, again ? 'exam.reopened' : 'exam.results', g.rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name, exam: res.exam.name, note: res.exam.reopenedNote } })));
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.published', entity: 'exam', entityId: id, detail: { name: res.exam.name, class: res.exam.className } });
     return { families, exam: await this.exam(t, id) };
   }

@@ -5,12 +5,12 @@ import { EmptyCard, Menu, PageScope, ToastSlot, rollDigits, tintFor, useToast } 
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
+import { useSetting } from '../../app/kit';
 import { AddStudentDialog, AssignFeeDialog, CollectFeeDialog, ImportDialog, MessageDialog } from './StudentDialogs';
 import { StudentsView } from './students.view';
 import { StudentFiles } from './StudentFiles';
 
 const PAGE = 10;
-const HOUSES = ['Emerald', 'Ruby', 'Sapphire', 'Amber'];
 const IC_OK = 'M5 12.5l4.5 4.5L19 7.5';
 const IC_CLK = 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2';
 const IC_AL = 'M12 3.5l9 15.5H3zM12 10v4M12 16.5h.01';
@@ -45,6 +45,7 @@ export function StudentsPage() {
   const [view, setView] = useState<number | null>(null);
   const [classId, setClassId] = useState<string | null>(null);
   const [house, setHouse] = useState('');
+  const houses = useSetting<{ key: string; name: string }[]>('people.houses', []);
   const [fee, setFee] = useState<'' | 'paid' | 'due' | 'overdue'>('');
   const [att, setAtt] = useState<'' | 'low' | 'perfect'>('');
   const [q, setQ] = useState('');
@@ -134,10 +135,10 @@ export function StudentsPage() {
           <button className={!className ? 'on' : ''} onClick={() => { setClassId(null); setView(0); setPop(''); setPage(1); }}>All classes</button><hr />
           {(classes.data ?? []).map((c) => <button key={c.id} className={c.id === filter.classId ? 'on' : ''} onClick={() => { setClassId(c.id); setPop(''); setPage(1); }}>{c.name}<small>{c.studentCount}</small></button>)}
         </>}>Class {className && <b>{className}</b>}</Pill>
-        <Pill id="house" open={pop} setOpen={setPop} on={!!house} icon={PILL_ICON.house} menu={<>
+        {houses.length > 0 && <Pill id="house" open={pop} setOpen={setPop} on={!!house} icon={PILL_ICON.house} menu={<>
           <button className={!house ? 'on' : ''} onClick={() => { setHouse(''); setPop(''); setPage(1); }}>Any house</button><hr />
-          {HOUSES.map((h) => <button key={h} className={h === house ? 'on' : ''} onClick={() => { setHouse(h); setPop(''); setPage(1); }}>{h}</button>)}
-        </>}>House {house && <b>{house}</b>}</Pill>
+          {houses.map((h) => <button key={h.key} className={h.name === house ? 'on' : ''} onClick={() => { setHouse(h.name); setPop(''); setPage(1); }}>{h.name}</button>)}
+        </>}>House {house && <b>{house}</b>}</Pill>}
         {has.fees && <Pill id="fee" open={pop} setOpen={setPop} on={!!fee} icon={PILL_ICON.fee} menu={<>
           <button className={!fee ? 'on' : ''} onClick={() => { setFee(''); setPop(''); setPage(1); }}>Any fee state</button><hr />
           {(['paid', 'due', 'overdue'] as const).map((f) => <button key={f} className={f === fee ? 'on' : ''} onClick={() => { setFee(f); setPop(''); setPage(1); }}>{f === 'paid' ? 'Paid up' : f === 'due' ? 'Due soon' : 'Overdue'}</button>)}

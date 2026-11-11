@@ -185,7 +185,7 @@ await flow('admin: search palette and keyboard shortcuts', { storage: adminStore
 });
 
 await flow('admin: search opens on every page and the menu collapses', { storage: adminStore }, async (p) => {
-  for (const path of ['', '/students', '/timetable', '/settings']) {
+  for (const path of ['', '/students', '/timetable', '/profile']) {
     await p.goto(`${ADMIN}/s/${slug}${path}`, { waitUntil: 'networkidle' });
     await p.keyboard.press('Control+k');
     await expectVisible(p.getByLabel('Search', { exact: true }), `the search box on ${path || '/'}`);
@@ -388,7 +388,7 @@ await flow('admin: an enquiry moves along the admissions board', { storage: admi
 });
 
 await flow('admin: invoices filter, receipts open and print', { storage: adminStore }, async (p) => {
-  await p.goto(A('/invoices'), { waitUntil: 'networkidle' });
+  await p.goto(A('/fees/invoices'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Still to pay'), 'the summary');
   await p.getByRole('tab', { name: 'Overdue' }).click();
   await expectVisible(p.getByRole('button', { name: 'Collect' }).first(), 'a Collect button');
@@ -430,19 +430,20 @@ await flow('admin: an event is added, shown on the calendar and removed', { stor
   await expectVisible(p.getByText(/E2E open house was removed/), 'the removed toast');
 });
 
-await flow('admin: school setup tabs show roles, messages and layout read-only, and data requests still work', { storage: adminStore }, async (p) => {
-  await p.goto(A('/settings'), { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: 'Roles and access' }).click();
-  await expectVisible(p.getByText('Office staff'), 'the role list');
+await flow('admin: the school profile is read-only with a way to ask Gradeon, and data requests are answered', { storage: adminStore }, async (p) => {
+  await p.goto(A('/profile/roles'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('tab', { name: /Office staff/ }), 'the role list');
   for (const name of ['New role', 'Save role', 'Delete role']) if (await p.getByRole('button', { name }).count()) throw new Error(`the school still has "${name}"`);
-  if (!(await p.getByRole('checkbox').first().isDisabled())) throw new Error('role permissions should be read-only');
-  await p.getByRole('button', { name: 'Notifications' }).click();
-  if (!(await p.getByRole('switch', { name: /Child marked absent or late by email/ }).isDisabled())) throw new Error('notification switches should be read-only');
-  await p.getByRole('button', { name: 'Message templates' }).click();
-  await expectVisible(p.getByText(/Gradeon sets this up for your school/).first(), 'the read-only note');
-  await p.getByRole('button', { name: 'App layout' }).click();
-  await expectVisible(p.getByText('Tabs along the bottom'), 'the layout');
-  await p.getByRole('button', { name: 'Privacy and consent' }).click();
+  if (await p.getByRole('checkbox').count()) throw new Error('the profile should have nothing to tick');
+  await p.goto(A('/profile/messages'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Child marked absent or late'), 'the messages');
+  await p.goto(A('/profile/app'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Tabs along the bottom').first(), 'the layout');
+  await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Send to Gradeon' }).click();
+  await expectVisible(p.getByText('Say what you would like changed.'), 'the ask error');
+  await p.keyboard.press('Escape');
+  await p.goto(A('/privacy'), { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Log a request' }).click();
   await p.getByRole('dialog').getByRole('button', { name: 'Log request' }).click();
   await expectVisible(p.getByText('Whose data is this about?'), 'the request error');
@@ -604,9 +605,10 @@ await flow('admin: a dropdown lists every option above the cards and a bar has a
   await expectVisible(p.getByRole('tooltip').getByText(/collected/), 'the tooltip on a fee bar');
 });
 
-await flow('admin: classes and calendar add a holiday, refuse a bad one, and bill a fee to its grade', { storage: adminStore }, async (p) => {
-  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
+await flow('admin: academic year adds a holiday, refuses a bad one, and fees bill a structure to its grade', { storage: adminStore }, async (p) => {
+  await p.goto(A('/year'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Academic years' }), 'the years card');
+  await p.getByRole('tab', { name: 'Holidays' }).click();
   await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
   await p.getByLabel('Holiday', { exact: true }).fill('E2E founders day');
   await p.getByLabel('From', { exact: true }).fill('2027-01-12');
@@ -621,7 +623,7 @@ await flow('admin: classes and calendar add a holiday, refuse a bad one, and bil
   await expectVisible(p.getByText('E2E founders day was removed.'), 'the removed toast');
   await p.getByRole('tab', { name: 'Classes' }).click();
   await expectVisible(p.getByRole('button', { name: 'Open 8 A' }), 'class 8 A');
-  await p.getByRole('tab', { name: 'Fees' }).click();
+  await p.goto(A('/fees/structure'), { waitUntil: 'networkidle' });
   await p.locator('section', { has: p.getByRole('heading', { name: 'Fee structures' }) }).getByRole('button', { name: 'Add' }).click();
   await p.getByLabel('Grade (blank for all)').fill('8');
   await p.getByLabel('Fee', { exact: true }).fill('E2E science fair');
@@ -728,22 +730,21 @@ await flow('design system: the menu keeps its scroll between pages, and search o
 });
 
 await flow('design system: a dialog opened while the last one is still fading starts fresh', { storage: adminStore }, async (p) => {
-  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
-  await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
-  await expectVisible(p.getByRole('dialog'), 'the holiday dialog');
+  await p.goto(A('/fees/structure'), { waitUntil: 'networkidle' });
+  const add = p.locator('section', { has: p.getByRole('heading', { name: 'Fee structures' }) }).getByRole('button', { name: 'Add' });
+  await add.click();
+  await p.getByLabel('Fee', { exact: true }).fill('Left behind');
   // Close it and open another within its fade (200 ms), the way a quick hand or a slow machine does.
   await p.evaluate(async () => {
     const byText = (sel, text) => [...document.querySelectorAll(sel)].find((e) => e.textContent.trim() === text);
     byText('[role=dialog] button', 'Cancel').click();
     await new Promise((r) => setTimeout(r, 30));
-    byText('[role=tab]', 'Fees').click();
-    await new Promise((r) => setTimeout(r, 30));
     const sec = [...document.querySelectorAll('section')].find((x) => x.querySelector('h2,h3')?.textContent.trim() === 'Fee structures');
     [...sec.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
   });
   await expectVisible(p.getByRole('dialog').getByText('Add to fee structures'), 'the fee dialog');
-  const head = (await p.getByRole('dialog').getByLabel('Fee head').textContent())?.trim();
-  if (head !== 'Tuition') throw new Error(`the fee dialog kept the holiday dialog's state: fee head is "${head}"`);
+  const left = await p.getByRole('dialog').getByLabel('Fee', { exact: true }).inputValue();
+  if (left) throw new Error(`the new dialog kept the closing one's state: fee is "${left}"`);
 });
 
 await flow('design system: every overlay opens and closes from the keyboard, and a date is picked without a mouse', { storage: adminStore }, async (p) => {
@@ -882,8 +883,8 @@ await flow('admin: year-end drafts the next year and previews promotion', { stor
   await p.getByRole('button', { name: 'Promote students' }).click();
   await expectVisible(p.getByRole('dialog').getByText(/Leaves the school|Each class moves/), 'the promotion preview');
   await p.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
-  await p.goto(A('/online-payments'), { waitUntil: 'networkidle' });
-  await expectVisible(p.getByRole('heading', { name: 'Online payments' }), 'online payments');
+  await p.goto(A('/fees/online'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('tab', { name: 'Refunds' }), 'online payments');
 });
 
 await browser.close();

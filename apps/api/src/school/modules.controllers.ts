@@ -16,6 +16,8 @@ import { PeopleService } from './people.service.js';
 const ClassFilter = z.object({ classId: z.string().optional(), subjectId: z.string().optional() });
 const Q = z.object({ query: z.string().trim().max(80).optional() });
 
+const Reopen = z.object({ note: z.string().trim().min(5, 'Say what is being corrected; families are told.').max(200) });
+
 @Controller('v1')
 @Core()
 export class LearningController {
@@ -41,6 +43,11 @@ export class LearningController {
     return this.learning.homeworkDetail(t, id);
   }
 
+  @Put('homework/:id') @RequireModule('homework') @Require('homework.write')
+  updateHomework(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(HomeworkCreate)) b: HomeworkCreate): Promise<HomeworkDetail> {
+    return this.learning.updateHomework(t, u, id, b);
+  }
+
   @Put('homework/:id/marks') @RequireModule('homework') @Require('homework.write')
   markHomework(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(HomeworkMarks)) b: HomeworkMarks): Promise<HomeworkDetail> {
     return this.learning.markHomework(t, u, id, b);
@@ -59,6 +66,16 @@ export class LearningController {
   @Post('exams') @RequireModule('exams') @Require('exams.write')
   createExam(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(ExamCreate)) b: ExamCreate): Promise<ExamRow> {
     return this.learning.createExam(t, u, b);
+  }
+
+  @Put('exams/:id') @RequireModule('exams') @Require('exams.write')
+  updateExam(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(ExamCreate)) b: ExamCreate): Promise<ExamRow> {
+    return this.learning.updateExam(t, u, id, b);
+  }
+
+  @Post('exams/:id/reopen') @HttpCode(200) @RequireModule('exams') @Require('exams.publish')
+  reopen(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Reopen)) b: z.infer<typeof Reopen>): Promise<ExamRow> {
+    return this.learning.reopenExam(t, u, id, b.note);
   }
 
   @Get('exams/:id/marks') @RequireModule('exams') @Require('exams.read')

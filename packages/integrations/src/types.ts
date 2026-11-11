@@ -76,6 +76,26 @@ export interface InboundResult {
   reply?: { status: number; body: string };
 }
 
+/** A school's own database made on a cell's server or service. */
+export interface DatabasesAdapter {
+  create(c: Ctx, name: string, password: string): Promise<{ url: string; dbName: string }>;
+  drop(c: Ctx, dbName: string): Promise<void>;
+}
+/** A school's own address at the host: added, then verified by its DNS record and given a certificate. */
+export interface HostingAdapter {
+  addDomain(c: Ctx, domain: string): Promise<DomainState>;
+  domain(c: Ctx, domain: string): Promise<DomainState>;
+  removeDomain(c: Ctx, domain: string): Promise<void>;
+}
+export interface DomainState { verified: boolean; certificate: 'issued' | 'waiting'; target: string }
+export interface BuildsAdapter {
+  dispatch(c: Ctx, inputs: Record<string, string>): Promise<void>;
+  commit(c: Ctx, path: string, content: string, message: string): Promise<void>;
+}
+export interface TrackingAdapter { positions(c: Ctx): Promise<{ vehicle: string; lat: number; lng: number; at: Date }[]> }
+/** A template as the provider lists it, for importing into the console's Templates. */
+export interface ProviderTemplate { id: string; name: string; language: string; text: string; status: string }
+
 /** One provider: the capabilities it implements, a test, and how it reads its webhooks. */
 export interface Adapter {
   sms?(c: Ctx, m: OutMessage): Promise<SendResult>;
@@ -86,6 +106,14 @@ export interface Adapter {
   payments?: PaymentsAdapter;
   storage?: StorageAdapter;
   maps?: MapsAdapter;
+  alert?(c: Ctx, a: { title: string; text: string }): Promise<void>;
+  scan?(c: Ctx, data: Buffer): Promise<{ clean: boolean; found: string | null }>;
+  builds?: BuildsAdapter;
+  databases?: DatabasesAdapter;
+  hosting?: HostingAdapter;
+  tracking?: TrackingAdapter;
+  /** The provider's approved message templates, for importing (WhatsApp providers that can list them). */
+  templates?(c: Ctx): Promise<ProviderTemplate[]>;
   test(c: Ctx, input: { to?: string }): Promise<{ ok: boolean; detail: string }>;
   inbound?(c: Ctx, req: InboundRequest): Promise<InboundResult>;
 }

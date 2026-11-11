@@ -6,7 +6,7 @@ export const CONSOLE_ROLES = ['super_admin', 'implementation', 'support', 'relea
 export const ConsoleRole = z.enum(CONSOLE_ROLES);
 export type ConsoleRole = z.infer<typeof ConsoleRole>;
 
-export const SchoolStatus = z.enum(['onboarding', 'live', 'suspended', 'offboarding', 'archived']);
+export const SchoolStatus = z.enum(['onboarding', 'live', 'suspended', 'moving', 'offboarding', 'archived']);
 export type SchoolStatus = z.infer<typeof SchoolStatus>;
 
 /** Where a cell runs. A cell has exactly one target; the blueprint steps are the same on every target. */
@@ -249,7 +249,7 @@ export interface BuildRow {
   createdAt: string;
 }
 
-export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply', 'integration.live', 'retention.erase'] as const;
+export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply', 'integration.live', 'integration.mode', 'retention.erase'] as const;
 export const ActionKey = z.enum(ACTIONS);
 export type ActionKey = z.infer<typeof ActionKey>;
 
@@ -462,13 +462,16 @@ export const CellCreate = z.object({
   target: DeployTarget,
   region: z.string().trim().min(2, 'Name the region').max(40),
   maxSchools: z.number().int().min(1, 'At least 1').max(500),
-});
+  /** The School databases connection (Integrations) that makes its schools' databases; needed on aws-cell. */
+  connectionId: z.string().nullable().default(null),
+}).refine((c) => c.target !== 'aws-cell' || !!c.connectionId, { message: 'A cell on AWS needs its School databases connection.', path: ['connectionId'] });
 export type CellCreate = z.infer<typeof CellCreate>;
 
 export const CellPatch = z.object({
   region: z.string().trim().min(2).max(40).optional(),
   maxSchools: z.number().int().min(1).max(500).optional(),
   accepting: z.boolean().optional(),
+  connectionId: z.string().nullable().optional(),
 });
 export type CellPatch = z.infer<typeof CellPatch>;
 
@@ -562,12 +565,14 @@ export interface RestoreDrillRow {
 export interface SchoolConfig {
   version: number;
   values: Record<string, unknown>;
-  /** Modules the plan allows: the most "Switched on" may hold. */
+  /** Modules the school has (its plan and dates): only their settings are shown. */
   entitled: string[];
   /** Features the school has inside those modules: roles only offer permissions for what the school has. */
   features: string[];
   roles: RoleDef[];
   classes: { id: string; name: string }[];
+  /** The school's own fee heads (a list it keeps; fees.gstHeads picks from it). */
+  feeHeads: { key: string; name: string }[];
   staff: { id: string; name: string; designation: string; roleId: string | null }[];
   versions: ConfigVersionRow[];
 }
@@ -604,3 +609,6 @@ export interface ChangeRequestRow {
   id: string; schoolId: string; schoolSlug: string; schoolName: string; area: string; message: string; requestedBy: string;
   status: 'open' | 'done' | 'declined'; answer: string; answeredBy: string | null; createdAt: string; closedAt: string | null;
 }
+
+/** The store ID a school's app is listed under: the same package name on Android and bundle ID on iPhone. */
+export const appIdFor = (slug: string) => `com.gradeon.${slug.replace(/[^a-z0-9]/g, '')}`;

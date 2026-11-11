@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IMPORT_KINDS, type LetterRow, type Permission } from '@gradeon/contracts';
 import { Field, FilePick, Select } from '@gradeon/web-ui';
+import qrcode from 'qrcode-generator';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp } from '../../app/kit';
@@ -19,15 +20,19 @@ const esc = (v: string) => v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
 
 /** One letter per child, one per page, for the class teacher to hand out. */
-function letterPage(school: string, rows: LetterRow[]): string {
-  // ponytail: no QR code (it would need a library); the letter names the app and the phone, which is all a family types.
+function letterPage(school: string, link: string, rows: LetterRow[]): string {
+  // The code opens the school's app in the phone's own store (the API's /hooks/app/<school> picks Google Play or the App Store).
+  const qr = qrcode(0, 'M');
+  qr.addData(link);
+  qr.make();
+  const code = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
   const one = (r: LetterRow) => `<section><h1>${esc(school)}</h1><p class="m">For the family of <b>${esc(r.student)}</b> · ${esc(r.className)} · ${esc(r.admissionNo)}</p>
-    <p>Dear ${esc(r.guardian)},</p><p>${esc(school)} now uses Gradeon for attendance, homework, marks, fees and notices. You can follow ${esc(r.student)}’s day on your phone.</p>
-    <ol><li>Install the <b>Gradeon</b> app from the Play Store or the App Store.</li><li>Sign in with your phone number ending <b>${esc(r.phoneEnd)}</b>.</li><li>Type the code we send you by SMS. There is no password to remember.</li></ol>
+    <p>Dear ${esc(r.guardian)},</p><p>${esc(school)} now has its own app for attendance, homework, marks, fees and notices. You can follow ${esc(r.student)}’s day on your phone.</p>
+    <div class="row"><ol><li>Scan the code with your phone’s camera to get the <b>${esc(school)}</b> app, or open <b>${esc(link)}</b>.</li><li>Sign in with your phone number ending <b>${esc(r.phoneEnd)}</b>.</li><li>Type the code we send you by SMS. There is no password to remember.</li></ol><div class="qr">${code}</div></div>
     <p>If your phone number has changed, tell the school office.</p></section>`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>Letters · ${esc(school)}</title><style>
     body{font:15px/1.6 system-ui,sans-serif;color:#111;margin: 0}section{padding:48px 56px;page-break-after:always;max-width:640px}
-    h1{font-size:22px;margin: 0 0 4px}.m{color:#555;margin: 0 0 28px}li{margin:6px 0}</style></head><body>${rows.map(one).join('')}</body></html>`;
+    h1{font-size:22px;margin: 0 0 4px}.m{color:#555;margin: 0 0 28px}li{margin:6px 0}.row{display:flex;gap:24px;align-items:center}.row ol{flex:1}.qr{width:132px;flex:none}.qr svg{width:100%;height:auto}</style></head><body>${rows.map(one).join('')}</body></html>`;
 }
 
 export function MovingInPage() {
@@ -78,7 +83,7 @@ export function MovingInPage() {
     mutationFn: async ({ classId, win }: { classId?: string; win: Window }) => ({ rows: await app.api.movingIn.letters(classId), win }),
     onSuccess: ({ rows, win }) => {
       if (!rows.length) { win.close(); say('No students there yet.'); return; }
-      win.document.write(letterPage(brand.data?.name ?? 'Your school', rows));
+      win.document.write(letterPage(brand.data?.name ?? 'Your school', `${location.origin}/hooks/app/${app.slug}`, rows));
       win.document.close();
       win.focus();
       win.print();

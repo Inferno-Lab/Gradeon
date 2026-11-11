@@ -1,3 +1,4 @@
+import { addDays, istToday } from '@gradeon/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -94,7 +95,7 @@ describe('learning', () => {
     expect(days.at(-1)).toMatchObject({ studentId: 'stu_aarav', status: 'absent' });
     expect((await post(parent, '/attendance', { stu_aarav: 'present' })).status).toBe(403);
     const notes = (await f(parent, '/users/x/notifications')).json;
-    expect(notes[0]).toMatchObject({ type: 'attendance', read: false });
+    expect(notes[0]).toMatchObject({ type: 'attendance.absent', module: 'attendance.parentAlerts', route: '/attendance', read: false });
     expect((await post(parent, `/notifications/${notes[0].id}/dismiss`)).status).toBe(200);
     expect((await f(parent, '/users/x/notifications')).json.find((n: any) => n.id === notes[0].id)).toBeUndefined();
   });
@@ -153,7 +154,8 @@ describe('money, notices, events', () => {
     const sports = events.find((e: any) => e.title === 'Sports day');
     expect(sports).toMatchObject({ date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), time: expect.stringMatching(/^\d{2}:\d{2}$/) });
     expect((await post(parent, `/events/${sports.id}/rsvp`, { status: 'going' })).status).toBe(200);
-    expect((await f(parent, '/events')).json.find((e: any) => e.id === sports.id).rsvps).toEqual([{ userId: (await f(parent, '/me')).json.id, status: 'going' }]);
+    expect((await f(parent, '/events')).json.find((e: any) => e.id === sports.id).rsvps).toEqual(
+      (await f(parent, '/me')).json.childIds.map((studentId: string) => expect.objectContaining({ studentId, status: 'going', adults: 0 })));
     expect(events.some((e: any) => e.title === 'Staff meeting')).toBe(false);
     expect((await post(parent, `/events/${sports.id}/rsvp`, { status: 'sure' })).status).toBe(400);
     expect((await post(parent, '/notices', { title: 'Not allowed', body: 'A parent cannot post.' })).status).toBe(403);
@@ -192,7 +194,9 @@ describe('chat, leave and the rest', () => {
   });
   it('answers the school, library, transport and gallery screens honestly', async () => {
     expect((await f(parent, '/school')).json).toMatchObject({ name: 'Greenfield International School' });
-    const books = (await f(parent, '/library/books')).json;
+    const lib = (await f(parent, '/library/books')).json;
+    expect(lib.rules.maxLoans).toBe(3);
+    const books = lib.books;
     expect(books.length).toBeGreaterThanOrEqual(12);
     expect(books.some((b: any) => b.borrowedBy === 'stu_aarav' && b.dueDate)).toBe(true);
     expect((await post(parent, '/library/books/bok_12/reserve', { studentId: 'stu_aarav' })).json).toMatchObject({ status: 'waiting', bookId: 'bok_12' });
@@ -201,6 +205,65 @@ describe('chat, leave and the rest', () => {
     expect((await f(parent, '/students/stu_aarav/transport')).json.stops).toHaveLength(4);
     expect((await f(parent, '/gallery')).json).toEqual([]);
     expect((await f(parent, '/users/' + (await f(parent, '/me')).json.id)).json.name).toBe('Priya Sharma');
+  });
+});
+
+describe('the teacher’s class', () => {
+  it('lists the class as a roster with attendance and results, and families see no contact details of classmates', async () => {
+    const roster = (await f(teacher, '/classes/cls_8a/students')).json;    const aarav = roster.find((s: any) => s.id === 'stu_aarav');
+    expect(aarav).toMatchObject({ guardianPhone: expect.any(String), attendancePct: expect.any(Number), absentToday: expect.any(Boolean) });
+    expect(aarav).toHaveProperty('resultsPct');
+    expect(aarav).toHaveProperty('photoFileId');
+    const classmates = (await f(parent, '/classes/cls_8a/students')).json;
+    const other = classmates.find((s: any) => s.id !== 'stu_aarav' && s.id !== ananya);
+    expect(other).toMatchObject({ guardianPhone: '', address: '', dob: '' });
+    expect(other).not.toHaveProperty('attendancePct');
+  });
+  it('fills approved leave into the roll call and keeps a past day within the correction window', async () => {
+    const day = addDays(istToday(), -1);
+    const applied = await post(parent, '/leave', { studentId: 'stu_aarav', from: day, to: day, reason: 'Family function' });
+    expect((await post(teacher, `/leave/${applied.json.id}/review`, { status: 'approved' })).status).toBe(200);
+    const roll = (await f(teacher, `/attendance/roll?classId=cls_8a&date=${day}`)).json;
+    const row = roll.marks.find((m: any) => m.studentId === 'stu_aarav');
+    expect(row.onLeave).toBe(true);
+    if (!roll.submitted) expect(row.status).toBe('leave');
+    expect((await f(parent, `/attendance/roll?classId=cls_8a&date=${day}`)).status).toBe(403);
+    expect((await post(teacher, `/attendance?date=${addDays(istToday(), -20)}`, { stu_aarav: 'present' })).status).toBe(423);
+    expect((await post(teacher, `/attendance?date=${addDays(istToday(), 2)}`, { stu_aarav: 'present' })).status).toBe(400);
+  });
+});
+
+describe('attendance every period', () => {
+  it('lets the period’s teacher mark it, and no one else but someone who approves', async () => {
+    const day = istToday();
+    const roll = await f(teacher, `/attendance/periods?classId=cls_8a&date=${day}`);
+    expect(roll.status).toBe(200);
+    const mine = roll.json.periods.find((p: any) => p.mine);
+    const other = roll.json.periods.find((p: any) => !p.mine);
+    if (mine) {
+      const put = await h.call('PUT', '/v1/f/attendance/periods', { token: teacher, body: { classId: 'cls_8a', date: day, period: mine.period, marks: [{ studentId: 'stu_diya', status: 'absent' }] } });
+      expect(put.status).toBe(200);
+      expect(put.json.periods.find((p: any) => p.period === mine.period).marks.stu_diya).toBe('absent');
+    }
+    if (other) {
+      expect((await h.call('PUT', '/v1/f/attendance/periods', { token: teacher, body: { classId: 'cls_8a', date: day, period: other.period, marks: [{ studentId: 'stu_diya', status: 'present' }] } })).status).toBe(403);
+      expect((await h.call('PUT', '/v1/attendance/periods', { token: admin, body: { classId: 'cls_8a', date: day, period: other.period, marks: [{ studentId: 'stu_diya', status: 'present' }] } })).status).toBe(200);
+    }
+    expect(mine ?? other).toBeTruthy();
+    expect((await f(parent, `/attendance/periods?classId=cls_8a&date=${day}`)).status).toBe(403);
+  });
+});
+
+describe('the school’s app link', () => {
+  it('sends a phone to its store and a computer to a page', async () => {
+    const page = await h.call('GET', '/hooks/app/greenfield', { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0)' } });
+    expect(page.status).toBe(200);
+    expect(page.text).toContain('not in the stores yet');
+    await h.registry.query("insert into builds (id, school_id, platform, version, status, note, url) select 'bld_test', id, 'android', '1.0.0', 'done', '', null from schools where slug = 'greenfield'");
+    const phone = await h.call('GET', '/hooks/app/greenfield', { headers: { 'user-agent': 'Mozilla/5.0 (Linux; Android 14)' } });
+    expect(phone.status).toBe(302);
+    expect(phone.headers.location).toBe('https://play.google.com/store/apps/details?id=com.gradeon.greenfield');
+    expect((await h.call('GET', '/hooks/app/nowhere')).status).toBe(404);
   });
 });
 
@@ -229,7 +292,7 @@ describe('family accounts', () => {
   });
   it('sends one account at most five codes in fifteen minutes (outside demo mode)', async () => {
     expect((await h.call('POST', '/v1/students', { token: admin, body: { name: 'Ira Rao', classId: 'cls_8a', dob: '2013-06-02', guardianName: 'Anil Rao', guardianPhone: '+91 90000 11122' } })).status).toBe(201);
-    await h.setSettings({ 'demo.mode': false });
+    await h.setDemo(false);
     try {
       for (let i = 0; i < 5; i++) expect((await h.call('POST', '/v1/auth/code', { body: { identifier: '90000 11122' } })).status).toBe(200);
       const sixth = await h.call('POST', '/v1/auth/code', { body: { identifier: '90000 11122' } });
@@ -237,7 +300,7 @@ describe('family accounts', () => {
       expect(sixth.json.retryAfter).toBeGreaterThan(0);
       expect((await h.call('POST', '/v1/auth/reset/start', { body: { identifier: '90000 11122' } })).status).toBe(429);
     } finally {
-      await h.setSettings({ 'demo.mode': true });
+      await h.setDemo(true);
     }
   });
 });
@@ -256,15 +319,19 @@ describe('what the console sets reaches families and the office', () => {
     await h.setSettings({ 'privacy.notice': 'We keep marks for five years.', 'privacy.officerName': 'R. Kulkarni' });
     expect((await h.call('GET', '/v1/brand')).json.privacy).toMatchObject({ notice: 'We keep marks for five years.', officerName: 'R. Kulkarni' });
   });
-  it('keeps teachers off the app when the console says so, but not off the admin', async () => {
-    await h.setSettings({ 'app.teachers': false });
+  it('lets only the roles the console chose use the app; staff keep the admin', async () => {
+    await h.setSettings({ 'app.roles': ['parent'] });
     try {
       const app = await h.call('POST', '/v1/auth/login', { body: { identifier: 'kavita.iyer@greenfield.edu.in', password: 'a-new-pass-123', client: 'mobile' } });
       expect(app.status).toBe(403);
+      expect(app.json.message).toMatch(/admin on the web/);
       const web = await h.call('POST', '/v1/auth/login', { body: { identifier: 'kavita.iyer@greenfield.edu.in', password: 'a-new-pass-123', client: 'web' } });
       expect(web.status).toBe(200);
+      await h.setSettings({ 'app.roles': ['teacher'] });
+      const family = await h.call('POST', '/v1/auth/code', { body: { identifier: '99887 76655' } });
+      expect(family.status).toBe(403);
     } finally {
-      await h.setSettings({ 'app.teachers': true });
+      await h.setSettings({ 'app.roles': ['parent', 'teacher'] });
     }
   });
   it('lets the office record only the ways the school takes money', async () => {
@@ -282,7 +349,7 @@ describe('what the console sets reaches families and the office', () => {
   it('names students the school’s way in the admin menu', async () => {
     await h.setSettings({ 'vocab.student': 'Pupil' });
     try {
-      expect((await h.call('GET', '/v1/config', { token: admin })).json.nav.map((n: { label: string }) => n.label)).toContain('Pupils');
+      expect((await h.call('GET', '/v1/config', { token: admin })).json.menu.flatMap((g: { pages: { label: string }[] }) => g.pages.map((p) => p.label))).toContain('Pupils');
     } finally {
       await h.setSettings({ 'vocab.student': 'Student' });
     }
@@ -340,9 +407,9 @@ describe('messages and background work through the Hub', () => {
   it('refuses texts past the plan’s monthly limit, never a sign-in code', async () => {
     const limits = (await h.registry.query("select entitlement->'limits' l from schools where slug = 'greenfield'")).rows[0].l;
     await h.entitle({ limits: { ...limits, smsPerMonth: 1 } });
-    const sent = await h.call('POST', '/v1/students/message', { token: admin, body: { ids: ['stu_aarav'], channel: 'sms', body: 'Over the limit test' } });
+    const sent = await h.call('POST', '/v1/students/message', { token: admin, body: { ids: ['stu_aarav'], body: 'Over the limit test' } });
     expect(sent.status).toBe(200);
-    const row = (await h.registry.query("select status, error from message_log where body = 'Over the limit test'")).rows[0];
+    const row = (await h.registry.query("select status, error from message_log where body like 'Over the limit test%' and channel = 'sms'")).rows[0];
     expect(row).toMatchObject({ status: 'refused' });
     expect(row.error).toContain('texts are used up');
     await h.call('POST', '/v1/auth/login', { body: { identifier: 'priya.sharma@example.com' } });

@@ -39,7 +39,7 @@ afterAll(async () => {
 describe('configuration from the console', () => {
   it('changes settings the school then follows, refuses a stale version, and keeps a history', async () => {
     const before = (await cfg()).json;
-    const r = await patch({ expectedVersion: before.version, changes: { 'brand.color': '#0E7490', 'app.dock': ['home', 'fees'], 'fees.receiptPrefix': 'GF/{year}/' }, note: 'Brand refresh' });
+    const r = await patch({ expectedVersion: before.version, changes: { 'brand.color': '#0E7490', 'app.layout': { parent: { dock: ['home', 'fees'], home: [], quick: [] }, student: { dock: [], home: [], quick: [] }, teacher: { dock: [], home: [], quick: [] }, driver: { dock: [], home: [], quick: [] } }, 'fees.receiptPrefix': 'GF/{year}/' }, note: 'Brand refresh' });
     expect(r.status).toBe(200);
     expect(r.json.version).toBe(before.version + 1);
     expect(r.json.versions[0]).toMatchObject({ note: 'Brand refresh', by: 'kaushal@gradeon.app' });
@@ -50,7 +50,7 @@ describe('configuration from the console', () => {
     await wait();
     const seen = (await h.s('GET', '/v1/config', { school: 'cfgschool', token: school })).json;
     expect(seen.school.color).toBe('#0E7490');
-    expect(seen.app.dock).toEqual(['home', 'fees']);
+    expect(seen.app.layout.parent.dock).toEqual(['home', 'fees']);
   });
 
   it('rolls back to an earlier version', async () => {
@@ -86,8 +86,9 @@ describe('configuration from the console', () => {
     expect((await cfg()).json.staff.find((s: { id: string }) => s.id === staff.id).roleId).toBe(exam.id);
     expect((await h.s('GET', '/v1/roles', { school: 'cfgschool', token: school })).json.some((r: { key: string }) => r.key === 'custom_fee_desk')).toBe(true);
     const preview = (await h.c('GET', `/console/v1/schools/${id}/config/preview?roleId=${exam.id}`, { token: t })).json;
-    expect(preview.nav.map((n: { label: string }) => n.label)).toContain('Fees');
-    expect(preview.nav.map((n: { label: string }) => n.label)).not.toContain('Timetable');
+    const labels = preview.menu.flatMap((g: { pages: { label: string }[] }) => g.pages.map((p) => p.label));
+    expect(labels).toContain('Fees');
+    expect(labels).not.toContain('Timetable');
   });
 
   it('saves a setup as a template and applies it to another school, but never who the school is', async () => {

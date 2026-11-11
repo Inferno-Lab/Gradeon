@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
-  ApprovalDecision, AssignFee, AttendanceDayPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentQuery,
-  type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeSummary, type ImportResult, type InvoiceRow,
+  ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentQuery,
+  type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type PeriodRoll, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeHead, type FeeSummary, type ImportResult, type InvoiceRow,
   type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
 } from '@gradeon/contracts';
 import { MODULES, activeModules } from '@gradeon/config-engine';
@@ -14,12 +14,14 @@ import { AttendanceService } from './attendance.service.js';
 import { DashboardService } from './dashboard.service.js';
 import { FeesService } from './fees.service.js';
 import { StudentsService } from './students.service.js';
+import { NoticesService } from './notices.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 import { TimetableService } from './timetable.service.js';
 
 const DayQuery = z.object({ classId: z.string().min(1), date: IsoDate });
 const InvoiceQuery = z.object({ studentId: z.string().min(1) });
-const ListApprovals = z.object({ status: z.enum(['pending', 'approved', 'rejected', 'all']).default('pending'), kind: z.enum(['leave', 'fee_waiver', 'admission', 'notice']).optional() });
+const NoticeEdit = NoticeCreate.and(z.object({ tellAgain: z.boolean().default(false) }));
+const ListApprovals = z.object({ view: z.enum(['waiting', 'sent', 'decided']).default('waiting'), kind: z.enum(['leave', 'fee_waiver', 'admission', 'notice', 'attendance', 'photo']).optional() });
 const ClassQuery = z.object({ classId: z.string().min(1) });
 const DashQuery = z.object({ days: z.coerce.number().int().min(1).max(30).default(6) });
 const SearchQuery = z.object({ q: z.string().max(80).default('') });
@@ -53,8 +55,8 @@ export class StudentsController {
   }
 
   @Get('views') @Require('students.read')
-  views(@Tenant() t: TenantCtx): Promise<StudentViews> {
-    return this.students.views(t);
+  views(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<StudentViews> {
+    return this.students.views(t, u.id);
   }
 
   @Get('export') @Require('students.read') @Header('content-type', 'text/csv; charset=utf-8') @Header('content-disposition', 'attachment; filename="students.csv"')
@@ -75,6 +77,11 @@ export class StudentsController {
   @Post('message') @HttpCode(200) @Require('students.read')
   message(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(MessageRequest)) body: MessageRequest): Promise<{ sent: number }> {
     return this.students.message(t, body, u);
+  }
+
+  @Post(':id/app-account') @HttpCode(200) @Require('students.write')
+  studentAccount(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(z.object({ phone: z.string().max(20).optional(), email: z.string().email().max(120).optional() }))) b: { phone?: string; email?: string }): Promise<{ sent: boolean }> {
+    return this.students.studentAccount(t, u, id, b);
   }
 
   @Post('invite') @HttpCode(200) @Require('students.write')
@@ -113,6 +120,16 @@ export class AttendanceController {
     return this.attendance.put(t, u, body);
   }
 
+  @Get('periods') @RequireModule('attendance.periodWise') @Require('attendance.read')
+  periods(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Query(new ZodPipe(DayQuery)) q: z.infer<typeof DayQuery>): Promise<PeriodRoll> {
+    return this.attendance.periods(t, u, q.classId, q.date);
+  }
+
+  @Put('periods') @RequireModule('attendance.periodWise') @Require('attendance.mark')
+  putPeriod(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PeriodMarksPut)) body: PeriodMarksPut): Promise<PeriodRoll> {
+    return this.attendance.putPeriod(t, u, body);
+  }
+
   @Get('week') @Require('attendance.read')
   week(@Tenant() t: TenantCtx): Promise<AttendanceWeekPoint[]> {
     return this.attendance.week(t);
@@ -132,6 +149,16 @@ export class FeesController {
   @Get('summary') @Require('fees.read')
   summary(@Tenant() t: TenantCtx): Promise<FeeSummary> {
     return this.fees.summary(t);
+  }
+
+  @Get('heads') @Require('fees.read')
+  heads(@Tenant() t: TenantCtx): Promise<FeeHead[]> {
+    return this.fees.heads(t);
+  }
+
+  @Put('heads') @Require('setup.write')
+  setHeads(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(FeeHeadsPut)) body: FeeHeadsPut): Promise<FeeHead[]> {
+    return this.fees.setHeads(t, body, u);
   }
 
   @Get('invoices') @Require('fees.read')
@@ -162,8 +189,8 @@ export class ApprovalsController {
   }
 
   @Get('approvals') @Require('approvals.read')
-  list(@Tenant() t: TenantCtx, @Query(new ZodPipe(ListApprovals)) q: z.infer<typeof ListApprovals>): Promise<ApprovalRow[]> {
-    return this.approvals.list(t, q.status, q.kind);
+  list(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Query(new ZodPipe(ListApprovals)) q: z.infer<typeof ListApprovals>): Promise<ApprovalRow[]> {
+    return this.approvals.list(t, u, q.view, q.kind);
   }
 
   @Post('approvals/:id/decision') @HttpCode(200) @Require('approvals.decide')
@@ -171,14 +198,37 @@ export class ApprovalsController {
     return this.approvals.decide(t, u, id, body);
   }
 
-  @Get('notices') @RequireModule('notices') @Require('notices.read')
-  notices(@Tenant() t: TenantCtx): Promise<NoticeRow[]> {
-    return this.approvals.notices(t);
+}
+
+@Controller('v1/notices')
+@RequireModule('notices')
+export class NoticesController {
+  constructor(private readonly notices: NoticesService) {}
+
+  @Get() @Require('notices.read')
+  list(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<NoticeRow[]> {
+    return this.notices.list(t, u);
   }
 
-  @Post('notices') @RequireModule('notices') @Require('notices.write')
-  createNotice(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(NoticeCreate)) body: NoticeCreate): Promise<NoticeRow> {
-    return this.approvals.createNotice(t, u, body);
+  @Post() @Require('notices.write')
+  create(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(NoticeCreate)) body: NoticeCreate): Promise<NoticeRow> {
+    return this.notices.create(t, u, body);
+  }
+
+  @Put(':id') @Require('notices.write')
+  update(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(NoticeEdit)) body: z.infer<typeof NoticeEdit>): Promise<NoticeRow> {
+    return this.notices.update(t, u, id, body);
+  }
+
+  @Delete(':id') @HttpCode(204) @Require('notices.write')
+  async remove(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<void> {
+    await this.notices.remove(t, u, id);
+  }
+
+  /** Who has not acknowledged a notice that asked for it, to remind them. */
+  @Get(':id/not-acknowledged') @Require('notices.read')
+  notAcked(@Tenant() t: TenantCtx, @Param('id') id: string) {
+    return this.notices.notAcked(t, id);
   }
 }
 

@@ -2,7 +2,7 @@ import type pg from 'pg';
 import { newId } from './ids.js';
 
 /** Per-school background work: reminders, late fines, file checks, reconciliation, erasure. Lives in the registry's job_queue. */
-export const JOB_KINDS = ['fees.reminders', 'fees.lateFines', 'files.scan', 'files.thumb', 'files.usage', 'payments.reconcile', 'retention.erase', 'imports.run'] as const;
+export const JOB_KINDS = ['fees.reminders', 'fees.lateFines', 'files.scan', 'files.thumb', 'files.usage', 'payments.reconcile', 'retention.erase', 'imports.run', 'notices.publish', 'transport.poll'] as const;
 export type JobKind = (typeof JOB_KINDS)[number];
 
 export interface Job { id: string; schoolId: string | null; kind: JobKind; payload: Record<string, unknown>; attempts: number }

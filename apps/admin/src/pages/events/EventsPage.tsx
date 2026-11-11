@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EVENT_KINDS, istToday, type EventKind, type EventRow } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { EVENT_KINDS, istToday, type Category, type EventKind, type EventRow } from '@gradeon/contracts';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, AreaField, Ico, problem } from '../../app/kit';
+import { AddBtn, AreaField, Ico, problem, useSetting } from '../../app/kit';
 
 const KIND: Record<EventKind, { label: string; tone: string }> = { event: { label: 'Event', tone: 'v' }, holiday: { label: 'Holiday', tone: 'g' }, exam: { label: 'Exams', tone: 'a' }, ptm: { label: 'Parent meeting', tone: 'k' }, routine: { label: 'Routine', tone: '' } };
 const AUDIENCE: Record<string, string> = { everyone: 'Everyone', parents: 'Parents', staff: 'Staff only' };
@@ -116,22 +116,28 @@ function EventItem({ e, canWrite, onOpen, dim }: { e: EventRow; canWrite: boolea
   );
 }
 
-const local = (iso: string) => { const d = new Date(iso); return { date: ymd(d), time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` }; };
+/** A stored time as the school's day and clock (India Standard Time), whatever the browser's time zone. */
+const local = (iso: string) => { const d = new Date(new Date(iso).getTime() + 330 * 60_000).toISOString(); return { date: d.slice(0, 10), time: d.slice(11, 16) }; };
 
 function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow | null; defaultDay: string | null; onClose: () => void; onDone: (msg: string) => void }) {
   const app = useApp();
   const canWrite = app.user.permissions.includes('events.write');
   const s = event ? local(event.startsAt) : { date: defaultDay ?? istToday(), time: '10:00' };
   const en = event?.endsAt ? local(event.endsAt) : { date: s.date, time: '12:00' };
-  const [f, setF] = useState({ title: event?.title ?? '', kind: (event?.kind ?? 'event') as EventKind, date: s.date, time: s.time, endDate: en.date, endTime: en.time, venue: event?.venue ?? '', note: event?.note ?? '', audience: event?.audience ?? 'everyone' });
+  const cats = useSetting<Category[]>('events.categories', []);
+  const [f, setF] = useState({ title: event?.title ?? '', kind: (event?.kind ?? 'event') as EventKind, date: s.date, time: s.time, endDate: en.date, endTime: en.time, venue: event?.venue ?? '', note: event?.note ?? '', audience: event?.audience ?? 'everyone',
+    category: event?.category ?? cats[0]?.key ?? '', lat: event?.lat == null ? '' : String(event.lat), lng: event?.lng == null ? '' : String(event.lng) });
+  const [needsRsvp, setNeedsRsvp] = useState(event?.needsRsvp ?? false);
   const [err, setErr] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
   const holiday = f.kind === 'holiday';
+  // Times are the school's (India Standard Time), whatever the browser's clock is set to.
   const body = () => ({
-    title: f.title.trim(), kind: f.kind, venue: f.venue.trim(), note: f.note.trim(), audience: f.audience as 'everyone',
-    startsAt: new Date(`${f.date}T${holiday ? '00:00' : f.time}:00`).toISOString(), endsAt: new Date(`${f.endDate}T${holiday ? '00:00' : f.endTime}:00`).toISOString(),
+    title: f.title.trim(), kind: f.kind, venue: f.venue.trim(), note: f.note.trim(), audience: f.audience as 'everyone', category: f.category, needsRsvp: !holiday && needsRsvp,
+    lat: f.lat ? Number(f.lat) : null, lng: f.lng ? Number(f.lng) : null,
+    startsAt: new Date(`${f.date}T${holiday ? '00:00' : f.time}:00+05:30`).toISOString(), endsAt: new Date(`${f.endDate}T${holiday ? '00:00' : f.endTime}:00+05:30`).toISOString(),
   });
   const save = useMutation({
     mutationFn: () => (event ? app.api.events.save(event.id, body()) : app.api.events.create(body())),
@@ -149,7 +155,7 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
   };
   return (
     <Dialog title={event ? (canWrite ? 'Edit event' : event.title) : 'Add event'} tag={event ? { text: KIND[event.kind].label, tone: 'v' } : undefined} onClose={onClose} width={560} shake={shake.cls}>
-      {event && (event.going + event.maybe + event.cant > 0) && <div className="tgrow" style={{ marginBottom: 12 }}><span className="chip g">{event.going} going</span><span className="chip a">{event.maybe} maybe</span><span className="chip">{event.cant} cannot come</span></div>}
+      {event && (event.going + event.maybe + event.cant > 0) && <div className="tgrow" style={{ marginBottom: 12 }}><span className="chip g">{event.going} going{event.adults ? ` · ${event.adults} adults` : ''}</span><span className="chip a">{event.maybe} maybe</span><span className="chip">{event.cant} cannot come</span></div>}
       <div className="stack">
         <Field label="Name" value={f.title} onChange={set('title')} error={err.title} maxLength={100} disabled={!canWrite} />
         <div className="two">
@@ -161,7 +167,11 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
           {holiday ? <DateField label="To" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /> : <TimeField label="Starts at" value={f.time} onChange={set('time')} disabled={!canWrite} />}
         </div>
         {!holiday && <div className="two"><DateField label="Ends on" value={f.endDate} min={f.date} onChange={set('endDate')} error={err.endDate} disabled={!canWrite} /><TimeField label="Ends at" value={f.endTime} onChange={set('endTime')} disabled={!canWrite} /></div>}
+        {!holiday && cats.length > 0 && <SelectField label="Category" value={f.category} onChange={set('category')} disabled={!canWrite} options={cats.map((c) => ({ value: c.key, label: c.name }))} />}
         <Field label="Where (optional)" value={f.venue} onChange={set('venue')} maxLength={80} disabled={!canWrite} />
+        {!holiday && <div className="two"><NumberField label="Latitude (optional)" decimals value={f.lat} onChange={set('lat')} min={-90} max={90} step={0.0001} disabled={!canWrite} /><NumberField label="Longitude (optional)" decimals value={f.lng} onChange={set('lng')} min={-180} max={180} step={0.0001} disabled={!canWrite} /></div>}
+        {!holiday && <div className="help" style={{ marginTop: -6 }}>With the place on the map, families get directions in the app.</div>}
+        {!holiday && <Checkbox checked={needsRsvp} onChange={setNeedsRsvp} label="Ask families whether they are coming" disabled={!canWrite} />}
         <AreaField label="Note (optional)" value={f.note} onChange={set('note')} rows={2} maxLength={300} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>

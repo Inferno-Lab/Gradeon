@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, NumberField, Segmented, Select, TimeField, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -107,20 +107,28 @@ type StopDraft = { id?: string; name: string; pickup: string; dropTime: string; 
 function RouteDialog({ route, onClose, onDone }: { route: BusRouteRow | null; onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
   const shake = useShake();
-  const [f, setF] = useState({ name: route?.name ?? '', vehicle: route?.vehicle ?? '', driverName: route?.driverName ?? '', driverPhone: route?.driverPhone ?? '', fee: String(route?.fee ?? 0) });
+  const [f, setF] = useState({ name: route?.name ?? '', vehicle: route?.vehicle ?? '', driverUserId: route?.driverUserId ?? '', attendantName: route?.attendantName ?? '', attendantPhone: route?.attendantPhone ?? '', trackerId: route?.trackerId ?? '', fee: String(route?.fee ?? 0) });
+  const staff = useQuery({ queryKey: ['staff'], queryFn: () => app.api.staff.list() });
+  const [sure, setSure] = useState(false);
   const [stops, setStops] = useState<StopDraft[]>(() => (route?.stops ?? []).map((s) => ({ id: s.id, name: s.name, pickup: s.pickup, dropTime: s.dropTime, lat: s.lat == null ? '' : String(s.lat), lng: s.lng == null ? '' : String(s.lng) })));
   const [err, setErr] = useState<Record<string, string>>({});
   const set = (k: keyof typeof f) => (x: string) => { setF((o) => ({ ...o, [k]: x })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
   const setStop = (i: number, k: keyof StopDraft) => (x: string) => setStops((list) => list.map((s, j) => (j === i ? { ...s, [k]: x } : s)));
   const move = (i: number) => setStops((list) => { const n = [...list]; [n[i - 1], n[i]] = [n[i]!, n[i - 1]!]; return n; });
-  const body = () => ({ ...f, name: f.name.trim(), fee: Number(f.fee || 0), stops: stops.filter((s) => s.name.trim()).map((s): StopInput => ({ id: s.id, name: s.name.trim(), pickup: s.pickup, dropTime: s.dropTime, lat: s.lat ? Number(s.lat) : null, lng: s.lng ? Number(s.lng) : null })) });
+  const body = () => ({ ...f, name: f.name.trim(), driverUserId: f.driverUserId || null, fee: Number(f.fee || 0), stops: stops.filter((s) => s.name.trim()).map((s): StopInput => ({ id: s.id, name: s.name.trim(), pickup: s.pickup, dropTime: s.dropTime, lat: s.lat ? Number(s.lat) : null, lng: s.lng ? Number(s.lng) : null })) });
   const save = useMutation({ mutationFn: () => (route ? app.api.transport.save(route.id, body()) : app.api.transport.add(body())), onSuccess: (r) => onDone(`${r.name} was saved with ${r.stops.length} stops.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
   const del = useMutation({ mutationFn: () => app.api.transport.remove(route!.id), onSuccess: () => onDone(`${route!.name} was removed.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
   return (
     <Dialog title={route ? `Edit ${route.name}` : 'Add a route'} onClose={onClose} width={640} shake={shake.cls}>
       <div className="stack">
         <div className="two"><Field label="Route name" value={f.name} onChange={set('name')} error={err.name} placeholder="Route 4 · Baner" /><Field label="Bus number" value={f.vehicle} onChange={set('vehicle')} placeholder="MH12 AB 1234" /></div>
-        <div className="two"><Field label="Driver" value={f.driverName} onChange={set('driverName')} placeholder="Suresh Patil" /><Field label="Driver’s phone" type="tel" value={f.driverPhone} onChange={set('driverPhone')} hint="The driver shares the bus’s position from the app with this number." /></div>
+        <div>
+          <SelectField label="Driver" value={f.driverUserId} onChange={set('driverUserId')} error={err.driverUserId}
+            options={[{ value: '', label: 'No driver yet' }, ...(staff.data ?? []).filter((p) => p.status === 'active').map((p) => ({ value: p.id, label: `${p.name}${p.designation ? ` · ${p.designation}` : ''}` }))]} />
+          <div className="help" style={{ marginTop: 6 }}>The driver signs in to the app as a bus driver (when the school uses that role) to run this route’s trips: the bus’s position, who got on and off, delays.</div>
+        </div>
+        <div className="two"><Field label="Attendant" value={f.attendantName} onChange={set('attendantName')} placeholder="Meena Kale" /><Field label="Attendant’s phone" type="tel" value={f.attendantPhone} onChange={set('attendantPhone')} hint="Families call the attendant or the office about the bus, never the driver." /></div>
+        <Field label="GPS tracker number (optional)" value={f.trackerId} onChange={set('trackerId')} hint="If the bus has a tracker: its number at the tracker company. Its position is used while a trip runs." />
         <NumberField label="Route fee for a term (₹)" value={f.fee} onChange={set('fee')} min={0} />
         <div>
           <div className="lbl" style={{ marginBottom: 8 }}>Stops, in order</div>
@@ -141,7 +149,9 @@ function RouteDialog({ route, onClose, onDone }: { route: BusRouteRow | null; on
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-        {route && <button className="btn" style={{ marginRight: 'auto' }} disabled={del.isPending} onClick={() => del.mutate()}>Remove route</button>}
+        {route && (sure
+          ? <button className="btn dng" style={{ marginRight: 'auto' }} disabled={del.isPending} onClick={() => del.mutate()}>Remove {route.name} and unassign its {route.riders} riders</button>
+          : <button className="btn" style={{ marginRight: 'auto' }} onClick={() => setSure(true)}>Remove route…</button>)}
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn pri" disabled={save.isPending || !f.name.trim()} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save route'}</button>
       </div>

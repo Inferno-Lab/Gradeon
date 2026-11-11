@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
-import { addDays, dayName, dayMonth, istToday, latestSchoolDay, schoolDaysEnding, type FeeSummary, type InvoiceRow, type PaymentCreate } from '@gradeon/contracts';
+import { addDays, dayName, dayMonth, istToday, latestSchoolDay, schoolDaysEnding, type FeeHead, type FeeHeadsPut, type FeeSummary, type InvoiceRow, type PaymentCreate } from '@gradeon/contracts';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
-const HEADS = [
-  ['tuition', 'Tuition'], ['transport', 'Transport'], ['activities', 'Activities'], ['lab', 'Lab'],
-] as const;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 @Injectable()
@@ -26,7 +23,7 @@ export class FeesService {
     const monthStart = `${last.slice(0, 7)}-01`;
     const nextMonth = addDays(monthStart, 32).slice(0, 7) + '-01';
     const prevStart = addDays(monthStart, -1).slice(0, 7) + '-01';
-    const [byHead, totals, daily, prev, target] = await Promise.all([
+    const [byHead, totals, daily, prev, target, headList] = await Promise.all([
       t.pool.query<{ head: string; due: string; collected: string }>(
         `select i.head, coalesce(sum(i.amount - i.waived_amount),0) due,
            coalesce(sum((select coalesce(sum(p.amount - p.refunded),0) from payments p where p.invoice_id = i.id)),0) collected
@@ -42,10 +39,13 @@ export class FeesService {
         `select to_char(paid_on,'YYYY-MM-DD') d, sum(amount) amount from payments where paid_on = any($1::date[]) group by 1`, [schoolDaysEnding(last, count, OFF_DAYS)]),
       t.pool.query<{ collected: string }>('select coalesce(sum(amount),0) collected from payments where paid_on >= $1 and paid_on < $2', [prevStart, monthStart]),
       this.settings.value<number>(t, 'fees.dailyTarget', 150000),
+      this.heads(t),
     ]);
     const days = schoolDaysEnding(last, count, OFF_DAYS);
     const amounts = new Map(daily.rows.map((r) => [r.d, Number(r.amount)]));
-    const heads = HEADS.map(([key, label]) => {
+    // Every head the school keeps, plus any an old invoice still names, so no money goes missing from the totals.
+    const known = [...headList.map((h) => [h.key, h.name] as const), ...byHead.rows.filter((r) => !headList.some((h) => h.key === r.head)).map((r) => [r.head, r.head] as const)];
+    const heads = known.map(([key, label]) => {
       const r = byHead.rows.find((x) => x.head === key);
       const due = Number(r?.due ?? 0);
       const collected = Math.min(due, Number(r?.collected ?? 0));
@@ -62,6 +62,45 @@ export class FeesService {
       daily: days.map((d) => ({ date: d, label: dayName(d, true), full: `${dayName(d)} ${dayMonth(d)}${d === last ? ' · today' : ''}`, amount: amounts.get(d) ?? 0, isToday: d === last })),
       dailyTarget: target,
     };
+  }
+
+  /** The school's fee heads, in its order. */
+  async heads(t: TenantCtx): Promise<FeeHead[]> {
+    return (await t.pool.query<FeeHead>('select key, name, sort, concession from fee_heads order by sort, name')).rows;
+  }
+
+  /**
+   * Replaces the list (Gradeon's console, or the school when `feeStructures.schoolEdits` is on). A head that invoices or fee
+   * structures use cannot be removed, only renamed, so no money loses its kind.
+   */
+  async setHeads(t: TenantCtx, body: FeeHeadsPut, by: { id: string; name: string }): Promise<FeeHead[]> {
+    if (!(await this.settings.value<boolean>(t, 'feeStructures.schoolEdits', true))) throw new ApiError('forbidden', 'Gradeon keeps this school’s fee heads. Ask Gradeon to change them.');
+    const slug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'fee';
+    const next = body.heads.map((h, i) => ({ key: h.key ?? slug(h.name), name: h.name, sort: i + 1, concession: h.concession }));
+    if (new Set(next.map((h) => h.key)).size !== next.length) throw new ApiError('validation', 'Two fee heads have the same name.');
+    const used = (await t.pool.query<{ head: string }>('select distinct head from fee_invoices union select distinct head from fee_structures')).rows.map((r) => r.head);
+    const dropped = used.filter((k) => !next.some((h) => h.key === k));
+    const before = await this.heads(t);
+    if (dropped.length) {
+      const names = dropped.map((k) => before.find((h) => h.key === k)?.name ?? k);
+      throw new ApiError('conflict', `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} used by invoices or fee structures, so ${names.length === 1 ? 'it stays' : 'they stay'}. Rename instead.`);
+    }
+    const client = await t.pool.connect();
+    try {
+      await client.query('begin');
+      await client.query('delete from fee_heads where not (key = any($1::text[]))', [next.map((h) => h.key)]);
+      for (const h of next) {
+        await client.query('insert into fee_heads (key, name, sort, concession, updated_at) values ($1,$2,$3,$4,now()) on conflict (key) do update set name = excluded.name, sort = excluded.sort, concession = excluded.concession, updated_at = now()', [h.key, h.name, h.sort, h.concession]);
+      }
+      await client.query('commit');
+    } catch (err) {
+      await client.query('rollback').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+    await this.audit.record(t, { actorId: by.id, actorName: by.name, action: 'fees.heads', entity: 'fee_heads', detail: { before: before.map((h) => h.name), after: next.map((h) => h.name) } });
+    return this.heads(t);
   }
 
   async invoices(t: TenantCtx, studentId: string): Promise<InvoiceRow[]> {

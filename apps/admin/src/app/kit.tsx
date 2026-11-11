@@ -98,3 +98,31 @@ export function Attach({ files, onChange, max = 3 }: { files: File[]; onChange: 
     </div>
   );
 }
+
+/** The school's own fee heads, for every place that picks or filters a kind of fee. */
+export function useFeeHeads(): { value: string; label: string }[] {
+  const { api } = useApp();
+  const q = useQuery({ queryKey: ['fee-heads'], queryFn: api.fees.heads, staleTime: 5 * 60_000 });
+  return (q.data ?? []).map((h) => ({ value: h.key, label: h.name }));
+}
+
+/** The school's configuration as the console set it (its lists and rules), shared by every page. */
+export function useSchoolConfig() {
+  const { api } = useApp();
+  return useQuery({ queryKey: ['config'], queryFn: api.config, staleTime: 60_000 }).data;
+}
+
+/** A setting's value from the school's configuration, or the fallback while it loads. */
+export function useSetting<T>(key: string, fallback: T): T {
+  const cfg = useSchoolConfig();
+  return (cfg?.settings[key] as T | undefined) ?? fallback;
+}
+
+/** The grades the school teaches, from its classes, each named the way its classes are ("Grade 8", or "Nursery"). */
+export function useGrades(): { value: string; label: string }[] {
+  const { api } = useApp();
+  const q = useQuery({ queryKey: ['classes'], queryFn: api.classes, staleTime: 5 * 60_000 });
+  const seen = new Map<number, string>();
+  for (const c of q.data ?? []) if (!seen.has(c.grade)) seen.set(c.grade, c.section && c.name.endsWith(c.section) ? c.name.slice(0, -c.section.length).trim() : c.name);
+  return [...seen].sort((a, b) => a[0] - b[0]).map(([g, name]) => ({ value: String(g), label: /^\d+$/.test(name) ? `Grade ${name}` : name }));
+}

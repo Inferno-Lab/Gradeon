@@ -11,7 +11,7 @@ const REFUND: Record<RefundRow['status'], { text: string; tone: string }> = {
   requested: { text: 'Needs a second person', tone: 'a' }, sent: { text: 'Sent to the bank', tone: 'v' }, done: { text: 'Refunded', tone: 'g' }, failed: { text: 'Failed', tone: 'c' }, rejected: { text: 'Declined', tone: '' },
 };
 
-export function OnlinePaymentsPage() {
+export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
@@ -29,7 +29,7 @@ export function OnlinePaymentsPage() {
   const open = (recon.data ?? []).filter((r) => !r.resolved);
   const waiting = (refunds.data ?? []).filter((r) => r.status === 'requested');
   return (
-    <Page title="Online payments" sub="What families paid in the app, refunds, and the daily check against what the provider settled" toast={toast}
+    <Page title="Fees" sub="What families paid in the app, refunds, and the daily check against what the provider settled" toast={toast} actions={tabs}
       loading={payments.isLoading && !payments.data} error={payments.isError && !payments.data ? { message: (payments.error as Error).message, retry: () => void payments.refetch() } : null}
       overlays={refund && <RefundDialog p={refund} onClose={() => setRefund(null)} onDone={(m) => { setRefund(null); refresh(); say(m); }} />}>
       <Segmented label="Online payments" value={tab} onChange={setTab} options={[

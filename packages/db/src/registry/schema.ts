@@ -21,6 +21,8 @@ export const cells = pgTable('cells', {
   maxSchools: integer('max_schools').notNull().default(50),
   /** false closes the cell to new schools and moves into it. */
   accepting: boolean('accepting').notNull().default(true),
+  /** The School databases connection (Integrations) that makes its schools' databases; none means the registry's own server. */
+  connectionId: text('connection_id'),
   createdAt: at('created_at'),
 });
 
@@ -73,6 +75,10 @@ export const schools = pgTable(
     address: text('address').notNull().default(''),
     addressing: text('addressing').notNull().default('path'),
     customDomain: text('custom_domain').notNull().default(''),
+    /** Started from the demo data: demo sign-in cards and the demo code work. */
+    demo: boolean('demo').notNull().default(false),
+    /** What the host said about the school's own address: verified, certificate, the DNS target to point at. */
+    domainState: jsonb('domain_state').$type<{ verified?: boolean; certificate?: string; target?: string; checkedAt?: string; error?: string }>().notNull().default({}),
     appName: text('app_name').notNull().default(''),
     studentsCount: integer('students_count').notNull().default(0),
     health: text('health').notNull().default('unknown'),
@@ -205,6 +211,10 @@ export const builds = pgTable('builds', {
   status: text('status').notNull(),
   url: text('url'),
   note: text('note').notNull().default(''),
+  /** The build's own short-lived code (hashed): fetches its signing kit and reports back once. */
+  tokenHash: text('token_hash'),
+  /** The store listing it went to (package name or bundle ID). */
+  store: text('store').notNull().default(''),
   createdAt: at('created_at'),
 });
 
@@ -221,6 +231,8 @@ export const consoleUsers = pgTable(
     tokenVersion: integer('token_version').notNull().default(0),
     /** Sealed with SECRETS_KEY. */
     totpSecret: text('totp_secret'),
+    /** The last authenticator code used, with when ("123456@1731234567"): a code works once. */
+    totpLast: text('totp_last'),
     failedLogins: integer('failed_logins').notNull().default(0),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: at('created_at'),
@@ -369,7 +381,9 @@ export const schoolBackups = pgTable(
     kind: text('kind').notNull(), // daily | manual
     takenBy: text('taken_by').notNull(),
     bytes: integer('bytes').notNull(),
-    data: bytea('data').notNull(),
+    /** Older backups only: newer ones are kept in Gradeon's File storage at storageKey. */
+    data: bytea('data'),
+    storageKey: text('storage_key'),
     takenAt: at('taken_at'),
   },
   (t) => [index('school_backups_school_idx').on(t.schoolId, t.takenAt)],

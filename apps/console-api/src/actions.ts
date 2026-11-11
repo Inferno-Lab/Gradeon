@@ -1,53 +1,125 @@
 import { Body, Controller, Get, Headers, HttpCode, Inject, Injectable, Param, Post } from '@nestjs/common';
 import { POOLS, REGISTRY } from './tokens.js';
 import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
-import { ActionRequest, type ActionRow, type BuildRow, type ConsoleRole, type EntitlementDoc } from '@gradeon/contracts';
+import { ActionRequest, appIdFor, type ActionRow, type BuildRow, type ConsoleRole, type EntitlementDoc } from '@gradeon/contracts';
 import { migrate, newId, pg, pendingMigrations } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
-import { constantTimeEqual, unseal } from '@gradeon/security';
+import { constantTimeEqual, randomToken, sha256, unseal } from '@gradeon/security';
+import { PlatformHub } from './platform-hub.js';
 import type { PoolManager, Registry } from '@gradeon/tenancy';
 import dns from 'node:dns/promises';
 import { Backups } from './backups.js';
 import { Db, Me, Needs, Public, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';
+import { moveSchool } from './move.js';
 import { Policy } from './policy.js';
 import { Schools } from './schools.js';
 
 type ActionRecord = typeof reg.actions.$inferSelect;
 
+/** What a build workflow needs to sign and publish one school's app, fetched once with the build's own code. */
+export interface BuildKit {
+  school: string;
+  platform: 'android' | 'ios';
+  apiBaseUrl: string;
+  /** The store listing: com.gradeon.<school> on both stores. */
+  appId: string;
+  appName: string;
+  firebase: { android: string | null; ios: string | null };
+  android: { keystore: string; storePassword: string; keyAlias: string; keyPassword: string; serviceAccount: string; track: string } | null;
+  ios: { teamId: string; issuerId: string; keyId: string; privateKey: string } | null;
+}
+
+
 @Injectable()
 export class Builds {
-  fetchImpl: typeof fetch = (...a) => fetch(...a);
-
   constructor(
     private readonly db: Db,
     @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
   ) {}
 
-  /** Asks GitHub to build the school's app. With no token it records that it could not, so the screen says why. */
+  /**
+   * Starts the school's app build through the App builds connection (GitHub Actions). Android builds are signed with the Google
+   * Play upload key and sent to its track; iPhone builds are signed with the App Store Connect key and sent to TestFlight. Each
+   * build gets a code of its own to fetch that kit and report back, so no signing secret is ever stored in the repository.
+   */
   async request(schoolId: string, slug: string, platform: BuildRow['platform'], user: string): Promise<BuildRow> {
     const id = newId('bld');
     const version = this.env.APP_VERSION;
-    let status: BuildRow['status'] = 'unavailable';
-    let note = 'GitHub is not connected, so no build was started. Set GITHUB_TOKEN and GITHUB_REPO on the console server.';
-    if (platform === 'ios') note = 'iPhone builds need the school’s Apple account and a Mac runner. They are not available yet.';
-    else if (this.env.GITHUB_TOKEN && this.env.GITHUB_REPO) {
-      const res = await this.fetchImpl(`https://api.github.com/repos/${this.env.GITHUB_REPO}/actions/workflows/mobile-build.yml/dispatches`, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${this.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'gradeon-console' },
-        body: JSON.stringify({ ref: this.env.GITHUB_BRANCH, inputs: { school: slug, build_id: id } }),
-      });
-      status = res.ok ? 'queued' : 'failed';
-      note = res.ok ? 'Queued on GitHub Actions. The install link appears here when the build finishes.' : `GitHub refused the request (${res.status}).`;
+    const missing = await this.missing(platform);
+    const token = randomToken(24);
+    let status: BuildRow['status'] = missing ? 'unavailable' : 'queued';
+    let note = missing ?? `Queued on GitHub Actions for ${platform === 'ios' ? 'TestFlight' : 'Google Play'}. The link appears here when the build finishes.`;
+    if (!missing) {
+      const b = (await this.platform.hub.platform('builds'))!;
+      try {
+        await b.adapter.builds!.dispatch(b.ctx, { school: slug, build_id: id, platform, token, api: this.env.API_BASE_URL.replace(/\/$/, '') });
+      } catch (e) {
+        status = 'failed';
+        note = `GitHub refused the build: ${(e as Error).message}`;
+      }
     }
-    await this.db.pool.query('insert into builds (id, school_id, platform, version, status, note) values ($1,$2,$3,$4,$5,$6)', [id, schoolId, platform, version, status, note]);
+    await this.db.pool.query('insert into builds (id, school_id, platform, version, status, note, token_hash, store) values ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [id, schoolId, platform, version, status, note, status === 'queued' ? sha256(token) : null, appIdFor(slug)]);
     await this.db.audit(user, 'build.requested', 'school', schoolId, { platform, status });
     return { id, schoolId, platform, version, status, url: null, note, createdAt: new Date().toISOString() };
   }
 
-  /** The workflow calls this when it finishes, with the install link. */
-  async finish(id: string, ok: boolean, url: string | null): Promise<void> {
-    await this.db.pool.query('update builds set status = $2, url = $3, note = $4 where id = $1', [id, ok ? 'done' : 'failed', url, ok ? 'Ready to install.' : 'The build failed. See the workflow log on GitHub.']);
+  /** What is not set up yet for a build on this platform, in words, or null when everything is. */
+  async missing(platform: BuildRow['platform']): Promise<string | null> {
+    const hub = this.platform.hub;
+    if (!(await hub.platform('builds'))) return 'No App builds connection is set up: add GitHub under Integrations.';
+    const stores = await this.stores();
+    if (platform === 'android' && !stores.android) return 'No Google Play connection is set up under Integrations → App stores.';
+    if (platform === 'ios' && !stores.ios) return 'No Apple App Store connection is set up under Integrations → App stores.';
+    if (!(await this.fcm())) return 'No Firebase connection is set up under Integrations → Phone notifications: the app could not receive notifications.';
+    return null;
+  }
+
+  /** The App stores connections (one per store), live or in test. */
+  private async stores(): Promise<{ android: string | null; ios: string | null }> {
+    const { rows } = await this.db.pool.query<{ id: string; provider: string }>("select id, provider from integration_connections where provider in ('google-play','app-store') and state in ('test','live') and scope = 'platform' order by state = 'live' desc, updated_at desc");
+    return { android: rows.find((r) => r.provider === 'google-play')?.id ?? null, ios: rows.find((r) => r.provider === 'app-store')?.id ?? null };
+  }
+
+  private async fcm(): Promise<string | null> {
+    const { rows } = await this.db.pool.query<{ id: string }>("select id from integration_connections where provider = 'fcm' and state in ('test','live') and scope = 'platform' order by state = 'live' desc, updated_at desc limit 1");
+    return rows[0]?.id ?? null;
+  }
+
+  /** The build's own code, checked against what was given at dispatch; it works only while the build runs. */
+  private async build(id: string, token: string | undefined): Promise<{ school_id: string; platform: BuildRow['platform']; status: string; slug: string; app_name: string; name: string }> {
+    const { rows } = await this.db.pool.query('select b.school_id, b.platform, b.status, b.token_hash, s.slug, s.app_name, s.short_name as name from builds b join schools s on s.id = b.school_id where b.id = $1', [id]);
+    const b = rows[0];
+    if (!b || !token || !b.token_hash || !constantTimeEqual(sha256(token), b.token_hash) || (b.status !== 'queued' && b.status !== 'building')) throw new ApiError('unauthenticated', 'That build code is not accepted.');
+    return b;
+  }
+
+  /** The signing kit for one build: Firebase files, the store's keys. Fetching it marks the build as building. */
+  async kit(id: string, token: string | undefined): Promise<BuildKit> {
+    const b = await this.build(id, token);
+    const hub = this.platform.hub;
+    const fcmId = await this.fcm();
+    const fcm = fcmId ? (await hub.use(fcmId)).conn : null;
+    const stores = await this.stores();
+    const play = b.platform === 'android' && stores.android ? (await hub.use(stores.android)).conn : null;
+    const apple = b.platform === 'ios' && stores.ios ? (await hub.use(stores.ios)).conn : null;
+    await this.db.pool.query("update builds set status = 'building', note = 'Building on GitHub Actions.' where id = $1", [id]);
+    return {
+      school: b.slug, platform: b.platform, apiBaseUrl: this.env.API_BASE_URL.replace(/\/$/, ''), appId: appIdFor(b.slug), appName: b.app_name || b.name,
+      firebase: { android: fcm?.secrets.androidConfig ?? null, ios: fcm?.secrets.iosConfig ?? null },
+      android: play ? { keystore: play.secrets.keystore ?? '', storePassword: play.secrets.keystorePassword ?? '', keyAlias: String(play.settings.keyAlias ?? 'upload'), keyPassword: play.secrets.keyPassword ?? '', serviceAccount: play.secrets.serviceAccount ?? '', track: String(play.settings.track ?? 'internal') } : null,
+      ios: apple ? { teamId: String(apple.settings.teamId), issuerId: String(apple.settings.issuerId), keyId: String(apple.settings.keyId), privateKey: apple.secrets.privateKey ?? '' } : null,
+    };
+  }
+
+  /** The workflow reports back once, with where the build went; the code stops working then. */
+  async finish(id: string, token: string | undefined, ok: boolean, url: string | null, note: string | null): Promise<void> {
+    const b = await this.build(id, token);
+    const where = b.platform === 'ios' ? 'Sent to TestFlight' : 'Sent to Google Play';
+    await this.db.pool.query('update builds set status = $2, url = $3, note = $4, token_hash = null where id = $1',
+      [id, ok ? 'done' : 'failed', url, ok ? `${where}. ${note ?? ''}`.trim() : `The build failed${note ? `: ${note}` : '.'} See the workflow log on GitHub.`]);
   }
 
   async list(): Promise<BuildRow[]> {
@@ -69,6 +141,7 @@ export class Actions {
     @Inject(REGISTRY) private readonly registry: Registry,
     @Inject(POOLS) private readonly pools: PoolManager,
     @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
   ) {}
 
   /** Actions owned by other services (config.apply), registered at start-up so this file does not import them. */
@@ -91,8 +164,8 @@ export class Actions {
   }
 
   async request(user: ConsoleUser, body: ActionRequest): Promise<ActionRow> {
-    // Taking a platform connection live is the one action about no school.
-    if (!body.schoolId && body.action !== 'integration.live') throw new ApiError('validation', 'Choose the school this is for.');
+    // Taking a platform connection live, and switching the platform to live messages, are the actions about no school.
+    if (!body.schoolId && body.action !== 'integration.live' && body.action !== 'integration.mode') throw new ApiError('validation', 'Choose the school this is for.');
     const school = body.schoolId ? await this.schools.raw(body.schoolId) : null;
     const pol = await this.policy.get();
     if (pol.freeze && body.action !== 'school.suspend') throw new ApiError('locked', 'Changes are frozen. A super admin can lift the freeze under Policy.');
@@ -145,6 +218,7 @@ export class Actions {
   private describe(action: ActionRequest['action'], school: string, params: Record<string, unknown> = {}): string {
     return ({
       'integration.live': `Take ${String(params.name ?? 'a connection')} live for ${school}`,
+      'integration.mode': 'Switch every school to live messages (real providers, no Test inbox)',
       'retention.erase': `Erase the records of people who left ${school} past the retention period`,
       'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
       'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'config.apply': `Change risky settings for ${school}`, 'school.move': `Move ${school} to another cell`,
@@ -200,13 +274,20 @@ export class Actions {
       }
       case 'domain.set': {
         const custom = String(params.customDomain ?? '').trim().toLowerCase();
+        // The Hosting connection adds the address at the host (which issues its certificate) and says where DNS must point;
+        // without one, the platform's own name is the target. The DNS record is checked before the school switches to it.
+        const host = await this.platform.hub.platform('hosting');
+        if (school.customDomain && school.customDomain !== custom && host?.adapter.hosting) await host.adapter.hosting.removeDomain(host.ctx, school.customDomain).catch(() => undefined);
+        let state: Record<string, unknown> = {};
         if (custom) {
-          const target = `cname.${this.env.BASE_DOMAIN}`;
+          const atHost = host?.adapter.hosting ? await host.adapter.hosting.addDomain(host.ctx, custom) : null;
+          const target = atHost?.target || `cname.${this.env.BASE_DOMAIN}`;
           const found = await dns.resolveCname(custom).catch(() => [] as string[]);
-          if (!found.some((f) => f.replace(/\.$/, '') === target)) throw new Error(`Add a CNAME record for ${custom} pointing to ${target}, then run this again.`);
+          if (!found.some((f) => f.replace(/\.$/, '') === target)) throw new Error(`Add a CNAME record for ${custom} pointing to ${target} at the school’s DNS host, then run this again.`);
+          state = { verified: atHost?.verified ?? true, certificate: atHost?.certificate ?? 'issued', target, checkedAt: new Date().toISOString() };
         }
-        await this.db.pool.query('update schools set custom_domain = $2, addressing = $3 where id = $1', [school.id, custom, params.addressing === 'subdomain' ? 'subdomain' : 'path']);
-        return custom ? `${custom} now points at ${school.name}.` : `${school.name} uses its platform address.`;
+        await this.db.pool.query('update schools set custom_domain = $2, addressing = $3, domain_state = $4 where id = $1', [school.id, custom, params.addressing === 'subdomain' ? 'subdomain' : 'path', JSON.stringify(state)]);
+        return custom ? `${custom} now points at ${school.name}${state.certificate === 'waiting' ? '; the certificate is being issued (a few minutes)' : ''}.` : `${school.name} uses its platform address.`;
       }
       case 'migration.run': {
         if (!school.dbUrlSealed) throw new Error('This school has no database yet.');
@@ -227,11 +308,12 @@ export class Actions {
         if (to === school.cell) throw new Error(`${school.name} already runs in ${to}.`);
         if (!target.accepting) throw new Error(`Cell ${to} is closed to new schools.`);
         if (Number(target.n) >= target.max_schools) throw new Error(`Cell ${to} is full.`);
-        if (target.target !== school.target) throw new Error(`Cell ${to} runs on ${target.target}, but ${school.name} runs on ${school.target}. Moving between kinds of cell needs a database copy, which only the aws-cell target performs.`);
-        await this.db.pool.query('update schools set cell = $2, region = (select region from cells where key = $2), config_version = config_version + 1 where id = $1', [school.id, to]);
+        const moved = await moveSchool({
+          db: this.db, env: this.env, hub: this.platform, school: { ...school, dbName: school.dbName ?? null }, to,
+          backup: () => this.backups.take(school.id, 'manual', `${a.requestedBy} (before moving)`), log: () => done(),
+        });
         done();
-        // shortcut: cells of one kind share a database server on the test track, so a move is a change of record, not a copy. On aws-cell this step becomes replicate, freeze, switch and verify.
-        return `${school.name} now runs in ${to}. On the test track its database stays where it is.`;
+        return moved;
       }
       case 'build.app': {
         const b = await this.builds.request(school.id, school.slug, params.platform === 'ios' ? 'ios' : 'android', a.requestedBy);
@@ -272,23 +354,43 @@ export class Actions {
   }
 
   private async erase(school: typeof reg.schools.$inferSelect): Promise<void> {
-    if (school.dbName?.startsWith('neon:')) {
-      const res = await this.fetchImpl(`https://console.neon.tech/api/v2/projects/${school.dbName.slice(5)}`, { method: 'DELETE', headers: { authorization: `Bearer ${this.env.NEON_API_KEY}` } });
-      if (!res.ok && res.status !== 404) throw new Error(`Neon refused to delete the project (${res.status}).`);
-    } else if (school.dbName) {
-      const admin = process.env[`CELL_${school.cell.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_ADMIN_URL`] ?? this.env.SHARED_PG_ADMIN_URL ?? this.env.REGISTRY_DATABASE_URL;
+    if (school.dbName) {
       this.pools.evict(school.slug);
-      const c = new pg.Client({ connectionString: admin });
-      await c.connect();
-      try {
+      // The cell's School databases connection made it, so it removes it; a cell without one used the registry's own server.
+      const cell = (await this.db.pool.query<{ connection_id: string | null }>('select connection_id from cells where key = $1', [school.cell])).rows[0];
+      if (cell?.connection_id) {
+        const { adapter, ctx } = await this.platform.hub.use(cell.connection_id);
+        await adapter.databases!.drop(ctx, school.dbName);
+      } else {
         if (!/^[a-z][a-z0-9_]{0,62}$/.test(school.dbName)) throw new Error('Unsafe database name.');
-        await c.query(`drop database if exists ${school.dbName} with (force)`);
-        await c.query(`drop role if exists ${school.dbName}_app`).catch(() => undefined);
-      } finally {
-        await c.end().catch(() => undefined);
+        const c = new pg.Client({ connectionString: this.env.REGISTRY_DATABASE_URL });
+        await c.connect();
+        try {
+          await c.query(`drop database if exists ${school.dbName} with (force)`);
+          await c.query(`drop role if exists ${school.dbName}_app`).catch(() => undefined);
+        } finally {
+          await c.end().catch(() => undefined);
+        }
       }
     }
     await this.db.pool.query("update schools set status = 'archived', deleted_at = now(), db_url_sealed = null where id = $1", [school.id]);
+  }
+
+  /** Asks the host again about the school's own address (certificate issued yet?) and checks its DNS record. */
+  async checkDomain(schoolId: string): Promise<Record<string, unknown>> {
+    const school = await this.schools.raw(schoolId);
+    if (!school.customDomain) return {};
+    const host = await this.platform.hub.platform('hosting');
+    const atHost = host?.adapter.hosting ? await host.adapter.hosting.domain(host.ctx, school.customDomain).catch((e: Error) => ({ error: e.message })) : null;
+    const target = (atHost && 'target' in atHost && atHost.target) || `cname.${this.env.BASE_DOMAIN}`;
+    const found = await dns.resolveCname(school.customDomain).catch(() => [] as string[]);
+    const state = {
+      verified: found.some((f) => f.replace(/\.$/, '') === target) && (!atHost || ('verified' in atHost && atHost.verified)),
+      certificate: atHost && 'certificate' in atHost ? atHost.certificate : 'issued', target, checkedAt: new Date().toISOString(),
+      ...(atHost && 'error' in atHost ? { error: atHost.error } : {}),
+    };
+    await this.db.pool.query('update schools set domain_state = $2 where id = $1', [schoolId, JSON.stringify(state)]);
+    return state;
   }
 
   async pending(school: typeof reg.schools.$inferSelect): Promise<string[]> {
@@ -303,8 +405,12 @@ export class ActionsController {
   constructor(
     private readonly actions: Actions,
     private readonly builds: Builds,
-    @Inject(ENV) private readonly env: Env,
   ) {}
+
+  @Post('schools/:id/domain/check') @HttpCode(200) @Needs('schools.read')
+  checkDomain(@Param('id') id: string): Promise<Record<string, unknown>> {
+    return this.actions.checkDomain(id);
+  }
 
   @Get('actions') @Needs('schools.read')
   list(): Promise<ActionRow[]> {
@@ -332,11 +438,15 @@ export class ActionsController {
     return this.builds.list();
   }
 
-  /** The build workflow reports back here with the install link. It proves itself with the shared token; without one set, this is closed. */
+  /** The build workflow fetches its signing kit with the build's own code (given at dispatch, good only while the build runs). */
+  @Public() @Get('builds/:id/kit')
+  buildKit(@Param('id') id: string, @Headers('x-build-token') token: string | undefined): Promise<BuildKit> {
+    return this.builds.kit(id, token);
+  }
+
+  /** The build workflow reports back here, once, with the same code. */
   @Public() @Post('builds/:id/finish') @HttpCode(204)
-  async buildFinished(@Param('id') id: string, @Headers('x-build-token') token: string | undefined, @Body() body: { ok?: boolean; url?: string }): Promise<void> {
-    const want = this.env.BUILD_CALLBACK_TOKEN;
-    if (!want || !token || !constantTimeEqual(token, want)) throw new ApiError('unauthenticated', 'That build token is not accepted.');
-    await this.builds.finish(id, body?.ok !== false, typeof body?.url === 'string' ? body.url.slice(0, 500) : null);
+  async buildFinished(@Param('id') id: string, @Headers('x-build-token') token: string | undefined, @Body() body: { ok?: boolean; url?: string; note?: string }): Promise<void> {
+    await this.builds.finish(id, token, body?.ok !== false, typeof body?.url === 'string' ? body.url.slice(0, 500) : null, typeof body?.note === 'string' ? body.note.slice(0, 300) : null);
   }
 }

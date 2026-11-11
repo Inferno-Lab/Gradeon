@@ -4,6 +4,7 @@
 // Usage: node tools/e2e-onboard.mjs [outDir]   (needs the server on :4000, console on :5174, admin on :5173)
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { adminPaths } from './lib/pages.mjs';
 
 const out = process.argv[2] ?? 'e2e-shots';
 mkdirSync(out, { recursive: true });
@@ -82,7 +83,7 @@ await ap.getByLabel('6-digit code').fill(code);
 await ap.waitForURL(`${ADMIN}/s/${slug}`, { timeout: 15000 }).catch(() => undefined);
 await ap.waitForTimeout(2500);
 ap.on('pageerror', (e) => errors.push(`pageerror ${e.message}`));
-for (const [name, path] of [['dashboard', ''], ['students', '/students'], ['timetable', '/timetable'], ['settings', '/settings'], ['attendance', '/attendance'], ['fees', '/fees'], ['notices', '/notices'], ['homework', '/homework'], ['exams', '/exams'], ['staff', '/staff'], ['admissions', '/admissions'], ['invoices', '/invoices'], ['reports', '/reports'], ['messages', '/messages'], ['events', '/events']]) {
+for (const [name, path] of adminPaths.map((p) => [p.slice(1).replace(/\//g, '-') || 'dashboard', p])) {
   await ap.goto(`${ADMIN}/s/${slug}${path}`, { waitUntil: 'networkidle' });
   await ap.waitForTimeout(1200);
   const o = await ap.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));

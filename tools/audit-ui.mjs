@@ -5,6 +5,7 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { auditPage } from './lib/audit.mjs';
+import { adminPaths as pages } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -31,7 +32,7 @@ async function consoleSession() {
   return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
-const adminPaths = ['', '/students', '/timetable', '/settings', '/setup', '/moving-in', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/library', '/transport', '/gallery', '/year', '/online-payments', '/design', '/nope'];
+const adminPaths = [...pages, '/design', '/nope'];
 const jobs = [];
 if (only !== 'console') {
   const key = await adminSession();

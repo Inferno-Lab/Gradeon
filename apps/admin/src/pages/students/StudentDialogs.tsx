@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { inr, istToday, type ClassInfo, type StudentDetail } from '@gradeon/contracts';
 import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
+import { useFeeHeads } from '../../app/kit';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 
@@ -117,21 +118,20 @@ export function MessageDialog({ ids, label, onClose, onDone }: { ids: string[]; 
   const { api } = useApp();
   const shake = useShake();
   const [body, setBody] = useState('');
-  const [channel, setChannel] = useState('sms');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (body.trim().length < 2) { setErr('Write the message.'); shake.hit(); return; }
     setBusy(true);
-    try { const r = await api.students.message({ ids, body, channel: channel as 'sms' }); onDone(`Sent to ${r.sent} ${r.sent === 1 ? 'guardian' : 'guardians'}`); }
+    try { const r = await api.students.message({ ids, body }); onDone(`Sent to ${r.sent} ${r.sent === 1 ? 'guardian' : 'guardians'}`); }
     catch (x) { setBusy(false); setErr(messageOf(x)); shake.hit(); }
   };
   return (
     <Dialog title="Message guardians" onClose={onClose} shake={shake.cls}>
       <p>To the primary guardian of {label}.</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SelectField label="Send by" value={channel} onChange={setChannel} options={[{ value: 'sms', label: 'SMS' }, { value: 'whatsapp', label: 'WhatsApp' }, { value: 'push', label: 'App notification' }]} />
+        <div className="help" style={{ marginTop: 0 }}>It reaches them the way Gradeon set for your school’s messages (the app, a text, WhatsApp or email).</div>
         <div className="fld">
           <label htmlFor="msg">Message</label>
           <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto', padding: 12, alignItems: 'stretch' }}>
@@ -148,7 +148,9 @@ export function MessageDialog({ ids, label, onClose, onDone }: { ids: string[]; 
 export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]; label: string; onClose: () => void; onDone: Done }) {
   const { api } = useApp();
   const shake = useShake();
-  const [f, setF] = useState({ head: 'tuition', title: '', amount: '', dueOn: '' });
+  const heads = useFeeHeads();
+  const [f, setF] = useState({ head: '', title: '', amount: '', dueOn: '' });
+  const head = f.head || heads[0]?.value || '';
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (v: string) => { setF((s) => ({ ...s, [k]: v })); setErr((e) => ({ ...e, [k]: '' })); };
@@ -160,14 +162,14 @@ export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]
     if (!f.dueOn) local.dueOn = 'Choose the due date.';
     if (Object.keys(local).length) { setErr(local); shake.hit(); return; }
     setBusy(true);
-    try { const r = await api.students.assignFee({ ids, head: f.head as 'tuition', title: f.title, amount: Math.round(Number(f.amount)), dueOn: f.dueOn }); onDone(`${f.title} added for ${r.created} ${r.created === 1 ? 'student' : 'students'}`); }
+    try { const r = await api.students.assignFee({ ids, head, title: f.title, amount: Math.round(Number(f.amount)), dueOn: f.dueOn }); onDone(`${f.title} added for ${r.created} ${r.created === 1 ? 'student' : 'students'}`); }
     catch (x) { setBusy(false); setErr({ ...fieldsOf(x), title: fieldsOf(x).title ?? (Object.keys(fieldsOf(x)).length ? '' : messageOf(x)) }); shake.hit(); }
   };
   return (
     <Dialog title="Assign a fee" onClose={onClose} shake={shake.cls}>
       <p>For {label}. It appears in each family’s fees straight away.</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <SelectField label="Type" value={f.head} onChange={set('head')} options={[{ value: 'tuition', label: 'Tuition' }, { value: 'transport', label: 'Transport' }, { value: 'activities', label: 'Activities' }, { value: 'lab', label: 'Lab' }]} />
+        <SelectField label="Kind of fee" value={head} onChange={set('head')} options={heads} />
         <Field label="Name of the fee" value={f.title} onChange={set('title')} error={err.title} placeholder="Annual day costume" />
         <div className="two">
           <Field label="Amount (₹)" value={f.amount} onChange={set('amount')} error={err.amount} inputMode="numeric" />

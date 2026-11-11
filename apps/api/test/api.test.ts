@@ -300,13 +300,20 @@ describe('settings', () => {
     expect((await h.call('PUT', '/v1/roles/role_teacher', { token, body: { name: 'Mine', permissions: [] } })).status).toBe(404);
     expect((await h.call('GET', '/v1/me', { token })).json.permissions).not.toContain('settings.write');
   });
-  it('follows what the console sets: colour, and modules only within the plan', async () => {
-    await h.setSettings({ 'brand.color': '#0E7490', 'modules.enabled': ['people', 'attendance'] });
-    const cfg = (await h.call('GET', '/v1/config', { token })).json;
-    expect(cfg.school.color).toBe('#0E7490');
-    expect(cfg.modules).toEqual(['people', 'attendance']);
-    expect(cfg.nav.map((n: any) => n.label)).not.toContain('Fees');
-    await h.setSettings({ 'modules.enabled': [] });
+  it('follows what the console sets: colour, and the modules of the plan (the only place modules are chosen)', async () => {
+    const was = (await h.registry.query("select entitlement->'modules' m from schools where slug = 'greenfield'")).rows[0].m;
+    await h.setSettings({ 'brand.color': '#0E7490' });
+    await h.entitle({ modules: ['people', 'attendance'] });
+    try {
+      const cfg = (await h.call('GET', '/v1/config', { token })).json;
+      expect(cfg.school.color).toBe('#0E7490');
+      expect(cfg.modules).toEqual(['school', 'people', 'attendance']);
+      const labels = cfg.menu.flatMap((g: any) => g.pages.map((p: any) => p.label));
+      expect(labels).toContain('Attendance');
+      expect(labels).not.toContain('Fees');
+    } finally {
+      await h.entitle({ modules: was });
+    }
   }, 30_000);
   it('lets the school ask Gradeon for a change', async () => {
     const r = await h.call('POST', '/v1/change-requests', { token, body: { area: 'App layout', message: 'Please put Fees in the bottom tabs.' } });

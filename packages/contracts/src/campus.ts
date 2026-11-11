@@ -41,11 +41,17 @@ export const BookInput = z.object({
 });
 export type BookInput = z.infer<typeof BookInput>;
 export interface BookRow extends BookInput { id: string; out: number; waiting: number }
-export const IssueInput = z.object({ bookId: z.string().min(1), studentId: z.string().min(1, 'Choose a student.'), dueOn: day.optional() });
+/** A loan to a student, or to a member of staff. */
+export const IssueInput = z.object({ bookId: z.string().min(1), studentId: z.string().min(1).nullable().default(null), staffUserId: z.string().min(1).nullable().default(null), dueOn: day.optional() })
+  .refine((b) => !!b.studentId !== !!b.staffUserId, { message: 'Choose who is borrowing it.', path: ['studentId'] });
 export type IssueInput = z.infer<typeof IssueInput>;
-export interface LoanRow { id: string; bookId: string | null; title: string; studentId: string; student: string; className: string; issuedOn: string | null; dueOn: string; returnedOn: string | null; fine: number; overdueDays: number }
+export interface LoanRow {
+  id: string; bookId: string | null; title: string; studentId: string | null; staffUserId: string | null;
+  /** The borrower's name, and their class (or "Staff"). */
+  student: string; className: string; issuedOn: string | null; dueOn: string; returnedOn: string | null; fine: number; overdueDays: number; renewals: number;
+}
 export interface ReservationRow { id: string; bookId: string; title: string; studentId: string; student: string; status: 'waiting' | 'ready' | 'done' | 'cancelled'; createdAt: string }
-export interface LibraryView { books: BookRow[]; loans: LoanRow[]; reservations: ReservationRow[]; rules: { loanDays: number; finePerDay: number; maxRenewals: number } }
+export interface LibraryView { books: BookRow[]; loans: LoanRow[]; reservations: ReservationRow[]; rules: { loanDays: number; finePerDay: number; maxRenewals: number; maxLoans: number; staffMaxLoans: number } }
 
 // ── Transport ─────────────────────────────────────────────────────────────────
 
@@ -61,8 +67,13 @@ export type StopInput = z.infer<typeof StopInput>;
 export const BusRouteInput = z.object({
   name: z.string().trim().min(1, 'Name the route.').max(60),
   vehicle: z.string().trim().max(30).default(''),
-  driverName: z.string().trim().max(80).default(''),
-  driverPhone: z.string().trim().max(20).default(''),
+  /** The member of staff who drives it: they run its trips from the app (the bus driver role). */
+  driverUserId: z.string().nullable().default(null),
+  /** Whom families call about the bus (console: Transport → families call): never the driver while driving. */
+  attendantName: z.string().trim().max(80).default(''),
+  attendantPhone: z.string().trim().max(20).default(''),
+  /** The bus's number at the GPS tracker company, when the school uses trackers (Integrations → Bus trackers). */
+  trackerId: z.string().trim().max(40).default(''),
   fee: z.number().int().min(0).max(1_000_000).default(0),
   stops: z.array(StopInput).max(60).default([]),
 });
@@ -72,7 +83,15 @@ export type RiderInput = z.infer<typeof RiderInput>;
 export const BusPosition = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
 export type BusPosition = z.infer<typeof BusPosition>;
 export interface StopRow { id: string; name: string; position: number; pickup: string; dropTime: string; lat: number | null; lng: number | null; riders: number }
-export interface BusRouteRow { id: string; name: string; vehicle: string; driverName: string; driverPhone: string; fee: number; stops: StopRow[]; riders: number; bus: { lat: number; lng: number; at: string } | null }
+export interface BusRouteRow {
+  id: string; name: string; vehicle: string; driverUserId: string | null; driverName: string; driverPhone: string; attendantName: string; attendantPhone: string; trackerId: string;
+  fee: number; stops: StopRow[]; riders: number; bus: { lat: number; lng: number; at: string } | null;
+  /** Today's trips: which ran, when, and whether one is running now. */
+  trips: { id: string; kind: 'morning' | 'afternoon'; startedAt: string; endedAt: string | null; lateMinutes: number; lateReason: string }[];
+}
+export const TripStart = z.object({ routeId: z.string().min(1), kind: z.enum(['morning', 'afternoon']) });
+export const TripMark = z.object({ studentId: z.string().min(1), event: z.enum(['boarded', 'dropped', 'absent']), stopId: z.string().nullable().default(null) });
+export const TripDelay = z.object({ minutes: z.number().int().min(1).max(240), reason: z.string().trim().min(3, 'Say what happened').max(160) });
 export interface RiderRow { studentId: string; student: string; className: string; routeId: string | null; stopId: string | null }
 export interface TransportView { routes: BusRouteRow[]; riders: RiderRow[] }
 

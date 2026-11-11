@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
+import { FilesService } from './files.service.js';
 import { LearningService } from './learning.service.js';
 import { pdf, type PdfLine } from './pdf.js';
 import { SettingsService } from './support.js';
@@ -14,6 +15,7 @@ export class DocumentsService {
   constructor(
     private readonly settings: SettingsService,
     private readonly learning: LearningService,
+    private readonly files: FilesService,
   ) {}
 
   private async header(t: TenantCtx, title: string): Promise<PdfLine[]> {
@@ -52,7 +54,7 @@ export class DocumentsService {
     if (p.refunded) lines.push({ text: 'Refunded', right: `- ${rupees(p.refunded)}`, size: 10 });
     lines.push({ text: '', rule: true, gap: 18 }, { text: 'Paid by', right: `${p.method.toUpperCase()}${p.reference ? ` · ${p.reference}` : ''}`, size: 10 },
       { text: 'This receipt was made by Gradeon and needs no signature.', size: 9, gap: 40 });
-    return { name: `${p.receipt_no}.pdf`, data: pdf(lines) };
+    return { name: `${p.receipt_no}.pdf`, data: await pdf(lines, { logo: await this.files.logoBytes(t) }) };
   }
 
   /** A report card for one student in one published exam. */
@@ -63,6 +65,9 @@ export class DocumentsService {
     if (!row || (students && res.exam.status !== 'published')) throw notFound('That report card');
     const s = (await t.pool.query<{ name: string; admission_no: string; class: string; roll_no: string }>(
       'select s.name, s.admission_no, c.name class, s.roll_no from students s join classes c on c.id = s.class_id where s.id = $1', [studentId])).rows[0]!;
+    const grading = await this.settings.grading(t);
+    // A family sees the class rank only when the console says so (results.showRank); the office always does.
+    const showRank = !students || (await this.settings.value<boolean>(t, 'results.showRank', false));
     const marks = (await t.pool.query<{ subject: string; score: string | null; absent: boolean; max_marks: number }>(
       `select coalesce(sub.name, m.subject_id) subject, m.score, m.absent, x.max_marks from exam_marks m join exam_subjects x on x.exam_id = m.exam_id and x.subject_id = m.subject_id
        left join subjects sub on sub.id = m.subject_id where m.exam_id = $1 and m.student_id = $2 order by subject`, [examId, studentId])).rows;
@@ -71,13 +76,14 @@ export class DocumentsService {
       { text: 'Student', right: `${s.name} (${s.admission_no})` },
       { text: 'Class and roll number', right: `${s.class} · ${s.roll_no || '-'}` },
       { text: '', rule: true, gap: 18 },
-      { text: 'Subject', right: 'Marks', bold: true, gap: 22 },
-      ...marks.map((m) => ({ text: m.subject, right: m.absent ? 'Absent' : `${Math.round(Number(m.score ?? 0))} / ${m.max_marks}` })),
+      { text: 'Subject', right: 'Marks · grade', bold: true, gap: 22 },
+      ...marks.map((m) => ({ text: m.subject, right: m.absent ? 'Absent' : `${Math.round(Number(m.score ?? 0))} / ${m.max_marks} · ${grading.grade(Math.round((Number(m.score ?? 0) / m.max_marks) * 100))}` })),
       { text: '', rule: true, gap: 18 },
       { text: 'Overall', right: `${row.pct}% · grade ${row.grade}`, bold: true, gap: 22 },
-      { text: 'Rank in class', right: `${row.rank} of ${res.rows.length}` },
+      { text: 'Result', right: row.pct >= grading.pass ? 'Passed' : 'Needs support' },
+      ...(showRank ? [{ text: 'Rank in class', right: `${row.rank} of ${res.rows.length}` }] : []),
       { text: 'Class teacher', gap: 60 }, { text: 'Principal', right: 'Parent', gap: 0 },
     ];
-    return { name: `${s.admission_no}-${res.exam.name.replace(/[^\w-]+/g, '_')}.pdf`, data: pdf(lines) };
+    return { name: `${s.admission_no}-${res.exam.name.replace(/[^\w-]+/g, '_')}.pdf`, data: await pdf(lines, { logo: await this.files.logoBytes(t) }) };
   }
 }

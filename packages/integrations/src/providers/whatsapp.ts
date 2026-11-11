@@ -24,6 +24,13 @@ export const metaCloud: Adapter = {
     });
     return { providerId: r.json?.messages?.[0]?.id ?? null };
   },
+  /** Approved templates at Meta: {{1}}, {{2}}… in the body become the message's values in order. */
+  async templates(c) {
+    if (!c.settings.businessAccountId) throw new ProviderError('Add the WhatsApp Business account ID to import templates.', true);
+    const r = await call(`https://graph.facebook.com/v21.0/${String(c.settings.businessAccountId)}/message_templates?fields=name,language,status,components&limit=200`, { headers: { authorization: `Bearer ${c.secrets.accessToken}` } });
+    return ((r.json?.data ?? []) as { name: string; language: string; status: string; components?: { type: string; text?: string }[] }[])
+      .map((t) => ({ id: t.name, name: t.name, language: t.language, status: t.status, text: t.components?.find((x) => x.type === 'BODY')?.text ?? '' }));
+  },
   async test(c, input) {
     const r = await call(`https://graph.facebook.com/v21.0/${s(c, 'phoneNumberId')}?fields=display_phone_number,verified_name,quality_rating`, { headers: { authorization: `Bearer ${c.secrets.accessToken}` } }).catch((e: Error) => e);
     if (r instanceof Error) return { ok: false, detail: r.message };
@@ -58,6 +65,11 @@ export const gupshupWa: Adapter = {
     });
     if (r.json?.status === 'error') throw new ProviderError(`Gupshup: ${r.json.message}`, true);
     return { providerId: r.json?.messageId ?? null };
+  },
+  async templates(c) {
+    const r = await call(`https://api.gupshup.io/sm/api/v1/template/list/${encodeURIComponent(String(c.settings.appName))}`, { headers: { apikey: c.secrets.apiKey! } });
+    return ((r.json?.templates ?? []) as { id: string; elementName: string; languageCode: string; status: string; data: string }[])
+      .map((t) => ({ id: t.id, name: t.elementName, language: t.languageCode, status: t.status, text: t.data }));
   },
   async test(c) {
     const r = await call(`https://api.gupshup.io/wa/app/${encodeURIComponent(s(c, 'appName'))}/template`, { headers: { apikey: c.secrets.apiKey! } }).catch((e: Error) => e);

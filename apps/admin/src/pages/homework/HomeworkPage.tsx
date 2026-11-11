@@ -15,6 +15,7 @@ export function HomeworkPage() {
   const { toast, say } = useToast();
   const [classId, setClassId] = useState('');
   const [setting, setSetting] = useState(false);
+  const [changing, setChanging] = useState<HomeworkDetail | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const list = useQuery({ queryKey: ['homework', classId], queryFn: () => app.api.homework.list(classId ? { classId } : {}) });
@@ -34,7 +35,8 @@ export function HomeworkPage() {
       </>}
       overlays={<>
         {setting && <SetHomework defaultClass={classId} onClose={() => setSetting(false)} onDone={(d, failed) => { setSetting(false); refresh(qc); say(failed.length ? `Homework set, but ${failed.join(', ')} could not be attached.` : 'Homework set. Families are told.', failed.length ? 'bad' : undefined); setOpen(d.id); }} />}
-        {open && <HomeworkSheet id={open} canWrite={canWrite} onClose={() => setOpen(null)} onSaved={(m) => { refresh(qc); say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Homework removed.'); }} />}
+        {changing && <SetHomework hw={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={(_d, failed) => { setChanging(null); refresh(qc); say(failed.length ? `Saved, but ${failed.join(', ')} could not be attached.` : 'Homework changed.'); }} />}
+        {open && !changing && <HomeworkSheet id={open} canWrite={canWrite} onChange={setChanging} onClose={() => setOpen(null)} onSaved={(m) => { refresh(qc); say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Homework removed.'); }} />}
       </>}>
       {rows.length === 0 ? (
         <div><EmptyCard title="Homework" chip={{ text: '0 set', tone: 'v' }} scene="notebooks" heading="No homework yet" body="Set homework for a class and it goes to every family in the app. You then tick who has handed it in." actions={canWrite ? <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn> : undefined} /></div>
@@ -76,18 +78,21 @@ function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () =
   );
 }
 
-function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; onClose: () => void; onDone: (d: HomeworkDetail, failed: string[]) => void }) {
+/** Sets homework, or changes it later (families are not told again for a correction). */
+function SetHomework({ hw, defaultClass, onClose, onDone }: { hw?: HomeworkDetail; defaultClass: string; onClose: () => void; onDone: (d: HomeworkDetail, failed: string[]) => void }) {
   const app = useApp();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
-  const [f, setF] = useState({ classId: defaultClass, subjectId: '', title: '', description: '', dueOn: addDays(istToday(), 2), maxMarks: '20' });
+  const [f, setF] = useState({ classId: hw?.classId ?? defaultClass, subjectId: hw?.subjectId ?? '', title: hw?.title ?? '', description: hw?.description ?? '', dueOn: hw?.dueOn ?? addDays(istToday(), 2), maxMarks: String(hw?.maxMarks ?? 20) });
+  const [graded, setGraded] = useState(hw?.graded ?? true);
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
   const [files, setFiles] = useState<File[]>([]);
   const make = useMutation({
     mutationFn: async () => {
-      const d = await app.api.homework.create({ classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || 20 });
+      const body = { classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || 20, graded, draft: false, fileIds: [] };
+      const d = hw ? await app.api.homework.update(hw.id, body) : await app.api.homework.create(body);
       // Attached once the homework exists; one that fails is said by name, and the homework stays set.
       const failed: string[] = [];
       for (const file of files) await uploadFile(app.api, 'homework_attachment', d.id, file).catch(() => failed.push(file.name));
@@ -100,29 +105,30 @@ function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; 
     if (!f.classId) p.classId = 'Choose a class.';
     if (!f.subjectId) p.subjectId = 'Choose a subject.';
     if (f.title.trim().length < 3) p.title = 'Give the homework a title.';
-    if (f.dueOn < istToday()) p.dueOn = 'Pick today or a later day.';
+    if (f.dueOn < istToday() && f.dueOn !== hw?.dueOn) p.dueOn = 'Pick today or a later day.';
     setErr(p);
     if (Object.keys(p).length) shake.hit(); else make.mutate();
   };
   return (
-    <Dialog title="Set homework" onClose={onClose} width={560} shake={shake.cls}>
+    <Dialog title={hw ? `Change ${hw.title}` : 'Set homework'} onClose={onClose} width={560} shake={shake.cls}>
       <div className="stack">
         <div className="two">
-          <SelectField label="Class" value={f.classId} onChange={set('classId')} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
+          {!hw && <SelectField label="Class" value={f.classId} onChange={set('classId')} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
           <SelectField label="Subject" value={f.subjectId} onChange={set('subjectId')} error={err.subjectId} options={[{ value: '', label: 'Pick a subject' }, ...(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
         </div>
         <Field label="Title" value={f.title} onChange={set('title')} error={err.title} maxLength={120} placeholder="Linear equations, questions 1 to 10" />
         <AreaField label="What to do (optional)" value={f.description} onChange={set('description')} error={err.description} maxLength={1000} rows={3} />
         <div className="two">
           <DateField label="Due on" value={f.dueOn} min={istToday()} onChange={set('dueOn')} error={err.dueOn} />
-          <NumberField label="Marks out of" min={1} max={100} value={f.maxMarks} onChange={set('maxMarks')} error={err.maxMarks} />
+          {graded ? <NumberField label="Marks out of" min={1} max={100} value={f.maxMarks} onChange={set('maxMarks')} error={err.maxMarks} /> : <div className="help" style={{ alignSelf: 'center' }}>Checked when handed in, not marked.</div>}
         </div>
+        <Checkbox checked={graded} onChange={setGraded} label="Marked out of a number" />
         <Attach files={files} onChange={setFiles} />
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={make.isPending} onClick={go}>{make.isPending ? 'Setting…' : 'Set homework'}</button>
+        <button className="btn pri" disabled={make.isPending} onClick={go}>{make.isPending ? 'Saving…' : hw ? 'Save changes' : 'Set homework'}</button>
       </div>
     </Dialog>
   );
@@ -130,7 +136,7 @@ function SetHomework({ defaultClass, onClose, onDone }: { defaultClass: string; 
 
 interface Draft { handed: boolean; score: string; feedback: string }
 
-function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: string; canWrite: boolean; onClose: () => void; onSaved: (msg: string) => void; onRemoved: () => void }) {
+function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: { id: string; canWrite: boolean; onChange: (d: HomeworkDetail) => void; onClose: () => void; onSaved: (msg: string) => void; onRemoved: () => void }) {
   const app = useApp();
   const detail = useQuery({ queryKey: ['homework', 'detail', id], queryFn: () => app.api.homework.detail(id) });
   const [draft, setDraft] = useState<Record<string, Draft>>({});
@@ -175,7 +181,7 @@ function HomeworkSheet({ id, canWrite, onClose, onSaved, onRemoved }: { id: stri
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             {canWrite ? (confirm
               ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this homework?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
-              : <button className="btn dng" onClick={() => setConfirm(true)}>Remove homework</button>) : <span />}
+              : <span style={{ display: 'flex', gap: 8 }}><button className="btn dng" onClick={() => setConfirm(true)}>Remove homework</button>{d && <button className="btn" onClick={() => onChange(d)}>Change</button>}</span>) : <span />}
             <span style={{ display: 'flex', gap: 10 }}>
               <button className="btn" onClick={onClose}>Close</button>
               {canWrite && <button className="btn pri" disabled={nothing} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save hand-ins'}</button>}

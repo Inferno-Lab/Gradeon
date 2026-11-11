@@ -5,6 +5,8 @@
 .pg-p .mk button[aria-pressed=true].p{background:var(--pri);color:var(--priT)}
 .pg-p .mk button[aria-pressed=true].l{background:var(--aS);color:var(--aD)}
 .pg-p .mk button[aria-pressed=true].a{background:var(--cS);color:var(--c)}
+.pg-p .mk button[aria-pressed=true].h{background:var(--gS);color:var(--gD)}
+.pg-p .mk button[aria-pressed=true].v{background:var(--vS);color:var(--vD)}
 .pg-p .mk button:disabled{cursor:not-allowed;opacity:.6}
 .pg-p .mk button:active:not(:disabled){transform:scale(.94)}
 .pg-p .rcall .grd.rw{min-height:60px}

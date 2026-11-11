@@ -14,7 +14,7 @@ import 'package:gradeon/features/settings/views/privacy_sheet.dart';
 class ShellController extends GetxController {
   final index = 0.obs;
 
-  /// The tab keys in dock order, set by the shell: a school chooses its family tabs in the console.
+  /// The tab keys in dock order, set by the shell: the console chooses each role's tabs.
   List<String> tabs = const ['home', 'academics', 'fees', 'chat', 'profile'];
 
   bool get isTeacher => Get.find<AuthService>().role == UserRole.teacher;
@@ -24,6 +24,7 @@ class ShellController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    SchoolConfig.applyRole((Get.find<AuthService>().role ?? UserRole.parent).name);
     unawaited(SchoolConfig.load().then((_) => askConsentIfNeeded()));
     _life = AppLifecycleListener(onResume: () => unawaited(SchoolConfig.load()));
   }

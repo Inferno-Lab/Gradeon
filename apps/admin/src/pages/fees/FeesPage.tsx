@@ -4,11 +4,24 @@ import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
 import { EmptyCard, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
+import { usePageTabs } from '../../app/tabs';
 import { CollectFeeDialog } from '../students/StudentDialogs';
+import { FeeStructure } from './FeeStructure';
+import { InvoicesPage } from './InvoicesPage';
+import { OnlinePaymentsPage } from './OnlinePaymentsPage';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${inr(Math.round(n))}`);
 
+/** Fees: one page whose tabs the fees module defines (overview, invoices, receipts, online payments, the fee structure). */
 export function FeesPage() {
+  const { tab, tabs } = usePageTabs('/fees');
+  if (tab === 'invoices' || tab === 'receipts') return <InvoicesPage view={tab} tabs={tabs} />;
+  if (tab === 'online') return <OnlinePaymentsPage tabs={tabs} />;
+  if (tab === 'structure') return <FeeStructure tabs={tabs} />;
+  return <Overview tabs={tabs} />;
+}
+
+function Overview({ tabs }: { tabs: React.ReactNode }) {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
@@ -27,7 +40,7 @@ export function FeesPage() {
   const canPay = app.user.permissions.includes('fees.collect');
   const err = [summary, overdue].find((q) => q.isError && !q.data);
   return (
-    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
+    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading} actions={tabs}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
       overlays={paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}>
       {s && (

@@ -6,18 +6,19 @@ void main() {
   setUp(() => Get.testMode = true);
   tearDown(() {
     SchoolConfig.modules.clear();
-    SchoolConfig.features.value = null;
+    SchoolConfig.features.clear();
   });
 
-  test('before the school config arrives, everything shows', () {
+  test('a school shows only what its config gives it', () {
+    SchoolConfig.modules.assignAll(['people', 'fees']);
+    SchoolConfig.features.assignAll(['fees.onlinePayment']);
     expect(SchoolConfig.has('fees'), isTrue);
     expect(SchoolConfig.hasFeature('fees.onlinePayment'), isTrue);
-    expect(SchoolConfig.allows('chat.familyChat'), isTrue);
   });
 
   test('a module or feature the school does not have is refused', () {
     SchoolConfig.modules.assignAll(['people', 'fees']);
-    SchoolConfig.features.value = ['fees.reminders'];
+    SchoolConfig.features.assignAll(['fees.reminders']);
     expect(SchoolConfig.has('chat'), isFalse);
     expect(SchoolConfig.hasFeature('fees.reminders'), isTrue);
     expect(SchoolConfig.allows('fees.onlinePayment'), isFalse);

@@ -25,7 +25,7 @@ beforeAll(async () => {
   // An empty school: settings, roles and the first admin, nothing else, the way a school starts before it moves in.
   await seedSchool(pool, {
     school: { name: 'Riverside School', shortName: 'Riverside', tagline: '', phone: '', email: '', address: '', color: '#2F5BD3', logoText: 'R', language: 'en' },
-    admin: { name: 'Office Admin', email: 'office@riverside.test', phone: '+91 90000 00001', passwordHash: 'x' }, modules: ['people'], demoMode: false, data: 'empty',
+    admin: { name: 'Office Admin', email: 'office@riverside.test', phone: '+91 90000 00001', passwordHash: 'x' }, modules: ['people'], data: 'empty',
   });
 }, 180_000);
 afterAll(async () => { await pool?.end(); await server?.stop(); });

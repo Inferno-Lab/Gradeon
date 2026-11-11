@@ -3,6 +3,8 @@
 const enRedesign = <String, String>{
   // common
   'common.and': 'and',
+  'common.not_at_school': 'Your school doesn’t use this.',
+  'common.config_stale': 'Couldn’t reach the school. Showing what was saved last time.',
   'common.clear': 'Clear',
   'common.close': 'Close',
   'common.optional': 'optional',
@@ -12,7 +14,6 @@ const enRedesign = <String, String>{
   'common.logout': 'Sign out',
   'errors.cant_open': "Couldn't open that on this phone",
   'errors.didnt_load': "This didn't load",
-  'plan.not_included': "This isn't part of your school's plan. Ask the school office.",
   'time.today': 'today',
   'time.today_cap': 'Today',
   'time.one_day': '1 day',

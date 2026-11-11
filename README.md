@@ -56,7 +56,7 @@ On the hosted test track (`https://gradeon.onrender.com`) the school logins are 
 
 Texts and emails are never sent for real yet: they land in the console's **Test inbox**. That is where a new school's invite and sign-in codes appear. A real SMS provider (with DLT registration) is the step that lets real families sign in; see `docs/integrations.md` and section 1 of `docs/features-plan.md`.
 
-Operations: every school is backed up daily and a weekly restore drill puts one back into a scratch database (console → Health). Set `ALERT_WEBHOOK_URL` to a Slack or Discord webhook to hear about new errors, a school not answering, a failed backup or drill.
+Operations: every school is backed up daily and a weekly restore drill puts one back into a scratch database (console → Health). Add an Alerts connection (Slack, Discord or e-mail) under the console's Integrations to hear about new errors, a school not answering, a failed backup or drill.
 
 ## Check that nothing is broken
 

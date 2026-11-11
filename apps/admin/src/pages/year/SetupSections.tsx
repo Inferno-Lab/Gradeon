@@ -1,19 +1,11 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { DateField, Dialog, Field, Segmented, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { Page, useToast } from '../../app/Page';
-import { AddBtn, problem } from '../../app/kit';
+import { AddBtn, problem, useFeeHeads } from '../../app/kit';
 
 type Row = SetupSection['rows'][number];
-const GROUPS = [
-  { value: 'calendar', label: 'Calendar', kinds: ['years', 'terms', 'holidays'] },
-  { value: 'classes', label: 'Classes', kinds: ['classes', 'subjects', 'periods'] },
-  { value: 'fees', label: 'Fees', kinds: ['fee_structures'] },
-] as const;
-type Group = (typeof GROUPS)[number]['value'];
-const HEADS = ['tuition', 'transport', 'activities', 'lab'];
 const PERIOD_KINDS = ['period', 'break', 'lunch', 'recess', 'assembly'];
 /** What people call a row: the fee's title, the subject's or holiday's name, the class, the period's label. */
 const nameOf = (r: Record<string, string>) => r.title || r.name || r.class || r.label || 'It';
@@ -28,28 +20,27 @@ function shown(col: ImportColumn, v: string): string {
   return v;
 }
 
-export function SetupPage() {
+/**
+ * The school's own records of one part of its setup (years and terms, holidays, classes, subjects, bells, fee structures), as
+ * lists to read and, where Gradeon lets the school change them (console switches like calendar.schoolEdits), to edit.
+ */
+export function useSetupSections(kinds: readonly string[], say: (text: string, tone?: 'bad') => void): { view: React.ReactNode; overlay: React.ReactNode } {
   const app = useApp();
   const qc = useQueryClient();
-  const { toast, say } = useToast();
-  const [group, setGroup] = useState<Group>('calendar');
   const [editing, setEditing] = useState<{ section: SetupSection; row: Row | null } | null>(null);
   const list = useQuery({ queryKey: ['setup'], queryFn: app.api.setup.sections });
   const canWrite = app.user.permissions.includes('setup.write');
   const sections = list.data ?? [];
-  const groups = GROUPS.filter((g) => g.kinds.some((k) => sections.some((s) => s.kind === k)));
-  const visible = sections.filter((s) => (GROUPS.find((g) => g.value === group)?.kinds as readonly string[] | undefined)?.includes(s.kind));
-  return (
-    <Page title="Classes and calendar" sub="The school’s year, classes, subjects, bells and fees. Everything else in Gradeon reads from these." toast={toast} loading={list.isLoading && !list.data}
-      error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      overlays={editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
-        onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />}>
-      <div style={{ marginBottom: 16 }}><Segmented value={group} onChange={setGroup} label="Part of setup" options={groups.map((g) => ({ value: g.value, label: g.label }))} /></div>
-      <div className="stack" style={{ gap: 16 }}>
-        {visible.map((s) => <SectionCard key={s.kind} section={s} canWrite={canWrite} onOpen={(row) => setEditing({ section: s, row })} />)}
-      </div>
-    </Page>
+  const overlay = editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
+    onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />;
+  if (list.isLoading) return { view: <div className="skc" style={{ height: 240, borderRadius: 18 }} />, overlay: null };
+  if (list.isError) return { view: <EmptyCard error title="Setup" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} />, overlay: null };
+  const view = (
+    <div className="stack" style={{ gap: 16 }}>
+      {sections.filter((s) => kinds.includes(s.kind)).map((s) => <SectionCard key={s.kind} section={s} canWrite={canWrite} onOpen={(row) => setEditing({ section: s, row })} />)}
+    </div>
   );
+  return { view, overlay };
 }
 
 function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; canWrite: boolean; onOpen: (row: Row | null) => void }) {
@@ -88,7 +79,8 @@ function RowDialog({ section: s, row, all, onClose, onDone }: { section: SetupSe
   const shake = useShake();
   const kind = importKind(s.kind)!;
   const years = all.find((x) => x.kind === 'years')?.rows ?? [];
-  const start: Record<string, string> = { head: 'tuition', kind: 'period', year: (years.find((y) => y.current) ?? years[years.length - 1])?.label ?? '' };
+  const heads = useFeeHeads();
+  const start: Record<string, string> = { head: heads[0]?.value ?? '', kind: 'period', year: (years.find((y) => y.current) ?? years[years.length - 1])?.label ?? '' };
   const [f, setF] = useState<Record<string, string>>(() => Object.fromEntries(s.columns.map((c) => [c.key, row?.[c.key] ?? start[c.key] ?? ''])));
   const [err, setErr] = useState('');
   const staff = useQuery({ queryKey: ['staff'], queryFn: () => app.api.staff.list(), enabled: s.kind === 'classes' });
@@ -104,7 +96,7 @@ function RowDialog({ section: s, row, all, onClose, onDone }: { section: SetupSe
     const pick = (options: { value: string; label: string }[]) => <SelectField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} options={options} disabled={fixed} />;
     if (c.key === 'class_teacher') return pick([{ value: '', label: 'No class teacher' }, ...(staff.data ?? []).filter((p) => p.status === 'active' && p.email).map((p) => ({ value: p.email!, label: p.name }))]);
     if (c.key === 'year' && s.kind === 'terms') return pick(years.map((y) => ({ value: y.label!, label: y.label! })));
-    if (c.key === 'head') return pick(HEADS.map((h) => ({ value: h, label: h[0]!.toUpperCase() + h.slice(1) })));
+    if (c.key === 'head') return pick(heads);
     if (c.key === 'kind') return pick(PERIOD_KINDS.map((k) => ({ value: k, label: k[0]!.toUpperCase() + k.slice(1) })));
     if (c.key === 'current') return pick([{ value: '', label: 'No' }, { value: 'yes', label: 'Yes, the year the school is in' }]);
     if (isDay(c.key)) return <DateField key={c.key} label={name} value={f[c.key] ?? ''} onChange={set(c.key)} disabled={fixed} />;

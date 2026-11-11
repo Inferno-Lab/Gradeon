@@ -1,12 +1,12 @@
 import {
   SchoolSettingsSchema,
   plural,
+  type AppLayout,
   type EffectiveConfig,
   type EntitlementDoc,
-  type Permission,
   type SettingsDoc,
 } from '@gradeon/contracts';
-import { APP_CATALOG, activeFeatures, activeModules, closeModules, moduleByKey } from './modules.js';
+import { APP_CATALOG, APP_ROLES, activeFeatures, activeModules, adminMenu, hasKey, type AppRole } from './modules.js';
 
 /** Layer 1: platform defaults, taken from the schema so there is one source. */
 export function platformDefaults(): Record<string, unknown> {
@@ -27,10 +27,12 @@ export interface ResolveInput {
   audience?: { permissions: readonly string[] };
   /** Console flags for this school: a school's own value already wins over a fleet-wide one. */
   flags?: Record<string, boolean>;
+  /** Whether the school has gone live (Moving in leaves the menu then). */
+  live?: boolean;
 }
 
 /** Layers 1 to 5 in order. A higher layer changes a value only where the lower layer allows it (locks). */
-export function resolveConfig({ settings, entitlement, audience, flags }: ResolveInput): EffectiveConfig {
+export function resolveConfig({ settings, entitlement, audience, flags, live = true }: ResolveInput): EffectiveConfig {
   const locked = new Set([...entitlement.locks, ...settings.locked]);
   const merged: Record<string, unknown> = { ...platformDefaults() };
   for (const [k, v] of Object.entries(settings.values)) if (!entitlement.locks.includes(k)) merged[k] = v;
@@ -38,28 +40,32 @@ export function resolveConfig({ settings, entitlement, audience, flags }: Resolv
   for (const k of locked) if (k in entitlement.overrides) merged[k] = entitlement.overrides[k];
 
   const entitled = activeModules(entitlement);
-  const chosen = Array.isArray(merged['modules.enabled']) && (merged['modules.enabled'] as string[]).length
-    ? (merged['modules.enabled'] as string[])
-    : entitled;
   // A console kill switch (`kill.<module>`) takes a module away from every app until it is lifted.
-  const enabled = closeModules(chosen).filter((k) => entitled.includes(k) && flags?.[`kill.${k}`] !== true);
-
-  const perms = audience ? new Set(audience.permissions as string[]) : null;
-  const nav: EffectiveConfig['nav'] = [];
-  for (const key of enabled) {
-    for (const n of moduleByKey(key)?.nav ?? []) {
-      if (perms && !n.anyOf.some((p: Permission) => perms.has(p))) continue;
-      const student = typeof merged['vocab.student'] === 'string' && (merged['vocab.student'] as string).trim() ? (merged['vocab.student'] as string).trim() : 'Student';
-      nav.push({ module: key, label: n.label === 'Students' ? plural(student) : n.label, icon: n.icon, href: n.href });
-    }
-  }
-
-  const pick = (key: 'dock' | 'home' | 'quick', setting: string): string[] => {
-    const allowed = new Set<string>(APP_CATALOG[key].filter((c) => enabled.includes(c.module)).map((c) => c.key));
-    const chosen = Array.isArray(merged[setting]) ? (merged[setting] as string[]) : [];
-    return chosen.filter((k) => allowed.has(k));
-  };
+  const enabled = entitled.filter((k) => flags?.[`kill.${k}`] !== true);
+  const features = activeFeatures(entitlement, enabled);
+  const has = { modules: enabled, features };
   const str = (k: string, fallback = '') => (typeof merged[k] === 'string' ? (merged[k] as string) : fallback);
+  const words = vocabulary(merged);
+
+  const menu: EffectiveConfig['menu'] = adminMenu(has, audience ? audience.permissions : null, live).map((g) => ({
+    group: g.group,
+    pages: g.pages.map((p) => ({
+      id: p.id, module: p.module, icon: p.icon, keys: p.keys, href: p.path,
+      label: p.id === 'stu' ? words.students : p.label,
+      tabs: (p.tabs ?? []).map((t) => ({ key: t.key, label: t.key === 'classes' ? words.classes : t.label, href: `${p.path === '/' ? '' : p.path}/${t.key}` })),
+    })),
+  }));
+
+  const roles = (Array.isArray(merged['app.roles']) ? (merged['app.roles'] as AppRole[]) : []).filter((r) => APP_ROLES.includes(r));
+  const saved = (merged['app.layout'] ?? {}) as Partial<Record<AppRole, AppLayout>>;
+  const layout = Object.fromEntries(APP_ROLES.map((role) => {
+    const pick = (slot: 'dock' | 'home' | 'quick') => {
+      const allowed = new Set(APP_CATALOG[slot].filter((c) => c.roles.includes(role) && enabled.includes(c.module) && hasKey(has, c.feature)).map((c) => c.key));
+      return (saved[role]?.[slot] ?? []).filter((k) => allowed.has(k));
+    };
+    return [role, { dock: pick('dock'), home: pick('home'), quick: pick('quick') }];
+  })) as Record<AppRole, AppLayout>;
+
   return {
     version: settings.version * 1000 + entitlement.version,
     school: {
@@ -69,16 +75,29 @@ export function resolveConfig({ settings, entitlement, audience, flags }: Resolv
       logoText: str('brand.logoText') || str('school.shortName').slice(0, 1).toUpperCase(),
       language: str('school.language', 'en'),
       tagline: str('school.tagline'),
+      place: str('school.place'),
+      address: str('school.address'),
+      phone: str('school.phone'),
+      email: str('school.email'),
     },
     modules: enabled,
-    features: activeFeatures(entitlement, enabled),
-    nav,
+    features,
+    menu,
     settings: merged,
-    vocabulary: { student: str('vocab.student', 'Student'), class: str('vocab.class', 'Class') },
+    vocabulary: words,
     limits: entitlement.limits,
-    app: { dock: pick('dock', 'app.dock'), home: pick('home', 'app.home'), quick: pick('quick', 'app.quick') },
+    app: { roles, layout },
+    privacy: { notice: str('privacy.notice'), officerName: str('privacy.officerName'), officerEmail: str('privacy.officerEmail'), officerPhone: str('privacy.officerPhone') },
     flags: flags ?? {},
   };
+}
+
+/** What the school calls a student and a class, one and many. */
+export function vocabulary(values: Record<string, unknown>): { student: string; students: string; class: string; classes: string } {
+  const word = (k: string, fallback: string) => (typeof values[k] === 'string' && (values[k] as string).trim() ? (values[k] as string).trim() : fallback);
+  const student = word('vocab.student', 'Student');
+  const cls = word('vocab.class', 'Class');
+  return { student, students: word('vocab.students', plural(student)), class: cls, classes: word('vocab.classes', plural(cls)) };
 }
 
 export interface SettingsProblem {
@@ -106,7 +125,7 @@ export function validateSettingsChanges(
     }
     const res = field.safeParse(raw);
     if (!res.success) problems.push({ key, message: res.error?.issues[0]?.message ?? 'That value is not allowed.' });
-    else values[key] = key === 'modules.enabled' ? closeModules(res.data as string[]) : res.data;
+    else values[key] = res.data;
   }
   return problems.length ? { ok: false, problems } : { ok: true, values };
 }

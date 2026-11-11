@@ -261,7 +261,7 @@ export class Bootstrap implements OnApplicationBootstrap {
     await this.blueprints.ensureDefaults();
     const cells = await this.db.pool.query('select count(*) n from cells');
     if (Number(cells.rows[0]!.n) === 0) {
-      const target = this.env.NEON_API_KEY ? 'free-test' : this.env.NODE_ENV === 'production' ? 'free-test' : 'local';
+      const target = this.env.NODE_ENV === 'production' ? 'free-test' : 'local';
       await this.db.pool.query('insert into cells (key, target, region, max_schools) values ($1,$2,$3,$4)', [target === 'local' ? 'local-1' : 'test-1', target, target === 'local' ? 'this computer' : 'test track', 25]);
       this.log.log(`created the first cell on ${target}`);
     }
@@ -341,20 +341,28 @@ export class OpsController {
   }
 
   @Get('cells') @Needs('schools.read')
-  async cells(): Promise<{ key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean }[]> {
-    const { rows } = await this.db.pool.query<{ key: string; target: string; region: string; max_schools: number; accepting: boolean; n: string }>(
-      'select c.key, c.target, c.region, c.max_schools, c.accepting, (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n from cells c order by c.key');
-    return rows.map((r) => ({ key: r.key, target: r.target, region: r.region, maxSchools: r.max_schools, schools: Number(r.n), accepting: r.accepting }));
+  async cells(): Promise<{ key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean; connectionId: string | null; connectionName: string | null }[]> {
+    const { rows } = await this.db.pool.query<{ key: string; target: string; region: string; max_schools: number; accepting: boolean; n: string; connection_id: string | null; connection_name: string | null }>(
+      `select c.key, c.target, c.region, c.max_schools, c.accepting, c.connection_id, ic.name connection_name, (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n
+       from cells c left join integration_connections ic on ic.id = c.connection_id order by c.key`);
+    return rows.map((r) => ({ key: r.key, target: r.target, region: r.region, maxSchools: r.max_schools, schools: Number(r.n), accepting: r.accepting, connectionId: r.connection_id, connectionName: r.connection_name }));
+  }
+
+  /** The connection must exist and make databases. */
+  private async databasesConnection(id: string | null | undefined): Promise<void> {
+    if (!id) return;
+    const { rows } = await this.db.pool.query<{ provider: string }>('select provider from integration_connections where id = $1', [id]);
+    if (!rows[0] || !['postgres-server', 'neon'].includes(rows[0].provider)) throw new ApiError('validation', 'Choose a School databases connection.', { fields: { connectionId: 'Choose a School databases connection.' } });
   }
 
   /** A new cell. On the test track it is a name and a limit; on aws-cell the database server it points at must be configured first. */
   @Post('cells') @HttpCode(200) @Needs('policy.write')
   async createCell(@Me() me: ConsoleUser, @Body(new ZodPipe(CellCreate)) body: CellCreate): Promise<{ key: string; note: string }> {
     if ((await this.db.pool.query('select 1 from cells where key = $1', [body.key])).rowCount) throw new ApiError('validation', 'There is already a cell with that name.', { fields: { key: 'There is already a cell with that name.' } });
-    await this.db.pool.query('insert into cells (key, target, region, max_schools) values ($1,$2,$3,$4)', [body.key, body.target, body.region, body.maxSchools]);
-    await this.db.audit(me.email, 'cell.created', 'cell', body.key, { target: body.target });
-    const env = `CELL_${body.key.toUpperCase().replace(/-/g, '_')}_ADMIN_URL`;
-    return { key: body.key, note: body.target === 'aws-cell' ? `Schools placed here need ${env} on the console server (the database server this cell runs on).` : 'Ready. New schools can be placed here.' };
+    await this.databasesConnection(body.connectionId);
+    await this.db.pool.query('insert into cells (key, target, region, max_schools, connection_id) values ($1,$2,$3,$4,$5)', [body.key, body.target, body.region, body.maxSchools, body.connectionId]);
+    await this.db.audit(me.email, 'cell.created', 'cell', body.key, { target: body.target, connectionId: body.connectionId });
+    return { key: body.key, note: body.connectionId ? 'Ready. New schools placed here get their database through its connection.' : 'Ready. New schools placed here get a database on the registry’s own server.' };
   }
 
   @Put('cells/:key') @HttpCode(200) @Needs('policy.write')
@@ -362,6 +370,11 @@ export class OpsController {
     const cur = (await this.db.pool.query<{ n: string }>('select (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n from cells c where c.key = $1', [key])).rows[0];
     if (!cur) throw notFound('That cell');
     if (body.maxSchools !== undefined && body.maxSchools < Number(cur.n)) throw new ApiError('validation', `${cur.n} schools already run here, so the limit cannot go below that.`, { fields: { maxSchools: `At least ${cur.n}.` } });
+    if (body.connectionId !== undefined) {
+      await this.databasesConnection(body.connectionId);
+      if (Number(cur.n) > 0) throw new ApiError('conflict', `${cur.n} schools already run on this cell’s server, so its database connection stays. Move them to another cell first.`);
+      await this.db.pool.query('update cells set connection_id = $2 where key = $1', [key, body.connectionId]);
+    }
     await this.db.pool.query('update cells set region = coalesce($2, region), max_schools = coalesce($3, max_schools), accepting = coalesce($4, accepting) where key = $1', [key, body.region ?? null, body.maxSchools ?? null, body.accepting ?? null]);
     await this.db.audit(me.email, 'cell.changed', 'cell', key, { ...body });
     return { ok: true };

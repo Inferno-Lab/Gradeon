@@ -26,7 +26,9 @@ describe('console authenticator', () => {
     const again = (await login('kaushal@gradeon.app', 'nest2026')).json.challenge;
     expect(again.channel).toBe('app');
     expect(again.enroll).toBeUndefined();
-    expect((await verify(again.challengeId, totp(first.enroll.secret))).status).toBe(200);
+    // A code already used is refused (no replay); the authenticator's next code works (the window allows one step ahead).
+    expect((await verify(again.challengeId, totp(first.enroll.secret))).status).toBe(401);
+    expect((await verify(again.challengeId, totp(first.enroll.secret, Date.now() + 30_000))).status).toBe(200);
     const team = (await h.c('GET', '/console/v1/team', { token: admin })).json;
     expect(team.find((m: { email: string }) => m.email === 'kaushal@gradeon.app').authenticator).toBe(true);
   });

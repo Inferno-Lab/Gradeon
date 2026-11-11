@@ -9,6 +9,7 @@ import type { Registry } from '@gradeon/tenancy';
 import { Db, type reg } from '../core.js';
 import { ENV, type Env } from '../env.js';
 import { Sandbox } from '../sandbox.js';
+import { PlatformHub } from '../platform-hub.js';
 import { StepBlocked, driversFor, type StepCtx } from './drivers.js';
 
 type RunRecord = typeof reg.provisionRuns.$inferSelect;
@@ -90,6 +91,7 @@ export class Provisioner implements OnApplicationBootstrap {
     private readonly sandbox: Sandbox,
     @Inject(REGISTRY) private readonly registry: Registry,
     @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
   ) {}
 
   /** A restart can interrupt a run. Mark it failed so a person can retry it from the step it stopped on. */
@@ -182,7 +184,7 @@ export class Provisioner implements OnApplicationBootstrap {
         await save();
         const school = await loadSchool();
         const ctx: StepCtx = {
-          env: this.env, db: this.db, registry: this.registry, sandbox: this.sandbox, fetch: this.fetchImpl, school, slug: school.slug, payload: payload.wizard, target: r.target as DeployTarget,
+          env: this.env, db: this.db, hub: this.platform.hub, registry: this.registry, sandbox: this.sandbox, fetch: this.fetchImpl, school, slug: school.slug, payload: payload.wizard, target: r.target as DeployTarget,
           params: payload.params[step.key] ?? {}, reload: loadSchool,
           log: (level, text) => { step.log.push({ at: now(), level, text }); if (step.log.length > 100) step.log.shift(); },
         };
