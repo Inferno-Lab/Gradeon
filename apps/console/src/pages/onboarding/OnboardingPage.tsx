@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard, tintFor } from '@gradeon/web-ui';
+import { WIZARD_STEPS, type WizardDraftRow } from '@gradeon/contracts';
+import { Dialog, EmptyCard, tintFor } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -11,13 +13,25 @@ export function OnboardingPage() {
   const { toast, say } = useToast();
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => app.api.schools(), refetchInterval: 8000 });
   const drafts = useQuery({ queryKey: ['drafts'], queryFn: app.api.wizard.drafts, enabled: app.can('schools.write') });
-  const del = useMutation({ mutationFn: (id: string) => app.api.wizard.deleteDraft(id), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['drafts'] }); say('Draft removed.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const [deleting, setDeleting] = useState<WizardDraftRow | null>(null);
+  const del = useMutation({ mutationFn: (id: string) => app.api.wizard.deleteDraft(id), onSuccess: () => { setDeleting(null); void qc.invalidateQueries({ queryKey: ['drafts'] }); say('Draft deleted.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const setting = (schools.data ?? []).filter((s) => s.status === 'onboarding');
-  const recent = (schools.data ?? []).filter((s) => s.status === 'live').sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  // Running but not yet live: still moving in (imports, invites, the go-live checklist on its Overview).
+  const moving = (schools.data ?? []).filter((s) => s.status === 'live' && !s.wentLiveAt);
+  const recent = (schools.data ?? []).filter((s) => s.wentLiveAt).sort((a, b) => b.wentLiveAt!.localeCompare(a.wentLiveAt!)).slice(0, 5);
   const list = drafts.data ?? [];
   const none = !setting.length && !list.length;
   return (
     <Page title="Onboarding" sub="Set a new school up from start to finish: database, address, first admin and app" toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
+      overlays={deleting && (
+        <Dialog title={`Delete the draft for ${deleting.name || 'an untitled school'}?`} tag={{ text: 'Cannot be undone', tone: 'a' }} onClose={() => setDeleting(null)} width={440}>
+          <p style={{ marginTop: 0 }}>What was typed into the wizard so far is gone. No school was created from it, so nothing else changes.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button className="btn" onClick={() => setDeleting(null)}>Keep it</button>
+            <button className="btn dngf" disabled={del.isPending} onClick={() => del.mutate(deleting.id)}>Delete</button>
+          </div>
+        </Dialog>
+      )}
       actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Onboard a school</button> : undefined}>
       {none && (
         <div>
@@ -45,10 +59,16 @@ export function OnboardingPage() {
           <Card title="Saved drafts" chip={<span className="chip">{list.length}</span>} span="s12">
             {list.map((d) => (
               <div key={d.id} className="kv" style={{ alignItems: 'center' }}>
-                <span>{d.name || 'Untitled school'}<br /><small style={{ color: 'var(--ink3)' }}>Step {d.step + 1} of 7 · {ago(d.updatedAt)} · {d.updatedBy}</small></span>
-                <b className="tgrow"><button className="btn sm pri" onClick={() => app.go(`/onboarding/new/${d.id}`)}>Continue</button><button className="btn sm" aria-label={`Delete draft ${d.name}`} onClick={() => del.mutate(d.id)}>Delete</button></b>
+                <span>{d.name || 'Untitled school'}<br /><small style={{ color: 'var(--ink3)' }}>Step {d.step + 1} of {WIZARD_STEPS.length + 1} · {ago(d.updatedAt)} · {d.updatedBy}</small></span>
+                <b className="tgrow"><button className="btn sm pri" onClick={() => app.go(`/onboarding/new/${d.id}`)}>Continue</button><button className="btn sm" aria-label={`Delete draft ${d.name}`} onClick={() => setDeleting(d)}>Delete</button></b>
               </div>
             ))}
+          </Card>
+        )}
+        {moving.length > 0 && (
+          <Card title="Moving in" chip={<span className="chip v">{moving.length}</span>} span="s12">
+            <div className="help" style={{ marginTop: 0 }}>Running, with imports and invites under way. Each goes live from its Overview once its checklist is green.</div>
+            {moving.map((s) => <a key={s.id} className="kv" href={url(`/schools/${s.id}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${s.id}`); }} style={{ color: 'inherit', textDecoration: 'none' }}>{s.name}<b>set up {ago(s.createdAt)}</b></a>)}
           </Card>
         )}
         {recent.length > 0 && (

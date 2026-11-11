@@ -1,4 +1,4 @@
-import { ROLE_TEMPLATES, addDays, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
+import { PERMISSIONS, ROLE_TEMPLATES, addDays, type RoleTemplate, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
 import type { Pool, PoolClient } from 'pg';
 import { newId } from '../ids.js';
 import { bulkInsert } from './bulk.js';
@@ -24,6 +24,8 @@ export interface SeedInput {
   data: 'empty' | 'demo';
   /** Hash used for every demo staff and guardian login. Needed for `demo`. */
   demoPasswordHash?: string;
+  /** The starting roles the console keeps (Blueprints → Starting roles); the built-in ones when not given. */
+  roleTemplates?: RoleTemplate[];
   today?: string;
 }
 
@@ -126,7 +128,7 @@ async function run(db: PoolClient, input: SeedInput): Promise<Omit<SeedReport, '
 
   // Roles, periods and subjects exist in every school, empty or not.
   await bulkInsert(db, 'roles', ['id', 'key', 'name', 'description', 'permissions', 'locked'],
-    ROLE_TEMPLATES.map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.permissions), t.key === 'principal']));
+    (input.roleTemplates?.length ? input.roleTemplates : ROLE_TEMPLATES).map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.key === 'principal' ? [...PERMISSIONS] : t.permissions), t.key === 'principal']));
   await bulkInsert(db, 'periods', ['idx', 'label', 'starts_at', 'ends_at', 'kind'], PERIOD_ROWS);
   await bulkInsert(db, 'subjects', ['id', 'name', 'color', 'per_week'], SUBJECTS.map((s) => [s.id, s.name, s.color, s.perWeek]));
 

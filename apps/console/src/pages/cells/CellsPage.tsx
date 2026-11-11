@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError, type CellRow } from '@gradeon/api-client';
-import type { SchoolRow } from '@gradeon/contracts';
+import { DEPLOY_TARGET_LABELS, type SchoolRow } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, NumberField, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { statusOf } from '../../app/format';
 
-const TARGET: Record<string, string> = { local: 'This computer', 'free-test': 'Free test track', 'aws-cell': 'AWS cell' };
+const TARGET: Record<string, string> = DEPLOY_TARGET_LABELS;
 const fields = (e: unknown): Record<string, string> => (e instanceof HttpError && Object.keys(e.fields).length ? e.fields : { _: (e as Error).message });
 
 export function CellsPage() {
@@ -78,30 +78,34 @@ export function CellsPage() {
 
 function AddCell({ onClose, onDone }: { onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
-  const [f, setF] = useState({ key: '', target: 'free-test', region: '', maxSchools: '25', connectionId: '' });
+  // Only the places this deployment can run a cell on, as the server says.
+  const targets = useQuery({ queryKey: ['cell-targets'], queryFn: app.api.cellTargets, staleTime: Infinity });
+  const [f, setF] = useState({ key: '', target: '', region: '', maxSchools: '25', connectionId: '' });
+  const target = f.target || targets.data?.[0]?.key || '';
   const view = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view });
   const dbs = (view.data?.connections ?? []).filter((c) => (c.provider === 'postgres-server' || c.provider === 'neon') && c.state !== 'draft');
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const set = (k: keyof typeof f) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
-  const make = useMutation({ mutationFn: () => app.api.createCell({ key: f.key.trim().toLowerCase(), target: f.target as 'local', region: f.region.trim(), maxSchools: Number(f.maxSchools), connectionId: f.connectionId || null }), onSuccess: (r) => onDone(`Cell ${r.key} added. ${r.note}`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
+  const make = useMutation({ mutationFn: () => app.api.createCell({ key: f.key.trim().toLowerCase(), target: target as 'local', region: f.region.trim(), maxSchools: Number(f.maxSchools), connectionId: f.connectionId || null }), onSuccess: (r) => onDone(`Cell ${r.key} added. ${r.note}`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
   const go = () => {
     const p: Record<string, string> = {};
     if (!/^[a-z][a-z0-9-]{1,22}[a-z0-9]$/.test(f.key.trim().toLowerCase())) p.key = 'Use 3 to 24 letters, numbers or dashes, starting with a letter.';
-    if (f.region.trim().length < 2) p.region = 'Name the place, like Mumbai or this computer.';
+    if (f.region.trim().length < 2) p.region = 'Name the place, like Frankfurt or this computer.';
     if (!(Number(f.maxSchools) >= 1)) p.maxSchools = 'At least 1.';
-    if (f.target === 'aws-cell' && !f.connectionId) p.connectionId = 'A cloud cell needs the connection that makes its databases.';
+    if (target === 'aws-cell' && !f.connectionId) p.connectionId = 'A cloud cell needs the connection that makes its databases.';
     setErr(p);
     if (Object.keys(p).length) shake.hit(); else make.mutate();
   };
   return (
     <Dialog title="Add a cell" onClose={onClose} width={500} shake={shake.cls}>
       <div className="stack">
-        <Field label="Name" value={f.key} onChange={set('key')} error={err.key} placeholder="mumbai-2" />
-        <SelectField label="Runs on" value={f.target} onChange={set('target')} options={Object.entries(TARGET).map(([value, label]) => ({ value, label }))} />
-        <div className="two"><Field label="Region" value={f.region} onChange={set('region')} error={err.region} placeholder="Mumbai" /><NumberField label="Most schools" min={1} value={f.maxSchools} onChange={set('maxSchools')} error={err.maxSchools} /></div>
-        <SelectField label={f.target === 'aws-cell' ? 'Where its schools’ databases are made' : 'Where its schools’ databases are made (optional)'} value={f.connectionId} onChange={set('connectionId')} error={err.connectionId}
-          options={[{ value: '', label: f.target === 'aws-cell' ? 'Choose a School databases connection' : 'The registry’s own server' }, ...dbs.map((c) => ({ value: c.id, label: c.name }))]} />
+        <Field label="Name" value={f.key} onChange={set('key')} error={err.key} placeholder="eu-west-2" />
+        <SelectField label="Runs on" value={target} onChange={set('target')} options={(targets.data ?? []).map((t) => ({ value: t.key, label: t.label }))} />
+        {targets.data?.find((t) => t.key === target) && <div className="help">{targets.data.find((t) => t.key === target)!.note}</div>}
+        <div className="two"><Field label="Region" value={f.region} onChange={set('region')} error={err.region} placeholder="Frankfurt" /><NumberField label="Most schools" min={1} value={f.maxSchools} onChange={set('maxSchools')} error={err.maxSchools} /></div>
+        <SelectField label={target === 'aws-cell' ? 'Where its schools’ databases are made' : 'Where its schools’ databases are made (optional)'} value={f.connectionId} onChange={set('connectionId')} error={err.connectionId}
+          options={[{ value: '', label: target === 'aws-cell' ? 'Choose a School databases connection' : 'The registry’s own server' }, ...dbs.map((c) => ({ value: c.id, label: c.name }))]} />
         {!dbs.length && <div className="help">Add a PostgreSQL server or Neon under Integrations → School databases to choose it here.</div>}
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
@@ -121,6 +125,8 @@ function ManageCell({ cell, onClose, onDone }: { cell: CellRow; onClose: () => v
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const save = useMutation({ mutationFn: () => app.api.patchCell(cell.key, { region: region.trim(), maxSchools: Number(max), accepting }), onSuccess: () => onDone(`Cell ${cell.key} was updated.`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
+  const [sure, setSure] = useState(false);
+  const remove = useMutation({ mutationFn: () => app.api.removeCell(cell.key), onSuccess: () => onDone(`Cell ${cell.key} was removed.`), onError: (e) => { setErr(fields(e)); shake.hit(); } });
   return (
     <Dialog title={`Cell ${cell.key}`} tag={{ text: TARGET[cell.target] ?? cell.target, tone: 'v' }} onClose={onClose} width={480} shake={shake.cls}>
       <div className="stack">
@@ -131,9 +137,14 @@ function ManageCell({ cell, onClose, onDone }: { cell: CellRow; onClose: () => v
         </div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+        {cell.schools === 0 ? (sure
+          ? <span className="tgrow"><button className="btn sm dngf" disabled={remove.isPending} onClick={() => remove.mutate()}>Yes, remove it</button><button className="btn sm" onClick={() => setSure(false)}>Keep</button></span>
+          : <button className="btn dng" onClick={() => setSure(true)}>Remove this cell</button>) : <span className="help" style={{ margin: 0 }}>An empty cell can be removed.</span>}
+        <span className="tgrow">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn pri" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
+        </span>
       </div>
     </Dialog>
   );

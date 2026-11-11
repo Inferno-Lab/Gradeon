@@ -64,7 +64,7 @@ export class SettingsService {
   }
 
   async effective(t: TenantCtx, permissions?: string[]): Promise<EffectiveConfig> {
-    return resolveConfig({ settings: await this.doc(t), entitlement: t.info.entitlement, audience: permissions ? { permissions } : undefined, flags: t.info.flags, live: t.info.status === 'live' });
+    return resolveConfig({ settings: await this.doc(t), entitlement: t.info.entitlement, audience: permissions ? { permissions } : undefined, flags: t.info.flags, live: t.info.wentLive });
   }
 }
 
@@ -144,7 +144,7 @@ export class Messenger {
       if (!cfg.modules.includes(ev.needs) && !cfg.features.includes(ev.needs)) return 0;
     }
     const doc = (await this.settings.doc(t)).values;
-    const rule = ((doc['notify.rules'] as Record<string, { push: boolean; sms: boolean; email: boolean }> | undefined) ?? {})[key] ?? ev.defaults;
+    const rule: { push: boolean; sms: boolean; email: boolean; whatsapp?: boolean } = ((doc['notify.rules'] as Record<string, { push: boolean; sms: boolean; email: boolean; whatsapp?: boolean }> | undefined) ?? {})[key] ?? ev.defaults;
     const custom = ((doc['templates.messages'] as Record<string, string> | undefined) ?? {})[key];
     const text = custom?.trim() ? custom : ev.text;
     const [qf, qt] = [String(doc['notify.quietFrom'] ?? '21:00'), String(doc['notify.quietTo'] ?? '07:00')];
@@ -167,6 +167,7 @@ export class Messenger {
       const before = out.length;
       if (rule.push) out.push({ ...m, channel: 'push', to: w.to, subject: school });
       if (rule.sms) out.push({ ...m, channel: 'sms', to: w.to });
+      if (rule.whatsapp) out.push({ ...m, channel: 'whatsapp', to: w.to });
       if (rule.email && w.email) out.push({ ...m, channel: 'email', to: w.email, subject: ev.label });
       if (out.length > before) reached++;
     }

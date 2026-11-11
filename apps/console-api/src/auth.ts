@@ -1,15 +1,16 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, type OnModuleInit } from '@nestjs/common';
-import { LoginRequest, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
+import { LoginRequest, PasswordChange, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
 import { newId, scheduleJob } from '@gradeon/db';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@gradeon/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@gradeon/nest-kit';
 import { Db, Me, Public, type ConsoleUser } from './core.js';
-import { ENV, type Env } from './env.js';
+import { ENV, demosAllowed, type Env } from './env.js';
 import { Sandbox } from './sandbox.js';
 import { PlatformHub } from './platform-hub.js';
 import { randomInt } from 'node:crypto';
+import { z } from 'zod';
 
 const ACCESS_SECONDS = 15 * 60;
 const WEB_DAYS = 7;
@@ -115,6 +116,40 @@ export class ConsoleAuth implements OnModuleInit {
     // Every session ends: whoever had the old password is signed out.
     await this.db.pool.query('update console_users set password_hash = $2, failed_logins = 0, locked_until = null, token_version = token_version + 1 where id = $1', [r.user_id, await hashPassword(password)]);
     await this.db.audit(r.user_id, 'auth.password_reset', 'user', r.user_id);
+  }
+
+  /** Which console this is, said by the server: a guess from the address could call production "Test". */
+  about(): { environment: 'Production' | 'Test track' | 'Local'; version: string; demos: boolean } {
+    const environment = this.env.NODE_ENV !== 'production' ? 'Local' : this.env.DEMO_CODE || this.env.ALLOW_DEMO === 'true' ? 'Test track' : 'Production';
+    return { environment, version: this.env.APP_VERSION, demos: demosAllowed(this.env) };
+  }
+
+  /** An invitation link: the person chooses their password; their authenticator is added at their first sign-in. */
+  async join(token: string, password: string): Promise<{ email: string }> {
+    const u = (await this.db.pool.query<{ id: string; email: string; invite_expires: Date | null }>("select id, email, invite_expires from console_users where invite_hash = $1 and status = 'invited'", [sha256(token)])).rows[0];
+    if (!u || !u.invite_expires || u.invite_expires < new Date()) throw new ApiError('unauthenticated', 'This invitation has expired or was used. Ask for a new one.');
+    if (password.length < 10) throw new ApiError('validation', 'Use at least 10 characters.', { fields: { password: 'Use at least 10 characters.' } });
+    await this.db.pool.query("update console_users set password_hash = $2, status = 'active', invite_hash = null, invite_expires = null where id = $1", [u.id, await hashPassword(password)]);
+    await this.db.audit(u.email, 'team.joined', 'user', u.id);
+    return { email: u.email };
+  }
+
+  /** My account: a new password needs the current one; every other session of mine ends. */
+  async changePassword(me: ConsoleUser, body: PasswordChange): Promise<void> {
+    const u = (await this.db.pool.query<{ password_hash: string | null }>('select password_hash from console_users where id = $1', [me.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(body.current, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { current: 'That is not your current password.' } });
+    if (body.next.length < 10) throw new ApiError('validation', 'Use at least 10 characters.', { fields: { next: 'Use at least 10 characters.' } });
+    await this.db.pool.query('update console_users set password_hash = $2 where id = $1', [me.id, await hashPassword(body.next)]);
+    await this.db.pool.query('update console_sessions set revoked_at = now() where user_id = $1 and id <> $2 and revoked_at is null', [me.id, me.sid]);
+    await this.db.audit(me.email, 'auth.password_changed', 'user', me.id);
+  }
+
+  /** A new phone: the old authenticator key is dropped and the next sign-in adds a new one. The password proves it is me. */
+  async resetAuthenticator(me: ConsoleUser, password: string): Promise<void> {
+    const u = (await this.db.pool.query<{ password_hash: string | null }>('select password_hash from console_users where id = $1', [me.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(password, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { password: 'That is not your current password.' } });
+    await this.db.pool.query('update console_users set totp_secret = null, totp_last = null where id = $1', [me.id]);
+    await this.db.audit(me.email, 'auth.authenticator_reset', 'user', me.id);
   }
 
   async verify(body: VerifyRequest, reply?: FastifyReply): Promise<ConsoleTokens> {
@@ -286,5 +321,26 @@ export class AuthController {
   @Get('me')
   me(@Me() me: ConsoleUser): ConsoleUser {
     return me;
+  }
+
+  @Public() @Post('join') @HttpCode(200)
+  join(@Body(new ZodPipe(z.object({ token: z.string().min(10).max(200), password: z.string().min(1).max(200) }))) body: { token: string; password: string }, @Req() req: FastifyRequest): Promise<{ email: string }> {
+    limiter.check(`j|${req.ip}`);
+    return this.auth.join(body.token, body.password);
+  }
+
+  @Public() @Get('about')
+  about(): { environment: string; version: string; demos: boolean } {
+    return this.auth.about();
+  }
+
+  @Post('password') @HttpCode(204)
+  async password(@Me() me: ConsoleUser, @Body(new ZodPipe(PasswordChange)) body: PasswordChange): Promise<void> {
+    await this.auth.changePassword(me, body);
+  }
+
+  @Post('authenticator/reset') @HttpCode(204)
+  async authenticator(@Me() me: ConsoleUser, @Body(new ZodPipe(z.object({ password: z.string().min(1, 'Type your password').max(200) }))) body: { password: string }): Promise<void> {
+    await this.auth.resetAuthenticator(me, body.password);
   }
 }

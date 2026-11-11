@@ -13,6 +13,8 @@ const Env = z.object({
   /** Where school admin sites are served from. */
   // On Render the service's own address is known; elsewhere the local development addresses are the default.
   ADMIN_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'),
+  /** Where the console is served: invitation links point here. */
+  CONSOLE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL}/console` : 'http://localhost:5174'),
   API_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:4000'),
   BASE_DOMAIN: z.string().default('gradeon.app'),
   BOOTSTRAP_EMAIL: z.string().default('kaushal@gradeon.app'),
@@ -29,6 +31,9 @@ const Env = z.object({
   TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
 });
 export type Env = z.infer<typeof Env>;
+
+/** Demo data (the demo school, a test school's sample records) belongs to development and the test track, never production. */
+export const demosAllowed = (env: Env) => env.NODE_ENV !== 'production' || env.ALLOW_DEMO === 'true';
 
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = Env.safeParse(source);

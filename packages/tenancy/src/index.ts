@@ -22,6 +22,8 @@ export interface TenantInfo {
   flags: Record<string, boolean>;
   /** A demo school: demo sign-in cards and the demo code work. */
   demo: boolean;
+  /** Gradeon pressed Go live: the school has moved in. */
+  wentLive: boolean;
 }
 
 export interface RegistryOptions {
@@ -77,6 +79,7 @@ export class Registry {
         apiVersion: row.apiVersion,
         flags: Object.fromEntries(fl.rows.map((f) => [f.key, f.enabled])),
         demo: row.demo,
+        wentLive: !!row.wentLiveAt,
       };
     }
     this.cache.set(slug, { at: now, value });

@@ -5,7 +5,7 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { auditPage } from './lib/audit.mjs';
-import { adminPaths as pages } from './lib/pages.mjs';
+import { adminPaths as pages, consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -40,7 +40,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleSession();
-  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/integrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/modules', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
+  const paths = consolePaths(c.school);
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 

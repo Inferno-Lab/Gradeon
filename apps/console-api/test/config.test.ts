@@ -25,7 +25,7 @@ const wait = () => new Promise((r) => setTimeout(r, 5_100)); // the school API c
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
   second = await h.signIn('second@gradeon.app', 'another-long-pass');
   expect((await launch('cfgschool')).status).toBe('succeeded');
   id = (await h.c('GET', '/console/v1/schools', { token: t })).json.find((s: { slug: string }) => s.slug === 'cfgschool').id;
@@ -111,10 +111,10 @@ describe('configuration from the console', () => {
     expect(req).toMatchObject({ area: 'App layout', status: 'open' });
     expect((await h.c('POST', `/console/v1/change-requests/${req.id}/answer`, { token: t, body: { status: 'done', answer: 'Added Events to the tabs.' } })).status).toBe(204);
     expect((await h.s('GET', '/v1/change-requests', { school: 'cfgschool', token: school })).json[0]).toMatchObject({ status: 'done', answer: 'Added Events to the tabs.' });
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'], password: 'long-enough-pass' } });
+    await h.invite(t, { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'] }, 'long-enough-pass');
     const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
     expect((await patch({ expectedVersion: 1, changes: { 'school.tagline': 'x' } }, sam)).status).toBe(403);
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Ira Implement', email: 'ira@gradeon.app', roles: ['implementation'], password: 'long-enough-pass' } });
+    await h.invite(t, { name: 'Ira Implement', email: 'ira@gradeon.app', roles: ['implementation'] }, 'long-enough-pass');
     const ira = await h.signIn('ira@gradeon.app', 'long-enough-pass');
     expect((await patch({ expectedVersion: (await cfg()).json.version, changes: { 'school.tagline': 'Set by implementation' } }, ira)).status).toBe(200);
     expect((await h.s('PATCH', '/v1/settings', { school: 'cfgschool', token: school, body: { changes: { 'school.tagline': 'x' } } })).status).toBe(404);

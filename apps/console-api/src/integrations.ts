@@ -361,7 +361,13 @@ export class IntegrationsController {
   deleteTemplate(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> { return this.integrations.deleteTemplate(me, id); }
 
   @Get('activity') @Needs('integrations.read')
-  activity(@Query(new ZodPipe(ActivityQuery)) q: ActivityQuery): Promise<ActivityView> { return this.integrations.activity(q); }
+  async activity(@Me() me: ConsoleUser, @Query(new ZodPipe(ActivityQuery)) q: ActivityQuery): Promise<ActivityView> {
+    const v = await this.integrations.activity(q);
+    if (me.permissions.includes('integrations.write')) return v;
+    // Families' numbers and what was said to them are for the people who run messaging; the rest see that it happened.
+    const mask = (to: string) => (to.includes('@') ? to.replace(/^(.).*?(@.*)$/, '$1•••$2') : to.replace(/\d(?=(?:\D*\d){4})/g, '•'));
+    return { ...v, rows: v.rows.map((r) => ({ ...r, to: mask(r.to), body: 'Hidden: only people who run messaging read it.' })) };
+  }
 
   @Post('activity/:id/retry') @HttpCode(204) @Needs('integrations.write')
   retry(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> { return this.integrations.retry(me, id); }

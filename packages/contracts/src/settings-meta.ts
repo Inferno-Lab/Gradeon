@@ -17,13 +17,16 @@ export interface SettingMeta {
   max?: number;
   /** A change needs a second person's approval in the console. */
   risky?: true;
+  /** Saved, but nothing acts on it yet: the console hides it unless asked (AGENTS.md: a new setting is marked until it is used). */
+  notUsedYet?: true;
 }
 
 /** Settings that belong to the whole school rather than one module (docs/product-map.md §5). */
 export const SETTING_GROUPS = ['School identity', 'Look', 'The app', 'Sign-in and security', 'Privacy', 'Messaging'] as const;
 export type SchoolWideGroup = (typeof SETTING_GROUPS)[number];
 
-const LANGUAGES: [string, string][] = [['en', 'English'], ['hi', 'हिन्दी (Hindi)'], ['mr', 'मराठी (Marathi)']];
+/** The languages the apps and messages come in: the one list every page offers. */
+export const LANGUAGES: [string, string][] = [['en', 'English'], ['hi', 'हिन्दी (Hindi)'], ['mr', 'मराठी (Marathi)']];
 
 export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'school.name': { group: 'School identity', label: 'School name', kind: 'text', help: 'On the sign-in pages, the app, receipts and report cards.' },

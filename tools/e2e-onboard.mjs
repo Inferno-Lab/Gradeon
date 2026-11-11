@@ -54,7 +54,8 @@ await page.screenshot({ path: `${out}/01-review.png` });
 await page.getByRole('button', { name: 'Launch', exact: true }).click();
 await page.waitForURL(/\/schools\//, { timeout: 30000 });
 step('watch provisioning');
-await page.getByText('Live', { exact: true }).first().waitFor({ timeout: 90000 });
+// Set up and running: it is moving in until Gradeon presses Go live.
+await page.getByText('Moving in', { exact: true }).first().waitFor({ timeout: 90000 });
 await page.screenshot({ path: `${out}/02-school-live.png` });
 
 step('read the invite from the test inbox');

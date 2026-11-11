@@ -17,19 +17,8 @@ export function Avatar({ name, size = 34 }: { name: string; size?: number }) {
   return <span className="av" style={{ width: size, height: size, fontSize: Math.round(size * 0.33), background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>;
 }
 
-/** A multi-line input in the same box as Field. */
-export function AreaField({ label, value, onChange, error, rows = 4, ...rest }: { label: string; value: string; onChange: (v: string) => void; error?: string; rows?: number; maxLength?: number; placeholder?: string }) {
-  const id = `ta-${label.replace(/\W+/g, '')}`;
-  return (
-    <div className="fld">
-      <label htmlFor={id}>{label}</label>
-      <div className={`inp ${error ? 'err shake' : ''}`} style={{ height: 'auto', alignItems: 'stretch' }}>
-        <textarea id={id} className="ta" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} style={{ padding: '12px 0', resize: 'vertical', width: '100%', font: '500 15px/1.5 var(--fb)' }} {...rest} />
-      </div>
-      {error && <div className="emsg" role="alert">{error}</div>}
-    </div>
-  );
-}
+/** The shared multi-line field (web-ui), kept importable from here. */
+export { AreaField } from '@gradeon/web-ui';
 
 /** What a failed call says, split into field messages when the server named fields. */
 export function problem(e: unknown): Record<string, string> {

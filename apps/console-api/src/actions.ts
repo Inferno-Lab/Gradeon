@@ -22,7 +22,7 @@ export interface BuildKit {
   school: string;
   platform: 'android' | 'ios';
   apiBaseUrl: string;
-  /** The store listing: com.gradeon.<school> on both stores. */
+  /** The store listing: the bundle prefix and the school's address, the same on both stores. */
   appId: string;
   appName: string;
   firebase: { android: string | null; ios: string | null };
@@ -37,6 +37,7 @@ export class Builds {
     private readonly db: Db,
     @Inject(ENV) private readonly env: Env,
     private readonly platform: PlatformHub,
+    private readonly policy: Policy,
   ) {}
 
   /**
@@ -61,9 +62,18 @@ export class Builds {
       }
     }
     await this.db.pool.query('insert into builds (id, school_id, platform, version, status, note, token_hash, store) values ($1,$2,$3,$4,$5,$6,$7,$8)',
-      [id, schoolId, platform, version, status, note, status === 'queued' ? sha256(token) : null, appIdFor(slug)]);
+      [id, schoolId, platform, version, status, note, status === 'queued' ? sha256(token) : null, await this.appId(schoolId, slug)]);
     await this.db.audit(user, 'build.requested', 'school', schoolId, { platform, status });
     return { id, schoolId, platform, version, status, url: null, note, createdAt: new Date().toISOString() };
+  }
+
+  /**
+   * The id a school's app is listed under in the stores. It never changes once a build has it (a store listing is tied to it);
+   * a school's first build takes the bundle prefix from Mobile builds → Build settings.
+   */
+  private async appId(schoolId: string, slug: string): Promise<string> {
+    const had = (await this.db.pool.query<{ store: string }>("select store from builds where school_id = $1 and store <> '' order by created_at limit 1", [schoolId])).rows[0];
+    return had?.store ?? appIdFor(slug, (await this.policy.get()).naming.bundlePrefix);
   }
 
   /** What is not set up yet for a build on this platform, in words, or null when everything is. */
@@ -89,8 +99,8 @@ export class Builds {
   }
 
   /** The build's own code, checked against what was given at dispatch; it works only while the build runs. */
-  private async build(id: string, token: string | undefined): Promise<{ school_id: string; platform: BuildRow['platform']; status: string; slug: string; app_name: string; name: string }> {
-    const { rows } = await this.db.pool.query('select b.school_id, b.platform, b.status, b.token_hash, s.slug, s.app_name, s.short_name as name from builds b join schools s on s.id = b.school_id where b.id = $1', [id]);
+  private async build(id: string, token: string | undefined): Promise<{ school_id: string; platform: BuildRow['platform']; status: string; slug: string; app_name: string; name: string; store: string | null }> {
+    const { rows } = await this.db.pool.query('select b.school_id, b.platform, b.status, b.token_hash, b.store, s.slug, s.app_name, s.short_name as name from builds b join schools s on s.id = b.school_id where b.id = $1', [id]);
     const b = rows[0];
     if (!b || !token || !b.token_hash || !constantTimeEqual(sha256(token), b.token_hash) || (b.status !== 'queued' && b.status !== 'building')) throw new ApiError('unauthenticated', 'That build code is not accepted.');
     return b;
@@ -107,7 +117,7 @@ export class Builds {
     const apple = b.platform === 'ios' && stores.ios ? (await hub.use(stores.ios)).conn : null;
     await this.db.pool.query("update builds set status = 'building', note = 'Building on GitHub Actions.' where id = $1", [id]);
     return {
-      school: b.slug, platform: b.platform, apiBaseUrl: this.env.API_BASE_URL.replace(/\/$/, ''), appId: appIdFor(b.slug), appName: b.app_name || b.name,
+      school: b.slug, platform: b.platform, apiBaseUrl: this.env.API_BASE_URL.replace(/\/$/, ''), appId: b.store || appIdFor(b.slug), appName: b.app_name || b.name,
       firebase: { android: fcm?.secrets.androidConfig ?? null, ios: fcm?.secrets.iosConfig ?? null },
       android: play ? { keystore: play.secrets.keystore ?? '', storePassword: play.secrets.keystorePassword ?? '', keyAlias: String(play.settings.keyAlias ?? 'upload'), keyPassword: play.secrets.keyPassword ?? '', serviceAccount: play.secrets.serviceAccount ?? '', track: String(play.settings.track ?? 'internal') } : null,
       ios: apple ? { teamId: String(apple.settings.teamId), issuerId: String(apple.settings.issuerId), keyId: String(apple.settings.keyId), privateKey: apple.secrets.privateKey ?? '' } : null,
@@ -154,7 +164,8 @@ export class Actions {
   private row(r: ActionRecord): ActionRow {
     return {
       id: r.id, action: r.action as ActionRow['action'], schoolId: r.schoolId, schoolName: r.schoolName, status: r.status as ActionRow['status'], requestedBy: r.requestedBy, approvedBy: r.approvedBy,
-      dryRun: r.dryRun, summary: r.summary, createdAt: r.createdAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null,
+      dryRun: r.dryRun, summary: r.summary, asked: r.asked || r.summary, note: String((r.params as { note?: unknown }).note ?? ''), decisionNote: r.decisionNote,
+      changes: ((r.params as { diff?: ActionRow['changes'] }).diff ?? []), createdAt: r.createdAt.toISOString(), finishedAt: r.finishedAt?.toISOString() ?? null,
     };
   }
 
@@ -168,7 +179,7 @@ export class Actions {
     if (!body.schoolId && body.action !== 'integration.live' && body.action !== 'integration.mode') throw new ApiError('validation', 'Choose the school this is for.');
     const school = body.schoolId ? await this.schools.raw(body.schoolId) : null;
     const pol = await this.policy.get();
-    if (pol.freeze && body.action !== 'school.suspend') throw new ApiError('locked', 'Changes are frozen. A super admin can lift the freeze under Policy.');
+    if (pol.freeze && body.action !== 'school.suspend') throw new ApiError('locked', `Changes are frozen${pol.freezeReason ? `: ${pol.freezeReason}` : ''}. A super admin can lift the freeze under Console settings.`);
     const busy = school ? await this.db.pool.query("select 1 from actions where school_id = $1 and status = 'running'", [school.id]) : { rowCount: 0 };
     if (busy.rowCount) throw new ApiError('conflict', 'Another action is already running for this school.');
     if (school && (body.action === 'school.erase' || body.action === 'retention.erase') && !body.dryRun && body.confirmCode?.trim() !== school.slug) {
@@ -185,7 +196,7 @@ export class Actions {
     }
     const id = newId('act');
     await this.db.pool.query(
-      'insert into actions (id, action, school_id, school_name, params, status, requested_by, dry_run, summary) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+      'insert into actions (id, action, school_id, school_name, params, status, requested_by, dry_run, summary, asked) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)',
       [id, body.action, school?.id ?? null, school?.name ?? null, JSON.stringify(body.params), needs ? 'pending_approval' : 'running', user.email, body.dryRun, summary]);
     await this.db.audit(user.email, `action.${body.action}.requested`, school ? 'school' : 'integration', school?.id ?? String(body.params.connectionId ?? ''), { dryRun: body.dryRun, needsApproval: !!needs });
     if (!needs) await this.run(id);
@@ -199,15 +210,16 @@ export class Actions {
   }
 
   /** A second person says yes. Nobody can approve their own request, and the role must be one the policy names. */
-  async approve(user: ConsoleUser, id: string, yes: boolean): Promise<ActionRow> {
+  async approve(user: ConsoleUser, id: string, yes: boolean, note = ''): Promise<ActionRow> {
     const a = await this.get(id);
     if (a.status !== 'pending_approval') throw new ApiError('conflict', 'This request is not waiting for approval.');
     if (a.requestedBy === user.email) throw new ApiError('forbidden', 'A second person has to approve this. You cannot approve your own request.');
     const pol = (await this.policy.get()).approvals[a.action];
     if (pol && !user.roles.some((r) => (pol.roles as ConsoleRole[]).includes(r))) throw new ApiError('forbidden', 'Your role cannot approve this action.');
     if (!yes) {
-      await this.db.pool.query("update actions set status = 'rejected', approved_by = $2, finished_at = now() where id = $1", [id, user.email]);
-      await this.db.audit(user.email, `action.${a.action}.rejected`, 'school', a.schoolId);
+      if (note.trim().length < 5) throw new ApiError('validation', 'Say why, so the person who asked knows what to change.', { fields: { note: 'Say why.' } });
+      await this.db.pool.query("update actions set status = 'rejected', approved_by = $2, decision_note = $3, finished_at = now() where id = $1", [id, user.email, note.trim()]);
+      await this.db.audit(user.email, `action.${a.action}.rejected`, 'school', a.schoolId, { note: note.trim() });
       return this.get(id);
     }
     await this.db.pool.query("update actions set status = 'running', approved_by = $2 where id = $1", [id, user.email]);
@@ -220,7 +232,7 @@ export class Actions {
       'integration.live': `Take ${String(params.name ?? 'a connection')} live for ${school}`,
       'integration.mode': 'Switch every school to live messages (real providers, no Test inbox)',
       'retention.erase': `Erase the records of people who left ${school} past the retention period`,
-      'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
+      'school.golive': `Take ${school} live (moving in ends)`, 'school.suspend': `Pause ${school}`, 'school.resume': `Resume ${school}`, 'school.erase': `Erase ${school}`, 'entitlements.push': `Push the plan and locks to ${school}`,
       'migration.run': `Run pending migrations for ${school}`, 'domain.set': `Change the address of ${school}`, 'build.app': `Build the app for ${school}`, 'backup.take': `Back up ${school}`, 'backup.restore': `Put ${school} back as it was in a backup`, 'config.apply': `Change risky settings for ${school}`, 'school.move': `Move ${school} to another cell`,
     } as const)[action];
   }
@@ -429,8 +441,8 @@ export class ActionsController {
   }
 
   @Post('actions/:id/reject') @HttpCode(200) @Needs('schools.danger')
-  reject(@Me() me: ConsoleUser, @Param('id') id: string): Promise<ActionRow> {
-    return this.actions.approve(me, id, false);
+  reject(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { note?: string } | undefined): Promise<ActionRow> {
+    return this.actions.approve(me, id, false, String(body?.note ?? '').slice(0, 500));
   }
 
   @Get('builds') @Needs('schools.read')

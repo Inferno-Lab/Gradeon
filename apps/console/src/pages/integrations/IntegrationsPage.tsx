@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { useParams } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import {
-  CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
+  CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
 import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
+import { tabsOf } from '../../app/nav';
 
 type Tab = 'connections' | 'routing' | 'templates' | 'activity' | 'webhooks';
 const fields = (e: unknown): Record<string, string> => (e instanceof HttpError && Object.keys(e.fields).length ? e.fields : { _: (e as Error).message });
@@ -17,7 +19,7 @@ const DELIVERY: Record<DeliveryRow['status'], string> = { queued: 'a', held: 'v'
 /** Route settings a capability uses, on top of its connection's own. */
 const ROUTE_FIELDS: Partial<Record<Capability, { key: string; label: string; placeholder: string }[]>> = {
   sms: [{ key: 'senderId', label: 'Sender ID for this route', placeholder: 'GRNFLD' }],
-  email: [{ key: 'from', label: 'From address for this route', placeholder: 'Greenfield <office@greenfield.edu.in>' }],
+  email: [{ key: 'from', label: 'From address for this route', placeholder: 'Your School <office@yourschool.org>' }],
   storage: [{ key: 'prefix', label: 'Folder prefix in the bucket', placeholder: 'gradeon/' }],
 };
 const MESSAGE_KEYS = [...SYSTEM_MESSAGES.map((m) => ({ key: m.key, label: m.label, text: m.text })), ...MESSAGE_EVENTS.map((m) => ({ key: m.key, label: m.label, text: m.text }))];
@@ -26,7 +28,8 @@ export function IntegrationsPage() {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [tab, setTab] = useState<Tab>('connections');
+  // The tabs have addresses (/integrations/routing); the Test inbox is there only while messages go to it.
+  const { tab: asked } = useParams({ strict: false }) as { tab?: string };
   const [dlg, setDlg] = useState<
     | { kind: 'add' } | { kind: 'edit'; c: ConnectionRow } | { kind: 'test'; c: ConnectionRow } | { kind: 'route'; capability: Capability; schoolId: string | null; route?: RouteRow }
     | { kind: 'template'; connectionId: string; messageKey: string; t?: TemplateRow } | { kind: 'allow' } | { kind: 'delete'; c: ConnectionRow } | null>(null);
@@ -37,6 +40,9 @@ export function IntegrationsPage() {
   const done = (m: string) => { setDlg(null); refresh(); say(m); };
   const v = view.data;
   const live = (schools.data ?? []).filter((s) => s.status !== 'archived');
+  const tabList = tabsOf('/integrations', app.can).filter((t) => t.key !== 'inbox' || v?.mode !== 'live');
+  const tab = (tabList.find((t) => t.key === asked)?.key ?? 'connections') as Tab | 'inbox';
+  const counts: Record<string, number | undefined> = { connections: v?.connections.length, routing: v?.routes.length, templates: v?.templates.length };
   const gaps = useQuery({ queryKey: ['integrations', 'gaps'], queryFn: app.api.integrations.gaps });
   const mode = useMutation({
     mutationFn: (m: 'sandbox' | 'live') => app.api.integrations.mode(m),
@@ -84,16 +90,14 @@ export function IntegrationsPage() {
           { label: 'Sent this month', value: count(v.connections.reduce((n, c) => n + c.usage.count, 0)), note: 'through real providers', tone: 'a' },
           { label: 'Cost this month', value: rupees(v.connections.reduce((n, c) => n + c.usage.costPaise, 0) / 100), note: 'from each connection’s price', tone: 'i' },
         ]} />
-        <Segmented label="Integrations" value={tab} onChange={setTab} options={[
-          { value: 'connections', label: 'Connections', count: v.connections.length }, { value: 'routing', label: 'Routing', count: v.routes.length },
-          { value: 'templates', label: 'Templates', count: v.templates.length }, { value: 'activity', label: 'Activity' }, { value: 'webhooks', label: 'Webhooks' },
-        ]} />
+        <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />
         {tab === 'connections' && <Connections v={v} write={write} busy={act.isPending} onEdit={(c) => setDlg({ kind: 'edit', c })} onTest={(c) => setDlg({ kind: 'test', c })} onDelete={(c) => setDlg({ kind: 'delete', c })}
           onAct={(c, what) => act.mutate({ c, what })} onAdd={() => setDlg({ kind: 'add' })} />}
         {tab === 'routing' && <Routing v={v} schools={live} write={write} onEdit={(capability, schoolId, route) => setDlg({ kind: 'route', capability, schoolId, route })} />}
         {tab === 'templates' && <Templates v={v} write={write} say={say} onEdit={(connectionId, messageKey, t) => setDlg({ kind: 'template', connectionId, messageKey, t })} />}
         {tab === 'activity' && <Activity schools={live} write={write} say={say} />}
         {tab === 'webhooks' && <Webhooks v={v} say={say} />}
+        {tab === 'inbox' && <TestInbox schools={live} />}
       </>}
     </Page>
   );
@@ -339,7 +343,7 @@ function DeleteDialog({ c, onClose, onDone }: { c: ConnectionRow; onClose: () =>
       {del.isError && <div className="emsg" role="alert" style={{ marginTop: 12 }}>{(del.error as Error).message}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={del.isPending} onClick={() => del.mutate()}>{del.isPending ? 'Deleting…' : 'Delete'}</button>
+        <button className="btn dngf" disabled={del.isPending} onClick={() => del.mutate()}>{del.isPending ? 'Deleting…' : 'Delete'}</button>
       </div>
     </Dialog>
   );
@@ -350,9 +354,9 @@ function Routing({ v, schools, write, onEdit }: { v: IntegrationsView; schools: 
   const caps = CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k)));
   const [school, setSchool] = useState('');
   return (
-    <Card title="Which connection serves what" chip={<Select compact aria-label="Add an override for a school" value={school} onChange={setSchool} placeholder="Override for a school…"
-      options={[{ value: '', label: 'Override for a school…' }, ...schools.map((s) => ({ value: s.id, label: s.name }))]} />} style={{ padding: 0 }}>
-      <div className="help" style={{ padding: '0 20px 12px' }}>A school’s own route wins; otherwise the Gradeon default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
+    <Card title="Which connection serves what" style={{ padding: 0 }}>
+      <div className="help" style={{ padding: '0 20px 8px' }}>A school’s own route wins; otherwise the Gradeon default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
+      {write && <div style={{ padding: '0 20px 12px', maxWidth: 380 }}><SelectField label="Give a school its own route" value={school} onChange={setSchool} options={[{ value: '', label: 'Choose a school…' }, ...schools.map((s) => ({ value: s.id, label: s.name }))]} /></div>}
       <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
         <div className="grd th" style={{ '--cols': '160px minmax(0,1fr) minmax(0,1.4fr)' } as React.CSSProperties}><span>Capability</span><span>Gradeon default</span><span>Schools with their own</span></div>
         {caps.map((k) => {
@@ -470,7 +474,7 @@ function TemplateDialog({ connectionId, messageKey, t, onClose, onDone }: { conn
           <Field label="Provider template ID" value={f.providerTemplateId} onChange={set('providerTemplateId')} error={err.providerTemplateId} placeholder="65f1c…" />
           <Field label="DLT template ID (optional)" value={f.dltTemplateId} onChange={set('dltTemplateId')} error={err.dltTemplateId} placeholder="1107169…" />
         </div>
-        <SelectField label="Language" value={f.language} onChange={set('language')} options={[{ value: 'en', label: 'English' }, { value: 'hi', label: 'हिन्दी (Hindi)' }, { value: 'mr', label: 'मराठी (Marathi)' }]} />
+        <SelectField label="Language" value={f.language} onChange={set('language')} options={LANGUAGES.map(([value, label]) => ({ value, label }))} />
         <div className="fld">
           <label htmlFor="tpl-text">Approved wording</label>
           <div className={`inp ${err.approvedText ? 'err shake' : ''}`} style={{ height: 'auto' }}>
@@ -523,18 +527,6 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
             </div></div>
           )}
       </Card>
-      {(q.data?.totals ?? []).length > 0 && (
-        <Card title="For billing: per school and month" style={{ padding: 0 }}>
-          <div className="tbl scroll-x"><div style={{ minWidth: 480 }}>
-            <div className="grd th" style={{ '--cols': 'minmax(0,1fr) 120px 100px 100px 110px' } as React.CSSProperties}><span>School</span><span>Channel</span><span>Month</span><span>Messages</span><span>Cost</span></div>
-            {q.data!.totals.map((t) => (
-              <div key={`${t.schoolSlug}${t.channel}${t.month}`} className="grd rw" style={{ '--cols': 'minmax(0,1fr) 120px 100px 100px 110px' } as React.CSSProperties}>
-                <b style={{ font: '700 13px var(--fb)' }}>{t.schoolSlug}</b><span>{CAPABILITY_LABELS[t.channel as Capability] ?? t.channel}</span><span>{t.month}</span><span className="num">{count(t.count)}</span><span className="num">{rupees(t.costPaise / 100)}</span>
-              </div>
-            ))}
-          </div></div>
-        </Card>
-      )}
     </>
   );
 }
@@ -596,5 +588,38 @@ function AllowDialog({ list, onClose, onDone }: { list: string[]; onClose: () =>
         <button className="btn pri" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
       </div>
     </Dialog>
+  );
+}
+
+const ICON: Record<string, string> = {
+  sms: 'M4 5h16v11H9l-5 4z', email: 'M4 6h16v12H4zM4 7l8 6 8-6', whatsapp: 'M4 5h16v11H9l-5 4z', push: 'M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0',
+};
+
+/** Texts and emails that would have gone out while messages are in sandbox: where a tester reads the codes and receipts. */
+function TestInbox({ schools }: { schools: SchoolRow[] }) {
+  const app = useApp();
+  const [school, setSchool] = useState('');
+  const msgs = useQuery({ queryKey: ['sandbox', school], queryFn: () => app.api.sandbox(school || undefined), refetchInterval: 6000 });
+  const rows = msgs.data ?? [];
+  return (
+    <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
+      {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 18 }} />
+        : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
+          : rows.map((m) => (
+            <div key={m.id} className="kv" style={{ alignItems: 'flex-start' }}>
+              <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>
+                <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--vS)', color: 'var(--vD)' }}>
+                  <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path className="i" d={ICON[m.channel] ?? ICON.sms}></path></svg>
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <b style={{ display: 'block', textAlign: 'left' }}>{m.subject ?? m.to}</b>
+                  <span style={{ color: 'var(--ink2)', overflowWrap: 'anywhere' }}>{m.body}</span><br />
+                  <small style={{ color: 'var(--ink3)' }}>{CAPABILITY_LABELS[m.channel as Capability] ?? m.channel} to {m.to} · {m.schoolSlug}</small>
+                </span>
+              </span>
+              <b style={{ whiteSpace: 'nowrap', color: 'var(--ink3)' }}>{ago(m.createdAt)}</b>
+            </div>
+          ))}
+    </Card>
   );
 }

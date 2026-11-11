@@ -13,27 +13,53 @@ const KEYS = Object.keys(SETTINGS_META) as SettingKey[];
 const shape = SchoolSettingsSchema.shape as Record<string, { safeParse: (v: unknown) => { data?: unknown } }>;
 const dflt = (k: string): unknown => shape[k]?.safeParse(undefined).data;
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** The channels a message can go through, as the Hub sends them. */
+const CHANNELS = [['push', 'App'], ['sms', 'SMS'], ['whatsapp', 'WhatsApp'], ['email', 'Email']] as const;
 const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' } as const;
 
-/** Everything Gradeon sets for one school, built from SETTINGS_META: a new setting appears here without a new screen. */
+/** The groups a school's settings sit in: the six school-wide ones, then one per module it has. */
+const groupLabel = (g: string) => (MODULES.find((m) => m.key === g) ? (g === 'school' ? 'Academic year' : MODULES.find((m) => m.key === g)!.name) : g);
+
+/**
+ * Everything Gradeon sets for one school, built from SETTINGS_META: a new setting appears here without a new screen. Groups sit
+ * in a side list with their own address (?group=…), a search finds any setting, and changes in several groups go in one save.
+ */
 export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   const app = useApp();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['config', schoolId], queryFn: () => app.api.config.get(schoolId) });
   const [edits, setEdits] = useState<Record<string, unknown>>({});
+  const [logo, setLogo] = useState<File | null>(null);
   const [note, setNote] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
-  const [group, setGroup] = useState<string>(SETTING_GROUPS[0]);
+  const [group, setGroupState] = useState<string>(() => new URLSearchParams(window.location.search).get('group') ?? SETTING_GROUPS[0]);
+  const [find, setFind] = useState('');
+  const [unused, setUnused] = useState(false);
   const shake = useShake();
   const can = app.can('schools.configure');
   const cfg = q.data;
+  const setGroup = (g: string) => {
+    setGroupState(g);
+    setFind('');
+    const u = new URL(window.location.href);
+    u.searchParams.set('group', g);
+    window.history.replaceState(window.history.state, '', u);
+  };
   const value = (k: string): unknown => (k in edits ? edits[k] : cfg && k in cfg.values ? cfg.values[k] : dflt(k));
   const changed = cfg ? Object.keys(edits).filter((k) => !same(edits[k], k in cfg.values ? cfg.values[k] : dflt(k))) : [];
   const refresh = () => void qc.invalidateQueries({ queryKey: ['config', schoolId] });
   const save = useMutation({
-    mutationFn: () => app.api.config.patch(schoolId, { expectedVersion: cfg!.version, changes: Object.fromEntries(changed.map((k) => [k, edits[k]])), note: note.trim() }),
+    mutationFn: async () => {
+      // The logo is a file: it goes up first, then the rest of the change, so both are one save with one note.
+      if (logo) {
+        const data = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] ?? ''); r.onerror = () => no(new Error('That file could not be read.')); r.readAsDataURL(logo); });
+        await app.api.logo(schoolId, { name: logo.name, mime: logo.type as 'image/png', data });
+      }
+      if (!changed.length) return { saved: true } as const;
+      return app.api.config.patch(schoolId, { expectedVersion: cfg!.version, changes: Object.fromEntries(changed.map((k) => [k, edits[k]])), note: note.trim() });
+    },
     onSuccess: (r) => {
-      setEdits({}); setNote(''); setErr({}); refresh();
+      setEdits({}); setLogo(null); setNote(''); setErr({}); refresh();
       say('pending' in r ? 'A risky setting is in there, so the change waits for a second person under Approvals.' : 'Saved. The school’s admin and app follow within a minute.');
     },
     onError: (e) => {
@@ -46,40 +72,62 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
   if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
-  const keys = KEYS.filter((k) => SETTINGS_META[k].group === group);
-  const sections = [
-    ...SETTING_GROUPS.map((g) => ({ value: g as string, label: g as string })),
-    ...MODULES.filter((m) => m.settings.length && cfg.entitled.includes(m.key)).map((m) => ({ value: m.key, label: m.key === 'school' ? 'Academic year' : m.name })),
-  ];
-  const groupLabel = sections.find((x) => x.value === group)?.label ?? group;
+  const shown = (k: SettingKey) => unused || !SETTINGS_META[k].notUsedYet;
+  const groups = [...SETTING_GROUPS as readonly string[], ...MODULES.filter((m) => m.settings.length && cfg.entitled.includes(m.key)).map((m) => m.key)];
+  // A module the school does not have keeps its settings out of sight (P9), named in one line.
+  const off = MODULES.filter((m) => m.settings.length && !m.core && !cfg.entitled.includes(m.key));
+  const needle = find.trim().toLowerCase();
+  const keys = needle
+    ? KEYS.filter((k) => shown(k) && groups.includes(SETTINGS_META[k].group) && `${SETTINGS_META[k].label} ${SETTINGS_META[k].help ?? ''} ${k}`.toLowerCase().includes(needle))
+    : KEYS.filter((k) => SETTINGS_META[k].group === group && shown(k));
+  const dirtyGroups = [...new Set(changed.map((k) => SETTINGS_META[k as SettingKey]?.group).filter(Boolean))] as string[];
+  const hiddenCount = KEYS.filter((k) => SETTINGS_META[k].notUsedYet).length;
+  const total = changed.length + (logo ? 1 : 0);
   return (
     <section className="grid">
       <div className="card s12 rise">
-        <div className="ch"><h2>Configuration</h2><span className="chip">Version {cfg.version}</span></div>
-        <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).</div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
-          <div className="fld" style={{ minWidth: 220 }}>
-            <label htmlFor="cfg-group">Section</label>
-            <Select id="cfg-group" value={group} onChange={setGroup} options={sections.map((x) => ({ value: x.value, label: `${x.label} · ${KEYS.filter((k) => SETTINGS_META[k].group === x.value).length}` }))} />
-          </div>
-          <span style={{ flex: 1 }} />
-          {changed.length > 0 && <span className="help">{changed.length} {changed.length === 1 ? 'change' : 'changes'} not saved</span>}
+        <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}>
+          <h2>Configuration</h2><span className="chip">Version {cfg.version}</span><span className="grow"></span>
+          <div className="srch" style={{ minWidth: 220, height: 38 }}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
+        <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).{off.length ? ` Not in its plan, so not shown: ${off.map((m) => m.name).join(', ')}.` : ''}</div>
+        {dirtyGroups.length > 0 && (
+          <div className="tgrow" style={{ marginTop: 10, alignItems: 'center' }}>
+            <span className="chip a">{dirtyGroups.length === 1 ? '1 group has' : `${dirtyGroups.length} groups have`} unsaved changes</span>
+            {dirtyGroups.map((g) => <button key={g} className="btn sm" onClick={() => setGroup(g)}>{groupLabel(g)}</button>)}
+          </div>
+        )}
       </div>
 
-      <div className={`card s12 rise ${shake.cls}`}>
-        <div className="ch"><h2>{groupLabel}</h2></div>
+      <nav className="card s3 rise" aria-label="Setting groups" style={{ padding: 12, alignSelf: 'start' }}>
+        {groups.map((g) => {
+          const n = changed.filter((k) => SETTINGS_META[k as SettingKey]?.group === g).length;
+          return (
+            <button key={g} className={`rpb ${!needle && g === group ? 'on' : ''}`} aria-current={!needle && g === group} onClick={() => setGroup(g)} style={{ width: '100%' }}>
+              <b>{groupLabel(g)}{n ? ` · ${n} changed` : ''}</b><small>{KEYS.filter((k) => SETTINGS_META[k].group === g && shown(k)).length} settings</small>
+            </button>
+          );
+        })}
+        {hiddenCount > 0 && <div style={{ padding: '10px 8px 0' }}><Checkbox checked={unused} onChange={setUnused} label={`Show ${hiddenCount} not in use yet`} /></div>}
+      </nav>
+
+      <div className={`card s9 rise ${shake.cls}`}>
+        <div className="ch"><h2>{needle ? `Settings matching “${find.trim()}”` : groupLabel(group)}</h2></div>
+        {keys.length === 0 && <div className="help">{needle ? 'No setting matches.' : 'No settings here.'}</div>}
         {keys.map((k) => (
-          <SettingRow key={k} schoolId={schoolId} say={say} meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg}
-            onChange={(v) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }} />
+          <div key={k}>
+            {needle && <div className="lbl" style={{ marginTop: 12 }}>{groupLabel(SETTINGS_META[k].group)}</div>}
+            <SettingRow meta={SETTINGS_META[k]} value={value(k)} error={err[k]} disabled={!can} cfg={cfg} logo={logo} onLogo={setLogo}
+              onChange={(v) => { setEdits((x) => ({ ...x, [k]: v })); setErr({}); }} />
+          </div>
         ))}
         {can && (
           <div style={{ marginTop: 16 }}>
             {err._ && <ErrorLine>{err._}</ErrorLine>}
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 220 }}><Field label="Why (kept in the history)" value={note} onChange={setNote} maxLength={200} placeholder="For example: the principal asked for Fees in the tabs" /></div>
-              <button className="btn" disabled={!changed.length || save.isPending} onClick={() => { setEdits({}); setErr({}); }}>Discard</button>
-              <button className="btn pri" disabled={!changed.length || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : changed.length ? `Save ${changed.length} ${changed.length === 1 ? 'change' : 'changes'}` : 'Save'}</button>
+              <button className="btn" disabled={!total || save.isPending} onClick={() => { setEdits({}); setLogo(null); setErr({}); }}>Discard all</button>
+              <button className="btn pri" disabled={!total || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : total ? `Save ${total} ${total === 1 ? 'change' : 'changes'}` : 'Save'}</button>
             </div>
           </div>
         )}
@@ -92,7 +140,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   );
 }
 
-function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange }: { schoolId: string; say: Say; meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; onChange: (v: unknown) => void }) {
+function SettingRow({ meta, value, error, disabled, cfg, logo, onLogo, onChange }: { meta: SettingMeta; value: unknown; error?: string; disabled: boolean; cfg: SchoolConfig; logo: File | null; onLogo: (f: File | null) => void; onChange: (v: unknown) => void }) {
   const label = <>{meta.label}{meta.risky && <span className="chip a" style={{ marginLeft: 8 }}>Needs a second person</span>}</>;
   const help = meta.help;
   const str = typeof value === 'string' ? value : '';
@@ -127,7 +175,7 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange
     case 'textarea':
       return box(<div className={`inp ${error ? 'err' : ''}`} style={{ height: 'auto' }}><textarea value={str} onChange={(e) => onChange(e.target.value)} disabled={disabled} aria-label={meta.label} style={ta} /></div>);
     case 'logo':
-      return box(<LogoPick schoolId={schoolId} has={!!str} disabled={disabled} say={say} />);
+      return box(<LogoPick has={!!str} picked={logo} disabled={disabled} onPick={onLogo} />);
     case 'multi':
       // `fees.gstHeads` names the school's own fee heads; every other list names its options.
       return pick(meta.options ? meta.options.map(([key, l]) => ({ key, label: l })) : cfg.feeHeads.map((h) => ({ key: h.key, label: h.name })));
@@ -144,8 +192,8 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange
     case 'gradingScale':
       return box(<GradingEditor value={(Array.isArray(value) ? value : []) as { grade: string; minPct: number }[]} max={meta.max ?? 12} disabled={disabled} onChange={onChange} />);
     case 'notifyRules': {
-      const rules = (value ?? {}) as Record<string, { push: boolean; sms: boolean; email: boolean }>;
-      const set = (ev: string, ch: 'push' | 'sms' | 'email', on: boolean) => {
+      const rules = (value ?? {}) as Record<string, { push: boolean; sms: boolean; email: boolean; whatsapp?: boolean }>;
+      const set = (ev: string, ch: (typeof CHANNELS)[number][0], on: boolean) => {
         const base = rules[ev] ?? MESSAGE_EVENTS.find((e) => e.key === ev)!.defaults;
         onChange({ ...rules, [ev]: { ...base, [ch]: on } });
       };
@@ -153,8 +201,8 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange
         const r = rules[e.key] ?? e.defaults;
         return (
           <div key={e.key} className="kv" style={{ flexWrap: 'wrap', gap: 8 }}>{e.label}{e.urgent ? ' · sent in quiet hours' : ''}
-            <b style={{ display: 'flex', gap: 12 }}>{(['push', 'sms', 'email'] as const).map((ch) => (
-              <Checkbox key={ch} checked={r[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={ch === 'push' ? 'App' : ch === 'sms' ? 'SMS' : 'Email'} />
+            <b style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{CHANNELS.map(([ch, label]) => (
+              <Checkbox key={ch} checked={!!(r as Record<string, boolean | undefined>)[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={label} />
             ))}</b>
           </div>
         );
@@ -175,24 +223,21 @@ function SettingRow({ schoolId, say, meta, value, error, disabled, cfg, onChange
   }
 }
 
-/** The logo goes straight to the school's storage and into its settings (it is a file, not a value to type). */
-function LogoPick({ schoolId, has, disabled, say }: { schoolId: string; has: boolean; disabled: boolean; say: Say }) {
-  const app = useApp();
-  const qc = useQueryClient();
-  const up = useMutation({
-    mutationFn: async (file: File) => {
-      if (!['image/png', 'image/jpeg'].includes(file.type)) throw new Error('Choose a PNG or JPEG image.');
-      if (file.size > 2 * 1024 * 1024) throw new Error('The logo must be 2 MB or smaller.');
-      const data = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] ?? ''); r.onerror = () => no(new Error('That file could not be read.')); r.readAsDataURL(file); });
-      return app.api.logo(schoolId, { name: file.name, mime: file.type as 'image/png', data });
-    },
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['config', schoolId] }); say('The logo was saved. The admin and the app show it from their next load.'); },
-    onError: (e) => say((e as Error).message, 'bad'),
-  });
+/** The logo is a file: picked here, sent with the rest of the change when it is saved. */
+function LogoPick({ has, picked, disabled, onPick }: { has: boolean; picked: File | null; disabled: boolean; onPick: (f: File | null) => void }) {
+  const [err, setErr] = useState('');
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-      <span className={`chip ${has ? 'g' : ''}`}>{has ? 'Logo set' : 'Letters only'}</span>
-      <FilePick accept="image/png,image/jpeg" disabled={disabled || up.isPending} onPick={(f) => up.mutate(f)} className="btn sm">{up.isPending ? 'Uploading…' : has ? 'Replace logo' : 'Upload logo'}</FilePick>
+    <div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span className={`chip ${picked ? 'a' : has ? 'g' : ''}`}>{picked ? `${picked.name}: not saved yet` : has ? 'Logo set' : 'Letters only'}</span>
+        <FilePick accept="image/png,image/jpeg" disabled={disabled} className="btn sm" onPick={(f) => {
+          if (!['image/png', 'image/jpeg'].includes(f.type)) return setErr('Choose a PNG or JPEG image.');
+          if (f.size > 2 * 1024 * 1024) return setErr('The logo must be 2 MB or smaller.');
+          setErr(''); onPick(f);
+        }}>{has || picked ? 'Choose another' : 'Choose a logo'}</FilePick>
+        {picked && <button className="btn sm" onClick={() => onPick(null)}>Keep the old one</button>}
+      </div>
+      {err && <ErrorLine>{err}</ErrorLine>}
     </div>
   );
 }
@@ -240,40 +285,43 @@ function Templates({ schoolId, can, say }: { schoolId: string; can: boolean; say
   return (
     <div className="card s12 rise">
       <div className="ch"><h2>Templates</h2><span className="chip">{(list.data ?? []).length}</span></div>
-      <div className="help">A template carries settings and roles, never who the school is (name, contacts, logo letters).</div>
+      <div className="help">A template carries settings and roles, never who the school is (name, contacts, logo letters). Applying one to many schools at once is on Blueprints.</div>
       {(list.data ?? []).map((t) => <div key={t.id} className="kv">{t.name}<b>{t.keys} settings · {t.roles} roles · {ago(t.createdAt)}</b></div>)}
       {can && (
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
           <div style={{ flex: 1, minWidth: 200 }}><Field label="Save this school’s setup as" value={name} onChange={setName} maxLength={60} placeholder="For example: CBSE day school" /></div>
           <button className="btn" disabled={name.trim().length < 2 || save.isPending} onClick={() => save.mutate()}>Save template</button>
-          <button className="btn pri" disabled={!(list.data ?? []).length} onClick={() => setApplying(true)}>Apply a template…</button>
+          <button className="btn pri" disabled={!(list.data ?? []).length} onClick={() => setApplying(true)}>Start from a template…</button>
         </div>
       )}
-      {applying && <ApplyDialog schoolId={schoolId} onClose={() => setApplying(false)} onDone={(n) => { setApplying(false); void qc.invalidateQueries({ queryKey: ['config'] }); say(`Applied to ${n} ${n === 1 ? 'school' : 'schools'}.`); }} />}
+      {applying && <ApplyDialog only={schoolId} onClose={() => setApplying(false)} onDone={(n) => { setApplying(false); void qc.invalidateQueries({ queryKey: ['config'] }); say(`Applied to ${n} ${n === 1 ? 'school' : 'schools'}.`); }} />}
     </div>
   );
 }
 
-function ApplyDialog({ schoolId, onClose, onDone }: { schoolId: string; onClose: () => void; onDone: (n: number) => void }) {
+/** Applies a saved setup: to this school only (its Configuration), or to the schools chosen (Blueprints → Setup templates). */
+export function ApplyDialog({ only, onClose, onDone }: { only?: string; onClose: () => void; onDone: (n: number) => void }) {
   const app = useApp();
   const list = useQuery({ queryKey: ['config-templates'], queryFn: app.api.config.templates });
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => app.api.schools() });
   const [tpl, setTpl] = useState('');
-  const [picked, setPicked] = useState<Set<string>>(new Set([schoolId]));
+  const [picked, setPicked] = useState<Set<string>>(new Set(only ? [only] : []));
   const [err, setErr] = useState('');
   const go = useMutation({ mutationFn: () => app.api.config.applyTemplate(tpl, [...picked]), onSuccess: (r) => onDone(r.applied), onError: (e) => setErr((e as Error).message) });
   const rows = (schools.data ?? []).filter((s) => s.status !== 'archived' && s.status !== 'onboarding');
   return (
     <Dialog title="Apply a template" onClose={onClose} width={560}>
       <SelectField label="Template" value={tpl} onChange={setTpl} options={[{ value: '', label: 'Choose a template' }, ...(list.data ?? []).map((t) => ({ value: t.id, label: t.name }))]} />
-      <div className="lbl" style={{ margin: '12px 0 6px' }}>Schools</div>
-      <div style={{ maxHeight: 260, overflow: 'auto' }}>
-        {rows.map((s) => (
-          <label key={s.id} className="hwc" style={{ display: 'flex', padding: '6px 0' }}>
-            <Checkbox checked={picked.has(s.id)} onChange={(c) => { const n = new Set(picked); if (c) n.add(s.id); else n.delete(s.id); setPicked(n); }} />{s.name}
-          </label>
-        ))}
-      </div>
+      {!only && <>
+        <div className="lbl" style={{ margin: '12px 0 6px' }}>Schools</div>
+        <div style={{ maxHeight: 260, overflow: 'auto' }}>
+          {rows.map((s) => (
+            <label key={s.id} className="hwc" style={{ display: 'flex', padding: '6px 0' }}>
+              <Checkbox checked={picked.has(s.id)} onChange={(c) => { const n = new Set(picked); if (c) n.add(s.id); else n.delete(s.id); setPicked(n); }} />{s.name}
+            </label>
+          ))}
+        </div>
+      </>}
       {err && <ErrorLine>{err}</ErrorLine>}
       <div className="help" style={{ marginTop: 10 }}>Each school gets a new configuration version, which can be rolled back. Modules outside a school’s plan are left off.</div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>

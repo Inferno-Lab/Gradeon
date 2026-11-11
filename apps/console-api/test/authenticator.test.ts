@@ -33,14 +33,20 @@ describe('console authenticator', () => {
     expect(team.find((m: { email: string }) => m.email === 'kaushal@gradeon.app').authenticator).toBe(true);
   });
 
-  it('lets a super admin reset a lost authenticator and a password', async () => {
-    await h.c('POST', '/console/v1/team', { token: admin, body: { name: 'Tia Ops', email: 'tia@gradeon.app', roles: ['support'], password: 'first-long-password' } });
+  it('lets a super admin reset a lost authenticator, never set someone’s password; the person changes their own', async () => {
+    await h.invite(admin, { name: 'Tia Ops', email: 'tia@gradeon.app', roles: ['support'] }, 'first-long-password');
     const first = (await login('tia@gradeon.app', 'first-long-password')).json.challenge;
     expect((await verify(first.challengeId, totp(first.enroll.secret))).status).toBe(200);
     const tia = (await h.c('GET', '/console/v1/team', { token: admin })).json.find((m: { email: string }) => m.email === 'tia@gradeon.app');
-    expect((await h.c('PUT', `/console/v1/team/${tia.id}`, { token: admin, body: { resetAuthenticator: true, password: 'second-long-password' } })).status).toBe(204);
+    expect((await h.c('PUT', `/console/v1/team/${tia.id}`, { token: admin, body: { resetAuthenticator: true } })).status).toBe(204);
+    const again = (await login('tia@gradeon.app', 'first-long-password')).json.challenge;
+    expect(again.enroll).toBeDefined();
+    const tiaToken = (await verify(again.challengeId, totp(again.enroll.secret))).json.accessToken;
+    // My account: the current password is needed, then the new one works and the old one does not.
+    expect((await h.c('POST', '/console/v1/auth/password', { token: tiaToken, body: { current: 'wrong-one', next: 'second-long-password' } })).status).toBe(400);
+    expect((await h.c('POST', '/console/v1/auth/password', { token: tiaToken, body: { current: 'first-long-password', next: 'second-long-password' } })).status).toBe(204);
     expect((await login('tia@gradeon.app', 'first-long-password')).status).toBe(401);
-    expect((await login('tia@gradeon.app', 'second-long-password')).json.challenge.enroll).toBeDefined();
+    expect((await login('tia@gradeon.app', 'second-long-password')).status).toBe(200);
   });
 
   it('locks an account after five wrong passwords', async () => {

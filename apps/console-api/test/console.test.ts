@@ -33,10 +33,10 @@ describe('console sign-in', () => {
   });
   it('needs a token, and only super admins can reach the team', async () => {
     expect((await h.c('GET', '/console/v1/fleet')).status).toBe(401);
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'], password: 'long-enough-pass' } });
+    await h.invite(t, { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'] }, 'long-enough-pass');
     const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
     expect((await h.c('GET', '/console/v1/team', { token: sam })).status).toBe(200);
-    expect((await h.c('POST', '/console/v1/team', { token: sam, body: { name: 'X', email: 'x@y.zz', roles: ['support'], password: 'long-enough-pass' } })).status).toBe(403);
+    expect((await h.invite(sam, { name: 'X', email: 'x@y.zz', roles: ['support'] }, 'long-enough-pass')).status).toBe(403);
     expect((await h.c('POST', '/console/v1/releases', { token: sam, body: { version: '2026.10.9' } })).status).toBe(403);
   });
   it('never lets the last super admin be removed', async () => {
@@ -164,7 +164,7 @@ describe('actions', () => {
     const asked = await h.c('POST', '/console/v1/actions', { token: t, body: { action: 'school.erase', schoolId: id, confirmCode: 'freshschool' } });
     expect(asked.json.status).toBe('pending_approval');
     expect((await h.c('POST', `/console/v1/actions/${asked.json.id}/approve`, { token: t })).status).toBe(403);
-    await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+    await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
     const second = await h.signIn('second@gradeon.app', 'another-long-pass');
     const done = await h.c('POST', `/console/v1/actions/${asked.json.id}/approve`, { token: second });
     expect(done.json.status).toBe('done');

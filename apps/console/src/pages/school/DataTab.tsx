@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ImportInputIn } from '@gradeon/api-client';
-import type { ImportBatchRow, ImportKind, ImportPreview, MigrationView, ReadinessMark } from '@gradeon/contracts';
-import { EmptyCard, Field, FilePick, NumberField, Select } from '@gradeon/web-ui';
+import { IMPORT_SOURCES, type ImportBatchRow, type ImportKind, type ImportPreview, type MigrationView, type SchoolDetail } from '@gradeon/contracts';
+import { Dialog, EmptyCard, Field, FilePick, Select } from '@gradeon/web-ui';
+import { RecordsTab } from './IntegrationsTab';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
 
@@ -10,15 +11,21 @@ type Say = (text: string, tone?: 'ok' | 'bad') => void;
 /** What is being imported: a file (CSV text or an .xlsx as a data URL), or rows typed or fixed in the grid. */
 type Source = { kind: 'file'; fileName: string; content: string; uploadId?: string } | { kind: 'rows'; fileName: string; rows: Record<string, string>[]; uploadId?: string };
 
-const SOURCES: Record<string, string> = { gradeon: 'Gradeon template', fedena: 'Fedena export', entab: 'Entab export', sheet: 'The school’s own sheet', typed: 'Typed or fixed here' };
+const SOURCES = IMPORT_SOURCES;
 const SHOWN = 100;
 const blank = (k: ImportKind) => Object.fromEntries(k.columns.map((c) => [c.key, '']));
 const readFile = (f: File) => (/\.(csv|txt)$/i.test(f.name) ? f.text() : new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(new Error('That file could not be read.')); r.readAsDataURL(f); }));
 const save = (blob: Blob, name: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
 
-/** Moving a school in: Gradeon's onboarding team imports what the school sent, checks it adds up, and undoes what was wrong. */
-export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) {
+/**
+ * A school's data: Gradeon's onboarding team imports what the school sent, checks it adds up and undoes what was wrong; the
+ * export of everything; leavers past retention; and, at the bottom, erasing the school.
+ */
+export function DataTab({ d, say, danger }: { d: SchoolDetail; say: Say; danger: React.ReactNode }) {
+  const schoolId = d.id;
   const app = useApp();
+  const about = useQuery({ queryKey: ['about'], queryFn: app.api.about, staleTime: Infinity });
+  const [undoing, setUndoing] = useState<ImportBatchRow | null>(null);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['migration', schoolId], queryFn: () => app.api.migration.view(schoolId) });
   const can = app.can('schools.configure');
@@ -44,7 +51,7 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
     onSuccess: (b) => { change(null); refresh(); say(`Imported ${kind!.label.toLowerCase()}: ${b.created} added, ${b.updated} updated${b.skipped ? `, ${b.skipped} left out` : ''}.`); },
     onError: fail,
   });
-  const undo = useMutation({ mutationFn: (id: string) => app.api.migration.undo(schoolId, id), onSuccess: (batches) => { refresh({ batches }); say('Undone. Everything it changed is back as it was.'); }, onError: fail });
+  const undo = useMutation({ mutationFn: (id: string) => app.api.migration.undo(schoolId, id), onSuccess: (batches) => { setUndoing(null); refresh({ batches }); say('Undone. Everything it changed is back as it was.'); }, onError: fail });
   // Setting a file aside says why: the school reads it under Moving in.
   const [asideFor, setAsideFor] = useState<string | null>(null);
   const [why, setWhy] = useState('');
@@ -56,43 +63,13 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
   });
   const load = useMutation({ mutationFn: () => app.api.migration.sample(schoolId, Number(sample)), onSuccess: (batches) => { refresh({ batches }); say(`A test school of ${sample} students was imported, file by file.`); }, onError: fail });
   const exp = useMutation({ mutationFn: () => app.api.migration.exportAll(schoolId), onSuccess: (b) => save(b, `${schoolId}-export.zip`), onError: fail });
-  const mark = useMutation({ mutationFn: (b: ReadinessMark) => app.api.migration.mark(schoolId, b), onSuccess: (next) => qc.setQueryData(['migration', schoolId], next), onError: fail });
-  const [oldDues, setOldDues] = useState('');
   const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (blob, k) => save(blob, `${k}-template.xlsx`), onError: fail });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
-  if (q.isError || !v) return <EmptyCard error title="Migration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="Migration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
-  const ready = v.readiness.filter((r) => r.done).length;
+  if (q.isError || !v) return <EmptyCard error title="Data" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s data didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const pickKind = (k: string) => { setKindKey(k); change(null); };
   return (
     <section className="grid">
-      <div className="card s12 rise">
-        <div className="ch"><h2>Ready to go live</h2><span className={`chip ${ready === v.readiness.length ? 'g' : 'a'}`}>{ready} of {v.readiness.length}</span></div>
-        <div className="help">Worked out from the school’s own data. Staff and family invites are sent from the school’s admin, on Moving in.</div>
-        <div style={{ marginTop: 10 }}>
-          {v.readiness.map((r) => (
-            <div key={r.key} className="grd rw" style={{ '--cols': '28px minmax(0,1fr) minmax(0,auto)', height: 'auto', padding: '10px 0' } as React.CSSProperties}>
-              <span className={`st ${r.done ? 'g' : 'a'}`} aria-label={r.done ? 'Done' : 'Not yet'}><i></i></span>
-              <b style={{ font: '700 14px var(--fb)' }}>{r.label}</b>
-              <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                {r.detail}
-                {can && r.manual && <button className="btn sm" disabled={mark.isPending} onClick={() => mark.mutate({ key: r.key as 'config_reviewed' | 'staff_trained', done: !r.done })}>{r.done ? 'Undo' : 'Mark done'}</button>}
-              </span>
-            </div>
-          ))}
-          {can && v.dues && (
-            <>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginTop: 12 }}>
-                <div style={{ flex: '1 1 220px', maxWidth: 300 }}><NumberField label="The old system’s total dues (₹)" min={0} value={oldDues || (v.dues.oldSystem == null ? '' : String(v.dues.oldSystem))} onChange={setOldDues} /></div>
-                <button className="btn" disabled={mark.isPending} onClick={() => mark.mutate({ key: 'old_dues', amount: oldDues === '' ? null : Math.round(Number(oldDues)) })}>Compare</button>
-              </div>
-              <div className="help">From the old system’s dues report: go-live waits until what is owed here matches it to the rupee.</div>
-            </>
-          )}
-        </div>
-        <div className="help" style={{ marginTop: 8 }}>{v.students} of {v.studentLimit} students on the plan.</div>
-      </div>
-
       {can && kind && (
         <div className="card s12 rise">
           <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}><h2>Import</h2><span className="grow"></span><button className="btn sm" disabled={tpl.isPending} onClick={() => tpl.mutate(kind.key)}>Blank template</button></div>
@@ -111,7 +88,16 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
       <div className="card s12 rise">
         <div className="ch"><h2>Imports</h2><span className="chip">{v.batches.length}</span></div>
         <div className="help">Each import is one batch. The newest can be undone for 30 days; undo the newer ones first to go further back.</div>
-        {v.batches.length === 0 ? <div className="help" style={{ marginTop: 10 }}>Nothing imported yet.</div> : v.batches.map((b) => <BatchRow key={b.id} b={b} kinds={v.kinds} canUndo={can && b.canUndo} busy={undo.isPending} onUndo={() => undo.mutate(b.id)} />)}
+        {v.batches.length === 0 ? <div className="help" style={{ marginTop: 10 }}>Nothing imported yet.</div> : v.batches.map((b) => <BatchRow key={b.id} b={b} kinds={v.kinds} canUndo={can && b.canUndo} busy={undo.isPending} onUndo={() => setUndoing(b)} />)}
+        {undoing && (
+          <Dialog title="Undo this import?" tag={{ text: v.kinds.find((k) => k.key === undoing.kind)?.label ?? undoing.kind, tone: 'a' }} onClose={() => setUndoing(null)} width={460}>
+            <p style={{ marginTop: 0 }}>The {undoing.created} {undoing.created === 1 ? 'record it added is' : 'records it added are'} removed and the {undoing.updated} it updated go back to how they were. Anything added since that depends on them is refused first.</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button className="btn" onClick={() => setUndoing(null)}>Keep it</button>
+              <button className="btn dngf" disabled={undo.isPending} onClick={() => undo.mutate(undoing.id)}>Undo {undoing.created + undoing.updated} rows</button>
+            </div>
+          </Dialog>
+        )}
       </div>
 
       <div className="card s12 rise">
@@ -141,17 +127,20 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
 
       {can && (
         <div className="card s12 rise">
-          <div className="ch"><h2>Test school and export</h2></div>
-          {v.students === 0 && (
+          <div className="ch"><h2>{about.data?.demos && v.students === 0 ? 'Test school and export' : 'Export'}</h2></div>
+          {about.data?.demos && v.students === 0 && (
             <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ width: 200 }}><Field label="Students (10 to 3,000)" value={sample} onChange={(x) => setSample(x.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" /></div>
               <button className="btn" disabled={load.isPending || Number(sample) < 10 || Number(sample) > 3000} onClick={() => load.mutate()}>{load.isPending ? 'Importing…' : 'Load a realistic test school'}</button>
             </div>
           )}
-          <div className="help">{v.students === 0 ? 'The test school goes through the same importer, file by file, so it can be undone like any import. Only for a school with no students. ' : ''}The export is every kind of record in the import templates: what the school takes with it if it leaves.</div>
+          <div className="help">{about.data?.demos && v.students === 0 ? 'The test school goes through the same importer, file by file, so it can be undone like any import. Only for a school with no students. ' : ''}The export is every kind of record in the import templates: what the school takes with it if it leaves.</div>
           <div style={{ marginTop: 12 }}><button className="btn" disabled={exp.isPending} onClick={() => exp.mutate()}>{exp.isPending ? 'Preparing…' : 'Export everything'}</button></div>
         </div>
       )}
+
+      <RecordsTab d={d} say={say} />
+      {danger}
     </section>
   );
 }

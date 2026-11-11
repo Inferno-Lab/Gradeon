@@ -48,9 +48,10 @@ export class HooksController {
   async app(@Param('slug') slug: string, @Req() req: FastifyRequest, @Res() res: FastifyReply) {
     const info = await this.tenants.registry.school(slug);
     if (!info) return res.status(404).type('text/html').send(page('Not found', '<h1>We could not find that school</h1><p>Check the letter and try again.</p>'));
-    const builds = (await this.tenants.registry.pool.query<{ platform: string; url: string | null }>(
-      "select distinct on (b.platform) b.platform, b.url from builds b where b.school_id = $1 and b.status = 'done' order by b.platform, b.created_at desc", [info.id])).rows;
-    const android = builds.some((b) => b.platform === 'android') ? `https://play.google.com/store/apps/details?id=${appIdFor(slug)}` : null;
+    const builds = (await this.tenants.registry.pool.query<{ platform: string; url: string | null; store: string | null }>(
+      "select distinct on (b.platform) b.platform, b.url, b.store from builds b where b.school_id = $1 and b.status = 'done' order by b.platform, b.created_at desc", [info.id])).rows;
+    const played = builds.find((b) => b.platform === 'android');
+    const android = played ? `https://play.google.com/store/apps/details?id=${played.store || appIdFor(slug)}` : null;
     const ios = builds.find((b) => b.platform === 'ios' && b.url?.startsWith('https://'))?.url ?? null;
     const ua = String(req.headers['user-agent'] ?? '');
     const go = /android/i.test(ua) ? android : /iphone|ipad|ipod/i.test(ua) ? ios : null;

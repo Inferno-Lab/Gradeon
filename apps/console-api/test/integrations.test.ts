@@ -8,7 +8,7 @@ let second: string;
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
   second = await h.signIn('second@gradeon.app', 'another-long-pass');
 }, 240_000);
 afterAll(async () => {

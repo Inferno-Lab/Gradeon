@@ -4,22 +4,25 @@ import { HttpError } from '@gradeon/api-client';
 import { CAPABILITIES, CAPABILITY_LABELS, INTEGRATION_PROVIDERS, providerDef, type SchoolDetail } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Presence, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { ago, count } from '../../app/format';
+import { ago } from '../../app/format';
+import { url } from '../../app/base';
+
+/** A phone number or address with only its end showing, until someone asks to see it. */
+export const mask = (to: string) => (to.includes('@') ? to.replace(/^(.).*?(@.*)$/, '$1•••$2') : to.replace(/\d(?=(?:\D*\d){4})/g, '•'));
 
 /** One school's view of the Hub: what serves each capability (its own route or the default), its own connections, its volume and failures. */
 export function IntegrationsTab({ d }: { d: SchoolDetail }) {
   const app = useApp();
+  const [shown, setShown] = useState<Set<string>>(new Set());
   const view = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, enabled: app.can('integrations.read') });
   const fails = useQuery({ queryKey: ['activity', d.slug, '', 'failed'], queryFn: () => app.api.integrations.activity({ school: d.slug, status: 'failed', limit: 10 }), enabled: app.can('integrations.read') });
-  if (!app.can('integrations.read')) return <EmptyCard title="Integrations" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
+  if (!app.can('integrations.read')) return <EmptyCard title="Messaging" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
   if (view.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 24 }} />;
   const v = view.data;
   if (!v) return <EmptyCard error title="Integrations" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(view.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void view.refetch()}>Try again</button>} />;
   const name = (id: string | null) => (id ? v.connections.find((c) => c.id === id)?.name ?? 'Deleted' : '');
   const caps = CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k)));
   const own = v.connections.filter((c) => c.schoolId === d.id);
-  const limit = d.entitlement.limits.smsPerMonth;
-  const pct = limit ? Math.min(100, Math.round((d.usage.sms / limit) * 100)) : 0;
   return (
     <>
       <section className="grid" data-even="">
@@ -41,16 +44,10 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
               );
             })}
           </div>
-          <div className="help" style={{ marginTop: 10 }}>Change routes on the <a href="#" onClick={(e) => { e.preventDefault(); app.go('/integrations'); }}>Integrations</a> page.</div>
+          <div className="help" style={{ marginTop: 10 }}>Change routes on <a href={url('/integrations/routing')} onClick={(e) => { e.preventDefault(); app.go('/integrations/routing'); }}>Integrations → Routing</a>. Texts used this month are on the Overview.</div>
         </div>
         <div className="card s5 rise">
-          <div className="ch"><h2>Texts this month</h2><span className="chip">{count(d.usage.sms)} of {limit ? count(limit) : 'no limit'}</span></div>
-          <div className="us" style={{ marginTop: 12 }}>
-            <div className="r">SMS parts sent<b>{pct}%</b></div>
-            <div className={`bar ${pct > 80 ? 'warn' : ''}`}><i style={{ width: `${pct}%` }}></i></div>
-          </div>
-          <div className="help" style={{ marginTop: 10 }}>Past the limit, texts are refused (sign-in codes never are). Raise it under Entitlements.</div>
-          <div className="lbl" style={{ margin: '16px 0 4px' }}>Its own connections</div>
+          <div className="ch"><h2>Its own connections</h2><span className="chip">{own.length}</span></div>
           {!own.length ? <div className="help">None: it uses Gradeon’s.</div> : own.map((c) => (
             <div key={c.id} className="kv" style={{ alignItems: 'center' }}><span style={{ minWidth: 0 }}>{c.name}</span><b style={{ display: 'flex', gap: 6 }}><span className="chip">{providerDef(c.provider)?.name}</span><span className={`chip ${c.state === 'live' ? 'g' : c.state === 'paused' ? 'c' : 'a'}`}>{c.state}</span></b></div>
           ))}
@@ -61,7 +58,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         <div style={{ marginTop: 8 }}>
           {!(fails.data?.rows ?? []).length ? <div className="help">No message to this school’s families has failed lately.</div> : fails.data!.rows.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'center' }}>
-              <span style={{ minWidth: 0 }}><b className="num">{m.to}</b> · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--cD)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
+              <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--cD)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
               <b style={{ whiteSpace: 'nowrap' }}>{ago(m.createdAt)}</b>
             </div>
           ))}
@@ -72,7 +69,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
 }
 
 /** Records of students who left, past the school's retention period: erased only after a second person approves. */
-export function RecordsTab({ d, say }: { d: SchoolDetail; say: (m: string, tone?: 'bad') => void }) {
+export function RecordsTab({ d, say }: { d: SchoolDetail; say: (m: string, tone?: 'ok' | 'bad') => void }) {
   const app = useApp();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['retention', d.id], queryFn: () => app.api.retention(d.id), enabled: d.status !== 'onboarding' });
@@ -80,7 +77,7 @@ export function RecordsTab({ d, say }: { d: SchoolDetail; say: (m: string, tone?
   if (q.isLoading) return <div className="skc" style={{ height: 200, borderRadius: 24 }} />;
   const r = q.data;
   return (
-    <section className="card rise">
+    <section className="card s12 rise">
       <div className="ch"><h2>Students who left</h2><span className={`chip ${r?.due ? 'a' : 'g'}`}>{r ? `${r.due} past ${r.months} months` : 'Unknown'}</span></div>
       <p className="help" style={{ margin: '8px 0 0' }}>
         {q.isError ? (q.error as Error).message

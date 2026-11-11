@@ -140,7 +140,7 @@ export const SchoolSettingsSchema = z.object({
   // Which languages the app offers; the school's default language comes first.
   'app.languages': z.array(z.enum(['en', 'hi', 'mr'])).min(1).default(['en', 'hi', 'mr']),
   // Notifications: which message goes out on which channel, and when families are left in peace.
-  'notify.rules': z.record(z.string(), z.object({ push: z.boolean(), sms: z.boolean(), email: z.boolean() })).default({}),
+  'notify.rules': z.record(z.string(), z.object({ push: z.boolean(), sms: z.boolean(), email: z.boolean(), whatsapp: z.boolean().default(false) })).default({}),
   'notify.quietFrom': z.string().regex(/^\d{2}:\d{2}$/, 'Use a time like 21:00').default('21:00'),
   'notify.quietTo': z.string().regex(/^\d{2}:\d{2}$/, 'Use a time like 07:00').default('07:00'),
   // Message templates by key, with {placeholders}. Empty means the built-in wording.

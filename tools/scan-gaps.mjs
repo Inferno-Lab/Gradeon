@@ -2,7 +2,7 @@
 // Looks for empty space: a hole under the last card, cards side by side with unequal heights, a card with a big blank inside,
 // and content that stops short of the right edge. Usage: node tools/scan-gaps.mjs [--only admin|console] [--sizes 1440x900,1920x1080] [--dark]
 import { chromium } from '@playwright/test';
-import { adminPaths } from './lib/pages.mjs';
+import { adminPaths, consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -34,7 +34,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleKey();
-  for (const p of ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
+  for (const p of consolePaths(c.school)) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 
 const scan = () => {

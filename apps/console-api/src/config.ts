@@ -119,7 +119,11 @@ export class ConfigService implements OnModuleInit {
     if (after.changes.length) {
       await this.db.pool.query('insert into config_versions (id, school_id, version, values, changes, note, by) values ($1,$2,$3,$4,$5,$6,$7)',
         [newId('cfv'), schoolId, after.version, JSON.stringify(after.values), JSON.stringify(after.changes), patch.note ?? '', by]);
-      await this.db.pool.query('update schools set config_version = config_version + 1 where id = $1', [schoolId]);
+      // Who the school is lives in its settings; the registry keeps a copy for the fleet, the console and the school's address.
+      const v = after.values as Record<string, unknown>;
+      const id = (k: string) => (typeof v[k] === 'string' && (v[k] as string).trim() ? (v[k] as string).trim() : null);
+      await this.db.pool.query('update schools set config_version = config_version + 1, name = coalesce($2, name), short_name = coalesce($3, short_name), color = coalesce($4, color), logo_text = coalesce($5, logo_text) where id = $1',
+        [schoolId, id('school.name'), id('school.shortName'), id('brand.color'), id('brand.logoText')]);
       await this.db.audit(by, 'config.changed', 'school', schoolId, { keys: after.changes.map((c) => c.key).join(', ') });
     }
     return this.get(schoolId);
@@ -266,7 +270,10 @@ export class ConfigController {
   async patch(@Me() me: ConsoleUser, @Param('id') id: string, @Body(new ZodPipe(ConfigPatch)) body: ConfigPatch): Promise<SchoolConfig | { pending: true; actionId: string }> {
     const risky = Object.keys(body.changes).filter((k) => SETTINGS_META[k as keyof typeof SETTINGS_META]?.risky);
     if (risky.length) {
-      const a = await this.actions.request(me, { action: 'config.apply', schoolId: id, params: { changes: body.changes, note: body.note, expectedVersion: body.expectedVersion }, dryRun: false });
+      // The approver sees each setting as it is now and as it would become.
+      const now = (await this.config.get(id)).values;
+      const diff = Object.entries(body.changes).map(([key, after]) => ({ key, before: now[key] ?? null, after }));
+      const a = await this.actions.request(me, { action: 'config.apply', schoolId: id, params: { changes: body.changes, note: body.note, expectedVersion: body.expectedVersion, diff }, dryRun: false });
       if (a.status === 'pending_approval') return { pending: true, actionId: a.id };
       return this.config.get(id);
     }

@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  date,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
@@ -77,6 +78,8 @@ export const schools = pgTable(
     customDomain: text('custom_domain').notNull().default(''),
     /** Started from the demo data: demo sign-in cards and the demo code work. */
     demo: boolean('demo').notNull().default(false),
+    /** The day Gradeon pressed Go live: until then the school is moving in (Moving in, invites, imports). */
+    wentLiveAt: timestamp('went_live_at', { withTimezone: true }),
     /** What the host said about the school's own address: verified, certificate, the DNS target to point at. */
     domainState: jsonb('domain_state').$type<{ verified?: boolean; certificate?: string; target?: string; checkedAt?: string; error?: string }>().notNull().default({}),
     appName: text('app_name').notNull().default(''),
@@ -153,6 +156,10 @@ export const actions = pgTable('actions', {
   approvedBy: text('approved_by'),
   dryRun: boolean('dry_run').notNull().default(false),
   summary: text('summary').notNull().default(''),
+  /** What was asked, kept after the result replaces the summary. */
+  asked: text('asked').notNull().default(''),
+  /** Why a second person said no. */
+  decisionNote: text('decision_note').notNull().default(''),
   createdAt: at('created_at'),
   finishedAt: timestamp('finished_at', { withTimezone: true }),
 });
@@ -233,6 +240,11 @@ export const consoleUsers = pgTable(
     totpSecret: text('totp_secret'),
     /** The last authenticator code used, with when ("123456@1731234567"): a code works once. */
     totpLast: text('totp_last'),
+    /** The Fleet incident this person dismissed (it stays dismissed for them). */
+    dismissedIncident: text('dismissed_incident'),
+    /** An open invitation: the link's hash and when it stops working. */
+    inviteHash: text('invite_hash'),
+    inviteExpires: timestamp('invite_expires', { withTimezone: true }),
     failedLogins: integer('failed_logins').notNull().default(0),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: at('created_at'),
@@ -298,6 +310,11 @@ export const invoices = pgTable('invoices', {
   period: text('period').notNull(),
   amount: integer('amount').notNull(),
   status: text('status').notNull(),
+  lines: jsonb('lines').$type<{ label: string; amount: number }[]>().notNull().default([]),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  sentTo: text('sent_to'),
+  paidOn: date('paid_on'),
+  paidRef: text('paid_ref'),
   createdAt: at('created_at'),
 });
 
@@ -368,6 +385,9 @@ export const errorReports = pgTable(
     count: integer('count').notNull().default(1),
     firstAt: at('first_at'),
     lastAt: at('last_at'),
+    /** Marked handled; it shows again once it happens after this. */
+    handledAt: timestamp('handled_at', { withTimezone: true }),
+    handledBy: text('handled_by'),
   },
   (t) => [index('error_reports_last_idx').on(t.lastAt)],
 );

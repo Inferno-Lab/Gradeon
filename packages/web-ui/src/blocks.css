@@ -116,3 +116,10 @@
   .mod { position: static !important; inset: auto !important; }
   .dlg { box-shadow: none !important; max-height: none !important; overflow: visible !important; width: auto !important; }
 }
+/* A list of choices down the side of a page (a report, a group of settings): one is open. */
+.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
+.nest .rpb:hover{background:var(--sunk)}
+.nest .rpb.on{background:var(--vS);color:var(--vD)}
+.nest .rpb b{display:block;font:700 14px var(--fb)}
+.nest .rpb small{display:block;font:500 12px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
+.nest .rpb.on small{color:inherit;opacity:.75}

@@ -2,6 +2,7 @@
 // Looks for what the eye catches and audit-ui does not: text cut by an ellipsis, boxes that hide their own content vertically,
 // and scrollable areas whose scrollbar is hidden. Usage: node tools/scan-cutoff.mjs [--only admin|console] [--sizes 1280x720,1440x900]
 import { chromium } from '@playwright/test';
+import { consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -34,7 +35,7 @@ if (only !== 'console') {
 }
 if (only !== 'admin') {
   const c = await consoleKey();
-  for (const p of ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
+  for (const p of consolePaths(c.school)) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 
 const scan = () => {

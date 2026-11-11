@@ -1,6 +1,6 @@
 import dns from 'node:dns/promises';
 import { closeModules } from '@gradeon/config-engine';
-import type { DeployTarget, StepKey, WizardPayload } from '@gradeon/contracts';
+import type { DeployTarget, RoleTemplate, StepKey, WizardPayload } from '@gradeon/contracts';
 import { migrate, pg } from '@gradeon/db';
 import { seedSchool } from '@gradeon/db/seed';
 import { hashPassword, randomToken, seal, unseal } from '@gradeon/security';
@@ -35,6 +35,8 @@ export interface StepCtx extends DescribeCtx {
   payload: WizardPayload;
   target: DeployTarget;
   params: Record<string, unknown>;
+  /** The starting roles (Blueprints → Starting roles) as they were when this run began. */
+  roles: RoleTemplate[];
   log: (level: 'info' | 'warn' | 'error', text: string) => void;
   /** Read the school again after an earlier step changed it. */
   reload: () => Promise<SchoolRecord>;
@@ -162,7 +164,7 @@ const migrateSeed: Driver = {
         const report = await seedSchool(pool, {
           school: { name: p.basics.name, shortName: p.basics.shortName, tagline: p.branding.tagline, place: [p.basics.board, p.basics.city].filter(Boolean).join(' · '), phone: p.basics.contactPhone, email: p.basics.contactEmail, address: [p.basics.address, p.basics.city].filter(Boolean).join(', '), color: p.branding.color, logoText: p.branding.logoText, language: p.basics.language },
           admin: { name: p.admin.name, email: p.admin.email, phone: p.admin.phone, passwordHash: '!' },
-          modules: closeModules(p.plan.modules), data: p.data.start === 'demo' ? 'demo' : 'empty', demoPasswordHash: await demoHash,
+          modules: closeModules(p.plan.modules), data: p.data.start === 'demo' ? 'demo' : 'empty', demoPasswordHash: await demoHash, roleTemplates: c.roles,
         });
         tail = report.students ? `roles, periods and templates, then ${report.students.toLocaleString('en-IN')} sample students in ${report.classes} classes` : 'roles, periods and templates';
         c.log('info', `seeded in ${report.ms} ms`);

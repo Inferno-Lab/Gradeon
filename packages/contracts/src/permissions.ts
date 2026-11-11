@@ -136,6 +136,14 @@ export interface RoleTemplate {
 
 const ALL: Permission[] = [...PERMISSIONS];
 
+/** The starting roles as the console saves them: the built-in ones stay (they can be renamed and changed), more can be added. */
+export const RoleTemplatesPut = z.array(z.object({
+  key: z.string().trim().regex(/^[a-z][a-z0-9_]{1,23}$/, 'Use 2 to 24 lowercase letters, numbers or _'),
+  name: z.string().trim().min(2, 'Name the role').max(40),
+  description: z.string().trim().max(160).default(''),
+  permissions: z.array(z.enum(PERMISSIONS)),
+})).min(1).max(30);
+
 export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: 'principal', name: 'Principal', description: 'Everything in the school.', permissions: ALL },
   {

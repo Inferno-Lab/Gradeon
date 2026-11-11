@@ -1,19 +1,38 @@
-import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Patch, Post, type OnModuleInit } from '@nestjs/common';
 import { activeFeatures, activeModules } from '@gradeon/config-engine';
 import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
 import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateXlsx, undoBatch } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { z } from 'zod';
+import type { Registry } from '@gradeon/tenancy';
+import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
-import { ENV, type Env } from './env.js';
+import { ENV, demosAllowed, type Env } from './env.js';
 import { withSchoolDb } from './school-db.js';
+import { REGISTRY } from './tokens.js';
 
 const n = async (pool: pg.Pool, sql: string) => Number((await pool.query<{ n: string }>(sql)).rows[0]!.n);
 
 /** Gradeon's onboarding team moves a school in: files in, checked, imported as batches that add up, and undone if wrong. */
 @Injectable()
-export class Migration {
-  constructor(private readonly db: Db, @Inject(ENV) private readonly env: Env) {}
+export class Migration implements OnModuleInit {
+  constructor(private readonly db: Db, private readonly actions: Actions, @Inject(ENV) private readonly env: Env, @Inject(REGISTRY) private readonly registry: Registry) {}
+
+  onModuleInit(): void {
+    // Go live is the end of moving in: the school's Moving in page closes and the day is kept. Only with every item green.
+    this.actions.handle('school.golive', async (schoolId, _params, by) => {
+      const r = (await this.db.pool.query<{ name: string; slug: string; status: string; went_live_at: Date | null }>('select name, slug, status, went_live_at from schools where id = $1 and deleted_at is null', [schoolId])).rows[0];
+      if (!r) throw new Error('That school is gone.');
+      if (r.went_live_at) return `${r.name} went live on ${r.went_live_at.toISOString().slice(0, 10)} already.`;
+      if (r.status !== 'live') throw new Error(`${r.name} is ${r.status}: it must be running before it goes live.`);
+      const open = (await this.view(schoolId)).readiness.filter((x) => !x.done);
+      if (open.length) throw new Error(`Not ready: ${open.map((x) => x.label.toLowerCase()).join('; ')}.`);
+      await this.db.pool.query('update schools set went_live_at = now() where id = $1', [schoolId]);
+      this.registry.invalidate(r.slug);
+      await this.db.audit(by, 'school.went_live', 'school', schoolId, {});
+      return `${r.name} is live. Its Moving in page has closed; records are added from each page now.`;
+    });
+  }
 
   private async school(id: string): Promise<{ entitlement: EntitlementDoc; kinds: string[]; checklist: Record<string, unknown>; modules: Set<string> }> {
     const r = (await this.db.pool.query<{ entitlement: EntitlementDoc; checklist: Record<string, unknown> }>('select entitlement, checklist from schools where id = $1 and deleted_at is null', [id])).rows[0];
@@ -39,7 +58,7 @@ export class Migration {
   private async kindFor(id: string, kind: string): Promise<{ entitlement: EntitlementDoc }> {
     const s = await this.school(id);
     if (!importKind(kind)) throw notFound('That kind of import');
-    if (!s.kinds.includes(kind)) throw new ApiError('validation', `This school’s plan does not include ${importKind(kind)!.label.toLowerCase()}. Change it under Entitlements first.`);
+    if (!s.kinds.includes(kind)) throw new ApiError('validation', `This school’s plan does not include ${importKind(kind)!.label.toLowerCase()}. Change it on the school’s Plan and modules tab first.`);
     return s;
   }
 
@@ -118,7 +137,7 @@ export class Migration {
       if (input.kind === 'students') {
         const p = await previewImport(pool, input);
         const total = (await n(pool, 'select count(*) n from students')) + p.counts.create;
-        if (total > s.entitlement.limits.students) throw new ApiError('validation', `This takes the school to ${total} students; its plan allows ${s.entitlement.limits.students}. Raise the limit under Entitlements first.`);
+        if (total > s.entitlement.limits.students) throw new ApiError('validation', `This takes the school to ${total} students; its plan allows ${s.entitlement.limits.students}. Raise the limit on the Plan and modules tab first.`);
       }
       const batch = await commitImport(pool, input, by);
       await this.db.pool.query('update schools set students_count = $2 where id = $1', [id, await n(pool, 'select count(*) n from students')]);
@@ -147,9 +166,10 @@ export class Migration {
   /** A realistic test school through the same importer a real one uses: only into a school with no students yet. */
   async loadSample(id: string, students: number, by: string): Promise<ImportBatchRow[]> {
     const s = await this.school(id);
+    if (!demosAllowed(this.env)) throw new ApiError('forbidden', 'A test school is only for the test track, never a real school.');
     return this.with(id, async (pool) => {
       if (await n(pool, 'select count(*) n from students')) throw new ApiError('conflict', 'This school already has students. A test school only goes into an empty one.');
-      if (students > s.entitlement.limits.students) throw new ApiError('validation', `The plan allows ${s.entitlement.limits.students} students. Raise the limit under Entitlements first.`);
+      if (students > s.entitlement.limits.students) throw new ApiError('validation', `The plan allows ${s.entitlement.limits.students} students. Raise the limit on the Plan and modules tab first.`);
       for (const f of sampleSchool(students).files.filter((f) => s.kinds.includes(f.kind))) await commitImport(pool, { kind: f.kind, csv: f.csv, fileName: f.name }, by);
       await this.db.pool.query('update schools set students_count = $2 where id = $1', [id, await n(pool, 'select count(*) n from students')]);
       await this.db.audit(by, 'import.sample_loaded', 'school', id, { students });

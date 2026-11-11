@@ -17,6 +17,8 @@ export interface Harness {
   c: (method: string, url: string, opts?: { token?: string; body?: unknown }) => Promise<{ status: number; json: any }>;
   s: (method: string, url: string, opts?: { token?: string; body?: unknown; school: string }) => Promise<{ status: number; json: any }>;
   signIn: (email?: string, password?: string) => Promise<string>;
+  /** Invites a team member and joins with the link, as the person would: they choose the password. */
+  invite: (token: string, body: { name: string; email: string; roles: string[] }, password: string) => Promise<{ status: number; json: any }>;
   close: () => Promise<void>;
 }
 
@@ -52,8 +54,13 @@ export async function startHarness(extra: Record<string, string> = {}): Promise<
     const b = await c('POST', '/console/v1/auth/verify', { body: { challengeId: a.json.challenge.challengeId, code: '424242' } });
     return b.json.accessToken as string;
   };
+  const invite: Harness['invite'] = async (token, body, password) => {
+    const r = await c('POST', '/console/v1/team', { token, body });
+    if (r.status !== 200) return r;
+    return c('POST', '/console/v1/auth/join', { body: { token: new URL(r.json.link).searchParams.get('token'), password } });
+  };
   return {
-    console: console_, api, server, registry: pool, c, s, signIn,
+    console: console_, api, server, registry: pool, c, s, signIn, invite,
     close: async () => { await pool.end(); await console_.close(); await api.close(); await registry.close(); await pools.closeAll(); await server.stop(); },
   };
 }
