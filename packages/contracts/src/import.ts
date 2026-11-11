@@ -144,7 +144,7 @@ export const UploadCreate = z.object({
 });
 export type UploadCreate = z.infer<typeof UploadCreate>;
 
-export interface UploadRow { id: string; fileName: string; note: string; rows: number; uploadedBy: string; at: string; status: 'new' | 'imported' | 'set_aside'; batchId: string | null }
+export interface UploadRow { id: string; fileName: string; note: string; rows: number; uploadedBy: string; at: string; status: 'new' | 'imported' | 'set_aside'; batchId: string | null; setAsideReason: string }
 
 /** What the school edits itself in Classes and calendar: the same kinds and columns as the importers, behind a console lock each. */
 export const SETUP_KINDS = [

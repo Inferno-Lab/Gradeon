@@ -66,9 +66,6 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.130.0
         version: 1.170.45(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      qrcode-generator:
-        specifier: 1.4.4
-        version: 1.4.4
       react:
         specifier: ^19.1.0
         version: 19.3.1
@@ -139,6 +136,9 @@ importers:
       pdf-lib:
         specifier: 1.17.1
         version: 1.17.1
+      qrcode-generator:
+        specifier: 1.4.4
+        version: 1.4.4
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2

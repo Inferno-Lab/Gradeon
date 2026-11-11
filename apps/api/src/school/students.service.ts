@@ -86,6 +86,8 @@ export class StudentsService {
     if (q.attendance === 'low') where.push(`coalesce(att.pct, 1) < ${add((await this.settings.value<number>(t, 'attendance.goalPct', 95)) / 100)}`);
     if (q.attendance === 'perfect') where.push('coalesce(att.pct, 0) >= 0.999');
     if (q.newThisYear) where.push(`s.admitted_on >= (select starts_on from academic_years where current limit 1)`);
+    // On the roll, or (the "Left the school" view) those who left; never both mixed.
+    where.push(q.left ? "s.status = 'left'" : "s.status = 'active'");
     const dir = q.dir === 'desc' ? 'desc' : 'asc';
     const order = {
       name: `lower(s.name) ${dir}`,
@@ -132,6 +134,7 @@ export class StudentsService {
     const where: string[] = [];
     if (q.classId) { params.push(q.classId); where.push(`s.class_id = $${params.length}`); }
     if (q.house) { params.push(q.house); where.push(`s.house = $${params.length}`); }
+    where.push("s.status = 'active'");
     const w = where.length ? `where ${where.join(' and ')}` : '';
     const split = addDays(last, -12);
     const { rows } = await t.pool.query<{ in_view: string; present: string; marked: string; since: string; overdue_amt: string; overdue_fam: string; a_now: number | null; a_prev: number | null }>(
@@ -177,18 +180,19 @@ export class StudentsService {
     const taught = own.rows[0] ? null : await t.pool.query<{ id: string }>('select id from classes where class_teacher_id = $1 order by grade, section limit 1', [userId]).catch(() => ({ rows: [] as { id: string }[] }));
     const pinnedId = own.rows[0]?.value ?? taught?.rows[0]?.id ?? null;
     const [counts, pinned] = await Promise.all([
-      t.pool.query<{ all: string; overdue: string; fresh: string }>(
+      t.pool.query<{ all: string; overdue: string; fresh: string; left: string }>(
         `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id),
          od as (select distinct i.student_id from fee_invoices i left join paid on paid.invoice_id=i.id where i.due_on < $1::date and i.amount - i.waived_amount - coalesce(paid.p,0) > 0)
-         select (select count(*) from students) "all", (select count(*) from od) overdue,
-           (select count(*) from students where admitted_on >= (select starts_on from academic_years where current limit 1)) fresh`, [today]),
+         select (select count(*) from students where status = 'active') "all", (select count(*) from od join students s on s.id = od.student_id and s.status = 'active') overdue,
+           (select count(*) from students where status = 'active' and admitted_on >= (select starts_on from academic_years where current limit 1)) fresh,
+           (select count(*) from students where status = 'left' and erased_at is null) "left"`, [today]),
       t.pool.query<{ id: string; name: string; n: string }>(
         `select c.id, c.name, (select count(*) from students s where s.class_id = c.id) n from classes c
          where ($1::text is null or c.id = $1) order by c.grade, c.section limit 1`, [pinnedId]),
     ]);
     const c = counts.rows[0]!;
     const p = pinned.rows[0];
-    return { all: Number(c.all), pinned: p ? { classId: p.id, name: p.name, count: Number(p.n) } : null, overdue: (await this.has(t)).fees ? Number(c.overdue) : 0, newThisYear: Number(c.fresh) };
+    return { all: Number(c.all), pinned: p ? { classId: p.id, name: p.name, count: Number(p.n) } : null, overdue: (await this.has(t)).fees ? Number(c.overdue) : 0, newThisYear: Number(c.fresh), left: Number(c.left) };
   }
 
   async detail(t: TenantCtx, id: string): Promise<StudentDetail> {
@@ -209,7 +213,7 @@ export class StudentsService {
       this.activity(t, id),
       t.pool.query<{ phone: string | null; email: string | null; last_login_at: Date | null }>('select u.phone, u.email, u.last_login_at from students s join users u on u.id = s.user_id where s.id = $1', [id]),
     ]);
-    const extra = (await t.pool.query<{ gender: StudentDetail['gender'] }>('select gender from students where id = $1', [id])).rows[0];
+    const extra = (await t.pool.query<{ gender: StudentDetail['gender']; status: string; left_on: string | null; reason: string | null }>("select gender, status, left_on::text, leaving_reason reason from students where id = $1", [id])).rows[0];
     const has = await this.has(t);
     const acc = account.rows[0];
     const base = this.mask(this.row(r, ticks.get(id)!), has);
@@ -221,7 +225,7 @@ export class StudentsService {
         homework: has.homework ? { onTime: Number(hw.rows[0]!.on_time), total: Number(hw.rows[0]!.total) } : { onTime: 0, total: 0 }, libraryOut: has.library ? Number(lib.rows[0]!.n) : 0,
       },
       chips: { house: r.house }, recentActivity: acts, roll24: has.attendance ? roll24 : roll24.map(() => null),
-      gender: extra?.gender ?? null, guardians: await this.guardians(t, id),
+      gender: extra?.gender ?? null, guardians: await this.guardians(t, id), left: extra?.status === 'left' && extra.left_on ? { on: extra.left_on, reason: extra.reason ?? '' } : null,
       appAccount: acc ? { phone: acc.phone ? maskPhone(acc.phone) : '', email: acc.email ?? '', lastSignIn: acc.last_login_at?.toISOString() ?? null } : null,
     };
   }

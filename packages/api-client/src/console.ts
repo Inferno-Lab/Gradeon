@@ -29,7 +29,7 @@ export function consoleApi(h: Http) {
       mark: (schoolId: string, b: ReadinessMark) => h.patch<MigrationView>(`${base}/schools/${schoolId}/import/readiness`, b),
       template: (schoolId: string, kind: string) => h.blob(`${base}/schools/${schoolId}/import/template/${kind}`),
       upload: (schoolId: string, uploadId: string) => h.get<{ fileName: string; content: string }>(`${base}/schools/${schoolId}/import/uploads/${uploadId}`),
-      setAside: (schoolId: string, uploadId: string) => h.post<UploadRow[]>(`${base}/schools/${schoolId}/import/uploads/${uploadId}/set-aside`),
+      setAside: (schoolId: string, uploadId: string, reason: string) => h.post<UploadRow[]>(`${base}/schools/${schoolId}/import/uploads/${uploadId}/set-aside`, { reason }),
       preview: (schoolId: string, b: ImportInputIn) => h.post<ImportPreview>(`${base}/schools/${schoolId}/import/preview`, b),
       commit: (schoolId: string, b: ImportInputIn) => h.post<ImportBatchRow>(`${base}/schools/${schoolId}/import/commit`, b),
       undo: (schoolId: string, batchId: string) => h.post<ImportBatchRow[]>(`${base}/schools/${schoolId}/import/batches/${batchId}/undo`),

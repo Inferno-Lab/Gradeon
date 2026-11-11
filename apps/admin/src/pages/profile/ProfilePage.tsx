@@ -17,7 +17,7 @@ import { AskGradeon } from './AskGradeon';
  */
 const dflt = (k: string): unknown => (SchoolSettingsSchema.shape as Record<string, { safeParse: (v: unknown) => { data?: unknown } }>)[k]?.safeParse(undefined).data;
 const ROLE_NAMES: Record<string, string> = { parent: 'Parents', student: 'Students', teacher: 'Teachers', driver: 'Bus drivers' };
-const AREA: Record<string, string> = { identity: 'School identity', plan: 'Plan and modules', app: 'The app', roles: 'Roles', messages: 'Messages', privacy: 'Privacy notice' };
+const AREA: Record<string, string> = { data: 'Your data', identity: 'School identity', plan: 'Plan and modules', app: 'The app', roles: 'Roles', messages: 'Messages', privacy: 'Privacy notice' };
 
 function show(m: SettingMeta, v: unknown): ReactNode {
   if (v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length)) return <span className="help">Not set</span>;
@@ -83,6 +83,7 @@ export function ProfilePage() {
           {tab === 'app' && <AppSetup doc={d} cfg={c} />}
           {tab === 'roles' && <Roles cfg={c} />}
           {tab === 'messages' && <Messages doc={d} cfg={c} />}
+          {tab === 'data' && <YourData say={say} />}
           {tab === 'privacy' && <>
             <Card title="Privacy notice">
               <p style={{ margin: 0, font: '500 14px/1.6 var(--fb)', whiteSpace: 'pre-wrap' }}>{c.privacy.notice || 'Gradeon has not written the school’s privacy notice yet.'}</p>
@@ -201,4 +202,28 @@ function Messages({ doc, cfg }: { doc: SettingsResponse; cfg: EffectiveConfig })
       })}
     </Card>
   </>;
+}
+
+/** Everything the school has, in the import templates: what it would take to another system. Its data is its own. */
+function YourData({ say }: { say: (m: string, tone?: 'bad') => void }) {
+  const app = useApp();
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    try {
+      const b = await app.api.movingIn.exportAll();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = `${app.slug}-export.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      say('Your export is downloading.');
+    } catch (e) { say((e as Error).message, 'bad'); } finally { setBusy(false); }
+  };
+  return (
+    <Card title="Everything, to take with you">
+      <p className="help" style={{ marginTop: 0 }}>A ZIP with one sheet for each kind of record, in the same columns Gradeon imports. Your data is yours: this is what you would take to another system.</p>
+      <button className="btn" disabled={busy} onClick={() => void go()}>{busy ? 'Preparing…' : 'Download everything'}</button>
+    </Card>
+  );
 }

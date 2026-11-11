@@ -93,7 +93,12 @@ export const SchoolSettingsSchema = z.object({
   'vocab.classes': z.string().max(24).default(''),
   // Where enquiries come from, as the school counts them (Admissions and its reports).
   'admissions.sources': z.array(z.string().trim().min(1).max(40)).min(1).max(16).default(['Walk-in', 'Phone', 'Website', 'Referral', 'Event']),
+  // The stages between enquiry and enrolment the school uses (some have no entrance test).
+  'admissions.stages': z.array(z.enum(['applied', 'test', 'offer'])).max(3).default(['applied', 'test', 'offer']),
   // The school's houses, if it has them: on student profiles, the roll-call grid and the app.
+  /** The letters sent home to start families and students on the app (placeholders: {school} {student} {class} {guardian} {phoneEnd} {link}). */
+  'letters.family': z.string().max(3000).default('Dear {guardian},\n\n{school} now has its own app. You can follow {student}’s school day on your phone: attendance, homework, results, fees and notices, as your school uses them.\n\n1. Scan the code, or open {link}, to get the {school} app.\n2. Sign in with your phone number ending {phoneEnd}.\n3. Type the code we send you. There is no password to remember.\n\nIf your phone number has changed, tell the school office.'),
+  'letters.student': z.string().max(3000).default('Dear {student},\n\n{school} now has its own app for you: your timetable, homework, results and notices.\n\n1. Scan the code, or open {link}, to get the {school} app.\n2. Sign in with the phone number or email the school has for you.\n3. Type the code we send you.\n\nAsk your class teacher if you need help.'),
   'students.required': z.array(z.enum(['gender', 'house', 'admissionNo', 'bloodGroup', 'address'])).default([]),
   'people.houses': z.array(z.object({ key: z.string().regex(/^[a-z0-9-]{1,24}$/), name: z.string().min(1).max(24), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) })).max(12).default([]),
   // The first column of every week grid (attendance, leave, the app's calendars).

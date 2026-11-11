@@ -8,7 +8,9 @@ import { useShellChrome } from '../../app/Layout';
 import { useSetting } from '../../app/kit';
 import { AddStudentDialog, AssignFeeDialog, ImportDialog, MessageDialog } from './StudentDialogs';
 import { StudentsView } from './students.view';
+import { OnTheApp } from './OnTheApp';
 import { StudentAccount } from './StudentAccount';
+import { usePageTabs } from '../../app/tabs';
 import { EditStudentDialog, GuardiansDialog, LeaveDialog } from './StudentRecord';
 import { StudentFiles } from './StudentFiles';
 
@@ -40,6 +42,12 @@ function Pill({ id, open, setOpen, on, icon, children, menu }: { id: string; ope
 }
 
 export function StudentsPage() {
+  const { tab, tabs } = usePageTabs('/students');
+  if (tab === 'app') return <OnTheApp tabs={tabs} />;
+  return <StudentList tabs={tabs} />;
+}
+
+function StudentList({ tabs }: { tabs: React.ReactNode }) {
   const app = useApp();
   const chrome = useShellChrome();
   const qc = useQueryClient();
@@ -85,6 +93,7 @@ export function StudentsPage() {
     feeStatus: fee || (active === 2 ? 'overdue' : undefined),
     attendance: att || undefined,
     newThisYear: active === 3 || undefined,
+    left: active === 4 || undefined,
     sort: 'name', dir, page, limit: per,
   }), [dq, classId, active, pinned, house, fee, att, page, per, dir]);
 
@@ -116,7 +125,7 @@ export function StudentsPage() {
   const total = list.data?.total ?? 0;
   const allCount = views.data?.all ?? 0;
   const className = classes.data?.find((c) => c.id === filter.classId)?.name;
-  const title = className ? `Class ${className}` : active === 2 ? 'Fees overdue' : active === 3 ? 'New this year' : 'All students';
+  const title = className ? `Class ${className}` : active === 2 ? 'Fees overdue' : active === 3 ? 'New this year' : active === 4 ? 'Left the school' : 'All students';
   const anyFilter = !!(dq || classId || house || fee || att || active !== 0);
 
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -129,10 +138,11 @@ export function StudentsPage() {
   const allViews = [
     { n: 'All', c: inr(allCount), cc: 'v' }, { n: pinned?.name ?? 'My class', c: String(pinned?.count ?? 0), cc: 'g' },
     { n: 'Fees overdue', c: String(views.data?.overdue ?? 0), cc: 'c' }, { n: 'New this year', c: String(views.data?.newThisYear ?? 0), cc: 'a' },
+    { n: 'Left the school', c: String(views.data?.left ?? 0), cc: '' },
   ].map((x, i) => ({ ...x, i }));
-  const shownViews = allViews.filter((x) => has.fees || x.i !== 2);
+  const shownViews = allViews.filter((x) => (has.fees || x.i !== 2) && (x.i !== 4 || (views.data?.left ?? 0) > 0));
   const vals = {
-    ...chrome, has,
+    ...chrome, has, tabs,
     // What the school calls its students (console: People), "Pupils" for "Pupil".
     heading: plural(chrome.shell?.school.studentWord ?? 'Student'),
     subtitle: `${allCount.toLocaleString('en-IN')} enrolled across ${classes.data?.length ?? 0} sections`,
@@ -198,7 +208,7 @@ export function StudentsPage() {
     bulkExport: () => void download([...sel]),
     bulkInvite: () => void app.api.students.invite([...sel]).then((r) => say(r.sent ? `Invited ${r.sent} ${r.sent === 1 ? 'family' : 'families'} to the app.` : 'No family has a phone number to invite.')).catch((e: Error) => say(e.message)),
     drOn: !!openId, close: closeDrawer, files: openId ? <><StudentFiles id={openId} say={(m) => say(m)} />{detail.data && <StudentAccount s={detail.data} say={(m) => say(m)} />}</> : null,
-    canCollect: has.fees && app.user.permissions.includes('fees.collect'),
+    canCollect: has.fees && app.user.permissions.includes('fees.collect') && !detail.data?.left,
     d: (() => {
       const s = detail.data;
       if (!s) return { n: '…', ini: '', bg: 'var(--sunk)', fg: 'var(--ink3)', adm: '', roll: '', cls: '', house: null, route: null, fcls: 'due', fees: '', att: 0, exam: '–', examName: 'Latest test', homework: '–', library: 0, show: { att: false, exam: false, hw: false, lib: false }, rollTitle: '', rollAria: '', gi: '', g: '', activity: [] as { label: string; sub: string; color: string }[] };
@@ -219,7 +229,10 @@ export function StudentsPage() {
     messageOne: () => detail.data && setDialog({ kind: 'message', ids: [detail.data.id], label: detail.data.name }),
     // Fees are collected on Fees; this opens the payment there for this student.
     collect: () => openId && app.go(`/fees?collect=${openId}`),
-    may: { edit: app.user.permissions.includes('students.write'), leave: app.user.permissions.includes('year.manage') },
+    may: { edit: app.user.permissions.includes('students.write') && !detail.data?.left, leave: app.user.permissions.includes('year.manage') && !detail.data?.left },
+    // A student who left: when and why, and (for someone who manages the year) bringing them back on the roll.
+    left: detail.data?.left ? { line: `Left on ${new Date(`${detail.data.left.on}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}${detail.data.left.reason ? `: ${detail.data.left.reason}` : ''}`,
+      back: app.user.permissions.includes('year.manage') ? () => void app.api.year.rejoin(detail.data!.id).then(() => { say(`${detail.data!.name} is back on the roll.`); refreshAll(); }).catch((e: Error) => say(e.message)) : null } : null,
     edit: () => setDialog({ kind: 'edit' }), editGuardians: () => setDialog({ kind: 'guardians' }), leave: () => setDialog({ kind: 'leave' }),
     guardians: (detail.data?.guardians ?? []).map((g) => ({
       n: g.name, ini: g.name.split(' ').map((w) => w[0]).slice(0, 2).join(''), primary: g.isPrimary,

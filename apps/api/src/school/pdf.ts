@@ -1,6 +1,8 @@
 import 'regenerator-runtime/runtime.js';
 import { readFileSync } from 'node:fs';
 import fontkit from '@pdf-lib/fontkit';
+import qrcode from 'qrcode-generator';
+import type { FastifyReply } from 'fastify';
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 
 /**
@@ -8,7 +10,8 @@ import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
  * Text is set in Noto Sans with Noto Sans Devanagari for Hindi and Marathi (shaped by fontkit: conjuncts, reph and matras come
  * out right), so ₹ and every family's name print as written. The fonts are vendored in assets/fonts (SIL Open Font License).
  */
-export interface PdfLine { text: string; right?: string; size?: number; bold?: boolean; gap?: number; rule?: boolean }
+/** A line of a document. `page` starts a new page first; `qr` draws a QR code of that text at the right, beside the lines after it. */
+export interface PdfLine { text: string; right?: string; size?: number; bold?: boolean; gap?: number; rule?: boolean; page?: boolean; qr?: string }
 
 const FONTS = new URL('../../assets/fonts/', import.meta.url);
 const files = {
@@ -69,6 +72,19 @@ export async function pdf(lines: PdfLine[], opts: { logo?: Buffer | null } = {})
     }
   }
   for (const l of lines) {
+    if (l.page && y < HEIGHT - MARGIN) { page = doc.addPage([WIDTH, HEIGHT]); y = HEIGHT - MARGIN; }
+    if (l.qr) {
+      // A QR code, 108 points wide, at the right margin from here down.
+      const code = qrcode(0, 'M');
+      code.addData(l.qr);
+      code.make();
+      const n = code.getModuleCount();
+      const cell = 108 / n;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        if (code.isDark(r, c)) page.drawRectangle({ x: WIDTH - MARGIN - 108 + c * cell, y: y - 12 - (r + 1) * cell, width: cell, height: cell, color: rgb(0, 0, 0) });
+      }
+      continue;
+    }
     const size = l.size ?? 11;
     const room = WIDTH - 2 * MARGIN - (l.right ? width(l.right, size, l.bold) + 16 : 0);
     const parts = l.rule ? [''] : wrap(l.text, size, room, l.bold);
@@ -84,3 +100,8 @@ export async function pdf(lines: PdfLine[], opts: { logo?: Buffer | null } = {})
   if (pages.length > 1) pages.forEach((p, i) => p.drawText(`${i + 1} / ${pages.length}`, { x: WIDTH / 2 - 10, y: 24, size: 8, font: f.latin, color: rgb(0.5, 0.5, 0.55) }));
   return Buffer.from(await doc.save());
 }
+
+/** Sends a document to the browser as a download with its own name. */
+export const sendPdf = (reply: FastifyReply, doc: { name: string; data: Buffer }) => {
+  void reply.type('application/pdf').header('content-disposition', `inline; filename="${doc.name.replace(/"/g, '')}"`).send(doc.data);
+};

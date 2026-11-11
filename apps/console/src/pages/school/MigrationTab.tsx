@@ -45,7 +45,10 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
     onError: fail,
   });
   const undo = useMutation({ mutationFn: (id: string) => app.api.migration.undo(schoolId, id), onSuccess: (batches) => { refresh({ batches }); say('Undone. Everything it changed is back as it was.'); }, onError: fail });
-  const aside = useMutation({ mutationFn: (id: string) => app.api.migration.setAside(schoolId, id), onSuccess: (uploads) => refresh({ uploads }), onError: fail });
+  // Setting a file aside says why: the school reads it under Moving in.
+  const [asideFor, setAsideFor] = useState<string | null>(null);
+  const [why, setWhy] = useState('');
+  const aside = useMutation({ mutationFn: ({ id, reason }: { id: string; reason: string }) => app.api.migration.setAside(schoolId, id, reason), onSuccess: (uploads) => { setAsideFor(null); setWhy(''); refresh({ uploads }); }, onError: fail });
   const open = useMutation({
     mutationFn: (id: string) => app.api.migration.upload(schoolId, id),
     onSuccess: (f, id) => change({ kind: 'file', fileName: f.fileName, content: f.content, uploadId: id }),
@@ -117,11 +120,18 @@ export function MigrationTab({ schoolId, say }: { schoolId: string; say: Say }) 
         {v.uploads.length === 0 ? <div className="help" style={{ marginTop: 10 }}>No files yet.</div> : v.uploads.map((u) => (
           <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, height: 'auto', padding: '10px 0', cursor: 'default' }}>
             <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
-            <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {when(u.at)}</span>
+            <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {when(u.at)}{u.status === 'set_aside' && u.setAsideReason ? ` · set aside: ${u.setAsideReason}` : ''}</span>
+            {asideFor === u.id && (
+              <span style={{ flex: '1 1 100%', display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <span style={{ flex: '1 1 260px' }}><Field label="Why (the school reads this)" value={why} onChange={setWhy} maxLength={200} placeholder="This is last year's list; send this year's" /></span>
+                <button className="btn sm pri" disabled={aside.isPending || why.trim().length < 3} onClick={() => aside.mutate({ id: u.id, reason: why.trim() })}>Set aside</button>
+                <button className="btn sm" onClick={() => setAsideFor(null)}>Cancel</button>
+              </span>
+            )}
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
               {u.status === 'imported' ? <span className="chip g">Imported</span> : <>
                 {can && /\.(csv|txt|xlsx)$/i.test(u.fileName) && <button className="btn sm" disabled={open.isPending} onClick={() => open.mutate(u.id)}>Open</button>}
-                {can && <button className="btn sm" disabled={aside.isPending} onClick={() => aside.mutate(u.id)}>{u.status === 'set_aside' ? 'Bring back' : 'Set aside'}</button>}
+                {can && <button className="btn sm" disabled={aside.isPending} onClick={() => (u.status === 'set_aside' ? aside.mutate({ id: u.id, reason: '' }) : setAsideFor(u.id))}>{u.status === 'set_aside' ? 'Bring back' : 'Set aside'}</button>}
               </>}
               <button className="btn sm" onClick={() => void app.api.migration.upload(schoolId, u.id).then((f) => save(f.content.startsWith('data:') ? dataBlob(f.content) : new Blob([f.content], { type: 'text/csv' }), f.fileName), fail)}>Download</button>
             </span>

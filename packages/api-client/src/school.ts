@@ -1,11 +1,11 @@
 import type {
-  ChangeRequestCreate, ChangeRequestRow, PasswordChange, EventReply, InvoiceDetail, WaiverRequest, ReceiptCancel, SlotCreate, WeekOf, StudentPatch, GuardiansPut, GuardianRow, DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
+  ChangeRequestCreate, ChangeRequestRow, PasswordChange, ReportQuery, EventReply, InvoiceDetail, WaiverRequest, ReceiptCancel, SlotCreate, WeekOf, StudentPatch, GuardiansPut, GuardianRow, DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
   HomeworkCreate, HomeworkDetail, HomeworkMarks, HomeworkRow, InvoiceListQuery, InvoiceListRow, InvoiceListSummary, ReceiptRow, ReportData, ReportInfo, RoleRow, StaffCreate, StaffPatch, StaffRow,
   ThreadCreate, ThreadDetail, ThreadPatch, ThreadReply, ThreadRow,
   AttendanceDayPut, PeriodMarksPut, PeriodRoll, GalleryReportRow, ApprovalDecision, ApprovalKind, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeHead, FeeHeadsPut, FeeSummary, ImportResult, InvoiceRow,
   LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
-  Activation, ImportBatchRow, LetterRow, SetupSection, UploadCreate, UploadRow,
+  Activation, ImportBatchRow, SetupSection, UploadCreate, UploadRow,
   AlbumInput, AlbumRow, BookInput, BookRow, BusRouteInput, BusRouteRow, FileKind, FileRow, FileStart, FileUpload, GiveBack, IssueInput, LeaverInput, LibraryView, LoanRow, NewYearInput, OnlinePaymentRow, PhotoRow,
   PromotionInput, PromotionPreview, ReconRow, RefundRequest, RefundRow, RiderInput, SchoolChannels, TransportView, YearView,
 } from '@gradeon/contracts';
@@ -122,6 +122,10 @@ export function schoolApi(h: Http) {
       list: (query?: string) => h.get<StaffRow[]>('/v1/staff', query ? { query } : undefined),
       create: (b: StaffCreate) => h.post<StaffRow>('/v1/staff', b),
       patch: (id: string, b: StaffPatch) => h.patch<StaffRow>(`/v1/staff/${id}`, b),
+      invite: (id: string) => h.post<{ to: string }>(`/v1/staff/${id}/invite`),
+      template: () => h.blob('/v1/staff/template'),
+      import: (csv: string) => h.post<ImportResult>('/v1/staff/import', { csv }),
+      exportCsv: () => h.text('/v1/staff/export'),
     },
     admissions: {
       list: () => h.get<EnquiryRow[]>('/v1/admissions'),
@@ -142,8 +146,8 @@ export function schoolApi(h: Http) {
     },
     reports: {
       list: () => h.get<ReportInfo[]>('/v1/reports'),
-      get: (id: string) => h.get<ReportData>(`/v1/reports/${id}`),
-      csv: (id: string) => h.text(`/v1/reports/${id}/csv`),
+      get: (id: string, q: ReportQuery = {}) => h.get<ReportData>(`/v1/reports/${id}`, q as Query),
+      csv: (id: string, q: ReportQuery = {}) => h.text(`/v1/reports/${id}/csv`, q as Query),
     },
     messages: {
       list: () => h.get<ThreadRow[]>('/v1/messages'),
@@ -172,9 +176,9 @@ export function schoolApi(h: Http) {
       batches: () => h.get<ImportBatchRow[]>('/v1/moving-in/batches'),
       upload: (b: UploadCreate) => h.post<UploadRow[]>('/v1/moving-in/uploads', b),
       activation: () => h.get<Activation>('/v1/moving-in/activation'),
-      inviteFamilies: (classId?: string) => h.post<{ sent: number }>('/v1/moving-in/families/invite', classId ? { classId } : {}),
-      inviteStaff: () => h.post<{ sent: number }>('/v1/moving-in/staff/invite'),
-      letters: (classId?: string) => h.get<LetterRow[]>('/v1/moving-in/letters', classId ? { classId } : undefined),
+      inviteFamilies: (classId?: string, remind = false) => h.post<{ sent: number }>('/v1/moving-in/families/invite', { ...(classId ? { classId } : {}), remind }),
+      inviteStaff: (remind = false) => h.post<{ sent: number; skipped: string[] }>('/v1/moving-in/staff/invite', { remind }),
+      letterPdf: (classId: string | undefined, role: 'family' | 'student') => h.blob('/v1/moving-in/letters.pdf', { ...(classId ? { classId } : {}), role }),
       template: (kind: string) => h.blob(`/v1/moving-in/template/${kind}`),
       exportAll: () => h.blob('/v1/moving-in/export'),
     },

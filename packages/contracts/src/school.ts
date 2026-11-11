@@ -53,6 +53,8 @@ export interface StudentDetail extends StudentRow {
   recentActivity: { id: string; at: string; label: string; sub: string; tone: 'g' | 'v' | 'a' }[];
   roll24: (AttendanceStatus | null)[];
   gender: (typeof GENDERS)[number] | null;
+  /** When and why a student who left the school left (null while on the roll). */
+  left: { on: string; reason: string } | null;
   /** Every guardian (phones masked: the reveal call shows one in full). */
   guardians: GuardianRow[];
   /** The student's own app account (when the school uses the student role): how they sign in, and whether they have yet. */
@@ -66,6 +68,8 @@ export const StudentQuery = z.object({
   feeStatus: z.enum(['paid', 'due', 'overdue']).optional(),
   attendance: z.enum(['low', 'perfect']).optional(),
   newThisYear: z.stringbool().optional(),
+  /** Students who left the school, instead of those on the roll. */
+  left: z.stringbool().optional(),
   sort: z.enum(['name', 'class', 'attendance', 'due']).default('name'),
   dir: z.enum(['asc', 'desc']).default('asc'),
   page: z.coerce.number().int().min(1).default(1),
@@ -95,6 +99,8 @@ export interface StudentViews {
   pinned: { classId: string; name: string; count: number } | null;
   overdue: number;
   newThisYear: number;
+  /** Students who left (kept until the retention period ends). */
+  left: number;
 }
 
 export interface ContactReveal {

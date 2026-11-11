@@ -94,9 +94,10 @@ describe('going live', () => {
     expect((await send('POST', '/v1/moving-in/families/invite', { classId: 'cls_8a' })).json.sent).toBe(0);
     const after = (await get('/v1/moving-in/activation')).json;
     expect(after.classes.find((c: any) => c.className === '8 A').invited).toBe(c8.families);
-    const letters = (await get('/v1/moving-in/letters?classId=cls_8a')).json;
-    expect(letters.length).toBe(c8.students);
-    expect(letters[0].phoneEnd).toMatch(/^\d{4}$/);
+    expect((await send('POST', '/v1/moving-in/families/invite', { classId: 'cls_8a', remind: true })).json.sent).toBe(c8.families - c8.signedIn);
+    const letters = await get('/v1/moving-in/letters.pdf?classId=cls_8a&role=family');
+    expect(letters.status).toBe(200);
+    expect(letters.headers['content-type']).toContain('application/pdf');
   });
 
   it('gives staff brought in without a password their first one, and they can sign in', async () => {

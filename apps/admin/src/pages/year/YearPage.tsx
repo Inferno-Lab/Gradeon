@@ -28,12 +28,14 @@ export function YearPage() {
   return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} actions={tabs} overlays={setup.overlay}>{setup.view}</Page>;
 }
 
-/** Promotions, starting the new year and leavers. */
+/** Drafting the next year, promoting students into it, and starting it. */
 function YearEnd({ tabs }: { tabs: React.ReactNode }) {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [dlg, setDlg] = useState<'year' | 'promote' | 'leaver' | null>(null);
+  const [dlg, setDlg] = useState<'year' | 'promote' | null>(null);
+  // Starting a year, removing a draft, undoing a promotion and bringing a leaver back each ask first.
+  const [sure, setSure] = useState<{ what: 'start' | 'remove' | 'undo' | 'rejoin'; id: string; text: string } | null>(null);
   const view = useQuery({ queryKey: ['year'], queryFn: app.api.year.view });
   const can = app.user.permissions.includes('year.manage');
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['year', 'students', 'classes', 'shell'].includes(String(q.queryKey[0])) });
@@ -53,11 +55,19 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Academic year" sub="Promote students, start the new year and record who leaves. Dues carry forward on their own." toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{can && <button className="btn pri" onClick={() => setDlg('promote')}>Promote students</button>}</>}
+      actions={<>{tabs}{can && <button className="btn pri" disabled={!draft} data-tip={draft ? undefined : 'Draft the next year first'} onClick={() => setDlg('promote')}>Promote students</button>}</>}
       overlays={v && <>
         {dlg === 'year' && <NewYear years={v.years} onClose={() => setDlg(null)} onDone={done} />}
         {dlg === 'promote' && <Promote years={v.years} onClose={() => setDlg(null)} onDone={done} />}
-        {dlg === 'leaver' && <Leaver onClose={() => setDlg(null)} onDone={done} />}
+        {sure && (
+          <Dialog title="Are you sure?" onClose={() => setSure(null)} width={460}>
+            <p style={{ margin: 0, font: '500 14px/1.5 var(--fb)' }}>{sure.text}</p>
+            <div className="tgrow" style={{ justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn" onClick={() => setSure(null)}>Not now</button>
+              <button className="btn pri" disabled={act.isPending} onClick={() => { act.mutate({ what: sure.what, id: sure.id }); setSure(null); }}>Yes</button>
+            </div>
+          </Dialog>
+        )}
       </>}>
       {v && <>
         <section className="grid" data-even="">
@@ -68,13 +78,13 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
                 <span style={{ minWidth: 0 }}><b style={{ color: 'var(--ink)' }}>{y.label}</b><br /><small className="help">{dateLabel(y.startsOn)} {y.startsOn.slice(0, 4)} to {dateLabel(y.endsOn)} {y.endsOn.slice(0, 4)}{y.status === 'current' ? ` · ${y.classes} classes, ${y.students} students` : ''}</small></span>
                 <b style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <span className={`chip ${STATUS[y.status].tone}`}>{STATUS[y.status].text}</span>
-                  {can && y.status === 'draft' && <><button className="btn sm pri" disabled={act.isPending} onClick={() => act.mutate({ what: 'start', id: y.id })} data-tip="Promote students first">Start</button><button className="btn sm" disabled={act.isPending} onClick={() => act.mutate({ what: 'remove', id: y.id })}>Remove</button></>}
+                  {can && y.status === 'draft' && <><button className="btn sm pri" disabled={act.isPending || !v.runs.some((r) => r.toYear === y.id && !r.undoneAt)} data-tip={v.runs.some((r) => r.toYear === y.id && !r.undoneAt) ? undefined : 'Promote students into it first'} onClick={() => setSure({ what: 'start', id: y.id, text: `Start ${y.label}? The year now running is archived: it stays readable but cannot be changed.` })}>Start</button><button className="btn sm" disabled={act.isPending} onClick={() => setSure({ what: 'remove', id: y.id, text: `Remove the draft ${y.label}?` })}>Remove</button></>}
                 </b>
               </div>
             ))}
             <div className="help" style={{ marginTop: 10 }}>Order of things: draft the next year, promote students, then start the year. An archived year stays readable but cannot be changed.</div>
           </Card>
-          <Card span="s6" title="Promotions" chip={latestRun && !latestRun.undoneAt && can ? <button className="btn sm" disabled={act.isPending} onClick={() => act.mutate({ what: 'undo', id: latestRun.id })}>Undo the latest</button> : undefined}>
+          <Card span="s6" title="Promotions" chip={latestRun && !latestRun.undoneAt && can ? <button className="btn sm" disabled={act.isPending} onClick={() => setSure({ what: 'undo', id: latestRun.id, text: `Undo the latest promotion? ${latestRun.students} students go back to the class they were in before.` })}>Undo the latest</button> : undefined}>
             {!v.runs.length ? <div className="help">No promotion has run yet. “Promote students” shows where each class goes before anything moves.</div>
               : v.runs.map((r) => (
                 <div key={r.id} className="kv" style={{ alignItems: 'center' }}>
@@ -84,22 +94,9 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
               ))}
           </Card>
         </section>
-        <Card title="Students who left" chip={can ? <button className="btn sm" onClick={() => setDlg('leaver')}>Record a leaver</button> : undefined} style={{ padding: 0 }}>
-          <div className="help" style={{ padding: '0 20px 12px' }}>Their records are kept for {v.retentionMonths} months after they leave, then Gradeon erases them once a second person agrees. Receipts stay, without a name.</div>
-          {!v.leavers.length ? <div className="help" style={{ padding: '0 20px 20px' }}>Nobody has left. Students in the top class leave when they are promoted; others are recorded here.</div> : (
-            <div className="tbl scroll-x"><div style={{ minWidth: 620 }} className="lscroll">
-              <div className="grd th" style={{ '--cols': 'minmax(0,1.4fr) 110px minmax(0,1.4fr) 150px 100px' } as React.CSSProperties}><span>Student</span><span>Left on</span><span>Why</span><span>Records kept until</span><span></span></div>
-              {v.leavers.map((l) => (
-                <div key={l.id} className="grd rw" style={{ '--cols': 'minmax(0,1.4fr) 110px minmax(0,1.4fr) 150px 100px', height: 'auto', minHeight: 52, padding: '8px 20px' } as React.CSSProperties}>
-                  <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{l.name}</b><small className="help" style={{ display: 'block' }}>{l.admissionNo}</small></span>
-                  <span className="num">{dateLabel(l.leftOn)}</span>
-                  <span className="help" style={{ margin: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={l.reason}>{l.reason}</span>
-                  <span><span className={`chip ${l.due ? 'a' : ''}`}>{dateLabel(l.eraseAfter)} {l.eraseAfter.slice(0, 4)}</span></span>
-                  <span>{can && <button className="btn sm" disabled={act.isPending} onClick={() => act.mutate({ what: 'rejoin', id: l.id })}>Rejoin</button>}</span>
-                </div>
-              ))}
-            </div></div>
-          )}
+        <Card title="Students who left">
+          <p className="help" style={{ margin: 0 }}>{v.leavers.length ? `${v.leavers.length} ${v.leavers.length === 1 ? 'student has' : 'students have'} left.` : 'Nobody has left yet.'} Their records are kept for {Math.round(v.retentionMonths / 12)} {v.retentionMonths === 12 ? 'year' : 'years'}, then erased. They are listed, and brought back, under Students → Left the school; a student is recorded as leaving from their record.</p>
+          {v.leavers.length > 0 && <button className="btn sm" style={{ marginTop: 10 }} onClick={() => app.go('/students')}>Open Students</button>}
         </Card>
       </>}
     </Page>
@@ -137,7 +134,8 @@ function Promote({ years, onClose, onDone }: { years: YearRow[]; onClose: () => 
   const [moves, setMoves] = useState<PromotionPreview['classes']>([]);
   const [held, setHeld] = useState<Kid[]>([]);
   const [leaving, setLeaving] = useState<Kid[]>([]);
-  const target = years.find((y) => y.status === 'draft') ?? years.find((y) => y.status === 'current');
+  const target = years.find((y) => y.status === 'draft');
+  const [checking, setChecking] = useState(false);
   const [err, setErr] = useState('');
   useEffect(() => { if (preview.data) setMoves(preview.data.classes); }, [preview.data]);
   const run = useMutation({
@@ -148,7 +146,7 @@ function Promote({ years, onClose, onDone }: { years: YearRow[]; onClose: () => 
   const total = moves.reduce((n, m) => n + m.students, 0);
   return (
     <Dialog title="Promote students" tag={target ? { text: `Into ${target.label}`, tone: 'v' } : undefined} onClose={onClose} width={640} shake={shake.cls}>
-      {preview.isLoading ? <div className="skc" style={{ height: 220, borderRadius: 18 }} /> : !classes.length ? <EmptyCard title="Promotion" chip={{ text: '0 classes', tone: 'v' }} scene="register" heading="No classes to promote" body="Classes come from Classes and calendar, or from Migration." /> : (
+      {preview.isLoading ? <div className="skc" style={{ height: 220, borderRadius: 18 }} /> : !classes.length ? <EmptyCard title="Promotion" chip={{ text: '0 classes', tone: 'v' }} scene="register" heading="No classes to promote" body="Classes come from Academic year → Classes, or from Moving in." /> : (
         <div className="stack">
           <div className="help">Each class moves to the next grade’s section with the same letter. Change any of them; the top class leaves the school.</div>
           <div className="lscroll" style={{ maxHeight: 280 }}>
@@ -172,34 +170,19 @@ function Promote({ years, onClose, onDone }: { years: YearRow[]; onClose: () => 
           {err && <div className="emsg" role="alert">{err}</div>}
         </div>
       )}
+      {/* A last look at the numbers before anything moves. */}
+      {checking && (() => {
+        const tops = moves.filter((m) => m.toClassId === null).reduce((n, m) => n + m.students, 0);
+        const out = tops + leaving.length;
+        return <div className="card" style={{ padding: 16, marginTop: 16 }}><b style={{ font: '700 15px var(--fb)' }}>{Math.max(0, total - out - held.length)} move up · {held.length} stay in their class · {out} leave the school</b><p className="help" style={{ margin: '6px 0 0' }}>Into {target?.label}. Undo stays on this page until the year starts.</p></div>;
+      })()}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={run.isPending || !target || !moves.length} onClick={() => run.mutate()}>{run.isPending ? 'Promoting…' : `Promote ${total} students`}</button>
+        <button className="btn" onClick={checking ? () => setChecking(false) : onClose}>{checking ? 'Back' : 'Cancel'}</button>
+        {checking
+          ? <button className="btn pri" disabled={run.isPending || !target || !moves.length} onClick={() => run.mutate()}>{run.isPending ? 'Promoting…' : 'Yes, promote'}</button>
+          : <button className="btn pri" disabled={!target || !moves.length} onClick={() => setChecking(true)}>Check the numbers</button>}
       </div>
     </Dialog>
   );
 }
 
-function Leaver({ onClose, onDone }: { onClose: () => void; onDone: (m: string) => void }) {
-  const app = useApp();
-  const shake = useShake();
-  const [kid, setKid] = useState<Kid | null>(null);
-  const [leftOn, setLeftOn] = useState(istToday());
-  const [reason, setReason] = useState('');
-  const [err, setErr] = useState<Record<string, string>>({});
-  const save = useMutation({ mutationFn: () => app.api.year.leaver({ studentId: kid!.id, leftOn, reason: reason.trim() }), onSuccess: () => onDone(`${kid!.name} is recorded as having left.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
-  return (
-    <Dialog title="Record a leaver" onClose={onClose} width={480} shake={shake.cls}>
-      <div className="stack">
-        <StudentPick label="Student" value={kid} onChange={setKid} error={err.studentId} />
-        <DateField label="Left on" value={leftOn} onChange={setLeftOn} error={err.leftOn} />
-        <Field label="Why" value={reason} onChange={(x) => { setReason(x); setErr({}); }} error={err.reason} placeholder="Moved to Bengaluru" />
-        {err._ && <div className="emsg" role="alert">{err._}</div>}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={save.isPending || !kid || reason.trim().length < 2} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Record'}</button>
-      </div>
-    </Dialog>
-  );
-}

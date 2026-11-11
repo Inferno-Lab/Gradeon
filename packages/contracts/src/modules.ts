@@ -124,6 +124,8 @@ export interface StaffRow {
   maxPeriods: number;
   status: 'active' | 'inactive';
   joinedOn: string | null;
+  /** invited: sent a first password, not signed in yet; none: never invited (brought in by an import). */
+  access: 'none' | 'invited' | 'signed_in';
 }
 
 export const StaffCreate = z.object({
@@ -138,6 +140,9 @@ export const StaffCreate = z.object({
 export type StaffCreate = z.infer<typeof StaffCreate>;
 
 export const StaffPatch = z.object({
+  name: z.string().trim().min(2, 'Enter the name').max(80).optional(),
+  email: z.string().trim().toLowerCase().email('Enter a valid email').optional(),
+  phone: z.string().trim().min(8, 'Enter a phone number').max(24).optional(),
   designation: z.string().trim().min(2).max(60).optional(),
   department: z.string().trim().max(60).nullable().optional(),
   subjectIds: z.array(z.string()).max(8).optional(),
@@ -148,6 +153,8 @@ export type StaffPatch = z.infer<typeof StaffPatch>;
 
 export const ENQUIRY_STAGES = ['enquiry', 'applied', 'test', 'offer', 'enrolled', 'declined'] as const;
 export type EnquiryStage = (typeof ENQUIRY_STAGES)[number];
+/** The stages between enquiry and enrolment a school may use (console: `admissions.stages`). */
+export const OPTIONAL_STAGES = ['applied', 'test', 'offer'] as const;
 
 export interface EnquiryRow {
   id: string;
@@ -167,7 +174,8 @@ export interface EnquiryRow {
 
 export const EnquiryCreate = z.object({
   childName: z.string().trim().min(2, 'Enter the child’s name').max(80),
-  gradeSought: z.number().int().min(1, 'Choose a grade').max(12),
+  // Early years are 0 and below (Nursery, LKG, UKG), as the school's classes number them.
+  gradeSought: z.number().int().min(-3, 'Choose a grade').max(14),
   guardianName: z.string().trim().min(2, 'Enter the guardian’s name').max(80),
   phone: z.string().trim().min(8, 'Enter a phone number').max(24),
   email: z.string().trim().email('Enter a valid email').optional().or(z.literal('')),
@@ -178,6 +186,12 @@ export const EnquiryCreate = z.object({
 export type EnquiryCreate = z.infer<typeof EnquiryCreate>;
 
 export const EnquiryPatch = z.object({
+  childName: z.string().trim().min(2, 'Enter the child’s name').max(80).optional(),
+  gradeSought: z.number().int().min(-3).max(14).optional(),
+  guardianName: z.string().trim().min(2, 'Enter the guardian’s name').max(80).optional(),
+  phone: z.string().trim().min(8, 'Enter a phone number').max(24).optional(),
+  email: z.string().trim().email('Enter a valid email').or(z.literal('')).optional(),
+  source: z.string().trim().min(1).max(40).optional(),
   stage: z.enum(ENQUIRY_STAGES).optional(),
   testOn: IsoDate.nullable().optional(),
   note: z.string().trim().max(400).optional(),
@@ -260,13 +274,23 @@ export interface ReportInfo {
   title: string;
   blurb: string;
   area: 'Attendance' | 'Fees' | 'People' | 'Learning';
+  /** What the report can be narrowed by. */
+  filters: ('dates' | 'class')[];
+  /** The module it reads from; a school without it does not see the report. */
+  needs: string | null;
 }
+/** A report's filters; a period left out is the report's own default (said in its summary). */
+export const ReportQuery = z.object({ from: IsoDate.optional(), to: IsoDate.optional(), classId: z.string().optional() });
+export type ReportQuery = z.infer<typeof ReportQuery>;
 
 export interface ReportData {
   id: string;
   title: string;
+  /** What the rows are, for the download's name and the printed heading ("Class 8 A, 1 Oct to 31 Oct"). */
+  scope: string;
   summary: { label: string; value: string }[];
   columns: { key: string; label: string; align?: 'right' }[];
+  /** Each row by column key; `_student` (not a column) is the student a row is about, to open their record. */
   rows: Record<string, string | number>[];
 }
 

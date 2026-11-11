@@ -17,11 +17,9 @@ import { LibraryService } from './library.service.js';
 import { PaymentsService } from './payments.service.js';
 import { SettingsService } from './support.js';
 import { TransportService } from './transport.service.js';
+import { sendPdf } from './pdf.js';
 import { YearService } from './year.service.js';
 
-const sendPdf = (reply: FastifyReply, doc: { name: string; data: Buffer }) => {
-  void reply.type('application/pdf').header('content-disposition', `inline; filename="${doc.name.replace(/"/g, '')}"`).send(doc.data);
-};
 const ListFiles = z.object({ kind: z.enum(FILE_KINDS), owner: z.string().min(1).max(120) });
 // A declined refund always says why.
 const RefundDecide = z.object({ approve: z.boolean(), note: z.string().trim().max(300).default('') }).refine((b) => b.approve || b.note.length >= 3, { message: 'Say why', path: ['note'] });

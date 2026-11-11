@@ -1,12 +1,14 @@
-import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import {
   DataRequestCreate, DataRequestDecision, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EventSave, ExamCreate, ExamMarksPut, HomeworkCreate, HomeworkMarks, InvoiceListQuery, StaffCreate, StaffPatch,
-  ThreadCreate, ThreadPatch, ThreadReply,
-  type DataRequestRow, type EnquiryRow, type EventReply, type EventRow, type ExamMarksView, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
+  ThreadCreate, ThreadPatch, ThreadReply, ReportQuery, StudentImport, istToday,
+  type DataRequestRow, type EnquiryRow, type EventReply, type EventRow, type ExamMarksView, type ImportResult, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
   type ReceiptRow, type ReportData, type ReportInfo, type RoleRow, type StaffRow, type StudentDetail, type ThreadDetail, type ThreadRow,
 } from '@gradeon/contracts';
 import { z } from 'zod';
 import { ZodPipe } from '@gradeon/nest-kit';
+import { templateXlsx } from '@gradeon/db';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { LearningService } from './learning.service.js';
@@ -119,6 +121,26 @@ export class PeopleController {
     return this.people.createStaff(t, u, b);
   }
 
+  @Get('staff/template') @Require('staff.write') @Header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  staffTemplate(): Buffer {
+    return templateXlsx('staff');
+  }
+
+  @Post('staff/import') @HttpCode(200) @Require('staff.write')
+  importStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(StudentImport)) b: StudentImport): Promise<ImportResult> {
+    return this.people.importStaff(t, b.csv, u);
+  }
+
+  @Get('staff/export') @Require('staff.read') @Header('content-type', 'text/csv; charset=utf-8')
+  exportStaff(@Tenant() t: TenantCtx): Promise<string> {
+    return this.people.exportStaff(t);
+  }
+
+  @Post('staff/:id/invite') @HttpCode(200) @Require('staff.write')
+  inviteStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<{ to: string }> {
+    return this.people.inviteOne(t, u, id);
+  }
+
   @Patch('staff/:id') @Require('staff.write')
   patchStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(StaffPatch)) b: StaffPatch): Promise<StaffRow> {
     return this.people.patchStaff(t, u, id, b);
@@ -181,18 +203,22 @@ export class OfficeController {
   }
 
   @Get('reports') @Require('reports.read')
-  reports(): ReportInfo[] {
-    return this.office.reportList();
+  reports(@Tenant() t: TenantCtx): Promise<ReportInfo[]> {
+    return this.office.reportList(t);
   }
 
   @Get('reports/:id') @Require('reports.read')
-  report(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<ReportData> {
-    return this.office.report(t, id);
+  report(@Tenant() t: TenantCtx, @Param('id') id: string, @Query(new ZodPipe(ReportQuery)) q: ReportQuery): Promise<ReportData> {
+    return this.office.report(t, id, q);
   }
 
-  @Get('reports/:id/csv') @Require('reports.read') @Header('content-type', 'text/csv; charset=utf-8') @Header('content-disposition', 'attachment; filename="report.csv"')
-  async reportCsv(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<string> {
-    return this.office.csv(await this.office.report(t, id));
+  @Get('reports/:id/csv') @Require('reports.read') @Header('content-type', 'text/csv; charset=utf-8')
+  async reportCsv(@Tenant() t: TenantCtx, @Param('id') id: string, @Query(new ZodPipe(ReportQuery)) q: ReportQuery, @Res({ passthrough: true }) reply: FastifyReply): Promise<string> {
+    const r = await this.office.report(t, id, q);
+    // Named after the report, what it covers and the day: "Low attendance - Class 8 A - 2026-11-11.csv".
+    const name = `${r.title} - ${r.scope} - ${istToday()}.csv`.replace(/[^\w ,.-]+/g, ' ');
+    reply.header('content-disposition', `attachment; filename="${name}"`);
+    return this.office.csv(r);
   }
 
   @Get('messages') @RequireModule('chat') @Require('messages.read')

@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { EmptyCard, PageScope } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence } from '@gradeon/web-ui';
+import { AskGradeon } from '../profile/AskGradeon';
 import { useApp } from '../../app/context';
 import { pageForPath } from '@gradeon/config-engine';
 import { moduleForPath } from '../../app/nav';
@@ -20,7 +21,7 @@ export function PlanGate({ children }: { children: ReactNode }) {
   const d = shell.data;
   if (!page || !d || d.menu.some((g) => g.pages.some((x) => x.id === page.id))) return <>{children}</>;
   const need = moduleForPath(path);
-  if (need && !d.modules.includes(need) && !d.features.includes(need)) return <NotInPlan />;
+  if (need && !d.modules.includes(need) && !d.features.includes(need)) return <NotInPlan area={page.label} />;
   if (page.untilLive) return <Closed title="Moving in" heading="Your school has moved in" body="Moving in closes once the school is live. Records are added from each page now, and Gradeon’s team can still import a file for you." />;
   return <Closed title={page.label} heading="Your role does not include this page" body="Ask your principal if you need it; they can ask Gradeon to change your role." />;
 }
@@ -37,14 +38,19 @@ function Closed({ title, heading, body }: { title: string; heading: string; body
   );
 }
 
-function NotInPlan() {
+function NotInPlan({ area }: { area: string }) {
   const app = useApp();
+  const [asking, setAsking] = useState(false);
+  const [sent, setSent] = useState(false);
   return (
-    <PageScope page="dashboard">
+    <PageScope page="dashboard" overlays={<Presence>{asking && <AskGradeon area={area} onClose={() => setAsking(false)} onDone={() => { setAsking(false); setSent(true); }} />}</Presence>}>
       <main className="mn">
-        <div><EmptyCard title="Not in your plan" chip={{ text: 'Not included', tone: 'a' }} scene="padlock" heading="This is not part of your school’s plan"
-          body="Your school does not have this module right now. Anything it held is kept safely. To add it, ask Gradeon from your school profile."
-          actions={<button className="btn pri" onClick={() => app.go('/profile/plan')}>See the plan and modules</button>} /></div>
+        <div><EmptyCard title={area} chip={{ text: 'Not included', tone: 'a' }} scene="padlock" heading="This is not part of your school’s plan"
+          body={sent ? 'Your request is with Gradeon. The answer shows on your school profile, under the plan.' : 'Your school does not have this module right now. Anything it held is kept safely. Ask Gradeon to add it.'}
+          actions={<>
+            {!sent && <button className="btn pri" onClick={() => setAsking(true)}>Ask Gradeon to add it</button>}
+            <button className="btn" onClick={() => app.go('/profile/plan')}>See the plan</button>
+          </>} /></div>
       </main>
     </PageScope>
   );

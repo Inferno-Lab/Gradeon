@@ -3,6 +3,7 @@ import { activeFeatures, activeModules } from '@gradeon/config-engine';
 import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
 import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateXlsx, undoBatch } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { z } from 'zod';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { withSchoolDb } from './school-db.js';
@@ -82,9 +83,9 @@ export class Migration {
   }
 
   private async uploads(pool: pg.Pool): Promise<UploadRow[]> {
-    const { rows } = await pool.query<{ id: string; file_name: string; note: string; rows: number; uploaded_by: string; at: Date; status: UploadRow['status']; batch_id: string | null }>(
-      'select id, file_name, note, rows, uploaded_by, at, status, batch_id from import_uploads order by at desc limit 200');
-    return rows.map((r) => ({ id: r.id, fileName: r.file_name, note: r.note, rows: r.rows, uploadedBy: r.uploaded_by, at: r.at.toISOString(), status: r.status, batchId: r.batch_id }));
+    const { rows } = await pool.query<{ id: string; file_name: string; note: string; rows: number; uploaded_by: string; at: Date; status: UploadRow['status']; batch_id: string | null; set_aside_reason: string }>(
+      'select id, file_name, note, rows, uploaded_by, at, status, batch_id, set_aside_reason from import_uploads order by at desc limit 200');
+    return rows.map((r) => ({ id: r.id, fileName: r.file_name, note: r.note, rows: r.rows, uploadedBy: r.uploaded_by, at: r.at.toISOString(), status: r.status, batchId: r.batch_id, setAsideReason: r.set_aside_reason ?? '' }));
   }
 
   async upload(id: string, uploadId: string): Promise<{ fileName: string; content: string }> {
@@ -95,10 +96,13 @@ export class Migration {
     });
   }
 
-  async setAside(id: string, uploadId: string, by: string): Promise<UploadRow[]> {
+  async setAside(id: string, uploadId: string, by: string, reason: string): Promise<UploadRow[]> {
     return this.with(id, async (pool) => {
-      await pool.query("update import_uploads set status = case when status = 'set_aside' then 'new' else 'set_aside' end where id = $1 and status <> 'imported'", [uploadId]);
-      await this.db.audit(by, 'import.file_set_aside', 'school', id, { uploadId });
+      const r = (await pool.query<{ status: string }>('select status from import_uploads where id = $1', [uploadId])).rows[0];
+      if (!r) throw notFound('That file');
+      if (r.status === 'new' && reason.trim().length < 3) throw new ApiError('validation', 'Say why, so the school knows what to send instead.', { fields: { reason: 'Say why.' } });
+      await pool.query("update import_uploads set status = case when status = 'set_aside' then 'new' else 'set_aside' end, set_aside_reason = case when status = 'set_aside' then '' else $2 end where id = $1 and status <> 'imported'", [uploadId, reason.trim()]);
+      await this.db.audit(by, 'import.file_set_aside', 'school', id, { uploadId, reason });
       return this.uploads(pool);
     });
   }
@@ -181,8 +185,8 @@ export class MigrationController {
   }
 
   @Post('uploads/:uploadId/set-aside') @HttpCode(200) @Needs('schools.configure')
-  setAside(@Me() me: ConsoleUser, @Param('id') id: string, @Param('uploadId') uploadId: string): Promise<UploadRow[]> {
-    return this.migration.setAside(id, uploadId, me.email);
+  setAside(@Me() me: ConsoleUser, @Param('id') id: string, @Param('uploadId') uploadId: string, @Body(new ZodPipe(z.object({ reason: z.string().max(200).default('') }))) b: { reason: string }): Promise<UploadRow[]> {
+    return this.migration.setAside(id, uploadId, me.email, b.reason);
   }
 
   @Post('preview') @HttpCode(200) @Needs('schools.configure')

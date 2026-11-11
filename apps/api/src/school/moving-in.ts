@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Header, HttpCode, Injectable, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Post, Query, Res } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { FamilyInvite, IMPORT_KINDS, UploadCreate, importKind, type Activation, type ImportBatchRow, type LetterRow, type UploadRow } from '@gradeon/contracts';
 import { exportAll, listBatches, newId, readTable, templateXlsx } from '@gradeon/db';
 import { hashPassword } from '@gradeon/security';
@@ -6,6 +7,8 @@ import { ZodPipe, notFound } from '@gradeon/nest-kit';
 import { z } from 'zod';
 import { Core, CurrentUser, Require } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
+import { ENV, type Env } from '../env.js';
+import { pdf, sendPdf, type PdfLine } from './pdf.js';
 import { tempPassword } from './people.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
@@ -26,9 +29,9 @@ export class MovingInService {
   constructor(private readonly audit: AuditService, private readonly messenger: Messenger, private readonly settings: SettingsService) {}
 
   async uploads(t: TenantCtx): Promise<UploadRow[]> {
-    const { rows } = await t.pool.query<{ id: string; file_name: string; note: string; rows: number; uploaded_by: string; at: Date; status: UploadRow['status']; batch_id: string | null }>(
-      'select id, file_name, note, rows, uploaded_by, at, status, batch_id from import_uploads order by at desc limit 200');
-    return rows.map((r) => ({ id: r.id, fileName: r.file_name, note: r.note, rows: r.rows, uploadedBy: r.uploaded_by, at: r.at.toISOString(), status: r.status, batchId: r.batch_id }));
+    const { rows } = await t.pool.query<{ id: string; file_name: string; note: string; rows: number; uploaded_by: string; at: Date; status: UploadRow['status']; batch_id: string | null; set_aside_reason: string }>(
+      'select id, file_name, note, rows, uploaded_by, at, status, batch_id, set_aside_reason from import_uploads order by at desc limit 200');
+    return rows.map((r) => ({ id: r.id, fileName: r.file_name, note: r.note, rows: r.rows, uploadedBy: r.uploaded_by, at: r.at.toISOString(), status: r.status, batchId: r.batch_id, setAsideReason: r.set_aside_reason ?? '' }));
   }
 
   async upload(t: TenantCtx, body: UploadCreate, user: Who): Promise<UploadRow[]> {
@@ -60,7 +63,7 @@ export class MovingInService {
   }
 
   /** Texts each family not yet invited (in one class, or everywhere) and remembers it, so a second press reaches only the new ones. */
-  async inviteFamilies(t: TenantCtx, classId: string | undefined, user: Who): Promise<{ sent: number }> {
+  async inviteFamilies(t: TenantCtx, classId: string | undefined, user: Who, remind = false): Promise<{ sent: number }> {
     // Families sign in by phone, so each needs a login first: an existing one with that phone (a teacher who is also a parent), or a new one.
     const loose = await t.pool.query<{ id: string; name: string; phone: string; existing: string | null }>(
       `select distinct g.id, g.name, g.phone, (select u.id from users u where right(regexp_replace(coalesce(u.phone,''), '\\D', '', 'g'), 10) = right(regexp_replace(g.phone, '\\D', '', 'g'), 10) limit 1) existing
@@ -81,25 +84,52 @@ export class MovingInService {
     const { rows } = await t.pool.query<{ user_id: string; phone: string; student: string }>(
       `select distinct on (u.id) u.id user_id, g.phone, s.name student from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary
        join guardians g on g.id = sg.guardian_id join users u on u.id = g.user_id
-       where s.status = 'active' and u.invited_at is null and g.phone is not null and ($1::text is null or s.class_id = $1) order by u.id, s.name`, [classId ?? null]);
+       where s.status = 'active' and g.phone is not null and ($1::text is null or s.class_id = $1)
+         and (case when $2 then u.invited_at is not null and u.last_login_at is null else u.invited_at is null end) order by u.id, s.name`, [classId ?? null, remind]);
     if (!rows.length) return { sent: 0 };
+    // A reminder is the same invite again, to families invited before who have not signed in yet.
     await this.messenger.notify(t, 'family.invite', rows.map((r) => ({ to: r.phone, vars: { student: r.student } })));
     await t.pool.query('update users set invited_at = now() where id = any($1)', [rows.map((r) => r.user_id)]);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'family.invited', entity: 'class', entityId: classId, detail: { families: rows.length } });
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: remind ? 'family.reminded' : 'family.invited', entity: 'class', entityId: classId, detail: { families: rows.length } });
     return { sent: rows.length };
   }
 
   /** Staff brought in by Migration have no password yet: each gets a first one by email now, the day the school goes live. */
-  async inviteStaff(t: TenantCtx, user: Who): Promise<{ sent: number }> {
-    const { rows } = await t.pool.query<{ id: string; name: string; email: string | null; phone: string | null }>(
-      "select id, name, email, phone from users where kind = 'staff' and status = 'active' and invited_at is null and password_hash is null");
+  async inviteStaff(t: TenantCtx, user: Who, remind = false): Promise<{ sent: number; skipped: string[] }> {
+    // An invite (or, to remind, a new first password for someone who never signed in) needs an email or a phone to reach them.
+    const all = (await t.pool.query<{ id: string; name: string; email: string | null; phone: string | null }>(
+      remind ? "select id, name, email, phone from users where kind = 'staff' and status = 'active' and invited_at is not null and last_login_at is null"
+        : "select id, name, email, phone from users where kind = 'staff' and status = 'active' and invited_at is null and password_hash is null")).rows;
+    const rows = all.filter((r) => r.email || r.phone);
+    const skipped = all.filter((r) => !r.email && !r.phone).map((r) => r.name);
     for (const r of rows) {
       const temp = tempPassword();
       await t.pool.query('update users set password_hash = $2, invited_at = now() where id = $1', [r.id, await hashPassword(temp)]);
       await this.messenger.notify(t, 'staff.invite', [{ to: r.phone ?? r.email ?? '', email: r.email, vars: { name: r.name.split(' ')[0]!, password: temp } }]);
     }
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'staff.invited', entity: 'staff', detail: { count: rows.length } });
-    return { sent: rows.length };
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: remind ? 'staff.reminded' : 'staff.invited', entity: 'staff', detail: { count: rows.length, skipped: skipped.length } });
+    return { sent: rows.length, skipped };
+  }
+
+  /**
+   * The letters to send home, printed by the server from the school's own wording (console: People → letters), one page each:
+   * to every family (or, when the school uses the app for students, every student) of a class or the school, with a QR code
+   * that opens the school's app in the phone's own store.
+   */
+  async letterPdf(t: TenantCtx, classId: string | undefined, role: 'family' | 'student', base: string): Promise<{ name: string; data: Buffer }> {
+    const rows = await this.letters(t, classId);
+    if (!rows.length) throw notFound('Students in that class');
+    const school = String((await this.settings.doc(t)).values['school.name'] ?? t.info.name);
+    const words = await this.settings.value<string>(t, role === 'family' ? 'letters.family' : 'letters.student', '');
+    const link = `${base.replace(/\/$/, '')}/hooks/app/${t.info.slug}`;
+    const lines: PdfLine[] = [];
+    rows.forEach((r, i) => {
+      const vars: Record<string, string> = { school, student: r.student, class: r.className, guardian: r.guardian, phoneEnd: r.phoneEnd, link };
+      const text = words.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
+      lines.push({ text: school, size: 18, bold: true, gap: 0, page: i > 0 }, { text: `${role === 'family' ? 'For the family of ' : ''}${r.student} · ${r.className} · ${r.admissionNo}`, size: 10, gap: 18 }, { text: '', qr: link, gap: 0 });
+      for (const para of text.split('\n')) lines.push({ text: para, gap: para ? 16 : 8 });
+    });
+    return { name: `${school} - letters${classId ? ` - ${rows[0]!.className}` : ''}.pdf`, data: await pdf(lines, { logo: null }) };
   }
 
   async letters(t: TenantCtx, classId: string | undefined): Promise<LetterRow[]> {
@@ -123,7 +153,7 @@ export class MovingInService {
 @Controller('v1/moving-in')
 @Core()
 export class MovingInController {
-  constructor(private readonly moving: MovingInService) {}
+  constructor(private readonly moving: MovingInService, @Inject(ENV) private readonly env: Env) {}
 
   @Get('uploads') @Require('setup.write')
   uploads(@Tenant() t: TenantCtx): Promise<UploadRow[]> {
@@ -147,13 +177,18 @@ export class MovingInController {
   }
 
   @Post('families/invite') @HttpCode(200) @Require('students.write')
-  inviteFamilies(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(FamilyInvite)) body: FamilyInvite): Promise<{ sent: number }> {
-    return this.moving.inviteFamilies(t, body.classId, u);
+  inviteFamilies(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(FamilyInvite.extend({ remind: z.boolean().default(false) }))) body: FamilyInvite & { remind: boolean }): Promise<{ sent: number }> {
+    return this.moving.inviteFamilies(t, body.classId, u, body.remind);
   }
 
   @Post('staff/invite') @HttpCode(200) @Require('staff.write')
-  inviteStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<{ sent: number }> {
-    return this.moving.inviteStaff(t, u);
+  inviteStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ remind: z.boolean().default(false) }))) b: { remind: boolean }): Promise<{ sent: number; skipped: string[] }> {
+    return this.moving.inviteStaff(t, u, b.remind);
+  }
+
+  @Get('letters.pdf') @Require('students.read')
+  async letterPdf(@Tenant() t: TenantCtx, @Query(new ZodPipe(ClassQ.extend({ role: z.enum(['family', 'student']).default('family') }))) q: { classId?: string; role: 'family' | 'student' }, @Res() reply: FastifyReply): Promise<void> {
+    sendPdf(reply, await this.moving.letterPdf(t, q.classId, q.role, this.env.API_BASE_URL));
   }
 
   /** A blank sheet to fill, as the console's: an .xlsx with the columns, an example row and dropdowns. */
@@ -161,11 +196,6 @@ export class MovingInController {
   template(@Param('kind') kind: string): Buffer {
     if (!importKind(kind)) throw notFound('That kind of import');
     return templateXlsx(kind);
-  }
-
-  @Get('letters') @Require('students.read')
-  letters(@Tenant() t: TenantCtx, @Query(new ZodPipe(ClassQ)) q: z.infer<typeof ClassQ>): Promise<LetterRow[]> {
-    return this.moving.letters(t, q.classId);
   }
 
   @Get('export') @Require('privacy.manage') @Header('content-type', 'application/zip') @Header('content-disposition', 'attachment; filename="school-export.zip"')

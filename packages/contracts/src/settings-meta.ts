@@ -69,9 +69,12 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'vocab.students': { group: 'people', label: '…and more than one', kind: 'text', help: 'Leave empty for the usual ending (“Pupil” → “Pupils”); fill in when it differs (“Children”).' },
   'vocab.class': { group: 'people', label: 'What the school calls a class', kind: 'text', help: 'The admin and the app use it.' },
   'vocab.classes': { group: 'people', label: '…and more than one', kind: 'text', help: 'Leave empty for the usual ending.' },
+  'letters.family': { group: 'people', label: 'Letter to families about the app', kind: 'textarea', help: 'Printed for each family from Students → On the app, with a code that opens the app. Use {school}, {student}, {class}, {guardian}, {phoneEnd} and {link}.' },
+  'letters.student': { group: 'people', label: 'Letter to students about the app', kind: 'textarea', help: 'Printed for each student when the school uses the app for students. Use {school}, {student}, {class} and {link}.' },
   'students.required': { group: 'people', label: 'Fields the office must fill for a student', kind: 'multi', options: [['gender', 'Gender'], ['house', 'House'], ['admissionNo', 'Admission number (otherwise Gradeon numbers them)'], ['bloodGroup', 'Blood group'], ['address', 'Address']], help: 'Name, class, date of birth and a guardian are always needed. These become required too when adding or editing a student.' },
   'people.houses': { group: 'people', label: 'Houses', kind: 'houses', max: 12, help: 'The school’s houses and their colours, if it has them: on student profiles, the roll-call grid and the app. Students are put in a house by import or on their profile.' },
   'admissions.sources': { group: 'people', label: 'Where enquiries come from', kind: 'strings', max: 16, help: 'The choices on a new enquiry, and how Admissions counts them.' },
+  'admissions.stages': { group: 'people', label: 'Admission stages', kind: 'multi', options: [['applied', 'Applied (form received)'], ['test', 'Entrance test'], ['offer', 'Offer (the family is told)']], help: 'The steps between an enquiry and enrolment on the Admissions board. Enquiry and Enrolled are always there.' },
   'staff.schoolAssignsRoles': { group: 'people', label: 'The school may put its staff into roles', kind: 'bool', help: 'Roles themselves are always made here. Off: only Gradeon assigns roles to people.' },
 
   // Attendance

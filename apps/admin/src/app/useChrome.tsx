@@ -21,6 +21,14 @@ export function useChrome() {
   useEffect(() => { if (shell.data && !shell.isPlaceholderData) try { localStorage.setItem(shellKey, JSON.stringify(shell.data)); } catch { /* storage can be blocked */ } }, [shell.data, shell.isPlaceholderData, shellKey]);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } });
   const [open, setOpen] = useState(false);
+  // "Search" on the not-found page lands here with ?search=1: open the box, and take the flag out of the address.
+  useEffect(() => {
+    const u = new URL(window.location.href);
+    if (!u.searchParams.has('search')) return;
+    setOpen(true);
+    u.searchParams.delete('search');
+    window.history.replaceState(window.history.state, '', u);
+  }, []);
   const [more, setMore] = useState(false);
   const [q, setQ] = useState('');
   const [dq, setDq] = useState('');

@@ -636,23 +636,22 @@ await flow('admin: academic year adds a holiday, refuses a bad one, and fees bil
   await expectVisible(p.getByText(/E2E science fair was added to \d+ students’ fees/), 'the billed toast');
 });
 
-await flow('admin: moving in sends a file to Gradeon, invites a class and prints its letters', { storage: adminStore }, async (p) => {
+await flow('admin: moving in sends a file to Gradeon; Students → On the app invites a class and prints its letters', { storage: adminStore }, async (p) => {
   await p.goto(A('/moving-in'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Send us your files' }), 'the files card');
   await p.locator('input[type=file]').setInputFiles({ name: 'e2e-subjects.csv', mimeType: 'text/csv', buffer: Buffer.from('Subject,Periods a week\nE2E Robotics,2\nE2E Dance,x\n') });
   await p.getByLabel('What is in it (optional)').fill('Two new subjects');
   await p.getByRole('button', { name: 'Send to Gradeon' }).click();
-  await expectVisible(p.getByText('Sent to Gradeon. The team will import it and tell you.'), 'the sent toast');
+  await expectVisible(p.getByText('Sent it to Gradeon. The team will import it and tell you.'), 'the sent toast');
   await expectVisible(p.getByText('e2e-subjects.csv'), 'the file in the list');
+  await p.goto(A('/students/app'), { waitUntil: 'networkidle' });
   const row = p.locator('.rw', { hasText: '8 A' });
   if (await row.getByRole('button', { name: 'Invite' }).count()) {
     await row.getByRole('button', { name: 'Invite' }).click();
     await expectVisible(p.getByText(/Invited \d+ famil/), 'the invited toast');
   }
-  await p.evaluate(() => { window.print = () => undefined; });
-  const [letters] = await Promise.all([p.waitForEvent('popup'), row.getByRole('button', { name: 'Letters' }).click()]);
-  await letters.waitForFunction(() => document.querySelectorAll('section').length > 0);
-  if (!(await letters.content()).includes('phone number ending')) throw new Error('the letters do not say which phone to sign in with');
+  const [letters] = await Promise.all([p.waitForEvent('popup'), row.getByRole('button', { name: 'Letters', exact: true }).click()]);
+  await letters.waitForURL(/^blob:/);
   await letters.close();
 });
 

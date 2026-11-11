@@ -14,6 +14,7 @@ export function StudentsView({ v }: { v: any }) {
             <p>{v.subtitle}</p>
           </div>
           <span className="grow"></span>
+          {v.tabs}
           <button className="btn" onClick={v.openImport}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M12 20V9M7 14l5-5 5 5M5 4h14"></path>
@@ -277,6 +278,12 @@ export function StudentsView({ v }: { v: any }) {
                   </svg>
                 </button>
               </div>
+              {v.left && (
+                <div className="tgrow" style={{ marginBottom: "8px" } as CSSProperties}>
+                  <span className="chip a">{v.left.line}</span>
+                  {v.left.back && <button className="btn sm" onClick={v.left.back}>Bring back on the roll</button>}
+                </div>
+              )}
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" } as CSSProperties}>
                 <span className={`fs ${v.d.fcls ?? ""}`}>{v.d.fees}</span>
                 {v.d.house && <span className="chip">{v.d.house} house</span>}

@@ -55,8 +55,18 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
   );
 }
 
-export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone: Done }) {
+/** What the import dialog says and calls for each kind of record a page imports itself (the one import engine on the server). */
+const IMPORTS = {
+  students: { one: 'student', many: 'students', columns: <><b>name, class, dob, guardian, phone</b> (and <b>roll</b> or <b>admission number</b> if you have them)</>, example: 'name,class,dob,guardian,phone\nSam Taylor,8 A,2012-04-18,Alex Taylor,+44 7700 900123' },
+  staff: { one: 'person', many: 'staff', columns: <><b>name, email</b> (and <b>phone, designation, department, role, subjects</b> if you have them)</>, example: 'name,email,phone,designation,role\nAlex Morgan,alex.morgan@school.org,+44 7700 900456,Teacher,Teacher' },
+};
+
+export function ImportDialog({ onClose, onDone, kind = 'students' }: { onClose: () => void; onDone: Done; kind?: keyof typeof IMPORTS }) {
   const { api } = useApp();
+  const k = IMPORTS[kind];
+  const run = kind === 'staff' ? api.staff.import : api.students.import;
+  const template = kind === 'staff' ? api.staff.template : api.students.template;
+  const n = (x: number) => `${x} ${x === 1 ? k.one : k.many}`;
   const shake = useShake();
   const [csv, setCsv] = useState('');
   const [file, setFile] = useState('');
@@ -67,12 +77,12 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
     e.preventDefault();
     if (csv.trim().length < 10) { setErr('Paste your sheet here, or choose a file.'); shake.hit(); return; }
     setBusy(true);
-    try { setResult(await api.students.import(csv)); setBusy(false); } catch (x) { setBusy(false); setErr(messageOf(x)); shake.hit(); }
+    try { setResult(await run(csv)); setBusy(false); } catch (x) { setBusy(false); setErr(messageOf(x)); shake.hit(); }
   };
   if (result) {
-    const done = () => onDone(result.created || result.updated ? `Imported ${result.created + result.updated} students` : '');
+    const done = () => onDone(result.created || result.updated ? `Imported ${n(result.created + result.updated)}` : '');
     return (
-      <Dialog title={result.created ? `${result.created} ${result.created === 1 ? 'student was' : 'students were'} added` : result.updated ? `${result.updated} ${result.updated === 1 ? 'student was' : 'students were'} updated` : 'No one was added'} onClose={done} width={520}>
+      <Dialog title={result.created ? `${n(result.created)} ${result.created === 1 ? 'was' : 'were'} added` : result.updated ? `${n(result.updated)} ${result.updated === 1 ? 'was' : 'were'} updated` : 'No one was added'} onClose={done} width={520}>
         <p>{result.created && result.updated ? `${result.updated} already here ${result.updated === 1 ? 'was' : 'were'} updated. ` : ''}{result.skipped ? `${result.skipped} ${result.skipped === 1 ? 'line was' : 'lines were'} skipped. Fix them and import again.` : 'Every line was imported.'}</p>
         {result.errors.length > 0 && (
           <ul style={{ margin: '0 0 8px', paddingLeft: 20, font: '600 13px/1.7 var(--fb)', color: 'var(--ink2)', maxHeight: 180, overflow: 'auto' }}>
@@ -84,13 +94,13 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
     );
   }
   return (
-    <Dialog title="Import students" onClose={onClose} shake={shake.cls} width={560}>
-      <p>Choose an Excel sheet (.xlsx) or a CSV with the columns <b>name, class, dob, guardian, phone</b> (and <b>roll</b> or <b>admission number</b> if you have them), or an export from your old system. Start from the template if you have nothing yet. A student already here is updated, not added twice.</p>
+    <Dialog title={`Import ${k.many}`} onClose={onClose} shake={shake.cls} width={560}>
+      <p>Choose an Excel sheet (.xlsx) or a CSV with the columns {k.columns}, or an export from your old system. Start from the template if you have nothing yet. Anyone already here is updated, not added twice.{kind === 'staff' ? ' They are invited to sign in from the Staff page once they are in.' : ''}</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div className="fld">
           <label htmlFor="csv">Your sheet</label>
           <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto', padding: 12, alignItems: 'stretch' }}>
-            <textarea id="csv" value={file ? `${file} is ready to import.` : csv} readOnly={!!file} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={'name,class,dob,guardian,phone\nSam Taylor,8 A,2012-04-18,Alex Taylor,+44 7700 900123'} style={{ width: '100%', resize: 'vertical', font: '600 13px/1.5 ui-monospace,Consolas,monospace' }} />
+            <textarea id="csv" value={file ? `${file} is ready to import.` : csv} readOnly={!!file} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={k.example} style={{ width: '100%', resize: 'vertical', font: '600 13px/1.5 ui-monospace,Consolas,monospace' }} />
           </div>
           {err && <ErrorLine>{err}</ErrorLine>}
         </div>
@@ -100,7 +110,7 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
             if (/\.xlsx$/i.test(f.name)) { const r = new FileReader(); r.onload = () => { setCsv(String(r.result)); setFile(f.name); setErr(''); }; r.readAsDataURL(f); }
             else void f.text().then((t) => { setCsv(t); setFile(''); setErr(''); });
           }}>Choose a file</FilePick>
-          <button type="button" className="btn sm" onClick={() => void api.students.template().then((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'students-template.xlsx'; a.click(); URL.revokeObjectURL(a.href); })}>Download the template</button>
+          <button type="button" className="btn sm" onClick={() => void template().then((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${kind}-template.xlsx`; a.click(); URL.revokeObjectURL(a.href); })}>Download the template</button>
           {file && <span className="chip v">{file}</span>}
         </div>
         <Actions onClose={onClose} busy={busy} label="Import" />
