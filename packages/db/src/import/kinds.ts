@@ -292,6 +292,7 @@ const students = kind<StudentLookups>({
       ...(r.guardian_phone && digits(r.guardian_phone).length < 10 ? ['The guardian’s phone needs 10 digits: families sign in with it.'] : []),
       ...(r.guardian2_phone && digits(r.guardian2_phone).length < 10 ? ['The second guardian’s phone needs 10 digits.'] : []),
       ...(r.status && !STATUS[norm(r.status)] ? ['Status is active or inactive (left, TC and transferred count as inactive).'] : []),
+      ...(r.gender && !['female', 'male', 'other'].includes(norm(r.gender)) ? ['Gender is female, male or other.'] : []),
     ];
     // No admission number (a sheet of new children): the same child is the same name and date of birth, and Gradeon numbers new ones.
     if (!r.admission_no) return ok(`new|${person(r.name!, isoDay(r.dob!) ?? '')}`, errors, l.people.has(person(r.name!, isoDay(r.dob!) ?? '')));
@@ -327,7 +328,7 @@ const students = kind<StudentLookups>({
       const id = was?.id ?? newId('stu');
       studs.push({
         id, admission_no: r.admission_no?.trim() || (was?.admission_no as string | undefined) || `${l.next.year}/${String(l.next.n++).padStart(4, '0')}`, name: r.name, class_id: l.classes.get(classKey(r.class!))!.id, roll_no: r.roll_no || (was?.roll_no as string) || '', dob: isoDay(r.dob!),
-        blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null,
+        blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null, gender: r.gender ? norm(r.gender) : was?.gender ?? null,
         status: r.status ? STATUS[norm(r.status)] : was?.status ?? 'active', admitted_on: r.admitted_on ? isoDay(r.admitted_on) : was?.admitted_on ?? null,
       });
       const g1 = guardian(r.guardian_name!, r.guardian_phone ?? '', r.guardian_email!, r.relation!, id);
@@ -340,7 +341,7 @@ const students = kind<StudentLookups>({
     return [
       { table: 'users', pk: ['id'], cols: [], rows: users },
       { table: 'guardians', pk: ['id'], cols: ['user_id', 'email'], rows: [...guardians.values()] },
-      { table: 'students', pk: ['id'], cols: ['name', 'class_id', 'roll_no', 'dob', 'blood_group', 'house', 'address', 'status', 'admitted_on'], rows: studs },
+      { table: 'students', pk: ['id'], cols: ['name', 'class_id', 'roll_no', 'dob', 'gender', 'blood_group', 'house', 'address', 'status', 'admitted_on'], rows: studs },
       { table: 'student_guardians', pk: ['student_id', 'guardian_id'], cols: [], rows: links },
     ];
   },

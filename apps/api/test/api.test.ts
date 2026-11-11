@@ -174,6 +174,29 @@ describe('students', () => {
   });
 });
 
+describe('a student’s record', () => {
+  it('edits a student, moves them to a class, and keeps every guardian with who may collect', async () => {
+    const made = await h.call('POST', '/v1/students', { token, body: { name: 'Record Test', classId: 'cls_8a', dob: '2013-02-01', guardianName: 'Pat Test', guardianPhone: '9822099001', gender: 'female' } });
+    expect(made.status).toBe(201);
+    expect(made.json).toMatchObject({ gender: 'female', guardians: [expect.objectContaining({ name: 'Pat Test', isPrimary: true, canCollect: true })] });
+    const moved = await h.call('PATCH', `/v1/students/${made.json.id}`, { token, body: { classId: 'cls_8b', house: '', bloodGroup: 'O+' } });
+    expect(moved.status).toBe(200);
+    expect(moved.json).toMatchObject({ bloodGroup: 'O+' });
+    expect(moved.json.className).toMatch(/8 B/);
+    const first = moved.json.guardians[0];
+    const g = await h.call('PUT', `/v1/students/${made.json.id}/guardians`, { token, body: { guardians: [
+      { id: first.id, name: 'Pat Test', phone: first.phone, email: '', relation: 'Mother', canCollect: true, isPrimary: false },
+      { name: 'Sam Test', phone: '9822099002', email: 'sam@example.com', relation: 'Father', canCollect: false, isPrimary: true },
+    ] } });
+    expect(g.status).toBe(200);
+    expect(g.json).toEqual([expect.objectContaining({ name: 'Sam Test', isPrimary: true, canCollect: false }), expect.objectContaining({ name: 'Pat Test', relation: 'Mother', isPrimary: false })]);
+    expect((await h.call('PUT', `/v1/students/${made.json.id}/guardians`, { token, body: { guardians: [{ name: 'No One', phone: '9822099003', relation: 'Aunt', canCollect: true, isPrimary: false }] } })).status).toBe(400);
+    await h.setSettings({ 'students.required': ['address'] });
+    expect((await h.call('PATCH', `/v1/students/${made.json.id}`, { token, body: { address: '' } })).status).toBe(400);
+    await h.setSettings({ 'students.required': [] });
+  });
+});
+
 describe('access', () => {
   it('stops a teacher from opening fees or settings', async () => {
     const tt = await h.login('sunita.desai@greenfield.edu.in');

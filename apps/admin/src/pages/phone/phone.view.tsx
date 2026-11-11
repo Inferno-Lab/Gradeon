@@ -17,7 +17,7 @@ export function PhoneView({ v }: { v: any }) {
             <small>{v.dayLine}</small>
             <h1>{v.greeting}</h1>
           </div>
-          <button className="mini bell" aria-label={v.pending ? `${v.pending} things need you` : "Notifications"} onClick={v.openSearch}>
+          <button className="mini bell" aria-label={v.pending ? `${v.pending} things need you` : "Notifications"} onClick={v.openApprovals}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M12 4a6 6 0 0 0-6 6c0 5-2 6-2 6h16s-2-1-2-6a6 6 0 0 0-6-6M10 20a2 2 0 0 0 4 0"></path>
             </svg>
@@ -27,19 +27,19 @@ export function PhoneView({ v }: { v: any }) {
         <div className="sc">
           <div className="two">
             {v.has.attendance && (
-            <div className="bt a" style={{ "--d": ".02s" } as CSSProperties}>
+            <button type="button" className="bt a" aria-label="Open attendance" onClick={() => v.goto("/attendance")} style={{ "--d": ".02s", border: "0", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer", width: "100%" } as CSSProperties}>
               <small>Present today</small>
               <div className="n num">
                 {v.present}
                 <span style={{ fontSize: "22px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
               </div>
-            </div>
+            </button>
             )}
             {v.has.fees && (
-            <div className="bt v" style={{ "--d": ".06s" } as CSSProperties}>
+            <button type="button" className="bt v" aria-label="Open fees" onClick={() => v.goto("/fees")} style={{ "--d": ".06s", border: "0", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer", width: "100%" } as CSSProperties}>
               <small>Fees in {v.feeMonth}</small>
               <div className="n num">{v.fees}</div>
-            </div>
+            </button>
             )}
           </div>
           <div className="bt w" style={{ "--d": ".1s", display: "flex", alignItems: "center", gap: "12px", padding: "16px 20px" } as CSSProperties}>
@@ -90,7 +90,7 @@ export function PhoneView({ v }: { v: any }) {
             )}
           </div>
           {v.has.fees && (
-          <div className="bt k" style={{ "--d": ".18s" } as CSSProperties}>
+          <button type="button" className="bt k" aria-label="Open fees" onClick={() => v.goto("/fees")} style={{ "--d": ".18s", border: "0", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer", width: "100%" } as CSSProperties}>
             <small>{v.barsTitle}</small>
             {v.barsEmpty ? (
               <p style={{ margin: "12px 0 0", font: "500 13px/1.45 var(--fb)", opacity: ".75" } as CSSProperties}>Payments show up here as fees are collected.</p>
@@ -106,7 +106,7 @@ export function PhoneView({ v }: { v: any }) {
                 ))}
               </div>
             )}
-          </div>
+          </button>
           )}
         </div>
       </div>

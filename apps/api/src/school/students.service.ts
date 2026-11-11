@@ -3,7 +3,7 @@ import { commitImport, newId, previewImport } from '@gradeon/db';
 import {
   addDays, dayLabel, initials, istToday, latestSchoolDay, schoolDaysEnding,
   type AssignFee, type AttendanceStatus, type ContactReveal, type FeeStatus, type ImportResult, type MessageRequest,
-  type Paged, type StudentCreate, type StudentDetail, type StudentQuery, type StudentRow, type StudentSummary, type StudentViews,
+  type GuardianRow, type GuardiansPut, type Paged, type StudentCreate, type StudentDetail, type StudentPatch, type StudentQuery, type StudentRow, type StudentSummary, type StudentViews,
 } from '@gradeon/contracts';
 import { maskPhone } from '@gradeon/security';
 import { ApiError, notFound } from '@gradeon/nest-kit';
@@ -11,7 +11,6 @@ import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
 const FEE_HORIZON_DAYS = 30;
-const LOW_ATTENDANCE = 0.88;
 
 interface ListRow {
   id: string; admission_no: string; name: string; class_id: string; class_name: string; roll_no: string; house: string | null; status: string;
@@ -83,7 +82,8 @@ export class StudentsService {
     if (q.feeStatus === 'overdue') where.push('coalesce(fee.overdue, 0) > 0');
     else if (q.feeStatus === 'due') where.push('coalesce(fee.overdue, 0) = 0 and coalesce(fee.due, 0) > 0');
     else if (q.feeStatus === 'paid') where.push('coalesce(fee.overdue, 0) = 0 and coalesce(fee.due, 0) = 0');
-    if (q.attendance === 'low') where.push(`coalesce(att.pct, 1) < ${LOW_ATTENDANCE}`);
+    // "Low" is below the school's attendance goal (console: Attendance → goal).
+    if (q.attendance === 'low') where.push(`coalesce(att.pct, 1) < ${add((await this.settings.value<number>(t, 'attendance.goalPct', 95)) / 100)}`);
     if (q.attendance === 'perfect') where.push('coalesce(att.pct, 0) >= 0.999');
     if (q.newThisYear) where.push(`s.admitted_on >= (select starts_on from academic_years where current limit 1)`);
     const dir = q.dir === 'desc' ? 'desc' : 'asc';
@@ -201,14 +201,17 @@ export class StudentsService {
     if (!r) throw notFound('That student');
     const roll24 = await this.rollWindow(t, id, schoolDaysEnding(last, 24, OFF_DAYS));
     const ticks = await this.ticks(t, [id], days);
-    const [exam, hw, lib, route, acts] = await Promise.all([
+    const [exam, hw, lib, route, acts, account] = await Promise.all([
       t.pool.query<{ exam: string; grade: string; pct: number }>('select exam, grade, pct from exam_results where student_id = $1 order by exam desc limit 1', [id]),
       t.pool.query<{ on_time: string; total: string }>('select count(*) filter (where on_time) on_time, count(*) total from homework_submissions where student_id = $1', [id]),
       t.pool.query<{ n: string }>('select count(*) n from library_loans where student_id = $1 and returned_on is null', [id]),
       t.pool.query<{ route: string }>('select route from transport_assignments where student_id = $1', [id]),
       this.activity(t, id),
+      t.pool.query<{ phone: string | null; email: string | null; last_login_at: Date | null }>('select u.phone, u.email, u.last_login_at from students s join users u on u.id = s.user_id where s.id = $1', [id]),
     ]);
+    const extra = (await t.pool.query<{ gender: StudentDetail['gender'] }>('select gender from students where id = $1', [id])).rows[0];
     const has = await this.has(t);
+    const acc = account.rows[0];
     const base = this.mask(this.row(r, ticks.get(id)!), has);
     return {
       ...base, dob: r.dob, bloodGroup: r.blood_group, house: r.house, address: r.address, admittedOn: r.admitted_on,
@@ -218,6 +221,8 @@ export class StudentsService {
         homework: has.homework ? { onTime: Number(hw.rows[0]!.on_time), total: Number(hw.rows[0]!.total) } : { onTime: 0, total: 0 }, libraryOut: has.library ? Number(lib.rows[0]!.n) : 0,
       },
       chips: { house: r.house }, recentActivity: acts, roll24: has.attendance ? roll24 : roll24.map(() => null),
+      gender: extra?.gender ?? null, guardians: await this.guardians(t, id),
+      appAccount: acc ? { phone: acc.phone ? maskPhone(acc.phone) : '', email: acc.email ?? '', lastSignIn: acc.last_login_at?.toISOString() ?? null } : null,
     };
   }
 
@@ -254,7 +259,19 @@ export class StudentsService {
     return { phone: rows[0].phone, email: rows[0].email };
   }
 
+  /** The fields the school requires beyond the always-needed ones (console: students.required), checked on add and edit. */
+  private async required(t: TenantCtx, body: StudentPatch): Promise<void> {
+    const need = await this.settings.value<string[]>(t, 'students.required', []);
+    const missing = need.filter((k) => k in body ? !String((body as Record<string, unknown>)[k] ?? '').trim() : false);
+    if (missing.length) throw new ApiError('validation', 'Fill in the fields your school keeps for every student.', { fields: Object.fromEntries(missing.map((k) => [k, 'Your school needs this.'])) });
+  }
+
   async create(t: TenantCtx, body: StudentCreate, user: { id: string; name: string }): Promise<StudentDetail> {
+    const need = await this.settings.value<string[]>(t, 'students.required', []);
+    await this.required(t, Object.fromEntries(need.map((k) => [k, (body as Record<string, unknown>)[k] ?? ''])) as StudentPatch);
+    if (body.admissionNo && (await t.pool.query('select 1 from students where lower(admission_no) = lower($1)', [body.admissionNo])).rowCount) {
+      throw new ApiError('validation', 'Another student has that admission number.', { fields: { admissionNo: 'Already used.' } });
+    }
     const cls = await t.pool.query<{ id: string; grade: number }>('select id, grade from classes where id = $1', [body.classId]);
     if (!cls.rows[0]) throw new ApiError('validation', 'Choose a class from the list.', { fields: { classId: 'Choose a class from the list.' } });
     const limit = t.info.entitlement.limits.students;
@@ -270,7 +287,8 @@ export class StudentsService {
     const client = await t.pool.connect();
     try {
       await client.query('begin');
-      await client.query('insert into students (id, admission_no, name, class_id, roll_no, dob, blood_group, address, admitted_on) values ($1,$2,$3,$4,$5,$6,$7,$8, current_date)', [id, `${year}/${String(seq).padStart(4, '0')}`, body.name, body.classId, roll, body.dob, body.bloodGroup ?? null, body.address ?? null]);
+      await client.query('insert into students (id, admission_no, name, class_id, roll_no, dob, blood_group, address, gender, house, admitted_on) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, current_date)',
+        [id, body.admissionNo || `${year}/${String(seq).padStart(4, '0')}`, body.name, body.classId, roll, body.dob, body.bloodGroup ?? null, body.address ?? null, body.gender ?? null, body.house || null]);
       // One family, one guardian: a brother or sister joins the guardian who already has that phone number.
       let g = (await client.query<{ id: string; user_id: string | null }>(`select id, user_id from guardians where ${byPhone} limit 1`, [digits])).rows[0];
       if (!g) {
@@ -296,6 +314,77 @@ export class StudentsService {
     }
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'student.created', entity: 'student', entityId: id, detail: { name: body.name } });
     return this.detail(t, id);
+  }
+
+  /** Changes a student's record. A new class keeps their history; the roll number follows if one is given. */
+  async update(t: TenantCtx, id: string, b: StudentPatch, user: { id: string; name: string }): Promise<StudentDetail> {
+    const was = (await t.pool.query<{ class_id: string }>("select class_id from students where id = $1 and status = 'active'", [id])).rows[0];
+    if (!was) throw notFound('That student');
+    await this.required(t, b);
+    if (b.classId && !(await t.pool.query('select 1 from classes where id = $1', [b.classId])).rowCount) throw new ApiError('validation', 'Choose a class from the list.', { fields: { classId: 'Choose a class from the list.' } });
+    if (b.admissionNo && (await t.pool.query('select 1 from students where lower(admission_no) = lower($1) and id <> $2', [b.admissionNo, id])).rowCount) {
+      throw new ApiError('validation', 'Another student has that admission number.', { fields: { admissionNo: 'Already used.' } });
+    }
+    const cols: Record<keyof StudentPatch, string> = { name: 'name', classId: 'class_id', rollNo: 'roll_no', dob: 'dob', gender: 'gender', house: 'house', admissionNo: 'admission_no', bloodGroup: 'blood_group', address: 'address' };
+    const set = (Object.keys(cols) as (keyof StudentPatch)[]).filter((k) => b[k] !== undefined);
+    if (set.length) {
+      await t.pool.query(`update students set ${set.map((k, i) => `${cols[k]} = $${i + 2}`).join(', ')} where id = $1`, [id, ...set.map((k) => (b[k] === '' ? null : b[k]))]);
+    }
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: b.classId && b.classId !== was.class_id ? 'student.moved' : 'student.edited', entity: 'student', entityId: id, detail: { fields: set.join(', ') } });
+    return this.detail(t, id);
+  }
+
+  async guardians(t: TenantCtx, studentId: string): Promise<GuardianRow[]> {
+    const { rows } = await t.pool.query<{ id: string; name: string; phone: string | null; email: string | null; relation: string | null; can_collect: boolean; is_primary: boolean; user_id: string | null; login: Date | null }>(
+      `select g.id, g.name, g.phone, g.email, g.relation, sg.can_collect, sg.is_primary, g.user_id, u.last_login_at login from student_guardians sg join guardians g on g.id = sg.guardian_id
+       left join users u on u.id = g.user_id where sg.student_id = $1 order by sg.is_primary desc, g.name`, [studentId]);
+    return rows.map((r) => ({ id: r.id, name: r.name, phone: r.phone ? maskPhone(r.phone) : '', email: r.email ?? '', relation: r.relation ?? 'Parent', canCollect: r.can_collect, isPrimary: r.is_primary, hasApp: !!r.login }));
+  }
+
+  /**
+   * Sets a student's guardians. A guardian already known by phone (a brother's or sister's) is joined, not made twice; one taken
+   * off this student stays for their other children. Each guardian has the family app account of their phone.
+   */
+  async setGuardians(t: TenantCtx, studentId: string, b: GuardiansPut, user: { id: string; name: string }): Promise<GuardianRow[]> {
+    if (!(await t.pool.query('select 1 from students where id = $1', [studentId])).rowCount) throw notFound('That student');
+    const byPhone = "right(regexp_replace(coalesce(phone,''), '\\D', '', 'g'), 10) = $1";
+    const client = await t.pool.connect();
+    try {
+      await client.query('begin');
+      const keep: string[] = [];
+      for (const g of b.guardians) {
+        // An existing guardian keeps their (masked) phone unless a new one is typed in full.
+        const known = g.id ? (await client.query<{ id: string; phone: string | null }>('select id, phone from guardians where id = $1', [g.id])).rows[0] : undefined;
+        const phone = known && /[^\d\s+()-]/.test(g.phone) ? known.phone ?? '' : g.phone;
+        const digits = phone.replace(/\D/g, '').slice(-10);
+        if (digits.length < 10) throw new ApiError('validation', `Add ${g.name}’s 10-digit phone number.`, { fields: { phone: 'Use a 10-digit phone number.' } });
+        let id = known?.id ?? (await client.query<{ id: string }>(`select id from guardians where ${byPhone} limit 1`, [digits])).rows[0]?.id;
+        if (id) await client.query('update guardians set name = $2, phone = $3, email = $4, relation = $5 where id = $1', [id, g.name, phone, g.email || null, g.relation]);
+        else {
+          id = newId('gdn');
+          await client.query('insert into guardians (id, name, phone, email, relation) values ($1,$2,$3,$4,$5)', [id, g.name, phone, g.email || null, g.relation]);
+        }
+        const d = digits;
+        const has = (await client.query<{ user_id: string | null }>('select user_id from guardians where id = $1', [id])).rows[0]?.user_id;
+        if (!has) {
+          let uid = (await client.query<{ id: string }>(`select id from users where ${byPhone} limit 1`, [d])).rows[0]?.id;
+          if (!uid) { uid = newId('usr'); await client.query("insert into users (id, kind, name, phone) values ($1,'guardian',$2,$3)", [uid, g.name, phone]); }
+          await client.query('update guardians set user_id = $2 where id = $1', [id, uid]);
+        }
+        await client.query(`insert into student_guardians (student_id, guardian_id, is_primary, can_collect) values ($1,$2,$3,$4)
+          on conflict (student_id, guardian_id) do update set is_primary = excluded.is_primary, can_collect = excluded.can_collect`, [studentId, id, g.isPrimary, g.canCollect]);
+        keep.push(id);
+      }
+      await client.query('delete from student_guardians where student_id = $1 and guardian_id <> all($2)', [studentId, keep]);
+      await client.query('commit');
+    } catch (err) {
+      await client.query('rollback').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'student.guardians', entity: 'student', entityId: studentId, detail: { count: b.guardians.length } });
+    return this.guardians(t, studentId);
   }
 
   /** The school's own sheet of students, through the same engine as Migration: bad lines are reported, the rest go in as one batch. */

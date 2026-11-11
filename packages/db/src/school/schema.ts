@@ -149,6 +149,7 @@ export const students = pgTable(
     dob: date('dob').notNull(),
     bloodGroup: text('blood_group'),
     house: text('house'),
+    gender: text('gender'),
     avatarUrl: text('avatar_url'),
     address: text('address'),
     status: text('status').notNull().default('active'),
@@ -177,6 +178,8 @@ export const studentGuardians = pgTable(
     studentId: text('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
     guardianId: text('guardian_id').notNull().references(() => guardians.id, { onDelete: 'cascade' }),
     isPrimary: boolean('is_primary').notNull().default(true),
+    /** May collect the child from school (migration 0021). */
+    canCollect: boolean('can_collect').notNull().default(true),
   },
   (t) => [primaryKey({ columns: [t.studentId, t.guardianId] }), index('student_guardians_guardian_idx').on(t.guardianId)],
 );

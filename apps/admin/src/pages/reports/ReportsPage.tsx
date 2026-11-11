@@ -4,16 +4,21 @@ import { EmptyCard } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Ico } from '../../app/kit';
+import { usePageTabs } from '../../app/tabs';
 
 const DOWNLOAD = 'M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14';
+/** Which reports each tab of the page (config-engine: the school module's reports page) holds, by the server's report areas. */
+const AREAS: Record<string, string> = { attendance: 'Attendance', money: 'Fees', learning: 'Learning', people: 'People' };
 
 export function ReportsPage() {
   const app = useApp();
   const { toast, say } = useToast();
+  const { tab, tabs } = usePageTabs('/reports');
   const [id, setId] = useState('');
   const [busy, setBusy] = useState(false);
-  const list = useQuery({ queryKey: ['reports'], queryFn: app.api.reports.list, staleTime: 10 * 60_000 });
-  const pick = id || list.data?.[0]?.id || '';
+  const all = useQuery({ queryKey: ['reports'], queryFn: app.api.reports.list, staleTime: 10 * 60_000 });
+  const list = { ...all, data: all.data?.filter((r) => r.area === AREAS[tab]) };
+  const pick = (list.data?.some((r) => r.id === id) ? id : '') || list.data?.[0]?.id || '';
   const data = useQuery({ queryKey: ['reports', pick], queryFn: () => app.api.reports.get(pick), enabled: !!pick });
   const areas = [...new Set((list.data ?? []).map((r) => r.area))];
   const download = async () => {
@@ -30,11 +35,11 @@ export function ReportsPage() {
   };
   const d = data.data;
   return (
-    <Page title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
-      error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={d ? <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button> : undefined}>
+    <Page title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={all.isLoading && !all.data}
+      error={all.isError && !all.data ? { message: (all.error as Error).message, retry: () => void all.refetch() } : null}
+      actions={<>{tabs}{d && <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>}</>}>
       {(list.data?.length ?? 0) === 0 ? (
-        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports are available" body="Reports appear here once the modules they read from are switched on for your school." /></div>
+        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports here yet" body="Reports in this area appear once the modules they read from are part of your school’s plan." /></div>
       ) : (
         <section className="rpg" data-even="fill">
           <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">

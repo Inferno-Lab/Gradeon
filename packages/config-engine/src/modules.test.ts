@@ -61,7 +61,8 @@ describe('every module is whole', () => {
     for (const m of MODULES.filter((x) => x.state !== 'planned')) {
       expect(m.pages.length + m.app.length, `${m.key} has neither an admin page nor an app piece`).toBeGreaterThan(0);
       for (const f of [...m.pages.map((p) => p.feature), ...m.pages.flatMap((p) => p.tabs ?? []).map((t) => t.feature), ...m.app.map((a) => a.feature), ...m.dashboard.map((d) => d.feature)]) {
-        if (f) expect(featureByKey(f)?.module, `${m.key} names ${f}`).toBe(m.key);
+        // A piece is gated by a feature of its own module, or (a report or a tab that reads another module's data) by that whole module.
+        if (f) expect(featureByKey(f)?.module === m.key || !!moduleByKey(f), `${m.key} names ${f}`).toBe(true);
       }
     }
   });

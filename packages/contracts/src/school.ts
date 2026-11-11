@@ -52,6 +52,11 @@ export interface StudentDetail extends StudentRow {
   admittedOn: string | null;
   recentActivity: { id: string; at: string; label: string; sub: string; tone: 'g' | 'v' | 'a' }[];
   roll24: (AttendanceStatus | null)[];
+  gender: (typeof GENDERS)[number] | null;
+  /** Every guardian (phones masked: the reveal call shows one in full). */
+  guardians: GuardianRow[];
+  /** The student's own app account (when the school uses the student role): how they sign in, and whether they have yet. */
+  appAccount: { phone: string; email: string; lastSignIn: string | null } | null;
 }
 
 export const StudentQuery = z.object({
@@ -131,17 +136,38 @@ export const AssignFee = z.object({
 });
 export type AssignFee = z.infer<typeof AssignFee>;
 
-export const StudentCreate = z.object({
+export const GENDERS = ['female', 'male', 'other'] as const;
+/** The fields of a student's record a school may require (console: People → fields the office must fill). */
+export const STUDENT_FIELDS = ['gender', 'house', 'admissionNo', 'bloodGroup', 'address'] as const;
+const StudentFields = {
   name: z.string().trim().min(2, 'Enter the full name').max(80),
   classId: z.string().min(1, 'Choose a class'),
   rollNo: z.string().trim().max(10).optional(),
   dob: IsoDate,
-  guardianName: z.string().trim().min(2).max(80),
-  guardianPhone: z.string().trim().min(8).max(20),
+  gender: z.enum(GENDERS).optional(),
+  house: z.string().trim().max(24).optional(),
+  admissionNo: z.string().trim().max(30).optional(),
   bloodGroup: z.string().trim().max(4).optional(),
   address: z.string().trim().max(200).optional(),
+};
+export const StudentCreate = z.object({
+  ...StudentFields,
+  guardianName: z.string().trim().min(2).max(80),
+  guardianPhone: z.string().trim().min(8).max(20),
 });
 export type StudentCreate = z.infer<typeof StudentCreate>;
+/** Changes to a student's own record; a change of class keeps their marks and attendance. */
+export const StudentPatch = z.object(StudentFields).partial();
+export type StudentPatch = z.infer<typeof StudentPatch>;
+/** A student's guardians, all at once: who they are, which one is first, and who may collect the child. */
+export const GuardiansPut = z.object({
+  guardians: z.array(z.object({
+    id: z.string().optional(), name: z.string().trim().min(2, 'Enter the name').max(80), phone: z.string().trim().min(8, 'Enter the phone number').max(20),
+    email: z.string().trim().email('Check the email').max(120).or(z.literal('')).optional(), relation: z.string().trim().min(2).max(30), canCollect: z.boolean(), isPrimary: z.boolean(),
+  })).min(1, 'A student needs at least one guardian').max(4),
+}).refine((b) => b.guardians.filter((g) => g.isPrimary).length === 1, { message: 'Choose one guardian to contact first.', path: ['guardians'] });
+export type GuardiansPut = z.infer<typeof GuardiansPut>;
+export interface GuardianRow { id: string; name: string; phone: string; email: string; relation: string; canCollect: boolean; isPrimary: boolean; hasApp: boolean }
 
 export const BulkStudentAction = z.object({
   ids: z.array(z.string()).min(1).max(500),

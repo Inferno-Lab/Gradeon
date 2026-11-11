@@ -1,8 +1,8 @@
 import type {
-  ChangeRequestCreate, ChangeRequestRow, DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
+  ChangeRequestCreate, ChangeRequestRow, PasswordChange, StudentPatch, GuardiansPut, GuardianRow, DataRequestCreate, DataRequestDecision, DataRequestRow, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EnquiryRow, EventRow, EventSave, ExamCreate, ExamMarksPut, ExamMarksView, ExamResults, ExamRow,
   HomeworkCreate, HomeworkDetail, HomeworkMarks, HomeworkRow, InvoiceListQuery, InvoiceListRow, InvoiceListSummary, ReceiptRow, ReportData, ReportInfo, RoleRow, StaffCreate, StaffPatch, StaffRow,
   ThreadCreate, ThreadDetail, ThreadPatch, ThreadReply, ThreadRow,
-  AttendanceDayPut, PeriodMarksPut, PeriodRoll, ApprovalDecision, ApprovalKind, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeHead, FeeHeadsPut, FeeSummary, ImportResult, InvoiceRow,
+  AttendanceDayPut, PeriodMarksPut, PeriodRoll, GalleryReportRow, ApprovalDecision, ApprovalKind, ApprovalRow, AssignFee, AttendanceDay, AuditRow, ClassInfo, ContactReveal, CoverRequest, DashboardData, EffectiveConfig, FeeHead, FeeHeadsPut, FeeSummary, ImportResult, InvoiceRow,
   LoginChallenge, LoginRequest, LoginResponse, MessageRequest, NoticeCreate, NoticeRow, Paged, PaymentCreate, SearchHit, SessionUser, SettingsResponse, ShellData, SlotPatch, StudentCreate, StudentDetail,
   StudentRow, StudentSummary, StudentViews, TeacherLoad, TeacherOption, TimetableView, TokenPair, VerifyRequest,
   Activation, ImportBatchRow, LetterRow, SetupSection, UploadCreate, UploadRow,
@@ -29,6 +29,12 @@ export function schoolApi(h: Http) {
     resetFinish: (b: { challengeId: string; code: string; password: string }) => h.post<void>('/v1/auth/reset/finish', b),
     logout: () => h.post<void>('/v1/auth/logout'),
     logoutAll: () => h.post<void>('/v1/auth/logout-all'),
+    changePassword: (b: PasswordChange) => h.post<void>('/v1/auth/password', b),
+    /** The signed-in person's own choices (USER_PREFS), kept with their account. */
+    prefs: {
+      get: () => h.get<Record<string, unknown>>('/v1/me/prefs'),
+      put: (key: string, value: unknown) => h.put<void>('/v1/me/prefs', { key, value }),
+    },
     me: () => h.get<SessionUser>('/v1/me'),
     config: () => h.get<EffectiveConfig>('/v1/config'),
     shell: () => h.get<ShellData>('/v1/shell'),
@@ -36,6 +42,9 @@ export function schoolApi(h: Http) {
     search: (q: string) => h.get<SearchHit[]>('/v1/search', { q }),
     classes: () => h.get<ClassInfo[]>('/v1/classes'),
     students: {
+      appAccount: (id: string, b: { phone?: string; email?: string }) => h.post<{ sent: boolean }>(`/v1/students/${id}/app-account`, b),
+      update: (id: string, b: StudentPatch) => h.patch<StudentDetail>(`/v1/students/${id}`, b),
+      setGuardians: (id: string, b: GuardiansPut) => h.put<GuardianRow[]>(`/v1/students/${id}/guardians`, b),
       list: (q: StudentListQuery) => h.get<Paged<StudentRow>>('/v1/students', q as Query),
       summary: (q: Pick<StudentListQuery, 'classId' | 'house'>) => h.get<StudentSummary>('/v1/students/summary', q as Query),
       views: () => h.get<StudentViews>('/v1/students/views'),
@@ -43,6 +52,7 @@ export function schoolApi(h: Http) {
       reveal: (id: string) => h.post<ContactReveal>(`/v1/students/${id}/reveal`),
       create: (b: StudentCreate) => h.post<StudentDetail>('/v1/students', b),
       import: (csv: string) => h.post<ImportResult>('/v1/students/import', { csv }),
+      template: () => h.blob('/v1/students/template'),
       exportCsv: (ids?: string[]) => h.text('/v1/students/export', ids?.length ? { ids: ids.join(',') } : undefined),
       message: (b: MessageRequest) => h.post<{ sent: number }>('/v1/students/message', b),
       assignFee: (b: AssignFee) => h.post<{ created: number }>('/v1/students/assign-fee', b),
@@ -212,6 +222,8 @@ export function schoolApi(h: Http) {
       remove: (id: string) => h.del<void>(`/v1/gallery/${id}`),
       photos: (id: string) => h.get<PhotoRow[]>(`/v1/gallery/${id}/photos`),
       tag: (fileId: string, studentIds: string[]) => h.put<void>(`/v1/gallery/photos/${fileId}/tags`, { studentIds }),
+      reports: () => h.get<GalleryReportRow[]>('/v1/gallery/reports'),
+      resolve: (id: string, remove: boolean) => h.post<void>(`/v1/gallery/reports/${id}/resolve`, { remove }),
     },
     year: {
       view: () => h.get<YearView>('/v1/year'),

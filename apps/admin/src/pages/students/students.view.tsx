@@ -52,7 +52,7 @@ export function StudentsView({ v }: { v: any }) {
               <em>/{v.sum.marked}</em>
             </div>
             <div className="s">
-              <span className="tr up">+{v.sum.since}</span>since 09:00
+              <span className="tr">{v.sum.unmarked}</span>not marked yet
             </div>
           </div>
           )}
@@ -61,10 +61,9 @@ export function StudentsView({ v }: { v: any }) {
             <span className="l">Fees overdue</span>
             <div className="v">
               ₹{v.sum.overdue}
-              <em>.00</em>
             </div>
             <div className="s">
-              <span className="tr dn">{v.sum.families}</span>this term
+              <span className="tr dn">{v.sum.families}</span>past the due date
             </div>
           </div>
           )}
@@ -106,40 +105,33 @@ export function StudentsView({ v }: { v: any }) {
                 }
               />
             </div>
-            <button className="btn sm" onClick={v.openAdd}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path className="i" d="M12 5v14M5 12h14"></path>
-              </svg>
-              Add student
-            </button>
           </div>
           {v.hasRows && (
             <>
               <div className="scroll-x">
               <div className="gmin">
-              <div className="grd th" style={{ "--cols": "44px minmax(0,1.5fr) 84px minmax(0,1.1fr) 150px 150px 40px" } as CSSProperties} role="row">
+              <div className="grd th" style={{ "--cols": v.cols } as CSSProperties} role="row">
                 <button className={`cb ${v.allOn ?? ""}`} role="checkbox" aria-checked={v.allSel} aria-label="Select all" onClick={v.toggleAll}>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
                   </svg>
                 </button>
-                <span className="sortb" aria-sort="ascending">
+                <button type="button" className="sortb" aria-sort={v.dir === "asc" ? "ascending" : "descending"} data-tip="Sort by name" onClick={v.flipSort} style={{ border: "0", background: "none", font: "inherit", color: "inherit", cursor: "pointer", padding: "0" } as CSSProperties}>
                   Student
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path className="i" d="M8 10l4-4 4 4M8 14l4 4 4-4"></path>
+                    <path className="i" d={v.dir === "asc" ? "M8 14l4 4 4-4" : "M8 10l4-4 4 4"}></path>
                   </svg>
-                </span>
+                </button>
                 <span>Class</span>
                 <span>Guardian</span>
-                <span>Last 10 days</span>
-                <span>Fees</span>
-                <span></span>
+                {v.has.attendance && <span>Last 10 days</span>}
+                {v.has.fees && <span>Fees</span>}
               </div>
               {v.rows.map((r: any, $i: number) => (
                 <Fragment key={$i}>
                   <div
                     className={`grd rw ${r.sel ?? ""}`}
-                    style={{ "--cols": "44px minmax(0,1.5fr) 84px minmax(0,1.1fr) 150px 150px 40px" } as CSSProperties}
+                    style={{ "--cols": v.cols } as CSSProperties}
                     role="row"
                     onClick={r.open}
                     tabIndex={0}
@@ -165,24 +157,19 @@ export function StudentsView({ v }: { v: any }) {
                       {r.cls} · {r.roll}
                     </span>
                     <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--ink2)" } as CSSProperties}>{r.g}</span>
-                    <span className="tk" aria-label={`${r.att ?? ""} percent present`}>
+                    {v.has.attendance && <span className="tk" aria-label={`${r.att ?? ""} percent present`}>
                       {r.tk.map((t: any, $i: number) => (
                         <Fragment key={$i}>
                           <i className={t.c} style={{ "--k": t.k } as CSSProperties}></i>
                         </Fragment>
                       ))}
-                    </span>
-                    <span className={`fs ${r.fcls ?? ""} ${r.pp ?? ""}`}>
+                    </span>}
+                    {v.has.fees && <span className={`fs ${r.fcls ?? ""} ${r.pp ?? ""}`}>
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path className="i" d={r.fic} style={{ strokeWidth: "2.2" } as CSSProperties}></path>
                       </svg>
                       {r.fees}
-                    </span>
-                    <button className="kebab" aria-label={`Open ${r.n ?? ""}`}>
-                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                        <path className="i" d="M5 12h.01M12 12h.01M19 12h.01" style={{ strokeWidth: "3" } as CSSProperties}></path>
-                      </svg>
-                    </button>
+                    </span>}
                   </div>
                 </Fragment>
               ))}
@@ -190,7 +177,8 @@ export function StudentsView({ v }: { v: any }) {
               </div>
               <div className="tfoot">
                 <span>Showing {v.range}</span>
-                <span style={{ display: "flex", gap: "8px" } as CSSProperties}>
+                <span style={{ display: "flex", gap: "8px", alignItems: "center" } as CSSProperties}>
+                  {v.perPage}
                   <button className="btn sm" disabled={v.page <= 1} onClick={v.prev}>
                     Previous
                   </button>
@@ -297,22 +285,22 @@ export function StudentsView({ v }: { v: any }) {
             </div>
             <div className="db">
               <div className="facts">
-                <div className="fc t-v" style={{ "--d": ".05s" } as CSSProperties}>
+                {v.d.show.att && <div className="fc t-v" style={{ "--d": ".05s" } as CSSProperties}>
                   <span>Attendance this term</span>
                   <b>{v.d.att}%</b>
-                </div>
-                <div className="fc t-a" style={{ "--d": ".1s" } as CSSProperties}>
+                </div>}
+                {v.d.show.exam && <div className="fc t-a" style={{ "--d": ".1s" } as CSSProperties}>
                   <span>{v.d.examName}</span>
                   <b>{v.d.exam}</b>
-                </div>
-                <div className="fc t-g" style={{ "--d": ".15s" } as CSSProperties}>
+                </div>}
+                {v.d.show.hw && <div className="fc t-g" style={{ "--d": ".15s" } as CSSProperties}>
                   <span>Homework on time</span>
                   <b>{v.d.homework}</b>
-                </div>
-                <div className="fc t-l" style={{ "--d": ".2s" } as CSSProperties}>
+                </div>}
+                {v.d.show.lib && <div className="fc t-l" style={{ "--d": ".2s" } as CSSProperties}>
                   <span>Library books out</span>
                   <b>{v.d.library}</b>
-                </div>
+                </div>}
               </div>
               <div>
                 <h3>{v.d.rollTitle}</h3>
@@ -325,22 +313,26 @@ export function StudentsView({ v }: { v: any }) {
                 </div>
               </div>
               <div>
-                <h3>Guardians</h3>
-                <div className="g">
+                <h3 style={{ display: "flex", alignItems: "center", gap: "8px" } as CSSProperties}>Guardians{v.may.edit && <button className="btn sm" style={{ marginLeft: "auto" } as CSSProperties} onClick={v.editGuardians}>Change</button>}</h3>
+                {v.guardians.map((g: any, $i: number) => (
+                <div className="g" key={$i} style={{ marginTop: $i ? "8px" : "0" } as CSSProperties}>
                   <span className="av" style={{ background: "var(--card)", color: "var(--ink2)", boxShadow: "none" } as CSSProperties}>
-                    {v.d.gi}
+                    {g.ini}
                   </span>
-                  <div style={{ flex: "1" } as CSSProperties}>
-                    <b style={{ font: "700 14px var(--fb)" } as CSSProperties}>{v.d.g}</b>
-                    <div style={{ font: "600 12px var(--fb)", color: "var(--ink3)" } as CSSProperties}>Primary · may collect from school</div>
+                  <div style={{ flex: "1", minWidth: "0" } as CSSProperties}>
+                    <b style={{ font: "700 14px var(--fb)" } as CSSProperties}>{g.n}</b>
+                    <div style={{ font: "600 12px var(--fb)", color: "var(--ink3)" } as CSSProperties}>{g.line}</div>
                   </div>
                   <span className="num" style={{ font: "700 12px var(--fb)", color: "var(--ink2)" } as CSSProperties}>
-                    {v.phone}
+                    {g.phone || "–"}
                   </span>
+                  {g.primary && (
                   <button className="rev" onClick={v.reveal}>
                     {v.rlab}
                   </button>
+                  )}
                 </div>
+                ))}
               </div>
               {v.files}
               <div>
@@ -361,9 +353,19 @@ export function StudentsView({ v }: { v: any }) {
               <button className="btn pri" style={{ flex: "1" } as CSSProperties} onClick={v.messageOne}>
                 Message guardians
               </button>
+              {v.may.edit && (
+                <button className="btn" onClick={v.edit}>
+                  Edit
+                </button>
+              )}
               {v.canCollect && (
                 <button className="btn" onClick={v.collect}>
                   Collect fee
+                </button>
+              )}
+              {v.may.leave && (
+                <button className="btn" data-tip="Record that this student left the school" onClick={v.leave}>
+                  Leaving
                 </button>
               )}
             </div>

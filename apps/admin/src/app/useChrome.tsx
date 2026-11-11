@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { dashboardPieces } from '@gradeon/config-engine';
 import { useRouterState } from '@tanstack/react-router';
-import { Dock, IC, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useThemeColors, type DockTab, type PaletteHit } from '@gradeon/web-ui';
+import { Dock, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useThemeColors, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import type { ShellData } from '@gradeon/contracts';
 import { activeNav, adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
@@ -30,11 +31,15 @@ export function useChrome() {
   useThemeColors(data?.theme);
   const groups = useMemo(() => adminNav(data?.menu ?? [], base, data?.badges), [data, base]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
+  // `N` then a letter starts something new (the dashboard's New menu shows the same keys), from the module definitions.
+  const news = useMemo(() => new Map(dashboardPieces({ modules: data?.modules ?? [], features: data?.features ?? [] }, user.permissions)
+    .filter((p) => p.kind === 'new' && p.keys && p.to).map((p) => [p.keys!.replace('N ', '').toLowerCase(), p.to!])), [data, user.permissions]);
   const goRef = useRef(go);
   goRef.current = go;
 
   useEffect(() => {
     let armed = 0;
+    let mode: 'g' | 'n' = 'g';
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       const typing = !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
@@ -43,14 +48,14 @@ export function useChrome() {
       if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === '/') { e.preventDefault(); setOpen(true); return; }
       if (Date.now() - armed < 1200) {
-        const to = targets.get(e.key.toLowerCase());
+        const to = mode === 'n' ? news.get(e.key.toLowerCase()) : targets.get(e.key.toLowerCase());
         armed = 0;
         if (to) { e.preventDefault(); goRef.current(to.startsWith(base) && base ? to.slice(base.length) || '/' : to); }
-      } else if (e.key.toLowerCase() === 'g') armed = Date.now();
+      } else if (e.key.toLowerCase() === 'g' || e.key.toLowerCase() === 'n') { armed = Date.now(); mode = e.key.toLowerCase() as 'g' | 'n'; }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [targets, base]);
+  }, [targets, news, base]);
 
   const close = () => { setOpen(false); setQ(''); };
   const pick = (h: PaletteHit) => {
@@ -61,15 +66,15 @@ export function useChrome() {
 
   const t = tintFor(user.name);
   const has = (id: string) => groups.some((g) => g.items.some((i) => i.id === id));
-  const hrefOf = (id: string) => groups.flatMap((g) => g.items).find((i) => i.id === id)?.href ?? '/';
-  const home = ['dash', 'appr', 'rep'], people = ['stu', 'staff', 'adm'], money = ['fee'];
+  // The phone dock: Home, then the first page of the person's own work (a teacher's Teach group before People and Money), then More.
+  const DOCK_GROUPS = ['Teach', 'People', 'Money', 'Care', 'Reach', 'Campus'];
+  const picks = DOCK_GROUPS.map((n) => groups.find((g) => g.name === n)).filter((g) => !!g && g.items.length).slice(0, 2).map((g) => ({ group: g!, item: g!.items[0]! }));
   const dockTabs: DockTab[] = [
-    { id: 'home', label: 'Home', icon: 'M4 11l8-7 8 7v9H4zM9 20v-6h6v6', onPress: () => goRef.current('/') },
-    ...(has('stu') ? [{ id: 'people', label: 'People', icon: IC.stu, onPress: () => goRef.current(hrefOf('stu').replace(base, '') || '/') }] : []),
-    ...(has('fee') ? [{ id: 'money', label: 'Money', icon: IC.fee, onPress: () => goRef.current(hrefOf('fee').replace(base, '') || '/') }] : []),
+    { id: 'home', label: 'Dashboard', icon: 'M4 11l8-7 8 7v9H4zM9 20v-6h6v6', onPress: () => goRef.current('/') },
+    ...picks.map(({ group, item }) => ({ id: group.name, label: item.label, icon: item.icon, onPress: () => goRef.current(item.href.replace(base, '') || '/') })),
     { id: 'more', label: 'More', icon: 'M5 12h.01M12 12h.01M19 12h.01', onPress: () => setMore(true) },
   ];
-  const dockActive = home.includes(active) ? 'home' : people.includes(active) ? 'people' : money.includes(active) ? 'money' : 'more';
+  const dockActive = active === 'dash' ? 'home' : picks.find((p) => p.group.items.some((i) => i.id === active))?.group.name ?? 'more';
 
   const aside: ReactNode = (
     <>
@@ -77,7 +82,7 @@ export function useChrome() {
       label="Main menu" collapsed={collapsed} groups={groups} active={active}
       onNavigate={(href) => goRef.current(base && href.startsWith(base) ? href.slice(base.length) || '/' : href)}
       header={<SchoolHeader logo={data?.school.logoText ?? ''} logoUrl={data?.school.logoUrl} name={data?.school.shortName ?? ''} place={data?.school.place ?? ''} color={data?.school.color} collapsed={collapsed} onToggle={() => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1'); } catch { /* ignore */ } return !c; })} />}
-      promo={data && data.term.daysToGo !== null && (
+      promo={data && has('ex') && data.term.daysToGo !== null && (
         <div className="sbc">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}>{data.term.name && <span className="chip a">{data.term.name}</span>}{data.term.examsLabel}</div>
           <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{data.term.daysToGo === 0 ? 'Starts today' : `${data.term.daysToGo} ${data.term.daysToGo === 1 ? 'day' : 'days'} to go`}</div>
@@ -85,8 +90,8 @@ export function useChrome() {
           {has('ex') && <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>See the exam schedule<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>}
         </div>
       )}
-      me={{ initials: user.initials, name: user.name, role: user.roleNames[0] ?? 'Staff', bg: t.bg, fg: t.fg }}
-      meMenu={[{ label: theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark', onPress: theme.toggle }, { label: 'Sign out', onPress: signOut }]}
+      me={{ initials: user.initials, name: user.name, role: user.roleNames.length > 1 ? `${user.roleNames[0]} and ${user.roleNames.length - 1} more` : user.roleNames[0] ?? 'Staff', bg: t.bg, fg: t.fg }}
+      meMenu={[{ label: 'My account', onPress: () => goRef.current('/account') }, { label: theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark', onPress: theme.toggle }, { label: 'Sign out', onPress: signOut }]}
     />
     <Dock tabs={dockTabs} active={dockActive} />
     </>
@@ -94,7 +99,7 @@ export function useChrome() {
 
   const overlays: ReactNode = (
     <>
-      <Presence>{open && <SearchDialog hits={hits.data ?? []} query={q} onQuery={setQ} onPick={pick} onClose={close} empty={`No matches for “${q}”. Try a name like Aarav or a class like 8 A.`} />}</Presence>
+      <Presence>{open && <SearchDialog hits={hits.data ?? []} query={q} onQuery={setQ} onPick={pick} onClose={close} empty={`No matches for “${q}”. Try part of a name, an admission number or a class.`} />}</Presence>
       <Presence>{more && (
         <MoreSheet title="Menu" onClose={() => setMore(false)}>
           {groups.map((g) => (
@@ -107,7 +112,10 @@ export function useChrome() {
               ))}
             </div>
           ))}
-          <button className="btn" style={{ width: '100%', marginTop: 12 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
+          <div className="sl">You</div>
+          <a className={`nvm ${pathname.endsWith('/account') ? 'on' : ''}`} href={`${base}/account`} onClick={(e) => { e.preventDefault(); setMore(false); goRef.current('/account'); }}>My account</a>
+          <button className="btn" style={{ width: '100%', marginTop: 12 }} onClick={theme.toggle}>{theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark'}</button>
+          <button className="btn" style={{ width: '100%', marginTop: 8 }} onClick={() => { setMore(false); signOut(); }}>Sign out</button>
         </MoreSheet>
       )}</Presence>
     </>

@@ -94,6 +94,7 @@ export const SchoolSettingsSchema = z.object({
   // Where enquiries come from, as the school counts them (Admissions and its reports).
   'admissions.sources': z.array(z.string().trim().min(1).max(40)).min(1).max(16).default(['Walk-in', 'Phone', 'Website', 'Referral', 'Event']),
   // The school's houses, if it has them: on student profiles, the roll-call grid and the app.
+  'students.required': z.array(z.enum(['gender', 'house', 'admissionNo', 'bloodGroup', 'address'])).default([]),
   'people.houses': z.array(z.object({ key: z.string().regex(/^[a-z0-9-]{1,24}$/), name: z.string().min(1).max(24), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) })).max(12).default([]),
   // The first column of every week grid (attendance, leave, the app's calendars).
   'calendar.weekStarts': z.enum(['mon', 'sun']).default('mon'),
@@ -234,7 +235,7 @@ export interface EffectiveConfig {
 export const USER_PREFS = {
   /** The class the admin's Students page opens on. */
   'students.class': z.string().max(60).nullable(),
-  /** The admin dashboard's cards, in order. */
+  /** The admin dashboard's widgets this person hid. */
   'dashboard.widgets': z.array(z.string().max(40)).max(12),
   /** Messages this person turned off in the app (message keys; urgent ones cannot be). */
   'notify.off': z.array(z.string().max(60)).max(60),

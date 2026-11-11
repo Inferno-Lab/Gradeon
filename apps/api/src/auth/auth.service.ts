@@ -134,6 +134,18 @@ export class AuthService {
     return this.sendCode(t, user, 'reset');
   }
 
+  /** A signed-in person changes their password: the current one first; every other device is signed out, this one stays. */
+  async changePassword(t: TenantCtx, user: { id: string; sid: string }, current: string, next: string): Promise<void> {
+    const u = (await t.pool.query<{ password_hash: string | null }>('select password_hash from users where id = $1', [user.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(current, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { current: 'Not your current password.' } });
+    const min = Number((await this.settings.doc(t)).values['security.passwordMinLength'] ?? 8);
+    if (next.length < min) throw new ApiError('validation', `Use at least ${min} characters.`, { fields: { next: `At least ${min} characters.` } });
+    if (next === current) throw new ApiError('validation', 'Choose a password you have not used here.', { fields: { next: 'The same as now.' } });
+    await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(next)]);
+    await t.pool.query('update sessions set revoked_at = now() where user_id = $1 and id <> $2 and revoked_at is null', [user.id, user.sid]);
+    await this.bumpVersion(t, user.id);
+  }
+
   async resetFinish(t: TenantCtx, challengeId: string, code: string, password: string): Promise<void> {
     const min = Number((await this.settings.doc(t)).values['security.passwordMinLength'] ?? 8);
     if (password.length < min) throw new ApiError('validation', `Use at least ${min} characters.`, { fields: { password: `At least ${min} characters.` } });

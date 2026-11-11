@@ -1,10 +1,11 @@
 import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
-  ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentQuery,
+  ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentPatch, GuardiansPut, StudentQuery,
   type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type PeriodRoll, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeHead, type FeeSummary, type ImportResult, type InvoiceRow,
-  type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
+  type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type GuardianRow, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
 } from '@gradeon/contracts';
 import { MODULES, activeModules } from '@gradeon/config-engine';
+import { templateXlsx } from '@gradeon/db';
 import { z } from 'zod';
 import { ZodPipe } from '@gradeon/nest-kit';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
@@ -69,6 +70,12 @@ export class StudentsController {
     return this.students.create(t, body, u);
   }
 
+  /** The students sheet to fill (the import engine's template: columns, an example row, dropdowns). */
+  @Get('template') @Require('students.write') @Header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  template(): Buffer {
+    return templateXlsx('students');
+  }
+
   @Post('import') @HttpCode(200) @Require('students.write')
   import(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(StudentImport)) body: StudentImport): Promise<ImportResult> {
     return this.students.importCsv(t, body.csv, u);
@@ -77,6 +84,16 @@ export class StudentsController {
   @Post('message') @HttpCode(200) @Require('students.read')
   message(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(MessageRequest)) body: MessageRequest): Promise<{ sent: number }> {
     return this.students.message(t, body, u);
+  }
+
+  @Patch(':id') @Require('students.write')
+  update(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(StudentPatch)) body: StudentPatch): Promise<StudentDetail> {
+    return this.students.update(t, id, body, u);
+  }
+
+  @Put(':id/guardians') @Require('students.write')
+  guardians(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(GuardiansPut)) body: GuardiansPut): Promise<GuardianRow[]> {
+    return this.students.setGuardians(t, id, body, u);
   }
 
   @Post(':id/app-account') @HttpCode(200) @Require('students.write')

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Put, Req, Res } from '@nestjs/common';
-import { CodeRequest, LoginRequest, USER_PREFS, UserPrefPut, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import type { z } from 'zod';
@@ -65,6 +65,12 @@ export class AuthController {
   ): Promise<TokenPair> {
     loginLimit.check(`${t.info.slug}|${req.ip}|r`);
     return this.auth.refresh(t, body.refreshToken, req, reply);
+  }
+
+  @Post('password') @HttpCode(204)
+  async password(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PasswordChange)) body: PasswordChange, @Req() req: FastifyRequest): Promise<void> {
+    loginLimit.check(`${t.info.slug}|${req.ip}|pw`);
+    await this.auth.changePassword(t, u, body.current, body.next);
   }
 
   @Post('logout') @HttpCode(204)

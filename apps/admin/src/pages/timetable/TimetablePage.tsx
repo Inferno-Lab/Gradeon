@@ -1,23 +1,16 @@
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, parseDay, weekday, type SlotRow, type TimetableView as TT } from '@gradeon/contracts';
+import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, weekday, type SlotRow, type TimetableView as TT } from '@gradeon/contracts';
 import { Dialog, EmptyCard, PageScope, tintFor, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
+import { useSetting } from '../../app/kit';
 import { TimetableView } from './timetable.view';
 
 const VIEWS = ['Week', 'Day', 'List'];
-const DAYS = [1, 2, 3, 4, 5];
+const WEEK = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 } as const;
 const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
-
-/** ISO week number of a date. */
-function isoWeek(day: string): number {
-  const d = parseDay(day);
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const y0 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - y0.getTime()) / 86400000 + 1) / 7);
-}
 
 const SUBJECT_COLOURS = ['maths', 'science', 'english', 'hindi', 'social', 'computer', 'art', 'pe', 'music'];
 
@@ -28,26 +21,30 @@ export function TimetablePage() {
   const [classId, setClassId] = useState('');
   const [clsOpen, setClsOpen] = useState(false);
   const [mode, setMode] = useState(() => (window.innerWidth < 640 ? 1 : 0)); // the week grid needs more width than a phone has
-  const [sel, setSel] = useState<{ day: number; period: number }>({ day: 3, period: 3 });
-  const [week, setWeek] = useState(0);
+  // Opens on today and the period running now (or the first one), like a teacher looking up what is on.
+  const [sel, setSel] = useState<{ day: number; period: number }>({ day: ((weekday(istToday()) + 6) % 7) + 1, period: 0 });
+  // The school's working days: every day except the weekly off days the console set.
+  const off = useSetting<string[]>('calendar.weeklyOff', ['sun']);
+  const DAYS = (Object.entries(WEEK) as [string, number][]).filter(([k]) => !off.includes(k)).map(([, n]) => n);
   const { toast, say } = useToast();
   const [chooser, setChooser] = useState(false);
   useEffect(() => { const off = () => setClsOpen(false); document.addEventListener('click', off); return () => document.removeEventListener('click', off); }, []);
 
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
-  useEffect(() => { if (!classId && classes.data?.length) setClassId(classes.data.find((c) => c.id === 'cls_8a')?.id ?? classes.data[0]!.id); }, [classes.data, classId]);
+  // A class teacher opens on their own class.
+  useEffect(() => { if (!classId && classes.data?.length) setClassId(classes.data.find((c) => c.classTeacherId === app.user.id)?.id ?? classes.data[0]!.id); }, [classes.data, classId, app.user.id]);
   const tt = useQuery({ queryKey: ['timetable', classId], queryFn: () => app.api.timetable.view(classId), enabled: !!classId, placeholderData: keepPreviousData });
   const loads = useQuery({ queryKey: ['loads', classId, tt.data?.version, tt.data?.draftChanges], queryFn: () => app.api.timetable.loads(classId), enabled: !!classId });
 
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['timetable', 'loads', 'shell'].includes(String(q.queryKey[0])) });
   const cover = useMutation({
     mutationFn: (b: { slotId: string; teacherId: string }) => app.api.timetable.cover(b),
-    onSuccess: refresh, onError: (e) => say((e as Error).message),
+    onSuccess: refresh, onError: (e) => say((e as Error).message, 'bad'),
   });
   const publish = useMutation({
     mutationFn: () => app.api.timetable.publish(),
     onSuccess: (r) => { say(`Published · ${r.families.toLocaleString('en-IN')} families and ${r.teachers} teachers notified`); refresh(); },
-    onError: (e) => say(e instanceof HttpError ? e.message : 'Could not publish. Try again.'),
+    onError: (e) => say(e instanceof HttpError ? e.message : 'Could not publish. Try again.', 'bad'),
   });
 
   const data: TT | undefined = tt.data;
@@ -82,33 +79,35 @@ export function TimetablePage() {
   }
 
   const today = istToday();
-  const monday = addDays(addDays(today, -((weekday(today) + 6) % 7)), week * 7);
+  const monday = addDays(today, -((weekday(today) + 6) % 7));
   const dateOf = (day: number) => addDays(monday, day - 1);
-  const shownDays = mode === 1 ? [sel.day] : DAYS;
+  const shownDays = mode === 1 ? [DAYS.includes(sel.day) ? sel.day : DAYS[0] ?? 1] : DAYS;
   const slotAt = (d: number, p: number) => data.slots.find((s) => s.day === d && s.period === p);
   const badIds = new Set(data.clashes.flatMap((c) => c.slotIds));
   const periodDef = (idx: number) => data.periods.find((p) => p.idx === idx);
   const now = istMinutes();
   // The app's subject colours (lib/core/theme/app_colors.dart), so a subject looks the same in the admin and the app; others keep their stored tone.
   const subjectKey = (s: Pick<SlotRow, 'subjectName' | 'subjectColor'>) => {
-    const k = (s.subjectName.trim().toLowerCase().split(/s+/)[0] ?? '').replace(/^mathematics$/, 'maths').replace(/^physical$/, 'pe');
+    const k = (s.subjectName.trim().toLowerCase().split(/\s+/)[0] ?? '').replace(/^mathematics$/, 'maths').replace(/^physical$/, 'pe');
     return SUBJECT_COLOURS.includes(k) ? `sub s-${k}` : s.subjectColor;
   };
+  const running = data.periods.find((p) => p.kind === 'period' && now >= toMin(p.starts) && now < toMin(p.ends)) ?? data.periods.find((p) => p.kind === 'period');
+  const at = { day: DAYS.includes(sel.day) ? sel.day : DAYS[0] ?? 1, period: sel.period || running?.idx || 0 };
   const cellOf = (day: number, p: { idx: number; starts: string; ends: string }, ri: number) => {
     const s = slotAt(day, p.idx);
-    const live = week === 0 && dateOf(day) === today && now >= toMin(p.starts) && now < toMin(p.ends);
-    const base = { sel: sel.day === day && sel.period === p.idx ? 'sel' : '', pressed: sel.day === day && sel.period === p.idx ? 'true' : 'false', d: (ri * 0.04 + day * 0.03).toFixed(2), pg: live ? Math.round(((now - toMin(p.starts)) / (toMin(p.ends) - toMin(p.starts))) * 100) : 0, now: live ? 'now' : '', pick: () => setSel({ day, period: p.idx }) };
+    const live = dateOf(day) === today && now >= toMin(p.starts) && now < toMin(p.ends);
+    const on = at.day === day && at.period === p.idx;
+    const base = { sel: on ? 'sel' : '', pressed: on ? 'true' : 'false', d: (ri * 0.04 + day * 0.03).toFixed(2), pg: live ? Math.round(((now - toMin(p.starts)) / (toMin(p.ends) - toMin(p.starts))) * 100) : 0, now: live ? 'now' : '', pick: () => setSel({ day, period: p.idx }) };
     if (!s) return { ...base, k: 'n', n: 'Free', t: 'Not placed', r: '', bad: '', isBad: false, isFixed: false };
     const bad = badIds.has(s.id) && !s.substituteId;
     return { ...base, k: bad ? '' : subjectKey(s), n: s.subjectName, t: s.substituteName ?? s.teacherName, r: s.room ?? '', bad: bad ? 'bad' : '', isBad: bad, isFixed: !!s.substituteId };
   };
-  const teaching = data.periods.filter((p) => p.kind === 'period');
   const rows = data.periods.map((p, ri) => (p.kind === 'period'
     ? { brk: false, per: true, l: p.label, t: p.starts, cells: shownDays.map((d) => cellOf(d, p, ri)) }
     : { brk: true, per: false, l: '', t: '', name: `${p.label} · ${p.starts} to ${p.ends}` }));
 
-  const cur = slotAt(sel.day, sel.period);
-  const curDef = periodDef(sel.period);
+  const cur = slotAt(at.day, at.period);
+  const curDef = periodDef(at.period);
   const clash = cur ? data.clashes.find((c) => c.slotIds.includes(cur.id)) : undefined;
   const selBad = !!cur && !!clash && !cur.substituteId;
   const teacherId = cur?.substituteId ?? cur?.teacherId;
@@ -119,11 +118,10 @@ export function TimetablePage() {
   const subjects = [...new Map(data.slots.map((s) => [s.subjectId, s])).values()];
   const canEdit = app.user.permissions.includes('timetable.edit');
   const fixedNow = !!cur?.substituteId;
-  const t = cur ? tintFor(cur.teacherName) : tintFor('');
 
   const v = {
     ...chrome,
-    className: data.className, term: 'Term 1', version: data.version, isDraft: data.draftChanges > 0, draftChanges: data.draftChanges,
+    className: data.className, term: chrome.shell?.term.name || 'This year', version: data.version, isDraft: data.draftChanges > 0, draftChanges: data.draftChanges,
     clsOpen: clsOpen ? 'open' : '', clsExp: clsOpen ? 'true' : 'false', clsLabel: `Class ${data.className}`,
     toggleCls: (e: React.MouseEvent) => { e.stopPropagation(); setClsOpen((o) => !o); },
     classes: classList.map((c, i) => ({ n: `Class ${c.name}`, on: c.id === classId, sel: c.id === classId ? 'true' : 'false', d: 40 + Math.min(i, 8) * 30, pick: () => { setClassId(c.id); setClsOpen(false); } })),
@@ -131,8 +129,7 @@ export function TimetablePage() {
     mode: ['week', 'day', 'list'][mode],
     tgStyle: mode === 1 ? { gridTemplateColumns: '78px minmax(0,1fr)' } : undefined,
     publish: () => publish.mutate(),
-    prevWeek: () => setWeek((w) => w - 1), nextWeek: () => setWeek((w) => w + 1),
-    weekLabel: `${dayMonth(dateOf(1))} – ${dayMonth(dateOf(5))} ${dateOf(5).slice(0, 4)} · W${isoWeek(dateOf(1))}`,
+    weekLabel: `Every week · shown for ${dayMonth(dateOf(DAYS[0] ?? 1))} – ${dayMonth(dateOf(DAYS.at(-1) ?? 5))}`,
     clashChip: data.clashes.length ? 'c' : 'g', clashText: data.clashes.length ? `${data.clashes.length} ${data.clashes.length === 1 ? 'clash' : 'clashes'} to fix` : 'No clashes',
     legend: subjects.map((s) => ({ k: subjectKey(s), n: s.subjectName })),
     days: shownDays.map((d) => ({ n: dayName(dateOf(d), true), d: Number(dateOf(d).slice(8)), today: dateOf(d) === today ? 'today' : '' })),
@@ -143,12 +140,12 @@ export function TimetablePage() {
     })),
     sel: {
       k: selBad ? 'c' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
-      day: `${dayLabel(dateOf(sel.day))}`, time: curDef ? `${curDef.starts} to ${curDef.ends}` : '', len: curDef ? `${toMin(curDef.ends) - toMin(curDef.starts)} min` : '',
+      day: `${dayLabel(dateOf(at.day))}`, time: curDef ? `${curDef.starts} to ${curDef.ends}` : '', len: curDef ? `${toMin(curDef.ends) - toMin(curDef.starts)} min` : '',
       bad: selBad, fixedNow, fine: !!cur && !selBad && !fixedNow, other: clash ? clash.classNames.filter((n) => n !== data.className).join(', ') || 'another class' : '',
       suggest: clash?.suggestion ? clash.suggestion.teacherName.split(' ')[0] : null,
     },
     canEdit,
-    fix: () => { if (cur && clash?.suggestion) cover.mutate({ slotId: cur.id, teacherId: clash.suggestion.teacherId }, { onSuccess: () => say(`Clash fixed · ${clash.suggestion!.teacherName} covers ${dayName(dateOf(sel.day), true)} ${periodDef(sel.period)?.label}`) }); },
+    fix: () => { if (cur && clash?.suggestion) cover.mutate({ slotId: cur.id, teacherId: clash.suggestion.teacherId }, { onSuccess: () => say(`Clash fixed · ${clash.suggestion!.teacherName} covers ${dayName(dateOf(at.day), true)} ${periodDef(at.period)?.label}`) }); },
     change: () => setChooser(true),
     ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--c)' : 'var(--v)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '–',
     loads: top.map((l) => { const c = tintFor(l.name); return { n: l.name, s: l.subjects[0] ?? 'Teacher', ini: l.name.split(' ').map((w) => w[0]).slice(0, 2).join(''), bg: c.bg, fg: c.fg, v: l.periodsPerWeek, p: Math.round((l.periodsPerWeek / l.max) * 100), hot: l.periodsPerWeek > l.max * 0.9 ? 'hot' : '' }; }),
@@ -156,7 +153,6 @@ export function TimetablePage() {
     toast,
     dialog: chooser && cur ? <TeacherChooser slot={cur} onClose={() => setChooser(false)} onPick={(id) => { setChooser(false); app.api.timetable.patch(cur.id, { teacherId: id }).then(() => { say('Teacher changed. Publish to tell families.'); refresh(); }).catch((e) => say((e as Error).message)); }} /> : null,
   };
-  void teaching; void t;
   return <TimetableView v={v} />;
 }
 

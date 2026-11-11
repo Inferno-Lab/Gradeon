@@ -47,14 +47,16 @@ export class TransportService implements OnModuleInit {
       t.pool.query('select s.*, (select count(*) from transport_assignments a where a.stop_id = s.id)::int riders from transport_stops s order by route_id, position'),
       t.pool.query("select route_id, count(*)::int n from transport_assignments a join students s on s.id = a.student_id and s.status = 'active' where route_id is not null group by route_id"),
       t.pool.query('select * from bus_positions'),
-      t.pool.query('select * from bus_trips where day = $1 order by started_at', [istToday()]),
+      t.pool.query(`select b.*, (select count(*) filter (where m.event = 'boarded') from bus_trip_marks m where m.trip_id = b.id)::int boarded,
+        (select count(*) filter (where m.event = 'dropped') from bus_trip_marks m where m.trip_id = b.id)::int dropped,
+        (select count(*) filter (where m.event = 'absent') from bus_trip_marks m where m.trip_id = b.id)::int absent from bus_trips b where b.day = $1 order by b.started_at`, [istToday()]),
     ]);
     const n = new Map(riders.rows.map((r) => [r.route_id, r.n]));
     const pos = new Map(bus.rows.map((b) => [b.route_id, b]));
     return routes.rows.map((r) => ({
       id: r.id, name: r.name, vehicle: r.vehicle, driverUserId: r.driver_user_id, driverName: r.driver_user_name ?? r.driver_name, driverPhone: r.driver_user_phone ?? r.driver_phone,
       attendantName: r.attendant_name, attendantPhone: r.attendant_phone, trackerId: r.tracker_id, fee: r.fee, riders: n.get(r.id) ?? 0,
-      trips: trips.rows.filter((x) => x.route_id === r.id).map((x) => ({ id: x.id, kind: x.kind, startedAt: x.started_at.toISOString(), endedAt: x.ended_at?.toISOString() ?? null, lateMinutes: x.late_minutes, lateReason: x.late_reason })),
+      trips: trips.rows.filter((x) => x.route_id === r.id).map((x) => ({ id: x.id, kind: x.kind, startedAt: x.started_at.toISOString(), endedAt: x.ended_at?.toISOString() ?? null, lateMinutes: x.late_minutes, lateReason: x.late_reason, boarded: x.boarded, dropped: x.dropped, absent: x.absent })),
       stops: stops.rows.filter((s) => s.route_id === r.id).map((s) => ({ id: s.id, name: s.name, position: s.position, pickup: s.pickup, dropTime: s.drop_time, lat: s.lat, lng: s.lng, riders: s.riders })),
       bus: pos.get(r.id) ? { lat: pos.get(r.id).lat, lng: pos.get(r.id).lng, at: iso(pos.get(r.id).at) } : null,
     }));

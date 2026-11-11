@@ -87,7 +87,7 @@ export interface BusRouteRow {
   id: string; name: string; vehicle: string; driverUserId: string | null; driverName: string; driverPhone: string; attendantName: string; attendantPhone: string; trackerId: string;
   fee: number; stops: StopRow[]; riders: number; bus: { lat: number; lng: number; at: string } | null;
   /** Today's trips: which ran, when, and whether one is running now. */
-  trips: { id: string; kind: 'morning' | 'afternoon'; startedAt: string; endedAt: string | null; lateMinutes: number; lateReason: string }[];
+  trips: { id: string; kind: 'morning' | 'afternoon'; startedAt: string; endedAt: string | null; lateMinutes: number; lateReason: string; boarded: number; dropped: number; absent: number }[];
 }
 export const TripStart = z.object({ routeId: z.string().min(1), kind: z.enum(['morning', 'afternoon']) });
 export const TripMark = z.object({ studentId: z.string().min(1), event: z.enum(['boarded', 'dropped', 'absent']), stopId: z.string().nullable().default(null) });
@@ -102,6 +102,8 @@ export type AlbumInput = z.infer<typeof AlbumInput>;
 export interface AlbumRow { id: string; title: string; classId: string | null; className: string | null; eventId: string | null; published: boolean; photos: number; coverFileId: string | null; createdAt: string }
 export interface PhotoRow extends FileRow { students: { id: string; name: string; consent: boolean | null }[] }
 export const PhotoTags = z.object({ studentIds: z.array(z.string()).max(60) });
+/** A photo a family reported from the app, waiting for someone to keep it or take it down. */
+export interface GalleryReportRow { id: string; fileId: string; albumId: string | null; album: string | null; by: string; reason: string; createdAt: string }
 
 // ── Year-end ──────────────────────────────────────────────────────────────────
 

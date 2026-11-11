@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { dashboardPieces } from '@gradeon/config-engine';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
 import { Dialog, EmptyCard, IC, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast } from '@gradeon/web-ui';
@@ -8,14 +9,11 @@ import { DashboardView } from './dashboard.view';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { PhoneDashboard } from '../phone/PhoneDashboard';
 
-const RANGES: [string, number][] = [['Today', 1], ['This week', 6], ['This term', 24], ['This year', 24]];
-const TABS: [string, 'attendance' | 'fees' | 'homework', number][] = [['Attendance', 'attendance', 104], ['Fees', 'fees', 72], ['Homework', 'homework', 104]];
-// The last item of each row is the module it needs: a school without it does not see it.
-const NEWS: [string, string, string, string, string][] = [
-  ['Add student', 'stu', 'N S', '/students?add=1', 'people'], ['Collect a fee', 'fee', 'N F', '/students?pay=1', 'fees'], ['Post a notice', 'notice', 'N N', '/notices', 'notices'],
-  ['Mark attendance', 'att', 'N A', '/attendance', 'attendance'], ['Schedule an exam', 'ex', 'N E', '/exams', 'exams'],
-];
-const WIDGETS: [string, string, string, string][] = [['rolls', 'Class rolls', 'Attendance of each class today', 'attendance'], ['fees', 'Fees by type', 'What each kind of fee has collected', 'fees'], ['day', 'Today at school', 'The timeline of the school day', 'events']];
+// Only ranges the dashboard can count truly: a day and a school week.
+const RANGES: [string, number][] = [['Today', 1], ['This week', 6]];
+// Each chart needs its module and the person's right to see it (a teacher does not see fee totals).
+const TABS: [string, 'attendance' | 'fees' | 'homework', string][] = [['Attendance', 'attendance', 'attendance.read'], ['Fees', 'fees', 'fees.read'], ['Homework', 'homework', 'homework.read']];
+const KIND_WORD: Record<string, [string, string]> = { leave: ['leave request', 'leave requests'], fee_waiver: ['fee waiver', 'fee waivers'], notice: ['notice', 'notices'], admission: ['admission', 'admissions'], photo: ['new photo', 'new photos'] };
 const H = 236;
 const UP = 'M7 17L17 7M9 7h8v8';
 const DOWN = 'M7 7l10 10M17 9v8H9';
@@ -44,8 +42,14 @@ function DashboardDesktop() {
   const [tab, setTab] = useState(0);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [widgets, setWidgets] = useState(false);
-  const [hidden, setHidden] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(`gradeon.dash.hidden.${app.user.id}`) ?? '[]') as string[]; } catch { return []; } });
-  const setHide = (id: string, off: boolean) => setHidden((h) => { const n = off ? [...new Set([...h, id])] : h.filter((x) => x !== id); try { localStorage.setItem(`gradeon.dash.hidden.${app.user.id}`, JSON.stringify(n)); } catch { /* private window: the choice lasts until the page closes */ } return n; });
+  // The widgets this person hid, kept with their account so the choice follows them to any computer.
+  const prefs = useQuery({ queryKey: ['prefs'], queryFn: app.api.prefs.get, staleTime: 5 * 60_000 });
+  const hidden = (prefs.data?.['dashboard.widgets'] as string[] | undefined) ?? [];
+  const setHide = (id: string, off: boolean) => {
+    const n = off ? [...new Set([...hidden, id])] : hidden.filter((x) => x !== id);
+    qc.setQueryData(['prefs'], { ...prefs.data, 'dashboard.widgets': n });
+    void app.api.prefs.put('dashboard.widgets', n).catch(() => say('Your choice could not be saved. Try again.', 'bad'));
+  };
   const { toast, say, clear } = useToast();
   const days = RANGES[range]![1];
 
@@ -64,10 +68,15 @@ function DashboardDesktop() {
   const v = useMemo(() => (d ? build(d) : null), [d, range, tab, rangeOpen, newOpen, done, toast, chrome.shell, hidden, widgets]);
 
   function build(d: DashboardData) {
+    const may = (p: string) => app.user.permissions.includes(p as never);
     const has = (m: string) => d.modules.includes(m);
-    const tabsOn = TABS.filter((x) => has(x[1]));
+    // Widgets and the New menu come from the module definitions: what the school has and what this person may do.
+    const pieces = dashboardPieces({ modules: d.modules, features: chrome.shell?.features ?? [] }, app.user.permissions);
+    const widgetsOn = pieces.filter((p) => p.kind === 'widget');
+    const tabsOn = TABS.filter((x) => has(x[1]) && may(x[2]));
     const T = tabsOn[tab] ?? tabsOn[0] ?? TABS[0]!;
-    const off = WIDGETS.filter((w) => !has(w[3])).map((w) => w[0]);
+    // The board has a slot for each of these; a slot whose widget the school or person lacks stays hidden.
+    const off = ['rolls', 'fees', 'day'].filter((k) => !widgetsOn.some((w) => w.key === k));
     const kind = T[1];
     const pts = kind === 'attendance' ? d.charts.attendance.points : kind === 'fees' ? d.charts.fees.points : d.charts.homework.points;
     const values = pts.map((p) => ('pct' in p ? p.pct : p.amount));
@@ -82,15 +91,17 @@ function DashboardDesktop() {
         n: dense ? (i % 3 === 0 || p.isToday ? String(Number(p.date.slice(8))) : '') : p.label,
         v: fmt(x), full: kind === 'attendance' ? `${p.date}` : (p as { full: string }).full ?? p.date, prev: prev !== null ? fmt(prev) : '',
         h: Math.max(6, (x / max) * H), gh: prev !== null ? Math.max(6, (prev / max) * H) : 0,
-        c: 'var(--v2)', today: p.isToday ? 'today' : '', hover: () => undefined,
+        c: 'var(--v2)', today: p.isToday ? 'today' : '',
       };
     });
     const grid = [0, 1, 2, 3, 4].map((g) => ({ b: 30 + (g / 4) * H, l: kind === 'fees' ? (g === 0 ? '0' : money((max / 4) * g)) : `${(max / 4) * g}%` }));
-    const needs = d.needsYou.map((n) => {
+    // Requests to decide first, then reminders (a class not marked yet): two kinds of thing, never mixed in one order.
+    const needs = [...d.needsYou].sort((a, b) => Number(a.kind === 'attendance') - Number(b.kind === 'attendance')).map((n) => {
       const tone = TONES[n.tone] ?? TONES.violet!;
       const isDone = !!done[n.id];
       return {
-        t: n.title, s: n.subtitle, ini: n.initials, bg: tone.bg, fg: tone.fg, a: n.action, open: !isDone, done: isDone ? 'done' : '',
+        t: n.title, s: n.kind === 'attendance' ? `Reminder · ${n.subtitle}` : n.subtitle, ini: n.initials, bg: tone.bg, fg: tone.fg, a: n.action, open: !isDone, done: isDone ? 'done' : '',
+        view: n.kind === 'attendance' ? () => app.go('/attendance') : () => app.go('/approvals'),
         act: () => {
           setDone((s) => ({ ...s, [n.id]: true }));
           decide.mutate({ n, decision: 'approve' });
@@ -106,13 +117,17 @@ function DashboardDesktop() {
     const t = d.timeline;
     return {
       ...chrome, goto: app.go, hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
-      has: { attendance: has('attendance'), fees: has('fees') }, showChart: tabsOn.length > 0,
-      showNeeds: () => document.getElementById('need')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      has: { attendance: has('attendance') && may('attendance.read'), fees: has('fees') && may('fees.read'), chat: has('chat') && may('messages.read') }, showChart: tabsOn.length > 0,
+      approvalKinds: (() => {
+        const by = new Map<string, number>();
+        for (const n of d.needsYou) if (n.kind !== 'attendance') by.set(n.kind, (by.get(n.kind) ?? 0) + 1);
+        return [...by].map(([k, c]) => `${c} ${(KIND_WORD[k] ?? [k, k])[c === 1 ? 0 : 1]}`).join(', ') || 'Nothing waiting';
+      })(),
       widgetsDialog: widgets && (
         <Dialog title="Dashboard widgets" onClose={() => setWidgets(false)} width={460}>
           <p className="help" style={{ margin: '0 0 12px' }}>Choose what this dashboard shows for you. Other people keep their own choice.</p>
           <div className="stack">
-            {WIDGETS.filter((w) => has(w[3])).map(([id, name, blurb]) => (
+            {widgetsOn.map(({ key: id, label: name, blurb }) => (
               <div className="tgl" key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
                 <div style={{ flex: 1 }}><b style={{ font: '700 14px var(--fb)' }}>{name}</b><div className="help">{blurb}</div></div>
                 <button className={`sw ${hidden.includes(id) ? '' : 'on'}`} role="switch" aria-checked={!hidden.includes(id)} aria-label={name} onClick={() => setHide(id, !hidden.includes(id))}></button>
@@ -122,12 +137,11 @@ function DashboardDesktop() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn pri" onClick={() => setWidgets(false)}>Done</button></div>
         </Dialog>
       ), me: { name: app.user.name, initials: app.user.initials, role: app.user.roleNames[0] ?? 'Staff', ...me }, schoolName: chrome.shell?.school.shortName ?? d.schoolName,
-      greeting: greeting(), subtitle: `${d.term.name} · ${d.subtitle.marked} of ${d.subtitle.classes} classes have marked attendance`,
-      hasAlerts: left > 0,
+      greeting: greeting(), subtitle: has('attendance') && may('attendance.read') ? `${d.term.name ? `${d.term.name} · ` : ''}${d.subtitle.marked} of ${d.subtitle.classes} classes have marked attendance` : d.term.name,
       rangeOpen, rangeLabel: RANGES[range]![0], setRangeOpen: (o: boolean) => { setRangeOpen(o); setNewOpen(false); },
       ranges: RANGES.map((r, i) => ({ t: r[0], on: i === range, sel: i === range ? 'true' : 'false', d: 50 + i * 45, pick: () => { setRange(i); setRangeOpen(false); } })),
       newOpen, setNewOpen: (o: boolean) => { setNewOpen(o); setRangeOpen(false); },
-      news: NEWS.filter((n) => has(n[4])).map((n, i) => ({ t: n[0], ic: IC[n[1] as keyof typeof IC], k: n[2], d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n[3]); } })),
+      news: pieces.filter((p) => p.kind === 'new').map((n, i) => ({ t: n.label, ic: IC[(n.icon ?? 'dash') as keyof typeof IC], k: n.keys ?? '', d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n.to ?? '/'); } })),
       dayLine: d.day.isToday ? `${d.day.label} · ${d.day.clock}` : `${d.day.label} · last school day`,
       kPresent: rollDigits(inr(d.present.value)), totalStudents: inr(d.present.total),
       presentTrend: trend(d.present.deltaPct), presentVersus: d.present.versus,

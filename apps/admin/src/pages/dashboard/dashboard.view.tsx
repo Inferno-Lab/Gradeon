@@ -22,25 +22,6 @@ export function DashboardView({ v }: { v: any }) {
             <p>{v.subtitle}</p>
           </div>
           <span className="grow"></span>
-          <div
-            className="srch"
-            role="search"
-            onClick={v.openSearch}
-            tabIndex={0}
-            onKeyDown={(e: any) => e.key === "Enter" && v.openSearch()}
-            style={{ cursor: "text" }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path>
-            </svg>
-            Search anything<span className="kbd">Ctrl K</span>
-          </div>
-          <button className="ibtn" aria-label="Notifications" onClick={v.showNeeds}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"></path>
-            </svg>
-            {v.hasAlerts && <span className="pip"></span>}
-          </button>
           <MenuButton label={v.rangeLabel} icon="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4" chevron open={!!v.rangeOpen} onOpenChange={v.setRangeOpen} menuLabel="Time range">
             {v.ranges.map((r: any, $i: number) => (
               <button key={$i} role="menuitemradio" aria-checked={r.on} className={r.on ? "on" : ""} onClick={r.pick}>
@@ -78,16 +59,13 @@ export function DashboardView({ v }: { v: any }) {
               {v.me.role} · {v.schoolName}
             </div>
             <div className="quick">
-              <button aria-label="Messages" onClick={() => v.goto("/messages")}>
+              {v.has.chat && (
+              <button aria-label="Messages" data-tip="Messages" onClick={() => v.goto("/messages")}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M4 5h16v11H9l-5 4z"></path>
                 </svg>
               </button>
-              <button aria-label="Find" onClick={v.openSearch}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path>
-                </svg>
-              </button>
+              )}
             </div>
             <div className="nst">
               <Illustration scene="calendar" />
@@ -100,9 +78,9 @@ export function DashboardView({ v }: { v: any }) {
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path className="i" d="M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path>
                 </svg>
-                Students
+                Attendance
               </span>
-              <button className="arrow" aria-label="Open students" onClick={() => v.goto("/students")}>
+              <button className="arrow" aria-label="Open attendance" onClick={() => v.goto("/attendance")}>
                 <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                   <path className="i" d="M7 17L17 7M9 7h8v8"></path>
                 </svg>
@@ -185,7 +163,7 @@ export function DashboardView({ v }: { v: any }) {
                 </svg>
                 Approvals
               </span>
-              <button className="arrow" aria-label="Open approvals" onClick={v.showNeeds}>
+              <button className="arrow" aria-label="Open approvals" onClick={() => v.goto("/approvals")}>
                 <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                   <path className="i" d="M7 17L17 7M9 7h8v8"></path>
                 </svg>
@@ -194,7 +172,7 @@ export function DashboardView({ v }: { v: any }) {
             <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
               Waiting for you
             </div>
-            <div style={{ font: "600 12px var(--fb)", opacity: ".6", marginBottom: "12px" } as CSSProperties}>Leave, concessions, notices</div>
+            <div style={{ font: "600 12px var(--fb)", opacity: ".6", marginBottom: "12px" } as CSSProperties}>{v.approvalKinds}</div>
             <div className="big">
               <Roll digits={v.kLeft} />
               <small>requests</small>
@@ -238,7 +216,7 @@ export function DashboardView({ v }: { v: any }) {
               <div className="pcols">
                 {v.cols.map((p: any, $i: number) => (
                   <Fragment key={$i}>
-                    <div className={`col2 ${p.today ?? ""}`} data-tip={`${p.full}\n${p.v}${p.prev ? ` · was ${p.prev}` : ""}`} onMouseEnter={p.hover} onFocus={p.hover} tabIndex={0} aria-label={`${p.full}: ${p.v}`}>
+                    <div className={`col2 ${p.today ?? ""}`} data-tip={`${p.full}\n${p.v}${p.prev ? ` · was ${p.prev}` : ""}`} tabIndex={0} aria-label={`${p.full}: ${p.v}`}>
                       {p.gh > 0 && <i className="gh" style={{ height: `${p.gh}px` } as CSSProperties}></i>}
                       <i className="fl" style={{ height: `${p.h}px`, "--pc": p.c } as CSSProperties}></i>
                       <div className="bub">
@@ -284,6 +262,7 @@ export function DashboardView({ v }: { v: any }) {
                       <button className="btn sm" onClick={n.act}>
                         {n.a}
                       </button>
+                      {n.view && <button className="btn sm" data-tip="Open it, or decline with a reason" onClick={n.view}>Open</button>}
                     </>
                   )}
                 </div>

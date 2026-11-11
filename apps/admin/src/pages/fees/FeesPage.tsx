@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
+import { StudentPick } from '../../app/kit';
 import { usePageTabs } from '../../app/tabs';
 import { CollectFeeDialog } from '../students/StudentDialogs';
 import { FeeStructure } from './FeeStructure';
@@ -26,6 +27,9 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
   const qc = useQueryClient();
   const { toast, say } = useToast();
   const [paying, setPaying] = useState<StudentDetail | null>(null);
+  // "Collect a fee" (dashboard, or the N F keys) lands here with ?collect=1: pick the student, then record the payment.
+  const asked = new URLSearchParams(window.location.search).get('collect');
+  const [picking, setPicking] = useState(() => asked === '1');
   const summary = useQuery({ queryKey: ['fee-summary'], queryFn: app.api.fees.summary });
   const overdue = useQuery({ queryKey: ['students', 'overdue'], queryFn: () => app.api.students.list({ feeStatus: 'overdue', sort: 'due', dir: 'desc', limit: 30 }) });
   const refresh = () => void qc.invalidateQueries({ predicate: (q) => ['fee-summary', 'students', 'dashboard'].includes(String(q.queryKey[0])) });
@@ -38,11 +42,23 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
   const s = summary.data;
   const rows = overdue.data?.items ?? [];
   const canPay = app.user.permissions.includes('fees.collect');
+  // From a student's record (?collect=<student>): their payment opens straight away.
+  useEffect(() => {
+    if (asked && asked !== '1' && canPay) { open.mutate(asked); history.replaceState(null, '', window.location.pathname); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const err = [summary, overdue].find((q) => q.isError && !q.data);
   return (
-    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading} actions={tabs}
+    <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
-      overlays={paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}>
+      actions={<>{tabs}{canPay && <button className="btn pri" onClick={() => setPicking(true)}>Collect a fee</button>}</>}
+      overlays={<>
+        {paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}
+        {picking && canPay && !paying && (
+          <Dialog title="Collect a fee" onClose={() => { setPicking(false); history.replaceState(null, '', window.location.pathname); }} width={480}>
+            <StudentPick label="Whose fee" value={null} onChange={(s) => { if (s) { setPicking(false); history.replaceState(null, '', window.location.pathname); open.mutate(s.id); } }} />
+          </Dialog>
+        )}
+      </>}>
       {s && (
         <section className="grid">
           <div className="tile t-v s4 rise"><span className="lbl">Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>

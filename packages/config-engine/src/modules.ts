@@ -119,7 +119,7 @@ export const MODULES: ModuleManifest[] = [
     pages: [
       P('dash', 'Dashboard', 'dash', 'G D', '/', 'Home', []),
       P('appr', 'Approvals', 'appr', 'G Q', '/approvals', 'Home', ['approvals.read'], { tabs: [{ key: 'waiting', label: 'Waiting for me' }, { key: 'sent', label: 'Sent by me' }, { key: 'decided', label: 'Decided' }] }),
-      P('rep', 'Reports', 'rep', 'G R', '/reports', 'Home', ['reports.read'], { tabs: [{ key: 'attendance', label: 'Attendance' }, { key: 'money', label: 'Money' }, { key: 'learning', label: 'Learning' }, { key: 'people', label: 'People' }] }),
+      P('rep', 'Reports', 'rep', 'G R', '/reports', 'Home', ['reports.read'], { tabs: [{ key: 'attendance', label: 'Attendance', feature: 'attendance' }, { key: 'money', label: 'Money', feature: 'fees' }, { key: 'learning', label: 'Learning' }, { key: 'people', label: 'People' }] }),
       P('year', 'Academic year', 'year', 'G Y', '/year', 'School', ['settings.read', 'setup.write', 'year.manage'], {
         tabs: [{ key: 'terms', label: 'Years and terms' }, { key: 'holidays', label: 'Holidays' }, { key: 'classes', label: 'Classes' }, { key: 'subjects', label: 'Subjects' }, { key: 'bells', label: 'Bell times' }, { key: 'year-end', label: 'Year-end', anyOf: ['year.manage'] }],
       }),
@@ -148,7 +148,7 @@ export const MODULES: ModuleManifest[] = [
       P('adm', 'Admissions', 'adm', 'G M', '/admissions', 'People', ['admissions.read'], { feature: 'people.admissions' }),
     ],
     app: [A('dock', 'academics', 'Academics', FAMILY), A('dock', 'classes', 'My classes', ['teacher'])],
-    settings: ['vocab.student', 'vocab.students', 'vocab.class', 'vocab.classes', 'people.houses', 'admissions.sources', 'staff.schoolAssignsRoles'],
+    settings: ['vocab.student', 'vocab.students', 'vocab.class', 'vocab.classes', 'people.houses', 'students.required', 'admissions.sources', 'staff.schoolAssignsRoles'],
     permissions: ['students.read', 'students.write', 'staff.read', 'staff.write', 'admissions.read', 'admissions.write'],
     messages: ['admissions.offer', 'family.invite', 'student.invite', 'staff.invite', 'office.message'],
     imports: ['staff', 'students', 'contacts', 'admissions'],

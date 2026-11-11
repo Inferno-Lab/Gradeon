@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { uploadFile } from '@gradeon/api-client';
-import type { AlbumRow, PhotoRow } from '@gradeon/contracts';
+import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, FilePick, Panel, Presence, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
@@ -32,6 +32,7 @@ export function GalleryPage() {
       overlays={<>
         {edit && <AlbumDialog album={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onDone={done} />}
       </>}>
+      <Reported say={say} />
       {!list.length ? (
         <div><EmptyCard title="Gallery" chip={{ text: '0 albums', tone: 'v' }} scene="noticeboard" heading="No albums yet"
           body="Make an album for sports day or a class trip, add photos, tag the children in them, then share it. Families who agreed to photos see it in the app."
@@ -145,5 +146,40 @@ function AlbumDialog({ album, onClose, onDone }: { album: AlbumRow | null; onClo
         <button className="btn pri" disabled={save.isPending || title.trim().length < 2} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : album ? 'Save' : 'Create album'}</button>
       </div>
     </Dialog>
+  );
+}
+
+/** Photos families reported from the app, oldest first: each is kept or taken down, which closes every report of it. */
+function Reported({ say }: { say: (m: string, tone?: 'bad') => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const canWrite = app.user.permissions.includes('gallery.write');
+  const q = useQuery({ queryKey: ['gallery', 'reports'], queryFn: app.api.gallery.reports });
+  const act = useMutation({
+    mutationFn: (a: { r: GalleryReportRow; remove: boolean }) => app.api.gallery.resolve(a.r.id, a.remove),
+    onSuccess: (_, a) => { void qc.invalidateQueries({ queryKey: ['gallery'] }); say(a.remove ? 'The photo was taken down.' : 'The photo stays; the report is closed.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
+  const rows = q.data ?? [];
+  if (!rows.length) return null;
+  return (
+    <div className="card rise" style={{ marginBottom: 16 }}>
+      <div className="ch"><h2>Reported by families</h2><span className="chip a">{rows.length}</span></div>
+      <section className="grid" style={{ marginTop: 12 }}>
+        {rows.map((r) => (
+          <div key={r.id} className="s4" style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+            <Photo id={r.fileId} alt={`Reported photo in ${r.album ?? 'an album'}`} />
+            <b style={{ font: '700 14px var(--fb)', overflowWrap: 'anywhere' }}>“{r.reason}”</b>
+            <small className="help">{r.by} · {r.album ?? 'An album'} · {stamp(r.createdAt)}</small>
+            {canWrite && (
+              <span className="tgrow">
+                <button className="btn sm dng" disabled={act.isPending} onClick={() => act.mutate({ r, remove: true })}>Take it down</button>
+                <button className="btn sm" disabled={act.isPending} onClick={() => act.mutate({ r, remove: false })}>Keep it</button>
+              </span>
+            )}
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }

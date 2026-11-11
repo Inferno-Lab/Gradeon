@@ -5,6 +5,7 @@ import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectFiel
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
+import { usePageTabs } from '../../app/tabs';
 
 type Tab = 'books' | 'loans' | 'waiting';
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -13,7 +14,8 @@ export function LibraryPage() {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [tab, setTab] = useState<Tab>('books');
+  const { tab: at, tabs } = usePageTabs('/library');
+  const tab = (at || 'books') as Tab;
   const [q, setQ] = useState('');
   const [dlg, setDlg] = useState<{ kind: 'book'; book: BookRow | null } | { kind: 'issue'; book: BookRow } | { kind: 'return'; loan: LoanRow } | null>(null);
   const view = useQuery({ queryKey: ['library'], queryFn: app.api.library.view });
@@ -27,7 +29,7 @@ export function LibraryPage() {
   return (
     <Page title="Library" sub="The catalogue, who has which book, and who is waiting" toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={canWrite ? <AddBtn onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</AddBtn> : undefined}
+      actions={<>{tabs}{canWrite && <AddBtn onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</AddBtn>}</>}
       overlays={<>
         {dlg?.kind === 'book' && <BookDialog book={dlg.book} onClose={() => setDlg(null)} onDone={done} />}
         {dlg?.kind === 'issue' && <IssueDialog book={dlg.book} loanDays={v?.rules.loanDays ?? 14} onClose={() => setDlg(null)} onDone={done} />}
@@ -51,10 +53,7 @@ export function LibraryPage() {
             </div>
           ))}
         </section>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }} className="rise">
-          <Segmented label="Library" value={tab} onChange={setTab} options={[{ value: 'books', label: 'Catalogue', count: v.books.length }, { value: 'loans', label: 'On loan', count: v.loans.length, countTone: overdue.length ? 'c' : undefined }, { value: 'waiting', label: 'Reservations', count: v.reservations.length }]} />
-          {tab === 'books' && <div style={{ flex: '1 1 220px', maxWidth: 360 }}><Field label="Search the catalogue" value={q} onChange={setQ} icon={SEARCH} placeholder="Title, author or ISBN" /></div>}
-        </div>
+        {tab === 'books' && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search the catalogue" value={q} onChange={setQ} icon={SEARCH} placeholder="Title, author or ISBN" /></div>}
         {tab === 'books' && (
           <Card style={{ padding: 0 }}>
             {!books.length ? <div className="help" style={{ padding: 20 }}>No book matches “{q}”.</div> : (

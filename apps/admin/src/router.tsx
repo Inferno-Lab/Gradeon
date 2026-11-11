@@ -42,7 +42,8 @@ const authed = createRoute({
     const ctx = useMemo<AppCtx | null>(() => user ? {
       slug, base: router.basepath === '/' ? '' : router.basepath, api: client.api, user,
       signOut: () => { void client.api.logout().catch(() => undefined).finally(() => { session.write(slug, null); qc.clear(); void router.navigate({ to: '/login' }); }); },
-      go: (path) => void router.navigate({ to: path as never }),
+      // A path may carry a query (`/fees?collect=1`): the router takes it as search, so the page still finds it in the address.
+      go: (path) => { const [to, q] = path.split('?'); void router.navigate({ to: to as never, search: (q ? Object.fromEntries(new URLSearchParams(q)) : {}) as never }); },
     } : null, [slug, client, user, router, qc]);
     if (!ctx) return null;
     const support = session.read(slug)?.support;
@@ -87,6 +88,7 @@ const routeTree = root.addChildren([
     ...page('/transport', () => import('./pages/transport/TransportPage'), 'TransportPage'),
     ...page('/gallery', () => import('./pages/gallery/GalleryPage'), 'GalleryPage'),
     ...page('/year', () => import('./pages/year/YearPage'), 'YearPage'),
+    ...page('/account', () => import('./pages/account/AccountPage'), 'AccountPage'),
     ...page('/design', () => import('./design/DesignPage'), 'DesignPage'),
   ]),
 ]);

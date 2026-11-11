@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, NumberField, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
+import { usePageTabs } from '../../app/tabs';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 const UP = 'M12 19V5M6 11l6-6 6 6';
@@ -16,7 +17,8 @@ export function TransportPage() {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [tab, setTab] = useState<'routes' | 'riders'>('routes');
+  const { tab: at, tabs } = usePageTabs('/transport');
+  const tab = at || 'routes';
   const [edit, setEdit] = useState<BusRouteRow | 'new' | null>(null);
   const view = useQuery({ queryKey: ['transport'], queryFn: app.api.transport.view, refetchInterval: 30_000 });
   const canWrite = app.user.permissions.includes('transport.write');
@@ -25,7 +27,7 @@ export function TransportPage() {
   return (
     <Page title="Transport" sub="Routes, stops and times, who rides which bus, and where the bus is now" toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={canWrite ? <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn> : undefined}
+      actions={<>{tabs}{canWrite && <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn>}</>}
       overlays={edit && <RouteDialog route={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onDone={done} />}>
       {v && (!v.routes.length ? (
         <div><EmptyCard title="Transport" chip={{ text: '0 routes', tone: 'v' }} scene="map-pin" heading="No bus routes yet"
@@ -45,7 +47,6 @@ export function TransportPage() {
             </div>
           ))}
         </section>
-        <Segmented label="Transport" value={tab} onChange={setTab} options={[{ value: 'routes', label: 'Routes', count: v.routes.length }, { value: 'riders', label: 'Who rides', count: v.riders.filter((r) => r.routeId).length }]} />
         {tab === 'routes' && (
           <section className="grid" data-even="">
             {v.routes.map((r) => (
@@ -69,6 +70,7 @@ export function TransportPage() {
           </section>
         )}
         {tab === 'riders' && <Riders routes={v.routes} riders={v.riders} canWrite={canWrite} say={say} />}
+        {tab === 'live' && <Live routes={v.routes} />}
       </>)}
     </Page>
   );
@@ -156,5 +158,32 @@ function RouteDialog({ route, onClose, onDone }: { route: BusRouteRow | null; on
         <button className="btn pri" disabled={save.isPending || !f.name.trim()} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save route'}</button>
       </div>
     </Dialog>
+  );
+}
+
+const KIND = { morning: 'Morning', afternoon: 'Afternoon' } as const;
+
+/** Today on every route: which trip runs, where the bus was last seen, who got on and off, and any delay the driver reported. */
+function Live({ routes }: { routes: BusRouteRow[] }) {
+  return (
+    <section className="grid" data-even="">
+      {routes.map((r) => {
+        const running = r.trips.find((t) => !t.endedAt);
+        return (
+          <Card key={r.id} span="s6" title={r.name} chip={<span className={`chip ${running ? 'g' : ''}`}>{running ? `${KIND[running.kind]} trip running` : r.trips.length ? 'No trip running' : 'Not out today'}</span>}>
+            <div className="kv">Bus<b>{r.vehicle || '–'}</b></div>
+            <div className="kv">Driver<b>{r.driverName || 'None chosen'}</b></div>
+            <div className="kv">Last seen<b>{r.bus ? `${stamp(r.bus.at)}${isLive(r.bus.at) ? ' · live' : ''}` : 'Not yet today'}</b></div>
+            {!r.trips.length && <div className="help" style={{ marginTop: 8 }}>The driver starts each trip in the app; it shows here as it runs.</div>}
+            {r.trips.map((t) => (
+              <div key={t.id} className="kv" style={{ alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ minWidth: 0 }}>{KIND[t.kind]}<small style={{ display: 'block', color: 'var(--ink3)' }}>{stamp(t.startedAt)}{t.endedAt ? ` to ${stamp(t.endedAt)}` : ', running'}{t.lateMinutes ? ` · ${t.lateMinutes} min late: ${t.lateReason}` : ''}</small></span>
+                <b className="num">{t.boarded} on · {t.dropped} off{t.absent ? ` · ${t.absent} absent` : ''}</b>
+              </div>
+            ))}
+          </Card>
+        );
+      })}
+    </section>
   );
 }

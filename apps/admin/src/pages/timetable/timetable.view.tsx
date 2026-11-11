@@ -33,22 +33,12 @@ export function TimetableView({ v }: { v: any }) {
         </header>
         <div className="wk rise" style={{ "--d": ".05s" } as CSSProperties}>
           <div className="wkp">
-            <button aria-label="Previous week" onClick={v.prevWeek}>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path className="i" d="M15 6l-6 6 6 6"></path>
-              </svg>
-            </button>
             <span>
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                 <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4"></path>
               </svg>
               {v.weekLabel}
             </span>
-            <button aria-label="Next week" onClick={v.nextWeek}>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path className="i" d="M9 6l6 6-6 6"></path>
-              </svg>
-            </button>
           </div>
           <span className="grow"></span>
           <span className={`chip ${v.clashChip ?? ""}`}>{v.clashText}</span>

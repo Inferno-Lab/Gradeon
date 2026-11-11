@@ -6,6 +6,7 @@ import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } 
 import { useFeeHeads } from '../../app/kit';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
+import { RecordFields, emptyRec } from './StudentRecord';
 
 type Done = (message: string, openId?: string) => void;
 const fieldsOf = (e: unknown): Record<string, string> => (e instanceof HttpError ? e.fields : {});
@@ -23,7 +24,7 @@ function Actions({ onClose, busy, label, danger }: { onClose: () => void; busy: 
 export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { classes: ClassInfo[]; defaultClass?: string; onClose: () => void; onDone: Done }) {
   const { api } = useApp();
   const shake = useShake();
-  const [f, setF] = useState({ name: '', classId: defaultClass ?? classes[0]?.id ?? '', rollNo: '', dob: '', guardianName: '', guardianPhone: '', bloodGroup: '', address: '' });
+  const [f, setF] = useState({ name: '', classId: defaultClass ?? classes[0]?.id ?? '', rollNo: '', dob: '', guardianName: '', guardianPhone: '', ...emptyRec });
   // Opened before the classes arrived: take the first one when they do, as if it had been there.
   useEffect(() => { if (classes[0]) setF((s) => (s.classId ? s : { ...s, classId: classes[0]!.id })); }, [classes]);
   const [err, setErr] = useState<Record<string, string>>({});
@@ -41,7 +42,7 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
     if (Object.keys(local).length) { setErr(local); shake.hit(); return; }
     setBusy(true);
     try {
-      const s = await api.students.create({ ...f, rollNo: f.rollNo || undefined, bloodGroup: f.bloodGroup || undefined, address: f.address || undefined });
+      const s = await api.students.create({ ...f, rollNo: f.rollNo || undefined, bloodGroup: f.bloodGroup || undefined, address: f.address || undefined, gender: (f.gender || undefined) as 'female' | undefined, house: f.house || undefined, admissionNo: f.admissionNo || undefined });
       onDone(`${s.name} was added to ${s.className}`, s.id);
     } catch (x) {
       setBusy(false); setErr(fieldsOf(x)); setGeneral(Object.keys(fieldsOf(x)).length ? '' : messageOf(x)); shake.hit();
@@ -57,11 +58,10 @@ export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { c
         </div>
         <div className="two">
           <DateField label="Date of birth" value={f.dob} onChange={set('dob')} error={err.dob} max={istToday()} />
-          <Field label="Blood group (optional)" value={f.bloodGroup} onChange={set('bloodGroup')} maxLength={4} placeholder="B+" />
         </div>
+        <RecordFields f={f} set={set} err={err} adding />
         <Field label="Guardian" value={f.guardianName} onChange={set('guardianName')} error={err.guardianName} />
-        <Field label="Guardian’s phone" value={f.guardianPhone} onChange={set('guardianPhone')} error={err.guardianPhone} type="tel" placeholder="+91 98220 11002" />
-        <Field label="Address (optional)" value={f.address} onChange={set('address')} />
+        <Field label="Guardian’s phone" value={f.guardianPhone} onChange={set('guardianPhone')} error={err.guardianPhone} type="tel" hint="They sign in to the app with it. More guardians can be added on the student’s record." />
         {general && <ErrorLine>{general}</ErrorLine>}
         <Actions onClose={onClose} busy={busy} label="Add student" />
       </form>
@@ -73,6 +73,7 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
   const { api } = useApp();
   const shake = useShake();
   const [csv, setCsv] = useState('');
+  const [file, setFile] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: { line: number; message: string }[] } | null>(null);
@@ -98,16 +99,24 @@ export function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone:
   }
   return (
     <Dialog title="Import students" onClose={onClose} shake={shake.cls} width={560}>
-      <p>Use a CSV file with the columns <b>name, class, dob, guardian, phone</b> (and <b>roll</b> or <b>admission number</b> if you have them), or an export from your old system. Dates look like 2012-04-18 or 18/04/2012 and classes like 8 A. A student already here is updated, not added twice.</p>
+      <p>Choose an Excel sheet (.xlsx) or a CSV with the columns <b>name, class, dob, guardian, phone</b> (and <b>roll</b> or <b>admission number</b> if you have them), or an export from your old system. Start from the template if you have nothing yet. A student already here is updated, not added twice.</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div className="fld">
           <label htmlFor="csv">Your sheet</label>
           <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto', padding: 12, alignItems: 'stretch' }}>
-            <textarea id="csv" value={csv} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={'name,class,dob,guardian,phone\nAarav Sharma,8 A,2012-04-18,Priya Sharma,+91 98220 11002'} style={{ width: '100%', resize: 'vertical', font: '600 13px/1.5 ui-monospace,Consolas,monospace' }} />
+            <textarea id="csv" value={file ? `${file} is ready to import.` : csv} readOnly={!!file} onChange={(e) => { setCsv(e.target.value); setErr(''); }} rows={7} placeholder={'name,class,dob,guardian,phone\nSam Taylor,8 A,2012-04-18,Alex Taylor,+44 7700 900123'} style={{ width: '100%', resize: 'vertical', font: '600 13px/1.5 ui-monospace,Consolas,monospace' }} />
           </div>
           {err && <ErrorLine>{err}</ErrorLine>}
         </div>
-        <div><FilePick className="btn sm" accept=".csv,text/csv" onPick={(f) => void f.text().then((t) => { setCsv(t); setErr(''); })}>Choose a file</FilePick></div>
+        <div className="tgrow">
+          <FilePick className="btn sm" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onPick={(f) => {
+            // An .xlsx goes as the file itself (the import engine reads it); a CSV as its text, so it shows here to check.
+            if (/\.xlsx$/i.test(f.name)) { const r = new FileReader(); r.onload = () => { setCsv(String(r.result)); setFile(f.name); setErr(''); }; r.readAsDataURL(f); }
+            else void f.text().then((t) => { setCsv(t); setFile(''); setErr(''); });
+          }}>Choose a file</FilePick>
+          <button type="button" className="btn sm" onClick={() => void api.students.template().then((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'students-template.xlsx'; a.click(); URL.revokeObjectURL(a.href); })}>Download the template</button>
+          {file && <span className="chip v">{file}</span>}
+        </div>
         <Actions onClose={onClose} busy={busy} label="Import" />
       </form>
     </Dialog>

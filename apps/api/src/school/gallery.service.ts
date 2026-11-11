@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AlbumInput, AlbumRow, PhotoRow } from '@gradeon/contracts';
+import type { AlbumInput, AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -80,7 +80,7 @@ export class GalleryService {
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'gallery.photo.reported', entity: 'file', entityId: fileId, detail: { reason } });
   }
 
-  async reports(t: TenantCtx): Promise<{ id: string; fileId: string; albumId: string | null; album: string | null; by: string; reason: string; createdAt: string }[]> {
+  async reports(t: TenantCtx): Promise<GalleryReportRow[]> {
     const { rows } = await t.pool.query(
       `select r.id, r.file_id, f.owner_id album_id, a.title album, u.name by_name, r.reason, r.created_at from gallery_reports r join files f on f.id = r.file_id
        left join gallery_albums a on a.id = f.owner_id left join users u on u.id = r.user_id where r.resolved_at is null and f.deleted_at is null order by r.created_at`);
