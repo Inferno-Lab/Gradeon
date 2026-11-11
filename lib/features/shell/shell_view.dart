@@ -11,6 +11,7 @@ import 'package:gradeon/features/chat/controllers/chat_controller.dart';
 import 'package:gradeon/features/chat/views/chat_list_view.dart';
 import 'package:gradeon/features/dashboard/views/academics_view.dart';
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/driver/views/driver_view.dart';
 import 'package:gradeon/features/events/views/events_view.dart';
 import 'package:gradeon/features/fees/views/fees_view.dart';
 import 'package:gradeon/features/gallery/views/gallery_view.dart';
@@ -40,7 +41,7 @@ class _ShellViewState extends State<ShellView> {
     final chat = Get.find<ChatListController>();
     return Obx(() {
       final unread = chat.unread.value;
-      final tabs = _tabsFor(controller.isTeacher);
+      final tabs = _tabsFor(controller.isTeacher, driver: controller.isDriver);
       // Each role gets the tabs Gradeon set for it at this school (console → The app → What each role sees), Profile always last.
       final keys = [...SchoolConfig.dock.where((k) => k != 'profile' && tabs.containsKey(k)), 'profile'];
       controller.tabs = keys;
@@ -106,11 +107,12 @@ class _ShellViewState extends State<ShellView> {
 }
 
 /// Every tab the console can put in a role's dock (config-engine APP_CATALOG.dock), keyed as there; Profile is always last.
-Map<String, (DockItem, Widget)> _tabsFor(bool teacher) => {
+Map<String, (DockItem, Widget)> _tabsFor(bool teacher, {bool driver = false}) => {
   'home': (
     const DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'),
-    teacher ? const TeacherHomeView() : const DashboardView(),
+    driver ? const DriverView() : teacher ? const TeacherHomeView() : const DashboardView(),
   ),
+  'trips': (const DockItem(icon: PhosphorIconsRegular.steeringWheel, activeIcon: PhosphorIconsBold.steeringWheel, label: 'nav.trips'), const DriverView()),
   'academics': (
     const DockItem(icon: PhosphorIconsRegular.bookOpen, activeIcon: PhosphorIconsBold.bookOpen, label: 'nav.academics'),
     const AcademicsView(),

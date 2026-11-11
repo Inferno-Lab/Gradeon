@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Gradeon uses the camera when you attach homework or update your profile photo.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>While you drive a school bus trip, families see where the bus is.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Gradeon uses your photo library when you attach homework or update your profile photo.</string>
 	<key>LSApplicationQueriesSchemes</key>

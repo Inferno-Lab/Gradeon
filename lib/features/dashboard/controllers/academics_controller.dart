@@ -73,7 +73,7 @@ class AcademicsController extends GetxController with Loadable {
 
       due = work.where((hw) {
         final mine = hw.forStudent(id);
-        return (mine == null || mine.status == HomeworkStatus.pending) && Formatters.daysUntil(hw.dueOn) >= 0;
+        return (mine == null || mine.status.toDo) && Formatters.daysUntil(hw.dueOn) >= 0;
       }).toList()..sort((a, b) => a.dueOn.compareTo(b.dueOn));
 
       final today = DateTime.now();

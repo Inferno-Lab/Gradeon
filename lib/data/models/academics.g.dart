@@ -80,6 +80,7 @@ HomeworkSubmission _$HomeworkSubmissionFromJson(Map<String, dynamic> json) =>
       marks: (json['marks'] as num?)?.toInt(),
       grade: json['grade'] as String?,
       feedback: json['feedback'] as String?,
+      returnNote: json['returnNote'] as String?,
     );
 
 Map<String, dynamic> _$HomeworkSubmissionToJson(HomeworkSubmission instance) =>
@@ -91,12 +92,14 @@ Map<String, dynamic> _$HomeworkSubmissionToJson(HomeworkSubmission instance) =>
       'marks': ?instance.marks,
       'grade': ?instance.grade,
       'feedback': ?instance.feedback,
+      'returnNote': ?instance.returnNote,
     };
 
 const _$HomeworkStatusEnumMap = {
   HomeworkStatus.pending: 'pending',
   HomeworkStatus.submitted: 'submitted',
   HomeworkStatus.graded: 'graded',
+  HomeworkStatus.returned: 'returned',
 };
 
 Homework _$HomeworkFromJson(Map<String, dynamic> json) => Homework(
@@ -141,6 +144,11 @@ Exam _$ExamFromJson(Map<String, dynamic> json) => Exam(
   subjects: (json['subjects'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
+  papers:
+      (json['papers'] as List<dynamic>?)
+          ?.map((e) => ExamPaper.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
 );
 
 Map<String, dynamic> _$ExamToJson(Exam instance) => <String, dynamic>{
@@ -151,11 +159,32 @@ Map<String, dynamic> _$ExamToJson(Exam instance) => <String, dynamic>{
   'endDate': instance.endDate.toIso8601String(),
   'status': _$ExamStatusEnumMap[instance.status]!,
   'subjects': instance.subjects,
+  'papers': instance.papers.map((e) => e.toJson()).toList(),
 };
 
 const _$ExamStatusEnumMap = {
   ExamStatus.upcoming: 'upcoming',
   ExamStatus.completed: 'completed',
+};
+
+ExamPaper _$ExamPaperFromJson(Map<String, dynamic> json) => ExamPaper(
+  subject: json['subject'] as String,
+  date: DateTime.parse(json['date'] as String),
+  subjectName: json['subjectName'] as String? ?? '',
+  startsAt: json['startsAt'] as String? ?? '',
+  endsAt: json['endsAt'] as String? ?? '',
+  room: json['room'] as String? ?? '',
+  maxMarks: (json['maxMarks'] as num?)?.toInt() ?? 0,
+);
+
+Map<String, dynamic> _$ExamPaperToJson(ExamPaper instance) => <String, dynamic>{
+  'subject': instance.subject,
+  'subjectName': instance.subjectName,
+  'date': instance.date.toIso8601String(),
+  'startsAt': instance.startsAt,
+  'endsAt': instance.endsAt,
+  'room': instance.room,
+  'maxMarks': instance.maxMarks,
 };
 
 SubjectMark _$SubjectMarkFromJson(Map<String, dynamic> json) => SubjectMark(

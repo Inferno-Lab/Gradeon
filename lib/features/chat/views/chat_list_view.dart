@@ -447,7 +447,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                           child: Column(
                             crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                             children: [
-                              _Bubble(text: m.text, mine: mine),
+                              GestureDetector(onLongPress: () => unawaited(controller.onHold(m)), child: _Bubble(text: m.text, mine: mine)),
                               if (endsRun)
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),

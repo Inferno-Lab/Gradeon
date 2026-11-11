@@ -5,33 +5,39 @@
     "busNumber": "MH12 AB 4418",
     "etaMinutes": 12,
     "progress": 0.62,
-    "driver": {
-      "name": "Ramesh Pawar",
-      "phone": "+919823011223",
-      "avatarUrl": "https://i.pravatar.cc/300?img=51"
-    },
     "stops": [
       {
         "name": "School gate",
         "time": "07:10",
-        "reached": true
+        "reached": true,
+        "isMine": false
       },
       {
         "name": "Balewadi phata",
         "time": "07:22",
-        "reached": true
+        "reached": true,
+        "isMine": false
       },
       {
         "name": "Baner road signal",
         "time": "07:31",
-        "reached": false
+        "reached": false,
+        "isMine": false
       },
       {
         "name": "Ivory Towers",
         "time": "07:38",
-        "reached": false
+        "reached": false,
+        "isMine": true
       }
-    ]
+    ],
+    "driverName": "Ramesh Pawar",
+    "call": {
+      "name": "School office",
+      "phone": "+919823011223"
+    },
+    "running": true,
+    "live": true
   },
   {
     "studentId": "stu_ananya",
@@ -39,32 +45,38 @@
     "busNumber": "MH12 CD 2291",
     "etaMinutes": 8,
     "progress": 0.74,
-    "driver": {
-      "name": "Suresh Jadhav",
-      "phone": "+919823011440",
-      "avatarUrl": "https://i.pravatar.cc/300?img=53"
-    },
     "stops": [
       {
         "name": "School gate",
         "time": "07:15",
-        "reached": true
+        "reached": true,
+        "isMine": false
       },
       {
         "name": "University circle",
         "time": "07:24",
-        "reached": true
+        "reached": true,
+        "isMine": false
       },
       {
         "name": "Aundh gaon",
         "time": "07:33",
-        "reached": false
+        "reached": false,
+        "isMine": false
       },
       {
         "name": "Ivory Towers",
         "time": "07:41",
-        "reached": false
+        "reached": false,
+        "isMine": true
       }
-    ]
+    ],
+    "driverName": "Suresh Jadhav",
+    "call": {
+      "name": "School office",
+      "phone": "+919823011440"
+    },
+    "running": true,
+    "live": true
   }
 ]

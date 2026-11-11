@@ -16,6 +16,7 @@ import 'package:gradeon/features/chat/views/chat_list_view.dart';
 import 'package:gradeon/features/dashboard/controllers/academics_controller.dart';
 import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:gradeon/features/events/controllers/events_controller.dart';
+import 'package:gradeon/features/driver/controllers/driver_controller.dart';
 import 'package:gradeon/features/events/views/events_view.dart';
 import 'package:gradeon/features/exams_results/controllers/results_controller.dart';
 import 'package:gradeon/features/exams_results/views/results_view.dart';
@@ -65,7 +66,8 @@ class ShellBinding extends Bindings {
       ..lazyPut(EventsController.new, fenix: true)
       ..lazyPut(LibraryController.new, fenix: true)
       ..lazyPut(TransportController.new, fenix: true)
-      ..lazyPut(GalleryController.new, fenix: true);
+      ..lazyPut(GalleryController.new, fenix: true)
+      ..lazyPut(DriverController.new, fenix: true);
   }
 }
 

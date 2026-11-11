@@ -82,6 +82,8 @@ Notice _$NoticeFromJson(Map<String, dynamic> json) => Notice(
   attachments: (json['attachments'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
+  needsAck: json['needsAck'] as bool? ?? false,
+  acked: json['acked'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$NoticeToJson(Notice instance) => <String, dynamic>{
@@ -94,6 +96,8 @@ Map<String, dynamic> _$NoticeToJson(Notice instance) => <String, dynamic>{
   'date': instance.date.toIso8601String(),
   'author': instance.author,
   'attachments': instance.attachments,
+  'needsAck': instance.needsAck,
+  'acked': instance.acked,
 };
 
 Rsvp _$RsvpFromJson(Map<String, dynamic> json) => Rsvp(
@@ -191,6 +195,11 @@ LibraryBook _$LibraryBookFromJson(Map<String, dynamic> json) => LibraryBook(
   dueDate: json['dueDate'] == null
       ? null
       : DateTime.parse(json['dueDate'] as String),
+  loanId: json['loanId'] as String?,
+  fine: json['fine'] as num? ?? 0,
+  overdueDays: (json['overdueDays'] as num?)?.toInt() ?? 0,
+  renewalsLeft: (json['renewalsLeft'] as num?)?.toInt(),
+  waiting: (json['waiting'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$LibraryBookToJson(LibraryBook instance) =>
@@ -204,30 +213,31 @@ Map<String, dynamic> _$LibraryBookToJson(LibraryBook instance) =>
       'coverUrl': instance.coverUrl,
       'borrowedBy': ?instance.borrowedBy,
       'dueDate': ?instance.dueDate?.toIso8601String(),
+      'loanId': ?instance.loanId,
+      'fine': instance.fine,
+      'overdueDays': instance.overdueDays,
+      'renewalsLeft': ?instance.renewalsLeft,
+      'waiting': instance.waiting,
     };
 
-Driver _$DriverFromJson(Map<String, dynamic> json) => Driver(
-  name: json['name'] as String,
-  phone: json['phone'] as String,
-  avatarUrl: json['avatarUrl'] as String,
-);
+BusContact _$BusContactFromJson(Map<String, dynamic> json) =>
+    BusContact(name: json['name'] as String, phone: json['phone'] as String);
 
-Map<String, dynamic> _$DriverToJson(Driver instance) => <String, dynamic>{
-  'name': instance.name,
-  'phone': instance.phone,
-  'avatarUrl': instance.avatarUrl,
-};
+Map<String, dynamic> _$BusContactToJson(BusContact instance) =>
+    <String, dynamic>{'name': instance.name, 'phone': instance.phone};
 
 BusStop _$BusStopFromJson(Map<String, dynamic> json) => BusStop(
   name: json['name'] as String,
   time: json['time'] as String,
-  reached: json['reached'] as bool,
+  reached: json['reached'] as bool? ?? false,
+  isMine: json['isMine'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$BusStopToJson(BusStop instance) => <String, dynamic>{
   'name': instance.name,
   'time': instance.time,
   'reached': instance.reached,
+  'isMine': instance.isMine,
 };
 
 TransportInfo _$TransportInfoFromJson(Map<String, dynamic> json) =>
@@ -237,10 +247,18 @@ TransportInfo _$TransportInfoFromJson(Map<String, dynamic> json) =>
       busNumber: json['busNumber'] as String,
       etaMinutes: (json['etaMinutes'] as num).toInt(),
       progress: (json['progress'] as num).toDouble(),
-      driver: Driver.fromJson(json['driver'] as Map<String, dynamic>),
       stops: (json['stops'] as List<dynamic>)
           .map((e) => BusStop.fromJson(e as Map<String, dynamic>))
           .toList(),
+      driverName: json['driverName'] as String? ?? '',
+      call: json['call'] == null
+          ? null
+          : BusContact.fromJson(json['call'] as Map<String, dynamic>),
+      running: json['running'] as bool? ?? false,
+      live: json['live'] as bool? ?? false,
+      lastSeen: json['lastSeen'] == null
+          ? null
+          : DateTime.parse(json['lastSeen'] as String),
     );
 
 Map<String, dynamic> _$TransportInfoToJson(TransportInfo instance) =>
@@ -250,8 +268,12 @@ Map<String, dynamic> _$TransportInfoToJson(TransportInfo instance) =>
       'busNumber': instance.busNumber,
       'etaMinutes': instance.etaMinutes,
       'progress': instance.progress,
-      'driver': instance.driver.toJson(),
       'stops': instance.stops.map((e) => e.toJson()).toList(),
+      'driverName': instance.driverName,
+      'call': ?instance.call?.toJson(),
+      'running': instance.running,
+      'live': instance.live,
+      'lastSeen': ?instance.lastSeen?.toIso8601String(),
     };
 
 LeaveRequest _$LeaveRequestFromJson(Map<String, dynamic> json) => LeaveRequest(
@@ -285,6 +307,7 @@ const _$LeaveStatusEnumMap = {
   LeaveStatus.pending: 'pending',
   LeaveStatus.approved: 'approved',
   LeaveStatus.rejected: 'rejected',
+  LeaveStatus.withdrawn: 'withdrawn',
 };
 
 GalleryPhoto _$GalleryPhotoFromJson(Map<String, dynamic> json) => GalleryPhoto(

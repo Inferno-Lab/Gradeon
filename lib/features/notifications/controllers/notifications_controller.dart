@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/live_stream.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
@@ -13,7 +14,14 @@ import 'package:gradeon/data/repositories/directory_repository.dart';
 /// Notification types that come from the school rather than a person.
 const schoolNoticeTypes = {'general', 'event', 'notice'};
 
-class NotificationsController extends GetxController with Loadable {
+class NotificationsController extends GetxController with Loadable, LiveListen {
+  @override
+  void onInit() {
+    super.onInit();
+    // A new notification shows at once.
+    listenLive('notification', (_) => unawaited(load()));
+  }
+
   List<AppNotification> items = [];
 
   /// First names of a parent's children, for the per-child filter.
@@ -55,8 +63,27 @@ class NotificationsController extends GetxController with Loadable {
     }, isEmpty: () => items.isEmpty);
   }
 
+  /// The one just dismissed, offered back for a few seconds.
+  final undoable = Rxn<AppNotification>();
+  Timer? _undoOff;
+
+  Future<void> undo() async {
+    final n = undoable.value;
+    if (n == null) return;
+    undoable.value = null;
+    try {
+      await Get.find<NotificationRepository>().restore(n.id);
+      gone.remove(n.id);
+    } on AppException catch (error) {
+      ToastHelper.show(error.message, kind: ToastKind.error);
+    }
+  }
+
   Future<void> dismiss(AppNotification n) async {
     gone.add(n.id);
+    undoable.value = n;
+    _undoOff?.cancel();
+    _undoOff = Timer(const Duration(seconds: 6), () => undoable.value = null);
     try {
       await Get.find<NotificationRepository>().dismiss(n.id);
     } on AppException catch (error) {

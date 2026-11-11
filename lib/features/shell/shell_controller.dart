@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/routes/middlewares.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/live_stream.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/data/models/user.dart';
@@ -18,6 +19,7 @@ class ShellController extends GetxController {
   List<String> tabs = const ['home', 'academics', 'fees', 'chat', 'profile'];
 
   bool get isTeacher => Get.find<AuthService>().role == UserRole.teacher;
+  bool get isDriver => Get.find<AuthService>().role == UserRole.driver;
 
   AppLifecycleListener? _life;
 
@@ -25,6 +27,8 @@ class ShellController extends GetxController {
   void onInit() {
     super.onInit();
     SchoolConfig.applyRole((Get.find<AuthService>().role ?? UserRole.parent).name);
+    // Live updates (chat, notifications, the bus) while the app is in front.
+    if (Get.isRegistered<LiveStream>()) Get.find<LiveStream>().start();
     unawaited(SchoolConfig.load().then((_) => askConsentIfNeeded()));
     _life = AppLifecycleListener(onResume: () => unawaited(SchoolConfig.load()));
   }

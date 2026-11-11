@@ -113,6 +113,20 @@ class NotificationsView extends GetView<NotificationsController> {
         ],
         topPadding: MediaQuery.paddingOf(context).top + 60,
         onRefresh: controller.load,
+        // Dismissed by mistake: bring it back for a few seconds.
+        bottomBar: controller.undoable.value == null
+            ? null
+            : Glass(
+                height: 64,
+                radius: 999,
+                padding: const EdgeInsets.only(left: 20, right: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('notifications.removed'.tr, style: AppText.capB(color: context.app.ink3))),
+                    Btn('notifications.undo', kind: BtnKind.quiet, height: 48, onPressed: () => unawaited(controller.undo())),
+                  ],
+                ),
+              ),
         children: [
           const Rise(child: PageTitle('notifications.title')),
           ViewStateView(
