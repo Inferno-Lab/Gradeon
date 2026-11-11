@@ -25,8 +25,8 @@ export interface FileUpload { fileId: string; upload: { url: string; method: 'PU
 
 export const RefundRequest = z.object({ paymentId: z.string().min(1), amount: z.number().int().positive('Enter an amount'), reason: z.string().trim().min(3, 'Say why, in a few words.').max(200) });
 export type RefundRequest = z.infer<typeof RefundRequest>;
-export interface RefundRow { id: string; paymentId: string; receiptNo: string; student: string; amount: number; reason: string; status: 'requested' | 'sent' | 'done' | 'failed' | 'rejected'; requestedBy: string | null; approvedBy: string | null; error: string | null; createdAt: string }
-export interface ReconRow { id: string; day: string; providerPaymentId: string; providerAmount: number | null; receiptAmount: number | null; problem: string; resolved: boolean }
+export interface RefundRow { id: string; paymentId: string; receiptNo: string; student: string; amount: number; reason: string; status: 'requested' | 'sent' | 'done' | 'failed' | 'rejected'; requestedBy: string | null; approvedBy: string | null; error: string | null; createdAt: string; decisionNote: string }
+export interface ReconRow { id: string; day: string; providerPaymentId: string; providerAmount: number | null; receiptAmount: number | null; problem: string; resolved: boolean; note: string }
 export interface OnlinePaymentRow { id: string; receiptNo: string; student: string; title: string; amount: number; refunded: number; paidOn: string; method: string; providerPaymentId: string }
 
 // ── Library ───────────────────────────────────────────────────────────────────
@@ -49,7 +49,18 @@ export interface LoanRow {
   id: string; bookId: string | null; title: string; studentId: string | null; staffUserId: string | null;
   /** The borrower's name, and their class (or "Staff"). */
   student: string; className: string; issuedOn: string | null; dueOn: string; returnedOn: string | null; fine: number; overdueDays: number; renewals: number;
+  /** How it ended, and what happened to the fine. */
+  outcome: 'returned' | 'lost' | 'damaged'; fineNote: string; billed: boolean;
 }
+/** Taking a book back: how it came back, a charge for a lost or damaged book, and the fine put on the family's fees or waived (with why). */
+export const GiveBack = z.object({
+  outcome: z.enum(['returned', 'lost', 'damaged']).default('returned'),
+  charge: z.number().int().min(0).max(100_000).default(0),
+  fine: z.enum(['bill', 'waive', 'paid']).default('bill'),
+  reason: z.string().trim().max(200).default(''),
+}).refine((b) => b.fine !== 'waive' || b.reason.length >= 3, { message: 'Say why the fine is waived', path: ['reason'] });
+export type GiveBack = z.infer<typeof GiveBack>;
+export const CancelReservation = z.object({ reason: z.string().trim().min(3, 'Say why, so the family knows').max(200) });
 export interface ReservationRow { id: string; bookId: string; title: string; studentId: string; student: string; status: 'waiting' | 'ready' | 'done' | 'cancelled'; createdAt: string }
 export interface LibraryView { books: BookRow[]; loans: LoanRow[]; reservations: ReservationRow[]; rules: { loanDays: number; finePerDay: number; maxRenewals: number; maxLoans: number; staffMaxLoans: number } }
 

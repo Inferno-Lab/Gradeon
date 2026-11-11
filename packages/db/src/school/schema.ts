@@ -362,6 +362,8 @@ export const events = pgTable('events', {
   kind: text('kind').notNull().default('event'),
   note: text('note').notNull().default(''),
   audience: text('audience').notNull().default('everyone'),
+    /** For audience 'class' (migration 0023). */
+    classId: text('class_id'),
   venue: text('venue').notNull().default(''),
   createdBy: text('created_by'),
   /** One of the school's event categories. */

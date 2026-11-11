@@ -25,16 +25,17 @@ export class LearningService {
   async homework(t: TenantCtx, q: { classId?: string; subjectId?: string; draftsOf?: string }): Promise<HomeworkRow[]> {
     const { rows } = await t.pool.query<{
       id: string; class_id: string; class_name: string; subject_id: string; subject_name: string; title: string; description: string; assigned_on: string; due_on: string; max_marks: number;
-      graded: boolean; handed: string; on_time: string; total: string;
+      graded: boolean; handed: string; on_time: string; total: string; created_by: string | null; teacher_name: string | null;
     }>(
-      `select h.id, h.class_id, c.name class_name, h.subject_id, s.name subject_name, h.title, h.description, h.assigned_on::text, h.due_on::text, h.max_marks, h.graded,
+      `select h.id, h.class_id, c.name class_name, h.subject_id, s.name subject_name, h.title, h.description, h.assigned_on::text, h.due_on::text, h.max_marks, h.graded, h.created_by, tu.name teacher_name,
          count(*) filter (where sub.handed_at is not null) handed, count(*) filter (where sub.on_time) on_time, count(sub.student_id) total
-       from homework h join classes c on c.id = h.class_id join subjects s on s.id = h.subject_id left join homework_submissions sub on sub.homework_id = h.id
+       from homework h join classes c on c.id = h.class_id join subjects s on s.id = h.subject_id left join users tu on tu.id = h.created_by left join homework_submissions sub on sub.homework_id = h.id
        where ($1::text is null or h.class_id = $1) and ($2::text is null or h.subject_id = $2) and (h.status = 'set' or h.created_by = $3)
-       group by h.id, c.id, s.id order by h.assigned_on desc, c.grade, c.section, h.id limit 120`, [q.classId ?? null, q.subjectId ?? null, q.draftsOf ?? '']);
+       group by h.id, c.id, s.id, tu.name order by h.assigned_on desc, c.grade, c.section, h.id limit 120`, [q.classId ?? null, q.subjectId ?? null, q.draftsOf ?? '']);
     return rows.map((r) => ({
       id: r.id, classId: r.class_id, className: r.class_name, subjectId: r.subject_id, subjectName: r.subject_name, title: r.title, description: r.description,
       assignedOn: r.assigned_on, dueOn: r.due_on, maxMarks: r.max_marks, graded: r.graded, handedIn: Number(r.handed), onTime: Number(r.on_time), total: Number(r.total),
+      teacherId: r.created_by, teacherName: r.teacher_name ?? '',
     }));
   }
 
@@ -44,7 +45,18 @@ export class LearningService {
       `select s.id student_id, s.name, s.roll_no, sub.handed_at, coalesce(sub.on_time, false) on_time, sub.score, coalesce(sub.feedback, '') feedback
        from students s left join homework_submissions sub on sub.student_id = s.id and sub.homework_id = $1
        where s.class_id = $2 and s.status = 'active' order by s.roll_no, s.name`, [id, row.classId]);
-    return { ...row, students: rows.map((r) => ({ studentId: r.student_id, name: r.name, rollNo: r.roll_no, handedAt: r.handed_at?.toISOString() ?? null, onTime: r.on_time, score: r.score, feedback: r.feedback })) };
+    // What the teacher attached, and what each student handed in from the app (files that passed their check only).
+    const files = (await t.pool.query<{ id: string; name: string; mime: string; kind: string; owner_id: string }>(
+      `select id, name, mime, kind, owner_id from files where status = 'clean' and deleted_at is null
+       and ((kind = 'homework_attachment' and owner_id = $1) or (kind = 'homework_submission' and owner_id like $1 || ':%')) order by created_at`, [id])).rows;
+    const f = (x: { id: string; name: string; mime: string }) => ({ id: x.id, name: x.name, mime: x.mime });
+    return {
+      ...row, files: files.filter((x) => x.kind === 'homework_attachment').map(f),
+      students: rows.map((r) => ({
+        studentId: r.student_id, name: r.name, rollNo: r.roll_no, handedAt: r.handed_at?.toISOString() ?? null, onTime: r.on_time, score: r.score, feedback: r.feedback,
+        files: files.filter((x) => x.kind === 'homework_submission' && x.owner_id === `${id}:${r.student_id}`).map(f),
+      })),
+    };
   }
 
   private async homeworkRow(t: TenantCtx, id: string): Promise<HomeworkRow> {
@@ -181,16 +193,21 @@ export class LearningService {
 
   async createExam(t: TenantCtx, user: User, body: ExamCreate): Promise<ExamRow> {
     if (body.endsOn < body.startsOn) throw new ApiError('validation', 'The last day cannot be before the first day.', { fields: { endsOn: 'Pick a day on or after the first day.' } });
-    const cls = await t.pool.query('select 1 from classes where id = $1', [body.classId]);
-    if (!cls.rowCount) throw new ApiError('validation', 'Choose a class from the list.', { fields: { classId: 'Choose a class from the list.' } });
+    const classIds = [...new Set([body.classId, ...body.alsoClassIds])];
+    const cls = await t.pool.query('select id from classes where id = any($1)', [classIds]);
+    if (cls.rowCount !== classIds.length) throw new ApiError('validation', 'Choose classes from the list.', { fields: { classId: 'Choose a class from the list.' } });
     const known = await t.pool.query<{ id: string }>('select id from subjects where id = any($1)', [body.subjects.map((s) => s.subjectId)]);
     if (known.rowCount !== new Set(body.subjects.map((s) => s.subjectId)).size) throw new ApiError('validation', 'One of those subjects does not exist.', { fields: { subjects: 'Pick subjects from the list.' } });
-    const id = newId('exm');
+    // Every class gets its own exam (marks and results are per class), made together: all of them or none.
+    const ids = classIds.map(() => newId('exm'));
+    const id = ids[0]!;
     const client = await t.pool.connect();
     try {
       await client.query('begin');
-      await client.query('insert into exams (id, name, class_id, starts_on, ends_on, created_by) values ($1,$2,$3,$4,$5,$6)', [id, body.name, body.classId, body.startsOn, body.endsOn, user.id]);
-      for (const s of body.subjects) await client.query('insert into exam_subjects (exam_id, subject_id, on_date, max_marks, starts_at, ends_at, room) values ($1,$2,$3,$4,$5,$6,$7)', [id, s.subjectId, s.onDate ?? null, s.maxMarks, s.startsAt ?? null, s.endsAt ?? null, s.room]);
+      for (const [i, classId] of classIds.entries()) {
+        await client.query('insert into exams (id, name, class_id, starts_on, ends_on, created_by) values ($1,$2,$3,$4,$5,$6)', [ids[i], body.name, classId, body.startsOn, body.endsOn, user.id]);
+        for (const s of body.subjects) await client.query('insert into exam_subjects (exam_id, subject_id, on_date, max_marks, starts_at, ends_at, room) values ($1,$2,$3,$4,$5,$6,$7)', [ids[i], s.subjectId, s.onDate ?? null, s.maxMarks, s.startsAt ?? null, s.endsAt ?? null, s.room]);
+      }
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
@@ -198,7 +215,7 @@ export class LearningService {
     } finally {
       client.release();
     }
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.created', entity: 'exam', entityId: id, detail: { name: body.name } });
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'exam.created', entity: 'exam', entityId: id, detail: { name: body.name, classes: classIds.length } });
     return this.exam(t, id);
   }
 

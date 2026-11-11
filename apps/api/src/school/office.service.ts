@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
 import {
-  addDays, dayMonth, inr, istToday, latestSchoolDay, type DataRequestCreate, type DataRequestDecision, type DataRequestRow, type EventRow, type EventSave, type FeeStatus, type InvoiceListQuery,
+  addDays, dayMonth, inr, istToday, latestSchoolDay, type DataRequestCreate, type DataRequestDecision, type DataRequestRow, type EventReply, type EventRow, type EventSave, type FeeStatus, type InvoiceListQuery,
   type InvoiceListRow, type InvoiceListSummary, type Paged, type ReceiptRow, type ReportData, type ReportInfo, type ThreadCreate, type ThreadDetail, type ThreadPatch, type ThreadReply, type ThreadRow,
 } from '@gradeon/contracts';
 import { ApiError, notFound } from '@gradeon/nest-kit';
@@ -66,12 +66,20 @@ export class OfficeService {
     };
   }
 
-  async receipts(t: TenantCtx, query?: string): Promise<ReceiptRow[]> {
-    const { rows } = await t.pool.query<{ id: string; receipt_no: string; name: string; class_name: string; title: string; amount: number; method: string; reference: string | null; paid_on: string; by: string | null }>(
-      `select p.id, p.receipt_no, s.name, c.name class_name, i.title, p.amount, p.method, p.reference, p.paid_on::text, u.name "by"
-       from payments p join fee_invoices i on i.id = p.invoice_id join students s on s.id = i.student_id join classes c on c.id = s.class_id left join users u on u.id = p.recorded_by
-       where ($1::text is null or s.name ilike $1 or p.receipt_no ilike $1) order by p.paid_on desc, p.receipt_no desc limit 60`, [query ? `%${esc(query)}%` : null]);
-    return rows.map((r) => ({ id: r.id, receiptNo: r.receipt_no, studentName: r.name, className: r.class_name, title: r.title, amount: r.amount, method: r.method, reference: r.reference, paidOn: r.paid_on, recordedBy: r.by ?? 'Online' }));
+  async receipts(t: TenantCtx, query?: string, page = 1, limit = 25): Promise<Paged<ReceiptRow>> {
+    const params = [query ? `%${esc(query)}%` : null];
+    const where = `where ($1::text is null or s.name ilike $1 or p.receipt_no ilike $1)`;
+    const from = 'from payments p join fee_invoices i on i.id = p.invoice_id join students s on s.id = i.student_id join classes c on c.id = s.class_id left join users u on u.id = p.recorded_by';
+    const [{ rows }, total] = await Promise.all([
+      t.pool.query<{ id: string; receipt_no: string; name: string; class_name: string; title: string; amount: number; method: string; reference: string | null; paid_on: string; by: string | null; invoice_id: string; cancelled_at: Date | null; cancel_reason: string }>(
+        `select p.id, p.receipt_no, s.name, c.name class_name, i.title, p.amount, p.method, p.reference, p.paid_on::text, u.name "by", p.invoice_id, p.cancelled_at, p.cancel_reason
+         ${from} ${where} order by p.paid_on desc, p.receipt_no desc limit ${limit} offset ${(page - 1) * limit}`, params),
+      t.pool.query<{ n: string }>(`select count(*) n ${from} ${where}`, params),
+    ]);
+    return {
+      items: rows.map((r) => ({ id: r.id, receiptNo: r.receipt_no, studentName: r.name, className: r.class_name, title: r.title, amount: r.amount, method: r.method, reference: r.reference, paidOn: r.paid_on, recordedBy: r.by ?? 'Online', invoiceId: r.invoice_id, cancelled: !!r.cancelled_at, cancelReason: r.cancel_reason })),
+      total: Number(total.rows[0]!.n), page, limit,
+    };
   }
 
   // Reports
@@ -160,14 +168,14 @@ export class OfficeService {
   // Messages
 
   private threadSql(where = '', extra = ''): string {
-    return `select th.id, th.subject, th.status, th.last_at, g.name guardian, s.name student, c.name class_name, u.name assigned,
+    return `select th.id, th.subject, th.status, th.last_at, g.name guardian, s.name student, c.name class_name, th.assigned_to assigned_id, u.name assigned,
         lm.body last_body, lm.from_kind last_from, (select count(*) from thread_messages m where m.thread_id = th.id and m.from_kind = 'guardian' and m.read_at is null) unread
       from threads th left join guardians g on g.id = th.guardian_id left join students s on s.id = th.student_id left join classes c on c.id = s.class_id left join users u on u.id = th.assigned_to
         left join lateral (select body, from_kind from thread_messages m where m.thread_id = th.id order by m.created_at desc limit 1) lm on true ${where} order by th.last_at desc ${extra}`;
   }
 
-  private threadRow(r: { id: string; subject: string; status: 'open' | 'closed'; last_at: Date; guardian: string | null; student: string | null; class_name: string | null; assigned: string | null; last_body: string | null; last_from: 'staff' | 'guardian' | null; unread: string }): ThreadRow {
-    return { id: r.id, subject: r.subject, guardianName: r.guardian ?? 'A family', studentName: r.student, className: r.class_name, status: r.status, lastAt: r.last_at.toISOString(), lastBody: r.last_body ?? '', lastFrom: r.last_from ?? 'staff', unread: Number(r.unread), assignedToName: r.assigned };
+  private threadRow(r: { id: string; subject: string; status: 'open' | 'closed'; last_at: Date; guardian: string | null; student: string | null; class_name: string | null; assigned_id: string | null; assigned: string | null; last_body: string | null; last_from: 'staff' | 'guardian' | null; unread: string }): ThreadRow {
+    return { id: r.id, subject: r.subject, guardianName: r.guardian ?? 'A family', studentName: r.student, className: r.class_name, status: r.status, lastAt: r.last_at.toISOString(), lastBody: r.last_body ?? '', lastFrom: r.last_from ?? 'staff', unread: Number(r.unread), assignedToId: r.assigned_id, assignedToName: r.assigned };
   }
 
   async threads(t: TenantCtx): Promise<ThreadRow[]> {
@@ -179,8 +187,14 @@ export class OfficeService {
     const head = (await t.pool.query(this.threadSql('where th.id = $1'), [id])).rows[0];
     if (!head) throw notFound('That conversation');
     await t.pool.query("update thread_messages set read_at = now() where thread_id = $1 and from_kind = 'guardian' and read_at is null", [id]);
-    const msgs = await t.pool.query<{ id: string; from_kind: 'staff' | 'guardian'; sender_name: string; body: string; created_at: Date }>('select id, from_kind, sender_name, body, created_at from thread_messages where thread_id = $1 order by created_at, id', [id]);
-    return { ...this.threadRow({ ...head, unread: '0' }), messages: msgs.rows.map((m) => ({ id: m.id, from: m.from_kind, sender: m.sender_name, body: m.body, at: m.created_at.toISOString() })) };
+    const msgs = await t.pool.query<{ id: string; from_kind: 'staff' | 'guardian'; sender_name: string; body: string; created_at: Date; deleted_at: Date | null; file_ids: string[] | null }>(
+      'select id, from_kind, sender_name, body, created_at, deleted_at, file_ids from thread_messages where thread_id = $1 order by created_at, id', [id]);
+    const ids = msgs.rows.flatMap((m) => m.file_ids ?? []);
+    const files = ids.length ? (await t.pool.query<{ id: string; name: string; mime: string }>("select id, name, mime from files where id = any($1) and status = 'clean' and deleted_at is null", [ids])).rows : [];
+    return {
+      ...this.threadRow({ ...head, unread: '0' }),
+      messages: msgs.rows.map((m) => ({ id: m.id, from: m.from_kind, sender: m.sender_name, body: m.body, at: m.created_at.toISOString(), deleted: !!m.deleted_at, files: files.filter((f) => (m.file_ids ?? []).includes(f.id)) })),
+    };
   }
 
   async startThread(t: TenantCtx, user: User, body: ThreadCreate): Promise<ThreadDetail> {
@@ -196,42 +210,59 @@ export class OfficeService {
   async reply(t: TenantCtx, user: User, id: string, body: ThreadReply): Promise<ThreadDetail> {
     const th = (await t.pool.query<{ assigned_to: string | null }>('select assigned_to from threads where id = $1', [id])).rows[0];
     if (!th) throw notFound('That conversation');
-    await this.chat.post(t, { id: user.id, name: user.name, kind: 'staff' }, id, body.body);
+    await this.chat.post(t, { id: user.id, name: user.name, kind: 'staff' }, id, body.body, body.fileIds);
     return this.thread(t, id);
   }
 
   async patchThread(t: TenantCtx, user: User, id: string, body: ThreadPatch): Promise<ThreadDetail> {
-    const r = await t.pool.query('update threads set status = coalesce($2, status), assigned_to = case when $3 then $4 else assigned_to end where id = $1', [id, body.status ?? null, !!body.assignToMe, user.id]);
+    // Handing it on: only to a colleague who may write to families.
+    if (body.assignTo && !(await t.pool.query("select 1 from users u join user_roles ur on ur.user_id = u.id join roles r on r.id = ur.role_id where u.id = $1 and u.status = 'active' and r.permissions ? 'messages.write'", [body.assignTo])).rowCount) {
+      throw new ApiError('validation', 'Choose a colleague who may write to families.', { fields: { assignTo: 'Cannot reply to families.' } });
+    }
+    const to = body.assignTo ?? (body.assignToMe ? user.id : null);
+    const r = await t.pool.query('update threads set status = coalesce($2, status), assigned_to = coalesce($3, assigned_to) where id = $1', [id, body.status ?? null, to]);
     if (!r.rowCount) throw notFound('That conversation');
+    if (to && to !== user.id) await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'message.handed', entity: 'thread', entityId: id, detail: { to } });
     return this.thread(t, id);
   }
 
   // Events
 
   async events(t: TenantCtx): Promise<EventRow[]> {
-    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: EventRow['kind']; venue: string; note: string; audience: string; category: string; needs_rsvp: boolean; lat: number | null; lng: number | null; going: string; maybe: string; cant: string; adults: string }>(
-      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience, e.category, e.needs_rsvp, e.lat, e.lng,
+    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: EventRow['kind']; venue: string; note: string; audience: string; category: string; needs_rsvp: boolean; lat: number | null; lng: number | null; going: string; maybe: string; cant: string; adults: string; class_id: string | null; class_name: string | null }>(
+      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience, e.category, e.needs_rsvp, e.lat, e.lng, e.class_id, (select name from classes c where c.id = e.class_id) class_name,
          count(r.*) filter (where r.status = 'going') going, count(r.*) filter (where r.status = 'maybe') maybe, count(r.*) filter (where r.status = 'cant') cant,
          coalesce(sum(r.adults) filter (where r.status = 'going'), 0) adults
        from events e left join event_rsvps r on r.event_id = e.id where e.kind not in ('routine','cover') group by e.id order by e.starts_at desc limit 200`);
     return rows.map((r) => ({
       id: r.id, title: r.title, startsAt: r.starts_at.toISOString(), endsAt: r.ends_at?.toISOString() ?? null, kind: r.kind, venue: r.venue, note: r.note, audience: r.audience,
       category: r.category, needsRsvp: r.needs_rsvp, lat: r.lat, lng: r.lng, going: Number(r.going), maybe: Number(r.maybe), cant: Number(r.cant), adults: Number(r.adults),
+      classId: r.class_id, className: r.class_name,
     }));
+  }
+
+  /** Who answered an event's invitation, family by family. */
+  async eventReplies(t: TenantCtx, id: string): Promise<EventReply[]> {
+    const { rows } = await t.pool.query<{ student: string; class_name: string; guardian: string | null; status: EventReply['status']; adults: number }>(
+      `select s.name student, c.name class_name, g.name guardian, r.status, r.adults from event_rsvps r join students s on s.id = r.student_id join classes c on c.id = s.class_id
+       left join student_guardians sg on sg.student_id = s.id and sg.is_primary left join guardians g on g.id = sg.guardian_id where r.event_id = $1 order by r.status, c.grade, c.section, s.name`, [id]);
+    return rows.map((r) => ({ studentName: r.student, className: r.class_name, guardianName: r.guardian ?? '', status: r.status, adults: r.adults }));
   }
 
   async saveEvent(t: TenantCtx, user: User, id: string | null, body: EventSave): Promise<EventRow> {
     if (body.endsAt && body.endsAt < body.startsAt) throw new ApiError('validation', 'The event cannot end before it starts.', { fields: { endsAt: 'Pick a time after the start.' } });
+    if (body.audience === 'class' && !(body.classId && (await t.pool.query('select 1 from classes where id = $1', [body.classId])).rowCount)) throw new ApiError('validation', 'Choose the class.', { fields: { classId: 'Choose the class.' } });
+    const classId = body.audience === 'class' ? body.classId : null;
     if (id) {
-      const r = await t.pool.query("update events set title = $2, starts_at = $3, ends_at = $4, kind = $5, venue = $6, note = $7, audience = $8, category = $9, needs_rsvp = $10, lat = $11, lng = $12 where id = $1 and kind not in ('routine','cover')",
-        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, body.category, body.needsRsvp, body.lat, body.lng]);
+      const r = await t.pool.query("update events set title = $2, starts_at = $3, ends_at = $4, kind = $5, venue = $6, note = $7, audience = $8, category = $9, needs_rsvp = $10, lat = $11, lng = $12, class_id = $13 where id = $1 and kind not in ('routine','cover')",
+        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, body.category, body.needsRsvp, body.lat, body.lng, classId]);
       if (!r.rowCount) throw notFound('That event');
     } else {
       id = newId('evt');
-      await t.pool.query('insert into events (id, title, starts_at, ends_at, kind, venue, note, audience, created_by, category, needs_rsvp, lat, lng) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',
-        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, user.id, body.category, body.needsRsvp, body.lat, body.lng]);
+      await t.pool.query('insert into events (id, title, starts_at, ends_at, kind, venue, note, audience, created_by, category, needs_rsvp, lat, lng, class_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)',
+        [id, body.title, body.startsAt, body.endsAt ?? null, body.kind, body.venue, body.note, body.audience, user.id, body.category, body.needsRsvp, body.lat, body.lng, classId]);
       if (body.audience !== 'staff') {
-        const g = await t.pool.query<{ phone: string | null }>("select distinct g.phone from guardians g join student_guardians sg on sg.guardian_id = g.id join students s on s.id = sg.student_id where s.status = 'active' and g.phone is not null limit 2000");
+        const g = await t.pool.query<{ phone: string | null }>("select distinct g.phone from guardians g join student_guardians sg on sg.guardian_id = g.id join students s on s.id = sg.student_id where s.status = 'active' and g.phone is not null and ($1::text is null or s.class_id = $1) limit 5000", [classId]);
         const date = new Date(body.startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
         await this.messenger.notify(t, 'event.created', g.rows.map((x) => ({ to: x.phone!, vars: { title: body.title, date } })));
       }

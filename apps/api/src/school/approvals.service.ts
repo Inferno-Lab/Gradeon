@@ -7,17 +7,17 @@ import { NoticesService } from './notices.service.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
 interface Row {
-  id: string; kind: ApprovalKind; title: string; subtitle: string; requester_name: string; subject_ref: string | null;
+  id: string; kind: ApprovalKind; title: string; subtitle: string; requester_name: string; requested_by: string | null; subject_ref: string | null;
   payload: Record<string, unknown>; status: ApprovalRow['status']; created_at: Date; decided_at: Date | null; decision_note?: string; decided_by_name?: string | null;
 }
 
-const TONE: Record<ApprovalKind, ApprovalRow['tone']> = { leave: 'blue', fee_waiver: 'mint', attendance: 'amber', notice: 'violet', admission: 'coral', photo: 'violet' };
-const ACTION: Record<ApprovalKind, string> = { leave: 'Review', fee_waiver: 'Approve', attendance: 'Remind', notice: 'Publish', admission: 'Approve', photo: 'Use photo' };
+const TONE: Record<ApprovalKind, ApprovalRow['tone']> = { leave: 'blue', fee_waiver: 'mint', attendance: 'amber', notice: 'violet', admission: 'coral', photo: 'violet', receipt_cancel: 'coral' };
+const ACTION: Record<ApprovalKind, string> = { leave: 'Review', fee_waiver: 'Approve', attendance: 'Remind', notice: 'Publish', admission: 'Approve', photo: 'Use photo', receipt_cancel: 'Cancel receipt' };
 /** What a person needs to be allowed to decide each kind. */
-const KIND_NEEDS: Record<ApprovalKind, string | null> = { leave: null, fee_waiver: 'fees', notice: 'notices', admission: 'people.admissions', attendance: 'attendance', photo: null };
+const KIND_NEEDS: Record<ApprovalKind, string | null> = { leave: null, fee_waiver: 'fees', notice: 'notices', admission: 'people.admissions', attendance: 'attendance', photo: null, receipt_cancel: 'fees' };
 const NEEDS: Record<ApprovalKind, Permission[]> = {
   leave: ['approvals.decide'], fee_waiver: ['approvals.decide', 'fees.waive'], notice: ['approvals.decide', 'notices.publish'], admission: ['approvals.decide'], attendance: ['attendance.read'],
-  photo: ['approvals.decide', 'students.write'],
+  photo: ['approvals.decide', 'students.write'], receipt_cancel: ['approvals.decide', 'fees.refund'],
 };
 
 @Injectable()
@@ -40,7 +40,8 @@ export class ApprovalsService {
 
   private async doneText(t: TenantCtx, r: Row): Promise<string> {
     if (r.kind === 'leave') return 'Leave request reviewed';
-    if (r.kind === 'fee_waiver') return 'Concession approved';
+    if (r.kind === 'fee_waiver') return (r.payload as { cancel?: boolean }).cancel ? 'Invoice cancelled' : 'Waiver approved';
+    if (r.kind === 'receipt_cancel') return 'Receipt cancelled';
     if (r.kind === 'admission') return 'Admission approved';
     if (r.kind === 'photo') return 'New photo in use';
     const noticeId = (r.payload as { noticeId?: string }).noticeId;
@@ -109,6 +110,8 @@ export class ApprovalsService {
     const r = rows[0];
     if (!r) throw notFound('That request');
     if (!NEEDS[r.kind].every((p) => user.permissions.includes(p))) throw forbidden('You are not allowed to decide this kind of request.');
+    // A second person decides: never the one who asked.
+    if (r.requested_by === user.id && r.kind !== 'attendance') throw forbidden('Someone else decides a request you made.');
     if (body.decision === 'undo' ? r.status === 'pending' : r.status !== 'pending') throw new ApiError('conflict', body.decision === 'undo' ? 'That request is still open.' : 'Someone has already decided this request.');
     const next = body.decision === 'approve' ? 'approved' : body.decision === 'reject' ? 'rejected' : 'pending';
     const client = await t.pool.connect();
@@ -118,6 +121,7 @@ export class ApprovalsService {
       if (r.kind === 'fee_waiver') payload = await this.applyWaiver(client, r, body.decision, payload);
       if (r.kind === 'notice') await this.applyNotice(client, r, body.decision, user.id);
       if (r.kind === 'photo') await this.applyPhoto(client, r, body.decision);
+      if (r.kind === 'receipt_cancel') await this.applyReceiptCancel(client, r, body.decision);
       await client.query('update approvals set status = $2, decided_by = $3, decided_at = $4, payload = $5, decision_note = $6 where id = $1',
         [id, next, body.decision === 'undo' ? null : user.id, body.decision === 'undo' ? null : new Date(), JSON.stringify(payload), body.decision === 'undo' ? '' : body.note ?? '']);
       await client.query('commit');
@@ -136,6 +140,21 @@ export class ApprovalsService {
 
   /** A concession takes a percentage off the student's first unpaid invoice of a head that takes concessions (tuition by default); undo puts it back. */
   private async applyWaiver(client: { query: (q: string, p?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> }, r: Row, decision: ApprovalDecision['decision'], payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    // A request from an invoice names it and the amount; older ones (from before) take a percentage off the first unpaid fee.
+    if (decision === 'approve' && payload.invoiceId && payload.amount) {
+      const inv = (await client.query('select amount, waived_amount from fee_invoices where id = $1', [payload.invoiceId])).rows[0] as { amount: number; waived_amount: number } | undefined;
+      if (!inv) throw new ApiError('conflict', 'That invoice no longer exists.');
+      const paid = Number(((await client.query('select coalesce(sum(amount - refunded),0) p from payments where invoice_id = $1', [payload.invoiceId])).rows[0] as { p: string }).p);
+      const waived = Math.min(inv.amount - paid, inv.waived_amount + Number(payload.amount));
+      if (waived <= inv.waived_amount) throw new ApiError('conflict', 'Nothing is left to waive on this invoice.');
+      await client.query('update fee_invoices set waived_amount = $2 where id = $1', [payload.invoiceId, waived]);
+      return { ...payload, before: inv.waived_amount, waived };
+    }
+    if (decision === 'undo' && payload.invoiceId && payload.before !== undefined) {
+      await client.query('update fee_invoices set waived_amount = $2 where id = $1', [payload.invoiceId, payload.before]);
+      const { before: _b, waived: _w, ...rest } = payload;
+      return rest;
+    }
     if (decision === 'approve') {
       const pct = Number(payload.percent ?? 0);
       const inv = await client.query(
@@ -152,6 +171,13 @@ export class ApprovalsService {
       return rest;
     }
     return payload;
+  }
+
+  /** Cancels a desk receipt: its money leaves the totals (as refunded), and the receipt stays, marked cancelled with why. */
+  private async applyReceiptCancel(client: { query: (q: string, p?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> }, r: Row, decision: ApprovalDecision['decision']): Promise<void> {
+    const p = r.payload as { paymentId?: string; reason?: string };
+    if (decision === 'approve') await client.query("update payments set refunded = amount, cancelled_at = now(), cancel_reason = $2 where id = $1 and cancelled_at is null", [p.paymentId, p.reason ?? '']);
+    if (decision === 'undo') await client.query("update payments set refunded = 0, cancelled_at = null, cancel_reason = '' where id = $1", [p.paymentId]);
   }
 
   private async applyNotice(client: { query: (q: string, p?: unknown[]) => Promise<unknown> }, r: Row, decision: ApprovalDecision['decision'], userId: string): Promise<void> {

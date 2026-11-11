@@ -13,7 +13,7 @@ import { PhoneDashboard } from '../phone/PhoneDashboard';
 const RANGES: [string, number][] = [['Today', 1], ['This week', 6]];
 // Each chart needs its module and the person's right to see it (a teacher does not see fee totals).
 const TABS: [string, 'attendance' | 'fees' | 'homework', string][] = [['Attendance', 'attendance', 'attendance.read'], ['Fees', 'fees', 'fees.read'], ['Homework', 'homework', 'homework.read']];
-const KIND_WORD: Record<string, [string, string]> = { leave: ['leave request', 'leave requests'], fee_waiver: ['fee waiver', 'fee waivers'], notice: ['notice', 'notices'], admission: ['admission', 'admissions'], photo: ['new photo', 'new photos'] };
+const KIND_WORD: Record<string, [string, string]> = { leave: ['leave request', 'leave requests'], fee_waiver: ['fee waiver', 'fee waivers'], notice: ['notice', 'notices'], admission: ['admission', 'admissions'], photo: ['new photo', 'new photos'], receipt_cancel: ['receipt to cancel', 'receipts to cancel'] };
 const H = 236;
 const UP = 'M7 17L17 7M9 7h8v8';
 const DOWN = 'M7 7l10 10M17 9v8H9';

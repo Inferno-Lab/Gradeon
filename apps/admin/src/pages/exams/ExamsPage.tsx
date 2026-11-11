@@ -4,7 +4,7 @@ import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
 import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, Avatar, dateLabel, problem, useSetting } from '../../app/kit';
+import { AddBtn, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
 
 const TONE = { upcoming: 'n', marking: 'a', published: 'g' } as const;
 const LABEL = { upcoming: 'Coming up', marking: 'Marking', published: 'Published' } as const;
@@ -17,7 +17,7 @@ export function ExamsPage() {
   const [classId, setClassId] = useState('');
   const [creating, setCreating] = useState(() => !!new URLSearchParams(window.location.search).get('new'));
   const [changing, setChanging] = useState<ExamRow | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useOpenParam();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const list = useQuery({ queryKey: ['exams', classId], queryFn: () => app.api.exams.list(classId || undefined) });
   const rows = list.data ?? [];
@@ -75,14 +75,17 @@ function ExamDialog({ exam, defaultClass, onClose, onDone }: { exam?: ExamRow; d
   const app = useApp();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
-  const [f, setF] = useState({ name: exam?.name ?? '', classId: exam?.classId ?? defaultClass, startsOn: exam?.startsOn ?? addDays(istToday(), 7), endsOn: exam?.endsOn ?? addDays(istToday(), 11) });
+  const lead = useSetting<number>('exams.leadDays', 7);
+  const outOf = useSetting<number>('exams.defaultMaxMarks', 100);
+  const [f, setF] = useState({ name: exam?.name ?? '', classId: exam?.classId ?? defaultClass, startsOn: exam?.startsOn ?? addDays(istToday(), lead), endsOn: exam?.endsOn ?? addDays(istToday(), lead + 4) });
+  const [also, setAlso] = useState<string[]>([]);
   const [picked, setPicked] = useState<Record<string, Paper>>(() => Object.fromEntries((exam?.subjects ?? []).map((s) => [s.subjectId, { on: s.onDate ?? '', from: s.startsAt ?? '', to: s.endsAt ?? '', room: s.room, max: String(s.maxMarks) }])));
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
   const save = useMutation({
     mutationFn: () => {
-      const body = { name: f.name.trim(), classId: f.classId, startsOn: f.startsOn, endsOn: f.endsOn,
-        subjects: Object.entries(picked).map(([subjectId, v]) => ({ subjectId, onDate: v.on || null, startsAt: v.from || null, endsAt: v.to || null, room: v.room.trim(), maxMarks: Number(v.max) || 100 })) };
+      const body = { name: f.name.trim(), classId: f.classId, alsoClassIds: exam ? [] : also.filter((c) => c !== f.classId), startsOn: f.startsOn, endsOn: f.endsOn,
+        subjects: Object.entries(picked).map(([subjectId, v]) => ({ subjectId, onDate: v.on || null, startsAt: v.from || null, endsAt: v.to || null, room: v.room.trim(), maxMarks: Number(v.max) || outOf })) };
       return exam ? app.api.exams.update(exam.id, body) : app.api.exams.create(body);
     },
     onSuccess: onDone, onError: (e) => { setErr(problem(e)); shake.hit(); },
@@ -97,13 +100,21 @@ function ExamDialog({ exam, defaultClass, onClose, onDone }: { exam?: ExamRow; d
     setErr(p);
     if (Object.keys(p).length) shake.hit(); else save.mutate();
   };
-  const toggle = (id: string) => { setErr({ ...err, subjects: '' }); setPicked((x) => { const n = { ...x }; if (n[id]) delete n[id]; else n[id] = { on: f.startsOn, from: '', to: '', room: '', max: '100' }; return n; }); };
+  const toggle = (id: string) => { setErr({ ...err, subjects: '' }); setPicked((x) => { const n = { ...x }; if (n[id]) delete n[id]; else n[id] = { on: f.startsOn, from: '', to: '', room: '', max: String(outOf) }; return n; }); };
   const put = (id: string, patch: Partial<Paper>) => setPicked((x) => ({ ...x, [id]: { ...x[id]!, ...patch } }));
   return (
     <Dialog title={exam ? `Change ${exam.name}` : 'New exam'} onClose={onClose} width={760} shake={shake.cls}>
       <div className="stack">
         <Field label="Name" value={f.name} onChange={(name) => { setF({ ...f, name }); setErr({ ...err, name: '' }); }} error={err.name} placeholder="Mid-term exams" maxLength={80} />
         {!exam && <SelectField label="Class" value={f.classId} onChange={(classId) => { setF({ ...f, classId }); setErr({ ...err, classId: '' }); }} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+        {!exam && f.classId && (classes.data?.length ?? 0) > 1 && (
+          <div className="fld">
+            <label>Also for these classes (the same papers)</label>
+            <div className="tgrow">
+              {(classes.data ?? []).filter((c) => c.id !== f.classId).map((c) => <Checkbox key={c.id} checked={also.includes(c.id)} onChange={(on) => setAlso(on ? [...also, c.id] : also.filter((x) => x !== c.id))} label={c.name} />)}
+            </div>
+          </div>
+        )}
         <div className="two">
           <DateField label="First day" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
           <DateField label="Last day" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />

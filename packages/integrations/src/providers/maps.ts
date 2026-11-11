@@ -20,6 +20,11 @@ export const googleMaps: Adapter = {
       for (const p of points) q.append('markers', p.join(','));
       return `https://maps.googleapis.com/maps/api/staticmap?${q}`;
     },
+    async geocode(c, query) {
+      const r = await call(`https://maps.googleapis.com/maps/api/geocode/json?${new URLSearchParams({ address: query, key: c.secrets.apiKey! })}`);
+      if (r.json?.status !== 'OK' && r.json?.status !== 'ZERO_RESULTS') throw new Error(`Google Maps: ${r.json?.error_message ?? r.json?.status}`);
+      return (r.json?.results ?? []).slice(0, 5).map((x: { formatted_address: string; geometry: { location: { lat: number; lng: number } } }) => ({ label: x.formatted_address, lat: x.geometry.location.lat, lng: x.geometry.location.lng }));
+    },
   },
   async test(c) {
     try {
@@ -43,6 +48,11 @@ export const mapbox: Adapter = {
       if (!points.length) return null;
       const pins = points.map((p) => `pin-s(${p[1]},${p[0]})`).join(',');
       return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pins}/auto/640x320@2x?access_token=${c.secrets.accessToken}`;
+    },
+    async geocode(c, query) {
+      const r = await call(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?limit=5&access_token=${c.secrets.accessToken}`);
+      if (r.status >= 400) throw new Error(`Mapbox: ${r.json?.message ?? r.status}`);
+      return (r.json?.features ?? []).map((x: { place_name: string; center: [number, number] }) => ({ label: x.place_name, lat: x.center[1], lng: x.center[0] }));
     },
   },
   async test(c) {

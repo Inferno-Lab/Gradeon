@@ -126,3 +126,29 @@ export function useGrades(): { value: string; label: string }[] {
   for (const c of q.data ?? []) if (!seen.has(c.grade)) seen.set(c.grade, c.section && c.name.endsWith(c.section) ? c.name.slice(0, -c.section.length).trim() : c.name);
   return [...seen].sort((a, b) => a[0] - b[0]).map(([g, name]) => ({ value: String(g), label: /^\d+$/.test(name) ? `Grade ${name}` : name }));
 }
+
+/** The record a page has open, kept in the address (`?open=<id>`), so a link, a reload or a bookmark lands on it. */
+export function useOpenParam(key = 'open'): [string | null, (id: string | null) => void] {
+  const [open, setOpen] = useState<string | null>(() => new URLSearchParams(window.location.search).get(key));
+  const set = (id: string | null) => {
+    setOpen(id);
+    const q = new URLSearchParams(window.location.search);
+    if (id) q.set(key, id); else q.delete(key);
+    history.replaceState(null, '', `${window.location.pathname}${q.size ? `?${q}` : ''}`);
+  };
+  return [open, set];
+}
+
+/** A form's field errors and its message, from an API error. */
+export const fieldsOf = (e: unknown): Record<string, string> => (e instanceof HttpError ? e.fields : {});
+export const messageOf = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
+
+/** Cancel and the form's submit button, at the foot of a dialog's form. */
+export function DialogActions({ onClose, busy, label, danger }: { onClose: () => void; busy: boolean; label: string; danger?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+      <button type="button" className="btn" onClick={onClose}>Cancel</button>
+      <button type="submit" className={`btn ${danger ? 'dngf' : 'pri'}`} disabled={busy}>{busy && <span className="spin" aria-hidden="true" />}{label}</button>
+    </div>
+  );
+}

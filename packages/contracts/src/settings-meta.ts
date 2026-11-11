@@ -87,9 +87,13 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   // Homework
   'homework.goalPct': { group: 'homework', label: 'Homework on time goal (%)', kind: 'number', min: 50, max: 100 },
   'homework.showClassProgress': { group: 'homework', label: 'Families see how many classmates have handed in', kind: 'bool' },
+  'homework.defaultDueDays': { group: 'homework', label: 'New homework is due after', kind: 'number', min: 1, max: 30, help: 'Days after it is set, as the date a teacher starts from.' },
+  'homework.defaultMarks': { group: 'homework', label: 'New marked homework is out of', kind: 'number', min: 1, max: 100, help: 'The marks a teacher starts from; they can change it.' },
   'homework.handedInBy': { group: 'homework', label: 'Who hands homework in from the app', kind: 'enum', options: [['either', 'The student or a parent'], ['student', 'The student only'], ['parent', 'A parent only']], help: 'Students hand in only when students use the app.' },
 
   // Exams and results
+  'exams.defaultMaxMarks': { group: 'exams', label: 'A new paper is out of', kind: 'number', min: 1, max: 200, help: 'The marks a new exam paper starts from; each paper can be changed.' },
+  'exams.leadDays': { group: 'exams', label: 'A new exam starts after', kind: 'number', min: 0, max: 120, help: 'Days from today, as the first day a new exam starts from.' },
   'results.showRank': { group: 'exams', label: 'Families see the class rank', kind: 'bool' },
   'grading.scale': { group: 'exams', label: 'Grading scale', kind: 'gradingScale', max: 12, help: 'Each grade from the lowest percentage that earns it, highest first. Results, report cards, homework grades and the app use it.' },
   'grading.passPct': { group: 'exams', label: 'Pass mark (%)', kind: 'number', min: 0, max: 100 },

@@ -47,10 +47,16 @@ export interface HomeworkRow {
   handedIn: number;
   onTime: number;
   total: number;
+  /** Who set it. */
+  teacherId: string | null;
+  teacherName: string;
 }
 
+export interface HomeworkFile { id: string; name: string; mime: string }
 export interface HomeworkDetail extends HomeworkRow {
-  students: { studentId: string; name: string; rollNo: string; handedAt: string | null; onTime: boolean; score: number | null; feedback: string }[];
+  /** What the teacher attached. */
+  files: HomeworkFile[];
+  students: { studentId: string; name: string; rollNo: string; handedAt: string | null; onTime: boolean; score: number | null; feedback: string; files: HomeworkFile[] }[];
 }
 
 // Exams
@@ -58,6 +64,8 @@ export interface HomeworkDetail extends HomeworkRow {
 export const ExamCreate = z.object({
   name: z.string().trim().min(3, 'Name the exam').max(80),
   classId: z.string().min(1, 'Choose a class'),
+  /** More classes sitting the same papers (a school-wide mid-term): one exam is made for each, together. */
+  alsoClassIds: z.array(z.string().min(1)).max(60).default([]),
   startsOn: IsoDate,
   endsOn: IsoDate,
   subjects: z.array(z.object({
@@ -240,6 +248,9 @@ export interface ReceiptRow {
   reference: string | null;
   paidOn: string;
   recordedBy: string;
+  invoiceId: string;
+  cancelled: boolean;
+  cancelReason: string;
 }
 
 // Reports
@@ -272,11 +283,12 @@ export interface ThreadRow {
   lastBody: string;
   lastFrom: 'staff' | 'guardian';
   unread: number;
+  assignedToId: string | null;
   assignedToName: string | null;
 }
 
 export interface ThreadDetail extends ThreadRow {
-  messages: { id: string; from: 'staff' | 'guardian'; sender: string; body: string; at: string }[];
+  messages: { id: string; from: 'staff' | 'guardian'; sender: string; body: string; at: string; deleted: boolean; files: { id: string; name: string; mime: string }[] }[];
 }
 
 export const ThreadCreate = z.object({
@@ -286,10 +298,11 @@ export const ThreadCreate = z.object({
 });
 export type ThreadCreate = z.infer<typeof ThreadCreate>;
 
-export const ThreadReply = z.object({ body: z.string().trim().min(1, 'Write a reply').max(1000) });
+export const ThreadReply = z.object({ body: z.string().trim().max(1000).default(''), fileIds: z.array(z.string()).max(5).default([]) }).refine((b) => b.body.length > 0 || b.fileIds.length > 0, { message: 'Write a reply', path: ['body'] });
 export type ThreadReply = z.infer<typeof ThreadReply>;
 
-export const ThreadPatch = z.object({ status: z.enum(['open', 'closed']).optional(), assignToMe: z.boolean().optional() });
+/** Close or reopen; take it, or hand it to a colleague who may write to families. */
+export const ThreadPatch = z.object({ status: z.enum(['open', 'closed']).optional(), assignToMe: z.boolean().optional(), assignTo: z.string().min(1).optional() });
 export type ThreadPatch = z.infer<typeof ThreadPatch>;
 
 // Events
@@ -304,7 +317,9 @@ export const EventSave = z.object({
   kind: z.enum(EVENT_KINDS).default('event'),
   venue: z.string().trim().max(80).default(''),
   note: z.string().trim().max(300).default(''),
-  audience: z.enum(['everyone', 'parents', 'staff']).default('everyone'),
+  audience: z.enum(['everyone', 'parents', 'staff', 'class']).default('everyone'),
+  /** The class, for audience 'class'. */
+  classId: z.string().nullable().default(null),
   /** One of the school's event categories. */
   category: z.string().trim().max(24).default(''),
   /** Ask families whether they are coming. */
@@ -314,6 +329,7 @@ export const EventSave = z.object({
 });
 export type EventSave = z.infer<typeof EventSave>;
 
+export interface EventReply { studentName: string; className: string; guardianName: string; status: 'going' | 'maybe' | 'cant'; adults: number }
 export interface EventRow {
   id: string;
   title: string;
@@ -332,6 +348,8 @@ export interface EventRow {
   cant: number;
   /** Grown-ups coming with the children who are going. */
   adults: number;
+  classId: string | null;
+  className: string | null;
 }
 
 // Privacy
@@ -407,6 +425,7 @@ export const MESSAGE_EVENTS: MessageEvent[] = [
   { key: 'exam.reopened', label: 'Results corrected', to: 'families', vars: ['student', 'exam', 'note'], text: 'Results for {exam} were corrected: {note}. See {student}’s marks in the Gradeon app.', defaults: { push: true, sms: true, email: false }, opens: '/results', needs: 'exams' },
   { key: 'chat.message', label: 'New message in a conversation', to: 'families', vars: ['from', 'text'], text: '{from}: {text}', defaults: { push: true, sms: false, email: false }, opens: '/chat', needs: 'chat' },
   { key: 'gallery.album', label: 'New photo album', to: 'families', vars: ['album', 'school'], text: 'New photos from {school}: {album}. See them in the Gradeon app.', defaults: { push: true, sms: false, email: false }, opens: '/gallery', needs: 'gallery' },
+  { key: 'library.cancelled', label: 'Book reservation cancelled', to: 'families', vars: ['student', 'title', 'reason'], text: 'The reservation of {title} for {student} was cancelled: {reason}', defaults: { push: true, sms: false, email: false }, opens: '/library', needs: 'library.reservations' },
   { key: 'library.overdue', label: 'Library book overdue', to: 'families', vars: ['student', 'title', 'days', 'fine'], text: '{title}, borrowed by {student}, is {days} days late. Fine so far: {fine}.', defaults: { push: true, sms: false, email: false }, opens: '/library', needs: 'library' },
   { key: 'bus.late', label: 'Bus running late or stopped', to: 'families', vars: ['route', 'minutes', 'reason'], text: 'The {route} bus is running about {minutes} minutes late: {reason}.', defaults: { push: true, sms: true, email: false }, urgent: true, opens: '/transport', needs: 'transport.liveBus' },
   { key: 'bus.dropped', label: 'Child got on or off the bus', to: 'families', vars: ['student', 'stop', 'event', 'time'], text: '{student} {event} the bus at {stop}, {time}.', defaults: { push: true, sms: false, email: false }, urgent: true, opens: '/transport', needs: 'transport.liveBus' },

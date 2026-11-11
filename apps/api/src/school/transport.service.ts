@@ -133,6 +133,42 @@ export class TransportService implements OnModuleInit {
    * The bus's position, from the driver's phone (the teacher app, a staff member who drives the route or may manage transport).
    * Families at stops the bus is now near are told once a day.
    */
+  /** Places for a stop, from the school's maps connection; none on the test track (stops are placed once maps are set up). */
+  async places(t: TenantCtx, q: string): Promise<{ label: string; lat: number; lng: number }[]> {
+    const maps = await this.hubs.hub.resolve('maps', t.info.id, t.info.slug).catch(() => null);
+    if (!maps?.adapter.maps || maps.sandbox) return [];
+    return maps.adapter.maps.geocode(maps.ctx, q);
+  }
+
+  /** A picture of a route: its stops and, while a trip runs, the bus. Null without a maps connection. */
+  async routeMap(t: TenantCtx, routeId: string): Promise<{ url: string | null }> {
+    const maps = await this.hubs.hub.resolve('maps', t.info.id, t.info.slug).catch(() => null);
+    if (!maps?.adapter.maps || maps.sandbox) return { url: null };
+    const stops = (await t.pool.query<{ lat: number; lng: number }>('select lat, lng from transport_stops where route_id = $1 and lat is not null order by position', [routeId])).rows;
+    const bus = (await this.view(t)).routes.find((r) => r.id === routeId)?.bus;
+    return { url: await maps.adapter.maps.staticMap(maps.ctx, [...(bus ? [[bus.lat, bus.lng] as [number, number]] : []), ...stops.map((p) => [p.lat, p.lng] as [number, number])]) };
+  }
+
+  /**
+   * Bills every rider of a route its fee, as a Transport fee (the route is the one home of what transport costs). A rider who
+   * already has a fee with the same name is skipped, so billing twice adds nothing.
+   */
+  async billRiders(t: TenantCtx, user: { id: string; name: string }, routeId: string, b: { title: string; dueOn: string }): Promise<{ created: number; skipped: number }> {
+    const r = (await t.pool.query<{ name: string; fee: number }>('select name, fee from transport_routes where id = $1', [routeId])).rows[0];
+    if (!r) throw notFound('That route');
+    if (!r.fee) throw new ApiError('validation', 'This route has no fee. Set it on the route first.');
+    await t.pool.query("insert into fee_heads (key, name, sort, concession) values ('transport', 'Transport', 800, false) on conflict (key) do nothing");
+    const riders = (await t.pool.query<{ student_id: string }>("select a.student_id from transport_assignments a join students s on s.id = a.student_id and s.status = 'active' where a.route_id = $1", [routeId])).rows.map((x) => x.student_id);
+    let created = 0;
+    for (const sid of riders) {
+      if ((await t.pool.query('select 1 from fee_invoices where student_id = $1 and title = $2', [sid, b.title])).rowCount) continue;
+      await t.pool.query("insert into fee_invoices (id, student_id, head, title, amount, due_on) values ($1,$2,'transport',$3,$4,$5)", [newId('inv'), sid, b.title, r.fee, b.dueOn]);
+      created++;
+    }
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'transport.billed', entity: 'route', entityId: routeId, detail: { title: b.title, created } });
+    return { created, skipped: riders.length - created };
+  }
+
   /** The driver of a route (or someone who may change transport) may run its trips. */
   private async mayDrive(t: TenantCtx, user: AuthedUser, routeId: string): Promise<void> {
     const r = (await t.pool.query<{ driver_user_id: string | null }>('select driver_user_id from transport_routes where id = $1', [routeId])).rows[0];

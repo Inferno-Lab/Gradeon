@@ -259,6 +259,24 @@ export interface InvoiceRow {
   status: FeeStatus;
 }
 
+/** One invoice opened: what it is for, every payment against it, and any waiver asked for or given. */
+export interface InvoiceDetail extends InvoiceRow {
+  studentName: string;
+  className: string;
+  head: string;
+  headName: string;
+  waived: number;
+  outstanding: number;
+  payments: { id: string; receiptNo: string; amount: number; refunded: number; method: string; paidOn: string; cancelled: boolean; cancelReason: string }[];
+  /** A waiver or cancellation waiting for a second person, if any. */
+  pending: { id: string; title: string } | null;
+}
+/** Asks for part of an invoice to be waived, or all of what is left of it (cancel); a second person decides in Approvals. */
+export const WaiverRequest = z.object({ amount: z.number().int().positive('Enter an amount'), reason: z.string().trim().min(3, 'Say why').max(300), cancel: z.boolean().default(false) });
+export type WaiverRequest = z.infer<typeof WaiverRequest>;
+export const ReceiptCancel = z.object({ reason: z.string().trim().min(3, 'Say why').max(300) });
+export type ReceiptCancel = z.infer<typeof ReceiptCancel>;
+
 // Notices
 /**
  * A notice as written in the admin or the teachers' app. Who it goes to: everyone, parents, students, staff, or one class.
@@ -303,7 +321,7 @@ export interface NoticeRow {
 }
 
 // Approvals
-export type ApprovalKind = 'leave' | 'fee_waiver' | 'admission' | 'notice' | 'attendance' | 'photo';
+export type ApprovalKind = 'leave' | 'fee_waiver' | 'admission' | 'notice' | 'attendance' | 'photo' | 'receipt_cancel';
 export interface ApprovalRow {
   id: string;
   kind: ApprovalKind;
@@ -376,6 +394,11 @@ export const SlotPatch = z.object({
   room: z.string().max(20).nullable().optional(),
 });
 export type SlotPatch = z.infer<typeof SlotPatch>;
+/** Puts a lesson in a free period of a class. */
+export const SlotCreate = z.object({ classId: z.string().min(1), day: z.number().int().min(1).max(7), period: z.number().int().min(0), subjectId: z.string().min(1, 'Choose a subject'), teacherId: z.string().min(1, 'Choose a teacher'), room: z.string().max(20).nullable().optional() });
+export type SlotCreate = z.infer<typeof SlotCreate>;
+/** One teacher's or one room's week, across classes. */
+export interface WeekOf { title: string; periods: PeriodDef[]; slots: (SlotRow & { className: string })[] }
 export const CoverRequest = z.object({ slotId: z.string(), teacherId: z.string(), date: IsoDate.optional() });
 export type CoverRequest = z.infer<typeof CoverRequest>;
 export interface TeacherLoad {

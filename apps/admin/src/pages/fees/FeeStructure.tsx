@@ -4,6 +4,7 @@ import type { FeeHead } from '@gradeon/contracts';
 import { Checkbox, Field, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Ico, problem, useSetting } from '../../app/kit';
+import { useShellChrome } from '../../app/Layout';
 import { Card, Page } from '../../app/Page';
 import { useSetupSections } from '../year/SetupSections';
 
@@ -16,6 +17,7 @@ export function FeeStructure({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Fees" sub="The kinds of fee the school charges, and what each class pays" toast={toast} actions={tabs} overlays={setup.overlay}>
       <div className="stack" style={{ gap: 16 }}>
+        <Rules />
         <Heads say={say} />
         {setup.view}
       </div>
@@ -72,6 +74,22 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
           <button className="btn pri" disabled={!changed || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save fee heads'}</button>
         </div>
       )}
+    </Card>
+  );
+}
+
+/** The rules Gradeon set for the school's fees, so the office sees what families are charged and why. */
+function Rules() {
+  const { shell } = useShellChrome();
+  const late = useSetting<number>('fees.lateFeePct', 0);
+  const remind = useSetting<number>('fees.remindDaysBefore', 3);
+  const fines = shell?.features.includes('fees.lateFines') ?? false;
+  const reminders = shell?.features.includes('fees.reminders') ?? false;
+  return (
+    <Card title="Rules">
+      <div className="kv"><span>Late fine</span><b>{fines && late > 0 ? `${late}% each month on an overdue invoice` : 'None'}</b></div>
+      <div className="kv"><span>Reminders</span><b>{reminders ? `${remind} ${remind === 1 ? 'day' : 'days'} before the due date` : 'Not sent'}</b></div>
+      <p className="help" style={{ marginBottom: 0 }}>Gradeon sets these for your school. To change them, ask Gradeon from School profile.</p>
     </Card>
   );
 }

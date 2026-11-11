@@ -1,25 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { inr, istToday, type ClassInfo, type StudentDetail } from '@gradeon/contracts';
+import { istToday, type ClassInfo } from '@gradeon/contracts';
 import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
-import { useFeeHeads } from '../../app/kit';
+import { DialogActions as Actions, fieldsOf, messageOf, useFeeHeads } from '../../app/kit';
 import { useApp } from '../../app/context';
-import { useShellChrome } from '../../app/Layout';
 import { RecordFields, emptyRec } from './StudentRecord';
 
 type Done = (message: string, openId?: string) => void;
-const fieldsOf = (e: unknown): Record<string, string> => (e instanceof HttpError ? e.fields : {});
-const messageOf = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
-
-function Actions({ onClose, busy, label, danger }: { onClose: () => void; busy: boolean; label: string; danger?: boolean }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-      <button type="button" className="btn" onClick={onClose}>Cancel</button>
-      <button type="submit" className={`btn ${danger ? 'dngf' : 'pri'}`} disabled={busy}>{busy && <span className="spin" aria-hidden="true" />}{label}</button>
-    </div>
-  );
-}
 
 export function AddStudentDialog({ classes, defaultClass, onClose, onDone }: { classes: ClassInfo[]; defaultClass?: string; onClose: () => void; onDone: Done }) {
   const { api } = useApp();
@@ -190,51 +176,4 @@ export function AssignFeeDialog({ ids, label, onClose, onDone }: { ids: string[]
   );
 }
 
-const METHODS = [{ value: 'cash', label: 'Cash' }, { value: 'upi', label: 'UPI' }, { value: 'card', label: 'Card' }, { value: 'netbanking', label: 'Net banking' }, { value: 'cheque', label: 'Cheque' }];
 
-export function CollectFeeDialog({ student, onClose, onDone }: { student: StudentDetail; onClose: () => void; onDone: Done }) {
-  const { api } = useApp();
-  const shake = useShake();
-  const inv = useQuery({ queryKey: ['invoices', student.id], queryFn: () => api.fees.invoices(student.id) });
-  const open = (inv.data ?? []).filter((i) => i.paid < i.amount);
-  const [pick, setPick] = useState('');
-  const [amount, setAmount] = useState('');
-  // Only the ways the school takes money (console: Fees → How the office records payments).
-  const taken = useShellChrome().shell?.school.paymentMethods;
-  const methods = METHODS.filter((m) => !taken || taken.includes(m.value));
-  const [method, setMethod] = useState(methods[0]?.value ?? 'cash');
-  const [ref, setRef] = useState('');
-  const [err, setErr] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const chosen = open.find((i) => i.id === (pick || open[0]?.id));
-  useEffect(() => { if (chosen) setAmount(String(chosen.amount - chosen.paid)); }, [chosen?.id]);
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chosen) return;
-    const n = Math.round(Number(amount));
-    if (!(n > 0)) { setErr({ amount: 'Enter an amount.' }); shake.hit(); return; }
-    setBusy(true);
-    try { const r = await api.fees.pay({ studentId: student.id, invoiceId: chosen.id, amount: n, method: method as 'cash', reference: ref || undefined }); onDone(`Receipt ${r.receiptNo} recorded for ₹${inr(n)}`); }
-    catch (x) { setBusy(false); setErr({ amount: fieldsOf(x).amount ?? messageOf(x) }); shake.hit(); }
-  };
-  return (
-    <Dialog title={`Collect a fee from ${student.name}`} onClose={onClose} shake={shake.cls}>
-      {inv.isLoading ? <div className="skc" style={{ height: 120 }} /> : open.length === 0 ? (
-        <>
-          <p>Nothing is due for {student.name}. Every invoice is paid.</p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button className="btn pri" onClick={onClose}>Close</button></div>
-        </>
-      ) : (
-        <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <SelectField label="Invoice" value={chosen?.id ?? ''} onChange={setPick} options={open.map((i) => ({ value: i.id, label: `${i.title} · ₹${inr(i.amount - i.paid)} due ${i.dueOn.slice(5)}` }))} />
-          <div className="two">
-            <Field label="Amount (₹)" value={amount} onChange={(v) => { setAmount(v); setErr({}); }} error={err.amount} inputMode="numeric" />
-            <SelectField label="Paid by" value={method} onChange={setMethod} options={methods} />
-          </div>
-          {method !== 'cash' && <Field label="Reference (optional)" value={ref} onChange={setRef} maxLength={60} />}
-          <Actions onClose={onClose} busy={busy} label="Record payment" />
-        </form>
-      )}
-    </Dialog>
-  );
-}

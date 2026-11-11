@@ -52,7 +52,7 @@ describe('every piece of the product belongs to one module', () => {
     }
   });
   it('approval kinds', () => {
-    once((m) => m.approvals, ['leave', 'fee_waiver', 'admission', 'notice', 'attendance', 'photo'], 'Approval kind');
+    once((m) => m.approvals, ['leave', 'fee_waiver', 'admission', 'notice', 'attendance', 'photo', 'receipt_cancel'], 'Approval kind');
   });
 });
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addDays, istToday, type HomeworkDetail, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem } from '../../app/kit';
+import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
 import { uploadFile } from '@gradeon/api-client';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['homework', 'dashboard'].includes(String(q.queryKey[0])) });
@@ -16,10 +16,18 @@ export function HomeworkPage() {
   const [classId, setClassId] = useState('');
   const [setting, setSetting] = useState(false);
   const [changing, setChanging] = useState<HomeworkDetail | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useOpenParam();
+  const [subjectId, setSubjectId] = useState('');
+  const [state, setState] = useState<'open' | 'closed' | 'all'>('open');
+  const [mine, setMine] = useState(false);
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
-  const list = useQuery({ queryKey: ['homework', classId], queryFn: () => app.api.homework.list(classId ? { classId } : {}) });
-  const rows = list.data ?? [];
+  const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
+  const list = useQuery({ queryKey: ['homework', classId, subjectId], queryFn: () => app.api.homework.list({ ...(classId ? { classId } : {}), ...(subjectId ? { subjectId } : {}) }) });
+  const all = list.data ?? [];
+  // A teacher's own homework comes first; "Mine" shows only theirs.
+  const rows = all.filter((r) => (state === 'all' || (state === 'open') === (r.dueOn >= istToday())) && (!mine || r.teacherId === app.user.id))
+    .sort((a, b) => Number(b.teacherId === app.user.id) - Number(a.teacherId === app.user.id));
+  const iSet = all.some((r) => r.teacherId === app.user.id);
   const canWrite = app.user.permissions.includes('homework.write');
   const handed = rows.reduce((a, r) => a + r.handedIn, 0);
   const total = rows.reduce((a, r) => a + r.total, 0);
@@ -38,7 +46,7 @@ export function HomeworkPage() {
         {changing && <SetHomework hw={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={(_d, failed) => { setChanging(null); refresh(qc); say(failed.length ? `Saved, but ${failed.join(', ')} could not be attached.` : 'Homework changed.'); }} />}
         {open && !changing && <HomeworkSheet id={open} canWrite={canWrite} onChange={setChanging} onClose={() => setOpen(null)} onSaved={(m) => { refresh(qc); say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Homework removed.'); }} />}
       </>}>
-      {rows.length === 0 ? (
+      {all.length === 0 ? (
         <div><EmptyCard title="Homework" chip={{ text: '0 set', tone: 'v' }} scene="notebooks" heading="No homework yet" body="Set homework for a class and it goes to every family in the app. You then tick who has handed it in." actions={canWrite ? <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn> : undefined} /></div>
       ) : (
         <section className="grid">
@@ -46,10 +54,18 @@ export function HomeworkPage() {
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">On time</span><div className="big" style={{ marginTop: 8 }}>{pct(onTime)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>handed in by the due day</div></div>
           <div className="tile t-l s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Homework set</span><div className="big" style={{ marginTop: 8 }}>{rows.length}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{rows.filter((r) => r.dueOn >= today).length} still open</div></div>
           <div className="card tbl s12 rise" style={{ '--d': '.14s', padding: 0 } as React.CSSProperties}>
-            <div className="ch" style={{ padding: '24px 24px 16px' }}><h2>All homework</h2><span className="chip v">{rows.length}</span></div>
+            <div className="ch" style={{ padding: '24px 24px 12px', flexWrap: 'wrap', gap: 10 }}>
+              <h2>Homework</h2><span className="chip v">{rows.length}</span>
+              <span className="grow"></span>
+              <Segmented label="Open or closed" value={state} onChange={setState} options={[{ value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' }, { value: 'all', label: 'All' }]} />
+              <Select compact aria-label="Subject" value={subjectId} onChange={setSubjectId} options={[{ value: '', label: 'All subjects' }, ...(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
+              {iSet && <Checkbox checked={mine} onChange={setMine} label="Only mine" />}
+            </div>
             <div className="scroll-x lscroll" data-fill="">
               <div className="hwlw" style={{ minWidth: 640 }}>
+                <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>Homework</span><span>Class</span><span>Due</span><span>Handed in</span><span style={{ textAlign: 'right' }}>Count</span></div>
                 {rows.map((r) => <Row key={r.id} r={r} today={today} onOpen={() => setOpen(r.id)} />)}
+                {rows.length === 0 && <div className="help" style={{ padding: '16px 24px' }}>Nothing here with these filters.</div>}
               </div>
             </div>
           </div>
@@ -59,15 +75,17 @@ export function HomeworkPage() {
   );
 }
 
+const COLS = 'minmax(0,1.7fr) 70px 90px minmax(120px,1fr) 90px';
+
 function Row({ r, today, onOpen }: { r: HomeworkRow; today: string; onOpen: () => void }) {
   const p = r.total ? Math.round((r.handedIn / r.total) * 100) : 0;
   const overdue = r.dueOn < today && r.handedIn < r.total;
   return (
     <button className="rowbtn" onClick={onOpen} aria-label={`Open ${r.title}, ${r.className}`}>
-      <div className="grd rw hwl" style={{ '--cols': 'minmax(0,1.7fr) 70px 90px minmax(120px,1fr) 90px' } as React.CSSProperties}>
+      <div className="grd rw hwl" style={{ '--cols': COLS } as React.CSSProperties}>
         <span style={{ minWidth: 0 }}>
           <b data-tip={r.title} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.title}</b>
-          <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.subjectName} · set {dateLabel(r.assignedOn)}</small>
+          <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.subjectName} · set {dateLabel(r.assignedOn)}{r.teacherName ? ` by ${r.teacherName}` : ''}</small>
         </span>
         <span className="chip">{r.className}</span>
         <span className={`chip ${overdue ? 'c' : ''}`}>Due {dateLabel(r.dueOn)}</span>
@@ -83,7 +101,9 @@ function SetHomework({ hw, defaultClass, onClose, onDone }: { hw?: HomeworkDetai
   const app = useApp();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
-  const [f, setF] = useState({ classId: hw?.classId ?? defaultClass, subjectId: hw?.subjectId ?? '', title: hw?.title ?? '', description: hw?.description ?? '', dueOn: hw?.dueOn ?? addDays(istToday(), 2), maxMarks: String(hw?.maxMarks ?? 20) });
+  const dueDays = useSetting<number>('homework.defaultDueDays', 2);
+  const outOf = useSetting<number>('homework.defaultMarks', 20);
+  const [f, setF] = useState({ classId: hw?.classId ?? defaultClass, subjectId: hw?.subjectId ?? '', title: hw?.title ?? '', description: hw?.description ?? '', dueOn: hw?.dueOn ?? addDays(istToday(), dueDays), maxMarks: String(hw?.maxMarks ?? outOf) });
   const [graded, setGraded] = useState(hw?.graded ?? true);
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
@@ -91,7 +111,7 @@ function SetHomework({ hw, defaultClass, onClose, onDone }: { hw?: HomeworkDetai
   const [files, setFiles] = useState<File[]>([]);
   const make = useMutation({
     mutationFn: async () => {
-      const body = { classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || 20, graded, draft: false, fileIds: [] };
+      const body = { classId: f.classId, subjectId: f.subjectId, title: f.title.trim(), description: f.description.trim(), dueOn: f.dueOn, maxMarks: Number(f.maxMarks) || outOf, graded, draft: false, fileIds: [] };
       const d = hw ? await app.api.homework.update(hw.id, body) : await app.api.homework.create(body);
       // Attached once the homework exists; one that fails is said by name, and the homework stays set.
       const failed: string[] = [];
@@ -162,7 +182,8 @@ function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: 
         <>
           {d.description && <p style={{ margin: '0 0 6px', font: '500 14px/1.5 var(--fb)', color: 'var(--ink2)' }}>{d.description}</p>}
           <div className="tgrow" style={{ margin: '8px 0 12px' }}>
-            <span className="chip">Set {dateLabel(d.assignedOn)}</span><span className="chip a">Due {dateLabel(d.dueOn)}</span><span className="chip">Out of {d.maxMarks}</span><span className="chip g">{d.handedIn} of {d.total} handed in</span>
+            <span className="chip">Set {dateLabel(d.assignedOn)}</span><span className="chip a">Due {dateLabel(d.dueOn)}</span>{d.graded ? <span className="chip">Out of {d.maxMarks}</span> : <span className="chip">Checked, not marked</span>}<span className="chip g">{d.handedIn} of {d.total} handed in</span>
+            <FileChips files={d.files} />
           </div>
           <div className="lscroll" style={{ maxHeight: 'min(48dvh,420px)', border: '1px solid var(--line)', borderRadius: 18 }}>
             {d.students.map((s) => {
@@ -172,7 +193,14 @@ function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: 
                   <span className="rn num">{s.rollNo || '–'}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={s.name} size={30} /><b style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={s.name}>{s.name}</b></span>
                   <Checkbox checked={x.handed} disabled={!canWrite} onChange={(handed) => setDraft({ ...draft, [s.studentId]: { ...x, handed } })} label={<span>{x.handed ? (s.onTime || !s.handedAt ? 'Handed in' : 'Late') : 'Not yet'}</span>} />
-                  <input className="hws" inputMode="numeric" aria-label={`Marks for ${s.name}`} placeholder="–" disabled={!canWrite || !x.handed} value={x.score} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, score: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
+                  {d.graded ? <input className="hws" inputMode="numeric" aria-label={`Marks for ${s.name}`} placeholder="–" disabled={!canWrite || !x.handed} value={x.score} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, score: e.target.value.replace(/\D/g, '').slice(0, 3) } })} /> : <span />}
+                  {(x.handed || s.files.length > 0) && (
+                    <div style={{ gridColumn: '2 / -1', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', paddingBottom: 6 }}>
+                      <FileChips files={s.files} />
+                      <input className="hws" style={{ flex: '1 1 200px', width: 'auto', minWidth: 0, textAlign: 'left' }} aria-label={`Feedback for ${s.name}`} placeholder="A word of feedback (the family sees it)" disabled={!canWrite} maxLength={300}
+                        value={x.feedback} onChange={(e) => setDraft({ ...draft, [s.studentId]: { ...x, feedback: e.target.value } })} />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -191,4 +219,12 @@ function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: 
       )}
     </Dialog>
   );
+}
+
+/** Files to open in a new tab: their links last a few minutes, so each is fetched on the click. */
+function FileChips({ files }: { files: HomeworkFile[] }) {
+  const app = useApp();
+  if (!files.length) return null;
+  const open = (id: string) => void app.api.files.url(id, true).then((u) => window.open(u.url, '_blank', 'noopener')).catch(() => undefined);
+  return <>{files.map((f) => <button key={f.id} type="button" className="chip v" data-tip="Open" onClick={() => open(f.id)}>{f.name}</button>)}</>;
 }

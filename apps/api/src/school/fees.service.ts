@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
-import { addDays, dayName, dayMonth, istToday, latestSchoolDay, schoolDaysEnding, type FeeHead, type FeeHeadsPut, type FeeSummary, type InvoiceRow, type PaymentCreate } from '@gradeon/contracts';
+import { addDays, dayName, dayMonth, inr, istToday, latestSchoolDay, schoolDaysEnding, type FeeHead, type FeeHeadsPut, type FeeSummary, type InvoiceDetail, type InvoiceRow, type PaymentCreate, type ReceiptCancel, type WaiverRequest } from '@gradeon/contracts';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
@@ -16,13 +16,25 @@ export class FeesService {
   ) {}
 
   /** Money for the month of the latest school day: what fell due, what came in, and what is late. */
-  async summary(t: TenantCtx, count = 6): Promise<FeeSummary> {
+  /**
+   * Money for a period: this month (the default), the current term or the current academic year, from the school's calendar.
+   * The comparison is with the period just before it of the same length.
+   */
+  async summary(t: TenantCtx, count = 6, period: 'month' | 'term' | 'year' = 'month'): Promise<FeeSummary> {
     const OFF_DAYS = await this.settings.offDays(t);
     const today = istToday();
     const last = latestSchoolDay(today, OFF_DAYS);
-    const monthStart = `${last.slice(0, 7)}-01`;
-    const nextMonth = addDays(monthStart, 32).slice(0, 7) + '-01';
-    const prevStart = addDays(monthStart, -1).slice(0, 7) + '-01';
+    let monthStart = `${last.slice(0, 7)}-01`;
+    let nextMonth = addDays(monthStart, 32).slice(0, 7) + '-01';
+    let label = MONTHS[Number(last.slice(5, 7)) - 1]!;
+    if (period !== 'month') {
+      const r = (await t.pool.query<{ name: string; s: string; e: string }>(period === 'term'
+        ? 'select name, starts_on::text s, ends_on::text e from terms where starts_on <= $1 and ends_on >= $1 order by starts_on desc limit 1'
+        : 'select label name, starts_on::text s, ends_on::text e from academic_years where starts_on <= $1 and ends_on >= $1 order by starts_on desc limit 1', [today])).rows[0];
+      if (r) { monthStart = r.s; nextMonth = addDays(r.e, 1); label = r.name; }
+    }
+    const span = Math.max(1, Math.round((Date.parse(nextMonth) - Date.parse(monthStart)) / 86_400_000));
+    const prevStart = period === 'month' ? addDays(monthStart, -1).slice(0, 7) + '-01' : addDays(monthStart, -span);
     const [byHead, totals, daily, prev, target, headList] = await Promise.all([
       t.pool.query<{ head: string; due: string; collected: string }>(
         `select i.head, coalesce(sum(i.amount - i.waived_amount),0) due,
@@ -56,12 +68,60 @@ export class FeesService {
     const collected = Number(tt.collected);
     const prevCollected = Number(prev.rows[0]!.collected);
     return {
-      monthLabel: MONTHS[Number(last.slice(5, 7)) - 1]!, due, collected, pending: Number(tt.pending), overdue: Number(tt.overdue), overdueFamilies: Number(tt.fam),
+      monthLabel: label, due, collected, pending: Number(tt.pending), overdue: Number(tt.overdue), overdueFamilies: Number(tt.fam),
       pct: due ? Math.round((collected / due) * 100) : 0, collectedDelta: prevCollected ? Math.round(((collected - prevCollected) / prevCollected) * 1000) / 10 : 0,
       byHead: heads,
       daily: days.map((d) => ({ date: d, label: dayName(d, true), full: `${dayName(d)} ${dayMonth(d)}${d === last ? ' · today' : ''}`, amount: amounts.get(d) ?? 0, isToday: d === last })),
       dailyTarget: target,
     };
+  }
+
+  async invoice(t: TenantCtx, id: string): Promise<InvoiceDetail> {
+    const i = (await t.pool.query<{ id: string; student_id: string; title: string; amount: number; waived_amount: number; due_on: string; head: string; name: string; class_name: string; head_name: string | null }>(
+      `select i.id, i.student_id, i.title, i.amount, i.waived_amount, i.due_on::text, i.head, s.name, c.name class_name, h.name head_name
+       from fee_invoices i join students s on s.id = i.student_id join classes c on c.id = s.class_id left join fee_heads h on h.key = i.head where i.id = $1`, [id])).rows[0];
+    if (!i) throw notFound('That invoice');
+    const pays = (await t.pool.query<{ id: string; receipt_no: string; amount: number; refunded: number; method: string; paid_on: string; cancelled_at: Date | null; cancel_reason: string }>(
+      'select id, receipt_no, amount, refunded, method, paid_on::text, cancelled_at, cancel_reason from payments where invoice_id = $1 order by paid_on, receipt_no', [id])).rows;
+    const pending = (await t.pool.query<{ id: string; title: string }>(
+      "select id, title from approvals where status = 'pending' and ((kind = 'fee_waiver' and payload->>'invoiceId' = $1) or (kind = 'receipt_cancel' and payload->>'invoiceId' = $1)) limit 1", [id])).rows[0] ?? null;
+    const paid = pays.reduce((a, p) => a + p.amount - p.refunded, 0);
+    const outstanding = Math.max(0, i.amount - i.waived_amount - paid);
+    return {
+      id: i.id, studentId: i.student_id, title: i.title, amount: i.amount, paid, dueOn: i.due_on, status: outstanding === 0 ? 'paid' : i.due_on < istToday() ? 'overdue' : paid ? 'partial' : 'due',
+      studentName: i.name, className: i.class_name, head: i.head, headName: i.head_name ?? i.head, waived: i.waived_amount, outstanding,
+      payments: pays.map((p) => ({ id: p.id, receiptNo: p.receipt_no, amount: p.amount, refunded: p.refunded, method: p.method, paidOn: p.paid_on, cancelled: !!p.cancelled_at, cancelReason: p.cancel_reason })),
+      pending,
+    };
+  }
+
+  /** Asks for part (or, to cancel it, all that is left) of an invoice to be waived; someone else with fees.waive decides. */
+  async requestWaiver(t: TenantCtx, user: { id: string; name: string }, id: string, b: WaiverRequest): Promise<InvoiceDetail> {
+    const inv = await this.invoice(t, id);
+    if (inv.pending) throw new ApiError('conflict', 'A request for this invoice is already waiting in Approvals.');
+    const amount = b.cancel ? inv.outstanding : b.amount;
+    if (amount <= 0) throw new ApiError('conflict', 'Nothing is left to waive on this invoice.');
+    if (amount > inv.outstanding) throw new ApiError('validation', `At most ${inr(inv.outstanding)} is left to pay.`, { fields: { amount: `At most ${inr(inv.outstanding)}.` } });
+    await t.pool.query("insert into approvals (id, kind, title, subtitle, requester_name, requested_by, subject_ref, payload) values ($1,'fee_waiver',$2,$3,$4,$5,$6,$7)",
+      [newId('apr'), b.cancel ? `Cancel ${inv.title} for ${inv.studentName}` : `Waive ₹${inr(amount)} of ${inv.title} for ${inv.studentName}`, b.reason, user.name, user.id, inv.studentId,
+        JSON.stringify({ invoiceId: id, amount, cancel: b.cancel, reason: b.reason })]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: b.cancel ? 'fee.cancel_asked' : 'fee.waiver_asked', entity: 'invoice', entityId: id, detail: { amount } });
+    return this.invoice(t, id);
+  }
+
+  /** Asks for a desk receipt to be cancelled (recorded by mistake); someone else who may refund decides. */
+  async requestReceiptCancel(t: TenantCtx, user: { id: string; name: string }, paymentId: string, b: ReceiptCancel): Promise<InvoiceDetail> {
+    const p = (await t.pool.query<{ invoice_id: string; receipt_no: string; amount: number; cancelled_at: Date | null; online: boolean }>(
+      "select invoice_id, receipt_no, amount, cancelled_at, (method = 'online') online from payments where id = $1", [paymentId])).rows[0];
+    if (!p) throw notFound('That receipt');
+    if (p.cancelled_at) throw new ApiError('conflict', 'That receipt is already cancelled.');
+    if (p.online) throw new ApiError('conflict', 'An online payment is refunded from Online payments, not cancelled.');
+    const inv = await this.invoice(t, p.invoice_id);
+    if (inv.pending) throw new ApiError('conflict', 'A request for this invoice is already waiting in Approvals.');
+    await t.pool.query("insert into approvals (id, kind, title, subtitle, requester_name, requested_by, subject_ref, payload) values ($1,'receipt_cancel',$2,$3,$4,$5,$6,$7)",
+      [newId('apr'), `Cancel receipt ${p.receipt_no} (₹${inr(p.amount)}) for ${inv.studentName}`, b.reason, user.name, user.id, inv.studentId, JSON.stringify({ paymentId, invoiceId: p.invoice_id, reason: b.reason })]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'receipt.cancel_asked', entity: 'payment', entityId: paymentId });
+    return this.invoice(t, p.invoice_id);
   }
 
   /** The school's fee heads, in its order. */
@@ -220,7 +280,14 @@ export class FeesService {
     return `${n} late fines at ${pct}%.`;
   }
 
-  async remind(t: TenantCtx, user: { id: string; name: string }, ids: string[]): Promise<{ sent: number }> {
+  async remind(t: TenantCtx, user: { id: string; name: string }, ids: string[] | 'overdue'): Promise<{ sent: number }> {
+    // "Every overdue family": all of them, not only the ones a page happens to show.
+    if (ids === 'overdue') {
+      ids = (await t.pool.query<{ id: string }>(
+        `with paid as (select invoice_id, sum(amount - refunded) p from payments group by invoice_id)
+         select distinct i.student_id id from fee_invoices i left join paid on paid.invoice_id = i.id join students s on s.id = i.student_id and s.status = 'active'
+         where i.due_on < $1 and i.amount - i.waived_amount - coalesce(paid.p, 0) > 0`, [istToday()])).rows.map((r) => r.id);
+    }
     const { rows } = await t.pool.query<{ phone: string | null; name: string }>(
       `select g.phone, s.name from students s join student_guardians sg on sg.student_id = s.id and sg.is_primary join guardians g on g.id = sg.guardian_id where s.id = any($1)`, [ids]);
     const list = rows.filter((r) => r.phone).map((r) => ({ to: r.phone!, vars: { student: r.name } }));

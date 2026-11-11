@@ -7,6 +7,7 @@ import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { useSetting } from '../../app/kit';
 import { TimetableView } from './timetable.view';
+import { ChangeDialog, PlaceDialog, WeekDialog } from './TimetableTools';
 
 const VIEWS = ['Week', 'Day', 'List'];
 const WEEK = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 } as const;
@@ -28,6 +29,7 @@ export function TimetablePage() {
   const DAYS = (Object.entries(WEEK) as [string, number][]).filter(([k]) => !off.includes(k)).map(([, n]) => n);
   const { toast, say } = useToast();
   const [chooser, setChooser] = useState(false);
+  const [tool, setTool] = useState<'place' | 'change' | 'week' | null>(null);
   useEffect(() => { const off = () => setClsOpen(false); document.addEventListener('click', off); return () => document.removeEventListener('click', off); }, []);
 
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
@@ -144,14 +146,21 @@ export function TimetablePage() {
       bad: selBad, fixedNow, fine: !!cur && !selBad && !fixedNow, other: clash ? clash.classNames.filter((n) => n !== data.className).join(', ') || 'another class' : '',
       suggest: clash?.suggestion ? clash.suggestion.teacherName.split(' ')[0] : null,
     },
-    canEdit,
+    canEdit, canPublish: app.user.permissions.includes('timetable.publish'),
+    openWeek: () => setTool('week'), print: () => window.print(),
+    periodTools: canEdit && curDef?.kind === 'period' ? (
+      <button className="btn sm" onClick={() => setTool(cur ? 'change' : 'place')}>{cur ? 'Change subject or room' : 'Place a lesson'}</button>
+    ) : null,
     fix: () => { if (cur && clash?.suggestion) cover.mutate({ slotId: cur.id, teacherId: clash.suggestion.teacherId }, { onSuccess: () => say(`Clash fixed · ${clash.suggestion!.teacherName} covers ${dayName(dateOf(at.day), true)} ${periodDef(at.period)?.label}`) }); },
     change: () => setChooser(true),
     ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--c)' : 'var(--v)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '–',
     loads: top.map((l) => { const c = tintFor(l.name); return { n: l.name, s: l.subjects[0] ?? 'Teacher', ini: l.name.split(' ').map((w) => w[0]).slice(0, 2).join(''), bg: c.bg, fg: c.fg, v: l.periodsPerWeek, p: Math.round((l.periodsPerWeek / l.max) * 100), hot: l.periodsPerWeek > l.max * 0.9 ? 'hot' : '' }; }),
     unplaced: data.unplaced,
     toast,
-    dialog: chooser && cur ? <TeacherChooser slot={cur} onClose={() => setChooser(false)} onPick={(id) => { setChooser(false); app.api.timetable.patch(cur.id, { teacherId: id }).then(() => { say('Teacher changed. Publish to tell families.'); refresh(); }).catch((e) => say((e as Error).message)); }} /> : null,
+    dialog: tool === 'place' && curDef ? <PlaceDialog classId={classId} day={at.day} period={at.period} label={curDef.label} onClose={() => setTool(null)} onDone={(m) => { setTool(null); refresh(); say(m); }} />
+      : tool === 'change' && cur ? <ChangeDialog slot={cur} onClose={() => setTool(null)} onDone={(m) => { setTool(null); refresh(); say(m); }} />
+      : tool === 'week' ? <WeekDialog days={DAYS} onClose={() => setTool(null)} />
+      : chooser && cur ? <TeacherChooser slot={cur} onClose={() => setChooser(false)} onPick={(id) => { setChooser(false); app.api.timetable.patch(cur.id, { teacherId: id }).then(() => { say('Teacher changed. Publish to tell families.'); refresh(); }).catch((e) => say((e as Error).message)); }} /> : null,
   };
   return <TimetableView v={v} />;
 }

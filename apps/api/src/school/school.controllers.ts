@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
-  ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentPatch, GuardiansPut, StudentQuery,
-  type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type PeriodRoll, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeHead, type FeeSummary, type ImportResult, type InvoiceRow,
-  type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type GuardianRow, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type Paged,
+  ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, SlotCreate, WaiverRequest, ReceiptCancel, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentPatch, GuardiansPut, StudentQuery,
+  type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type PeriodRoll, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeHead, type FeeSummary, type ImportResult, type InvoiceRow, type InvoiceDetail,
+  type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type GuardianRow, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type WeekOf, type Paged,
 } from '@gradeon/contracts';
 import { MODULES, activeModules } from '@gradeon/config-engine';
 import { templateXlsx } from '@gradeon/db';
@@ -22,7 +22,7 @@ import { TimetableService } from './timetable.service.js';
 const DayQuery = z.object({ classId: z.string().min(1), date: IsoDate });
 const InvoiceQuery = z.object({ studentId: z.string().min(1) });
 const NoticeEdit = NoticeCreate.and(z.object({ tellAgain: z.boolean().default(false) }));
-const ListApprovals = z.object({ view: z.enum(['waiting', 'sent', 'decided']).default('waiting'), kind: z.enum(['leave', 'fee_waiver', 'admission', 'notice', 'attendance', 'photo']).optional() });
+const ListApprovals = z.object({ view: z.enum(['waiting', 'sent', 'decided']).default('waiting'), kind: z.enum(['leave', 'fee_waiver', 'admission', 'notice', 'attendance', 'photo', 'receipt_cancel']).optional() });
 const ClassQuery = z.object({ classId: z.string().min(1) });
 const DashQuery = z.object({ days: z.coerce.number().int().min(1).max(30).default(6) });
 const SearchQuery = z.object({ q: z.string().max(80).default('') });
@@ -164,8 +164,8 @@ export class FeesController {
   constructor(private readonly fees: FeesService) {}
 
   @Get('summary') @Require('fees.read')
-  summary(@Tenant() t: TenantCtx): Promise<FeeSummary> {
-    return this.fees.summary(t);
+  summary(@Tenant() t: TenantCtx, @Query(new ZodPipe(z.object({ period: z.enum(['month', 'term', 'year']).default('month') }))) q: { period: 'month' | 'term' | 'year' }): Promise<FeeSummary> {
+    return this.fees.summary(t, 6, q.period);
   }
 
   @Get('heads') @Require('fees.read')
@@ -183,6 +183,21 @@ export class FeesController {
     return this.fees.invoices(t, q.studentId);
   }
 
+  @Get('invoice/:id') @Require('fees.read')
+  invoice(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<InvoiceDetail> {
+    return this.fees.invoice(t, id);
+  }
+
+  @Post('invoice/:id/waive') @HttpCode(200) @Require('fees.collect')
+  waive(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(WaiverRequest)) body: WaiverRequest): Promise<InvoiceDetail> {
+    return this.fees.requestWaiver(t, u, id, body);
+  }
+
+  @Post('receipts/:id/cancel') @HttpCode(200) @Require('fees.collect')
+  cancelReceipt(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(ReceiptCancel)) body: ReceiptCancel): Promise<InvoiceDetail> {
+    return this.fees.requestReceiptCancel(t, u, id, body);
+  }
+
   @Post('payments') @HttpCode(200) @Require('fees.collect')
   async pay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PaymentCreate)) body: PaymentCreate): Promise<{ receiptNo: string; amount: number; outstanding: number }> {
     await this.fees.checkMethod(t, body.method);
@@ -190,8 +205,8 @@ export class FeesController {
   }
 
   @Post('reminders') @RequireModule('fees.reminders') @HttpCode(200) @Require('fees.read')
-  remind(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ ids: z.array(z.string()).min(1).max(500) }))) body: { ids: string[] }): Promise<{ sent: number }> {
-    return this.fees.remind(t, u, body.ids);
+  remind(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(z.object({ ids: z.array(z.string()).min(1).max(500).optional(), overdue: z.literal(true).optional() }).refine((b) => !!b.ids !== !!b.overdue, 'Name the students, or every overdue family'))) body: { ids?: string[]; overdue?: true }): Promise<{ sent: number }> {
+    return this.fees.remind(t, u, body.overdue ? 'overdue' : body.ids!);
   }
 }
 
@@ -267,6 +282,26 @@ export class TimetableController {
   @Get('teachers') @Require('timetable.read')
   teachers(@Tenant() t: TenantCtx, @Query(new ZodPipe(z.object({ slotId: z.string().min(1) }))) q: { slotId: string }): Promise<TeacherOption[]> {
     return this.tt.teachers(t, q.slotId);
+  }
+
+  @Get('week') @Require('timetable.read')
+  week(@Tenant() t: TenantCtx, @Query(new ZodPipe(z.object({ teacherId: z.string().optional(), room: z.string().max(20).optional() }).refine((q) => !!q.teacherId !== !!q.room, 'Name a teacher or a room'))) q: { teacherId?: string; room?: string }): Promise<WeekOf> {
+    return this.tt.weekOf(t, q);
+  }
+
+  @Get('rooms') @Require('timetable.read')
+  rooms(@Tenant() t: TenantCtx): Promise<string[]> {
+    return this.tt.rooms(t);
+  }
+
+  @Post('slots') @Require('timetable.edit')
+  place(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(SlotCreate)) body: SlotCreate): Promise<{ id: string }> {
+    return this.tt.createSlot(t, u, body);
+  }
+
+  @Delete('slots/:id') @HttpCode(204) @Require('timetable.edit')
+  async free(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<void> {
+    await this.tt.removeSlot(t, u, id);
   }
 
   @Patch('slots/:id') @HttpCode(204) @Require('timetable.edit')

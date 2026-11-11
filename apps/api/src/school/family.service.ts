@@ -615,13 +615,15 @@ export class FamilyService {
   async events(t: TenantCtx, user: AuthedUser) {
     const w = await this.who(t, user);
     const showGoing = await this.settings.value<boolean>(t, 'events.showGoing', false);
-    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: string; venue: string; note: string; audience: string; category: string; needs_rsvp: boolean; lat: number | null; lng: number | null; going: string }>(
-      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience, e.category, e.needs_rsvp, e.lat, e.lng,
+    const { rows } = await t.pool.query<{ id: string; title: string; starts_at: Date; ends_at: Date | null; kind: string; venue: string; note: string; audience: string; category: string; needs_rsvp: boolean; lat: number | null; lng: number | null; going: string; class_id: string | null }>(
+      `select e.id, e.title, e.starts_at, e.ends_at, e.kind, e.venue, e.note, e.audience, e.category, e.needs_rsvp, e.lat, e.lng, e.class_id,
          (select count(*) from event_rsvps r where r.event_id = e.id and r.status = 'going') going
        from events e where e.kind not in ('routine','cover') order by e.starts_at limit 150`);
+    // A class's own event reaches only the families (and students) of that class.
+    const classes = w.children.length ? (await t.pool.query<{ class_id: string }>('select distinct class_id from students where id = any($1)', [w.children])).rows.map((r) => r.class_id) : [];
     const mine = w.children.length ? await t.pool.query<{ event_id: string; student_id: string; status: string; adults: number }>('select event_id, student_id, status, adults from event_rsvps where student_id = any($1)', [w.children]) : { rows: [] as { event_id: string; student_id: string; status: string; adults: number }[] };
     const ist = (d: Date) => new Date(d.getTime() + 330 * 60_000).toISOString();
-    return rows.filter((e) => w.kind === 'staff' || e.audience !== 'staff').map((e) => {
+    return rows.filter((e) => w.kind === 'staff' || (e.audience !== 'staff' && (e.audience !== 'class' || classes.includes(e.class_id ?? '')))).map((e) => {
       const replies = mine.rows.filter((m) => m.event_id === e.id);
       return {
         id: e.id, title: e.title, description: e.note, date: ist(e.starts_at).slice(0, 10), time: ist(e.starts_at).slice(11, 16), endTime: e.ends_at ? ist(e.ends_at).slice(11, 16) : null,

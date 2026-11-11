@@ -285,7 +285,48 @@ describe('attendance and fees', () => {
   });
 });
 
+describe('an invoice', () => {
+  it('opens with its payments, and a waiver or a receipt cancellation waits for someone else in Approvals', async () => {
+    const list = (await h.call('GET', '/v1/fees/invoice-list?status=overdue&limit=5', { token })).json;
+    const id = list.items[0].id;
+    const inv = (await h.call('GET', `/v1/fees/invoice/${id}`, { token })).json;
+    expect(inv).toMatchObject({ id, outstanding: expect.any(Number), payments: expect.any(Array), pending: null });
+    expect((await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: inv.outstanding + 1, reason: 'Too much' } })).status).toBe(400);
+    const asked = await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: 100, reason: 'Sibling concession' } });
+    expect(asked.status).toBe(200);
+    expect(asked.json.pending.title).toMatch(/Waive ₹100/);
+    expect((await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: 50, reason: 'Again' } })).status).toBe(409);
+    const mine = (await h.call('GET', '/v1/approvals?view=sent&kind=fee_waiver', { token })).json.find((a: any) => a.title.includes('Waive ₹100'));
+    expect((await h.call('POST', `/v1/approvals/${mine.id}/decision`, { token, body: { decision: 'approve' } })).status).toBe(403);
+    expect((await h.call('GET', '/v1/fees/receipts?limit=5', { token })).json).toMatchObject({ items: expect.any(Array), total: expect.any(Number) });
+  });
+});
+
+describe('the library desk', () => {
+  it('lends a book, renews it, and takes it back lost with the cost on the family’s fees; a cancelled reservation says why', async () => {
+    const view = (await h.call('GET', '/v1/library', { token })).json;
+    const book = view.books.find((b: any) => b.copies - b.out > 1);
+    const kabir = (await h.call('GET', '/v1/students?query=Kabir', { token })).json.items[0].id;
+    const loan = await h.call('POST', '/v1/library/loans', { token, body: { bookId: book.id, studentId: kabir } });
+    expect(loan.status).toBe(200);
+    const renewed = await h.call('POST', `/v1/library/loans/${loan.json.id}/renew`, { token });
+    expect(renewed.json.dueOn > loan.json.dueOn).toBe(true);
+    expect((await h.call('POST', `/v1/library/loans/${loan.json.id}/return`, { token, body: { outcome: 'lost', charge: 300, fine: 'waive', reason: '' } })).status).toBe(400);
+    const back = await h.call('POST', `/v1/library/loans/${loan.json.id}/return`, { token, body: { outcome: 'lost', charge: 300, fine: 'bill' } });
+    expect(back.json).toEqual({ fine: 300, billed: true });
+    expect((await h.call('GET', '/v1/library', { token })).json.books.find((b: any) => b.id === book.id).copies).toBe(book.copies - 1);
+    const inv = (await h.call('GET', `/v1/fees/invoice-list?query=${encodeURIComponent('Lost book')}`, { token })).json;
+    expect(inv.items.some((i: any) => i.amount === 300)).toBe(true);
+    const r = view.reservations[0];
+    if (r) {
+      expect((await h.call('POST', `/v1/library/reservations/${r.id}/cancel`, { token, body: { reason: '' } })).status).toBe(400);
+      expect((await h.call('POST', `/v1/library/reservations/${r.id}/cancel`, { token, body: { reason: 'The book was lost' } })).status).toBe(204);
+    }
+  });
+});
+
 describe('timetable', () => {
+
   it('shows the clash, fixes it with a cover, then publishes', async () => {
     const v = (await h.call('GET', '/v1/timetable?classId=cls_8a', { token })).json;
     expect(v.clashes).toHaveLength(1);
@@ -311,7 +352,19 @@ describe('timetable', () => {
     const r = await h.call('POST', '/v1/timetable/cover', { token, body: { slotId: slot.id, teacherId: other.teacherId } });
     expect(r.status).toBe(409);
   });
-});
+  it('frees a period and places a lesson in it, refusing a busy teacher, and shows a teacher’s and a room’s week', async () => {
+    const v = (await h.call('GET', '/v1/timetable?classId=cls_8a', { token })).json;
+    const slot = v.slots.find((s: any) => s.day === 1 && s.room && !s.substituteId);
+    expect((await h.call('DELETE', `/v1/timetable/slots/${slot.id}`, { token })).status).toBe(204);
+    const placed = await h.call('POST', '/v1/timetable/slots', { token, body: { classId: 'cls_8a', day: slot.day, period: slot.period, subjectId: slot.subjectId, teacherId: slot.teacherId, room: slot.room } });
+    expect(placed.status).toBe(201);
+    expect((await h.call('POST', '/v1/timetable/slots', { token, body: { classId: 'cls_8a', day: slot.day, period: slot.period, subjectId: slot.subjectId, teacherId: slot.teacherId } })).status).toBe(409);
+    const week = (await h.call('GET', `/v1/timetable/week?teacherId=${slot.teacherId}`, { token })).json;
+    expect(week.slots.some((s: any) => s.day === slot.day && s.period === slot.period && s.className)).toBe(true);
+    const room = (await h.call('GET', `/v1/timetable/week?room=${encodeURIComponent(slot.room)}`, { token })).json;
+    expect(room.title).toBe(`Room ${slot.room}`);
+    expect((await h.call('GET', '/v1/timetable/rooms', { token })).json).toContain(slot.room);
+  });});
 
 describe('settings', () => {
   it('shows the school its setup, and gives the school no way to change it (only the console can)', async () => {

@@ -104,8 +104,12 @@ export const SchoolSettingsSchema = z.object({
   'leave.reasons': z.array(z.string().trim().min(1).max(40)).min(1).max(12).default(['Unwell', 'Family function', 'Travel', 'Appointment', 'Other']),
   // Families see how many classmates have handed in; who may hand in from the app.
   'homework.showClassProgress': z.boolean().default(false),
+  'homework.defaultDueDays': z.number().int().min(1).max(30).default(2),
+  'homework.defaultMarks': z.number().int().min(1).max(100).default(20),
   'homework.handedInBy': z.enum(['parent', 'student', 'either']).default('either'),
   // Results: class rank shown to families; the grading scale (highest first) and the pass mark.
+  'exams.defaultMaxMarks': z.number().int().min(1).max(200).default(100),
+  'exams.leadDays': z.number().int().min(0).max(120).default(7),
   'results.showRank': z.boolean().default(false),
   'grading.scale': z.array(z.object({ grade: z.string().min(1).max(4), minPct: z.number().min(0).max(100) })).min(1).max(12).default([
     { grade: 'A1', minPct: 91 }, { grade: 'A2', minPct: 81 }, { grade: 'B1', minPct: 71 }, { grade: 'B2', minPct: 61 }, { grade: 'C1', minPct: 51 },

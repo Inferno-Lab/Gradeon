@@ -106,3 +106,13 @@
 .nest .lnk{border:0;background:none;padding:0;font:700 12px var(--fb);color:var(--vD);cursor:pointer}
 .nest .lnk:hover{text-decoration:underline}
 .nest .lnk:disabled{opacity:.4;cursor:not-allowed;text-decoration:none}
+
+/* Printing: the page's content only, without the menu, the dock, buttons or the search. An open dialog (a week to print) prints alone. */
+@media print {
+  .sb, .dock, .scrim, .tst, button, .btn, [role="search"] { display: none !important; }
+  .fr, .app, .mn { margin: 0 !important; padding: 0 !important; min-height: 0 !important; box-shadow: none !important; }
+  body:has(.mod) .app > :not(.mod):not(:has(.mod)) { display: none !important; }
+  body:has(.mod) .mn { display: none !important; }
+  .mod { position: static !important; inset: auto !important; }
+  .dlg { box-shadow: none !important; max-height: none !important; overflow: visible !important; width: auto !important; }
+}

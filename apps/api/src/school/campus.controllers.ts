@@ -2,8 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Res }
 import {
   AlbumInput, BookInput, BusPosition, TripDelay, TripMark, TripStart, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
   type AlbumRow, type BookRow, type BusRouteRow, type FileRow, type FileUpload, type LibraryView, type LoanRow, type OnlinePaymentRow, type PhotoRow, type PromotionPreview,
-  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS,
-} from '@gradeon/contracts';
+  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS, GiveBack, CancelReservation } from '@gradeon/contracts';
 import { ApiError, ZodPipe, forbidden } from '@gradeon/nest-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
@@ -24,7 +23,9 @@ const sendPdf = (reply: FastifyReply, doc: { name: string; data: Buffer }) => {
   void reply.type('application/pdf').header('content-disposition', `inline; filename="${doc.name.replace(/"/g, '')}"`).send(doc.data);
 };
 const ListFiles = z.object({ kind: z.enum(FILE_KINDS), owner: z.string().min(1).max(120) });
-const Decide = z.object({ approve: z.boolean() });
+// A declined refund always says why.
+const RefundDecide = z.object({ approve: z.boolean(), note: z.string().trim().max(300).default('') }).refine((b) => b.approve || b.note.length >= 3, { message: 'Say why', path: ['note'] });
+const Sorted = z.object({ note: z.string().trim().min(3, 'Say what was done').max(300) });
 const Search = z.object({ q: z.string().max(80).default('') });
 
 /** Uploads and downloads for staff and families alike: what each may touch is checked per kind (FilesService). */
@@ -102,15 +103,15 @@ export class FeesOnlineController {
   }
 
   @Post('refunds/:id/decide') @RequireModule('fees.refunds') @HttpCode(200) @Require('fees.refund')
-  decide(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Decide)) b: z.infer<typeof Decide>): Promise<RefundRow> {
-    return this.payments.decideRefund(t, u, id, b.approve);
+  decide(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(RefundDecide)) b: z.infer<typeof RefundDecide>): Promise<RefundRow> {
+    return this.payments.decideRefund(t, u, id, b.approve, b.note);
   }
 
   @Get('reconciliation') @RequireModule('fees.onlinePayment') @Require('fees.read')
   recon(@Tenant() t: TenantCtx): Promise<ReconRow[]> { return this.payments.reconciliation(t); }
 
   @Post('reconciliation/:id/resolve') @RequireModule('fees.onlinePayment') @HttpCode(204) @Require('fees.collect')
-  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<void> { return this.payments.resolveRecon(t, u, id); }
+  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Sorted)) b: z.infer<typeof Sorted>): Promise<void> { return this.payments.resolveRecon(t, u, id, b.note); }
 
   @Get('payments/:id/receipt.pdf') @Require('fees.read')
   async receipt(@Tenant() t: TenantCtx, @Param('id') id: string, @Res() reply: FastifyReply): Promise<void> { sendPdf(reply, await this.docs.receipt(t, id, null)); }
@@ -148,10 +149,13 @@ export class LibraryController {
   issue(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(IssueInput)) b: IssueInput): Promise<LoanRow> { return this.lib.issue(t, u, b); }
 
   @Post('loans/:id/return') @HttpCode(200) @Require('library.write')
-  giveBack(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<{ fine: number }> { return this.lib.giveBack(t, u, id); }
+  giveBack(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(GiveBack)) b: GiveBack): Promise<{ fine: number; billed: boolean }> { return this.lib.giveBack(t, u, id, b); }
 
-  @Delete('reservations/:id') @HttpCode(204) @Require('library.write')
-  cancel(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<void> { return this.lib.cancelReservation(t, id, null); }
+  @Post('loans/:id/renew') @HttpCode(200) @Require('library.write')
+  renew(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<LoanRow> { return this.lib.renewAtDesk(t, u, id); }
+
+  @Post('reservations/:id/cancel') @HttpCode(204) @Require('library.write')
+  cancel(@Tenant() t: TenantCtx, @Param('id') id: string, @Body(new ZodPipe(CancelReservation)) b: { reason: string }): Promise<void> { return this.lib.cancelReservation(t, id, null, b.reason); }
 }
 
 @Controller('v1/transport')
@@ -161,6 +165,17 @@ export class TransportController {
 
   @Get() @Require('transport.read')
   view(@Tenant() t: TenantCtx): Promise<TransportView> { return this.tr.view(t); }
+
+  @Get('places') @Require('transport.write')
+  places(@Tenant() t: TenantCtx, @Query(new ZodPipe(z.object({ q: z.string().trim().min(3).max(120) }))) q: { q: string }) { return this.tr.places(t, q.q); }
+
+  @Get('routes/:id/map') @Require('transport.read')
+  routeMap(@Tenant() t: TenantCtx, @Param('id') id: string) { return this.tr.routeMap(t, id); }
+
+  @Post('routes/:id/bill') @HttpCode(200) @RequireModule('fees') @Require('fees.collect')
+  bill(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(z.object({ title: z.string().trim().min(3, 'Name the fee').max(80), dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick the due date') }))) b: { title: string; dueOn: string }) {
+    return this.tr.billRiders(t, u, id, b);
+  }
 
   @Post('routes') @RequireModule('transport.routes') @HttpCode(200) @Require('transport.write')
   add(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(BusRouteInput)) b: BusRouteInput): Promise<BusRouteRow> { return this.tr.saveRoute(t, u, b); }

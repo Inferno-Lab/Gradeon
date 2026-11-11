@@ -133,7 +133,7 @@ export class PaymentsService implements OnModuleInit {
       `select r.*, p.receipt_no, s.name student, ru.name requested_name, au.name approved_name from refunds r join payments p on p.id = r.payment_id join fee_invoices i on i.id = p.invoice_id
        join students s on s.id = i.student_id left join users ru on ru.id = r.requested_by left join users au on au.id = r.approved_by order by r.created_at desc limit 100`);
     return rows.map((r) => ({ id: r.id, paymentId: r.payment_id, receiptNo: r.receipt_no, student: r.student, amount: r.amount, reason: r.reason, status: r.status,
-      requestedBy: r.requested_name, approvedBy: r.approved_name, error: r.error, createdAt: r.created_at.toISOString() }));
+      requestedBy: r.requested_name, approvedBy: r.approved_name, error: r.error, createdAt: r.created_at.toISOString(), decisionNote: r.decision_note ?? '' }));
   }
 
   /** Asks for a refund on an online payment. Above the school's limit it waits for a second person with the same permission. */
@@ -151,13 +151,13 @@ export class PaymentsService implements OnModuleInit {
     return (await this.refunds(t)).find((r) => r.id === id)!;
   }
 
-  async decideRefund(t: TenantCtx, user: AuthedUser, id: string, yes: boolean): Promise<RefundRow> {
+  async decideRefund(t: TenantCtx, user: AuthedUser, id: string, yes: boolean, note = ''): Promise<RefundRow> {
     const r = (await t.pool.query<{ status: string; requested_by: string | null }>('select status, requested_by from refunds where id = $1', [id])).rows[0];
     if (!r) throw notFound('That refund');
     if (r.status !== 'requested') throw new ApiError('conflict', 'This refund is not waiting for approval.');
     if (r.requested_by === user.id) throw forbidden('A second person has to approve this refund.');
     if (!yes) {
-      await t.pool.query("update refunds set status = 'rejected', approved_by = $2, done_at = now() where id = $1", [id, user.id]);
+      await t.pool.query("update refunds set status = 'rejected', approved_by = $2, done_at = now(), decision_note = $3 where id = $1", [id, user.id, note]);
       await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'refund.rejected', entity: 'refund', entityId: id });
     } else {
       await this.send(t, user, id);
@@ -186,13 +186,13 @@ export class PaymentsService implements OnModuleInit {
   // ── Reconciliation ──────────────────────────────────────────────────────────
 
   async reconciliation(t: TenantCtx): Promise<ReconRow[]> {
-    const { rows } = await t.pool.query('select id, day::text as day, provider_payment_id, provider_amount, receipt_amount, problem, resolved_at from reconciliation order by 2 desc, created_at desc limit 200');
+    const { rows } = await t.pool.query('select id, day::text as day, provider_payment_id, provider_amount, receipt_amount, problem, resolved_at, note from reconciliation order by 2 desc, created_at desc limit 200');
     return rows.map((r) => ({ id: r.id, day: r.day, providerPaymentId: r.provider_payment_id, providerAmount: r.provider_amount,
-      receiptAmount: r.receipt_amount, problem: r.problem, resolved: !!r.resolved_at }));
+      receiptAmount: r.receipt_amount, problem: r.problem, resolved: !!r.resolved_at, note: r.note ?? '' }));
   }
 
-  async resolveRecon(t: TenantCtx, user: AuthedUser, id: string): Promise<void> {
-    const { rowCount } = await t.pool.query('update reconciliation set resolved_at = now() where id = $1 and resolved_at is null', [id]);
+  async resolveRecon(t: TenantCtx, user: AuthedUser, id: string, note: string): Promise<void> {
+    const { rowCount } = await t.pool.query('update reconciliation set resolved_at = now(), note = $2 where id = $1 and resolved_at is null', [id, note]);
     if (!rowCount) throw notFound('That finding');
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'reconciliation.resolved', entity: 'reconciliation', entityId: id });
   }

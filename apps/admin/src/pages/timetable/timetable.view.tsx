@@ -24,12 +24,16 @@ export function TimetableView({ v }: { v: any }) {
           <span className="grow"></span>
           <Select compact aria-label="Class" value={String(Math.max(0, v.classes.findIndex((c: any) => c.on)))} onChange={(i) => v.classes[Number(i)]?.pick()} options={v.classes.map((c: any, i: number) => ({ value: String(i), label: c.n }))} />
           <Segmented label="Timetable view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n }))} />
+          <button className="btn" onClick={v.openWeek}>A teacher’s or room’s week</button>
+          <button className="btn" onClick={v.print}>Print</button>
+          {v.canPublish && (
           <button className="btn pri" onClick={v.publish}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M4 12l16-8-6 16-3-7z"></path>
             </svg>
             Publish
           </button>
+          )}
         </header>
         <div className="wk rise" style={{ "--d": ".05s" } as CSSProperties}>
           <div className="wkp">
@@ -208,6 +212,7 @@ export function TimetableView({ v }: { v: any }) {
                     )}
                   </>
                 )}
+                {v.periodTools}
               </div>
             </section>
             <section className="card" aria-labelledby="load">

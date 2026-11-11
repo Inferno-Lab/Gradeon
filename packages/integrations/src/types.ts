@@ -64,6 +64,8 @@ export interface StorageAdapter {
 export interface MapsAdapter {
   eta(c: Ctx, from: [number, number], to: [number, number]): Promise<{ minutes: number; meters: number }>;
   staticMap(c: Ctx, points: [number, number][]): Promise<string | null>;
+  /** Places matching what someone typed (a bus stop's name or address), best first. */
+  geocode(c: Ctx, query: string): Promise<{ label: string; lat: number; lng: number }[]>;
 }
 
 export interface InboundRequest { headers: Record<string, string | string[] | undefined>; raw: Buffer; query: Record<string, string> }

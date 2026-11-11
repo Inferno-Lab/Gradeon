@@ -33,8 +33,8 @@ export class DocumentsService {
 
   /** A receipt for one payment; `students` limits it to a family's own children. */
   async receipt(t: TenantCtx, paymentId: string, students: string[] | null): Promise<{ name: string; data: Buffer }> {
-    const p = (await t.pool.query<{ receipt_no: string; amount: number; refunded: number; method: string; reference: string | null; paid_on: string; title: string; student: string; student_id: string; admission_no: string; class: string; tax: Record<string, any> | null }>(
-      `select p.receipt_no, p.amount, p.refunded, p.method, p.reference, p.paid_on::text, i.title, s.name student, s.id student_id, s.admission_no, c.name class, p.tax
+    const p = (await t.pool.query<{ receipt_no: string; amount: number; refunded: number; method: string; reference: string | null; paid_on: string; title: string; student: string; student_id: string; admission_no: string; class: string; tax: Record<string, any> | null; cancelled_at: Date | null; cancel_reason: string }>(
+      `select p.receipt_no, p.amount, p.refunded, p.method, p.reference, p.paid_on::text, i.title, s.name student, s.id student_id, s.admission_no, c.name class, p.tax, p.cancelled_at, p.cancel_reason
        from payments p join fee_invoices i on i.id = p.invoice_id join students s on s.id = i.student_id join classes c on c.id = s.class_id where p.id = $1`, [paymentId])).rows[0];
     if (!p || (students && !students.includes(p.student_id))) throw notFound('That receipt');
     const lines: PdfLine[] = [
@@ -51,7 +51,8 @@ export class DocumentsService {
       lines.push({ text: `CGST ${p.tax.ratePct / 2}%`, right: rupees(p.tax.cgst), size: 10 }, { text: `SGST ${p.tax.ratePct / 2}%`, right: rupees(p.tax.sgst), size: 10 });
       lines.push({ text: `GSTIN ${p.tax.gstin}`, size: 10 });
     }
-    if (p.refunded) lines.push({ text: 'Refunded', right: `- ${rupees(p.refunded)}`, size: 10 });
+    if (p.cancelled_at) lines.push({ text: `Cancelled on ${date(p.cancelled_at.toISOString().slice(0, 10))}: ${p.cancel_reason}`, bold: true, size: 10 });
+    else if (p.refunded) lines.push({ text: 'Refunded', right: `- ${rupees(p.refunded)}`, size: 10 });
     lines.push({ text: '', rule: true, gap: 18 }, { text: 'Paid by', right: `${p.method.toUpperCase()}${p.reference ? ` · ${p.reference}` : ''}`, size: 10 },
       { text: 'This receipt was made by Gradeon and needs no signature.', size: 9, gap: 40 });
     return { name: `${p.receipt_no}.pdf`, data: await pdf(lines, { logo: await this.files.logoBytes(t) }) };
