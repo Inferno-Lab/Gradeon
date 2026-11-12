@@ -35,10 +35,10 @@ class PostNoticeView extends GetView<PostNoticeController> {
         leading: const BackGlass(close: true),
         actions: [Text('teacher.preview_live'.tr, style: AppText.capB(color: c.ink3))],
         topPadding: MediaQuery.paddingOf(context).top + 56,
+        edgeBar: true,
         bottomBar: TeacherActionBar(
           text: Text(
             'teacher.notified'.trn(controller.reach),
-            style: AppText.capB(color: c.ink3),
           ),
           action: 'teacher.post',
           loading: controller.saving.value,

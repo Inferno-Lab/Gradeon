@@ -5,14 +5,12 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/theme_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -70,43 +68,24 @@ class _FeesViewState extends State<FeesView> {
         topPadding: standalone ? null : MediaQuery.paddingOf(context).top + 14,
         onRefresh: controller.load,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: PageTitle(
+          // As the ParentFees board: what is due, in the school's bright colour on its deep one, with the Pay button.
+          Builder(
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageTitle(
                   'fees.title',
                   subtitle: account == null || student == null
                       ? null
                       : '${account.academicYear.replaceAll('-', '–')} · ${student.name.split(' ').first}${cls == null ? '' : ' · ${cls.name} ${cls.section}'}',
                 ),
-              ),
-              if (account != null && account.receipts.isNotEmpty)
-                GlassPress(
-                  onTap: () => unawaited(_receipts(context, account)),
-                  child: Glass(
-                    height: 44,
-                    width: 116,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(PhosphorIconsRegular.receipt, size: 15, color: context.app.ink),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'fees.receipts'.tr,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.chip(color: context.app.ink, height: 1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+                if (account != null && account.installments.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _Due(controller: controller),
+                ],
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
           ViewStateView(
             state: state,
             onRetry: controller.load,
@@ -122,46 +101,57 @@ class _FeesViewState extends State<FeesView> {
       );
     });
   }
-
-  Future<void> _receipts(BuildContext context, FeeAccount account) => showSheet<void>(
-    SheetBody(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          Text('fees.receipts'.tr, style: context.type.h2),
-          const SizedBox(height: 8),
-          for (final r in account.receipts)
-            Pressable(
-              onTap: () {
-                Get.back<void>();
-                unawaited(Get.toNamed<void>(AppRoutes.receipt, arguments: receiptArgs(r, controller)));
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(r.title, style: context.type.t),
-                          Text('${DateFormat('d MMM y').format(r.paidOn)} · ${r.reference}', style: context.type.cap),
-                        ],
-                      ),
-                    ),
-                    Text(Formatters.inr(r.amount), style: context.type.t),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    ),
-  );
 }
 
+/// The header's figure: the next instalment due, or the year paid in full.
+class _Due extends StatelessWidget {
+  const _Due({required this.controller});
+
+  final FeesController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.app;
+    final next = controller.next;
+    if (next == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('fees.all_paid'.tr, style: context.type.capB),
+          const SizedBox(height: 4),
+          Text(Formatters.inr(controller.paid), style: context.type.dl.copyWith(color: c.bright)),
+        ],
+      );
+    }
+    final overdue = moneyStatus(next) == MoneyStatus.overdue;
+    final days = Formatters.daysUntil(next.dueDate);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          (overdue ? 'fees.was_due' : 'fees.due_on').trp({'date': DateFormat('d MMMM').format(next.dueDate)}),
+          style: context.type.capB,
+        ),
+        const SizedBox(height: 4),
+        Text(Formatters.inr(next.amount), style: context.type.dl.copyWith(color: c.bright)),
+        const SizedBox(height: 4),
+        Text(
+          '${next.title} · ${overdue ? 'fees.days_late'.trn(-days) : 'fees.due_in'.trn(days)}',
+          style: context.type.s.copyWith(color: c.ink2),
+        ),
+        if (SchoolConfig.allows('fees.onlinePayment')) ...[
+          const SizedBox(height: 16),
+          Btn(
+            'fees.pay_amount'.trp({'amount': Formatters.inr(next.amount)}),
+            kind: BtnKind.bright,
+            expand: true,
+            onPressed: () => unawaited(openPaySheet(next)),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
 class _Body extends StatelessWidget {
   const _Body({required this.controller, required this.account});
@@ -173,103 +163,85 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final next = controller.next;
-    final total = controller.total;
-    final paid = controller.paid;
     final theme = Get.find<ThemeService>();
     final items = [...account.installments]..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    final receipts = [...account.receipts]..sort((a, b) => b.paidOn.compareTo(a.paidOn));
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Rise(child: next == null ? const _AllPaid() : _DueCard(item: next)),
-        const SizedBox(height: 16),
         Rise(
-          index: 1,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: '${Formatters.inr(paid)} ',
-                    children: [
-                      TextSpan(
-                        text: 'fees.of_paid'.trp({'total': Formatters.inr(total)}),
-                        style: context.type.cap,
-                      ),
-                    ],
-                  ),
-                  style: context.type.t,
-                ),
-              ),
-              Text('${total == 0 ? 0 : (paid / total * 100).round()}%', style: context.type.cap),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Rise(
-          index: 1,
-          child: SizedBox(
-            height: 12,
-            child: Row(
+          child: _Card(
+            title: 'fees.plan',
+            child: Column(
               children: [
-                for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 2),
-                  Expanded(
-                    flex: items[i].amount,
-                    child: _Segment(item: items[i], first: i == 0, last: i == items.length - 1),
-                  ),
-                ],
+                for (final (i, item) in items.indexed) _PlanRow(item: item, first: i == 0),
+                _Kv(
+                  label: Text('fees.total'.tr, style: context.type.t),
+                  value: Text(Formatters.inr(controller.total), style: context.type.h3),
+                ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Rise(
-          index: 2,
-          child: EduCard(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-            child: Column(children: [for (final item in items) _TimelineRow(item: item)]),
+        if (receipts.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Rise(
+            index: 1,
+            child: _Card(
+              title: 'fees.paid',
+              action: 'fees.all_receipts',
+              onAction: () => unawaited(_receipts(context, account, controller)),
+              child: Column(children: [for (final r in receipts.take(3)) _ReceiptRow(receipt: r, controller: controller)]),
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 12),
         Rise(
-          index: 3,
-          child: EduCard(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(PhosphorIconsRegular.bell, color: c.mariText),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('fees.remind_early'.tr, style: context.type.t),
-                      Obx(
-                        () => Text(
-                          theme.notifyFees.value && next != null
-                              ? 'fees.next_reminder'.trp({
-                                  'date': DateFormat('EEE d MMM').format(
-                                    next.dueDate.subtract(const Duration(days: 3)).isBefore(DateTime.now())
-                                        ? DateTime.now().add(const Duration(days: 1))
-                                        : next.dueDate.subtract(const Duration(days: 3)),
-                                  ),
-                                })
-                              : 'fees.reminders_off'.tr,
-                          style: context.type.cap,
+          index: 2,
+          child: _Card(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: c.mariSoft, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    child: Icon(AppIcons.notifications, size: 20, color: c.mariText),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('fees.remind_early'.tr, style: context.type.t),
+                        Obx(
+                          () => Text(
+                            theme.notifyFees.value && next != null
+                                ? 'fees.next_reminder'.trp({
+                                    'date': DateFormat('EEE d MMM').format(
+                                      next.dueDate.subtract(const Duration(days: 3)).isBefore(DateTime.now())
+                                          ? DateTime.now().add(const Duration(days: 1))
+                                          : next.dueDate.subtract(const Duration(days: 3)),
+                                    ),
+                                  })
+                                : 'fees.reminders_off'.tr,
+                            style: context.type.s,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Obx(
-                  () => GlassSwitch(
-                    value: theme.notifyFees.value,
-                    label: 'fees.remind_early',
-                    onColor: context.app.brand,
-                    onChanged: (v) => theme.setNotify(fees: v),
+                  Obx(
+                    () => GlassSwitch(
+                      value: theme.notifyFees.value,
+                      label: 'fees.remind_early',
+                      onColor: context.app.brand,
+                      onChanged: (v) => theme.setNotify(fees: v),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -278,209 +250,179 @@ class _Body extends StatelessWidget {
   }
 }
 
-class _Segment extends StatelessWidget {
-  const _Segment({required this.item, required this.first, required this.last});
+/// The board's card: paper, radius 24, a display-voice title and an optional link on the right.
+class _Card extends StatelessWidget {
+  const _Card({required this.child, this.title, this.action, this.onAction});
 
-  final Installment item;
-  final bool first;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.app;
-    final status = moneyStatus(item);
-    final radius = BorderRadius.horizontal(
-      left: Radius.circular(first ? 6 : 2),
-      right: Radius.circular(last ? 6 : 2),
-    );
-    if (status == MoneyStatus.paid) {
-      return DecoratedBox(
-        decoration: BoxDecoration(color: c.ink, borderRadius: radius),
-      );
-    }
-    if (status == MoneyStatus.overdue) {
-      return DecoratedBox(
-        decoration: BoxDecoration(color: AppColors.bad, borderRadius: radius),
-      );
-    }
-    return Hatch(
-      radius: radius,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          border: Border.all(color: c.line2),
-        ),
-      ),
-    );
-  }
-}
-
-class _AllPaid extends StatelessWidget {
-  const _AllPaid();
+  final Widget child;
+  final String? title;
+  final String? action;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) => EduCard(
-    color: context.app.okSoft,
-    padding: const EdgeInsets.all(20),
-    child: Row(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(PhosphorIconsBold.checkCircle, color: AppColors.ok, size: 28),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('fees.all_paid'.tr, style: context.type.h3),
-              Text('fees.all_paid_body'.tr, style: context.type.cap),
-            ],
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Expanded(child: Text(title!.tr, style: context.type.h3)),
+                if (action != null)
+                  Pressable(onTap: onAction, child: Text(action!.tr, style: context.type.ts.copyWith(color: context.app.mariText))),
+              ],
+            ),
           ),
-        ),
+        child,
       ],
     ),
   );
 }
 
-class _DueCard extends StatelessWidget {
-  const _DueCard({required this.item});
+/// One line of the board's key and value list, with a hairline above all but the first.
+class _Kv extends StatelessWidget {
+  const _Kv({required this.label, required this.value, this.first = false, this.onTap});
 
-  final Installment item;
+  final Widget label;
+  final Widget value;
+  final bool first;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final overdue = moneyStatus(item) == MoneyStatus.overdue;
-    final days = Formatters.daysUntil(item.dueDate);
-    final ink = context.app.onBrand;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      decoration: BoxDecoration(color: context.app.brand, borderRadius: BorderRadius.circular(24)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Overline(
-                  'fees.due_now'.trp({'title': item.title.toLowerCase()}),
-                  color: ink.withValues(alpha: .75),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Stamp(
-                overdue ? 'fees.days_late'.trn(-days) : 'fees.due_in'.trn(days),
-                color: overdue ? Color.lerp(AppColors.bad, AppColors.light.ink, .45)! : ink,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(Formatters.inr(item.amount), style: context.type.dl.copyWith(color: ink)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  (overdue ? 'fees.was_due' : 'fees.due_on').trp({
-                    'date': DateFormat('EEE d MMM').format(item.dueDate),
-                  }),
-                  style: context.type.s.copyWith(color: ink.withValues(alpha: .8)),
-                ),
-              ),
-              Btn('common.pay_now', kind: BtnKind.ink, small: true, onPressed: () => unawaited(openPaySheet(item))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Pressable(
+    onTap: onTap,
+    child: Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(border: first ? null : Border(top: BorderSide(color: context.app.line))),
+      child: Row(children: [Expanded(child: label), const SizedBox(width: 12), value]),
+    ),
+  );
 }
 
-class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({required this.item});
+class _PlanRow extends StatelessWidget {
+  const _PlanRow({required this.item, required this.first});
 
   final Installment item;
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
     final c = context.app;
     final status = moneyStatus(item);
-    final Widget node = switch (status) {
-      MoneyStatus.paid => Dot(c.ink, size: 16),
-      MoneyStatus.overdue => Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: AppColors.bad,
-          shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: c.badSoft, spreadRadius: 4)],
-        ),
-      ),
-      _ => Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: c.paper,
-          shape: BoxShape.circle,
-          border: Border.all(color: status == MoneyStatus.due ? AppColors.late : c.ink3, width: 2.5),
-        ),
-      ),
+    final (tag, colour) = switch (status) {
+      MoneyStatus.paid => ('fees.status_paid'.tr, c.okText),
+      MoneyStatus.overdue => ('fees.status_late'.tr, c.badText),
+      _ => ('fees.due_on'.trp({'date': DateFormat('d MMM').format(item.dueDate)}), c.lateText),
     };
-    final line = switch (status) {
-      MoneyStatus.paid => 'fees.paid_line'.trp({
-        'date': DateFormat('d MMM').format(item.paidOn ?? item.dueDate),
-        'method': 'fees.${item.method ?? 'upi'}'.tr,
-      }),
-      MoneyStatus.overdue => 'fees.overdue_since'.trp({'date': DateFormat('d MMM').format(item.dueDate)}),
-      _ => 'fees.due_line'.trp({
-        'date': DateFormat('EEE d MMM').format(item.dueDate),
-        'n': '${Formatters.daysUntil(item.dueDate)}',
-      }),
-    };
-    return Pressable(
+    return _Kv(
+      first: first,
       onTap: status == MoneyStatus.paid ? null : () => unawaited(openPaySheet(item)),
-      child: IntrinsicHeight(
+      label: Row(
+        children: [
+          Flexible(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.b)),
+          const SizedBox(width: 8),
+          Stamp(tag, color: colour),
+        ],
+      ),
+      value: Text(Formatters.inr(item.amount), style: context.type.t),
+    );
+  }
+}
+
+class _ReceiptRow extends StatelessWidget {
+  const _ReceiptRow({required this.receipt, required this.controller});
+
+  final Receipt receipt;
+  final FeesController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.app;
+    return Pressable(
+      onTap: () => unawaited(Get.toNamed<void>(AppRoutes.receipt, arguments: receiptArgs(receipt, controller))),
+      label: 'fees.see_receipt'.tr,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 64),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
         child: Row(
           children: [
-            SizedBox(
-              width: 30,
-              child: Stack(
-                alignment: Alignment.center,
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: c.okSoft, borderRadius: BorderRadius.circular(AppRadius.md)),
+              child: Icon(PhosphorIconsBold.check, size: 18, color: c.okText),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Positioned(top: 0, bottom: 0, left: 9, child: Container(width: 2, color: c.line2)),
-                  Positioned(left: 2, child: node),
+                  Text(
+                    'fees.paid_on_line'.trp({'amount': Formatters.inr(receipt.amount), 'date': DateFormat('d MMMM').format(receipt.paidOn)}),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.type.t,
+                  ),
+                  Text('${receipt.title} · ${'fees.${receipt.method}'.tr}', maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.s),
                 ],
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.title, style: context.type.t),
-                    Text.rich(
-                      TextSpan(
-                        text: line,
-                        children: [
-                          if (status == MoneyStatus.paid && item.method == 'upi' && item.reference != null) ...[
-                            const TextSpan(text: ' · '),
-                            TextSpan(text: item.reference, style: context.type.mono),
-                          ],
-                        ],
-                      ),
-                      style: status == MoneyStatus.overdue
-                          ? AppText.capB(color: c.badText)
-                          : context.type.cap,
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(width: 8),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: c.paper2, shape: BoxShape.circle),
+              child: Icon(PhosphorIconsRegular.downloadSimple, size: 18, color: c.ink),
             ),
-            Text(Formatters.inr(item.amount), style: AppText.t(color: c.ink, height: 1)),
           ],
         ),
       ),
     );
   }
 }
+
+Future<void> _receipts(BuildContext context, FeeAccount account, FeesController controller) => showSheet<void>(
+  SheetBody(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text('fees.receipts'.tr, style: context.type.h2),
+        const SizedBox(height: 8),
+        for (final r in account.receipts)
+          Pressable(
+            onTap: () {
+              Get.back<void>();
+              unawaited(Get.toNamed<void>(AppRoutes.receipt, arguments: receiptArgs(r, controller)));
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(r.title, style: context.type.t),
+                        Text('${DateFormat('d MMM y').format(r.paidOn)} · ${r.reference}', style: context.type.cap),
+                      ],
+                    ),
+                  ),
+                  Text(Formatters.inr(r.amount), style: context.type.t),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+      ],
+    ),
+  ),
+);
 
 Future<void> openPaySheet(Installment item) async {
   // The school takes fees at the office only: say so instead of opening a payment the server would refuse.

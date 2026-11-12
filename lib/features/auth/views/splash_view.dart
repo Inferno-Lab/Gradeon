@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -14,7 +14,7 @@ import 'package:gradeon/features/auth/controllers/splash_controller.dart';
 double _beat(double t, double from, double to, [Curve curve = kEase]) =>
     curve.transform(((t - from) / (to - from)).clamp(0.0, 1.0));
 
-/// Three notebooks fan open under a warm glow; the name and school rise after.
+/// The school's cell art fills in on its deep colour, as the SignIn board; the name and school rise after.
 class SplashView extends GetView<SplashController> {
   const SplashView({super.key});
 
@@ -122,69 +122,20 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
         final t = still ? 1.0 : _enter.value;
         final breath = still ? 0.0 : kEase.transform(_breathe.value);
 
-        final glow = _beat(t, 0, .28);
-        final stack = _beat(t, .06, .42, kSpring);
-        final fan = _beat(t, .22, .62, kSpring);
+        final cells = _beat(t, 0, .62);
         final name = _beat(t, .48, .72);
         final school = _beat(t, .58, .82);
         final tag = _beat(t, .72, .95);
-
-        final glowScale = .72 + .28 * glow + .04 * breath * glow;
-        final glowOpacity = (.5 + .12 * breath) * glow;
 
         return SizedBox.expand(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 5),
-              SizedBox(
-                width: 270,
-                height: 230,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Opacity(
-                      opacity: glowOpacity,
-                      child: Transform.scale(
-                        scale: glowScale,
-                        child: Container(
-                          width: 250,
-                          height: 250,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                context.app.brand.withValues(alpha: .5),
-                                context.app.brand.withValues(alpha: 0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    _Book(
-                      subject: 'maths',
-                      left: 32 + 48 * (1 - fan),
-                      top: 24 + 36 * (1 - stack),
-                      angle: -.26 * fan,
-                      rise: stack,
-                    ),
-                    _Book(
-                      subject: 'science',
-                      left: 152 - 48 * (1 - fan),
-                      top: 24 + 36 * (1 - stack),
-                      angle: .26 * fan,
-                      rise: stack,
-                    ),
-                    _Book(
-                      subject: 'hindi',
-                      left: 92,
-                      top: 10 + 28 * (1 - stack),
-                      angle: 0,
-                      rise: stack,
-                    ),
-                  ],
-                ),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: c.deep, borderRadius: BorderRadius.circular(AppRadius.sheet)),
+                child: Transform.scale(scale: 1 + .02 * breath, child: CellArt(rows: 4, reveal: cells, width: math.min(240, MediaQuery.sizeOf(context).width - 104))),
               ),
               const SizedBox(height: 20),
               Opacity(
@@ -227,62 +178,6 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
           ),
         );
       },
-    );
-  }
-}
-
-class _Book extends StatelessWidget {
-  const _Book({
-    required this.subject,
-    required this.left,
-    required this.top,
-    required this.angle,
-    required this.rise,
-  });
-
-  final String subject;
-  final double left;
-  final double top;
-  final double angle;
-  final double rise;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = rise.clamp(0.0, 1.0);
-    return Positioned(
-      left: left,
-      top: top,
-      child: Opacity(
-        opacity: r,
-        child: Transform.rotate(
-          angle: angle,
-          alignment: Alignment.bottomCenter,
-          child: Transform.scale(
-            scale: .86 + .14 * r,
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: 86,
-              height: 168,
-              decoration: BoxDecoration(
-                color: AppColors.subject(subject).fill,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(7),
-                  right: Radius.circular(12),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.light.ink.withValues(alpha: 0.4).withValues(alpha: .25 + .4 * r),
-                    blurRadius: 18 + 14 * r,
-                    spreadRadius: -12,
-                    offset: Offset(0, 8 + 8 * r),
-                  ),
-                ],
-              ),
-              foregroundDecoration: spineDecoration,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

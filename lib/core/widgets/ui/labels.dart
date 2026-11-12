@@ -73,9 +73,9 @@ class Stamp extends StatelessWidget {
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.center,
       decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(AppRadius.xs)),
-      child: Text(text, maxLines: 1, style: hueText(size, 600, height: 1, color: ink)),
+      // Center with widthFactor 1 keeps the tag as wide as its text (Container(alignment:) would fill the row).
+      child: Center(widthFactor: 1, child: Text(text, maxLines: 1, style: hueText(size, 600, height: 1, color: ink))),
     );
   }
 }

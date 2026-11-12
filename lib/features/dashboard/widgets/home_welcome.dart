@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/ui.dart';

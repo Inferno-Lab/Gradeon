@@ -39,13 +39,13 @@ class GradingView extends GetView<GradingController> {
         leading: const BackGlass(),
         actions: [if (items.isNotEmpty) Chip2('teacher.oldest_first'.tr)],
         onRefresh: controller.load,
+        edgeBar: true,
         bottomBar: queue.isEmpty
             ? null
             : TeacherActionBar(
                 sub: 'teacher.next_in_queue'.tr,
                 text: Text(
                   controller.names[queue.first.$2.studentId] ?? '',
-                  style: context.type.ts,
                 ),
                 action: 'teacher.start_grading',
                 onPressed: () => openGradeSheet(controller, 0),

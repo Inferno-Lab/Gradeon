@@ -216,8 +216,8 @@ Widget _row(BuildContext context, IconData icon, Color bg, Color fg, String titl
 Widget _scene(BuildContext context, EmptyArt art) {
   final c = context.app;
   final t = context.type;
-  final blue = AppColors.spectrum('blue'), green = AppColors.spectrum('green'), pink = AppColors.spectrum('pink');
-  final amber = AppColors.spectrum('amber'), teal = AppColors.spectrum('teal'), violet = AppColors.spectrum('violet');
+  final blue = c.spectrumFor('blue'), green = c.spectrumFor('green'), pink = c.spectrumFor('pink');
+  final amber = c.spectrumFor('amber'), teal = c.spectrumFor('teal'), violet = c.spectrumFor('violet');
   switch (art) {
     // Preview cards of a school day fill in, one by one.
     case EmptyArt.home:
@@ -586,7 +586,7 @@ Widget _scene(BuildContext context, EmptyArt art) {
       );
     // A shelf of books; one goes out on loan.
     case EmptyArt.library:
-      final spines = [blue, pink, green, amber, violet, teal, AppColors.spectrum('red')];
+      final spines = [blue, pink, green, amber, violet, teal, c.spectrumFor('red')];
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

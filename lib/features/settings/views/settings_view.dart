@@ -363,59 +363,26 @@ class _AboutViewState extends State<AboutView> {
   Widget build(BuildContext context) {
     final c = context.app;
     final s = _school;
-    final inset = MediaQuery.paddingOf(context);
-    const books = [('maths', 120.0), ('science', 150.0), ('hindi', 104.0), ('social', 136.0), ('art', 96.0)];
     return PageFrame(
-      padContent: false,
-      topPadding: 0,
       leading: const BackGlass(),
       children: [
-        SizedBox(
-          height: 156 + inset.top,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
+        // The school's name on its deep colour, as every page's title.
+        Builder(
+          builder: (context) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                bottom: 0,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (final (i, b) in books.indexed) ...[
-                      if (i > 0) const SizedBox(width: 4),
-                      Container(
-                        width: 54,
-                        height: b.$2,
-                        decoration: BoxDecoration(
-                          color: AppColors.subject(b.$1).fill,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(7),
-                            topRight: Radius.circular(10),
-                          ),
-                        ),
-                        foregroundDecoration: spineDecoration,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+              Text('about.for'.trp({'version': AppConfig.version.split('.').take(2).join('.')}), style: context.type.capB),
+              const SizedBox(height: 6),
+              Text(s?.name ?? AppConfig.schoolName, style: context.type.h1),
+              const SizedBox(height: 6),
+              Text(s?.tagline ?? AppConfig.schoolTagline, style: context.type.ts.copyWith(color: context.app.bright)),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Overline('about.for'.trp({'version': AppConfig.version.split('.').take(2).join('.')})),
-              const SizedBox(height: 8),
-              Text(s?.name ?? AppConfig.schoolName, style: context.type.h2),
-              const SizedBox(height: 4),
-              Text(
-                s?.tagline ?? AppConfig.schoolTagline,
-                style: context.type.ts.copyWith(color: c.mariText),
-              ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               if (s != null) ...[
-                const SizedBox(height: 10),
                 Text(s.about, style: context.type.s),
                 const SizedBox(height: 16),
                 EduCard(
@@ -491,7 +458,6 @@ class _AboutViewState extends State<AboutView> {
               ),
             ],
           ),
-        ),
       ],
     );
   }

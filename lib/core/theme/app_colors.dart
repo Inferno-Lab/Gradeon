@@ -194,14 +194,28 @@ class AppColors extends ThemeExtension<AppColors> {
 
   static SubjectColor subject(String id) => spectrum(_subjectSpectrum[id.toLowerCase().split(' ').first] ?? 'teal');
 
-  /// One of the twelve spectrum colours (rose … pink): solid, soft fill and ink, light theme.
+  /// Whether the app's theme is dark (set by AppTheme.resolve): the spectrum lookups below follow it.
+  static bool activeDark = false;
+
+  /// One of the twelve spectrum colours (rose … pink): solid, soft fill and ink, in the app's theme.
   static SubjectColor spectrum(String colour) {
-    final fill = AppPalette.of('light', 'sp.$colour.c');
-    return SubjectColor(fill, AppPalette.on(fill), soft: AppPalette.of('light', 'sp.$colour.cs'), ink: AppPalette.of('light', 'sp.$colour.ci'));
+    final mode = activeDark ? 'dark' : 'light';
+    final fill = AppPalette.of(mode, 'sp.$colour.c');
+    return SubjectColor(fill, AppPalette.on(fill), soft: AppPalette.of(mode, 'sp.$colour.cs'), ink: AppPalette.of(mode, 'sp.$colour.ci'));
+  }
+
+  /// A subject's spectrum colour in this theme (dark themes use the spectrum's dark soft fills and light inks).
+  SubjectColor subjectFor(String id) => spectrumFor(_subjectSpectrum[id.toLowerCase().split(' ').first] ?? 'teal');
+
+  /// One spectrum colour in this theme.
+  SubjectColor spectrumFor(String colour) {
+    final mode = dark ? 'dark' : 'light';
+    final fill = AppPalette.of(mode, 'sp.$colour.c');
+    return SubjectColor(fill, AppPalette.on(fill), soft: AppPalette.of(mode, 'sp.$colour.cs'), ink: AppPalette.of(mode, 'sp.$colour.ci'));
   }
 
   /// House colours used for student avatars.
-  static List<Color> get houses => [for (final c in ['green', 'blue', 'pink', 'amber']) AppPalette.of('light', 'sp.$c.c')];
+  static List<Color> get houses => [for (final c in ['green', 'blue', 'pink', 'amber']) spectrum(c).fill];
 
   /// The same theme as it reads on the deep colour (the Hue header): surfaces become deep2 and deep3, text the deep
   /// colour's own, actions bright. Whatever sits in the header picks these up through `context.app`.

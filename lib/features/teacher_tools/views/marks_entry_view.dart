@@ -92,16 +92,15 @@ class _MarksEntryViewState extends State<MarksEntryView> {
         actions: [
           Chip2('teacher.marks_chip'.trp({'max': '${MarksEntryController.maxMarks}'})),
         ],
+        edgeBar: true,
         bottomBar: controller.students.isEmpty
             ? null
             : TeacherActionBar(
                 sub: controller.saving.value ? 'teacher.saving'.tr : 'teacher.saved_typing'.tr,
                 text: Text(
                   next == null ? 'teacher.all_entered'.tr : 'teacher.next_name'.trp({'name': next.name}),
-                  style: context.type.ts,
                 ),
                 action: 'teacher.next',
-                kind: BtnKind.ink,
                 icon: PhosphorIconsRegular.arrowBendDownLeft,
                 onPressed: next == null && active == null ? null : _next,
               ),

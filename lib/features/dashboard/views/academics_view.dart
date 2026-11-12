@@ -7,6 +7,7 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/schedule.dart';
+import 'package:gradeon/core/utils/view_state.dart';
 import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -30,15 +31,27 @@ class AcademicsView extends GetView<AcademicsController> {
         onRefresh: controller.load,
         topPadding: MediaQuery.paddingOf(context).top + 14,
         children: [
-          Row(
-            children: [
-              Expanded(child: Builder(builder: (context) => Text('nav.academics'.tr, style: context.type.h1))),
-              GlassIconButton(
-                icon: PhosphorIconsRegular.magnifyingGlass,
-                label: 'common.search'.tr,
-                onTap: () => Get.toNamed<void>(AppRoutes.search),
-              ),
-            ],
+          // The title and the subjects on the school's deep colour; the chosen subject is in its bright colour.
+          Builder(
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text('nav.academics'.tr, style: context.type.h1)),
+                    GlassIconButton(
+                      icon: PhosphorIconsRegular.magnifyingGlass,
+                      label: 'common.search'.tr,
+                      onTap: () => Get.toNamed<void>(AppRoutes.search),
+                    ),
+                  ],
+                ),
+                if (state == ViewState.success && controller.shelf.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _Shelf(controller: controller, selected: selected),
+                ],
+              ],
+            ),
           ),
           ViewStateView(
             state: state,
@@ -54,10 +67,7 @@ class AcademicsView extends GetView<AcademicsController> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Shelf(controller: controller, selected: selected),
-                      const SizedBox(height: 20),
                       Rise(
-                        index: 1,
                         child: _SubjectCard(item: controller.shelf[selected], examName: controller.latestExam?.name),
                       ),
                       Rise(index: 2, child: SectionLabel('academics.records'.tr)),
@@ -79,100 +89,53 @@ class _Shelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.app;
     return SizedBox(
-      height: 206,
-      child: Stack(
+      height: 96,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: -20,
-            right: -20,
-            top: 172,
-            height: 8,
-            child: DecoratedBox(
-              decoration: BoxDecoration(color: context.app.line2, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          Positioned.fill(
-            bottom: 34,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              padding: const EdgeInsets.only(top: 20),
-              itemCount: controller.shelf.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (context, i) => Align(
-                alignment: Alignment.bottomCenter,
-                child: _Book(
-                  item: controller.shelf[i],
-                  raised: i == selected,
-                  onTap: () => controller.selected.value = i,
+        itemCount: controller.shelf.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final item = controller.shelf[i];
+          final on = i == selected;
+          final ink = on ? c.onBright : c.ink;
+          return Semantics(
+            button: true,
+            selected: on,
+            label: subjectName(item.subject),
+            child: Pressable(
+              onTap: () => controller.selected.value = i,
+              child: AnimatedContainer(
+                duration: AppMotion.t2,
+                curve: kEase,
+                width: 104,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: on ? c.bright : c.paper, borderRadius: BorderRadius.circular(AppRadius.field)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(item.mark?.grade ?? '—', style: context.type.h2.copyWith(color: ink)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(subjectName(item.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.capB.copyWith(color: ink)),
+                        Text(
+                          item.pending.isEmpty ? ' ' : 'academics.n_due'.trp({'n': '${item.pending.length}'}),
+                          maxLines: 1,
+                          style: context.type.tiny.copyWith(color: on ? ink : c.ink2),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-    );
-  }
-}
-
-class _Book extends StatelessWidget {
-  const _Book({required this.item, required this.raised, required this.onTap});
-
-  final SubjectShelf item;
-  final bool raised;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final pigment = AppColors.subject(item.subject);
-    return Semantics(
-      button: true,
-      selected: raised,
-      label: subjectName(item.subject),
-      child: Pressable(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.spring,
-          curve: kSpring,
-          transform: Matrix4.translationValues(0, raised ? -16 : 0, 0),
-          width: 82,
-          height: 152,
-          padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
-          decoration: BoxDecoration(
-            color: pigment.fill,
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(7), right: Radius.circular(12)),
-            boxShadow: [
-              BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.5), blurRadius: 18, spreadRadius: -12, offset: const Offset(0, 10)),
-            ],
-          ),
-          foregroundDecoration: spineDecoration,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(item.mark?.grade ?? '—', style: AppText.h2(color: pigment.on, height: 1)),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Every tile keeps one size: a long name ("Social studies") ends in an ellipsis, never mid-word on two lines.
-                  Text(
-                    subjectName(item.subject),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.capB(color: pigment.on, height: 1.1),
-                  ),
-                  if (item.pending.isNotEmpty)
-                    Text(
-                      'academics.n_due'.trp({'n': '${item.pending.length}'}),
-                      style: AppText.cap(color: pigment.on.withValues(alpha: .85), height: 1.1),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),),
     );
   }
 }

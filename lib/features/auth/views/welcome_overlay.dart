@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/ui.dart';
@@ -94,15 +94,12 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
         final out = still ? 0.0 : _exit.value;
         final breath = still || !_breathe.isAnimating ? 0.0 : kEase.transform(_breathe.value);
 
-        final glow = _beat(t, 0, .24);
-        final stack = _beat(t, .05, .38, kSpring);
-        final fan = _beat(t, .18, .55, kSpring);
+        final cells = _beat(t, 0, .55);
         final hello = _beat(t, .4, .62);
         final body = _beat(t, .5, .72);
         final chips = _beat(t, .6, .85);
         final cta = _beat(t, .72, .95, kSpring);
 
-        final glowScale = .72 + .28 * glow + .04 * breath * glow;
         final leave = (1 - out).clamp(0.0, 1.0);
 
         return Opacity(
@@ -123,54 +120,11 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
                           child: Column(
                             children: [
                               const Spacer(flex: 2),
-                              SizedBox(
-                                width: 270,
-                                height: 210,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Opacity(
-                                      opacity: ((.5 + .12 * breath) * glow * leave).clamp(0.0, 1.0),
-                                      child: Transform.scale(
-                                        scale: glowScale,
-                                        child: Container(
-                                          width: 240,
-                                          height: 240,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: RadialGradient(
-                                              colors: [
-                                                context.app.brand.withValues(alpha: .5),
-                                                context.app.brand.withValues(alpha: 0),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    _Book(
-                                      subject: 'maths',
-                                      left: 32 + 48 * (1 - fan),
-                                      top: 20 + 36 * (1 - stack),
-                                      angle: -.26 * fan,
-                                      rise: stack,
-                                    ),
-                                    _Book(
-                                      subject: 'science',
-                                      left: 152 - 48 * (1 - fan),
-                                      top: 20 + 36 * (1 - stack),
-                                      angle: .26 * fan,
-                                      rise: stack,
-                                    ),
-                                    _Book(
-                                      subject: 'hindi',
-                                      left: 92,
-                                      top: 6 + 28 * (1 - stack),
-                                      angle: 0,
-                                      rise: stack,
-                                    ),
-                                  ],
-                                ),
+                              // The SignIn board's cell art filling in on the school's deep colour.
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(color: c.deep, borderRadius: BorderRadius.circular(AppRadius.sheet)),
+                                child: Transform.scale(scale: 1 + .02 * breath, child: CellArt(rows: 4, reveal: cells, width: math.min(240, MediaQuery.sizeOf(context).width - 104))),
                               ),
                               const SizedBox(height: 24),
                               Opacity(
@@ -268,62 +222,6 @@ class _TipChip extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Text(label, style: context.type.ts)),
         ],
-      ),
-    );
-  }
-}
-
-class _Book extends StatelessWidget {
-  const _Book({
-    required this.subject,
-    required this.left,
-    required this.top,
-    required this.angle,
-    required this.rise,
-  });
-
-  final String subject;
-  final double left;
-  final double top;
-  final double angle;
-  final double rise;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = rise.clamp(0.0, 1.0);
-    return Positioned(
-      left: left,
-      top: top,
-      child: Opacity(
-        opacity: r,
-        child: Transform.rotate(
-          angle: angle,
-          alignment: Alignment.bottomCenter,
-          child: Transform.scale(
-            scale: .86 + .14 * r,
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: 86,
-              height: 152,
-              decoration: BoxDecoration(
-                color: AppColors.subject(subject).fill,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(7),
-                  right: Radius.circular(12),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.light.ink.withValues(alpha: 0.4).withValues(alpha: .25 + .4 * r),
-                    blurRadius: 18 + 14 * r,
-                    spreadRadius: -12,
-                    offset: Offset(0, 8 + 8 * r),
-                  ),
-                ],
-              ),
-              foregroundDecoration: spineDecoration,
-            ),
-          ),
-        ),
       ),
     );
   }

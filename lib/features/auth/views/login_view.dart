@@ -33,47 +33,61 @@ class LoginView extends GetView<LoginController> {
   }
 }
 
-/// Book spines along the top edge.
-class Bookshelf extends StatelessWidget {
-  const Bookshelf({this.height = 150, super.key});
+/// The top of the sign-in screens, as the SignIn board: the school's crest and name with the cell art on its deep
+/// colour, ending in the sheet's rounded edge.
+class SignInHead extends StatelessWidget {
+  const SignInHead({this.art = true, super.key});
 
-  final double height;
+  final bool art;
 
   @override
   Widget build(BuildContext context) {
-    const books = [
-      ('maths', 1.2, .88),
-      ('science', .9, .79),
-      ('english', 1.0, .93),
-      ('hindi', .8, .73),
-      ('social', 1.1, .85),
-      ('computer', .9, .97),
-      ('art', 1.0, .8),
-      ('pe', .8, .89),
-    ];
-    return SizedBox(
-      height: height,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          for (final b in books)
-            Expanded(
-              flex: (b.$2 * 10).round(),
-              child: Container(
-                height: height * b.$3,
-                margin: const EdgeInsets.only(right: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.subject(b.$1).fill,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+    final c = context.app;
+    // The sheet's edge overlaps the deep block by a pixel so no seam shows between them.
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ColoredBox(
+          color: c.deep,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, MediaQuery.paddingOf(context).top + 20, 24, 52),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: c.bright, borderRadius: BorderRadius.circular(AppRadius.md)),
+                      child: Text(AppConfig.schoolMark, style: context.type.h3.copyWith(color: c.onBright)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(AppConfig.schoolName, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.t.copyWith(color: c.onDeep)),
+                    ),
+                  ],
                 ),
-                foregroundDecoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: AppColors.amoled.chalk.withValues(alpha: 0.18), width: 5)),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-                ),
-              ),
+                if (art) ...[
+                  const SizedBox(height: 24),
+                  // On a tablet the art keeps a phone's size.
+                  Align(alignment: Alignment.centerLeft, child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 440), child: const CellArt())),
+                ],
+              ],
             ),
-        ],
-      ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: -1,
+          height: 29,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -92,9 +106,9 @@ class _PasswordScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.only(bottom: inset.bottom + 24),
         children: [
-          Bookshelf(height: 103 + inset.top),
+          const SignInHead(),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
             child: Form(
               key: controller.formKey,
               child: AutofillGroup(
@@ -102,17 +116,6 @@ class _PasswordScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Rise(child: Text('auth.sign_in'.tr, style: context.type.h1)),
-                    const SizedBox(height: 6),
-                    Rise(
-                      index: 1,
-                      child: Row(
-                        children: [
-                          const SchoolMark(size: 22),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(AppConfig.schoolName, style: context.type.cap, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     Rise(
                       index: 2,
@@ -270,15 +273,7 @@ class _DemoCard extends StatelessWidget {
         height: 118,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final s in ['maths', 'science', 'hindi', 'social', 'computer', 'english', 'pe', 'art'])
-                    Expanded(child: ColoredBox(color: AppColors.subject(s).fill)),
-                ],
-              ),
-            ),
+            Positioned.fill(child: ColoredBox(color: context.app.deep)),
             Positioned(
               left: 12,
               right: 12,
@@ -305,9 +300,7 @@ class _DemoCard extends StatelessWidget {
                 () => Text(
                   'auth.demo_line_${controller.demoRole.value?.name ?? 'pick'}'.tr,
                   maxLines: 2,
-                  style: AppText.cap(color: AppColors.white).copyWith(
-                    shadows: [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.45), blurRadius: 6, offset: const Offset(0, 1))],
-                  ),
+                  style: AppText.cap(color: context.app.onDeep2),
                 ),
               ),
             ),
@@ -379,9 +372,9 @@ class _OtpScreenState extends State<_OtpScreen> {
             ListView(
               padding: EdgeInsets.only(bottom: inset.bottom + 120),
               children: [
-                Bookshelf(height: 73 + inset.top),
+                const SignInHead(art: false),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -6,8 +6,10 @@ import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/calendar.dart';
 import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -20,17 +22,18 @@ import 'package:gradeon/features/notices/controllers/notices_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Category badge text and colours.
-({String abbr, Color fill, Color on}) _category(BuildContext context, String category) {
+/// Category tile: an icon on the category's soft colour, as the boards' row tiles.
+({IconData icon, Color fill, Color on}) _category(BuildContext context, String category) {
   final c = context.app;
+  SubjectColor sp(String colour) => c.spectrumFor(colour);
   return switch (category) {
-    'sports' => (abbr: 'SPORT', fill: AppColors.subject('pe').fill, on: AppColors.subject('pe').on),
-    'fees' => (abbr: 'FEES', fill: c.lateSoft, on: c.lateText),
-    'holiday' => (abbr: 'HOL', fill: AppColors.subject('art').fill, on: AppColors.subject('art').on),
-    'exams' => (abbr: 'EXAM', fill: c.badSoft, on: c.badText),
-    'academic' => (abbr: 'ACAD', fill: c.mariSoft, on: c.mariText),
-    'events' => (abbr: 'EVENT', fill: AppColors.subject('social').fill, on: AppColors.subject('social').on),
-    _ => (abbr: 'NEWS', fill: c.paper2, on: c.ink2),
+    'sports' => (icon: PhosphorIconsRegular.soccerBall, fill: sp('lime').soft, on: sp('lime').ink),
+    'fees' => (icon: AppIcons.fees, fill: c.lateSoft, on: c.lateText),
+    'holiday' => (icon: PhosphorIconsRegular.sun, fill: sp('cyan').soft, on: sp('cyan').ink),
+    'exams' => (icon: AppIcons.exams, fill: c.badSoft, on: c.badText),
+    'academic' => (icon: AppIcons.homework, fill: c.mariSoft, on: c.mariText),
+    'events' => (icon: AppIcons.events, fill: sp('teal').soft, on: sp('teal').ink),
+    _ => (icon: AppIcons.notices, fill: c.paper2, on: c.ink2),
   };
 }
 
@@ -276,8 +279,8 @@ class _Row extends StatelessWidget {
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(10)),
-                    child: Text(cat.abbr, style: AppText.o(color: cat.on)),
+                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    child: Icon(cat.icon, size: 20, color: cat.on),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

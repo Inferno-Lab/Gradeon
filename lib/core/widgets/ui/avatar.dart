@@ -38,7 +38,7 @@ class Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = background ?? houseFor(name);
-    final fg = foreground ?? (bg == AppColors.houses[3] ? context.app.onBrand : AppColors.white);
+    final fg = foreground ?? AppPalette.on(bg);
     return Container(
       width: size,
       height: size,

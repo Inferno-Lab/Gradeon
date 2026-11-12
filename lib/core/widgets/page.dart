@@ -21,6 +21,7 @@ class PageFrame extends StatelessWidget {
     this.actions = const [],
     this.bottomBar,
     this.bottomBarHeight = 64,
+    this.edgeBar = false,
     this.background,
     this.onRefresh,
     this.dockPage = false,
@@ -37,6 +38,10 @@ class PageFrame extends StatelessWidget {
   final List<Widget> actions;
   final Widget? bottomBar;
   final double bottomBarHeight;
+
+  /// The bar is the board's action bar (design/hue/src/RollCall.html): flush with the bottom edge, full width, drawing
+  /// its own background and the safe area under it, instead of a pill floating above the page.
+  final bool edgeBar;
   final Color? background;
   final Future<void> Function()? onRefresh;
 
@@ -61,7 +66,9 @@ class PageFrame extends StatelessWidget {
     final top = inset.top + 8;
     // On a tab page a bottom bar floats above the dock.
     final barLift = dockPage ? 76.0 : 0.0;
-    final bottomSpace = bottomBar != null
+    final bottomSpace = bottomBar != null && edgeBar
+        ? bottomBarHeight + 24 + inset.bottom
+        : bottomBar != null
         ? bottomBarHeight + 48 + barLift + inset.bottom
         : dockPage
         ? kDockClearance + inset.bottom
@@ -165,7 +172,9 @@ class PageFrame extends StatelessWidget {
                 ],
               ),
             ),
-          if (bottomBar != null)
+          if (bottomBar != null && edgeBar)
+            Positioned(left: 0, right: 0, bottom: keyboard, child: bottomBar!)
+          else if (bottomBar != null)
             Positioned(
               left: 16,
               right: 16,

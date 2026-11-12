@@ -19,7 +19,6 @@ import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:gradeon/features/dashboard/widgets/child_switcher.dart';
-import 'package:gradeon/features/dashboard/widgets/day_ribbon.dart';
 import 'package:gradeon/features/dashboard/widgets/home_cards.dart';
 import 'package:gradeon/features/dashboard/widgets/home_welcome.dart';
 import 'package:intl/intl.dart';
@@ -33,7 +32,6 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  final _ribbon = GlobalKey<DayRibbonState>();
   int? _scrub;
   var _pulled = false;
 
@@ -46,10 +44,7 @@ class _DashboardViewState extends State<DashboardView> {
       final data = controller.snapshot;
       final parent = auth.role == UserRole.parent;
       final wide = context.isWide;
-      // With no classes today there is no ribbon: a slim header and dark controls.
       final hasDay = data != null && data.periods.isNotEmpty && _show('dayRibbon', 'timetable');
-      final ribbonH = hasDay ? (parent ? 196.0 : 236.0) : 0.0;
-      final controlInk = hasDay ? AppColors.white : context.app.ink;
       final top = MediaQuery.paddingOf(context).top;
       controller.state.value; // rebuild on state changes
       final c = context.app;
@@ -175,7 +170,7 @@ class PeriodStrip extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final p = lessons[i];
-          final col = AppColors.subject(p.subject);
+          final col = context.app.subjectFor(p.subject);
           final on = now >= minutesOf(p.start) && now < minutesOf(p.end);
           return Container(
             width: 112,
@@ -198,31 +193,6 @@ class PeriodStrip extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RibbonPlaceholder extends StatelessWidget {
-  const _RibbonPlaceholder({required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => Sweep(
-    child: Row(
-      children: [
-        for (var i = 0; i < 4; i++)
-          Expanded(
-            child: Container(
-              height: height,
-              margin: const EdgeInsets.only(right: 4),
-              decoration: BoxDecoration(
-                color: context.app.paper2,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-              ),
-            ),
-          ),
-      ],
-    ),
-  );
 }
 
 class _ProfileCapsule extends StatelessWidget {

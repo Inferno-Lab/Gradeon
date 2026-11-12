@@ -11,7 +11,6 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_pages.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_theme.dart';
 import 'package:gradeon/core/translations/app_translations.dart';
 import 'package:gradeon/core/widgets/toast.dart';
@@ -112,7 +111,7 @@ void main() {
           translations: AppTranslations(),
           locale: const Locale('en'),
           fallbackLocale: const Locale('en'),
-          theme: AppTheme.build(_dark ? AppColors.blackboard : AppColors.light),
+          theme: AppTheme.resolve(mode: _dark ? AppThemeMode.dark : AppThemeMode.light, platformBrightness: Brightness.light),
           initialRoute: guest ? AppRoutes.login : AppRoutes.shell,
           getPages: AppPages.pages,
           builder: (context, child) => ToastHost(child: child ?? const SizedBox.shrink()),
@@ -121,7 +120,21 @@ void main() {
     );
     await _settle(tester);
     await _save(tester, '${_roleName}_tab0');
-    if (guest) return;
+    if (guest) {
+      // The first-run story, page by page.
+      Get.offAllNamed<void>(AppRoutes.onboarding)?.ignore();
+      await _settle(tester);
+      for (var p = 0; p < 3; p++) {
+        if (p > 0) {
+          await tester.drag(find.byType(PageView), const Offset(-_width * 1.0, 0));
+          await _settle(tester);
+        }
+        await _save(tester, 'guest_onboard$p');
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 10));
+      return;
+    }
     for (var tab = 1; tab < 5; tab++) {
       Get.find<ShellController>().go(tab);
       await _settle(tester);

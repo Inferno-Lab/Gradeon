@@ -18,7 +18,6 @@ import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart' show PeriodStrip, greeting, todayLine;
-import 'package:gradeon/features/dashboard/widgets/day_ribbon.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
 import 'package:intl/intl.dart';

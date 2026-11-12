@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/ui/labels.dart';
 
@@ -25,14 +26,15 @@ class Cover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pigment = AppColors.subject(subject);
+    final tile = context.app.subjectFor(subject);
     // In a list row a subject is Gradeon Hue's tile: its spectrum soft fill with the homework icon in its ink.
     if (!large && width == null && height == null) {
       return Container(
         width: 40,
         height: 40,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: pigment.soft, borderRadius: BorderRadius.circular(AppRadius.md)),
-        child: Icon(AppIcons.homework, size: 20, color: pigment.ink),
+        decoration: BoxDecoration(color: tile.soft, borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: Icon(AppIcons.homework, size: 20, color: tile.ink),
       );
     }
     final w = width ?? (large ? 64.0 : 42.0);
@@ -94,3 +96,60 @@ class _SpinePainter extends BoxPainter {
 
 /// Spine decoration usable on bigger custom covers (book shelf, hero bands).
 const spineDecoration = _SpineDecoration(width: 6);
+
+/// The SignIn board's cell art: rows of the deep colour's tints with a few cells in the bright colour. [reveal] (0 to 1)
+/// brings the cells in one after another.
+class CellArt extends StatelessWidget {
+  const CellArt({this.rows = 3, this.reveal = 1, this.width, super.key});
+
+  final int rows;
+  final double reveal;
+
+  /// A fixed width, for parents that measure intrinsic sizes (a LayoutBuilder cannot answer them).
+  final double? width;
+
+  static const _bright = {3, 15, 16, 27, 30};
+  static const _mid = {1, 4, 8, 12, 14, 19, 22, 26, 28};
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.app;
+    const cols = 11;
+    final n = rows * cols;
+    Widget grid(double width) {
+        final size = (width - 6 * (cols - 1)) / cols;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var r = 0; r < rows; r++) ...[
+              if (r > 0) const SizedBox(height: 6),
+              Row(
+                children: [
+                  for (var i = 0; i < cols; i++) ...[
+                    if (i > 0) const SizedBox(width: 6),
+                    Opacity(
+                      opacity: ((reveal * (n + 8) - (r * cols + i)) / 8).clamp(0.0, 1.0),
+                      child: Container(
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          color: _bright.contains(r * cols + i)
+                              ? c.bright
+                              : _mid.contains(r * cols + i)
+                              ? c.deep3
+                              : c.deep2,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ],
+        );
+    }
+
+    return width != null ? grid(width!) : LayoutBuilder(builder: (context, box) => grid(box.maxWidth));
+  }
+}

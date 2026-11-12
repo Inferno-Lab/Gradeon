@@ -44,7 +44,7 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-enum BtnKind { primary, ink, quiet, danger, plain }
+enum BtnKind { primary, ink, bright, quiet, danger, plain }
 
 class Btn extends StatelessWidget {
   const Btn(
@@ -77,6 +77,8 @@ class Btn extends StatelessWidget {
       // Gradeon Hue: brand for the main action, the deep colour for a strong second one.
       BtnKind.primary => (c.brand, c.onBrand),
       BtnKind.ink => (c.deep, c.onDeep),
+      // On the deep header, the school's bright colour.
+      BtnKind.bright => (c.bright, c.onBright),
       BtnKind.quiet => (Colors.transparent, c.ink),
       BtnKind.danger => (AppColors.bad, AppColors.white),
       BtnKind.plain => (Colors.transparent, c.ink),

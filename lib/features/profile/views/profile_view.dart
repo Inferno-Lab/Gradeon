@@ -173,7 +173,7 @@ class _IdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final on = color == AppColors.houses[3] ? context.app.onBrand : AppColors.white;
+    final on = AppPalette.on(color);
     final now = DateTime.now();
     final start = now.month >= 6 ? now.year : now.year - 1;
     TextStyle k() => AppText.o(color: on.withValues(alpha: .75), height: 1.2);

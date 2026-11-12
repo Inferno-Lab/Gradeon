@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -15,7 +14,6 @@ import 'package:gradeon/core/widgets/states.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
 import 'package:gradeon/features/exams_results/controllers/results_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -27,33 +25,23 @@ class ResultsView extends GetView<ResultsController> {
     return Obx(() {
       controller.examIndex.value;
       final result = controller.result;
-      final inset = MediaQuery.paddingOf(context);
-      final heroH = 203.0 + inset.top;
-      final onHero = result == null ? null : AppColors.white;
       return PageFrame(
-        leading: BackGlass(color: onHero),
+        leading: const BackGlass(),
         actions: [
           if (controller.exams.isNotEmpty)
             GlassPress(
               onTap: () => unawaited(_pickExam(context)),
               child: Glass(
                 height: 44,
-                width: 150,
-                radius: 24,
+                radius: 22,
                 onPigment: true,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        controller.exam?.name ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.ts(color: onHero ?? context.app.ink, height: 1).copyWith(shadows: _shadow),
-                      ),
-                    ),
+                    Text(controller.exam?.name ?? '', maxLines: 1, style: AppText.ts(color: context.app.onDeep, height: 1)),
                     const SizedBox(width: 6),
-                    Icon(PhosphorIconsBold.caretDown, size: 13, color: onHero ?? context.app.ink),
+                    Icon(PhosphorIconsBold.caretDown, size: 13, color: context.app.onDeep),
                   ],
                 ),
               ),
@@ -61,45 +49,31 @@ class ResultsView extends GetView<ResultsController> {
           GlassIconButton(
             icon: PhosphorIconsRegular.downloadSimple,
             label: 'results.download'.tr,
-            color: onHero,
             onTap: () => ToastHelper.show('results.downloaded', kind: ToastKind.success),
           ),
         ],
-        topPadding: 0,
-        padContent: false,
         onRefresh: controller.load,
         children: [
-          if (result == null)
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, inset.top + 70, 20, 0),
-              child: ViewStateView(
-                state: controller.state.value,
-                onRetry: controller.load,
-                errorKey: controller.errorMessage.value,
-                emptyArt: EmptyArt.results,
-                emptyHint: 'results.empty_hint',
-                emptyTitle: 'results.none_title',
-                emptyBody: 'results.none',
-                child: const SizedBox.shrink(),
-              ),
-            )
-          else ...[
-            _Columns(result: result, height: heroH),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'results.out_of'.trp({'n': '${result.subjects.firstOrNull?.maxMarks ?? 0}'}),
-                  style: context.type.tiny,
-                ),
-              ),
+          // As the ParentResults board: the score as a ring with marks and rank on the school's deep colour.
+          Builder(
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const PageTitle('results.title'),
+                if (result != null) ...[const SizedBox(height: 16), _Score(controller: controller, result: result)],
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: _Summary(controller: controller, result: result),
-            ),
-          ],
+          ),
+          ViewStateView(
+            state: controller.state.value,
+            onRetry: controller.load,
+            errorKey: controller.errorMessage.value,
+            emptyArt: EmptyArt.results,
+            emptyHint: 'results.empty_hint',
+            emptyTitle: 'results.none_title',
+            emptyBody: 'results.none',
+            child: result == null ? const SizedBox.shrink() : _Body(controller: controller, result: result),
+          ),
         ],
       );
     });
@@ -142,105 +116,108 @@ class ResultsView extends GetView<ResultsController> {
   );
 }
 
-final _shadow = [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 1))];
+class _Score extends StatelessWidget {
+  const _Score({required this.controller, required this.result});
 
-class _Columns extends StatelessWidget {
-  const _Columns({required this.result, required this.height});
-
+  final ResultsController controller;
   final ExamResult result;
-  final double height;
 
   @override
   Widget build(BuildContext context) {
-    final marks = [...result.subjects]..sort((a, b) => (b.marks / b.maxMarks).compareTo(a.marks / a.maxMarks));
-    return SizedBox(
-      height: height,
-      child: LayoutBuilder(
-        builder: (context, box) {
-          final n = marks.length;
-          final w = (box.maxWidth - 4 - (n - 1) * 3) / n;
-          return Stack(
-            children: [
-              for (var i = 0; i < n; i++)
-                _Column(
-                  mark: marks[i],
-                  left: 2 + i * (w + 3),
-                  width: w,
-                  maxHeight: height - 6,
-                  delay: i,
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _Column extends StatelessWidget {
-  const _Column({
-    required this.mark,
-    required this.left,
-    required this.width,
-    required this.maxHeight,
-    required this.delay,
-  });
-
-  final SubjectMark mark;
-  final double left;
-  final double width;
-  final double maxHeight;
-  final int delay;
-
-  @override
-  Widget build(BuildContext context) {
-    final pigment = AppColors.subject(mark.subject);
-    final pct = mark.marks / mark.maxMarks * 100;
-    // Scale from 60% so differences between strong subjects stay visible.
-    final h = math.max(64, ((pct - 60) / 40).clamp(0, 1) * (maxHeight - 64) + 64).toDouble();
-    return Positioned(
-      left: left,
-      top: 0,
-      width: width,
-      height: h,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: context.reduceMotion ? 1 : .2, end: 1),
-        duration: AppMotion.t4 + AppMotion.stagger * delay,
-        curve: kSpring,
-        builder: (context, t, child) => Transform(
-          alignment: Alignment.topCenter,
-          transform: Matrix4.diagonal3Values(1, t, 1),
-          child: child,
-        ),
-        child: Semantics(
-          label: '${subjectName(mark.subject)} ${mark.marks} / ${mark.maxMarks}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: pigment.fill,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-            ),
-            padding: const EdgeInsets.only(bottom: 12),
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${mark.marks}', style: AppText.h3(color: pigment.on, height: 1)),
-                const SizedBox(height: 2),
-                Text(
-                  subjectAbbr[mark.subject] ?? '',
-                  style: AppText.o(color: pigment.on.withValues(alpha: .9)),
-                ),
-              ],
+    final c = context.app;
+    final marks = result.subjects.fold<int>(0, (s, m) => s + m.marks);
+    final max = result.subjects.fold<int>(0, (s, m) => s + m.maxMarks);
+    final trend = result.trend;
+    final change = trend.length > 1 ? (trend.last.percent - trend[trend.length - 2].percent).round() : null;
+    final pct = result.overallPercent;
+    return Row(
+      children: [
+        Semantics(
+          label: '${pct.round()}%',
+          child: SizedBox.square(
+            dimension: 104,
+            child: CustomPaint(
+              painter: _Ring(pct / 100, track: c.deep3, fill: c.bright),
+              child: Center(child: Text('${pct.round()}%', style: context.type.h3)),
             ),
           ),
         ),
-      ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(controller.exam?.name ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.capB),
+              const SizedBox(height: 4),
+              Text('results.of_marks'.trp({'n': '$marks', 'max': '$max'}), style: context.type.h2),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _Tag('results.rank'.trp({'rank': '${result.rank}', 'total': '${result.totalStudents}'}), color: c.ink),
+                  if (change != null && change != 0)
+                    _Tag(
+                      (change > 0 ? 'results.up_n' : 'results.down_n').trp({'n': '${change.abs()}'}),
+                      color: change > 0 ? c.bright : c.ink2,
+                      icon: change > 0 ? PhosphorIconsBold.trendUp : PhosphorIconsBold.trendDown,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _Summary extends StatelessWidget {
-  const _Summary({required this.controller, required this.result});
+class _Tag extends StatelessWidget {
+  const _Tag(this.text, {required this.color, this.icon});
+
+  final String text;
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(color: context.app.deep2, borderRadius: BorderRadius.circular(AppRadius.xs)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[Icon(icon, size: 14, color: color), const SizedBox(width: 4)],
+        Text(text, style: context.type.capB.copyWith(color: color)),
+      ],
+    ),
+  );
+}
+
+class _Ring extends CustomPainter {
+  _Ring(this.value, {required this.track, required this.fill});
+
+  final double value;
+  final Color track;
+  final Color fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromCircle(center: size.center(Offset.zero), radius: size.width / 2 - 10);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round;
+    canvas
+      ..drawArc(rect, 0, math.pi * 2, false, paint..color = track)
+      ..drawArc(rect, -math.pi / 2, math.pi * 2 * value.clamp(0, 1), false, paint..color = fill);
+  }
+
+  @override
+  bool shouldRepaint(_Ring old) => old.value != value || old.fill != fill || old.track != track;
+}
+
+class _Body extends StatelessWidget {
+  const _Body({required this.controller, required this.result});
 
   final ResultsController controller;
   final ExamResult result;
@@ -249,65 +226,70 @@ class _Summary extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final prev = controller.previous;
-    final trend = result.trend;
     final changes = controller.changes.take(3).toList();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Rise(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              BigNumber(value: '${result.overallPercent.round()}', unit: '%', size: 68),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stamp('results.grade'.trp({'g': result.grade}), color: AppColors.ok),
-                      const SizedBox(height: 6),
-                      Text(
-                        'results.rank'.trp({'rank': '${result.rank}', 'total': '${result.totalStudents}'}),
-                        style: AppText.capB(color: c.ink3, height: 1.2),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const Spacer(),
-              if (trend.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: SizedBox(
-                    width: 90,
-                    height: 46,
-                    child: Semantics(
-                      label: 'results.trend'.trp({'v': trend.map((t) => '${t.percent.round()}').join(', ')}),
-                      child: CustomPaint(painter: _Spark(trend.map((t) => t.percent).toList(), c.ink, c.chalk)),
+          child: EduCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('results.by_subject'.tr, style: context.type.h3),
+                for (final m in result.subjects) ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    label: '${subjectName(m.subject)} ${m.marks} / ${m.maxMarks}',
+                    excludeSemantics: true,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 116,
+                          child: Text(subjectName(m.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.b),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadius.xs),
+                            child: SizedBox(
+                              height: 10,
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(child: ColoredBox(color: c.paper3)),
+                                  FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    heightFactor: 1,
+                                    widthFactor: (m.marks / m.maxMarks).clamp(0, 1).toDouble(),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: c.subjectFor(m.subject).fill,
+                                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 52,
+                          child: Text('${m.marks}/${m.maxMarks}', textAlign: TextAlign.right, style: context.type.ts),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (trend.length > 1)
-          Rise(
-            index: 1,
-            child: Text(
-              _trendLine(trend),
-              style: context.type.s,
+                ],
+              ],
             ),
           ),
+        ),
         if (changes.isNotEmpty && prev != null) ...[
+          Rise(index: 1, child: SectionLabel('results.changed_since'.trp({'exam': controller.previousExam?.name ?? ''}))),
           Rise(
             index: 2,
-            child: SectionLabel('results.changed_since'.trp({'exam': controller.previousExam?.name ?? ''})),
-          ),
-          Rise(
-            index: 3,
             child: EduCard(
               child: Column(
                 children: [
@@ -334,7 +316,7 @@ class _Summary extends StatelessWidget {
                                 ),
                                 Text(
                                   '${changes[i].$1.marks} / ${changes[i].$1.maxMarks} · ${changes[i].$1.grade}',
-                                  style: context.type.cap,
+                                  style: context.type.s,
                                 ),
                               ],
                             ),
@@ -345,7 +327,7 @@ class _Summary extends StatelessWidget {
                                 : changes[i].$2 == 0
                                 ? '0'
                                 : '−${changes[i].$2.abs()}',
-                            style: AppText.t(color: changes[i].$2 >= 0 ? AppColors.ok : c.badText, height: 1),
+                            style: AppText.t(color: changes[i].$2 >= 0 ? c.okText : c.badText, height: 1),
                           ),
                         ],
                       ),
@@ -359,62 +341,4 @@ class _Summary extends StatelessWidget {
       ],
     );
   }
-
-  String _trendLine(List<TrendPoint> trend) {
-    final last = trend.last;
-    final earlier = trend.reversed.skip(1).toList();
-    final parts = earlier
-        .map((t) => 'results.trend_part'.trp({'p': '${t.percent.round()}', 'label': t.label}))
-        .join(' ${'common.and'.tr} ');
-    final up = last.percent >= trend[trend.length - 2].percent;
-    return (up ? 'results.up_from' : 'results.down_from').trp({'parts': parts});
-  }
-}
-
-class _Spark extends CustomPainter {
-  _Spark(this.values, this.ink, this.chalk);
-
-  final List<double> values;
-  final Color ink;
-  final Color chalk;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final lo = values.reduce(math.min) - 2;
-    final hi = values.reduce(math.max) + 2;
-    Offset at(int i) => Offset(
-      4 + (size.width - 8) * i / (values.length - 1),
-      size.height - 8 - (size.height - 16) * (values[i] - lo) / (hi - lo),
-    );
-    final path = Path()..moveTo(at(0).dx, at(0).dy);
-    for (var i = 1; i < values.length; i++) {
-      path.lineTo(at(i).dx, at(i).dy);
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = ink
-        ..strokeWidth = 2.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-    for (var i = 0; i < values.length - 1; i++) {
-      canvas.drawCircle(at(i), 3, Paint()..color = ink);
-    }
-    final last = at(values.length - 1);
-    canvas
-      ..drawCircle(last, 4, Paint()..color = AppColors.mari)
-      ..drawCircle(
-        last,
-        4,
-        Paint()
-          ..color = ink
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
-  }
-
-  @override
-  bool shouldRepaint(_Spark old) => old.values != values || old.ink != ink;
 }

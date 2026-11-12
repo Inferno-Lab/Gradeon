@@ -37,10 +37,10 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
           ),
         ],
         topPadding: MediaQuery.paddingOf(context).top + 56,
+        edgeBar: true,
         bottomBar: TeacherActionBar(
           text: Text(
             'teacher.reach'.trn(controller.roster.value),
-            style: AppText.capB(color: c.ink3),
           ),
           action: 'teacher.assign',
           loading: controller.saving.value,
