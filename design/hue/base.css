@@ -224,6 +224,7 @@
 .hue .cell{display:flex;align-items:center;gap:8px;height:52px;padding:0 10px 0 14px;border-radius:14px;background:var(--s1);min-width:0}
 .hue .pk{width:32px;height:32px;border-radius:9px;background:var(--s2);color:var(--t2);font:650 13px/1 var(--ft);display:grid;place-items:center;flex:none}
 .hue .pk.ok{background:var(--ok);color:var(--on-ok)} .hue .pk.warn{background:var(--warn);color:var(--on-warn)} .hue .pk.bad{background:var(--bad);color:var(--on-bad)}
+.hue .pk.info{background:var(--info);color:var(--on-info)} .hue .pk:disabled{cursor:default}
 .hue .st{height:40px;min-width:104px;padding:0 12px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font:650 14px/1 var(--ft);flex:none;background:var(--s2);color:var(--t2)}
 .hue .st .i{width:16px;height:16px}
 .hue .st.ok{background:var(--ok-s);color:var(--ok-i)} .hue .st.warn{background:var(--warn-s);color:var(--warn-i)} .hue .st.bad{background:var(--bad-s);color:var(--bad-i)}

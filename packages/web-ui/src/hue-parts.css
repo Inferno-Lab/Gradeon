@@ -206,6 +206,8 @@
 .nest .hb .pk.ok{background:var(--ok);color:var(--on-ok)}
 .nest .hb .pk.warn{background:var(--warn);color:var(--on-warn)}
 .nest .hb .pk.bad{background:var(--bad);color:var(--on-bad)}
+.nest .hb .pk.info{background:var(--info);color:var(--on-info)}
+.nest .hb .pk:disabled{cursor:default}
 .nest .hb .stb{height:40px;min-width:104px;padding:0 12px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font:650 14px/1 var(--fb);flex:none;background:var(--s2);color:var(--ink2)}
 .nest .hb .stb .i{width:16px;height:16px}
 .nest .hb .stb.ok{background:var(--ok-s);color:var(--ok-i)}
