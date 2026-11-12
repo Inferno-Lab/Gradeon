@@ -217,6 +217,7 @@
 .nest .hb .mx .i{width:16px;height:16px}
 .nest .hb .mx.on{background:var(--brand);color:var(--on-brand);box-shadow:none}
 .nest .hb .mx.wait{background:var(--warn-s);color:var(--warn-i);box-shadow:none}
+.nest .hb .mx.bad{background:var(--bad-s);color:var(--bad-i);box-shadow:none}
 .nest .hb .doc, .nest .hb.doc{padding:48px 56px;min-height:960px;display:flex;flex-direction:column;gap:32px}
 .nest .hb .dh{font:700 52px/56px var(--fd);font-stretch:112%;letter-spacing:-0.035em}
 .nest .hb .lead{font-size:18px;line-height:28px;color:var(--ink2);max-width:64ch}

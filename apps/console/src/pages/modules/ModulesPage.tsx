@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
 import { PlanSave, type EntitlementDoc, type EntitlementRow, type PlanRow } from '@gradeon/contracts';
 import { HttpError } from '@gradeon/api-client';
-import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, useShake, Icon } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, IC, Icon, NumberField, Select, SelectField, useShake, type PageIcon } from '@gradeon/web-ui';
 import type { CatalogDoc } from '@gradeon/api-client';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -78,10 +78,17 @@ export function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose:
   );
 }
 
-const dot = (on: boolean, until?: string, paused?: boolean) => (
-  <span data-tip={paused ? 'Paused by Gradeon' : on ? (until ? `Until ${until}` : 'On') : 'Off'} aria-label={paused ? 'Paused' : on ? (until ? `On until ${until}` : 'On') : 'Off'}
-    style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: paused ? 'var(--bad)' : on ? (until ? 'var(--warn)' : 'var(--ok)') : 'transparent', boxShadow: on || paused ? 'none' : 'inset 0 0 0 2px var(--line)' }} />
-);
+// A school's module or feature as the Modules board's tile (design/hue/src/Modules.html): on, on for a while, paused, or off.
+const dot = (on: boolean, until?: string, paused?: boolean) => {
+  const say = paused ? 'Paused by Gradeon' : on ? (until ? `On until ${until}` : 'On') : 'Off';
+  return (
+    <span className={`mx ${paused ? 'bad' : on ? (until ? 'wait' : 'on') : ''}`} role="img" aria-label={say} data-tip={say}>
+      {(on || paused) && <Icon name={paused ? 'pause' : until ? 'waiting' : 'check'} size={16} className="i" />}
+    </span>
+  );
+};
+// A module's own icon from the icon map, so the column reads like the menu.
+const modIcon = (key: string): PageIcon => (key in IC ? key : key === 'chat' ? 'messages' : key === 'exams_results' ? 'exams' : 'modules') as PageIcon;
 
 /** Plans and modules: which school has what, the plans schools start from, and what is planned. */
 export function ModulesPage() {
@@ -181,7 +188,7 @@ function Schools({ say }: { say: Say }) {
           )}
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <div role="table" aria-label={focused ? `${focused.name} features by school` : 'Modules by school'} style={{ display: 'grid', gridTemplateColumns: `40px minmax(190px,1.6fr) repeat(${Math.max(1, cols.length)}, minmax(84px,1fr))`, minWidth: 260 + Math.max(1, cols.length) * 84, alignItems: 'stretch' }}>
+          <div className="hb" role="table" aria-label={focused ? `${focused.name} features by school` : 'Modules by school'} style={{ display: 'grid', gridTemplateColumns: `40px minmax(190px,1.6fr) repeat(${Math.max(1, cols.length)}, minmax(84px,1fr))`, minWidth: 260 + Math.max(1, cols.length) * 84, alignItems: 'stretch' }}>
             <div role="row" style={{ display: 'contents' }}>
               <span role="columnheader" style={{ padding: '16px 0 16px 20px', display: 'flex', alignItems: 'center' }}>
                 {can && <Checkbox aria-label="Choose every school shown" checked={every} onChange={() => setPicked(every ? new Set() : new Set(rows.map((r) => r.id)))} />}
@@ -191,7 +198,7 @@ function Schools({ say }: { say: Say }) {
               {cols.map((c) => (
                 <span key={c.key} role="columnheader" style={{ padding: '10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {c.feature ? <span className="help" style={{ margin: 0, fontWeight: 700, textAlign: 'center', lineHeight: 1.25 }}>{c.name}</span>
-                    : <button className="fp" style={{ font: '700 12px/1.25 var(--fb)', whiteSpace: 'normal', textAlign: 'center' }} data-tip={paused(c.key) ? 'Paused for every school. Open to lift it.' : 'Open its features'} onClick={() => setFocus(c.key)}>{c.name}{paused(c.key) ? ' · paused' : ''}</button>}
+                    : <button className="vc" style={{ alignItems: 'center', gap: 6, font: '600 12px/16px var(--fb)', color: paused(c.key) ? 'var(--bad-i)' : 'var(--ink2)', textAlign: 'center' }} data-tip={paused(c.key) ? 'Paused for every school. Open to lift it.' : 'Open its features'} onClick={() => setFocus(c.key)}><Icon name={modIcon(c.key)} className="i" />{c.name}{paused(c.key) ? ' · paused' : ''}</button>}
                 </span>
               ))}
             </div>
