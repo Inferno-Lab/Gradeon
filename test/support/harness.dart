@@ -92,8 +92,8 @@ Widget testApp({Widget? home, List<GetPage<dynamic>> pages = const []}) {
 /// Loads the app's real fonts so text measures as on a phone.
 Future<void> loadAppFonts() async {
   final fonts = {
-    'AnekLatin': ['assets/fonts/AnekLatin.ttf'],
-    'AnekDevanagari': ['assets/fonts/AnekDevanagari.ttf'],
+    'MonaSans': ['assets/fonts/MonaSans.ttf'],
+    'NotoSansDevanagari': ['assets/fonts/NotoSansDevanagari.ttf'],
     'IBMPlexMono': ['assets/fonts/IBMPlexMono-Regular.ttf', 'assets/fonts/IBMPlexMono-Medium.ttf'],
     'packages/phosphor_flutter/PhosphorRegular': ['packages/phosphor_flutter/lib/fonts/Phosphor.ttf'],
     'packages/phosphor_flutter/PhosphorBold': ['packages/phosphor_flutter/lib/fonts/Phosphor-Bold.ttf'],

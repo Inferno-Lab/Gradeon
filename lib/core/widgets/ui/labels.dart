@@ -54,7 +54,7 @@ class Stamp extends StatelessWidget {
     child: Text(
       text.toUpperCase(),
       maxLines: 1,
-      style: anek(size, 760, width: 118, height: 1, em: .09, color: color),
+      style: hueText(size, 760, width: 118, height: 1, em: .09, color: color),
     ),
   );
 }

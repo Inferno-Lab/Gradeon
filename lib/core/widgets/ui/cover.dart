@@ -43,7 +43,7 @@ class Cover extends StatelessWidget {
       foregroundDecoration: const _SpineDecoration(),
       child: Text(
         label ?? subjectAbbr[subject] ?? subject.substring(0, 2).toUpperCase(),
-        style: anek(large ? 13 : 11, 760, width: 122, height: 1, em: .05, color: pigment.on),
+        style: hueText(large ? 13 : 11, 760, width: 122, height: 1, em: .05, color: pigment.on),
         maxLines: 1,
       ),
     );

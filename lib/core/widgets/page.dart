@@ -8,11 +8,11 @@ import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/states.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Space a tab page leaves for the floating dock.
-const kDockClearance = 112.0;
+/// Space a tab page leaves for the tab bar (kTabBarHeight) and a little air.
+const kDockClearance = 88.0;
 
-/// Phone page: content scrolls beneath floating glass controls at the top and
-/// an optional glass bar at the bottom.
+/// Phone page in Gradeon Hue: the title on the school's deep colour, the content on a sheet rising over it, the top
+/// controls and an optional action bar floating above.
 class PageFrame extends StatelessWidget {
   const PageFrame({
     required this.children,
@@ -68,29 +68,64 @@ class PageFrame extends StatelessWidget {
     final hasTopRow = leading != null || actions.isNotEmpty;
     // On tablets the reading column stays phone-like and centred.
     final side = padContent ? math.max<double>(20, (MediaQuery.sizeOf(context).width - 720) / 2) : 0.0;
-    final list = ListView(
-      controller: controller,
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-      padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 8), side, bottomSpace),
-      children: [
-        if (underlay == null) const OfflineCapsule(),
-        ...children,
-      ],
-    );
+    final c = context.app;
+    // Gradeon Hue's frame (design/hue/src/ParentFees.html): the page's title sits on the school's deep colour, the
+    // content on a sheet that rises over it. A page whose first child is its PageTitle gets the frame; pages that draw
+    // their own art behind the top (underlay) keep it.
+    final hue = underlay == null && children.isNotEmpty && children.first is PageTitle;
+    final Widget list;
+    if (hue) {
+      final viewport = MediaQuery.sizeOf(context).height;
+      list = ListView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: EdgeInsets.zero,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 12), side, 44),
+            child: _OnDeep(child: children.first),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -28),
+            child: Container(
+              constraints: BoxConstraints(minHeight: viewport),
+              decoration: BoxDecoration(color: background ?? c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+              padding: EdgeInsets.fromLTRB(side, 20, side, bottomSpace),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [const OfflineCapsule(), ...children.skip(1)],
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      list = ListView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 8), side, bottomSpace),
+        children: [
+          if (underlay == null) const OfflineCapsule(),
+          ...children,
+        ],
+      );
+    }
     return Scaffold(
-      backgroundColor: background ?? context.app.chalk,
+      backgroundColor: hue ? (background ?? c.chalk) : background ?? c.chalk,
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
+          // The deep colour stays behind the top, so pulling down or scrolling never shows a light band above the title.
+          if (hue) Positioned(left: 0, right: 0, top: 0, height: MediaQuery.sizeOf(context).height * .6, child: ColoredBox(color: c.deep)),
           if (onRefresh == null)
             Positioned.fill(child: list)
           else
             Positioned.fill(
               child: _PullToRefresh(onRefresh: onRefresh!, top: top + 10, child: list),
             ),
-          // A thin scrim keeps the clock readable over text. Nothing else covers content: glass has to
-          // show what scrolls beneath it, and page-coloured bands read as dark shadows in dark themes.
-          if (underlay == null && topFade)
+          // A thin scrim keeps the clock readable over text. Nothing else covers content: page-coloured bands read as
+          // dark shadows in dark themes. The Hue frame needs none: the top is the deep colour.
+          if (underlay == null && topFade && !hue)
             Positioned(
               left: 0,
               right: 0,
@@ -103,8 +138,8 @@ class PageFrame extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        (background ?? context.app.chalk).withValues(alpha: .96),
-                        (background ?? context.app.chalk).withValues(alpha: 0),
+                        (background ?? c.chalk).withValues(alpha: .96),
+                        (background ?? c.chalk).withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -172,20 +207,32 @@ class PageTitle extends StatelessWidget {
   final bool small;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title.tr, style: small ? context.type.h2 : context.type.h1),
-      if (subtitle != null)
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(subtitle!.tr, style: context.type.cap),
-        ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final deep = context.dependOnInheritedWidgetOfExactType<_OnDeep>() != null;
+    final c = context.app;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title.tr, style: (small ? context.type.h2 : context.type.h1).copyWith(color: deep ? c.onDeep : null)),
+        if (subtitle != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(subtitle!.tr, style: context.type.s.copyWith(color: deep ? c.onDeep2 : null)),
+          ),
+      ],
+    );
+  }
 }
 
-/// Section header: overline on the left, optional link on the right.
+/// Marks the page title as sitting on the deep colour of the Hue frame.
+class _OnDeep extends InheritedWidget {
+  const _OnDeep({required super.child});
+
+  @override
+  bool updateShouldNotify(_OnDeep oldWidget) => false;
+}
+
+/// Section header: a label on the left (Hue `.lbl`), an optional link on the right.
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {this.action, this.onAction, this.top = 22, super.key});
 
@@ -201,8 +248,8 @@ class SectionLabel extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            text.tr.toUpperCase(),
-            style: context.type.o,
+            text.tr,
+            style: context.type.capB.copyWith(color: context.app.ink2),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -215,7 +262,7 @@ class SectionLabel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
                 action!.tr,
-                style: context.type.capB.copyWith(color: context.app.ink2),
+                style: context.type.capB.copyWith(color: context.app.mariText),
               ),
             ),
           ),

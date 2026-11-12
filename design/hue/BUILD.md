@@ -42,7 +42,10 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 - Dev servers for checks: PostgreSQL 54339, server 4010 (scratchpad server-ds.sh), admin vite 5183, console vite 5184; `API=http://localhost:4010 node tools/shot.mjs <url> <png> 1440 960 [--console]`.
 - Rebuilt and compared with their boards: dashboard (Today), fees overview (Fees), roll call (Attendance), timetable (Timetable, also fixes six-day weeks), sign-in (SignIn), menu (Sidebar). Students already matches the board's language and keeps its extra functions.
 - Console rebuilt and compared: Fleet (FleetHue.tsx), Modules grid (mx tiles, module icons), School header in the school's own colours + seed colour card (ConfigTab HueSwatches).
-- Next: the app (Flutter) from ParentHome, ParentFees, ParentResults, TeacherHome, RollCall, EmptyHome, AppKit and EmptyApp1–4; then rules tests, audit-ui, e2e, docs, canvas, push.
+- App started: palette on Hue (AppColors maps the old names to Hue and adds deep/bright/brand/hero/info/spectrum), Mona Sans + Noto Sans Devanagari (hueText), dock is the deep tab bar with a bright block, PageFrame puts a leading PageTitle on the deep colour with the content on a rising sheet, section labels sentence case. Not yet shot or checked.
+- Next in the app: GlassIconButton → Hue round button on deep2; home screens rebuilt from ParentHome/TeacherHome/EmptyHome; fees/results/roll call from their boards; labels and stamps as Hue tags; EmptyKit + the 20 app scenes; then
+- Then (whole build): rules tests (web rules.test.ts still imports WEB_TOKENS), audit-ui, e2e, docs (AGENTS, DESIGN, design-system), canvas republish, push.
+- Earlier plan line: the app (Flutter) from ParentHome, ParentFees, ParentResults, TeacherHome, RollCall, EmptyHome, AppKit and EmptyApp1–4; then rules tests, audit-ui, e2e, docs, canvas, push.
 
 ## Checklist
 

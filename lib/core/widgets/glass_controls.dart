@@ -126,7 +126,7 @@ class _GlassSegmentedState extends State<GlassSegmented> {
               maxLines: 1,
               overflow: TextOverflow.fade,
               softWrap: false,
-              style: anek(widget.fontSize, on ? 720 : (widget.onPigment ? 650 : 560), height: 1, color: color).copyWith(
+              style: hueText(widget.fontSize, on ? 720 : (widget.onPigment ? 650 : 560), height: 1, color: color).copyWith(
                 shadows: widget.onPigment && !on
                     ? [Shadow(color: AppColors.amoled.chalk.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 1))]
                     : null,

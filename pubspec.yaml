@@ -38,12 +38,12 @@ flutter:
   assets:
     - assets/mock/
   fonts:
-    - family: AnekLatin
+    - family: MonaSans
       fonts:
-        - asset: assets/fonts/AnekLatin.ttf
-    - family: AnekDevanagari
+        - asset: assets/fonts/MonaSans.ttf
+    - family: NotoSansDevanagari
       fonts:
-        - asset: assets/fonts/AnekDevanagari.ttf
+        - asset: assets/fonts/NotoSansDevanagari.ttf
     - family: IBMPlexMono
       fonts:
         - asset: assets/fonts/IBMPlexMono-Regular.ttf

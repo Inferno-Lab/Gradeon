@@ -53,7 +53,7 @@ class Avatar extends StatelessWidget {
       ),
       child: Text(
         initials ?? initialsOf(name),
-        style: anek(size * .35, 700, width: 112, height: 1, em: .02, color: fg),
+        style: hueText(size * .35, 700, width: 112, height: 1, em: .02, color: fg),
       ),
     );
   }

@@ -190,7 +190,7 @@ class _Book extends StatelessWidget {
   Widget build(BuildContext context) {
     final id = _styles[style];
     final night = id == 'night';
-    final pigment = night ? SubjectColor(AppColors.light.ink, AppColors.blackboard.ink) : AppColors.subject(id);
+    final pigment = night ? AppColors.spectrum('indigo') : AppColors.subject(id);
     final away = !book.available;
     final shapes = switch (id) {
       'computer' => [_shape(right: -24, top: 40, w: 80, h: 80, color: AppColors.white.withValues(alpha: 0.14))],

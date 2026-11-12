@@ -82,7 +82,7 @@ class Btn extends StatelessWidget {
     };
     final h = height ?? (small ? 40.0 : 52.0);
     final disabled = onPressed == null && !loading;
-    final style = anek(small ? 14.5 : 16, 650, width: 108, height: 1, color: fg);
+    final style = hueText(small ? 14.5 : 16, 650, width: 108, height: 1, color: fg);
     final content = Row(
       mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,

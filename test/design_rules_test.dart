@@ -52,7 +52,7 @@ void main() {
   });
 
   test('text is set from the type roles', () {
-    expect(_hits(features, RegExp(r'\banek\(')), isEmpty, reason: 'use context.type.<role> or AppText.<role>');
+    expect(_hits(features, RegExp(r'\bhueText\(')), isEmpty, reason: 'use context.type.<role> or AppText.<role>');
     expect(_hits(drawn, RegExp(r'fontSize:\s*\d|fontWeight:|FontVariation\(')), isEmpty,
         reason: 'pick another role instead of changing its size or weight');
   });
