@@ -21,8 +21,8 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 | `--sunk` | `--s2` | | `--vD` | `--brand-ink` |
 | `--line` | `--line` | | `--v2` | `--brand-line` |
 | `--line2` | `--line2` | | `--vL` | `--brand-soft2` |
-| `--field` | `--t3` | | `--g` `--gS` `--gD` | `--ok` `--ok-s` `--ok-i` |
-| `--ink` `--ink2` `--ink3` | `--t1` `--t2` `--t3` | | `--a` `--aS` `--aD` | `--warn` `--warn-s` `--warn-i` |
+| `--field` | `--ink3` | | `--g` `--gS` `--gD` | `--ok` `--ok-s` `--ok-i` |
+| `--ink` `--ink2` `--ink3` | `--ink` `--ink2` `--ink3` (Hue's t1–t3; --t1..3 stay motion timings on the web) | | `--a` `--aS` `--aD` | `--warn` `--warn-s` `--warn-i` |
 | `--pri` `--priT` | `--brand` `--on-brand` | | `--c` `--cS` `--cD` | `--bad` `--bad-s` `--bad-i` |
 | `--ci` `--onCi` | `--deep` `--on-deep` | | `--cF` `--onCF` | `--bad` `--on-bad` |
 | `--knob` | `--s1` | | `--present` | `--line2` |
@@ -34,7 +34,7 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 - A page with a board is rebuilt from the board's composition (its markup and classes), bound to real data, then compared side by side with the board shot (`design/hue/shots/<Board>.png`) at 1440 and checked at phone width and in dark.
 - Boarded web pages: dashboard ← Today, students ← Students, fees ← Fees, attendance ← Attendance, timetable ← Timetable, menu ← Sidebar, sign-in ← SignIn; console fleet ← Fleet, school ← School, modules ← Modules. App: parent home ← ParentHome, fees ← ParentFees, results ← ParentResults, teacher home ← TeacherHome, roll call ← RollCall, empty home ← EmptyHome, the kit ← AppKit.
 - Every other page is built only from the canvas's parts (Components, AppKit).
-- Hue's component CSS (`design/hue/base.css`, `base2.css`) is ported into web-ui as `hue-parts.css` under `.nest`; class names that already meant something else in Nest are renamed in the port: Hue `.rw` → `.fx`, `.tr` → `.trow`, `.tile` → `.ht`.
+- Hue's component CSS (`design/hue/base.css`, `base2.css`) is ported into web-ui as `hue-parts.css` under `.nest`; class names that already meant something else in Nest are renamed in the port: Hue `.rw` → `.fx`, `.tr` → `.trow`, `.tile` → `.ht`, `.mini` → `.mcard`, `.st` → `.stb`, `.float` → `.flt`, `.sheet` → `.psheet`, `.col` → `.vc`.
 
 ## Progress log
 

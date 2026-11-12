@@ -5,7 +5,7 @@ import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contr
 import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
-import { DashboardView } from './dashboard.view';
+import { TodayView } from './TodayView';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { PhoneDashboard } from '../phone/PhoneDashboard';
 
@@ -116,7 +116,9 @@ function DashboardDesktop() {
     const me = tintFor(app.user.name);
     const t = d.timeline;
     return {
-      ...chrome, goto: app.go, hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
+      ...chrome, goto: app.go, money,
+      remind: () => void app.api.attendance.remind().then(() => say('Reminders sent to the class teachers.')).catch((e: Error) => say(e.message, 'bad')),
+      hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
       has: { attendance: has('attendance') && may('attendance.read'), fees: has('fees') && may('fees.read'), chat: has('chat') && may('messages.read') }, showChart: tabsOn.length > 0,
       approvalKinds: (() => {
         const by = new Map<string, number>();
@@ -187,5 +189,5 @@ function DashboardDesktop() {
     );
   }
   if (!v) return <DashboardSkeleton />;
-  return <DashboardView v={v} />;
+  return <TodayView v={v} d={d!} />;
 }
