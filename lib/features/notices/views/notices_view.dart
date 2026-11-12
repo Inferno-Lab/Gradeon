@@ -371,7 +371,20 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
         ],
         topPadding: MediaQuery.paddingOf(context).top + 60,
         onRefresh: controller.load,
-        bottomBar: !calendar
+        // A notice that asks families to say they have read it: one button until they do.
+        bottomBar: notice != null && notice.needsAck && !notice.acked
+            ? Glass(
+                height: 64,
+                radius: 999,
+                padding: const EdgeInsets.only(left: 20, right: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('notices.ack_asked'.tr, style: AppText.capB(color: c.ink3))),
+                    Btn('notices.ack', icon: PhosphorIconsRegular.checkCircle, height: 48, loading: controller.acking.value, onPressed: () => unawaited(controller.acknowledge())),
+                  ],
+                ),
+              )
+            : !calendar
             ? null
             : Glass(
                 height: 64,

@@ -1,6 +1,6 @@
 # Gradeon — guide for coding agents and new developers
 
-Gradeon is a school platform: a TypeScript backend, a school admin, a console and the Flutter school app (parents and teachers; students do not sign in) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
+Gradeon is a school platform: a TypeScript backend, a school admin, a console and the Flutter school app (parents, teachers, and students and bus drivers where the school turns them on from the console) in the **Chalk & Glass** design. The Flutter app runs on local JSON mock data by default; built with `SCHOOL` and `API_BASE_URL` it signs in and reads the school's real data through the family API (`/v1/f/*`, see `docs/HANDOFF.md` section 9.3 and `docs/API_CONTRACT.md`). Read this file first. It is the single source of truth: `CLAUDE.md` and `AGENT.md` only point here.
 
 Branch work happens on feature branches off `main`; the Render test deployment builds from `main`, so a change reaches `https://gradeon.onrender.com` only after it is merged (or pushed) to `main`. The Chalk & Glass redesign of the app was merged to `main`; `redesign/chalk-glass` and `apple_glass` remain on GitHub as history.
 
@@ -56,6 +56,7 @@ View (GetView/StatelessWidget)  →  Controller (GetxController + Loadable)  →
 - `lib/data/` `models/`, `repositories/` (interface + Mock + Remote in one file per area), `datasources/`.
 - `lib/features/<feature>/` `views/` and `controllers/` (and `widgets/` when a feature has reusable pieces). A view never talks to a repository; a controller never builds widgets.
 - `InitialBinding` registers every repository: Mock when `AppConfig.useMockData`, Remote otherwise. Add a repository in **both** branches.
+- Live updates (chat, notifications, the bus) come from one SSE stream, `core/services/live_stream.dart` (`GET /v1/f/stream`); a controller mixes in `LiveListen` instead of polling. The driver's phone shares the bus position (`geolocator`).
 - `Loadable` gives a controller `state` (loading/success/empty/error), `run(...)`, and auto-reload when the `SessionBus` bumps (after any mock write) or the active child changes.
 - Barrels: `core/widgets/ui.dart` re-exports `ui/*`; `teacher_tools_view.dart` re-exports the teacher screens. Import the barrel, put code in the part.
 
@@ -87,7 +88,7 @@ Details: `docs/architecture.md`. How to add a screen, a repository, or an AI fea
 - Comments say *why*, one line. Mark a deliberate limit with `// shortcut: <the limit>, <when to upgrade>`.
 - Commits are atomic and use Conventional Commits (`fix(glass): …`, `refactor(fees): …`). Keep refactors separate from behaviour changes.
 - Visual changes: look at them (headless shot at minimum; emulator for glass). Light, dark, AMOLED; small phone (360×640), phone (390×844), tablet (≥ 840 wide).
-- Demo accounts: password `demo123`, OTP `123456` on demo content; `nest2026` and code `424242` on a school build against the demo school. Parent Priya, teacher Kavita (see `README.md`). Students do not sign in.
+- Demo accounts: password `demo123`, OTP `123456` on demo content; `nest2026` and code `424242` on a school build against the demo school. Parent Priya, teacher Kavita (see `README.md`). Students and drivers sign in only when the console turns their role on (`app.roles`); the admin invites them (Students → On the app; a staff member set as a route's driver).
 
 ## Where things are
 

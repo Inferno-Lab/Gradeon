@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Post, Put, Query, type OnModuleInit } from '@nestjs/common';
 import {
-  ActivityQuery, ConnectionInput, ConnectionPatch, RouteInput, TemplateInput, providerDef, type ActionRow, type ActivityView, type ConnectionRow, type DeliveryRow, type HookEventRow,
+  ActivityQuery, CAPABILITY_LABELS, ConnectionInput, ConnectionPatch, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, RouteInput, SYSTEM_MESSAGES, TemplateInput, fieldProblem, providerDef, type Capability, type ActionRow, type ActivityView, type ConnectionRow, type DeliveryRow, type HookEventRow,
   type IntegrationsView, type RouteRow, type TemplateRow,
 } from '@gradeon/contracts';
 import { newId, scheduleJob } from '@gradeon/db';
@@ -11,6 +11,9 @@ import { z } from 'zod';
 import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
+import { PlatformHub } from './platform-hub.js';
+
+export { PlatformHub };
 
 const iso = (d: Date | null | undefined) => (d ? new Date(d).toISOString() : null);
 // Payment checks make and cancel a link each time: their health comes from webhooks and real payments instead.
@@ -25,11 +28,18 @@ export class Integrations implements OnModuleInit {
     private readonly db: Db,
     private readonly actions: Actions,
     @Inject(ENV) private readonly env: Env,
+    platform: PlatformHub,
   ) {
-    this.hub = new Hub({ pool: db.pool, secretsKey: env.SECRETS_KEY, baseUrl: env.API_BASE_URL.replace(/\/$/, ''), mode: env.MESSAGING_MODE });
+    this.hub = platform.hub;
   }
 
   onModuleInit(): void {
+    this.actions.handle('integration.mode', async (_school, _params, by) => {
+      const gaps = await this.liveGaps();
+      if (gaps.length) throw new Error(`Not ready for live messages: ${gaps.join(' ')}`);
+      await this.saveSettings({ mode: 'live' }, by);
+      return 'Live: every school’s messages, files and payments now go through live connections only.';
+    });
     this.actions.handle('integration.live', async (_school, params, by) => {
       const c = await this.raw(String(params.connectionId ?? ''));
       if (!c.health_ok) throw new Error(`${c.name} has not passed its test. Run Test again, then ask for approval.`);
@@ -69,36 +79,37 @@ export class Integrations implements OnModuleInit {
       templates: templates.rows.map((t): TemplateRow => ({ id: t.id, connectionId: t.connection_id, messageKey: t.message_key, language: t.language, providerTemplateId: t.provider_template_id,
         dltTemplateId: t.dlt_template_id ?? undefined, approvedText: t.approved_text })),
       allowList: await this.hub.allowList(),
-      mode: this.hub.mode,
+      mode: await this.hub.mode(),
     };
   }
 
-  /** Every required field is filled: settings in `settings`, secrets in `secrets` (or already stored). */
+  /** Every field is filled where needed and has the shape its provider expects: settings in `settings`, secrets and files in `secrets` (or already stored). */
   private check(provider: string, settings: Record<string, unknown>, secrets: Record<string, string>, stored: string[] = []): void {
     const def = providerDef(provider);
     if (!def || provider === 'sandbox') throw new ApiError('validation', 'Choose a provider.');
     const fields: Record<string, string> = {};
     for (const f of def.fields) {
-      if (!f.required) continue;
-      const v = f.kind === 'secret' ? (secrets[f.key] ?? (stored.includes(f.key) ? 'set' : '')) : settings[f.key];
-      if (v === undefined || v === null || String(v).trim() === '') fields[f.key] = `${f.label} is needed.`;
-      if (f.kind === 'json' && settings[f.key] && typeof settings[f.key] === 'string') {
-        try { JSON.parse(String(settings[f.key])); } catch { fields[f.key] = 'This is not valid JSON.'; }
-      }
+      const sealed = f.kind === 'secret' || f.kind === 'file';
+      const v = sealed ? (secrets[f.key] ?? (stored.includes(f.key) ? null : '')) : settings[f.key];
+      if (v === null) continue; // kept as it was
+      const problem = fieldProblem(f, v);
+      if (problem) fields[f.key] = problem;
     }
-    if (Object.keys(fields).length) throw new ApiError('validation', 'Some fields are missing.', { fields });
+    if (Object.keys(fields).length) throw new ApiError('validation', 'Some fields need a look.', { fields });
   }
 
   async create(me: ConsoleUser, b: ConnectionInput): Promise<string> {
+    if (b.scope === 'school' && providerDef(b.provider)?.capabilities.every((c) => PLATFORM_CAPABILITIES.includes(c))) throw new ApiError('validation', 'This serves Gradeon itself, so it is a Gradeon-wide connection.', { fields: { scope: 'Gradeon-wide only.' } });
     if (b.scope === 'school' && !b.schoolId) throw new ApiError('validation', 'Choose the school this connection belongs to.', { fields: { schoolId: 'Choose a school.' } });
     if (b.schoolId && !(await this.db.pool.query('select 1 from schools where id = $1 and deleted_at is null', [b.schoolId])).rowCount) throw notFound('That school');
-    this.check(b.provider, b.settings, b.secrets ?? {});
+    if (!b.draft) this.check(b.provider, b.settings, b.secrets ?? {});
+    else if (!providerDef(b.provider) || b.provider === 'sandbox') throw new ApiError('validation', 'Choose a provider.');
     const { sealed, hints } = this.hub.sealSecrets(b.secrets ?? {});
     const id = newId('con');
     await this.db.pool.query(
       `insert into integration_connections (id, provider, name, scope, school_id, state, settings, secrets_sealed, secret_hints, hook_token, created_by, updated_by)
-       values ($1,$2,$3,$4,$5,'test',$6,$7,$8,$9,$10,$10)`,
-      [id, b.provider, b.name, b.scope, b.scope === 'school' ? b.schoolId : null, JSON.stringify(b.settings), sealed, JSON.stringify(hints), randomToken(18), me.email]);
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)`,
+      [id, b.provider, b.name, b.scope, b.scope === 'school' ? b.schoolId : null, b.draft ? 'draft' : 'test', JSON.stringify(b.settings), sealed, JSON.stringify(hints), randomToken(18), me.email]);
     await this.db.audit(me.email, 'integration.created', 'integration', id, { provider: b.provider, scope: b.scope, schoolId: b.schoolId ?? null });
     return id;
   }
@@ -109,10 +120,11 @@ export class Integrations implements OnModuleInit {
     const conn = (await this.hub.connection(id))!;
     const settings = { ...c.settings, ...(b.settings ?? {}) };
     const secrets = { ...conn.secrets, ...Object.fromEntries(Object.entries(b.secrets ?? {}).filter(([, v]) => v.trim() !== '')) };
-    if (b.settings || b.secrets) this.check(c.provider, settings, secrets);
+    if (b.settings || b.secrets) this.check(c.provider, settings, b.secrets ?? {}, Object.keys(conn.secrets));
     const changed = !!b.settings || Object.values(b.secrets ?? {}).some((v) => v.trim() !== '');
     const { sealed, hints } = this.hub.sealSecrets(secrets);
-    const state = b.state ?? (changed && c.state === 'live' ? 'test' : c.state);
+    // A draft becomes a test connection once its fields are all filled in and pass their checks.
+    const state = b.state ?? (changed && (c.state === 'live' || c.state === 'draft') ? 'test' : c.state);
     await this.db.pool.query(
       `update integration_connections set name = $2, settings = $3, secrets_sealed = $4, secret_hints = $5, secret_version = secret_version + $6, state = $7,
        health_ok = case when $8 then null else health_ok end, updated_by = $9, updated_at = now() where id = $1`,
@@ -139,6 +151,11 @@ export class Integrations implements OnModuleInit {
     const c = await this.raw(id);
     if (c.state === 'live') throw new ApiError('conflict', `${c.name} is already live.`);
     if (!c.health_ok) throw new ApiError('validation', `Run Test on ${c.name} first: only a connection that passed its test can go live.`);
+    const def = providerDef(c.provider);
+    if (def?.capabilities.some((x) => x === 'sms' || x === 'whatsapp')) {
+      const missing = await this.missingTemplates(id);
+      if (missing.length) throw new ApiError('validation', `${c.name} has no approved template for ${missing.length} ${missing.length === 1 ? 'message' : 'messages'} yet. Map them under Templates first.`);
+    }
     return this.actions.request(me, { action: 'integration.live', schoolId: c.school_id ?? undefined, params: { connectionId: id, name: c.name }, dryRun: false });
   }
 
@@ -216,14 +233,75 @@ export class Integrations implements OnModuleInit {
     return rows.map((e) => ({ id: e.id, connectionId: e.connection_id, at: iso(e.at)!, ok: e.ok, summary: e.summary }));
   }
 
+  /** Merges into the Integrations settings (allow-list, mode): one record every server reads. */
+  private async saveSettings(patch: Record<string, unknown>, by: string): Promise<void> {
+    await this.db.pool.query(
+      "insert into console_settings (key, value, updated_by) values ('integrations', $1, $2) on conflict (key) do update set value = console_settings.value || excluded.value, updated_by = excluded.updated_by, updated_at = now()",
+      [JSON.stringify(patch), by]);
+    this.hub.forget();
+  }
+
   async setAllowList(me: ConsoleUser, list: string[]): Promise<string[]> {
     const clean = [...new Set(list.map((s) => s.trim()).filter(Boolean))];
-    await this.db.pool.query(
-      "insert into console_settings (key, value, updated_by) values ('integrations', $1, $2) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()",
-      [JSON.stringify({ allowList: clean }), me.email]);
-    this.hub.forget();
+    await this.saveSettings({ allowList: clean }, me.email);
     await this.db.audit(me.email, 'integration.allowlist', 'integration', 'allowlist', { count: clean.length });
     return clean;
+  }
+
+  /**
+   * What stands between the test track and live messages: each family-facing capability needs a live Gradeon-wide route, SMS and
+   * WhatsApp connections need every message's approved template, and uploads need a virus scanner. Empty when ready.
+   */
+  async liveGaps(): Promise<string[]> {
+    const gaps: string[] = [];
+    const routes = (await this.db.pool.query<{ capability: string; state: string; provider: string; connection_id: string; name: string }>(
+      'select r.capability, c.state, c.provider, c.id connection_id, c.name from integration_routes r join integration_connections c on c.id = r.connection_id where r.school_id is null')).rows;
+    for (const cap of ['sms', 'email', 'push', 'storage', 'payments', 'scanning'] as Capability[]) {
+      const r = routes.find((x) => x.capability === cap);
+      if (!r) gaps.push(`${CAPABILITY_LABELS[cap]} has no Gradeon-wide connection.`);
+      else if (r.state !== 'live') gaps.push(`${r.name} (${CAPABILITY_LABELS[cap]}) is not live yet.`);
+    }
+    for (const r of routes.filter((x) => x.capability === 'sms' || x.capability === 'whatsapp')) {
+      const missing = await this.missingTemplates(r.connection_id);
+      if (missing.length) gaps.push(`${r.name} has no approved template for ${missing.length} ${missing.length === 1 ? 'message' : 'messages'}.`);
+    }
+    return gaps;
+  }
+
+  /** Messages (the platform's own and every school message) a text or WhatsApp connection has no approved template for. */
+  async missingTemplates(connectionId: string): Promise<string[]> {
+    const have = new Set((await this.db.pool.query<{ message_key: string }>('select message_key from integration_templates where connection_id = $1', [connectionId])).rows.map((r) => r.message_key));
+    return [...SYSTEM_MESSAGES.map((m) => m.key), ...MESSAGE_EVENTS.map((m) => m.key)].filter((k) => !have.has(k));
+  }
+
+  /** Back to the test track at once (the safe way); to live only through a second person, and only when nothing is missing. */
+  async setMode(me: ConsoleUser, mode: 'sandbox' | 'live'): Promise<{ mode: 'sandbox' | 'live'; action?: ActionRow }> {
+    if (mode === 'sandbox') {
+      await this.saveSettings({ mode: 'sandbox' }, me.email);
+      await this.db.audit(me.email, 'integration.mode', 'integration', 'mode', { mode });
+      return { mode };
+    }
+    const gaps = await this.liveGaps();
+    if (gaps.length) throw new ApiError('validation', `Not ready for live messages: ${gaps.join(' ')}`);
+    return { mode: await this.hub.mode(), action: await this.actions.request(me, { action: 'integration.mode', params: {}, dryRun: false }) };
+  }
+
+  /** Pulls the provider's approved templates and fills in those whose name matches a message (or keeps them for picking). */
+  async importTemplates(me: ConsoleUser, id: string): Promise<{ imported: number; found: number }> {
+    await this.raw(id);
+    const list = (await this.hub.providerTemplates(id)).filter((t) => /^approved$/i.test(t.status));
+    const keys = [...SYSTEM_MESSAGES.map((m) => m.key), ...MESSAGE_EVENTS.map((m) => m.key)];
+    let imported = 0;
+    for (const t of list) {
+      // A template named like the message (attendance_absent for attendance.absent) is taken as its approved wording.
+      const key = keys.find((k) => k.replace(/\./g, '_') === t.name.toLowerCase());
+      if (!key) continue;
+      let n = 0;
+      const text = t.text.replace(/\{\{\d+\}\}/g, () => `{${(MESSAGE_EVENTS.find((e) => e.key === key)?.vars ?? SYSTEM_MESSAGES.find((e) => e.key === key)?.vars ?? [])[n++] ?? 'value'}}`);
+      await this.putTemplate(me, { connectionId: id, messageKey: key, language: t.language.slice(0, 5) || 'en', providerTemplateId: t.id, approvedText: text });
+      imported++;
+    }
+    return { imported, found: list.length };
   }
 
   /** Every 15 minutes: tests each live connection, and alerts when one fails or keeps failing to send. */
@@ -243,6 +321,7 @@ export class Integrations implements OnModuleInit {
 
 const TestBody = z.object({ to: z.string().max(200).optional() });
 const AllowBody = z.object({ allowList: z.array(z.string().max(200)).max(200) });
+const ModeBody = z.object({ mode: z.enum(['sandbox', 'live']) });
 
 @Controller('console/v1/integrations')
 export class IntegrationsController {
@@ -282,10 +361,28 @@ export class IntegrationsController {
   deleteTemplate(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> { return this.integrations.deleteTemplate(me, id); }
 
   @Get('activity') @Needs('integrations.read')
-  activity(@Query(new ZodPipe(ActivityQuery)) q: ActivityQuery): Promise<ActivityView> { return this.integrations.activity(q); }
+  async activity(@Me() me: ConsoleUser, @Query(new ZodPipe(ActivityQuery)) q: ActivityQuery): Promise<ActivityView> {
+    const v = await this.integrations.activity(q);
+    if (me.permissions.includes('integrations.write')) return v;
+    // Families' numbers and what was said to them are for the people who run messaging; the rest see that it happened.
+    const mask = (to: string) => (to.includes('@') ? to.replace(/^(.).*?(@.*)$/, '$1•••$2') : to.replace(/\d(?=(?:\D*\d){4})/g, '•'));
+    return { ...v, rows: v.rows.map((r) => ({ ...r, to: mask(r.to), body: 'Hidden: only people who run messaging read it.' })) };
+  }
 
   @Post('activity/:id/retry') @HttpCode(204) @Needs('integrations.write')
   retry(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> { return this.integrations.retry(me, id); }
+
+  @Put('mode') @HttpCode(200) @Needs('integrations.write')
+  mode(@Me() me: ConsoleUser, @Body(new ZodPipe(ModeBody)) b: z.infer<typeof ModeBody>) { return this.integrations.setMode(me, b.mode); }
+
+  @Get('live-gaps') @Needs('integrations.read')
+  async gaps(): Promise<{ gaps: string[] }> { return { gaps: await this.integrations.liveGaps() }; }
+
+  @Post('connections/:id/import-templates') @HttpCode(200) @Needs('integrations.write')
+  importTemplates(@Me() me: ConsoleUser, @Param('id') id: string) { return this.integrations.importTemplates(me, id); }
+
+  @Get('connections/:id/missing-templates') @Needs('integrations.read')
+  async missing(@Param('id') id: string): Promise<{ keys: string[] }> { return { keys: await this.integrations.missingTemplates(id) }; }
 
   @Put('allow-list') @HttpCode(200) @Needs('integrations.write')
   async allow(@Me() me: ConsoleUser, @Body(new ZodPipe(AllowBody)) b: z.infer<typeof AllowBody>): Promise<{ allowList: string[] }> { return { allowList: await this.integrations.setAllowList(me, b.allowList) }; }

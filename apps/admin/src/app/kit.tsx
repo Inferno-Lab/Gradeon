@@ -17,19 +17,8 @@ export function Avatar({ name, size = 34 }: { name: string; size?: number }) {
   return <span className="av" style={{ width: size, height: size, fontSize: Math.round(size * 0.33), background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>;
 }
 
-/** A multi-line input in the same box as Field. */
-export function AreaField({ label, value, onChange, error, rows = 4, ...rest }: { label: string; value: string; onChange: (v: string) => void; error?: string; rows?: number; maxLength?: number; placeholder?: string }) {
-  const id = `ta-${label.replace(/\W+/g, '')}`;
-  return (
-    <div className="fld">
-      <label htmlFor={id}>{label}</label>
-      <div className={`inp ${error ? 'err shake' : ''}`} style={{ height: 'auto', alignItems: 'stretch' }}>
-        <textarea id={id} className="ta" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} style={{ padding: '12px 0', resize: 'vertical', width: '100%', font: '500 15px/1.5 var(--fb)' }} {...rest} />
-      </div>
-      {error && <div className="emsg" role="alert">{error}</div>}
-    </div>
-  );
-}
+/** The shared multi-line field (web-ui), kept importable from here. */
+export { AreaField } from '@gradeon/web-ui';
 
 /** What a failed call says, split into field messages when the server named fields. */
 export function problem(e: unknown): Record<string, string> {
@@ -95,6 +84,60 @@ export function Attach({ files, onChange, max = 3 }: { files: File[]; onChange: 
         {files.length < max && <FilePick accept="application/pdf,image/jpeg,image/png,image/webp" className="btn sm" onPick={pick}>Attach a file</FilePick>}
       </div>
       {err && <div className="emsg" role="alert">{err}</div>}
+    </div>
+  );
+}
+
+/** The school's own fee heads, for every place that picks or filters a kind of fee. */
+export function useFeeHeads(): { value: string; label: string }[] {
+  const { api } = useApp();
+  const q = useQuery({ queryKey: ['fee-heads'], queryFn: api.fees.heads, staleTime: 5 * 60_000 });
+  return (q.data ?? []).map((h) => ({ value: h.key, label: h.name }));
+}
+
+/** The school's configuration as the console set it (its lists and rules), shared by every page. */
+export function useSchoolConfig() {
+  const { api } = useApp();
+  return useQuery({ queryKey: ['config'], queryFn: api.config, staleTime: 60_000 }).data;
+}
+
+/** A setting's value from the school's configuration, or the fallback while it loads. */
+export function useSetting<T>(key: string, fallback: T): T {
+  const cfg = useSchoolConfig();
+  return (cfg?.settings[key] as T | undefined) ?? fallback;
+}
+
+/** The grades the school teaches, from its classes, each named the way its classes are ("Grade 8", or "Nursery"). */
+export function useGrades(): { value: string; label: string }[] {
+  const { api } = useApp();
+  const q = useQuery({ queryKey: ['classes'], queryFn: api.classes, staleTime: 5 * 60_000 });
+  const seen = new Map<number, string>();
+  for (const c of q.data ?? []) if (!seen.has(c.grade)) seen.set(c.grade, c.section && c.name.endsWith(c.section) ? c.name.slice(0, -c.section.length).trim() : c.name);
+  return [...seen].sort((a, b) => a[0] - b[0]).map(([g, name]) => ({ value: String(g), label: /^\d+$/.test(name) ? `Grade ${name}` : name }));
+}
+
+/** The record a page has open, kept in the address (`?open=<id>`), so a link, a reload or a bookmark lands on it. */
+export function useOpenParam(key = 'open'): [string | null, (id: string | null) => void] {
+  const [open, setOpen] = useState<string | null>(() => new URLSearchParams(window.location.search).get(key));
+  const set = (id: string | null) => {
+    setOpen(id);
+    const q = new URLSearchParams(window.location.search);
+    if (id) q.set(key, id); else q.delete(key);
+    history.replaceState(null, '', `${window.location.pathname}${q.size ? `?${q}` : ''}`);
+  };
+  return [open, set];
+}
+
+/** A form's field errors and its message, from an API error. */
+export const fieldsOf = (e: unknown): Record<string, string> => (e instanceof HttpError ? e.fields : {});
+export const messageOf = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
+
+/** Cancel and the form's submit button, at the foot of a dialog's form. */
+export function DialogActions({ onClose, busy, label, danger }: { onClose: () => void; busy: boolean; label: string; danger?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+      <button type="button" className="btn" onClick={onClose}>Cancel</button>
+      <button type="submit" className={`btn ${danger ? 'dngf' : 'pri'}`} disabled={busy}>{busy && <span className="spin" aria-hidden="true" />}{label}</button>
     </div>
   );
 }

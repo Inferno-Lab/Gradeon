@@ -21,7 +21,7 @@ class HomeworkController extends GetxController with Loadable {
 
   int count(HomeworkStatus status) => items.where((item) {
     final mine = studentId == null ? null : item.forStudent(studentId!);
-    return (mine?.status ?? HomeworkStatus.pending) == status;
+    return (mine?.status ?? HomeworkStatus.pending).shown == status;
   }).length;
 
   List<Homework> get visible {
@@ -32,7 +32,7 @@ class HomeworkController extends GetxController with Loadable {
     };
     return items.where((item) {
       final mine = studentId == null ? null : item.forStudent(studentId!);
-      final current = mine?.status ?? HomeworkStatus.pending;
+      final current = (mine?.status ?? HomeworkStatus.pending).shown;
       return current == status;
     }).toList();
   }

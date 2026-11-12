@@ -67,6 +67,8 @@ export const sandbox: Adapter = {
       return { meters, minutes: Math.max(1, Math.round(meters / 300)) };
     },
     async staticMap() { return null; },
+    // The test track has no map data: a stop is placed once a real maps connection is set up.
+    async geocode() { return []; },
   },
   async test(c, input) {
     await inbox(c, 'sms', { to: input.to || 'test', subject: 'Test', text: 'A test from the Integrations Hub.', vars: {} });

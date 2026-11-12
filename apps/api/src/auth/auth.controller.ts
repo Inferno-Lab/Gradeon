@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
-import { CodeRequest, LoginRequest, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { Body, Controller, Get, HttpCode, Post, Put, Req, Res } from '@nestjs/common';
+import { CodeRequest, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { Limiter, ZodPipe } from '@gradeon/nest-kit';
+import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
+import type { z } from 'zod';
 import { FilesService } from '../school/files.service.js';
 import { SettingsService } from '../school/support.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
@@ -66,6 +67,12 @@ export class AuthController {
     return this.auth.refresh(t, body.refreshToken, req, reply);
   }
 
+  @Post('password') @HttpCode(204)
+  async password(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(PasswordChange)) body: PasswordChange, @Req() req: FastifyRequest): Promise<void> {
+    loginLimit.check(`${t.info.slug}|${req.ip}|pw`);
+    await this.auth.changePassword(t, u, body.current, body.next);
+  }
+
   @Post('logout') @HttpCode(204)
   async logout(
     @Tenant() t: TenantCtx,
@@ -103,6 +110,21 @@ export class MeController {
     return this.auth.me(t, u.id);
   }
 
+  /** The person's own choices, saved to their account. */
+  @Get('me/prefs')
+  async prefs(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<Record<string, unknown>> {
+    const { rows } = await t.pool.query<{ key: string; value: unknown }>('select key, value from user_prefs where user_id = $1', [u.id]);
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  }
+
+  @Put('me/prefs') @HttpCode(204)
+  async setPref(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(UserPrefPut)) b: z.infer<typeof UserPrefPut>): Promise<void> {
+    if (u.id.startsWith('support:')) throw new ApiError('forbidden', 'A support session cannot change a person’s choices.');
+    const parsed = USER_PREFS[b.key].safeParse(b.value);
+    if (!parsed.success) throw new ApiError('validation', parsed.error.issues[0]?.message ?? 'That value is not allowed.');
+    await t.pool.query('insert into user_prefs (user_id, key, value, updated_at) values ($1,$2,$3,now()) on conflict (user_id, key) do update set value = excluded.value, updated_at = now()', [u.id, b.key, JSON.stringify(parsed.data)]);
+  }
+
   /** The settings the apps and admin start from: platform defaults, plan, locks and school choices, cut to this user. */
   @Get('config')
   config(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<EffectiveConfig> {
@@ -113,11 +135,10 @@ export class MeController {
   @Public() @Get('brand')
   async brand(@Tenant() t: TenantCtx): Promise<SchoolBrand> {
     const cfg = await this.settings.effective(t);
-    const s = (k: string) => (typeof cfg.settings[k] === 'string' ? (cfg.settings[k] as string) : '');
     const theme = (cfg.settings['theme.colors'] ?? {}) as SchoolBrand['theme'];
     return {
-      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: cfg.settings['demo.mode'] === true, theme, palette: { light: resolveApp(theme, 'light'), dark: resolveApp(theme, 'dark'), amoled: resolveApp(theme, 'amoled') },
-      privacy: { notice: s('privacy.notice'), officerName: s('privacy.officerName'), officerEmail: s('privacy.officerEmail'), officerPhone: s('privacy.officerPhone') },
+      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, theme, palette: { light: resolveApp(theme, 'light'), dark: resolveApp(theme, 'dark'), amoled: resolveApp(theme, 'amoled') },
+      privacy: cfg.privacy,
     };
   }
 }

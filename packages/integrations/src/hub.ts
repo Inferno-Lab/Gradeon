@@ -14,8 +14,6 @@ export interface HubOptions {
   secretsKey: string;
   /** The server's public address: webhook addresses and sandbox links start with it. */
   baseUrl: string;
-  /** sandbox: messages go to the Test inbox except to allow-listed recipients. live: every capability needs a live connection. */
-  mode: 'sandbox' | 'live';
   /** Phone tokens for a person (the school app registers them); push needs them. */
   pushTokens?: (schoolSlug: string, to: string) => Promise<string[]>;
   /** Tokens the provider says no longer exist (the app was uninstalled). */
@@ -66,7 +64,16 @@ const SANDBOX: Conn = { id: 'sandbox', provider: 'sandbox', name: 'Test inbox', 
 export class Hub {
   constructor(readonly o: HubOptions) {}
 
-  get mode(): 'sandbox' | 'live' { return this.o.mode; }
+  /**
+   * sandbox: messages go to the Test inbox except to allow-listed recipients. live: every capability needs a live connection.
+   * Set in the console (Integrations → Mode, a second person to go live), kept in the registry so every server agrees.
+   */
+  async mode(): Promise<'sandbox' | 'live'> {
+    return this.remember('mode', async () => {
+      const { rows } = await this.o.pool.query("select value from console_settings where key = 'integrations'");
+      return rows[0]?.value?.mode === 'live' ? 'live' : 'sandbox';
+    });
+  }
 
   // ── Connections ─────────────────────────────────────────────────────────────
 
@@ -135,8 +142,9 @@ export class Hub {
       [capability, schoolId])).rows);
     const route = rows[0] as { connection_id: string; fallback_id: string | null; settings: Record<string, unknown> } | undefined;
     const message = capability === 'sms' || capability === 'whatsapp' || capability === 'email' || capability === 'push';
+    const mode = await this.mode();
     const allowed = to ? (await this.allowList()).some((a) => norm(a) === norm(to)) : false;
-    const usable = (c: Conn | null): c is Conn => !!c && (c.state === 'live' || (c.state === 'test' && (allowed || (!message && this.o.mode === 'sandbox'))));
+    const usable = (c: Conn | null): c is Conn => !!c && (c.state === 'live' || (c.state === 'test' && (allowed || (!message && mode === 'sandbox'))));
     const build = async (connId: string | null): Promise<Resolved | null> => {
       if (!connId) return null;
       const conn = await this.connection(connId);
@@ -144,13 +152,62 @@ export class Hub {
       if (conn.provider === 'sandbox') return this.sandbox(schoolSlug);
       return { conn, adapter: this.adapter(conn), ctx: this.ctx(conn, schoolSlug, route?.settings ?? {}), fallback: null, sandbox: false };
     };
-    if (this.o.mode === 'sandbox' && message && !allowed) return this.sandbox(schoolSlug);
+    if (mode === 'sandbox' && message && !allowed) return this.sandbox(schoolSlug);
     const main = await build(route?.connection_id ?? null);
     const fallback = await build(route?.fallback_id ?? null);
     if (main) return { ...main, fallback };
     if (fallback) return fallback;
-    if (this.o.mode === 'sandbox') return this.sandbox(schoolSlug);
+    if (mode === 'sandbox') return this.sandbox(schoolSlug);
     throw new ProviderError(`${CAPABILITY_LABELS[capability]} has no live connection for this school. Set one up in the console under Integrations.`, true);
+  }
+
+  // ── The services Gradeon runs on ────────────────────────────────────────────
+
+  /**
+   * The connection Gradeon itself uses for a platform capability (alerts, builds, stores, databases, hosting, scanning): the
+   * routed one, in test or live (these never reach families). Null when none is set up; the caller says what is missing.
+   */
+  async platform(capability: Capability): Promise<{ conn: Conn; adapter: Adapter; ctx: Ctx } | null> {
+    const rows = await this.remember(`route:${capability}:`, async () => (await this.o.pool.query(
+      'select connection_id, fallback_id, settings from integration_routes where capability = $1 and school_id is null limit 1', [capability])).rows);
+    const route = rows[0] as { connection_id: string; settings: Record<string, unknown> } | undefined;
+    const conn = route ? await this.connection(route.connection_id) : null;
+    if (!conn || (conn.state !== 'live' && conn.state !== 'test')) return null;
+    return { conn, adapter: this.adapter(conn), ctx: this.ctx(conn, '', route?.settings ?? {}) };
+  }
+
+  /** A specific connection (a cell's database server, a build's store) with its adapter, whatever its route. */
+  async use(connId: string): Promise<{ conn: Conn; adapter: Adapter; ctx: Ctx }> {
+    const conn = await this.connection(connId);
+    if (!conn) throw new ProviderError('That connection no longer exists. Choose another in the console.', true);
+    return { conn, adapter: this.adapter(conn), ctx: this.ctx(conn, '') };
+  }
+
+  /** Tells the Gradeon team (console: Integrations → Alerts to the Gradeon team). Without a route, only the server log has it. */
+  async alert(title: string, text: string): Promise<boolean> {
+    const p = await this.platform('alerts').catch(() => null);
+    if (!p?.adapter.alert) return false;
+    p.ctx.route.sendEmail = async (to: string, subject: string, body: string) => {
+      const r = await this.resolve('email', null, 'gradeon', to);
+      if (r.sandbox || !r.adapter.email) throw new ProviderError('The email connection is not live, so it cannot send alerts.', true);
+      await r.adapter.email(r.ctx, { to, subject, text: body, vars: {}, messageKey: 'alert' });
+    };
+    await p.adapter.alert(p.ctx, { title, text });
+    return true;
+  }
+
+  /** Scans an upload. Null when no scanner is set up (the caller decides: the test track allows, live mode refuses family uploads). */
+  async scan(data: Buffer): Promise<{ clean: boolean; found: string | null } | null> {
+    const p = await this.platform('scanning');
+    if (!p?.adapter.scan) return null;
+    return p.adapter.scan(p.ctx, data);
+  }
+
+  /** The templates a provider has approved, for importing (WhatsApp providers that can list them). */
+  async providerTemplates(connId: string) {
+    const { adapter, ctx } = await this.use(connId);
+    if (!adapter.templates) throw new ProviderError('This provider cannot list its templates: type each one in.', true);
+    return adapter.templates(ctx);
   }
 
   // ── Messages ────────────────────────────────────────────────────────────────
@@ -179,9 +236,10 @@ export class Hub {
   async sendMany(list: SendInput[]): Promise<void> {
     if (!list.length) return;
     const allow = (await this.allowList()).map(norm);
+    const sandboxMode = (await this.mode()) === 'sandbox';
     const bulk: SendInput[] = [];
     for (const m of list) {
-      if (m.now || (this.o.mode === 'sandbox' && allow.includes(norm(m.to)))) await this.send(m);
+      if (m.now || (sandboxMode && allow.includes(norm(m.to)))) await this.send(m);
       else bulk.push(m);
     }
     // Where each school's channel goes is the same for every recipient: worked out once.

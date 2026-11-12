@@ -9,6 +9,10 @@ enum LeaveStatus {
   approved,
   @JsonValue('rejected')
   rejected,
+
+  /// Taken back by the parent before the school answered.
+  @JsonValue('withdrawn')
+  withdrawn,
 }
 
 enum RsvpStatus {
@@ -135,6 +139,8 @@ class Notice {
     required this.date,
     required this.author,
     required this.attachments,
+    this.needsAck = false,
+    this.acked = false,
   });
 
   factory Notice.fromJson(Map<String, dynamic> json) => _$NoticeFromJson(json);
@@ -148,6 +154,12 @@ class Notice {
   final DateTime date;
   final String author;
   final List<String> attachments;
+
+  /// The school asks families to say they have read it; [acked] once they have.
+  @JsonKey(defaultValue: false)
+  final bool needsAck;
+  @JsonKey(defaultValue: false)
+  final bool acked;
 
   Map<String, dynamic> toJson() => _$NoticeToJson(this);
 }
@@ -266,6 +278,11 @@ class LibraryBook {
     required this.coverUrl,
     this.borrowedBy,
     this.dueDate,
+    this.loanId,
+    this.fine = 0,
+    this.overdueDays = 0,
+    this.renewalsLeft,
+    this.waiting = 0,
   });
 
   factory LibraryBook.fromJson(Map<String, dynamic> json) =>
@@ -280,6 +297,18 @@ class LibraryBook {
   final String coverUrl;
   final String? borrowedBy;
   final DateTime? dueDate;
+  final String? loanId;
+
+  /// What is owed on this loan so far, and how many days late it is.
+  @JsonKey(defaultValue: 0)
+  final num fine;
+  @JsonKey(defaultValue: 0)
+  final int overdueDays;
+  final int? renewalsLeft;
+
+  /// People waiting for a copy.
+  @JsonKey(defaultValue: 0)
+  final int waiting;
 
   LibraryBook copyWith({
     bool? available,
@@ -297,27 +326,28 @@ class LibraryBook {
       coverUrl: coverUrl,
       borrowedBy: clearBorrow ? null : borrowedBy ?? this.borrowedBy,
       dueDate: clearBorrow ? null : dueDate ?? this.dueDate,
+      loanId: clearBorrow ? null : loanId,
+      fine: clearBorrow ? 0 : fine,
+      overdueDays: clearBorrow ? 0 : overdueDays,
+      renewalsLeft: clearBorrow ? null : renewalsLeft,
+      waiting: waiting,
     );
   }
 
   Map<String, dynamic> toJson() => _$LibraryBookToJson(this);
 }
 
+/// Whom a family calls about the bus: the attendant or the school office, as the school chose; never the driver, who is driving.
 @JsonSerializable()
-class Driver {
-  const Driver({
-    required this.name,
-    required this.phone,
-    required this.avatarUrl,
-  });
+class BusContact {
+  const BusContact({required this.name, required this.phone});
 
-  factory Driver.fromJson(Map<String, dynamic> json) => _$DriverFromJson(json);
+  factory BusContact.fromJson(Map<String, dynamic> json) => _$BusContactFromJson(json);
 
   final String name;
   final String phone;
-  final String avatarUrl;
 
-  Map<String, dynamic> toJson() => _$DriverToJson(this);
+  Map<String, dynamic> toJson() => _$BusContactToJson(this);
 }
 
 @JsonSerializable()
@@ -325,14 +355,20 @@ class BusStop {
   const BusStop({
     required this.name,
     required this.time,
-    required this.reached,
+    this.reached = false,
+    this.isMine = false,
   });
 
   factory BusStop.fromJson(Map<String, dynamic> json) => _$BusStopFromJson(json);
 
   final String name;
   final String time;
+  @JsonKey(defaultValue: false)
   final bool reached;
+
+  /// The child's own stop.
+  @JsonKey(defaultValue: false)
+  final bool isMine;
 
   Map<String, dynamic> toJson() => _$BusStopToJson(this);
 }
@@ -345,8 +381,12 @@ class TransportInfo {
     required this.busNumber,
     required this.etaMinutes,
     required this.progress,
-    required this.driver,
     required this.stops,
+    this.driverName = '',
+    this.call,
+    this.running = false,
+    this.live = false,
+    this.lastSeen,
   });
 
   factory TransportInfo.fromJson(Map<String, dynamic> json) =>
@@ -357,8 +397,17 @@ class TransportInfo {
   final String busNumber;
   final int etaMinutes;
   final double progress;
-  final Driver driver;
   final List<BusStop> stops;
+  @JsonKey(defaultValue: '')
+  final String driverName;
+  final BusContact? call;
+
+  /// A trip is under way now; [live] when the bus's position is fresh.
+  @JsonKey(defaultValue: false)
+  final bool running;
+  @JsonKey(defaultValue: false)
+  final bool live;
+  final DateTime? lastSeen;
 
   Map<String, dynamic> toJson() => _$TransportInfoToJson(this);
 }
@@ -393,6 +442,11 @@ class LeaveRequest {
 
   /// The family's note to the class teacher.
   final String? note;
+
+  LeaveRequest copyWith({LeaveStatus? status}) => LeaveRequest(
+    id: id, studentId: studentId, from: from, to: to, reason: reason, status: status ?? this.status, appliedOn: appliedOn,
+    reviewedBy: reviewedBy, reviewNote: reviewNote, note: note,
+  );
 
   Map<String, dynamic> toJson() => _$LeaveRequestToJson(this);
 }

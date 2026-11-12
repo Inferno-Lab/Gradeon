@@ -148,7 +148,7 @@ class DashboardController extends GetxController with Loadable {
         final work = await Get.find<HomeworkRepository>().forClass(child.classId);
         for (final hw in work) {
           final mine = hw.forStudent(id);
-          final pending = mine == null || mine.status == HomeworkStatus.pending;
+          final pending = mine == null || mine.status.toDo;
           final days = Formatters.daysUntil(hw.dueOn);
           if (pending && days >= 0 && days <= 7) {
             due.add(DueItem(kind: DueKind.homework, when: hw.dueOn, homework: hw, childName: name));

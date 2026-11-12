@@ -1,81 +1,32 @@
-import { plural } from '@gradeon/contracts';
+import { pageForPath } from '@gradeon/config-engine';
+import type { MenuGroup, ShellData } from '@gradeon/contracts';
 import { IC, type NavGroup } from '@gradeon/web-ui';
 
-interface Def {
-  id: string;
-  label: string;
-  icon: keyof typeof IC;
-  keys: string;
-  /** Where it goes. Pages that do not exist yet go to a "not yet" screen under /p. */
-  to: string;
-  /** The module that must be on for it to show. `core` is always on. */
-  module: string;
+/**
+ * The menu comes from the server (`ShellData.menu`), built from the module definitions in config-engine: the modules the school
+ * has, the person's permissions, and Moving in only until go-live. Nothing here lists pages.
+ */
+export function adminNav(menu: MenuGroup[], base: string, badges?: ShellData['badges']): NavGroup[] {
+  const count = (id: string) => {
+    const n = id === 'att' ? badges?.attendance : id === 'adm' ? badges?.admissions : id === 'msg' ? badges?.messages : 0;
+    return n ? String(n) : undefined;
+  };
+  return menu.map((g) => ({
+    name: g.group,
+    items: g.pages.map((p) => ({ id: p.id, label: p.label, icon: IC[p.icon as keyof typeof IC] ?? IC.dash, keys: p.keys, href: `${base}${p.href === '/' ? '' : p.href}` || '/', count: count(p.id) })),
+  }));
 }
 
-const DEFS: { name: string; items: Def[] }[] = [
-  { name: 'Teach', items: [
-    { id: 'dash', label: 'Dashboard', icon: 'dash', keys: 'G D', to: '/', module: 'core' },
-    { id: 'att', label: 'Attendance', icon: 'att', keys: 'G A', to: '/attendance', module: 'attendance' },
-    { id: 'tt', label: 'Timetable', icon: 'tt', keys: 'G T', to: '/timetable', module: 'timetable' },
-    { id: 'hw', label: 'Homework', icon: 'hw', keys: 'G H', to: '/homework', module: 'homework' },
-    { id: 'ex', label: 'Exams', icon: 'ex', keys: 'G X', to: '/exams', module: 'exams' },
-  ] },
-  { name: 'People', items: [
-    { id: 'stu', label: 'Students', icon: 'stu', keys: 'G S', to: '/students', module: 'people' },
-    { id: 'staff', label: 'Staff', icon: 'staff', keys: 'G F', to: '/staff', module: 'people' },
-    { id: 'adm', label: 'Admissions', icon: 'adm', keys: 'G M', to: '/admissions', module: 'people.admissions' },
-  ] },
-  { name: 'Money', items: [
-    { id: 'fee', label: 'Fees', icon: 'fee', keys: 'G E', to: '/fees', module: 'fees' },
-    { id: 'inv', label: 'Invoices', icon: 'inv', keys: 'G I', to: '/invoices', module: 'fees' },
-    { id: 'online', label: 'Online payments', icon: 'fee', keys: 'G O', to: '/online-payments', module: 'fees.onlinePayment' },
-    { id: 'rep', label: 'Reports', icon: 'rep', keys: 'G R', to: '/reports', module: 'core' },
-  ] },
-  { name: 'Reach', items: [
-    { id: 'notice', label: 'Notices', icon: 'notice', keys: 'G N', to: '/notices', module: 'notices' },
-    { id: 'msg', label: 'Messages', icon: 'msg', keys: 'G G', to: '/messages', module: 'chat' },
-    { id: 'evt', label: 'Events', icon: 'evt', keys: 'G V', to: '/events', module: 'events' },
-  ] },
-  { name: 'Campus', items: [
-    { id: 'lib', label: 'Library', icon: 'book', keys: 'G L', to: '/library', module: 'library' },
-    { id: 'bus', label: 'Transport', icon: 'bus', keys: 'G B', to: '/transport', module: 'transport' },
-    { id: 'gal', label: 'Gallery', icon: 'photo', keys: 'G P', to: '/gallery', module: 'gallery' },
-  ] },
-  { name: 'School', items: [
-    { id: 'setup', label: 'Classes and calendar', icon: 'cells', keys: 'G Y', to: '/setup', module: 'core' },
-    { id: 'year', label: 'Year-end', icon: 'year', keys: 'G Z', to: '/year', module: 'core' },
-    { id: 'move', label: 'Moving in', icon: 'mig', keys: 'G U', to: '/moving-in', module: 'core' },
-    { id: 'set', label: 'School setup', icon: 'set', keys: 'G ,', to: '/settings', module: 'core' },
-  ] },
-];
-
-export const PAGE_TITLES: Record<string, string> = Object.fromEntries(DEFS.flatMap((g) => g.items.map((i) => [i.to.replace('/p/', ''), i.label])));
-
-/** The menu for a school: only the modules it has on, with counts where the data has them, in the school's own words (console: People). */
-export function adminNav(modules: string[], base: string, badges?: { attendance: number; admissions: number; messages?: number }, words?: { student: string; class: string }): NavGroup[] {
-  const label = (i: Def) => (i.id === 'stu' && words ? plural(words.student) : i.id === 'setup' && words ? `${plural(words.class)} and calendar` : i.label);
-  const on = new Set(['core', ...modules]);
-  return DEFS.map((g) => ({
-    name: g.name,
-    items: g.items
-      .filter((i) => on.has(i.module))
-      .map((i) => ({
-        id: i.id, label: label(i), icon: IC[i.icon], keys: i.keys, href: `${base}${i.to === '/' ? '' : i.to}` || '/',
-        count: i.id === 'att' && badges?.attendance ? String(badges.attendance) : i.id === 'adm' && badges?.admissions ? String(badges.admissions) : i.id === 'msg' && badges?.messages ? String(badges.messages) : undefined,
-      })),
-  })).filter((g) => g.items.length);
-}
-
-/** The module or feature a page needs, or null for pages every school has. */
+/** The module (or feature) a path needs, or null for pages every school has. */
 export function moduleForPath(path: string): string | null {
-  const item = DEFS.flatMap((g) => g.items).find((i) => i.to === path);
-  return item && item.module !== 'core' ? item.module : null;
+  const p = pageForPath(path);
+  if (!p || p.module === 'school' || p.module === 'people') return p?.feature ?? null;
+  return p.feature ?? p.module;
 }
 
 /** The menu item a path belongs to: its own, or the closest one above it (`/students/x` is Students). */
 export function activeNav(path: string): string {
-  const items = DEFS.flatMap((g) => g.items);
-  return items.find((i) => i.to === path)?.id ?? items.filter((i) => i.to !== '/' && path.startsWith(`${i.to}/`)).sort((a, b) => b.to.length - a.to.length)[0]?.id ?? '';
+  return pageForPath(path)?.id ?? '';
 }
 
 /** `G` then a letter, like the shortcuts on the menu. */

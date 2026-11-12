@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { REGISTRY } from '../tokens.js';
 import {
-  STEP_KEYS, STEP_LABELS, stepOrderProblem, type BlueprintInput, type BlueprintRow, type DeployTarget, type ProvisionRunRow, type RunStepRow, type StepKey, type WizardPayload,
+  STEP_KEYS, STEP_LABELS, stepOrderProblem, type BlueprintInput, type BlueprintRow, type DeployTarget, type ProvisionRunRow, type RunStepRow, type RoleTemplate, type StepKey, type WizardPayload,
 } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, notFound } from '@gradeon/nest-kit';
@@ -9,6 +9,8 @@ import type { Registry } from '@gradeon/tenancy';
 import { Db, type reg } from '../core.js';
 import { ENV, type Env } from '../env.js';
 import { Sandbox } from '../sandbox.js';
+import { PlatformHub } from '../platform-hub.js';
+import { RoleTemplates } from '../policy.js';
 import { StepBlocked, driversFor, type StepCtx } from './drivers.js';
 
 type RunRecord = typeof reg.provisionRuns.$inferSelect;
@@ -82,6 +84,12 @@ const now = () => new Date().toISOString();
 @Injectable()
 export class Provisioner implements OnApplicationBootstrap {
   private readonly log = new Logger('Provisioner');
+  private readonly whenSetUp: ((schoolId: string, payload: WizardPayload) => Promise<unknown>)[] = [];
+
+  /** Work that waits until a school's set-up has finished (its storage and database exist). */
+  afterSetUp(fn: (schoolId: string, payload: WizardPayload) => Promise<unknown>): void {
+    this.whenSetUp.push(fn);
+  }
   private readonly active = new Set<string>();
   fetchImpl: typeof fetch = (...a) => fetch(...a);
 
@@ -90,6 +98,8 @@ export class Provisioner implements OnApplicationBootstrap {
     private readonly sandbox: Sandbox,
     @Inject(REGISTRY) private readonly registry: Registry,
     @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
+    private readonly roles: RoleTemplates,
   ) {}
 
   /** A restart can interrupt a run. Mark it failed so a person can retry it from the step it stopped on. */
@@ -126,7 +136,7 @@ export class Provisioner implements OnApplicationBootstrap {
     const id = newId('run');
     await this.db.pool.query(
       'insert into provision_runs (id, school_id, school_name, blueprint_key, blueprint_version, target, dry_run, status, payload, steps) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
-      [id, school.id, school.name, blueprint.key, blueprint.version, blueprint.target, dryRun, 'queued', JSON.stringify({ wizard: payload, params: Object.fromEntries(blueprint.steps.map((s) => [s.key, s.params])) }), JSON.stringify(steps)]);
+      [id, school.id, school.name, blueprint.key, blueprint.version, blueprint.target, dryRun, 'queued', JSON.stringify({ wizard: payload, params: Object.fromEntries(blueprint.steps.map((s) => [s.key, s.params])), roles: await this.roles.get() }), JSON.stringify(steps)]);
     await this.db.audit(user, dryRun ? 'provision.dry_run' : 'provision.started', 'school', school.id, { blueprint: `${blueprint.key}@${blueprint.version}` });
     void this.execute(id);
     return this.get(id);
@@ -165,7 +175,8 @@ export class Provisioner implements OnApplicationBootstrap {
       const { rows } = await this.db.query<RunRecord>('select * from provision_runs where id = $1', [id]);
       const r = rows[0];
       if (!r) return;
-      const payload = r.payload as { wizard: WizardPayload; params: Record<string, Record<string, unknown>> };
+      // The starting roles as they were when the run began, so a retry sets up the same school.
+      const payload = r.payload as { wizard: WizardPayload; params: Record<string, Record<string, unknown>>; roles?: RoleTemplate[] };
       const steps = r.steps as RunStepRow[];
       const save = async (status?: string) => {
         await this.db.pool.query('update provision_runs set steps = $2, status = coalesce($3, status), finished_at = case when $3 in (\'succeeded\',\'failed\') then now() else finished_at end where id = $1', [id, JSON.stringify(steps), status ?? null]);
@@ -182,8 +193,8 @@ export class Provisioner implements OnApplicationBootstrap {
         await save();
         const school = await loadSchool();
         const ctx: StepCtx = {
-          env: this.env, db: this.db, registry: this.registry, sandbox: this.sandbox, fetch: this.fetchImpl, school, slug: school.slug, payload: payload.wizard, target: r.target as DeployTarget,
-          params: payload.params[step.key] ?? {}, reload: loadSchool,
+          env: this.env, db: this.db, hub: this.platform.hub, registry: this.registry, sandbox: this.sandbox, fetch: this.fetchImpl, school, slug: school.slug, payload: payload.wizard, target: r.target as DeployTarget,
+          params: payload.params[step.key] ?? {}, roles: payload.roles ?? [], reload: loadSchool,
           log: (level, text) => { step.log.push({ at: now(), level, text }); if (step.log.length > 100) step.log.shift(); },
         };
         try {
@@ -211,6 +222,8 @@ export class Provisioner implements OnApplicationBootstrap {
       }
       if (!r.dryRun) await this.activate(r.schoolId);
       await save('succeeded');
+      // What waits for a set-up school: the wizard's logo goes into its storage. A failure here is logged, the school is fine.
+      if (!r.dryRun) for (const fn of this.whenSetUp) await fn(r.schoolId, payload.wizard).catch((e: Error) => this.log.warn(`after set-up of ${r.schoolId}: ${e.message}`));
     } finally {
       this.active.delete(id);
     }

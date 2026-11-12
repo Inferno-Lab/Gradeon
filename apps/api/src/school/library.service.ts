@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { addDays, istToday, type BookInput, type BookRow, type IssueInput, type LibraryView, type LoanRow, type ReservationRow } from '@gradeon/contracts';
+import { addDays, istToday, type BookInput, type BookRow, type GiveBack, type IssueInput, type LibraryView, type LoanRow, type ReservationRow } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -22,6 +22,8 @@ export class LibraryService {
       loanDays: await this.settings.value<number>(t, 'library.loanDays', 14),
       finePerDay: await this.settings.value<number>(t, 'library.finePerDay', 1),
       maxRenewals: await this.settings.value<number>(t, 'library.maxRenewals', 1),
+      maxLoans: await this.settings.value<number>(t, 'library.maxLoans', 3),
+      staffMaxLoans: await this.settings.value<number>(t, 'library.staffMaxLoans', 5),
     };
   }
 
@@ -38,17 +40,19 @@ export class LibraryService {
     return rows.map((b) => ({ id: b.id, title: b.title, author: b.author, isbn: b.isbn, category: b.category, shelf: b.shelf, copies: b.copies, out: b.out, waiting: b.waiting }));
   }
 
-  async loans(t: TenantCtx, studentIds?: string[]): Promise<LoanRow[]> {
+  /** Open loans (the desk), or every loan of some students or one member of staff (the app's shelf and history). */
+  async loans(t: TenantCtx, studentIds?: string[], staffUserId?: string): Promise<LoanRow[]> {
     const fine = (await this.rules(t)).finePerDay;
     const today = istToday();
+    const all = !studentIds && !staffUserId;
     const { rows } = await t.pool.query(
-      `select l.*, l.due_on::text due, l.issued_on::text issued, l.returned_on::text returned, s.name student, c.name class_name from library_loans l
-       join students s on s.id = l.student_id join classes c on c.id = s.class_id
-       where ($1::text[] is null and l.returned_on is null) or l.student_id = any($1) order by l.due_on limit 1000`, [studentIds ?? null]);
+      `select l.*, l.due_on::text due, l.issued_on::text issued, l.returned_on::text returned, coalesce(s.name, u.name) student, coalesce(c.name, 'Staff') class_name from library_loans l
+       left join students s on s.id = l.student_id left join classes c on c.id = s.class_id left join users u on u.id = l.staff_user_id
+       where ($1 and l.returned_on is null) or l.student_id = any($2) or l.staff_user_id = $3 order by l.returned_on desc nulls first, l.due_on limit 1000`, [all, studentIds ?? [], staffUserId ?? '']);
     return rows.map((l) => {
       const late = l.returned ? 0 : Math.max(0, daysBetween(l.due, today));
-      return { id: l.id, bookId: l.book_id, title: l.title, studentId: l.student_id, student: l.student, className: l.class_name, issuedOn: l.issued, dueOn: l.due, returnedOn: l.returned,
-        fine: l.returned ? l.fine : late * fine, overdueDays: late };
+      return { id: l.id, bookId: l.book_id, title: l.title, studentId: l.student_id, staffUserId: l.staff_user_id, student: l.student, className: l.class_name, issuedOn: l.issued, dueOn: l.due, returnedOn: l.returned,
+        fine: l.returned ? l.fine : late * fine, overdueDays: late, renewals: l.renewals ?? 0, outcome: l.outcome ?? 'returned', fineNote: l.fine_note ?? '', billed: !!l.fine_invoice_id };
     });
   }
 
@@ -89,25 +93,44 @@ export class LibraryService {
     if (book.out >= book.copies) throw new ApiError('conflict', `All ${book.copies} copies of ${book.title} are out.`);
     const first = (await t.pool.query<{ student_id: string }>("select student_id from library_reservations where book_id = $1 and status in ('waiting','ready') order by created_at limit 1", [b.bookId])).rows[0];
     if (first && first.student_id !== b.studentId && book.copies - book.out <= 1) throw new ApiError('conflict', 'The last copy is reserved for someone else.');
-    if ((await t.pool.query('select 1 from students where id = $1', [b.studentId])).rowCount === 0) throw notFound('That student');
+    const rules = await this.rules(t);
+    if (b.studentId) {
+      if ((await t.pool.query('select 1 from students where id = $1', [b.studentId])).rowCount === 0) throw notFound('That student');
+    } else if (!(await t.pool.query("select 1 from users where id = $1 and kind = 'staff'", [b.staffUserId])).rowCount) throw notFound('That member of staff');
+    // How many books one person may have out (console: Library).
+    const out = Number((await t.pool.query<{ n: string }>('select count(*) n from library_loans where returned_on is null and (student_id = $1 or staff_user_id = $2)', [b.studentId ?? '', b.staffUserId ?? ''])).rows[0]!.n);
+    const most = b.studentId ? rules.maxLoans : rules.staffMaxLoans;
+    if (out >= most) throw new ApiError('conflict', `They already have ${out} ${out === 1 ? 'book' : 'books'} out, the most the school allows. A book must come back first.`);
     const today = istToday();
-    const due = b.dueOn ?? addDays(today, (await this.rules(t)).loanDays);
+    const due = b.dueOn ?? addDays(today, rules.loanDays);
     const id = newId('lon');
-    await t.pool.query('insert into library_loans (id, student_id, title, due_on, book_id, issued_on) values ($1,$2,$3,$4,$5,$6)', [id, b.studentId, book.title, due, b.bookId, today]);
-    await t.pool.query("update library_reservations set status = 'done' where book_id = $1 and student_id = $2 and status in ('waiting','ready')", [b.bookId, b.studentId]);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'library.issued', entity: 'book', entityId: b.bookId, detail: { studentId: b.studentId, due } });
-    return (await this.loans(t, [b.studentId])).find((l) => l.id === id)!;
+    await t.pool.query('insert into library_loans (id, student_id, staff_user_id, title, due_on, book_id, issued_on) values ($1,$2,$3,$4,$5,$6,$7)', [id, b.studentId, b.staffUserId, book.title, due, b.bookId, today]);
+    if (b.studentId) await t.pool.query("update library_reservations set status = 'done' where book_id = $1 and student_id = $2 and status in ('waiting','ready')", [b.bookId, b.studentId]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'library.issued', entity: 'book', entityId: b.bookId, detail: { studentId: b.studentId, staffUserId: b.staffUserId, due } });
+    return (await this.loans(t, b.studentId ? [b.studentId] : undefined, b.staffUserId ?? undefined)).find((l) => l.id === id)!;
   }
 
   /** Takes a book back, fixes its fine, and tells the next family waiting that it is ready. */
-  async giveBack(t: TenantCtx, user: User, loanId: string): Promise<{ fine: number }> {
-    const l = (await t.pool.query<{ book_id: string | null; due: string }>("select book_id, due_on::text due from library_loans where id = $1 and returned_on is null", [loanId])).rows[0];
+  async giveBack(t: TenantCtx, user: User, loanId: string, b: GiveBack = { outcome: 'returned', charge: 0, fine: 'bill', reason: '' }): Promise<{ fine: number; billed: boolean }> {
+    const l = (await t.pool.query<{ book_id: string | null; due: string; student_id: string | null; title: string }>("select book_id, due_on::text due, student_id, title from library_loans where id = $1 and returned_on is null", [loanId])).rows[0];
     if (!l) throw notFound('That loan');
     const today = istToday();
-    const fine = Math.max(0, daysBetween(l.due, today)) * (await this.rules(t)).finePerDay;
-    await t.pool.query('update library_loans set returned_on = $2, fine = $3 where id = $1', [loanId, today, fine]);
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'library.returned', entity: 'loan', entityId: loanId, detail: { fine } });
-    if (l.book_id) {
+    // A late fine, plus what a lost or damaged book costs the school.
+    const fine = Math.max(0, daysBetween(l.due, today)) * (await this.rules(t)).finePerDay + (b.outcome === 'returned' ? 0 : b.charge);
+    let invoiceId: string | null = null;
+    // A student's fine goes on their family's fees (a "Library" fee head is added the first time); staff settle at the desk.
+    if (fine > 0 && b.fine === 'bill' && l.student_id && (await this.settings.effective(t)).modules.includes('fees')) {
+      await t.pool.query("insert into fee_heads (key, name, sort, concession) values ('library', 'Library', 900, false) on conflict (key) do nothing");
+      invoiceId = newId('inv');
+      await t.pool.query('insert into fee_invoices (id, student_id, head, title, amount, due_on) values ($1,$2,$3,$4,$5,$6)',
+        [invoiceId, l.student_id, 'library', `${b.outcome === 'lost' ? 'Lost book' : b.outcome === 'damaged' ? 'Damaged book' : 'Library fine'}: ${l.title}`.slice(0, 80), fine, addDays(today, 14)]);
+    }
+    const note = fine === 0 ? '' : b.fine === 'waive' ? `Waived: ${b.reason}` : b.fine === 'paid' || !invoiceId ? 'Paid at the desk' : 'Added to the fees';
+    await t.pool.query('update library_loans set returned_on = $2, fine = $3, outcome = $4, fine_note = $5, fine_invoice_id = $6 where id = $1', [loanId, today, fine, b.outcome, note, invoiceId]);
+    // A lost book is one copy fewer on the shelf.
+    if (b.outcome === 'lost' && l.book_id) await t.pool.query('update library_books set copies = greatest(copies - 1, 0) where id = $1', [l.book_id]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: `library.${b.outcome}`, entity: 'loan', entityId: loanId, detail: { fine, note } });
+    if (l.book_id && b.outcome !== 'lost') {
       const next = (await t.pool.query<{ id: string; student: string; phone: string | null; title: string }>(
         `select r.id, s.name student, g.phone, b.title from library_reservations r join students s on s.id = r.student_id join library_books b on b.id = r.book_id
          left join student_guardians sg on sg.student_id = s.id and sg.is_primary left join guardians g on g.id = sg.guardian_id
@@ -117,7 +140,19 @@ export class LibraryService {
         if (next.phone) await this.messenger.notify(t, 'library.ready', [{ to: next.phone, vars: { student: next.student, title: next.title } }]);
       }
     }
-    return { fine };
+    return { fine, billed: !!invoiceId };
+  }
+
+  /** The desk renews a loan by the loan period (the family's own renewals are counted the same way). */
+  async renewAtDesk(t: TenantCtx, user: User, loanId: string): Promise<LoanRow> {
+    const rules = await this.rules(t);
+    const l = (await t.pool.query<{ student_id: string | null; staff_user_id: string | null; book_id: string | null; due: string }>('select student_id, staff_user_id, book_id, due_on::text due from library_loans where id = $1 and returned_on is null', [loanId])).rows[0];
+    if (!l) throw notFound('That loan');
+    if (l.book_id && (await t.pool.query("select 1 from library_reservations where book_id = $1 and status = 'waiting'", [l.book_id])).rowCount) throw new ApiError('conflict', 'Someone is waiting for this book, so it cannot be renewed.');
+    const due = addDays(l.due < istToday() ? istToday() : l.due, rules.loanDays);
+    await t.pool.query('update library_loans set due_on = $2, renewals = renewals + 1 where id = $1', [loanId, due]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'library.renewed', entity: 'loan', entityId: loanId, detail: { due } });
+    return (await this.loans(t, l.student_id ? [l.student_id] : undefined, l.staff_user_id ?? undefined)).find((x) => x.id === loanId)!;
   }
 
   /** A family reserves a book for their child: a place in the queue for the next copy. */
@@ -130,21 +165,28 @@ export class LibraryService {
     return (await this.reservations(t, [studentId])).find((r) => r.bookId === bookId)!;
   }
 
-  async cancelReservation(t: TenantCtx, id: string, studentIds: string[] | null): Promise<void> {
-    const r = await t.pool.query("update library_reservations set status = 'cancelled' where id = $1 and status in ('waiting','ready') and ($2::text[] is null or student_id = any($2))", [id, studentIds]);
+  /** A family cancels their own reservation, or the desk cancels one saying why (the family is told). */
+  async cancelReservation(t: TenantCtx, id: string, studentIds: string[] | null, reason = ''): Promise<void> {
+    const r = await t.pool.query<{ student_id: string; book_id: string }>("update library_reservations set status = 'cancelled', cancel_reason = $3 where id = $1 and status in ('waiting','ready') and ($2::text[] is null or student_id = any($2)) returning student_id, book_id", [id, studentIds, reason]);
     if (!r.rowCount) throw notFound('That reservation');
+    if (!studentIds && reason) {
+      const who = (await t.pool.query<{ phone: string | null; student: string; title: string }>(
+        `select g.phone, s.name student, b.title from students s join library_books b on b.id = $2 left join student_guardians sg on sg.student_id = s.id and sg.is_primary
+         left join guardians g on g.id = sg.guardian_id where s.id = $1`, [r.rows[0]!.student_id, r.rows[0]!.book_id])).rows[0];
+      if (who?.phone) await this.messenger.notify(t, 'library.cancelled', [{ to: who.phone, vars: { student: who.student, title: who.title, reason } }]);
+    }
   }
 
   /** A family renews a loan once more, by the loan period, if nobody is waiting for the book. */
-  async renew(t: TenantCtx, loanId: string, studentIds: string[]): Promise<LoanRow> {
+  async renew(t: TenantCtx, loanId: string, studentIds: string[], staffUserId?: string): Promise<LoanRow> {
     const rules = await this.rules(t);
-    const l = (await t.pool.query<{ student_id: string; book_id: string | null; renewals: number; due: string }>(
-      'select student_id, book_id, renewals, due_on::text due from library_loans where id = $1 and returned_on is null and student_id = any($2)', [loanId, studentIds])).rows[0];
+    const l = (await t.pool.query<{ student_id: string | null; staff_user_id: string | null; book_id: string | null; renewals: number; due: string }>(
+      'select student_id, staff_user_id, book_id, renewals, due_on::text due from library_loans where id = $1 and returned_on is null and (student_id = any($2) or staff_user_id = $3)', [loanId, studentIds, staffUserId ?? ''])).rows[0];
     if (!l) throw notFound('That book');
     if (l.renewals >= rules.maxRenewals) throw new ApiError('conflict', rules.maxRenewals ? `A book can be renewed ${rules.maxRenewals === 1 ? 'once' : `${rules.maxRenewals} times`}. Please return it to the library.` : 'Books cannot be renewed from the app. Ask at the library desk.');
     if (l.book_id && (await t.pool.query("select 1 from library_reservations where book_id = $1 and status = 'waiting'", [l.book_id])).rowCount) throw new ApiError('conflict', 'Someone is waiting for this book, so it cannot be renewed.');
     const due = addDays(l.due < istToday() ? istToday() : l.due, rules.loanDays);
     await t.pool.query('update library_loans set due_on = $2, renewals = renewals + 1 where id = $1', [loanId, due]);
-    return (await this.loans(t, [l.student_id])).find((x) => x.id === loanId)!;
+    return (await this.loans(t, l.student_id ? [l.student_id] : undefined, l.staff_user_id ?? undefined)).find((x) => x.id === loanId)!;
   }
 }

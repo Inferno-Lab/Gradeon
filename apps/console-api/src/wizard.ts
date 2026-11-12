@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Post, Put } from '@nestjs/common';
-import { DEFAULT_PLANS, closeModules } from '@gradeon/config-engine';
-import { BlueprintInput, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@gradeon/contracts';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Post, Put, Query } from '@nestjs/common';
+import { CORE_MODULES, DEFAULT_PLANS, closeModules, moduleByKey } from '@gradeon/config-engine';
+import { BlueprintInput, PlanSave, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
-import { ENV, type Env } from './env.js';
+import { ENV, demosAllowed, type Env } from './env.js';
 import { driversFor } from './provisioning/drivers.js';
 import { Blueprints, Provisioner } from './provisioning/provisioner.js';
 import { Policy } from './policy.js';
@@ -20,8 +20,39 @@ export class Wizard {
   ) {}
 
   async plans(): Promise<PlanRow[]> {
-    const { rows } = await this.db.pool.query<{ key: string; name: string; per_student_year: number; modules: string[]; features: Record<string, boolean>; limits: PlanRow['limits'] }>('select * from plans order by per_student_year');
-    return rows.map((r) => ({ key: r.key, name: r.name, perStudentYear: r.per_student_year, modules: r.modules, features: r.features ?? {}, limits: r.limits }));
+    const { rows } = await this.db.pool.query<{ key: string; name: string; per_student_year: number; modules: string[]; features: Record<string, boolean>; limits: PlanRow['limits']; schools: string }>(
+      'select p.*, (select count(*) from schools s where s.plan = p.key and s.deleted_at is null) schools from plans p order by per_student_year, name');
+    return rows.map((r) => ({ key: r.key, name: r.name, perStudentYear: r.per_student_year, modules: r.modules, features: r.features ?? {}, limits: r.limits, schools: Number(r.schools) }));
+  }
+
+  /**
+   * A plan is what a school starts from: changing one changes the price on the next invoices and what new schools get, never
+   * the modules a school already has (those change on its own Plan and modules tab, reviewed).
+   */
+  async savePlan(me: ConsoleUser, key: string | null, body: PlanSave): Promise<PlanRow[]> {
+    const unknown = body.modules.filter((m) => !moduleByKey(m));
+    if (unknown.length) throw new ApiError('validation', `There is no module called ${unknown.join(', ')}.`);
+    const modules = closeModules(body.modules).filter((m) => !CORE_MODULES.includes(m) || body.modules.includes(m));
+    const was = key ? (await this.db.pool.query('select 1 from plans where key = $1', [key])).rowCount : 0;
+    if (key && !was) throw notFound('That plan');
+    if (!key && (await this.db.pool.query('select 1 from plans where key = $1', [body.key])).rowCount) {
+      throw new ApiError('validation', 'A plan already has that key.', { fields: { key: 'A plan already has that key.' } });
+    }
+    await this.db.pool.query(
+      `insert into plans (key, name, per_student_year, modules, features, limits) values ($1,$2,$3,$4,$5,$6)
+       on conflict (key) do update set name = excluded.name, per_student_year = excluded.per_student_year, modules = excluded.modules, features = excluded.features, limits = excluded.limits`,
+      [key ?? body.key, body.name, body.perStudentYear, JSON.stringify(modules), JSON.stringify(body.features), JSON.stringify(body.limits)]);
+    await this.db.audit(me.email, key ? 'plan.changed' : 'plan.added', 'plan', key ?? body.key, { name: body.name, price: body.perStudentYear, modules: modules.length });
+    return this.plans();
+  }
+
+  async removePlan(me: ConsoleUser, key: string): Promise<PlanRow[]> {
+    const p = (await this.plans()).find((x) => x.key === key);
+    if (!p) throw notFound('That plan');
+    if (p.schools) throw new ApiError('conflict', `${p.schools} ${p.schools === 1 ? 'school is' : 'schools are'} on ${p.name}. Move them to another plan first.`);
+    await this.db.pool.query('delete from plans where key = $1', [key]);
+    await this.db.audit(me.email, 'plan.removed', 'plan', key, { name: p.name });
+    return this.plans();
   }
 
   async ensurePlans(): Promise<void> {
@@ -63,12 +94,21 @@ export class Wizard {
   }
 
   /** A plain list of what Launch will do, and anything that would stop it. Nothing is created. */
+  /** Whether a school's address name can be used: checked as soon as it is typed, not only at review. */
+  async slug(value: string): Promise<{ free: boolean; problem: string }> {
+    const v = value.trim().toLowerCase();
+    if (!new RegExp((await this.policy.get()).naming.slugPattern).test(v)) return { free: false, problem: 'Use 4 to 32 lowercase letters, numbers or dashes, starting with a letter.' };
+    const taken = await this.db.pool.query('select 1 from schools where slug = $1 and deleted_at is null', [v]);
+    return taken.rowCount ? { free: false, problem: `“${v}” is already used by another school.` } : { free: true, problem: '' };
+  }
+
   async review(payload: WizardPayload): Promise<WizardReview> {
     const problems: string[] = [];
     const taken = await this.db.pool.query('select 1 from schools where slug = $1 and deleted_at is null', [payload.basics.slug]);
     if (taken.rowCount) problems.push(`The address “${payload.basics.slug}” is already used by another school.`);
     const plan = (await this.plans()).find((p) => p.key === payload.plan.plan);
     if (!plan) problems.push(`Plan “${payload.plan.plan}” does not exist.`);
+    if (payload.data.start === 'demo' && !demosAllowed(this.env)) problems.push('The demo school is only for the test track. Start this school empty or from an import.');
     const cell = await this.db.pool.query<{ key: string; target: string; max_schools: number; accepting: boolean; n: string }>(
       'select c.key, c.target, c.max_schools, c.accepting, (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n from cells c where c.key = $1', [payload.placement.cell]);
     const c = cell.rows[0];
@@ -111,18 +151,18 @@ export class Wizard {
   async launch(user: ConsoleUser, payload: WizardPayload, opts: { dryRun: boolean; draftId?: string }): Promise<ProvisionRunRow> {
     const review = await this.review(payload);
     if (review.problems.length) throw new ApiError('validation', review.problems[0]!, { fields: { review: review.problems.join(' ') } });
-    if ((await this.policy.get()).freeze) throw new ApiError('locked', 'Changes are frozen right now. A super admin can lift the freeze under Policy.');
+    if ((await this.policy.get()).freeze) throw new ApiError('locked', 'Changes are frozen right now. A super admin can lift the freeze under Console settings.');
     const plan = (await this.plans()).find((p) => p.key === payload.plan.plan)!;
     const bp = await this.blueprints.pick(payload.placement.target, payload.plan.plan);
     const cell = (await this.db.pool.query<{ region: string }>('select region from cells where key = $1', [payload.placement.cell])).rows[0]!;
     const id = newId('sch');
     const entitlement = { modules: closeModules(payload.plan.modules), features: plan.features ?? {}, limits: plan.limits, locks: payload.plan.locks, overrides: {}, version: 1 };
     const school = (await this.db.query<typeof reg.schools.$inferSelect>(
-      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, entitlement, contact, gstin, board, address, addressing, custom_domain, app_name, created_by, ring, api_version, admin_version)
-       values ($1,$2,$3,$4,$5,$6,'onboarding',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'rest',$20,$20) returning *`,
+      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, entitlement, contact, gstin, board, address, addressing, custom_domain, app_name, created_by, ring, api_version, admin_version, demo)
+       values ($1,$2,$3,$4,$5,$6,'onboarding',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,'rest',$20,$20,$21) returning *`,
       [id, payload.basics.slug, payload.basics.name, payload.basics.shortName, payload.branding.color, payload.branding.logoText, payload.plan.plan, payload.placement.cell, payload.placement.target, cell.region,
         JSON.stringify(entitlement), JSON.stringify({ name: payload.basics.contactName, phone: payload.basics.contactPhone, email: payload.basics.contactEmail }), payload.basics.gstin, payload.basics.board,
-        [payload.basics.address, payload.basics.city].filter(Boolean).join(', '), payload.placement.addressing, payload.placement.customDomain, payload.branding.appName, user.email, this.env.APP_VERSION])).rows[0]!;
+        [payload.basics.address, payload.basics.city].filter(Boolean).join(', '), payload.placement.addressing, payload.placement.customDomain, payload.branding.appName, user.email, this.env.APP_VERSION, payload.data.start === 'demo'])).rows[0]!;
     if (opts.dryRun) {
       // A dry run needs a school record to read from; it is removed as soon as the run has finished.
       try {
@@ -149,6 +189,26 @@ export class WizardController {
   @Get('plans') @Needs('schools.read')
   plans(): Promise<PlanRow[]> {
     return this.wizard.plans();
+  }
+
+  @Post('plans') @HttpCode(200) @Needs('billing.write')
+  addPlan(@Me() me: ConsoleUser, @Body(new ZodPipe(PlanSave)) body: PlanSave): Promise<PlanRow[]> {
+    return this.wizard.savePlan(me, null, body);
+  }
+
+  @Put('plans/:key') @Needs('billing.write')
+  savePlan(@Me() me: ConsoleUser, @Param('key') key: string, @Body(new ZodPipe(PlanSave)) body: PlanSave): Promise<PlanRow[]> {
+    return this.wizard.savePlan(me, key, body);
+  }
+
+  @Delete('plans/:key') @Needs('billing.write')
+  removePlan(@Me() me: ConsoleUser, @Param('key') key: string): Promise<PlanRow[]> {
+    return this.wizard.removePlan(me, key);
+  }
+
+  @Get('wizard/slug') @Needs('schools.write')
+  slug(@Query('value') value = ''): Promise<{ free: boolean; problem: string }> {
+    return this.wizard.slug(value);
   }
 
   @Get('wizard/drafts') @Needs('schools.write')

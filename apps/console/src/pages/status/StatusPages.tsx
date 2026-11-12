@@ -9,7 +9,7 @@ export function NotFoundPage() {
   return (
     <div className="nest" style={{ minHeight: '100dvh', padding: 12, display: 'grid', placeItems: 'center' }}>
       <div style={{ maxWidth: 880, width: '100%' }}>
-        <NotFoundTile home={url('/')} onHome={home} onSearch={home} />
+        <NotFoundTile home={url('/')} onHome={home} onSearch={() => (app ? app.go('/?search=1') : (window.location.href = url('/?search=1')))} />
       </div>
     </div>
   );

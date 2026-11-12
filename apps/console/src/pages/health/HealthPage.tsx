@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard, tintFor } from '@gradeon/web-ui';
+import { Checkbox, EmptyCard, Segmented, Select, tintFor } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -11,7 +12,10 @@ export function HealthPage() {
   const { toast, say } = useToast();
   const schools = useQuery({ queryKey: ['schools'], queryFn: () => app.api.schools(), refetchInterval: 20_000 });
   const fleet = useQuery({ queryKey: ['fleet'], queryFn: app.api.fleet });
-  const errors = useQuery({ queryKey: ['errors'], queryFn: () => app.api.errors(7), refetchInterval: 60_000 });
+  const [days, setDays] = useState('7');
+  const [handled, setHandled] = useState(false);
+  const errors = useQuery({ queryKey: ['errors', days, handled], queryFn: () => app.api.errors(Number(days), handled), refetchInterval: 60_000 });
+  const done = useMutation({ mutationFn: app.api.errorHandled, onSuccess: () => { void qc.invalidateQueries({ queryKey: ['errors'] }); say('Marked handled. It comes back if it happens again.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const drills = useQuery({ queryKey: ['drills'], queryFn: app.api.drills });
   const drill = useMutation({ mutationFn: app.api.runDrill, onSuccess: (d) => { void qc.invalidateQueries({ queryKey: ['drills'] }); say(d.ok ? `Restored ${d.rows.toLocaleString('en-IN')} rows of ${d.schoolName} into a scratch database.` : `The drill failed: ${d.error}`, d.ok ? undefined : 'bad'); }, onError: (e) => say((e as Error).message, 'bad') });
   const probe = useMutation({ mutationFn: app.api.probe, onSuccess: (r) => { void qc.invalidateQueries({ predicate: (q) => ['schools', 'fleet'].includes(String(q.queryKey[0])) }); say(`Checked ${r.probed} ${r.probed === 1 ? 'school' : 'schools'}.`); }, onError: (e) => say((e as Error).message, 'bad') });
@@ -48,28 +52,30 @@ export function HealthPage() {
             {rows.map((s) => {
               const st = statusOf(s); const t = tintFor(s.name);
               return (
-                <a key={s.id} className="grd rw" href={url(`/schools/${s.id}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${s.id}`); }} style={{ '--cols': 'minmax(0,2fr) 70px 140px 100px 130px', color: 'inherit', textDecoration: 'none' } as React.CSSProperties}>
+                <a key={s.id} className="grd rw" href={url(`/schools/${s.id}/technical`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${s.id}/technical`); }} style={{ '--cols': 'minmax(0,2fr) 70px 140px 100px 130px', color: 'inherit', textDecoration: 'none' } as React.CSSProperties}>
                   <span style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}><span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none' }}>{initials(s.name)}</span><b data-tip={s.name} style={{ font: '700 14px/1.25 var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.name}</b></span>
-                  <span className="chip">{s.cell}</span><span className={`st ${st.tone}`}><i></i>{st.text}</span><span className="num" style={{ font: '700 13px var(--fb)' }}>{s.healthMs != null ? `${s.healthMs} ms` : '–'}</span><span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)' }}>{s.lastIncident ? 'Had a problem' : ''}</span>
+                  <span className="chip">{s.cell}</span><span className={`st ${st.tone}`}><i></i>{st.text}</span><span className="num" style={{ font: '700 13px var(--fb)' }}>{s.healthMs != null ? `${s.healthMs} ms` : '–'}</span><span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={s.lastIncident ?? undefined}>{s.lastIncident ?? ''}</span>
                 </a>
               );
             })}
           </div></div>
         </Card>
       )}
-      <Card title="Errors in the last 7 days" style={{ padding: 0 }}>
+      <Card title="Errors" chip={<span className="tgrow" style={{ alignItems: 'center' }}><Segmented label="Range" value={days} onChange={setDays} options={[{ value: '1', label: 'Day' }, { value: '7', label: 'Week' }, { value: '30', label: 'Month' }]} /><Checkbox checked={handled} onChange={setHandled} label="Show handled" /></span>} style={{ padding: 0 }}>
         {errors.isError ? <div className="help" style={{ padding: 20 }}>{(errors.error as Error).message}</div>
-          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 20 }}>Nothing has gone wrong in the APIs, the admin, the console or the app.</div>
+          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 20 }}>Nothing {handled ? '' : 'unhandled '}has gone wrong in the APIs, the admin, the console or the app in that time.</div>
           : (errors.data ?? []).map((e) => (
             <details key={e.fingerprint} className="rw" style={{ display: 'block', height: 'auto', padding: '12px 20px' }}>
               <summary style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', listStyle: 'none', minWidth: 0 }}>
                 <span className="chip">{e.source}</span>
                 {e.schoolSlug && <span className="chip v">{e.schoolSlug}</span>}
                 <b style={{ flex: 1, minWidth: 0, font: '700 13px/1.35 var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.message}>{e.message}</b>
+                {e.handledBy && <span className="chip g" data-tip={`By ${e.handledBy}`}>Handled</span>}
                 <span className="num" style={{ font: '700 13px var(--fb)' }}>{e.count}×</span>
                 <span style={{ color: 'var(--ink3)', font: '600 13px var(--fb)', whiteSpace: 'nowrap' }}>{ago(e.lastAt)}</span>
               </summary>
-              <div className="help" style={{ marginTop: 8 }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}</div>
+              <div className="help" style={{ marginTop: 8, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}
+                {!e.handledBy && app.can('schools.write') && <button className="btn sm" disabled={done.isPending} onClick={() => done.mutate(e.fingerprint)}>Mark handled</button>}</div>
               {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 14, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
             </details>
           ))}
@@ -93,9 +99,10 @@ export function HealthPage() {
 
 const JOB_LABELS: Record<string, string> = {
   'fees.reminders': 'Fee reminders', 'fees.lateFines': 'Late fines', 'files.scan': 'Virus check', 'files.thumb': 'Thumbnails', 'payments.reconcile': 'Payment reconciliation',
-  'retention.erase': 'Erase leavers', 'imports.run': 'Import',
+  'retention.erase': 'Erase leavers', 'imports.run': 'Import', 'notices.publish': 'Scheduled notice', 'transport.poll': 'Bus positions', 'files.usage': 'Storage used',
 };
 const JOB_TONE = { queued: 'v', running: 'a', done: 'g', failed: 'c' } as const;
+const JOB_WORDS = { queued: 'Waiting', running: 'Running', done: 'Done', failed: 'Failed' } as const;
 
 /** Each school's background work (reminders, late fines, reconciliation, file checks, erasure): what is waiting, running or failed. */
 function Jobs({ say }: { say: (m: string, tone?: 'bad') => void }) {
@@ -103,18 +110,28 @@ function Jobs({ say }: { say: (m: string, tone?: 'bad') => void }) {
   const qc = useQueryClient();
   const jobs = useQuery({ queryKey: ['jobs'], queryFn: app.api.jobs.list, refetchInterval: 20_000 });
   const retry = useMutation({ mutationFn: app.api.jobs.retry, onSuccess: () => { void qc.invalidateQueries({ queryKey: ['jobs'] }); say('Queued again.'); }, onError: (e) => say((e as Error).message, 'bad') });
-  const rows = jobs.data ?? [];
-  const failed = rows.filter((j) => j.status === 'failed').length;
+  const [school, setSchool] = useState('');
+  const [onlyFailed, setOnlyFailed] = useState(false);
+  const all = jobs.data ?? [];
+  const failed = all.filter((j) => j.status === 'failed').length;
+  const rows = all.filter((j) => (!school || j.schoolId === school) && (!onlyFailed || j.status === 'failed'));
+  const schools = [...new Map(all.filter((j) => j.schoolId).map((j) => [j.schoolId!, j.schoolName ?? j.schoolId!])).entries()];
   return (
     <Card title="Background jobs" chip={<span className={`chip ${failed ? 'c' : 'g'}`}>{failed ? `${failed} failed` : 'Nothing failed'}</span>} style={{ padding: 0 }}>
       <div className="help" style={{ padding: '0 20px 12px' }}>Reminders, late fines and reconciliation are queued for every school each morning; a failed job is tried again after 1 and 10 minutes, then waits here.</div>
+      {all.length > 0 && (
+        <div className="tgrow" style={{ padding: '0 20px 12px', alignItems: 'center' }}>
+          {schools.length > 1 && <Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'Every school' }, ...schools.map(([value, label]) => ({ value, label }))]} />}
+          <Checkbox checked={onlyFailed} onChange={setOnlyFailed} label="Only failed" />
+        </div>
+      )}
       {jobs.isError ? <div className="help" style={{ padding: '0 20px 20px' }}>{(jobs.error as Error).message}</div>
-        : !rows.length ? <div className="help" style={{ padding: '0 20px 20px' }}>No job has run in the last day.</div> : (
+        : !rows.length ? <div className="help" style={{ padding: '0 20px 20px' }}>{all.length ? 'No job matches.' : 'No job has run in the last day.'}</div> : (
           <div className="tbl scroll-x"><div style={{ minWidth: 640 }} className="lscroll">
             <div className="grd th" style={{ '--cols': '100px minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr) 90px' } as React.CSSProperties}><span>Status</span><span>Job</span><span>School</span><span>Result</span><span></span></div>
             {rows.map((j) => (
               <div key={j.id} className="grd rw" style={{ '--cols': '100px minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr) 90px', height: 'auto', minHeight: 52, padding: '8px 20px' } as React.CSSProperties}>
-                <span className={`chip ${JOB_TONE[j.status]}`}>{j.status}</span>
+                <span className={`chip ${JOB_TONE[j.status]}`}>{JOB_WORDS[j.status]}</span>
                 <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{JOB_LABELS[j.kind] ?? j.kind}</b><div className="help" style={{ margin: 0 }}>{ago(j.finishedAt ?? j.runAt)}{j.attempts > 1 ? ` · try ${j.attempts}` : ''}</div></span>
                 <span className="help" style={{ margin: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.schoolName ?? 'Every school'}</span>
                 <span style={{ minWidth: 0, font: '500 13px/1.4 var(--fb)', color: j.lastError ? 'var(--cD)' : 'var(--ink2)', overflowWrap: 'anywhere' }}>{j.lastError ?? j.result ?? ''}</span>

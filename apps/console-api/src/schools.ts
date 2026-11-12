@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Inject, Injectable, Param, Patch, Query } from '@nestjs/common';
 import { POOLS } from './tokens.js';
 import { activeModules, closeModules } from '@gradeon/config-engine';
-import { type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
-import { notFound, ApiError } from '@gradeon/nest-kit';
+import { SchoolDetailsPatch, type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
+import { notFound, ApiError, ZodPipe } from '@gradeon/nest-kit';
 import type { PoolManager } from '@gradeon/tenancy';
 import { unseal } from '@gradeon/security';
 import { adminUrlFor } from './provisioning/drivers.js';
@@ -32,7 +32,7 @@ export class Schools {
     return {
       id: r.id, slug: r.slug, name: r.name, shortName: r.shortName, color: r.color, logoText: r.logoText, status: r.status as SchoolStatus, plan: r.plan, cell: r.cell, target: r.target as DeployTarget,
       region: r.region, versions: { api: r.apiVersion, admin: r.adminVersion, app: r.appVersion }, configVersion: r.configVersion, students: r.studentsCount, health: r.health as SchoolRow['health'],
-      healthMs: r.healthMs, onboarding: { done: r.onboardingDone, total: r.onboardingTotal }, lastIncident: r.lastIncident, adminUrl: adminUrlFor(this.env, r.slug, r.addressing, r.customDomain), createdAt: r.createdAt.toISOString(),
+      healthMs: r.healthMs, onboarding: { done: r.onboardingDone, total: r.onboardingTotal }, lastIncident: r.lastIncident, adminUrl: adminUrlFor(this.env, r.slug, r.addressing, r.customDomain), createdAt: r.createdAt.toISOString(), wentLiveAt: r.wentLiveAt?.toISOString() ?? null,
     };
   }
 
@@ -71,45 +71,56 @@ export class Schools {
     const ent = r.entitlement;
     return {
       ...this.row(r),
-      contact: r.contact, gstin: r.gstin, entitlement: {
+      contact: r.contact, gstin: r.gstin, board: r.board, entitlement: {
         plan: r.plan, modules: closeModules(ent.modules), active: activeModules(ent), features: ent.features ?? {}, dates: ent.dates ?? {}, trialUntil: ent.trialUntil ?? null,
         limits: ent.limits, locks: ent.locks, version: ent.version,
       },
       usage: { students: r.studentsCount, storageGb: Math.round((bytes / 1024 ** 3) * 100) / 100, sms: Number(sms.rows[0]?.n ?? 0), staff },
-      checklist: Object.entries(CHECKLIST_LABELS).map(([key, label]) => ({ key, label, state: (r.checklist[key] as 'done' | 'waiting' | 'todo' | undefined) ?? 'todo' })),
+      checklist: Object.entries(CHECKLIST_LABELS).map(([key, label]) => {
+        const who = r.checklist[`${key}@`] as { by?: string; at?: string } | undefined;
+        return { key, label, state: (r.checklist[key] as 'done' | 'waiting' | 'todo' | undefined) ?? 'todo', by: who?.by ?? null, at: who?.at ?? null };
+      }),
       runs, builds: builds.rows.map((b) => ({ id: b.id, schoolId: b.school_id, platform: b.platform, version: b.version, status: b.status, url: b.url, note: b.note, createdAt: b.created_at.toISOString() })),
     };
+  }
+
+  async setDetails(user: string, id: string, b: SchoolDetailsPatch): Promise<void> {
+    const r = await this.raw(id);
+    await this.db.pool.query('update schools set contact = $2, gstin = $3, board = $4 where id = $1', [r.id, JSON.stringify(b.contact), b.gstin, b.board]);
+    await this.db.audit(user, 'school.details', 'school', r.id, { board: b.board });
   }
 
   async setChecklist(user: string, id: string, key: string, state: string): Promise<void> {
     if (!(key in CHECKLIST_LABELS)) throw new ApiError('validation', 'That is not a checklist item.');
     if (!['done', 'waiting', 'todo'].includes(state)) throw new ApiError('validation', 'State must be done, waiting or todo.');
     const r = await this.raw(id);
-    const next = { ...r.checklist, [key]: state };
+    const next = { ...r.checklist, [key]: state, [`${key}@`]: { by: user, at: new Date().toISOString() } };
     const done = Object.values(next).filter((v) => v === 'done').length;
     await this.db.pool.query('update schools set checklist = $2, onboarding_done = case when status = $4 then least(onboarding_total, 5 + $3) else onboarding_done end where id = $1', [r.id, JSON.stringify(next), done, 'live']);
     await this.db.audit(user, 'checklist.changed', 'school', r.id, { key, state });
   }
 
-  async fleet(): Promise<FleetSummary> {
-    const [schools, cells, series, p95, incident] = await Promise.all([
+  async fleet(userId: string): Promise<FleetSummary> {
+    const [schools, cells, series, p95, incident, seen] = await Promise.all([
       this.db.pool.query<{ status: string; health: string; cell: string; slug: string; name: string; id: string; created_at: Date }>('select id, slug, name, status, health, cell, created_at from schools where deleted_at is null'),
       this.db.pool.query<{ key: string; target: DeployTarget; region: string; max_schools: number }>('select key, target, region, max_schools from cells order by key'),
       this.db.pool.query<{ hour: number; day: string; per_min: number }>(
         `select extract(hour from m.at at time zone 'Asia/Kolkata')::int as hour, case when (m.at at time zone 'Asia/Kolkata')::date = (now() at time zone 'Asia/Kolkata')::date then 'today' else 'previous' end as day,
            sum(m.requests)::float / 60 as per_min
          from metrics_minute m where m.at >= (date_trunc('day', now() at time zone 'Asia/Kolkata') - interval '1 day') at time zone 'Asia/Kolkata' group by 1, 2`),
-      this.db.pool.query<{ p95: number | null }>("select max(p95_ms) p95 from metrics_minute where at >= now() - interval '1 hour'"),
+      this.db.pool.query<{ p95: number | null; at: Date | null }>("select max(p95_ms) p95, (select max(at) from metrics_minute) at from metrics_minute where at >= now() - interval '1 hour'"),
       this.db.pool.query<{ id: string; title: string; state: 'open' | 'resolved'; started_at: Date; school_id: string | null; school_name: string | null }>(
         `select i.id, i.title, i.state, i.started_at, i.school_id, s.name school_name from incidents i left join schools s on s.id = i.school_id
          where i.state = 'open' or i.resolved_at > now() - interval '1 hour' order by i.started_at desc limit 1`),
+      this.db.pool.query<{ dismissed_incident: string | null }>('select dismissed_incident from console_users where id = $1', [userId]),
     ]);
     const list = schools.rows;
     const by = (h: string) => list.filter((s) => s.health === h).length;
     const today = new Map<number, number>();
     const prev = new Map<number, number>();
     for (const r of series.rows) (r.day === 'today' ? today : prev).set(r.hour, Number(r.per_min));
-    const inc = incident.rows[0];
+    // One the person dismissed stays dismissed for them.
+    const inc = incident.rows[0]?.id === seen.rows[0]?.dismissed_incident ? undefined : incident.rows[0];
     const soon = list.filter((s) => s.status === 'onboarding').slice(0, 2).map((s) => ({ name: s.name, id: s.id }));
     return {
       schools: list.length, live: list.filter((s) => s.status === 'live').length, onboarding: list.filter((s) => s.status === 'onboarding').length,
@@ -117,7 +128,8 @@ export class Schools {
       requests24h: Array.from({ length: 24 }, (_, hour) => ({ hour, value: Math.round((today.get(hour) ?? 0) * 100) / 100, previous: Math.round((prev.get(hour) ?? 0) * 100) / 100 })),
       p95Ms: p95.rows[0]?.p95 ?? 0,
       cells: cells.rows.map((c) => ({ key: c.key, target: c.target, schools: list.filter((s) => s.cell === c.key).length, max: c.max_schools, region: c.region })),
-      incident: inc ? { id: inc.id, title: inc.title, body: inc.state === 'open' ? 'We are looking at it. Schools may see slower pages for a moment.' : 'It cleared by itself. No data was lost.', state: inc.state, startedAt: inc.started_at.toISOString(), schoolName: inc.school_name } : null,
+      incident: inc ? { id: inc.id, title: inc.title, body: inc.state === 'open' ? 'We are looking at it. Schools may see slower pages for a moment.' : 'It cleared by itself. No data was lost.', state: inc.state, startedAt: inc.started_at.toISOString(), schoolId: inc.school_id, schoolName: inc.school_name } : null,
+      readingAt: p95.rows[0]?.at?.toISOString() ?? null,
       upcoming: soon,
       release: null,
     };
@@ -137,6 +149,12 @@ export class SchoolsController {
   @Get(':id') @Needs('schools.read')
   detail(@Param('id') id: string): Promise<SchoolDetail> {
     return this.schools.detail(id);
+  }
+
+  @Patch(':id/details') @Needs('schools.write')
+  async details(@Me() me: ConsoleUser, @Param('id') id: string, @Body(new ZodPipe(SchoolDetailsPatch)) body: SchoolDetailsPatch): Promise<{ ok: true }> {
+    await this.schools.setDetails(me.email, id, body);
+    return { ok: true };
   }
 
   @Patch(':id/checklist') @Needs('schools.write')

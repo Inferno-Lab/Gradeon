@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Param, Post, type OnModuleInit } from '@nestjs/common';
 import { enqueue, newId, retryJob } from '@gradeon/db';
-import type { JobRow } from '@gradeon/contracts';
+import { LogoUpload, type JobRow } from '@gradeon/contracts';
 import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
@@ -10,9 +10,10 @@ import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { Integrations } from './integrations.js';
 import { withSchoolDb } from './school-db.js';
+import { Provisioner } from './provisioning/provisioner.js';
 
 
-const Logo = z.object({ name: z.string().min(1).max(120), mime: z.enum(['image/png', 'image/jpeg']), data: z.string().min(10).max(3_000_000) });
+const Logo = LogoUpload;
 
 /**
  * The console's side of Phase 4 for one school: its logo (Gradeon sets it, schools configure nothing), leavers past the retention
@@ -26,9 +27,14 @@ export class SchoolData implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly integrations: Integrations,
     @Inject(ENV) private readonly env: Env,
+    private readonly provisioner: Provisioner,
   ) {}
 
   onModuleInit(): void {
+    // A logo chosen in the wizard is stored once the school's storage exists.
+    this.provisioner.afterSetUp(async (schoolId, payload) => {
+      if (payload.branding.logo) await this.logo({ id: 'setup', name: 'Set-up', email: 'set-up', roles: [], permissions: [], sid: 'system' }, schoolId, payload.branding.logo);
+    });
     // After two people agree, the school API's worker does the erasing (it holds the school's storage and database).
     this.actions.handle('retention.erase', async (schoolId, _params, by) => {
       const due = await this.retention(schoolId);

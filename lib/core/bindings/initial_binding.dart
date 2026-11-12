@@ -6,6 +6,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/network/api_client.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/connectivity_service.dart';
+import 'package:gradeon/core/services/live_stream.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
@@ -14,6 +15,7 @@ import 'package:gradeon/data/repositories/assistant_repository.dart';
 import 'package:gradeon/data/repositories/auth_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/data/repositories/driver_repository.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -52,6 +54,7 @@ class InitialBinding extends Bindings {
           () => MockTransportRepository(source),
           fenix: true,
         )
+        ..lazyPut<DriverRepository>(() => MockDriverRepository(source), fenix: true)
         ..lazyPut<LeaveRepository>(() => MockLeaveRepository(source), fenix: true)
         ..lazyPut<GalleryRepository>(
           () => MockGalleryRepository(source),
@@ -69,6 +72,7 @@ class InitialBinding extends Bindings {
       RemoteDataSource(ApiClient(onSignedOut: () => unawaited(Get.find<AuthService>().signOut()), onLocked: () => unawaited(SchoolConfig.load()))),
       permanent: true,
     );
+    Get.put(LiveStream(), permanent: true);
     // Attendance marked without a signal is sent as soon as the phone is back online.
     if (Get.isRegistered<ConnectivityService>()) {
       Get.find<ConnectivityService>().onBackOnline.add(() async { await remote.client.flushOutbox(); });
@@ -104,6 +108,7 @@ class InitialBinding extends Bindings {
         () => RemoteTransportRepository(remote),
         fenix: true,
       )
+      ..lazyPut<DriverRepository>(() => RemoteDriverRepository(remote), fenix: true)
       ..lazyPut<LeaveRepository>(() => RemoteLeaveRepository(remote), fenix: true)
       ..lazyPut<GalleryRepository>(
         () => RemoteGalleryRepository(remote),

@@ -63,3 +63,17 @@ export function SelectField({ label, value, onChange, options, error, disabled }
     </div>
   );
 }
+
+/** A multi-line input in the same box as Field: notes, reasons, answers. */
+export function AreaField({ label, value, onChange, error, hint, rows = 4, ...rest }: { label: string; value: string; onChange: (v: string) => void; error?: string; hint?: string; rows?: number; maxLength?: number; placeholder?: string; disabled?: boolean }) {
+  const id = useId();
+  return (
+    <div className="fld">
+      <label htmlFor={id}>{label}</label>
+      <div className={`inp ${error ? 'err shake' : ''}`} style={{ height: 'auto', alignItems: 'stretch' }}>
+        <textarea id={id} className="ta" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} style={{ padding: '12px 0', resize: 'vertical', width: '100%', font: '500 15px/1.5 var(--fb)' }} {...rest} />
+      </div>
+      {error ? <div className="emsg" role="alert">{error}</div> : hint ? <div className="help">{hint}</div> : null}
+    </div>
+  );
+}

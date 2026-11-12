@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { useParams } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import {
-  CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, MESSAGE_EVENTS, SYSTEM_MESSAGES, providerDef,
+  CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
+import { tabsOf } from '../../app/nav';
 
 type Tab = 'connections' | 'routing' | 'templates' | 'activity' | 'webhooks';
 const fields = (e: unknown): Record<string, string> => (e instanceof HttpError && Object.keys(e.fields).length ? e.fields : { _: (e as Error).message });
@@ -17,7 +19,7 @@ const DELIVERY: Record<DeliveryRow['status'], string> = { queued: 'a', held: 'v'
 /** Route settings a capability uses, on top of its connection's own. */
 const ROUTE_FIELDS: Partial<Record<Capability, { key: string; label: string; placeholder: string }[]>> = {
   sms: [{ key: 'senderId', label: 'Sender ID for this route', placeholder: 'GRNFLD' }],
-  email: [{ key: 'from', label: 'From address for this route', placeholder: 'Greenfield <office@greenfield.edu.in>' }],
+  email: [{ key: 'from', label: 'From address for this route', placeholder: 'Your School <office@yourschool.org>' }],
   storage: [{ key: 'prefix', label: 'Folder prefix in the bucket', placeholder: 'gradeon/' }],
 };
 const MESSAGE_KEYS = [...SYSTEM_MESSAGES.map((m) => ({ key: m.key, label: m.label, text: m.text })), ...MESSAGE_EVENTS.map((m) => ({ key: m.key, label: m.label, text: m.text }))];
@@ -26,7 +28,8 @@ export function IntegrationsPage() {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [tab, setTab] = useState<Tab>('connections');
+  // The tabs have addresses (/integrations/routing); the Test inbox is there only while messages go to it.
+  const { tab: asked } = useParams({ strict: false }) as { tab?: string };
   const [dlg, setDlg] = useState<
     | { kind: 'add' } | { kind: 'edit'; c: ConnectionRow } | { kind: 'test'; c: ConnectionRow } | { kind: 'route'; capability: Capability; schoolId: string | null; route?: RouteRow }
     | { kind: 'template'; connectionId: string; messageKey: string; t?: TemplateRow } | { kind: 'allow' } | { kind: 'delete'; c: ConnectionRow } | null>(null);
@@ -37,6 +40,15 @@ export function IntegrationsPage() {
   const done = (m: string) => { setDlg(null); refresh(); say(m); };
   const v = view.data;
   const live = (schools.data ?? []).filter((s) => s.status !== 'archived');
+  const tabList = tabsOf('/integrations', app.can).filter((t) => t.key !== 'inbox' || v?.mode !== 'live');
+  const tab = (tabList.find((t) => t.key === asked)?.key ?? 'connections') as Tab | 'inbox';
+  const counts: Record<string, number | undefined> = { connections: v?.connections.length, routing: v?.routes.length, templates: v?.templates.length };
+  const gaps = useQuery({ queryKey: ['integrations', 'gaps'], queryFn: app.api.integrations.gaps });
+  const mode = useMutation({
+    mutationFn: (m: 'sandbox' | 'live') => app.api.integrations.mode(m),
+    onSuccess: (r) => { refresh(); say(r.action ? 'Asked for approval to switch to live messages. A second person approves it under Approvals.' : 'Back to sandbox: messages go to the Test inbox again.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
   const act = useMutation({
     mutationFn: async ({ c, what }: { c: ConnectionRow; what: 'live' | 'pause' | 'resume' }) => {
       if (what === 'live') { const a = await app.api.integrations.live(c.id); return a.status === 'pending_approval' ? `Asked for approval to take ${c.name} live. A second person approves it under Approvals.` : `${c.name} is live.`; }
@@ -66,22 +78,26 @@ export function IntegrationsPage() {
               : `Messages go to the Test inbox, except to the ${v.allowList.length} ${v.allowList.length === 1 ? 'number or address' : 'numbers and addresses'} on the allow-list, which get real messages through test or live connections.`}
           </span>
           {v.mode === 'sandbox' && write && <button className="btn sm" onClick={() => setDlg({ kind: 'allow' })}>Allow-list</button>}
+          {write && <button className={`btn sm ${v.mode === 'sandbox' ? 'pri' : ''}`} disabled={mode.isPending} onClick={() => mode.mutate(v.mode === 'sandbox' ? 'live' : 'sandbox')}>{v.mode === 'sandbox' ? 'Switch to live…' : 'Back to sandbox'}</button>}
         </div>
+        {v.mode === 'sandbox' && !!gaps.data?.gaps.length && (
+          <Card title="Before live messages" chip={<span className="chip a">{gaps.data.gaps.length} to do</span>}>
+            {gaps.data.gaps.map((g) => <div key={g} className="kv" style={{ height: 'auto', padding: '6px 0' }}><span style={{ font: '500 13px/1.45 var(--fb)' }}>{g}</span></div>)}
+          </Card>
+        )}
         <Tiles items={[
           { label: 'Connections', value: v.connections.length, note: `${v.connections.filter((c) => c.state === 'live').length} live · ${v.connections.filter((c) => c.health.ok === false).length} failing`, tone: 'v' },
           { label: 'Sent this month', value: count(v.connections.reduce((n, c) => n + c.usage.count, 0)), note: 'through real providers', tone: 'a' },
           { label: 'Cost this month', value: rupees(v.connections.reduce((n, c) => n + c.usage.costPaise, 0) / 100), note: 'from each connection’s price', tone: 'i' },
         ]} />
-        <Segmented label="Integrations" value={tab} onChange={setTab} options={[
-          { value: 'connections', label: 'Connections', count: v.connections.length }, { value: 'routing', label: 'Routing', count: v.routes.length },
-          { value: 'templates', label: 'Templates', count: v.templates.length }, { value: 'activity', label: 'Activity' }, { value: 'webhooks', label: 'Webhooks' },
-        ]} />
+        <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />
         {tab === 'connections' && <Connections v={v} write={write} busy={act.isPending} onEdit={(c) => setDlg({ kind: 'edit', c })} onTest={(c) => setDlg({ kind: 'test', c })} onDelete={(c) => setDlg({ kind: 'delete', c })}
           onAct={(c, what) => act.mutate({ c, what })} onAdd={() => setDlg({ kind: 'add' })} />}
         {tab === 'routing' && <Routing v={v} schools={live} write={write} onEdit={(capability, schoolId, route) => setDlg({ kind: 'route', capability, schoolId, route })} />}
-        {tab === 'templates' && <Templates v={v} write={write} onEdit={(connectionId, messageKey, t) => setDlg({ kind: 'template', connectionId, messageKey, t })} />}
+        {tab === 'templates' && <Templates v={v} write={write} say={say} onEdit={(connectionId, messageKey, t) => setDlg({ kind: 'template', connectionId, messageKey, t })} />}
         {tab === 'activity' && <Activity schools={live} write={write} say={say} />}
         {tab === 'webhooks' && <Webhooks v={v} say={say} />}
+        {tab === 'inbox' && <TestInbox schools={live} />}
       </>}
     </Page>
   );
@@ -135,8 +151,9 @@ function Connections({ v, write, busy, onEdit, onTest, onDelete, onAct, onAdd }:
 function SecretOrField({ f, value, onChange, error, set }: { f: ProviderField; value: string; onChange: (v: string) => void; error?: string; set?: string }) {
   const label = `${f.label}${f.required ? '' : ' (optional)'}`;
   if (f.kind === 'bool') return <div className="fld"><Checkbox checked={value === 'true'} onChange={(b) => onChange(String(b))} label={f.label} /></div>;
-  if (f.kind === 'select') return <SelectField label={label} value={value || f.options?.[0]?.[0] || ''} onChange={onChange} error={error} options={(f.options ?? []).map(([value, label]) => ({ value, label }))} />;
-  if (f.kind === 'number') return <NumberField label={label} value={value} onChange={onChange} error={error} min={0} />;
+  if (f.kind === 'select') return <div><SelectField label={label} value={value || f.options?.[0]?.[0] || ''} onChange={onChange} error={error} options={(f.options ?? []).map(([value, label]) => ({ value, label }))} />{f.help && !error && <div className="help" style={{ marginTop: 6 }}>{f.help}</div>}</div>;
+  if (f.kind === 'number') return <NumberField label={label} value={value} onChange={onChange} error={error} min={0} hint={f.help} />;
+  if (f.kind === 'file') return <FileField f={f} label={label} onChange={onChange} error={error} set={set} />;
   if (f.kind === 'json' || f.kind === 'template') {
     return (
       <div className="fld">
@@ -153,13 +170,48 @@ function SecretOrField({ f, value, onChange, error, set }: { f: ProviderField; v
     placeholder={f.kind === 'secret' && set ? `Set, ending ${set}. Type to replace it.` : f.placeholder} hint={f.help} />;
 }
 
-function ConnectionDialog({ c, schools, onClose, onDone }: { c?: ConnectionRow; schools: SchoolRow[]; onClose: () => void; onDone: (m: string) => void }) {
+/** Files are read in the browser and sealed with the connection's keys; only "set" and the last characters ever come back. */
+function FileField({ f, label, onChange, error, set }: { f: ProviderField; label: string; onChange: (v: string) => void; error?: string; set?: string }) {
+  const [picked, setPicked] = useState('');
+  const [tooBig, setTooBig] = useState(false);
+  return (
+    <div className="fld">
+      <label>{label}</label>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span className={`chip ${picked || set ? 'g' : ''}`}>{picked ? `Added: ${picked}` : set ? `Set, ending ${set}` : 'No file yet'}</span>
+        <FilePick accept={f.accept} className="btn sm" onPick={(file) => {
+          setTooBig(file.size > 512 * 1024);
+          if (file.size > 512 * 1024) return;
+          const r = new FileReader();
+          r.onload = () => { onChange(String(r.result).split(',')[1] ?? ''); setPicked(file.name); };
+          r.readAsDataURL(file);
+        }}>{picked || set ? 'Replace file' : 'Add the file'}</FilePick>
+      </div>
+      {(error || tooBig || f.help) && <div className={error || tooBig ? 'emsg' : 'help'} style={{ marginTop: 6 }}>{error || (tooBig ? 'That file is larger than 512 KB: it is not the key file.' : f.help)}</div>}
+    </div>
+  );
+}
+
+/** Copies a value and says so on the button for a moment. */
+function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+  const [done, setDone] = useState(false);
+  return <button type="button" className="btn sm" onClick={() => { void navigator.clipboard.writeText(text).then(() => { setDone(true); setTimeout(() => setDone(false), 1500); }); }}>{done ? 'Copied' : label}</button>;
+}
+
+/**
+ * Adding a connection is a template to fill in, like a credential in n8n: choose the service, then follow its steps beside the
+ * form. A new connection is saved as a draft first, so its webhook address can be pasted at the provider before the keys are typed.
+ */
+function ConnectionDialog({ c: initial, schools, onClose, onDone }: { c?: ConnectionRow; schools: SchoolRow[]; onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
+  const qc = useQueryClient();
   const shake = useShake();
+  const [c, setC] = useState<ConnectionRow | undefined>(initial);
   const [cap, setCap] = useState<Capability>(c ? (providerDef(c.provider)?.capabilities[0] ?? 'sms') : 'sms');
   const providers = INTEGRATION_PROVIDERS.filter((p) => p.key !== 'sandbox' && p.capabilities.includes(cap));
   const [provider, setProvider] = useState(c?.provider ?? providers[0]?.key ?? '');
   const def = providerDef(provider);
+  const platformOnly = !!def && def.capabilities.every((k) => PLATFORM_CAPABILITIES.includes(k));
   const [name, setName] = useState(c?.name ?? '');
   const [scope, setScope] = useState<'platform' | 'school'>(c?.scope ?? 'platform');
   const [schoolId, setSchoolId] = useState(c?.schoolId ?? schools[0]?.id ?? '');
@@ -167,43 +219,95 @@ function ConnectionDialog({ c, schools, onClose, onDone }: { c?: ConnectionRow; 
   const [err, setErr] = useState<Record<string, string>>({});
   const set = (k: string) => (x: string) => { setVals((o) => ({ ...o, [k]: x })); setErr((e) => ({ ...e, [k]: '', _: '' })); };
   const secretsSet = new Map((c?.secretsSet ?? []).map((s) => [s.key, s.ending]));
+  const start = useMutation({
+    mutationFn: async () => {
+      const r = await app.api.integrations.create({ provider, name: name.trim(), scope: platformOnly ? 'platform' : scope, schoolId: !platformOnly && scope === 'school' ? schoolId : undefined, settings: {}, secrets: {}, draft: true });
+      // staleTime 0: the cached list predates the new connection.
+      const view = await qc.fetchQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, staleTime: 0 });
+      return view.connections.find((x) => x.id === r.id)!;
+    },
+    onSuccess: (row) => setC(row), onError: (e) => { setErr(fields(e)); shake.hit(); },
+  });
   const save = useMutation({
     mutationFn: async () => {
       const settings: Record<string, unknown> = {};
       const secrets: Record<string, string> = {};
+      const problems: Record<string, string> = {};
       for (const f of def?.fields ?? []) {
         // A dropdown shows its first option until changed: that is the value it saves.
         const raw = vals[f.key] || (f.kind === 'select' ? f.options?.[0]?.[0] ?? '' : '');
-        if (f.kind === 'secret') { if (raw) secrets[f.key] = raw; continue; }
+        const sealed = f.kind === 'secret' || f.kind === 'file';
+        const problem = sealed && !raw && secretsSet.has(f.key) ? null : fieldProblem(f, raw);
+        if (problem) problems[f.key] = problem;
+        if (sealed) { if (raw) secrets[f.key] = raw; continue; }
         if (raw === '' && f.kind !== 'bool') continue;
         settings[f.key] = f.kind === 'number' ? Number(raw) : f.kind === 'bool' ? raw === 'true' : raw;
       }
-      if (c) { await app.api.integrations.update(c.id, { name: name.trim(), settings, secrets }); return `${name.trim()} was saved.${c.state === 'live' ? ' Its keys changed, so it is back in test until a second person takes it live again.' : ''}`; }
-      await app.api.integrations.create({ provider, name: name.trim(), scope, schoolId: scope === 'school' ? schoolId : undefined, settings, secrets });
-      return `${name.trim()} was added. Run Test, then route it.`;
+      if (Object.keys(problems).length) throw Object.assign(new Error('Some fields need a look.'), { problems });
+      await app.api.integrations.update(c!.id, { name: name.trim(), settings, secrets });
+      return c!.state === 'draft' ? `${name.trim()} is set up. Run Test, then route it.` : `${name.trim()} was saved.${c!.state === 'live' ? ' Its keys changed, so it is back in test until a second person takes it live again.' : ''}`;
     },
-    onSuccess: onDone, onError: (e) => { setErr(fields(e)); shake.hit(); },
+    onSuccess: onDone,
+    onError: (e) => { setErr((e as { problems?: Record<string, string> }).problems ?? fields(e)); shake.hit(); },
   });
+
+  // First: which service, what to call it, who it serves.
+  if (!c) {
+    return (
+      <Dialog title="Add a connection" onClose={onClose} width={560} shake={shake.cls}>
+        <div className="stack">
+          <div className="two">
+            <SelectField label="What it does" value={cap} onChange={(x) => { setCap(x as Capability); setProvider(INTEGRATION_PROVIDERS.find((p) => p.key !== 'sandbox' && p.capabilities.includes(x as Capability))?.key ?? ''); }}
+              options={CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k))).map((k) => ({ value: k, label: CAPABILITY_LABELS[k] }))} />
+            <SelectField label="Provider" value={provider} onChange={setProvider} options={providers.map((p) => ({ value: p.key, label: p.name }))} />
+          </div>
+          <Field label="Name" value={name} onChange={(x) => { setName(x); setErr((e) => ({ ...e, name: '' })); }} error={err.name} placeholder={def ? `${def.name} for every school` : ''} />
+          {!platformOnly && <>
+            <Segmented label="Who it serves" value={scope} onChange={setScope} options={[{ value: 'platform', label: 'Every school (Gradeon-wide)' }, { value: 'school', label: 'One school' }]} />
+            {scope === 'school' && <SelectField label="School" value={schoolId} onChange={setSchoolId} error={err.schoolId} options={schools.map((s) => ({ value: s.id, label: s.name }))} />}
+          </>}
+          {platformOnly && <div className="help">Gradeon itself uses this, so it serves every school.</div>}
+          {def && <div className="help">Next: the {def.steps.length} steps to get each value from {def.name}, beside the form.</div>}
+          {err._ && <div className="emsg" role="alert">{err._}</div>}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn pri" disabled={start.isPending || name.trim().length < 2 || !provider} onClick={() => start.mutate()}>{start.isPending ? 'Starting…' : 'Continue'}</button>
+        </div>
+      </Dialog>
+    );
+  }
+
+  // Then: the steps, the webhook address to paste back, and the form.
   return (
-    <Dialog title={c ? `Change ${c.name}` : 'Add a connection'} tag={def ? { text: def.name, tone: 'v' } : undefined} onClose={onClose} width={560} shake={shake.cls}>
-      <div className="stack">
-        {!c && <div className="two">
-          <SelectField label="What it does" value={cap} onChange={(x) => { setCap(x as Capability); const first = INTEGRATION_PROVIDERS.find((p) => p.key !== 'sandbox' && p.capabilities.includes(x as Capability)); setProvider(first?.key ?? ''); setVals({}); }}
-            options={CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k))).map((k) => ({ value: k, label: CAPABILITY_LABELS[k] }))} />
-          <SelectField label="Provider" value={provider} onChange={(x) => { setProvider(x); setVals({}); }} options={providers.map((p) => ({ value: p.key, label: p.name }))} />
-        </div>}
-        <Field label="Name" value={name} onChange={(x) => { setName(x); setErr((e) => ({ ...e, name: '' })); }} error={err.name} placeholder={def ? `${def.name} for every school` : ''} />
-        {!c && <>
-          <Segmented label="Who it serves" value={scope} onChange={setScope} options={[{ value: 'platform', label: 'Every school (Gradeon-wide)' }, { value: 'school', label: 'One school' }]} />
-          {scope === 'school' && <SelectField label="School" value={schoolId} onChange={setSchoolId} error={err.schoolId} options={schools.map((s) => ({ value: s.id, label: s.name }))} />}
-        </>}
-        {def?.fields.map((f) => <SecretOrField key={f.key} f={f} value={vals[f.key] ?? ''} onChange={set(f.key)} error={err[f.key]} set={secretsSet.get(f.key)} />)}
-        {def?.docs && <div className="help">Where to find these: <a href={def.docs} target="_blank" rel="noreferrer">{def.name} documentation</a>.</div>}
-        {err._ && <div className="emsg" role="alert">{err._}</div>}
+    <Dialog title={c.state === 'draft' ? `Set up ${c.name}` : `Change ${c.name}`} tag={def ? { text: def.name, tone: 'v' } : undefined} onClose={onClose} width={860} shake={shake.cls}>
+      <div className="grid" style={{ gap: 20 }}>
+        <div className="s5" style={{ minWidth: 0 }}>
+          <div className="lbl">How to get these from {def?.name}</div>
+          <ol style={{ margin: '8px 0 0', paddingLeft: 20, display: 'grid', gap: 8, font: '500 13px/1.5 var(--fb)', color: 'var(--ink2)' }}>
+            {def?.steps.map((s, i) => <li key={i}>{s}</li>)}
+          </ol>
+          {def?.docs && <div className="help" style={{ marginTop: 10 }}><a href={def.docs} target="_blank" rel="noreferrer">{def.name} documentation</a></div>}
+          {def?.webhooks && c.webhookUrl && (
+            <div style={{ marginTop: 16 }}>
+              <div className="lbl">Webhook address to paste at {def.name}</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+                <code className="mono" style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', font: '500 12px/1.4 var(--fm)' }}>{c.webhookUrl}</code>
+                <CopyButton text={c.webhookUrl} />
+              </div>
+              <div className="help" style={{ marginTop: 6 }}>Events: {def.webhooks.events}. Checked by: {def.webhooks.verifies}.</div>
+            </div>
+          )}
+        </div>
+        <div className="s7 stack" style={{ minWidth: 0 }}>
+          <Field label="Name" value={name} onChange={(x) => { setName(x); setErr((e) => ({ ...e, name: '' })); }} error={err.name} />
+          {def?.fields.map((f) => <SecretOrField key={f.key} f={f} value={vals[f.key] ?? ''} onChange={set(f.key)} error={err[f.key]} set={secretsSet.get(f.key)} />)}
+          {err._ && <div className="emsg" role="alert">{err._}</div>}
+        </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={save.isPending || !name.trim() || !provider} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : c ? 'Save' : 'Add connection'}</button>
+        <button className="btn" onClick={onClose}>{c.state === 'draft' ? 'Finish later' : 'Cancel'}</button>
+        <button className="btn pri" disabled={save.isPending || !name.trim()} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
       </div>
     </Dialog>
   );
@@ -240,7 +344,7 @@ function DeleteDialog({ c, onClose, onDone }: { c: ConnectionRow; onClose: () =>
       {del.isError && <div className="emsg" role="alert" style={{ marginTop: 12 }}>{(del.error as Error).message}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={del.isPending} onClick={() => del.mutate()}>{del.isPending ? 'Deleting…' : 'Delete'}</button>
+        <button className="btn dngf" disabled={del.isPending} onClick={() => del.mutate()}>{del.isPending ? 'Deleting…' : 'Delete'}</button>
       </div>
     </Dialog>
   );
@@ -251,9 +355,9 @@ function Routing({ v, schools, write, onEdit }: { v: IntegrationsView; schools: 
   const caps = CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k)));
   const [school, setSchool] = useState('');
   return (
-    <Card title="Which connection serves what" chip={<Select compact aria-label="Add an override for a school" value={school} onChange={setSchool} placeholder="Override for a school…"
-      options={[{ value: '', label: 'Override for a school…' }, ...schools.map((s) => ({ value: s.id, label: s.name }))]} />} style={{ padding: 0 }}>
-      <div className="help" style={{ padding: '0 20px 12px' }}>A school’s own route wins; otherwise the Gradeon default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
+    <Card title="Which connection serves what" style={{ padding: 0 }}>
+      <div className="help" style={{ padding: '0 20px 8px' }}>A school’s own route wins; otherwise the Gradeon default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
+      {write && <div style={{ padding: '0 20px 12px', maxWidth: 380 }}><SelectField label="Give a school its own route" value={school} onChange={setSchool} options={[{ value: '', label: 'Choose a school…' }, ...schools.map((s) => ({ value: s.id, label: s.name }))]} /></div>}
       <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
         <div className="grd th" style={{ '--cols': '160px minmax(0,1fr) minmax(0,1.4fr)' } as React.CSSProperties}><span>Capability</span><span>Gradeon default</span><span>Schools with their own</span></div>
         {caps.map((k) => {
@@ -312,25 +416,38 @@ function RouteDialog({ view, schools, capability, schoolId, route, onClose, onDo
   );
 }
 
-function Templates({ v, write, onEdit }: { v: IntegrationsView; write: boolean; onEdit: (connectionId: string, messageKey: string, t?: TemplateRow) => void }) {
+/** The wording as DLT wants it: every {placeholder} becomes {#var#}. */
+const forDlt = (text: string) => text.replace(/\{[\w.]+\}/g, '{#var#}');
+// WhatsApp providers whose templates can be listed and imported (their adapters implement templates()).
+const IMPORTABLE = new Set(['meta-cloud', 'gupshup-wa']);
+
+function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: boolean; say: (m: string, tone?: 'ok' | 'bad') => void; onEdit: (connectionId: string, messageKey: string, t?: TemplateRow) => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const imp = useMutation({
+    mutationFn: (id: string) => app.api.integrations.importTemplates(id),
+    onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['integrations'] }); say(r.found ? `Found ${r.found} approved templates; ${r.imported} matched a message by name and were mapped.` : 'The provider has no approved templates yet.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
   const conns = v.connections.filter((c) => providerDef(c.provider)?.capabilities.some((k) => k === 'sms' || k === 'whatsapp'));
   if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} scene="envelope" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
   return (
     <>
-      <div className="help rise">When a message is mapped, its approved wording is what goes out, filled with the message’s values, so DLT never rejects it. A school’s own wording still applies to app notifications and email.</div>
+      <div className="help rise">When a message is mapped, its approved wording is what goes out, filled with the message’s values, so DLT never rejects it. A text or WhatsApp connection goes live only when every message is mapped. “Copy for DLT” gives the wording with {'{#var#}'} where the values go, ready to register.</div>
       {conns.map((c) => {
         const mapped = v.templates.filter((t) => t.connectionId === c.id);
         return (
-          <Card key={c.id} title={c.name} chip={<span className="chip v">{mapped.length} of {MESSAGE_KEYS.length} mapped</span>} style={{ padding: 0 }}>
+          <Card key={c.id} title={c.name} chip={<><span className={`chip ${mapped.length === MESSAGE_KEYS.length ? 'g' : 'a'}`}>{mapped.length} of {MESSAGE_KEYS.length} mapped</span>
+            {write && IMPORTABLE.has(c.provider) && <button className="btn sm" disabled={imp.isPending} onClick={() => imp.mutate(c.id)}>{imp.isPending ? 'Importing…' : 'Import from provider'}</button>}</>} style={{ padding: 0 }}>
             <div className="tbl scroll-x"><div style={{ minWidth: 600 }}>
-              <div className="grd th" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 120px' } as React.CSSProperties}><span>Message</span><span>Approved template</span><span></span></div>
+              <div className="grd th" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 200px' } as React.CSSProperties}><span>Message</span><span>Approved template</span><span></span></div>
               {MESSAGE_KEYS.map((m) => {
                 const t = mapped.find((x) => x.messageKey === m.key);
                 return (
-                  <div key={m.key} className="grd rw" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 120px', height: 'auto', minHeight: 52, padding: '10px 20px' } as React.CSSProperties}>
+                  <div key={m.key} className="grd rw" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 200px', height: 'auto', minHeight: 52, padding: '10px 20px' } as React.CSSProperties}>
                     <b style={{ font: '700 13px/1.35 var(--fb)' }}>{m.label}</b>
                     <span style={{ minWidth: 0, font: '500 13px/1.45 var(--fb)', color: t ? 'var(--ink2)' : 'var(--ink3)', overflowWrap: 'anywhere' }}>{t ? <><span className="chip">{t.providerTemplateId}{t.dltTemplateId ? ` · DLT ${t.dltTemplateId}` : ''}</span> {t.approvedText}</> : 'Not mapped: this message cannot go by this connection.'}</span>
-                    <span>{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
+                    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
                   </div>
                 );
               })}
@@ -358,7 +475,7 @@ function TemplateDialog({ connectionId, messageKey, t, onClose, onDone }: { conn
           <Field label="Provider template ID" value={f.providerTemplateId} onChange={set('providerTemplateId')} error={err.providerTemplateId} placeholder="65f1c…" />
           <Field label="DLT template ID (optional)" value={f.dltTemplateId} onChange={set('dltTemplateId')} error={err.dltTemplateId} placeholder="1107169…" />
         </div>
-        <SelectField label="Language" value={f.language} onChange={set('language')} options={[{ value: 'en', label: 'English' }, { value: 'hi', label: 'हिन्दी (Hindi)' }, { value: 'mr', label: 'मराठी (Marathi)' }]} />
+        <SelectField label="Language" value={f.language} onChange={set('language')} options={LANGUAGES.map(([value, label]) => ({ value, label }))} />
         <div className="fld">
           <label htmlFor="tpl-text">Approved wording</label>
           <div className={`inp ${err.approvedText ? 'err shake' : ''}`} style={{ height: 'auto' }}>
@@ -411,18 +528,6 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
             </div></div>
           )}
       </Card>
-      {(q.data?.totals ?? []).length > 0 && (
-        <Card title="For billing: per school and month" style={{ padding: 0 }}>
-          <div className="tbl scroll-x"><div style={{ minWidth: 480 }}>
-            <div className="grd th" style={{ '--cols': 'minmax(0,1fr) 120px 100px 100px 110px' } as React.CSSProperties}><span>School</span><span>Channel</span><span>Month</span><span>Messages</span><span>Cost</span></div>
-            {q.data!.totals.map((t) => (
-              <div key={`${t.schoolSlug}${t.channel}${t.month}`} className="grd rw" style={{ '--cols': 'minmax(0,1fr) 120px 100px 100px 110px' } as React.CSSProperties}>
-                <b style={{ font: '700 13px var(--fb)' }}>{t.schoolSlug}</b><span>{CAPABILITY_LABELS[t.channel as Capability] ?? t.channel}</span><span>{t.month}</span><span className="num">{count(t.count)}</span><span className="num">{rupees(t.costPaise / 100)}</span>
-              </div>
-            ))}
-          </div></div>
-        </Card>
-      )}
     </>
   );
 }
@@ -484,5 +589,38 @@ function AllowDialog({ list, onClose, onDone }: { list: string[]; onClose: () =>
         <button className="btn pri" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
       </div>
     </Dialog>
+  );
+}
+
+const ICON: Record<string, string> = {
+  sms: 'M4 5h16v11H9l-5 4z', email: 'M4 6h16v12H4zM4 7l8 6 8-6', whatsapp: 'M4 5h16v11H9l-5 4z', push: 'M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0',
+};
+
+/** Texts and emails that would have gone out while messages are in sandbox: where a tester reads the codes and receipts. */
+function TestInbox({ schools }: { schools: SchoolRow[] }) {
+  const app = useApp();
+  const [school, setSchool] = useState('');
+  const msgs = useQuery({ queryKey: ['sandbox', school], queryFn: () => app.api.sandbox(school || undefined), refetchInterval: 6000 });
+  const rows = msgs.data ?? [];
+  return (
+    <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
+      {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 18 }} />
+        : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
+          : rows.map((m) => (
+            <div key={m.id} className="kv" style={{ alignItems: 'flex-start' }}>
+              <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>
+                <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--vS)', color: 'var(--vD)' }}>
+                  <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path className="i" d={ICON[m.channel] ?? ICON.sms}></path></svg>
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <b style={{ display: 'block', textAlign: 'left' }}>{m.subject ?? m.to}</b>
+                  <span style={{ color: 'var(--ink2)', overflowWrap: 'anywhere' }}>{m.body}</span><br />
+                  <small style={{ color: 'var(--ink3)' }}>{CAPABILITY_LABELS[m.channel as Capability] ?? m.channel} to {m.to} · {m.schoolSlug}</small>
+                </span>
+              </span>
+              <b style={{ whiteSpace: 'nowrap', color: 'var(--ink3)' }}>{ago(m.createdAt)}</b>
+            </div>
+          ))}
+    </Card>
   );
 }

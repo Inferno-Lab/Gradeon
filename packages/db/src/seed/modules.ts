@@ -99,14 +99,14 @@ export async function seedModulesDemo(db: Db, todayIn?: string): Promise<string[
 
   if ((await count(db, 'events')) < 10) {
     const ev: unknown[][] = [
-      ['evt_sports', 'Sports day', `${addDays(last, 11)}T02:30:00Z`, `${addDays(last, 11)}T09:30:00Z`, 'event', 'Bring a water bottle and wear house colours', 'Main ground', 'everyone'],
-      ['evt_ptm_c8', 'Parent-teacher meeting, Class 8', `${addDays(last, 5)}T09:00:00Z`, `${addDays(last, 5)}T12:00:00Z`, 'ptm', 'Ten-minute slots, book in the app', 'Class 8 rooms', 'parents'],
-      ['evt_diwali', 'Diwali break', `${addDays(last, 20)}T00:00:00Z`, `${addDays(last, 26)}T00:00:00Z`, 'holiday', 'School reopens on the next working Monday', '', 'everyone'],
-      ['evt_science', 'Science exhibition', `${addDays(last, 15)}T04:00:00Z`, `${addDays(last, 15)}T08:30:00Z`, 'event', 'Projects from classes 6 to 9', 'Auditorium', 'everyone'],
-      ['evt_staff', 'Staff meeting', `${addDays(last, 2)}T10:30:00Z`, `${addDays(last, 2)}T11:30:00Z`, 'routine', 'Mid-term planning', 'Staff room', 'staff'],
-      ['evt_midterm', 'Mid-term exams begin', `${addDays(last, 8)}T03:00:00Z`, `${addDays(last, 13)}T08:00:00Z`, 'exam', 'Timetable is on the exams page', '', 'everyone'],
+      ['evt_sports', 'Sports day', `${addDays(last, 11)}T02:30:00Z`, `${addDays(last, 11)}T09:30:00Z`, 'event', 'Bring a water bottle and wear house colours', 'Main ground', 'everyone', 'sports', true],
+      ['evt_ptm_c8', 'Parent-teacher meeting, Class 8', `${addDays(last, 5)}T09:00:00Z`, `${addDays(last, 5)}T12:00:00Z`, 'ptm', 'Ten-minute slots, book in the app', 'Class 8 rooms', 'parents', 'meeting', true],
+      ['evt_diwali', 'Diwali break', `${addDays(last, 20)}T00:00:00Z`, `${addDays(last, 26)}T00:00:00Z`, 'holiday', 'School reopens on the next working Monday', '', 'everyone', 'holiday', false],
+      ['evt_science', 'Science exhibition', `${addDays(last, 15)}T04:00:00Z`, `${addDays(last, 15)}T08:30:00Z`, 'event', 'Projects from classes 6 to 9', 'Auditorium', 'everyone', 'academic', true],
+      ['evt_staff', 'Staff meeting', `${addDays(last, 2)}T10:30:00Z`, `${addDays(last, 2)}T11:30:00Z`, 'routine', 'Mid-term planning', 'Staff room', 'staff', 'meeting', false],
+      ['evt_midterm', 'Mid-term exams begin', `${addDays(last, 8)}T03:00:00Z`, `${addDays(last, 13)}T08:00:00Z`, 'exam', 'Timetable is on the exams page', '', 'everyone', 'academic', false],
     ];
-    await bulkInsert(db, 'events', ['id', 'title', 'starts_at', 'ends_at', 'kind', 'note', 'venue', 'audience'], ev, { onConflict: 'on conflict (id) do nothing' });
+    await bulkInsert(db, 'events', ['id', 'title', 'starts_at', 'ends_at', 'kind', 'note', 'venue', 'audience', 'category', 'needs_rsvp'], ev, { onConflict: 'on conflict (id) do nothing' });
     const kids = (await db.query<{ id: string }>("select id from students where class_id in ('cls_8a','cls_8b') order by roll_no limit 40")).rows;
     const rsvp: unknown[][] = [];
     for (const e of ['evt_sports', 'evt_ptm_c8', 'evt_science']) kids.forEach((k) => { const x = r.next(); if (x < 0.8) rsvp.push([e, k.id, x < 0.55 ? 'going' : x < 0.7 ? 'maybe' : 'cant']); });
@@ -148,7 +148,7 @@ export async function seedModulesDemo(db: Db, todayIn?: string): Promise<string[
 
 /** Brings an older demo school up to date with the sample content of newer modules. Does nothing for a real school. */
 export async function topUpDemo(pool: Pool): Promise<string[]> {
-  const demo = await pool.query<{ value: unknown }>("select value from settings where key = 'demo.mode'").then((q) => q.rows[0]?.value === true).catch(() => false);
+  const demo = await pool.query<{ value: unknown }>("select value from meta where key = 'seeded.mode'").then((q) => q.rows[0]?.value === 'demo').catch(() => false);
   if (!demo) return [];
   const client = await pool.connect();
   try {

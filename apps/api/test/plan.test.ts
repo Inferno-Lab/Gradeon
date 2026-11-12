@@ -61,10 +61,10 @@ describe('a school gets only what it has', () => {
     // Core routes still work, and the admin and app are told what the school has.
     expect((await h.call('GET', '/v1/students', { token })).status).toBe(200);
     const cfg = (await h.call('GET', '/v1/config', { token })).json;
-    expect(cfg.modules).toEqual(['people']);
+    expect(cfg.modules).toEqual(['school', 'people']);
     expect(cfg.features).toEqual([]);
     const dash = (await h.call('GET', '/v1/dashboard', { token })).json;
-    expect(dash.modules).toEqual(['people']);
+    expect(dash.modules).toEqual(['school', 'people']);
     expect(dash.fees.collected).toBe(0);
     expect(dash.timeline).toEqual([]);
     expect(dash.badges.admissions).toBe(0);

@@ -106,3 +106,20 @@
 .nest .lnk{border:0;background:none;padding:0;font:700 12px var(--fb);color:var(--vD);cursor:pointer}
 .nest .lnk:hover{text-decoration:underline}
 .nest .lnk:disabled{opacity:.4;cursor:not-allowed;text-decoration:none}
+
+/* Printing: the page's content only, without the menu, the dock, buttons or the search. An open dialog (a week to print) prints alone. */
+@media print {
+  .sb, .dock, .scrim, .tst, button, .btn, [role="search"] { display: none !important; }
+  .fr, .app, .mn { margin: 0 !important; padding: 0 !important; min-height: 0 !important; box-shadow: none !important; }
+  body:has(.mod) .app > :not(.mod):not(:has(.mod)) { display: none !important; }
+  body:has(.mod) .mn { display: none !important; }
+  .mod { position: static !important; inset: auto !important; }
+  .dlg { box-shadow: none !important; max-height: none !important; overflow: visible !important; width: auto !important; }
+}
+/* A list of choices down the side of a page (a report, a group of settings): one is open. */
+.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
+.nest .rpb:hover{background:var(--sunk)}
+.nest .rpb.on{background:var(--vS);color:var(--vD)}
+.nest .rpb b{display:block;font:700 14px var(--fb)}
+.nest .rpb small{display:block;font:500 12px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
+.nest .rpb.on small{color:inherit;opacity:.75}

@@ -5,6 +5,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/connectivity_service.dart';
 import 'package:gradeon/core/services/error_reporter.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/school_profile_service.dart';
 import 'package:gradeon/core/services/session_bus.dart';
 import 'package:gradeon/core/services/storage_service.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
   Get.put(themes, permanent: true);
   final auth = AuthService(storage)..restore();
   Get.put(auth, permanent: true);
+  await SchoolConfig.restore();
   Get.put(ConnectivityService(), permanent: true);
   Get.put(SessionBus(), permanent: true);
   runApp(const GradeonApp());

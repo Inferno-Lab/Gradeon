@@ -23,7 +23,7 @@ export class HubService implements OnModuleInit, OnApplicationShutdown {
     @Inject(POOLS) private readonly pools: PoolManager,
   ) {
     this.hub = new Hub({
-      pool: registry.pool, secretsKey: env.SECRETS_KEY, baseUrl: env.API_BASE_URL.replace(/\/$/, ''), mode: env.MESSAGING_MODE,
+      pool: registry.pool, secretsKey: env.SECRETS_KEY, baseUrl: env.API_BASE_URL.replace(/\/$/, ''),
       pushTokens: (slug, to) => this.tokens(slug, to),
       forgetTokens: (slug, tokens) => this.forget(slug, tokens),
     });

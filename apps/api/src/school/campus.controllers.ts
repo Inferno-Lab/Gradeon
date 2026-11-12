@@ -1,9 +1,8 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Res } from '@nestjs/common';
 import {
-  AlbumInput, BookInput, BusPosition, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
+  AlbumInput, BookInput, BusPosition, TripDelay, TripMark, TripStart, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
   type AlbumRow, type BookRow, type BusRouteRow, type FileRow, type FileUpload, type LibraryView, type LoanRow, type OnlinePaymentRow, type PhotoRow, type PromotionPreview,
-  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS,
-} from '@gradeon/contracts';
+  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS, GiveBack, CancelReservation } from '@gradeon/contracts';
 import { ApiError, ZodPipe, forbidden } from '@gradeon/nest-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
@@ -18,16 +17,19 @@ import { LibraryService } from './library.service.js';
 import { PaymentsService } from './payments.service.js';
 import { SettingsService } from './support.js';
 import { TransportService } from './transport.service.js';
+import { sendPdf } from './pdf.js';
 import { YearService } from './year.service.js';
 
-const sendPdf = (reply: FastifyReply, doc: { name: string; data: Buffer }) => {
-  void reply.type('application/pdf').header('content-disposition', `inline; filename="${doc.name.replace(/"/g, '')}"`).send(doc.data);
-};
 const ListFiles = z.object({ kind: z.enum(FILE_KINDS), owner: z.string().min(1).max(120) });
-const Decide = z.object({ approve: z.boolean() });
+// A declined refund always says why.
+const RefundDecide = z.object({ approve: z.boolean(), note: z.string().trim().max(300).default('') }).refine((b) => b.approve || b.note.length >= 3, { message: 'Say why', path: ['note'] });
+const Sorted = z.object({ note: z.string().trim().min(3, 'Say what was done').max(300) });
 const Search = z.object({ q: z.string().max(80).default('') });
 
 /** Uploads and downloads for staff and families alike: what each may touch is checked per kind (FilesService). */
+const PhotoReport = z.object({ reason: z.string().trim().min(3, 'Say what is wrong').max(300) });
+const Resolve = z.object({ remove: z.boolean() });
+
 @Controller('v1/files')
 @Core()
 export class FilesController {
@@ -99,15 +101,15 @@ export class FeesOnlineController {
   }
 
   @Post('refunds/:id/decide') @RequireModule('fees.refunds') @HttpCode(200) @Require('fees.refund')
-  decide(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Decide)) b: z.infer<typeof Decide>): Promise<RefundRow> {
-    return this.payments.decideRefund(t, u, id, b.approve);
+  decide(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(RefundDecide)) b: z.infer<typeof RefundDecide>): Promise<RefundRow> {
+    return this.payments.decideRefund(t, u, id, b.approve, b.note);
   }
 
   @Get('reconciliation') @RequireModule('fees.onlinePayment') @Require('fees.read')
   recon(@Tenant() t: TenantCtx): Promise<ReconRow[]> { return this.payments.reconciliation(t); }
 
   @Post('reconciliation/:id/resolve') @RequireModule('fees.onlinePayment') @HttpCode(204) @Require('fees.collect')
-  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<void> { return this.payments.resolveRecon(t, u, id); }
+  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Sorted)) b: z.infer<typeof Sorted>): Promise<void> { return this.payments.resolveRecon(t, u, id, b.note); }
 
   @Get('payments/:id/receipt.pdf') @Require('fees.read')
   async receipt(@Tenant() t: TenantCtx, @Param('id') id: string, @Res() reply: FastifyReply): Promise<void> { sendPdf(reply, await this.docs.receipt(t, id, null)); }
@@ -145,10 +147,13 @@ export class LibraryController {
   issue(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(IssueInput)) b: IssueInput): Promise<LoanRow> { return this.lib.issue(t, u, b); }
 
   @Post('loans/:id/return') @HttpCode(200) @Require('library.write')
-  giveBack(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<{ fine: number }> { return this.lib.giveBack(t, u, id); }
+  giveBack(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(GiveBack)) b: GiveBack): Promise<{ fine: number; billed: boolean }> { return this.lib.giveBack(t, u, id, b); }
 
-  @Delete('reservations/:id') @HttpCode(204) @Require('library.write')
-  cancel(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<void> { return this.lib.cancelReservation(t, id, null); }
+  @Post('loans/:id/renew') @HttpCode(200) @Require('library.write')
+  renew(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<LoanRow> { return this.lib.renewAtDesk(t, u, id); }
+
+  @Post('reservations/:id/cancel') @HttpCode(204) @Require('library.write')
+  cancel(@Tenant() t: TenantCtx, @Param('id') id: string, @Body(new ZodPipe(CancelReservation)) b: { reason: string }): Promise<void> { return this.lib.cancelReservation(t, id, null, b.reason); }
 }
 
 @Controller('v1/transport')
@@ -158,6 +163,17 @@ export class TransportController {
 
   @Get() @Require('transport.read')
   view(@Tenant() t: TenantCtx): Promise<TransportView> { return this.tr.view(t); }
+
+  @Get('places') @Require('transport.write')
+  places(@Tenant() t: TenantCtx, @Query(new ZodPipe(z.object({ q: z.string().trim().min(3).max(120) }))) q: { q: string }) { return this.tr.places(t, q.q); }
+
+  @Get('routes/:id/map') @Require('transport.read')
+  routeMap(@Tenant() t: TenantCtx, @Param('id') id: string) { return this.tr.routeMap(t, id); }
+
+  @Post('routes/:id/bill') @HttpCode(200) @RequireModule('fees') @Require('fees.collect')
+  bill(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(z.object({ title: z.string().trim().min(3, 'Name the fee').max(80), dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick the due date') }))) b: { title: string; dueOn: string }) {
+    return this.tr.billRiders(t, u, id, b);
+  }
 
   @Post('routes') @RequireModule('transport.routes') @HttpCode(200) @Require('transport.write')
   add(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(BusRouteInput)) b: BusRouteInput): Promise<BusRouteRow> { return this.tr.saveRoute(t, u, b); }
@@ -199,6 +215,12 @@ export class GalleryController {
 
   @Put('photos/:fileId/tags') @HttpCode(204) @Require('gallery.write')
   tag(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('fileId') id: string, @Body(new ZodPipe(PhotoTags)) b: z.infer<typeof PhotoTags>): Promise<void> { return this.g.tag(t, u, id, b.studentIds); }
+
+  @Get('reports') @Require('gallery.read')
+  reports(@Tenant() t: TenantCtx) { return this.g.reports(t); }
+
+  @Post('reports/:id/resolve') @HttpCode(204) @Require('gallery.write')
+  resolve(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Resolve)) b: z.infer<typeof Resolve>): Promise<void> { return this.g.resolve(t, u, id, b.remove); }
 }
 
 @Controller('v1/year')
@@ -326,13 +348,24 @@ export class FamilyCampusController {
     return this.tr.forStudent(t, id);
   }
 
-  @Get('bus/routes') @RequireModule('transport.liveBus')
-  driving(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.tr.myRoutes(t, u); }
+  /** The bus driver's screen: their routes today, trips, stops with riders. */
+  @Get('driver/day') @RequireModule('transport.liveBus')
+  driverDay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser) { return this.tr.driverDay(t, u); }
 
-  @Post('bus/:routeId/position') @RequireModule('transport.liveBus') @HttpCode(200)
-  position(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('routeId') id: string, @Body(new ZodPipe(BusPosition)) b: z.infer<typeof BusPosition>) {
-    return this.tr.position(t, u, id, b);
-  }
+  @Post('driver/trips') @RequireModule('transport.liveBus') @HttpCode(200)
+  startTrip(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(TripStart)) b: z.infer<typeof TripStart>) { return this.tr.startTrip(t, u, b.routeId, b.kind); }
+
+  @Post('driver/trips/:id/end') @RequireModule('transport.liveBus') @HttpCode(200)
+  endTrip(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string) { return this.tr.endTrip(t, u, id); }
+
+  @Post('driver/trips/:id/position') @RequireModule('transport.liveBus') @HttpCode(200)
+  tripPosition(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(BusPosition)) b: z.infer<typeof BusPosition>) { return this.tr.tripPosition(t, u, id, b); }
+
+  @Post('driver/trips/:id/marks') @RequireModule('transport.liveBus') @HttpCode(200)
+  mark(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(TripMark)) b: z.infer<typeof TripMark>) { return this.tr.mark(t, u, id, b); }
+
+  @Post('driver/trips/:id/delay') @RequireModule('transport.liveBus') @HttpCode(200)
+  delay(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(TripDelay)) b: z.infer<typeof TripDelay>) { return this.tr.delay(t, u, id, b); }
 
   @Get('albums') @RequireModule('gallery')
   async albums(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<AlbumRow[]> {
@@ -340,6 +373,12 @@ export class FamilyCampusController {
     if (k === null) return this.g.albums(t);
     const classes = (await t.pool.query<{ class_id: string }>('select distinct class_id from students where id = any($1)', [k])).rows.map((r) => r.class_id);
     return this.g.albums(t, classes);
+  }
+
+  @Post('photos/:fileId/report') @RequireModule('gallery') @HttpCode(200)
+  async reportPhoto(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('fileId') id: string, @Body(new ZodPipe(PhotoReport)) b: z.infer<typeof PhotoReport>) {
+    await this.g.report(t, u, id, b.reason);
+    return { ok: true };
   }
 
   @Get('albums/:id/photos') @RequireModule('gallery')

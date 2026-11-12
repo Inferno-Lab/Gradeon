@@ -3,6 +3,7 @@
 // whose children poke out of its box, or whose knob does not sit on the chosen tab.
 // Usage: node tools/scan-fit.mjs [--only admin|console] [--sizes 1100x800,1280x800] [--dark]
 import { chromium } from '@playwright/test';
+import { adminPaths, consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -30,11 +31,11 @@ async function consoleKey() {
 const jobs = [];
 if (only !== 'console') {
   const key = await adminKey();
-  for (const p of ['', '/students', '/timetable', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/settings']) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
+  for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const c = await consoleKey();
-  for (const p of ['/', `/schools/${c.school}`, '/onboarding', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
+  for (const p of consolePaths(c.school)) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 
 const scan = () => {

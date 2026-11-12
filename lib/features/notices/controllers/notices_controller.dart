@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/storage_service.dart';
+import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
+import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/core/utils/schedule.dart';
 import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/campus.dart';
@@ -90,14 +94,41 @@ class NoticeDetailController extends GetxController with Loadable {
     }
     if (notice != null) {
       await NoticeReads.mark(notice!.id);
+      unawaited(Get.find<NoticeRepository>().read(notice!.id).catchError((Object _) {}));
       if (Get.isRegistered<NoticesController>()) Get.find<NoticesController>().read.add(notice!.id);
     }
   }, isEmpty: () => notice == null);
 
-  /// Exam sittings by school day; when subjects outnumber days the last days take two.
+  final acking = false.obs;
+
+  /// "I have read this", for a notice that asks for it.
+  Future<void> acknowledge() async {
+    final n = notice;
+    if (n == null || acking.value) return;
+    acking.value = true;
+    try {
+      await Get.find<NoticeRepository>().acknowledge(n.id);
+      await load();
+      ToastHelper.show('notices.acked', kind: ToastKind.success);
+    } on AppException catch (e) {
+      ToastHelper.show(e.message, kind: ToastKind.error);
+    } finally {
+      acking.value = false;
+    }
+  }
+
+  /// Exam sittings by day, from each paper's date as the school set it.
   List<(DateTime, List<String>)> get sittings {
     final e = exam;
-    if (e == null || e.subjects.isEmpty) return const [];
+    if (e == null) return const [];
+    if (e.papers.isNotEmpty) {
+      final byDay = <DateTime, List<String>>{};
+      for (final p in [...e.papers]..sort((a, b) => a.date.compareTo(b.date))) {
+        byDay.putIfAbsent(DateUtils.dateOnly(p.date), () => []).add(p.subject);
+      }
+      return [for (final d in byDay.entries) (d.key, d.value)];
+    }
+    if (e.subjects.isEmpty) return const [];
     final days = <DateTime>[];
     for (var d = DateUtils.dateOnly(e.startDate); !d.isAfter(e.endDate); d = DateTime(d.year, d.month, d.day + 1)) {
       if (!isWeeklyOff(d)) days.add(d);

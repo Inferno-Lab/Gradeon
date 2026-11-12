@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, Avatar, dateLabel, problem } from '../../app/kit';
+import { AddBtn, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
 
 const TONE = { upcoming: 'n', marking: 'a', published: 'g' } as const;
 const LABEL = { upcoming: 'Coming up', marking: 'Marking', published: 'Published' } as const;
@@ -15,8 +15,9 @@ export function ExamsPage() {
   const qc = useQueryClient();
   const { toast, say } = useToast();
   const [classId, setClassId] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  const [creating, setCreating] = useState(() => !!new URLSearchParams(window.location.search).get('new'));
+  const [changing, setChanging] = useState<ExamRow | null>(null);
+  const [open, setOpen] = useOpenParam();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const list = useQuery({ queryKey: ['exams', classId], queryFn: () => app.api.exams.list(classId || undefined) });
   const rows = list.data ?? [];
@@ -30,8 +31,9 @@ export function ExamsPage() {
         {canWrite && <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn>}
       </>}
       overlays={<>
-        {creating && <NewExam defaultClass={classId} onClose={() => setCreating(false)} onDone={(e) => { setCreating(false); refresh(qc); say('Exam added to the schedule.'); setOpen(e.id); }} />}
-        {open && <ExamSheet id={open} onClose={() => setOpen(null)} onChanged={(m) => { refresh(qc); if (m) say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Exam removed.'); }} />}
+        {creating && <ExamDialog defaultClass={classId} onClose={() => setCreating(false)} onDone={(e) => { setCreating(false); refresh(qc); say('Exam added to the schedule.'); setOpen(e.id); }} />}
+        {changing && <ExamDialog exam={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={() => { setChanging(null); refresh(qc); say('Exam changed. The timetable in the app follows.'); }} />}
+        {open && !changing && <ExamSheet id={open} onClose={() => setOpen(null)} onChange={(e) => setChanging(e)} onChanged={(m) => { refresh(qc); if (m) say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Exam removed.'); }} />}
       </>}>
       {rows.length === 0 ? (
         <div><EmptyCard title="Exams" chip={{ text: '0 exams', tone: 'v' }} scene="checklist" heading="No exams yet" body="Add an exam for a class with its subjects and dates. Teachers enter marks here, and you publish the results to families." actions={canWrite ? <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn> : undefined} /></div>
@@ -66,16 +68,26 @@ function ExamCard({ e, onOpen }: { e: ExamRow; onOpen: () => void }) {
   );
 }
 
-function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onClose: () => void; onDone: (e: ExamRow) => void }) {
+type Paper = { on: string; from: string; to: string; room: string; max: string };
+
+/** One form to add an exam or change it while its results are not out: each paper with its day, time, room and marks. */
+function ExamDialog({ exam, defaultClass, onClose, onDone }: { exam?: ExamRow; defaultClass: string; onClose: () => void; onDone: (e: ExamRow) => void }) {
   const app = useApp();
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ['subjects'], queryFn: app.api.subjects, staleTime: 10 * 60_000 });
-  const [f, setF] = useState({ name: '', classId: defaultClass, startsOn: addDays(istToday(), 7), endsOn: addDays(istToday(), 11) });
-  const [picked, setPicked] = useState<Record<string, { on: string; max: string }>>({});
+  const lead = useSetting<number>('exams.leadDays', 7);
+  const outOf = useSetting<number>('exams.defaultMaxMarks', 100);
+  const [f, setF] = useState({ name: exam?.name ?? '', classId: exam?.classId ?? defaultClass, startsOn: exam?.startsOn ?? addDays(istToday(), lead), endsOn: exam?.endsOn ?? addDays(istToday(), lead + 4) });
+  const [also, setAlso] = useState<string[]>([]);
+  const [picked, setPicked] = useState<Record<string, Paper>>(() => Object.fromEntries((exam?.subjects ?? []).map((s) => [s.subjectId, { on: s.onDate ?? '', from: s.startsAt ?? '', to: s.endsAt ?? '', room: s.room, max: String(s.maxMarks) }])));
   const [err, setErr] = useState<Record<string, string>>({});
   const shake = useShake();
-  const create = useMutation({
-    mutationFn: () => app.api.exams.create({ name: f.name.trim(), classId: f.classId, startsOn: f.startsOn, endsOn: f.endsOn, subjects: Object.entries(picked).map(([subjectId, v]) => ({ subjectId, onDate: v.on || null, maxMarks: Number(v.max) || 100 })) }),
+  const save = useMutation({
+    mutationFn: () => {
+      const body = { name: f.name.trim(), classId: f.classId, alsoClassIds: exam ? [] : also.filter((c) => c !== f.classId), startsOn: f.startsOn, endsOn: f.endsOn,
+        subjects: Object.entries(picked).map(([subjectId, v]) => ({ subjectId, onDate: v.on || null, startsAt: v.from || null, endsAt: v.to || null, room: v.room.trim(), maxMarks: Number(v.max) || outOf })) };
+      return exam ? app.api.exams.update(exam.id, body) : app.api.exams.create(body);
+    },
     onSuccess: onDone, onError: (e) => { setErr(problem(e)); shake.hit(); },
   });
   const go = () => {
@@ -84,30 +96,44 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
     if (!f.classId) p.classId = 'Choose a class.';
     if (f.endsOn < f.startsOn) p.endsOn = 'Pick a day on or after the first day.';
     if (!Object.keys(picked).length) p.subjects = 'Pick at least one subject.';
+    if (Object.values(picked).some((v) => v.from && v.to && v.to <= v.from)) p.subjects = 'A paper must end after it starts.';
     setErr(p);
-    if (Object.keys(p).length) shake.hit(); else create.mutate();
+    if (Object.keys(p).length) shake.hit(); else save.mutate();
   };
-  const toggle = (id: string) => { setErr({ ...err, subjects: '' }); setPicked((x) => { const n = { ...x }; if (n[id]) delete n[id]; else n[id] = { on: f.startsOn, max: '100' }; return n; }); };
+  const toggle = (id: string) => { setErr({ ...err, subjects: '' }); setPicked((x) => { const n = { ...x }; if (n[id]) delete n[id]; else n[id] = { on: f.startsOn, from: '', to: '', room: '', max: String(outOf) }; return n; }); };
+  const put = (id: string, patch: Partial<Paper>) => setPicked((x) => ({ ...x, [id]: { ...x[id]!, ...patch } }));
   return (
-    <Dialog title="New exam" onClose={onClose} width={620} shake={shake.cls}>
+    <Dialog title={exam ? `Change ${exam.name}` : 'New exam'} onClose={onClose} width={760} shake={shake.cls}>
       <div className="stack">
         <Field label="Name" value={f.name} onChange={(name) => { setF({ ...f, name }); setErr({ ...err, name: '' }); }} error={err.name} placeholder="Mid-term exams" maxLength={80} />
-        <SelectField label="Class" value={f.classId} onChange={(classId) => { setF({ ...f, classId }); setErr({ ...err, classId: '' }); }} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
+        {!exam && <SelectField label="Class" value={f.classId} onChange={(classId) => { setF({ ...f, classId }); setErr({ ...err, classId: '' }); }} error={err.classId} options={[{ value: '', label: 'Pick a class' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+        {!exam && f.classId && (classes.data?.length ?? 0) > 1 && (
+          <div className="fld">
+            <label>Also for these classes (the same papers)</label>
+            <div className="tgrow">
+              {(classes.data ?? []).filter((c) => c.id !== f.classId).map((c) => <Checkbox key={c.id} checked={also.includes(c.id)} onChange={(on) => setAlso(on ? [...also, c.id] : also.filter((x) => x !== c.id))} label={c.name} />)}
+            </div>
+          </div>
+        )}
         <div className="two">
           <DateField label="First day" value={f.startsOn} onChange={(startsOn) => setF({ ...f, startsOn })} />
           <DateField label="Last day" value={f.endsOn} min={f.startsOn} onChange={(endsOn) => { setF({ ...f, endsOn }); setErr({ ...err, endsOn: '' }); }} error={err.endsOn} />
         </div>
         <div className="fld">
-          <label>Subjects</label>
+          <label>Papers</label>
+          <div className="help" style={{ marginTop: 0 }}>Each paper’s day, time and room make the exam timetable families see in the app.</div>
           <div className="exs">
             {(subjects.data ?? []).map((s) => {
               const on = picked[s.id];
               return (
-                <div key={s.id} className={`exr ${on ? 'on' : ''}`}>
+                <div key={s.id} className={`exr ${on ? 'on' : ''}`} style={{ flexWrap: 'wrap' }}>
                   <Checkbox checked={!!on} onChange={() => toggle(s.id)} label={<span>{s.name}</span>} />
                   {on && <>
-                    <DateField compact label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(v) => setPicked({ ...picked, [s.id]: { ...on, on: v } })} />
-                    <input className="hws" inputMode="numeric" aria-label={`${s.name} marks out of`} value={on.max} onChange={(e) => setPicked({ ...picked, [s.id]: { ...on, max: e.target.value.replace(/\D/g, '').slice(0, 3) } })} />
+                    <DateField compact label={`${s.name} date`} value={on.on} min={f.startsOn} max={f.endsOn} onChange={(v) => put(s.id, { on: v })} />
+                    <TimeField label={`${s.name} starts`} value={on.from} onChange={(v) => put(s.id, { from: v })} />
+                    <TimeField label={`${s.name} ends`} value={on.to} onChange={(v) => put(s.id, { to: v })} />
+                    <Field label={`${s.name} room`} value={on.room} onChange={(v) => put(s.id, { room: v })} placeholder="Hall A" maxLength={40} />
+                    <input className="hws" inputMode="numeric" aria-label={`${s.name} marks out of`} value={on.max} onChange={(e) => put(s.id, { max: e.target.value.replace(/\D/g, '').slice(0, 3) })} />
                     <small>marks</small>
                   </>}
                 </div>
@@ -120,7 +146,7 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn pri" disabled={create.isPending} onClick={go}>{create.isPending ? 'Adding…' : 'Add exam'}</button>
+        <button className="btn pri" disabled={save.isPending} onClick={go}>{save.isPending ? 'Saving…' : exam ? 'Save changes' : 'Add exam'}</button>
       </div>
     </Dialog>
   );
@@ -128,14 +154,16 @@ function NewExam({ defaultClass, onClose, onDone }: { defaultClass: string; onCl
 
 type Cell = { score: string; absent: boolean };
 
-function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose: () => void; onChanged: (msg?: string) => void; onRemoved: () => void }) {
+function ExamSheet({ id, onClose, onChange, onChanged, onRemoved }: { id: string; onClose: () => void; onChange: (e: ExamRow) => void; onChanged: (msg?: string) => void; onRemoved: () => void }) {
   const app = useApp();
   const [tab, setTab] = useState<'marks' | 'results'>('marks');
   const marks = useQuery({ queryKey: ['exams', 'marks', id], queryFn: () => app.api.exams.marks(id) });
   const results = useQuery({ queryKey: ['exams', 'results', id], queryFn: () => app.api.exams.results(id), enabled: tab === 'results' });
   const [draft, setDraft] = useState<Record<string, Cell>>({});
   const [err, setErr] = useState('');
-  const [confirm, setConfirm] = useState<'publish' | 'remove' | null>(null);
+  const [confirm, setConfirm] = useState<'publish' | 'remove' | 'reopen' | null>(null);
+  const [note, setNote] = useState('');
+  const pass = useSetting<number>('grading.passPct', 33);
   const shake = useShake();
   const grid = useRef<HTMLDivElement>(null);
   const m = marks.data;
@@ -157,6 +185,11 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
     onError: (e) => { setConfirm(null); setErr((e as Error).message); shake.hit(); },
   });
   const remove = useMutation({ mutationFn: () => app.api.exams.remove(id), onSuccess: onRemoved, onError: (e) => { setConfirm(null); setErr((e as Error).message); shake.hit(); } });
+  const reopen = useMutation({
+    mutationFn: () => app.api.exams.reopen(id, note.trim()),
+    onSuccess: () => { setConfirm(null); setNote(''); void marks.refetch(); onChanged('Results reopened: marks can be corrected. Publish again when done; families are told what changed.'); },
+    onError: (e) => { setErr(problem(e).note ?? (e as Error).message); shake.hit(); },
+  });
   // Enter moves down the column, like a spreadsheet.
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
@@ -166,7 +199,8 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
     next[next.indexOf(e.currentTarget) + 1]?.focus();
   };
   const ex = m?.exam;
-  const editable = canWrite;
+  // Published results are locked: they are reopened (with why) before any mark changes.
+  const editable = canWrite && ex?.status !== 'published';
   return (
     <Dialog title={ex ? ex.name : 'Exam'} tag={ex ? { text: `Class ${ex.className} · ${LABEL[ex.status]}`, tone: ex.status === 'published' ? 'g' : 'v' } : undefined} onClose={onClose} width={860} shake={shake.cls}>
       {!m || !ex ? <div className="skc" style={{ height: 280, borderRadius: 18 }} /> : (
@@ -214,7 +248,7 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
                         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
                         <span className="num" style={{ font: '600 13px var(--fb)' }}>{r.total} / {r.max}</span>
                         <b className="num" style={{ font: '700 14px var(--fb)' }}>{r.pct}%</b>
-                        <span className={`chip ${r.pct >= 33 ? 'g' : 'c'}`}>{r.grade}</span>
+                        <span className={`chip ${r.pct >= pass ? 'g' : 'c'}`}>{r.grade}</span>
                       </div>
                     ))}
                   </div>
@@ -225,15 +259,19 @@ function ExamSheet({ id, onClose, onChanged, onRemoved }: { id: string; onClose:
           {err && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{err}</div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {editable ? (confirm === 'remove'
-              ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this exam?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep</button></span>
-              : ex.status !== 'published' ? <button className="btn dng" onClick={() => setConfirm('remove')}>Remove exam</button> : <span />) : <span />}
+              ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this exam and its marks?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep</button></span>
+              : <span style={{ display: 'flex', gap: 8 }}><button className="btn dng" onClick={() => setConfirm('remove')}>Remove exam</button><button className="btn" onClick={() => onChange(ex)}>Change exam</button></span>)
+              : canPublish && ex.status === 'published' ? (confirm === 'reopen'
+                ? <span style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}><div style={{ minWidth: 260 }}><Field label="What is being corrected (families are told)" value={note} onChange={setNote} maxLength={200} placeholder="Science marks for 8 A were entered wrongly" /></div>
+                  <button className="btn sm pri" disabled={note.trim().length < 5 || reopen.isPending} onClick={() => reopen.mutate()}>Reopen</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep locked</button></span>
+                : <button className="btn" onClick={() => setConfirm('reopen')}>Reopen to correct…</button>) : <span />}
             <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
               {confirm === 'publish' && <span className="help">Families will see these results.</span>}
               <button className="btn" onClick={onClose}>Close</button>
               {editable && <button className="btn" disabled={!dirty.length || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : dirty.length ? `Save ${dirty.length} ${dirty.length === 1 ? 'mark' : 'marks'}` : 'Save marks'}</button>}
               {canPublish && ex.status !== 'published' && (confirm === 'publish'
                 ? <button className="btn pri" disabled={publish.isPending || dirty.length > 0} onClick={() => publish.mutate()}>{publish.isPending ? 'Publishing…' : 'Yes, publish'}</button>
-                : <button className="btn pri" disabled={dirty.length > 0} title={dirty.length ? 'Save the marks first' : undefined} onClick={() => setConfirm('publish')}>Publish results</button>)}
+                : <button className="btn pri" disabled={dirty.length > 0} data-tip={dirty.length ? 'Save the marks first' : undefined} onClick={() => setConfirm('publish')}>{ex.reopenedNote ? 'Publish the correction' : 'Publish results'}</button>)}
             </span>
           </div>
         </>

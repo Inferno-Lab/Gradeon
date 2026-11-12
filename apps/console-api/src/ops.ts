@@ -1,15 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Logger, Param, Post, Put, Query, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Inject, Injectable, Logger, Param, Post, Put, Query, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
 import { POOLS } from './tokens.js';
 import { MODULES, activeModules, closeModules, moduleByKey } from '@gradeon/config-engine';
-import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, CONSOLE_ROLES, ROLE_TEMPLATES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
+import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, DEPLOY_TARGET_LABELS, InvoicePaid, auditLabel, CONSOLE_ROLES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
 import { migrate, newId, pg, scheduleJob } from '@gradeon/db';
 import { topUpDemo } from '@gradeon/db/seed';
 import { ApiError, ZodPipe, alert, notFound } from '@gradeon/nest-kit';
-import { hashPassword, signJwt, unseal } from '@gradeon/security';
+import { hashPassword, randomToken, sha256, signJwt, unseal } from '@gradeon/security';
 import type { PoolManager } from '@gradeon/tenancy';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
-import { ENV, type Env } from './env.js';
+import { ENV, demosAllowed, type Env } from './env.js';
 import { adminUrlFor } from './provisioning/drivers.js';
+import { PlatformHub } from './platform-hub.js';
 import { Blueprints } from './provisioning/provisioner.js';
 import { Wizard } from './wizard.js';
 import { Actions } from './actions.js';
@@ -41,8 +42,9 @@ export class Health implements OnApplicationBootstrap, OnApplicationShutdown {
     this.stop?.();
   }
 
-  async probeAll(): Promise<number> {
-    const { rows } = await this.db.query<SchoolRecord>("select * from schools where deleted_at is null and db_url_sealed is not null and status in ('live','suspended')");
+  /** Checks every running school now, or just one (a school's Technical tab). */
+  async probeAll(schoolId?: string): Promise<number> {
+    const { rows } = await this.db.query<SchoolRecord>("select * from schools where deleted_at is null and db_url_sealed is not null and status in ('live','suspended') and ($1::text is null or id = $1)", [schoolId ?? null]);
     await Promise.all(rows.map((s) => this.probe(s).catch((err) => this.log.warn(`${s.slug}: ${(err as Error).message}`))));
     return rows.length;
   }
@@ -114,6 +116,9 @@ export class Support {
   }
 }
 
+/** An invoice is due fifteen days after its month ends. */
+const dueFor = (period: string) => { const [y, m] = period.split('-').map(Number) as [number, number]; return new Date(Date.UTC(y, m, 15)).toISOString().slice(0, 10); };
+
 @Injectable()
 export class Admin {
   constructor(private readonly db: Db) {}
@@ -131,9 +136,47 @@ export class Admin {
     await this.db.audit(user, 'flag.set', 'flag', key, { schoolId, enabled });
   }
 
+  /** A flag for one school is cleared (the fleet value applies again); a fleet flag goes with every school's value of it. */
+  async removeFlag(user: string, key: string, schoolId: string | null): Promise<void> {
+    const r = await this.db.pool.query(schoolId ? 'delete from flags where key = $1 and school_id = $2' : 'delete from flags where key = $1', schoolId ? [key, schoolId] : [key]);
+    if (!r.rowCount) throw notFound('That flag');
+    await this.db.audit(user, 'flag.removed', 'flag', key, { schoolId });
+  }
+
   async invoices(): Promise<InvoiceRowC[]> {
-    const { rows } = await this.db.pool.query<{ id: string; school_id: string; school_name: string; period: string; amount: number; status: InvoiceRowC['status']; lines: InvoiceRowC['lines'] }>('select * from invoices order by created_at desc limit 200');
-    return rows.map((r) => ({ id: r.id, schoolId: r.school_id, schoolName: r.school_name, period: r.period, amount: r.amount, status: r.status, lines: r.lines ?? [] }));
+    const { rows } = await this.db.pool.query<{ id: string; school_id: string; school_name: string; period: string; amount: number; status: InvoiceRowC['status']; lines: InvoiceRowC['lines']; sent_at: Date | null; sent_to: string | null; paid_on: string | null; paid_ref: string | null }>(
+      'select id, school_id, school_name, period, amount, status, lines, sent_at, sent_to, paid_on::text, paid_ref from invoices order by period desc, school_name limit 1000');
+    const today = new Date().toISOString().slice(0, 10);
+    return rows.map((r) => {
+      const dueOn = dueFor(r.period);
+      return {
+        id: r.id, schoolId: r.school_id, schoolName: r.school_name, period: r.period, amount: r.amount, lines: r.lines ?? [], dueOn,
+        status: r.status === 'sent' && dueOn < today ? 'overdue' : r.status, sentAt: r.sent_at?.toISOString() ?? null, sentTo: r.sent_to, paidOn: r.paid_on, paidRef: r.paid_ref,
+      };
+    });
+  }
+
+  /** Emails the invoice to the school's contact through Gradeon's email connection, and says when and to whom. */
+  async sendInvoice(user: string, id: string, hub: PlatformHub['hub']): Promise<string> {
+    const r = (await this.db.pool.query<{ school_id: string; period: string; amount: number; lines: InvoiceRowC['lines']; status: string }>('select school_id, period, amount, lines, status from invoices where id = $1', [id])).rows[0];
+    if (!r) throw notFound('That invoice');
+    if (r.status === 'paid') throw new ApiError('conflict', 'That invoice is paid already.');
+    const s = (await this.db.pool.query<{ name: string; contact: { name: string; email: string }; gstin: string }>('select name, contact, gstin from schools where id = $1', [r.school_id])).rows[0]!;
+    if (!s.contact?.email) throw new ApiError('validation', `${s.name} has no contact email. Add one under its details first.`);
+    const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+    const body = [`Dear ${s.contact.name},`, '', `Gradeon invoice for ${s.name}, ${r.period}${s.gstin ? ` (GSTIN ${s.gstin})` : ''}:`, ...r.lines.map((l) => `  ${l.label}: ${inr(l.amount)}`), `Total: ${inr(r.amount)}`, `Due by ${dueFor(r.period)}.`, '', 'Thank you.'].join('\n');
+    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: s.contact.email, subject: `Gradeon invoice ${r.period} · ${s.name}`, body, now: true });
+    await this.db.pool.query("update invoices set status = 'sent', sent_at = now(), sent_to = $2 where id = $1", [id, s.contact.email]);
+    await this.db.audit(user, 'invoice.sent', 'invoice', id, { to: s.contact.email });
+    return s.contact.email;
+  }
+
+  async paidInvoice(user: string, id: string, b: InvoicePaid | null): Promise<void> {
+    // Paid with its day and reference, or undone back to sent.
+    const r = await this.db.pool.query(b ? "update invoices set status = 'paid', paid_on = $2, paid_ref = $3 where id = $1" : "update invoices set status = case when sent_at is null then 'draft' else 'sent' end, paid_on = null, paid_ref = null where id = $1",
+      b ? [id, b.paidOn, b.reference] : [id]);
+    if (!r.rowCount) throw notFound('That invoice');
+    await this.db.audit(user, b ? 'invoice.paid' : 'invoice.unpaid', 'invoice', id, b ? { on: b.paidOn, ref: b.reference } : {});
   }
 
   /**
@@ -167,30 +210,46 @@ export class Admin {
     return made;
   }
 
-  async setInvoice(user: string, id: string, status: string): Promise<void> {
-    if (!['draft', 'sent', 'paid', 'overdue'].includes(status)) throw new ApiError('validation', 'Unknown invoice status.');
-    await this.db.pool.query('update invoices set status = $2 where id = $1', [id, status]);
-    await this.db.audit(user, 'invoice.status', 'invoice', id, { status });
-  }
-
   async team(): Promise<ConsoleUserRow[]> {
     const { rows } = await this.db.pool.query<{ id: string; name: string; email: string; roles: ConsoleRole[]; status: ConsoleUserRow['status']; last_seen_at: Date | null; authenticator: boolean }>(
       'select id, name, email, roles, status, last_seen_at, totp_secret is not null authenticator from console_users order by name');
     return rows.map((r) => ({ id: r.id, name: r.name, email: r.email, roles: r.roles, status: r.status, lastSeenAt: r.last_seen_at?.toISOString() ?? null, authenticator: r.authenticator }));
   }
 
-  async addMember(user: string, body: { name: string; email: string; roles: string[]; password: string }): Promise<void> {
+  /** Invites a person: a link by email (through Gradeon's email connection) where they choose their own password. */
+  async addMember(user: string, body: { name: string; email: string; roles: string[] }, hub: PlatformHub['hub'], consoleUrl: string): Promise<{ link: string }> {
     const roles = body.roles.filter((r): r is ConsoleRole => (CONSOLE_ROLES as readonly string[]).includes(r));
     if (!roles.length) throw new ApiError('validation', 'Choose at least one role.');
+    if (String(body.name ?? '').trim().length < 2) throw new ApiError('validation', 'Enter their name.', { fields: { name: 'Enter their name.' } });
     if (!/^\S+@\S+\.\S+$/.test(body.email)) throw new ApiError('validation', 'Enter a valid email.', { fields: { email: 'Enter a valid email.' } });
-    if (body.password.length < 10) throw new ApiError('validation', 'Use a password of at least 10 characters.', { fields: { password: 'At least 10 characters.' } });
     const dupe = await this.db.pool.query('select 1 from console_users where lower(email) = lower($1)', [body.email]);
     if (dupe.rowCount) throw new ApiError('conflict', 'That email already has an account.');
-    await this.db.pool.query('insert into console_users (id, name, email, password_hash, roles) values ($1,$2,$3,$4,$5)', [newId('cus'), body.name.trim(), body.email.trim().toLowerCase(), await hashPassword(body.password), JSON.stringify(roles)]);
-    await this.db.audit(user, 'team.added', 'user', body.email, { roles });
+    const id = newId('cus');
+    await this.db.pool.query("insert into console_users (id, name, email, roles, status) values ($1,$2,$3,$4,'invited')", [id, body.name.trim(), body.email.trim().toLowerCase(), JSON.stringify(roles)]);
+    await this.db.audit(user, 'team.invited', 'user', body.email, { roles });
+    return this.invite(id, hub, consoleUrl);
   }
 
-  async setMember(user: string, id: string, patch: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }): Promise<void> {
+  /** A new invitation link (an earlier one stops working), valid for seven days. */
+  async invite(id: string, hub: PlatformHub['hub'], consoleUrl: string): Promise<{ link: string }> {
+    const m = (await this.db.pool.query<{ name: string; email: string; status: string }>('select name, email, status from console_users where id = $1', [id])).rows[0];
+    if (!m) throw notFound('That person');
+    if (m.status !== 'invited') throw new ApiError('conflict', `${m.name} has an account already. Change their password or authenticator instead.`);
+    const token = randomToken(24);
+    await this.db.pool.query("update console_users set invite_hash = $2, invite_expires = now() + interval '7 days' where id = $1", [id, sha256(token)]);
+    const link = `${consoleUrl.replace(/\/$/, '')}/join?token=${token}`;
+    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: m.email, subject: 'You are invited to the Gradeon console', body: `Hello ${m.name.split(' ')[0]},\n\nYou have been added to the Gradeon console. Choose your password here (the link works for seven days):\n${link}\n\nAt your first sign-in you add the console to an authenticator app.`, now: true }).catch(() => undefined);
+    return { link };
+  }
+
+  /** Someone invited who never signed in can be removed; anyone who did is switched off instead, so their history stays theirs. */
+  async removeMember(user: string, id: string): Promise<void> {
+    const r = await this.db.pool.query("delete from console_users where id = $1 and status = 'invited' and last_seen_at is null", [id]);
+    if (!r.rowCount) throw new ApiError('conflict', 'Only someone who never signed in can be removed. Switch them off instead.');
+    await this.db.audit(user, 'team.removed', 'user', id);
+  }
+
+  async setMember(user: string, id: string, patch: { roles?: string[]; status?: string; resetAuthenticator?: boolean }): Promise<void> {
     const { rows } = await this.db.pool.query<{ email: string; roles: ConsoleRole[]; status: string }>('select email, roles, status from console_users where id = $1', [id]);
     const m = rows[0];
     if (!m) throw notFound('That person');
@@ -201,27 +260,28 @@ export class Admin {
       const others = await this.db.pool.query("select count(*) n from console_users where id <> $1 and status = 'active' and roles ? 'super_admin'", [id]);
       if (Number(others.rows[0]!.n) === 0) throw new ApiError('conflict', 'There must always be one active super admin.');
     }
-    if (patch.password !== undefined && patch.password.length < 10) throw new ApiError('validation', 'Use a password of at least 10 characters.', { fields: { password: 'At least 10 characters.' } });
     await this.db.pool.query('update console_users set roles = $2, status = $3, token_version = token_version + 1 where id = $1', [id, JSON.stringify(roles), status]);
-    // A lost phone or a forgotten password: the person sets up again at their next sign-in, and every open session ends.
-    if (patch.password) await this.db.pool.query('update console_users set password_hash = $2, failed_logins = 0, locked_until = null where id = $1', [id, await hashPassword(patch.password)]);
+    // A lost phone: the person adds a new authenticator at their next sign-in, and every open session ends. A forgotten password
+    // is reset by the person themself ("Forgot it?"), so no one else ever knows it.
     if (patch.resetAuthenticator) await this.db.pool.query('update console_users set totp_secret = null where id = $1', [id]);
-    if (status !== 'active' || patch.password || patch.resetAuthenticator) {
+    if (status !== 'active' || patch.resetAuthenticator) {
       await this.db.pool.query('update console_sessions set revoked_at = now() where user_id = $1 and revoked_at is null', [id]);
     }
-    await this.db.audit(user, 'team.changed', 'user', id, { roles, status, ...(patch.password ? { password: 'reset' } : {}), ...(patch.resetAuthenticator ? { authenticator: 'reset' } : {}) });
+    await this.db.audit(user, 'team.changed', 'user', id, { roles, status, ...(patch.resetAuthenticator ? { authenticator: 'reset' } : {}) });
   }
 
-  async audit(limit = 100, entityId?: string): Promise<AuditRow[]> {
+  /** Console history, newest first, a page at a time (`before` is the last entry's time); filtered by school, person, action and dates. */
+  async audit(limit = 100, entityId?: string, f: { actor?: string; action?: string; from?: string; to?: string; before?: string } = {}): Promise<AuditRow[]> {
     const { rows } = await this.db.pool.query<{ id: string; at: Date; actor: string; action: string; entity: string; detail: Record<string, unknown> }>(
-      'select id, at, actor, action, entity, detail from console_audit where ($2::text is null or entity_id = $2) order by at desc limit $1', [limit, entityId ?? null]);
+      `select id, at, actor, action, entity, detail from console_audit where ($2::text is null or entity_id = $2) and ($3::text is null or actor = $3) and ($4::text is null or action like $4 || '%')
+         and ($5::date is null or at >= $5::date) and ($6::date is null or at < $6::date + 1) and ($7::timestamptz is null or at < $7) order by at desc limit $1`,
+      [Math.min(500, limit), entityId ?? null, f.actor || null, f.action || null, f.from || null, f.to || null, f.before || null]);
     return rows.map((r) => ({ id: r.id, at: r.at.toISOString(), actor: r.actor, action: r.action, entity: r.entity, detail: Object.entries(r.detail).map(([k, v]) => `${k}: ${String(v)}`).join(' · ') }));
   }
 
   catalog(): CatalogResponse {
     return {
       modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, backend: m.backend, core: !!m.core, state: m.state, addOnPerStudentYear: m.addOnPerStudentYear, features: m.features })),
-      roleTemplates: ROLE_TEMPLATES,
     };
   }
 
@@ -236,7 +296,7 @@ export class Admin {
   }
 }
 
-type CatalogResponse = { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean; core: boolean; state: string; addOnPerStudentYear: number; features: { key: string; name: string; state: string }[] }[]; roleTemplates: typeof ROLE_TEMPLATES };
+type CatalogResponse = { modules: { key: string; name: string; blurb: string; requires: string[]; backend: boolean; core: boolean; state: string; addOnPerStudentYear: number; features: { key: string; name: string; state: string }[] }[] };
 
 /** First start: the cell, the plans, the setup recipes, and the first super admin. Does nothing the second time. */
 @Injectable()
@@ -261,7 +321,7 @@ export class Bootstrap implements OnApplicationBootstrap {
     await this.blueprints.ensureDefaults();
     const cells = await this.db.pool.query('select count(*) n from cells');
     if (Number(cells.rows[0]!.n) === 0) {
-      const target = this.env.NEON_API_KEY ? 'free-test' : this.env.NODE_ENV === 'production' ? 'free-test' : 'local';
+      const target = this.env.NODE_ENV === 'production' ? 'free-test' : 'local';
       await this.db.pool.query('insert into cells (key, target, region, max_schools) values ($1,$2,$3,$4)', [target === 'local' ? 'local-1' : 'test-1', target, target === 'local' ? 'this computer' : 'test track', 25]);
       this.log.log(`created the first cell on ${target}`);
     }
@@ -327,6 +387,8 @@ export class Bootstrap implements OnApplicationBootstrap {
 @Controller('console/v1')
 export class OpsController {
   constructor(
+    @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
     private readonly support: Support,
     private readonly admin: Admin,
     private readonly health: Health,
@@ -336,25 +398,57 @@ export class OpsController {
   ) {}
 
   @Get('fleet') @Needs('schools.read')
-  async fleet(): Promise<FleetSummary> {
-    return { ...(await this.schools.fleet()), release: await this.releases.latest() };
+  async fleet(@Me() me: ConsoleUser): Promise<FleetSummary> {
+    return { ...(await this.schools.fleet(me.id)), release: await this.releases.latest() };
+  }
+
+  @Post('fleet/incident/:id/dismiss') @HttpCode(204) @Needs('schools.read')
+  async dismiss(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> {
+    await this.db.pool.query('update console_users set dismissed_incident = $2 where id = $1', [me.id, id]);
   }
 
   @Get('cells') @Needs('schools.read')
-  async cells(): Promise<{ key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean }[]> {
-    const { rows } = await this.db.pool.query<{ key: string; target: string; region: string; max_schools: number; accepting: boolean; n: string }>(
-      'select c.key, c.target, c.region, c.max_schools, c.accepting, (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n from cells c order by c.key');
-    return rows.map((r) => ({ key: r.key, target: r.target, region: r.region, maxSchools: r.max_schools, schools: Number(r.n), accepting: r.accepting }));
+  async cells(): Promise<{ key: string; target: string; region: string; maxSchools: number; schools: number; accepting: boolean; connectionId: string | null; connectionName: string | null }[]> {
+    const { rows } = await this.db.pool.query<{ key: string; target: string; region: string; max_schools: number; accepting: boolean; n: string; connection_id: string | null; connection_name: string | null }>(
+      `select c.key, c.target, c.region, c.max_schools, c.accepting, c.connection_id, ic.name connection_name, (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n
+       from cells c left join integration_connections ic on ic.id = c.connection_id order by c.key`);
+    return rows.map((r) => ({ key: r.key, target: r.target, region: r.region, maxSchools: r.max_schools, schools: Number(r.n), accepting: r.accepting, connectionId: r.connection_id, connectionName: r.connection_name }));
+  }
+
+  /** The places a new cell can run on this deployment: this computer only in development, the free track only where demos are allowed. */
+  @Get('cells/targets') @Needs('schools.read')
+  targets(): { key: string; label: string; note: string }[] {
+    return [
+      ...(this.env.NODE_ENV !== 'production' ? [{ key: 'local', label: DEPLOY_TARGET_LABELS.local, note: 'Databases on this machine’s PostgreSQL.' }] : []),
+      ...(demosAllowed(this.env) ? [{ key: 'free-test', label: DEPLOY_TARGET_LABELS['free-test'], note: 'Databases on the registry’s own server, or a School databases connection.' }] : []),
+      { key: 'aws-cell', label: DEPLOY_TARGET_LABELS['aws-cell'], note: 'Databases made through a School databases connection (Integrations → Databases).' },
+    ];
+  }
+
+  @Delete('cells/:key') @HttpCode(204) @Needs('policy.write')
+  async removeCell(@Me() me: ConsoleUser, @Param('key') key: string): Promise<void> {
+    const n = (await this.db.pool.query<{ n: string }>('select count(*) n from schools where cell = $1', [key])).rows[0]!.n;
+    if (Number(n)) throw new ApiError('conflict', `${n} ${n === '1' ? 'school is' : 'schools are'} on this cell (archived ones too). Move them first.`);
+    const r = await this.db.pool.query('delete from cells where key = $1', [key]);
+    if (!r.rowCount) throw notFound('That cell');
+    await this.db.audit(me.email, 'cell.removed', 'cell', key);
+  }
+
+  /** The connection must exist and make databases. */
+  private async databasesConnection(id: string | null | undefined): Promise<void> {
+    if (!id) return;
+    const { rows } = await this.db.pool.query<{ provider: string }>('select provider from integration_connections where id = $1', [id]);
+    if (!rows[0] || !['postgres-server', 'neon'].includes(rows[0].provider)) throw new ApiError('validation', 'Choose a School databases connection.', { fields: { connectionId: 'Choose a School databases connection.' } });
   }
 
   /** A new cell. On the test track it is a name and a limit; on aws-cell the database server it points at must be configured first. */
   @Post('cells') @HttpCode(200) @Needs('policy.write')
   async createCell(@Me() me: ConsoleUser, @Body(new ZodPipe(CellCreate)) body: CellCreate): Promise<{ key: string; note: string }> {
     if ((await this.db.pool.query('select 1 from cells where key = $1', [body.key])).rowCount) throw new ApiError('validation', 'There is already a cell with that name.', { fields: { key: 'There is already a cell with that name.' } });
-    await this.db.pool.query('insert into cells (key, target, region, max_schools) values ($1,$2,$3,$4)', [body.key, body.target, body.region, body.maxSchools]);
-    await this.db.audit(me.email, 'cell.created', 'cell', body.key, { target: body.target });
-    const env = `CELL_${body.key.toUpperCase().replace(/-/g, '_')}_ADMIN_URL`;
-    return { key: body.key, note: body.target === 'aws-cell' ? `Schools placed here need ${env} on the console server (the database server this cell runs on).` : 'Ready. New schools can be placed here.' };
+    await this.databasesConnection(body.connectionId);
+    await this.db.pool.query('insert into cells (key, target, region, max_schools, connection_id) values ($1,$2,$3,$4,$5)', [body.key, body.target, body.region, body.maxSchools, body.connectionId]);
+    await this.db.audit(me.email, 'cell.created', 'cell', body.key, { target: body.target, connectionId: body.connectionId });
+    return { key: body.key, note: body.connectionId ? 'Ready. New schools placed here get their database through its connection.' : 'Ready. New schools placed here get a database on the registry’s own server.' };
   }
 
   @Put('cells/:key') @HttpCode(200) @Needs('policy.write')
@@ -362,14 +456,19 @@ export class OpsController {
     const cur = (await this.db.pool.query<{ n: string }>('select (select count(*) from schools s where s.cell = c.key and s.deleted_at is null) n from cells c where c.key = $1', [key])).rows[0];
     if (!cur) throw notFound('That cell');
     if (body.maxSchools !== undefined && body.maxSchools < Number(cur.n)) throw new ApiError('validation', `${cur.n} schools already run here, so the limit cannot go below that.`, { fields: { maxSchools: `At least ${cur.n}.` } });
+    if (body.connectionId !== undefined) {
+      await this.databasesConnection(body.connectionId);
+      if (Number(cur.n) > 0) throw new ApiError('conflict', `${cur.n} schools already run on this cell’s server, so its database connection stays. Move them to another cell first.`);
+      await this.db.pool.query('update cells set connection_id = $2 where key = $1', [key, body.connectionId]);
+    }
     await this.db.pool.query('update cells set region = coalesce($2, region), max_schools = coalesce($3, max_schools), accepting = coalesce($4, accepting) where key = $1', [key, body.region ?? null, body.maxSchools ?? null, body.accepting ?? null]);
     await this.db.audit(me.email, 'cell.changed', 'cell', key, { ...body });
     return { ok: true };
   }
 
   @Post('health/probe') @HttpCode(200) @Needs('schools.read')
-  async probe(): Promise<{ probed: number }> {
-    return { probed: await this.health.probeAll() };
+  async probe(@Query('school') school?: string): Promise<{ probed: number }> {
+    return { probed: await this.health.probeAll(school) };
   }
 
   @Get('support') @Needs('support.access')
@@ -397,6 +496,11 @@ export class OpsController {
     await this.admin.setFlag(me.email, key, body.schoolId ?? null, !!body.enabled, body.label);
   }
 
+  @Delete('flags/:key') @HttpCode(204) @Needs('flags.write')
+  async removeFlag(@Me() me: ConsoleUser, @Param('key') key: string, @Query('school') school?: string): Promise<void> {
+    await this.admin.removeFlag(me.email, key, school || null);
+  }
+
   @Get('billing/invoices') @Needs('billing.read')
   invoices(): Promise<InvoiceRowC[]> {
     return this.admin.invoices();
@@ -407,9 +511,29 @@ export class OpsController {
     return { created: await this.admin.billMonth(me.email, String(body?.period ?? '')) };
   }
 
-  @Put('billing/invoices/:id') @HttpCode(204) @Needs('billing.write')
-  async setInvoice(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { status: string }): Promise<void> {
-    await this.admin.setInvoice(me.email, id, body.status);
+  @Post('billing/invoices/:id/send') @HttpCode(200) @Needs('billing.write')
+  async sendInvoice(@Me() me: ConsoleUser, @Param('id') id: string): Promise<{ to: string }> {
+    return { to: await this.admin.sendInvoice(me.email, id, this.platform.hub) };
+  }
+
+  @Post('billing/invoices/:id/paid') @HttpCode(204) @Needs('billing.write')
+  async paid(@Me() me: ConsoleUser, @Param('id') id: string, @Body(new ZodPipe(InvoicePaid)) body: InvoicePaid): Promise<void> {
+    await this.admin.paidInvoice(me.email, id, body);
+  }
+
+  @Delete('billing/invoices/:id/paid') @HttpCode(204) @Needs('billing.write')
+  async unpaid(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> {
+    await this.admin.paidInvoice(me.email, id, null);
+  }
+
+  /** Texts and other messages per school and month, for billing (moved from Integrations → Activity). */
+  @Get('billing/usage') @Needs('billing.read')
+  async usage(): Promise<{ schoolSlug: string; channel: string; month: string; count: number; costPaise: number }[]> {
+    const { rows } = await this.db.pool.query<{ school_slug: string; channel: string; mon: string; n: number; cost: number }>(
+      `select school_slug, channel, to_char(date_trunc('month', created_at), 'YYYY-MM') mon, count(*)::int n, coalesce(sum(cost_paise), 0)::int cost
+       from message_log where created_at >= date_trunc('month', now()) - interval '11 months' and status not in ('refused') and school_slug <> 'console'
+       group by 1, 2, 3 order by 3 desc, 1, 2`);
+    return rows.map((t) => ({ schoolSlug: t.school_slug, channel: t.channel, month: t.mon, count: t.n, costPaise: t.cost }));
   }
 
   @Get('team') @Needs('schools.read')
@@ -417,19 +541,36 @@ export class OpsController {
     return this.admin.team();
   }
 
-  @Post('team') @HttpCode(204) @Needs('team.write')
-  async add(@Me() me: ConsoleUser, @Body() body: { name: string; email: string; roles: string[]; password: string }): Promise<void> {
-    await this.admin.addMember(me.email, body);
+  @Post('team') @HttpCode(200) @Needs('team.write')
+  add(@Me() me: ConsoleUser, @Body() body: { name: string; email: string; roles: string[] }): Promise<{ link: string }> {
+    return this.admin.addMember(me.email, body, this.platform.hub, this.env.CONSOLE_URL);
+  }
+
+  @Post('team/:id/invite') @HttpCode(200) @Needs('team.write')
+  reinvite(@Param('id') id: string): Promise<{ link: string }> {
+    return this.admin.invite(id, this.platform.hub, this.env.CONSOLE_URL);
+  }
+
+  @Delete('team/:id') @HttpCode(204) @Needs('team.write')
+  async remove(@Me() me: ConsoleUser, @Param('id') id: string): Promise<void> {
+    await this.admin.removeMember(me.email, id);
   }
 
   @Put('team/:id') @HttpCode(204) @Needs('team.write')
-  async change(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { roles?: string[]; status?: string; password?: string; resetAuthenticator?: boolean }): Promise<void> {
+  async change(@Me() me: ConsoleUser, @Param('id') id: string, @Body() body: { roles?: string[]; status?: string; resetAuthenticator?: boolean }): Promise<void> {
     await this.admin.setMember(me.email, id, body);
   }
 
   @Get('audit') @Needs('audit.read')
-  audit(@Query('school') school?: string): Promise<AuditRow[]> {
-    return this.admin.audit(100, school);
+  audit(@Query('school') school?: string, @Query('actor') actor?: string, @Query('action') action?: string, @Query('from') from?: string, @Query('to') to?: string, @Query('before') before?: string): Promise<AuditRow[]> {
+    return this.admin.audit(50, school, { actor, action, from, to, before });
+  }
+
+  @Get('audit/export') @Needs('audit.read') @Header('content-type', 'text/csv; charset=utf-8')
+  async auditCsv(@Query('school') school?: string, @Query('actor') actor?: string, @Query('action') action?: string, @Query('from') from?: string, @Query('to') to?: string): Promise<string> {
+    const rows = await this.admin.audit(500, school, { actor, action, from, to });
+    const q = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    return ['when,who,what,details', ...rows.map((r) => [r.at, r.actor, auditLabel(r.action), r.detail].map(q).join(','))].join('\n');
   }
 
   @Get('catalog') @Needs('schools.read')

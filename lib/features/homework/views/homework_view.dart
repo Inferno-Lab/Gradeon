@@ -247,7 +247,7 @@ class HomeworkDetailView extends GetView<HomeworkDetailController> {
       final inset = MediaQuery.paddingOf(context);
       final heroH = 221 + inset.top;
       final mine = controller.mine;
-      final pending = mine == null || mine.status == HomeworkStatus.pending;
+      final pending = mine == null || mine.status.toDo;
       final pigment = item == null ? null : AppColors.subject(item.subject);
       return PageFrame(
         leading: BackGlass(color: pigment?.on),
@@ -349,7 +349,7 @@ class _DetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final days = Formatters.daysUntil(item.dueOn);
-    final submitted = item.submissions.where((s) => s.status != HomeworkStatus.pending).length;
+    final submitted = item.submissions.where((s) => !s.status.toDo).length;
     final status = mine?.status ?? HomeworkStatus.pending;
     final dueLabel = '${Formatters.countdown(item.dueOn).trp({'count': '$days'})} · ${DateFormat('EEE d MMM').format(item.dueOn)}';
     return Column(
@@ -369,7 +369,12 @@ class _DetailBody extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Rise(index: 1, child: Text(item.description, style: context.type.b)),
-        if (status != HomeworkStatus.pending && mine != null) ...[
+        // Sent back by the teacher: why, so it can be done again.
+        if (status == HomeworkStatus.returned && (mine?.returnNote ?? '').isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Rise(index: 2, child: EduCard(child: Text('homework.returned_note'.trp({'note': mine!.returnNote!}), style: context.type.b))),
+        ],
+        if (!status.toDo && mine != null) ...[
           const SizedBox(height: 16),
           Rise(
             index: 2,

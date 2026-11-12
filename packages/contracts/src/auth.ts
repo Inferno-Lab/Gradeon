@@ -43,6 +43,10 @@ export type CodeRequest = z.infer<typeof CodeRequest>;
 export const ResetStart = z.object({ identifier: z.string().trim().min(3, 'Enter your email or phone').max(120) });
 export type ResetStart = z.infer<typeof ResetStart>;
 
+/** A signed-in person changes their own password. */
+export const PasswordChange = z.object({ current: z.string().min(1, 'Type your current password').max(200), next: z.string().min(8, 'Use at least 8 characters').max(200) });
+export type PasswordChange = z.infer<typeof PasswordChange>;
+
 export const ResetFinish = z.object({
   challengeId: z.string().min(1),
   code: z.string().regex(/^\d{6}$/, 'The code is 6 digits'),

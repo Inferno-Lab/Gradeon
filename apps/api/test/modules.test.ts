@@ -70,9 +70,12 @@ describe('exams', () => {
     const detail = (await get(`/v1/students/${view.students[0].studentId}`)).json;
     expect(detail.id).toBe(view.students[0].studentId);
     expect((await send('DELETE', `/v1/exams/${id}`)).status).toBe(409);
-    // Editing a mark after publishing sends the exam back to marking, so families never see a number that was changed behind their back.
-    const edit = await send('PUT', `/v1/exams/${id}/marks`, { marks: [{ studentId: view.students[2].studentId, subjectId: 'sub_maths', score: 10, absent: false }] });
-    expect(edit.json.exam.status).toBe('marking');
+    // Published marks are locked: they are reopened first, saying why, so families never see a number changed behind their back.
+    const fix = { marks: [{ studentId: view.students[2].studentId, subjectId: 'sub_maths', score: 10, absent: false }] };
+    expect((await send('PUT', `/v1/exams/${id}/marks`, fix)).status).toBe(423);
+    const reopened = await send('POST', `/v1/exams/${id}/reopen`, { note: 'A paper was added up wrong' });
+    expect(reopened.json).toMatchObject({ status: 'marking', reopenedNote: 'A paper was added up wrong' });
+    expect((await send('PUT', `/v1/exams/${id}/marks`, fix)).json.exam.status).toBe('marking');
   });
   it('rejects an exam that ends before it starts or names an unknown subject', async () => {
     const d = istToday();
@@ -119,6 +122,18 @@ describe('staff and roles', () => {
     expect((await send('PATCH', '/v1/staff/' + pooja.id, { roleId: 'role_teacher' })).status).toBe(403);
     await h.setSettings({ 'staff.schoolAssignsRoles': true });
   }, 30_000);
+  it('imports staff from a sheet, invites one who never signed in, edits their email, and exports everyone', async () => {
+    const r = await send('POST', '/v1/staff/import', { csv: 'name,email,phone,designation,role\nSam Okafor,sam.okafor@greenfield.edu.in,+91 90000 55555,Teacher,Teacher' });
+    expect(r.json).toMatchObject({ created: 1, skipped: 0 });
+    const sam = (await get('/v1/staff?query=Okafor')).json[0];
+    expect(sam).toMatchObject({ access: 'none', roles: [{ id: 'role_teacher' }] });
+    expect((await send('PATCH', `/v1/staff/${sam.id}`, { email: 'sam.o@greenfield.edu.in', name: 'Sam Okafor-Reid' })).json).toMatchObject({ email: 'sam.o@greenfield.edu.in', name: 'Sam Okafor-Reid' });
+    expect((await send('POST', `/v1/staff/${sam.id}/invite`)).json).toEqual({ to: 'sam.o@greenfield.edu.in' });
+    expect((await get('/v1/staff?query=Okafor')).json[0].access).toBe('invited');
+    const csv = (await get('/v1/staff/export')).text;
+    expect(csv.split('\n')[0]).toContain('email');
+    expect(csv).toContain('sam.o@greenfield.edu.in');
+  }, 30_000);
   it('lets the school edit its own timetable until the console locks it, and still lets it cover a lesson', async () => {
     const slot = (await get('/v1/timetable?classId=cls_8a')).json.slots[0];
     expect((await send('PATCH', '/v1/timetable/slots/' + slot.id, { room: 'R-12' })).status).toBe(204);
@@ -151,6 +166,18 @@ describe('admissions', () => {
     expect((await get('/v1/admissions')).json.find((e: any) => e.id === made.json.id)).toMatchObject({ stage: 'enrolled', studentId: enrolled.json.id });
     expect((await send('POST', `/v1/admissions/${made.json.id}/enrol`, { classId: 'cls_4a', dob: '2016-05-12' })).status).toBe(409);
   });
+  it('edits an enquiry, steps it back, and keeps to the stages the console switched on', async () => {
+    const made = (await send('POST', '/v1/admissions', { childName: 'Mia Lopez', gradeSought: 0, guardianName: 'Ana Lopez', phone: '+44 7700 900777' })).json;
+    expect(made.gradeSought).toBe(0);
+    const edited = await send('PATCH', `/v1/admissions/${made.id}`, { childName: 'Mia Lopez-Grant', email: 'ana@example.org', gradeSought: 1, source: 'Phone' });
+    expect(edited.json).toMatchObject({ childName: 'Mia Lopez-Grant', email: 'ana@example.org', gradeSought: 1, source: 'Phone', stage: 'enquiry' });
+    expect((await send('PATCH', `/v1/admissions/${made.id}`, { email: '' })).json.email).toBeNull();
+    await h.setSettings({ 'admissions.stages': ['offer'] });
+    expect((await send('PATCH', `/v1/admissions/${made.id}`, { stage: 'applied' })).status).toBe(400);
+    expect((await send('PATCH', `/v1/admissions/${made.id}`, { stage: 'offer' })).json.stage).toBe('offer');
+    expect((await send('PATCH', `/v1/admissions/${made.id}`, { stage: 'enquiry' })).json.stage).toBe('enquiry');
+    await h.setSettings({ 'admissions.stages': ['applied', 'test', 'offer'] });
+  }, 30_000);
   it('shows the number waiting on the menu', async () => {
     const shell = (await get('/v1/shell')).json;
     expect(shell.badges.admissions).toBeGreaterThan(0);
@@ -168,7 +195,7 @@ describe('money lists and reports', () => {
     const search = (await get('/v1/fees/invoice-list?query=Aarav')).json;
     expect(search.items.every((i: any) => i.studentName.includes('Aarav'))).toBe(true);
     const receipts = (await get('/v1/fees/receipts?query=Aarav')).json;
-    expect(receipts.some((r: any) => r.receiptNo === 'RCPT-2026-08812')).toBe(true);
+    expect(receipts.items.some((r: any) => r.receiptNo === 'RCPT-2026-08812')).toBe(true);
   });
   it('builds every report and exports it as a CSV', async () => {
     const list = (await get('/v1/reports')).json;
@@ -182,6 +209,11 @@ describe('money lists and reports', () => {
     }
     const strength = (await get('/v1/reports/strength')).json;
     expect(strength.rows).toHaveLength(42);
+    // Narrowed to a class and a period, and named after them.
+    const low = await get(`/v1/reports/attendance-class?classId=cls_8a&from=${addDays(istToday(), -10)}&to=${istToday()}`);
+    expect(low.json.rows).toHaveLength(1);
+    expect(low.json.scope).toMatch(/^Class 8 A, /);
+    expect((await get('/v1/reports/attendance-low/csv?classId=cls_8a')).headers['content-disposition']).toMatch(/Low attendance - Class 8 A/);
     expect((await get('/v1/reports/nope')).status).toBe(404);
   });
 });
@@ -228,7 +260,7 @@ describe('privacy and templates', () => {
     const made = await send('POST', '/v1/privacy/requests', { kind: 'erasure', subjectName: 'Test Child', requestedBy: 'Parent', note: 'Moved schools' });
     expect(made.status).toBe(201);
     const done = await send('POST', `/v1/privacy/requests/${made.json.id}/decision`, { status: 'done', note: 'Erased' });
-    expect(done.json).toMatchObject({ status: 'done', note: 'Erased' });
+    expect(done.json).toMatchObject({ status: 'done', note: 'Moved schools', answer: 'Erased' });
     expect((await send('POST', `/v1/privacy/requests/${made.json.id}/decision`, { status: 'declined' })).status).toBe(409);
   });
   it('sends school messages with the wording and channels the school chose', async () => {
@@ -244,11 +276,12 @@ describe('privacy and templates', () => {
     expect(rows[0]).toMatchObject({ channel: 'sms', body: 'Hello! Anika Rao has a fee waiting. Please pay soon. Greenfield' });
     expect(Number((await h.registry.query("select count(*) n from sandbox_messages where school_slug = 'greenfield'")).rows[0].n)).toBe(before + 1);
   });
-  it('puts the app layout and console flags into the config the apps fetch', async () => {
-    await h.setSettings({ 'app.dock': ['home', 'fees', 'nonsense'], 'app.quick': ['payFees'] });
+  it('puts each role’s app layout and the console flags into the config the apps fetch', async () => {
+    await h.setSettings({ 'app.layout': { parent: { dock: ['home', 'fees', 'nonsense', 'trips'], home: [], quick: ['payFees'] }, student: { dock: [], home: [], quick: [] }, teacher: { dock: ['home', 'classes'], home: [], quick: [] }, driver: { dock: [], home: [], quick: [] } } });
     const cfg = (await get('/v1/config')).json;
-    expect(cfg.app.dock).toEqual(['home', 'fees']);
-    expect(cfg.app.quick).toEqual(['payFees']);
+    expect(cfg.app.layout.parent.dock).toEqual(['home', 'fees']);
+    expect(cfg.app.layout.parent.quick).toEqual(['payFees']);
+    expect(cfg.app.layout.teacher.dock).toEqual(['home', 'classes']);
     expect(cfg.flags).toBeTypeOf('object');
   });
 });

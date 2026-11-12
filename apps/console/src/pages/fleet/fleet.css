@@ -63,7 +63,6 @@
 .pg-fleet .st{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font:700 12px var(--fb);width:fit-content}
 .pg-fleet .st i{width:7px;height:7px;border-radius:50%;background:currentColor}
 .pg-fleet .st.g{background:var(--gS);color:var(--gD)}.pg-fleet .st.a{background:var(--aS);color:var(--aD)}.pg-fleet .st.v{background:var(--vS);color:var(--v)}
-.pg-fleet .rw.up{animation:glow var(--t3) var(--e)}
 @keyframes glow{0%{background:color-mix(in srgb,var(--v) 18%,transparent)}100%{background:transparent}}
 .pg-fleet .inc{padding:20px;border-radius:24px;background:var(--ci);color:var(--onCi);display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh2);animation:nToast var(--t3) var(--e)}
 .pg-fleet .inc.ok{background:var(--gS);color:var(--gD)}

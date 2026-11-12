@@ -11,14 +11,17 @@ import 'package:gradeon/features/chat/controllers/chat_controller.dart';
 import 'package:gradeon/features/chat/views/chat_list_view.dart';
 import 'package:gradeon/features/dashboard/views/academics_view.dart';
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
+import 'package:gradeon/features/driver/views/driver_view.dart';
 import 'package:gradeon/features/events/views/events_view.dart';
 import 'package:gradeon/features/fees/views/fees_view.dart';
 import 'package:gradeon/features/gallery/views/gallery_view.dart';
+import 'package:gradeon/features/homework/views/homework_view.dart';
 import 'package:gradeon/features/library/views/library_view.dart';
 import 'package:gradeon/features/notices/views/notices_view.dart';
 import 'package:gradeon/features/profile/views/profile_view.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:gradeon/features/teacher_tools/views/teacher_home_view.dart';
+import 'package:gradeon/features/timetable/views/timetable_view.dart';
 import 'package:gradeon/features/transport/views/transport_view.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -37,19 +40,19 @@ class _ShellViewState extends State<ShellView> {
     final controller = Get.find<ShellController>();
     final chat = Get.find<ChatListController>();
     return Obx(() {
-      final teacher = controller.isTeacher;
       final unread = chat.unread.value;
-      // Families get the tabs Gradeon set for the school (console → The app), Profile always last.
-      final keys = teacher ? _teacherKeys : [...SchoolConfig.dock.where(_familyTabs.containsKey), 'profile'];
+      final tabs = _tabsFor(controller.isTeacher, driver: controller.isDriver);
+      // Each role gets the tabs Gradeon set for it at this school (console → The app → What each role sees), Profile always last.
+      final keys = [...SchoolConfig.dock.where((k) => k != 'profile' && tabs.containsKey(k)), 'profile'];
       controller.tabs = keys;
-      final nav = teacher ? _teacherNav : [for (final k in keys) _familyTabs[k]!.$1];
       final items = [
-        for (final item in nav)
-          item.label == 'nav.chat'
-              ? DockItem(icon: item.icon, activeIcon: item.activeIcon, label: item.label, badge: unread)
-              : item,
+        for (final k in keys)
+          if (k == 'chat')
+            DockItem(icon: tabs[k]!.$1.icon, activeIcon: tabs[k]!.$1.activeIcon, label: tabs[k]!.$1.label, badge: unread)
+          else
+            tabs[k]!.$1,
       ];
-      final pages = teacher ? _teacherPages : [for (final k in keys) _familyTabs[k]!.$2];
+      final pages = [for (final k in keys) tabs[k]!.$2];
       final index = controller.index.value.clamp(0, pages.length - 1);
       final wide = context.isWide;
       return PopScope(
@@ -103,41 +106,29 @@ class _ShellViewState extends State<ShellView> {
   }
 }
 
-/// Every tab a school can give families (console → The app → Tabs along the bottom), keyed as in APP_CATALOG.dock.
-const Map<String, (DockItem, Widget)> _familyTabs = {
-  'home': (DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'), DashboardView()),
+/// Every tab the console can put in a role's dock (config-engine APP_CATALOG.dock), keyed as there; Profile is always last.
+Map<String, (DockItem, Widget)> _tabsFor(bool teacher, {bool driver = false}) => {
+  'home': (
+    const DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'),
+    driver ? const DriverView() : teacher ? const TeacherHomeView() : const DashboardView(),
+  ),
+  'trips': (const DockItem(icon: PhosphorIconsRegular.steeringWheel, activeIcon: PhosphorIconsBold.steeringWheel, label: 'nav.trips'), const DriverView()),
   'academics': (
-    DockItem(icon: PhosphorIconsRegular.bookOpen, activeIcon: PhosphorIconsBold.bookOpen, label: 'nav.academics'),
-    AcademicsView(),
+    const DockItem(icon: PhosphorIconsRegular.bookOpen, activeIcon: PhosphorIconsBold.bookOpen, label: 'nav.academics'),
+    const AcademicsView(),
   ),
-  'fees': (DockItem(icon: PhosphorIconsRegular.wallet, activeIcon: PhosphorIconsBold.wallet, label: 'nav.fees'), FeesView()),
-  'notices': (
-    DockItem(icon: PhosphorIconsRegular.megaphone, activeIcon: PhosphorIconsBold.megaphone, label: 'nav.notices'),
-    NoticesView(),
+  'classes': (
+    const DockItem(icon: PhosphorIconsRegular.chalkboardTeacher, activeIcon: PhosphorIconsBold.chalkboardTeacher, label: 'nav.classes'),
+    const TeacherClassesView(),
   ),
-  'chat': (DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'), ChatListView()),
-  'events': (
-    DockItem(icon: PhosphorIconsRegular.calendarBlank, activeIcon: PhosphorIconsBold.calendarBlank, label: 'nav.events'),
-    EventsView(),
-  ),
-  'transport': (DockItem(icon: PhosphorIconsRegular.bus, activeIcon: PhosphorIconsBold.bus, label: 'nav.transport'), TransportView()),
-  'library': (DockItem(icon: PhosphorIconsRegular.books, activeIcon: PhosphorIconsBold.books, label: 'nav.library'), LibraryView()),
-  'gallery': (DockItem(icon: PhosphorIconsRegular.images, activeIcon: PhosphorIconsBold.images, label: 'nav.gallery'), GalleryView()),
-  'profile': (DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'), ProfileView()),
+  'homework': (const DockItem(icon: PhosphorIconsRegular.notebook, activeIcon: PhosphorIconsBold.notebook, label: 'nav.homework'), const HomeworkView()),
+  'timetable': (const DockItem(icon: PhosphorIconsRegular.clock, activeIcon: PhosphorIconsBold.clock, label: 'nav.timetable'), const TimetableView()),
+  'fees': (const DockItem(icon: PhosphorIconsRegular.wallet, activeIcon: PhosphorIconsBold.wallet, label: 'nav.fees'), const FeesView()),
+  'notices': (const DockItem(icon: PhosphorIconsRegular.megaphone, activeIcon: PhosphorIconsBold.megaphone, label: 'nav.notices'), const NoticesView()),
+  'chat': (const DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'), const ChatListView()),
+  'events': (const DockItem(icon: PhosphorIconsRegular.calendarBlank, activeIcon: PhosphorIconsBold.calendarBlank, label: 'nav.events'), const EventsView()),
+  'transport': (const DockItem(icon: PhosphorIconsRegular.bus, activeIcon: PhosphorIconsBold.bus, label: 'nav.transport'), const TransportView()),
+  'library': (const DockItem(icon: PhosphorIconsRegular.books, activeIcon: PhosphorIconsBold.books, label: 'nav.library'), const LibraryView()),
+  'gallery': (const DockItem(icon: PhosphorIconsRegular.images, activeIcon: PhosphorIconsBold.images, label: 'nav.gallery'), const GalleryView()),
+  'profile': (const DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'), const ProfileView()),
 };
-
-const _teacherKeys = ['home', 'classes', 'notices', 'chat', 'profile'];
-
-const _teacherNav = [
-  DockItem(icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsBold.house, label: 'nav.home'),
-  DockItem(
-    icon: PhosphorIconsRegular.chalkboardTeacher,
-    activeIcon: PhosphorIconsBold.chalkboardTeacher,
-    label: 'nav.classes',
-  ),
-  DockItem(icon: PhosphorIconsRegular.megaphone, activeIcon: PhosphorIconsBold.megaphone, label: 'nav.notices'),
-  DockItem(icon: PhosphorIconsRegular.chatCircle, activeIcon: PhosphorIconsBold.chatCircle, label: 'nav.chat'),
-  DockItem(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsBold.user, label: 'nav.profile'),
-];
-
-const _teacherPages = [TeacherHomeView(), TeacherClassesView(), NoticesView(), ChatListView(), ProfileView()];

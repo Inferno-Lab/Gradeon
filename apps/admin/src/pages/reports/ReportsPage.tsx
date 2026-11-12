@@ -1,66 +1,103 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { EmptyCard } from '@gradeon/web-ui';
+import type { ReportQuery } from '@gradeon/contracts';
+import { DateField, EmptyCard, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { Ico } from '../../app/kit';
+import { Ico, useOpenParam } from '../../app/kit';
+import { usePageTabs } from '../../app/tabs';
 
 const DOWNLOAD = 'M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14';
+const PRINT = 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z';
+/** Which reports each tab of the page (config-engine: the school module's reports page) holds, by the server's report areas. */
+const AREAS: Record<string, string> = { attendance: 'Attendance', money: 'Fees', learning: 'Learning', people: 'People' };
+/** A number in a cell ("88%", "₹1,200", 12) as a number, so columns sort by value. */
+const num = (v: string | number) => (typeof v === 'number' ? v : Number(String(v).replace(/[^\d.-]/g, '')) || 0);
 
 export function ReportsPage() {
   const app = useApp();
   const { toast, say } = useToast();
-  const [id, setId] = useState('');
+  const { tab, tabs } = usePageTabs('/reports');
+  // The open report is in the address (?open=<report>), with its filters kept while it is open.
+  const [id, setId] = useOpenParam();
+  const [q, setQ] = useState<ReportQuery>({});
+  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [busy, setBusy] = useState(false);
-  const list = useQuery({ queryKey: ['reports'], queryFn: app.api.reports.list, staleTime: 10 * 60_000 });
-  const pick = id || list.data?.[0]?.id || '';
-  const data = useQuery({ queryKey: ['reports', pick], queryFn: () => app.api.reports.get(pick), enabled: !!pick });
-  const areas = [...new Set((list.data ?? []).map((r) => r.area))];
+  const all = useQuery({ queryKey: ['reports'], queryFn: app.api.reports.list, staleTime: 10 * 60_000 });
+  const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes, staleTime: 5 * 60_000 });
+  const list = all.data?.filter((r) => r.area === AREAS[tab]);
+  const pick = (list?.some((r) => r.id === id) ? id : '') || list?.[0]?.id || '';
+  const info = list?.find((r) => r.id === pick);
+  const data = useQuery({ queryKey: ['reports', pick, q], queryFn: () => app.api.reports.get(pick, q), enabled: !!pick, placeholderData: (p) => p });
+  const open = (next: string) => { setId(next); setQ({}); setSort(null); };
   const download = async () => {
     setBusy(true);
     try {
-      const csv = await app.api.reports.csv(pick);
+      const csv = await app.api.reports.csv(pick, q);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
-      a.download = `${pick}.csv`;
+      a.download = `${d?.title ?? 'Report'} - ${d?.scope ?? ''}.csv`;
       a.click();
       URL.revokeObjectURL(a.href);
       say('Report downloaded.');
     } catch (e) { say((e as Error).message, 'bad'); } finally { setBusy(false); }
   };
   const d = data.data;
+  const rows = d && sort ? [...d.rows].sort((a, b) => {
+    const x = a[sort.key] ?? '', y = b[sort.key] ?? '';
+    const right = d.columns.find((c) => c.key === sort.key)?.align === 'right';
+    return (right ? num(x) - num(y) : String(x).localeCompare(String(y))) * sort.dir;
+  }) : d?.rows ?? [];
+  const cols = d ? `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` : '';
   return (
-    <Page title="Reports" sub="Numbers you can read, print or take to a meeting" toast={toast} loading={list.isLoading && !list.data}
-      error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={d ? <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button> : undefined}>
-      {(list.data?.length ?? 0) === 0 ? (
-        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports are available" body="Reports appear here once the modules they read from are switched on for your school." /></div>
+    <Page title="Reports" sub="Numbers you can read, download or print for a meeting" toast={toast} loading={all.isLoading && !all.data}
+      error={all.isError && !all.data ? { message: (all.error as Error).message, retry: () => void all.refetch() } : null}
+      actions={<>{tabs}{d && <>
+        <button className="btn" onClick={() => window.print()}><Ico d={PRINT} />Print</button>
+        <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>
+      </>}</>}>
+      {(list?.length ?? 0) === 0 ? (
+        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports here yet" body="Reports in this area appear once the modules they read from are part of your school’s plan." /></div>
       ) : (
         <section className="rpg" data-even="fill">
           <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">
-            {areas.map((a) => (
-              <div key={a}>
-                <div className="lbl" style={{ padding: '4px 10px 8px' }}>{a}</div>
-                {list.data!.filter((r) => r.area === a).map((r) => (
-                  <button key={r.id} className={`rpb ${r.id === pick ? 'on' : ''}`} aria-current={r.id === pick} onClick={() => setId(r.id)}><b>{r.title}</b><small>{r.blurb}</small></button>
-                ))}
-              </div>
+            {list!.map((r) => (
+              <button key={r.id} className={`rpb ${r.id === pick ? 'on' : ''}`} aria-current={r.id === pick} onClick={() => open(r.id)}><b>{r.title}</b><small>{r.blurb}</small></button>
             ))}
           </nav>
           <div className="card tbl rise" style={{ padding: 0, minWidth: 0 }}>
             {!d ? <div className="skc" style={{ height: 320, borderRadius: 24 }} /> : (
               <>
-                <div className="ch" style={{ padding: '24px 24px 6px' }}><h2>{d.title}</h2><span className="chip v">{d.rows.length} {d.rows.length === 1 ? 'row' : 'rows'}</span></div>
+                <div className="ch" style={{ padding: '24px 24px 6px', flexWrap: 'wrap', gap: 10 }}>
+                  <h2>{d.title}</h2><span className="chip v">{d.scope}</span>
+                  <span className="grow"></span>
+                  {info?.filters.includes('class') && <Select compact aria-label="Class" value={q.classId ?? ''} onChange={(v) => setQ({ ...q, classId: v || undefined })} options={[{ value: '', label: 'Whole school' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+                  {info?.filters.includes('dates') && <>
+                    <DateField compact label="From" value={q.from ?? ''} onChange={(v) => setQ({ ...q, from: v || undefined })} max={q.to} />
+                    <DateField compact label="To" value={q.to ?? ''} onChange={(v) => setQ({ ...q, to: v || undefined })} min={q.from} />
+                  </>}
+                </div>
                 <div className="tgrow" style={{ padding: '10px 24px 16px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
-                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><div className="help">Nothing to report yet. This fills in as the school uses Gradeon.</div></div> : (
-                  <div className="scroll-x lscroll" data-even-scroll="">
+                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><div className="help">Nothing to report for this. It fills in as the school uses Gradeon.</div></div> : (
+                  <div className="scroll-x">
                     <div style={{ minWidth: Math.max(480, d.columns.length * 96) }}>
-                      <div className="grd th" style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>{d.columns.map((c) => <span key={c.key} style={{ textAlign: c.align }}>{c.label}</span>)}</div>
-                      {d.rows.map((r, i) => (
-                        <div className="grd rw" key={i} style={{ '--cols': `minmax(0,1.5fr) ${d.columns.slice(1).map(() => 'minmax(64px,1fr)').join(' ')}` } as React.CSSProperties}>
-                          {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
-                        </div>
-                      ))}
+                      <div className="grd th" style={{ '--cols': cols } as React.CSSProperties}>
+                        {d.columns.map((c) => (
+                          <button key={c.key} type="button" className="sortb" style={{ textAlign: c.align, justifyContent: c.align === 'right' ? 'flex-end' : undefined, border: 0, background: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0 }}
+                            aria-sort={sort?.key === c.key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} onClick={() => setSort(sort?.key === c.key ? { key: c.key, dir: sort.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.align === 'right' ? -1 : 1 })}>
+                            {c.label}{sort?.key === c.key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
+                          </button>
+                        ))}
+                      </div>
+                      {rows.map((r, i) => {
+                        const sid = r._student ? String(r._student) : null;
+                        return (
+                          <div className="grd rw" key={i} role={sid ? 'button' : undefined} tabIndex={sid ? 0 : undefined} onClick={sid ? () => app.go(`/students?open=${sid}`) : undefined}
+                            onKeyDown={sid ? (e) => { if (e.key === 'Enter') app.go(`/students?open=${sid}`); } : undefined} style={{ '--cols': cols, cursor: sid ? 'pointer' : undefined } as React.CSSProperties}>
+                            {d.columns.map((c, j) => <span key={c.key} className={j ? 'num' : ''} style={{ textAlign: c.align, font: j ? '600 13px var(--fb)' : '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={String(r[c.key] ?? '')}>{r[c.key]}</span>)}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

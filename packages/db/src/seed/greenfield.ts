@@ -1,4 +1,4 @@
-import { ROLE_TEMPLATES, addDays, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
+import { PERMISSIONS, ROLE_TEMPLATES, addDays, type RoleTemplate, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
 import type { Pool, PoolClient } from 'pg';
 import { newId } from '../ids.js';
 import { bulkInsert } from './bulk.js';
@@ -20,11 +20,12 @@ export interface SeedInput {
   };
   admin: { name: string; email: string; phone: string; passwordHash: string };
   modules: string[];
-  demoMode: boolean;
   /** `empty` is a brand-new school: roles, periods and settings only. `demo` adds a full year of sample data. */
   data: 'empty' | 'demo';
   /** Hash used for every demo staff and guardian login. Needed for `demo`. */
   demoPasswordHash?: string;
+  /** The starting roles the console keeps (Blueprints → Starting roles); the built-in ones when not given. */
+  roleTemplates?: RoleTemplate[];
   today?: string;
 }
 
@@ -127,7 +128,7 @@ async function run(db: PoolClient, input: SeedInput): Promise<Omit<SeedReport, '
 
   // Roles, periods and subjects exist in every school, empty or not.
   await bulkInsert(db, 'roles', ['id', 'key', 'name', 'description', 'permissions', 'locked'],
-    ROLE_TEMPLATES.map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.permissions), t.key === 'principal']));
+    (input.roleTemplates?.length ? input.roleTemplates : ROLE_TEMPLATES).map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.key === 'principal' ? [...PERMISSIONS] : t.permissions), t.key === 'principal']));
   await bulkInsert(db, 'periods', ['idx', 'label', 'starts_at', 'ends_at', 'kind'], PERIOD_ROWS);
   await bulkInsert(db, 'subjects', ['id', 'name', 'color', 'per_week'], SUBJECTS.map((s) => [s.id, s.name, s.color, s.perWeek]));
 
@@ -138,16 +139,15 @@ async function run(db: PoolClient, input: SeedInput): Promise<Omit<SeedReport, '
   await db.query("insert into staff (user_id, designation, department, joined_on) values ($1,'Principal','Administration',$2)", [adminId, addDays(last, -2000)]);
   await db.query('insert into user_roles (user_id, role_id) values ($1,$2)', [adminId, 'role_principal']);
 
-  const examsStart = addDays(last, 6);
   const s = input.school;
   const settings: [string, unknown][] = [
     ['school.name', s.name], ['school.shortName', s.shortName], ['school.tagline', s.tagline], ['school.place', s.place ?? ''], ['school.phone', s.phone],
     ['school.email', s.email], ['school.address', s.address], ['school.language', s.language], ['brand.color', s.color],
-    ['brand.logoText', s.logoText], ['modules.enabled', input.modules], ['approvals.feeWaiver', 'principal'],
+    ['brand.logoText', s.logoText],
     ['approvals.notice', 'required'], ['attendance.notifyParents', true], ['attendance.lockAfterDays', 2],
     ['fees.lateFeePct', 0], ['fees.remindDaysBefore', 3], ['fees.dailyTarget', 150000], ['attendance.goalPct', 95],
-    ['homework.goalPct', 85], ['students.pinnedClass', 'cls_8a'], ['dashboard.rollClasses', ['cls_8a', 'cls_8b', 'cls_9a', 'cls_9b', 'cls_10a', 'cls_10b']], ['term.name', 'Term 1'], ['term.examsStart', examsStart], ['security.twoFactor', true],
-    ['demo.mode', input.demoMode], ['vocab.student', 'Student'], ['vocab.class', 'Class'],
+    ['homework.goalPct', 85], ['dashboard.rollClasses', ['cls_8a', 'cls_8b', 'cls_9a', 'cls_9b', 'cls_10a', 'cls_10b']], ['security.twoFactor', true],
+    ['vocab.student', 'Student'], ['vocab.class', 'Class'],
   ];
   await bulkInsert(db, 'settings', ['key', 'value', 'updated_by'], settings.map(([k, v]) => [k, JSON.stringify(v), 'system']));
   await bulkInsert(db, 'meta', ['key', 'value'], [

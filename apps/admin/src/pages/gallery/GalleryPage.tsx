@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { uploadFile } from '@gradeon/api-client';
-import type { AlbumRow, PhotoRow } from '@gradeon/contracts';
+import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
 import { Dialog, EmptyCard, Field, FilePick, Panel, Presence, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
@@ -32,6 +32,7 @@ export function GalleryPage() {
       overlays={<>
         {edit && <AlbumDialog album={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onDone={done} />}
       </>}>
+      <Reported say={say} />
       {!list.length ? (
         <div><EmptyCard title="Gallery" chip={{ text: '0 albums', tone: 'v' }} scene="noticeboard" heading="No albums yet"
           body="Make an album for sports day or a class trip, add photos, tag the children in them, then share it. Families who agreed to photos see it in the app."
@@ -58,9 +59,19 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
   const [tagging, setTagging] = useState<PhotoRow | null>(null);
   const photos = useQuery({ queryKey: ['gallery', album.id, 'photos'], queryFn: () => app.api.gallery.photos(album.id) });
   const refresh = () => void qc.invalidateQueries({ queryKey: ['gallery'] });
-  const add = useMutation({ mutationFn: (f: File) => uploadFile(app.api, 'gallery', album.id, f), onSuccess: () => { refresh(); say('Photo added. Tag the children in it before sharing.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  // Many photos at once, one after the other; any that fail are named and the rest stay.
+  const add = useMutation({
+    mutationFn: async (files: File[]) => {
+      const failed: string[] = [];
+      for (const f of files) await uploadFile(app.api, 'gallery', album.id, f).catch(() => failed.push(f.name));
+      return { added: files.length - failed.length, failed };
+    },
+    onSuccess: ({ added, failed }) => { refresh(); say(failed.length ? `${added} added; ${failed.join(', ')} could not be added.` : `${added} ${added === 1 ? 'photo' : 'photos'} added. Tag the children in them before sharing.`, failed.length ? 'bad' : undefined); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
+  const [removing, setRemoving] = useState<string | null>(null);
   const share = useMutation({ mutationFn: () => app.api.gallery.publish(album.id, !album.published), onSuccess: (a) => { refresh(); say(a.published ? `${a.title} is shared with families.` : `${a.title} is hidden from families.`); }, onError: (e) => say((e as Error).message, 'bad') });
-  const remove = useMutation({ mutationFn: app.api.files.remove, onSuccess: () => { refresh(); say('Photo removed.'); }, onError: (e) => say((e as Error).message, 'bad') });
+  const remove = useMutation({ mutationFn: app.api.files.remove, onSuccess: () => { setRemoving(null); refresh(); say('Photo removed.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const list = photos.data ?? [];
   const hidden = list.filter((p) => p.students.some((s) => s.consent !== true)).length;
   return (
@@ -74,7 +85,7 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
           <button className="xbtn" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path className="i" d="M6 6l12 12M18 6 6 18"></path></svg></button>
         </div>
         {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <FilePick accept="image/jpeg,image/png,image/webp" className="btn sm pri" disabled={add.isPending} onPick={(f) => add.mutate(f)}>{add.isPending ? 'Uploading…' : 'Add a photo'}</FilePick>
+          <FilePick accept="image/jpeg,image/png,image/webp" multiple className="btn sm pri" disabled={add.isPending} onPickAll={(files) => add.mutate(files)}>{add.isPending ? 'Uploading…' : 'Add photos'}</FilePick>
           <button className="btn sm" disabled={share.isPending} onClick={() => share.mutate()}>{album.published ? 'Hide from families' : 'Share with families'}</button>
           <button className="btn sm" onClick={onEdit}>Edit album</button>
         </div>}
@@ -91,7 +102,9 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
                 </div>
                 {canWrite && <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                   <button className="btn sm" onClick={() => setTagging(p)}>Tag</button>
-                  <button className="btn sm" disabled={remove.isPending} onClick={() => remove.mutate(p.id)}>Remove</button>
+                  {removing === p.id
+                    ? <><button className="btn sm dngf" disabled={remove.isPending} onClick={() => remove.mutate(p.id)}>Yes, remove</button><button className="btn sm" onClick={() => setRemoving(null)}>Keep</button></>
+                    : <button className="btn sm" onClick={() => setRemoving(p.id)}>Remove</button>}
                 </div>}
               </div>
             ))}
@@ -128,8 +141,11 @@ function AlbumDialog({ album, onClose, onDone }: { album: AlbumRow | null; onClo
   const classes = useQuery({ queryKey: ['classes'], queryFn: app.api.classes });
   const [title, setTitle] = useState(album?.title ?? '');
   const [classId, setClassId] = useState(album?.classId ?? '');
+  const [eventId, setEventId] = useState(album?.eventId ?? '');
+  const [confirm, setConfirm] = useState(false);
+  const events = useQuery({ queryKey: ['events'], queryFn: app.api.events.list, enabled: app.user.permissions.includes('events.read') });
   const [err, setErr] = useState<Record<string, string>>({});
-  const body = () => ({ title: title.trim(), classId: classId || null, eventId: album?.eventId ?? null });
+  const body = () => ({ title: title.trim(), classId: classId || null, eventId: eventId || null });
   const save = useMutation({ mutationFn: () => (album ? app.api.gallery.save(album.id, body()) : app.api.gallery.add(body())), onSuccess: (a) => onDone(`${a.title} was saved.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
   const del = useMutation({ mutationFn: () => app.api.gallery.remove(album!.id), onSuccess: () => onDone(`${album!.title} and its photos were deleted.`), onError: (e) => { setErr(problem(e)); shake.hit(); } });
   return (
@@ -137,13 +153,51 @@ function AlbumDialog({ album, onClose, onDone }: { album: AlbumRow | null; onClo
       <div className="stack">
         <Field label="Title" value={title} onChange={(x) => { setTitle(x); setErr({}); }} error={err.title} placeholder="Sports day 2026" />
         <SelectField label="Shared with" value={classId} onChange={setClassId} options={[{ value: '', label: 'The whole school' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
+        {(events.data?.length ?? 0) > 0 && <SelectField label="From the event (optional)" value={eventId} onChange={setEventId} options={[{ value: '', label: 'Not linked to an event' }, ...(events.data ?? []).filter((e) => e.kind !== 'holiday').map((e) => ({ value: e.id, label: `${e.title} · ${new Date(e.startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}` }))]} />}
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-        {album && <button className="btn" style={{ marginRight: 'auto' }} disabled={del.isPending} onClick={() => del.mutate()}>Delete album</button>}
+        {album && (confirm
+          ? <span style={{ marginRight: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Delete it and its {album.photos} {album.photos === 1 ? 'photo' : 'photos'}?</span><button className="btn sm dngf" disabled={del.isPending} onClick={() => del.mutate()}>Yes, delete</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
+          : <button className="btn dng" style={{ marginRight: 'auto' }} onClick={() => setConfirm(true)}>Delete album</button>)}
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn pri" disabled={save.isPending || title.trim().length < 2} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : album ? 'Save' : 'Create album'}</button>
       </div>
     </Dialog>
+  );
+}
+
+/** Photos families reported from the app, oldest first: each is kept or taken down, which closes every report of it. */
+function Reported({ say }: { say: (m: string, tone?: 'bad') => void }) {
+  const app = useApp();
+  const qc = useQueryClient();
+  const canWrite = app.user.permissions.includes('gallery.write');
+  const q = useQuery({ queryKey: ['gallery', 'reports'], queryFn: app.api.gallery.reports });
+  const act = useMutation({
+    mutationFn: (a: { r: GalleryReportRow; remove: boolean }) => app.api.gallery.resolve(a.r.id, a.remove),
+    onSuccess: (_, a) => { void qc.invalidateQueries({ queryKey: ['gallery'] }); say(a.remove ? 'The photo was taken down.' : 'The photo stays; the report is closed.'); },
+    onError: (e) => say((e as Error).message, 'bad'),
+  });
+  const rows = q.data ?? [];
+  if (!rows.length) return null;
+  return (
+    <div className="card rise" style={{ marginBottom: 16 }}>
+      <div className="ch"><h2>Reported by families</h2><span className="chip a">{rows.length}</span></div>
+      <section className="grid" style={{ marginTop: 12 }}>
+        {rows.map((r) => (
+          <div key={r.id} className="s4" style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+            <Photo id={r.fileId} alt={`Reported photo in ${r.album ?? 'an album'}`} />
+            <b style={{ font: '700 14px var(--fb)', overflowWrap: 'anywhere' }}>“{r.reason}”</b>
+            <small className="help">{r.by} · {r.album ?? 'An album'} · {stamp(r.createdAt)}</small>
+            {canWrite && (
+              <span className="tgrow">
+                <button className="btn sm dng" disabled={act.isPending} onClick={() => act.mutate({ r, remove: true })}>Take it down</button>
+                <button className="btn sm" disabled={act.isPending} onClick={() => act.mutate({ r, remove: false })}>Keep it</button>
+              </span>
+            )}
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }

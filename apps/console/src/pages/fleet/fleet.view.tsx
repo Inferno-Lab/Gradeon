@@ -14,17 +14,11 @@ export function FleetView({ v }: { v: any }) {
             <p>{v.subtitle}</p>
           </div>
           <span className="grow"></span>
-          <div className="srch" role="search" onClick={v.openSearch} tabIndex={0} onKeyDown={(e: any) => e.key === "Enter" && v.openSearch()} style={{ cursor: "text" }}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path>
-            </svg>
-            Find a school or page<span className="kbd">Ctrl K</span>
-          </div>
-          <button className="ibtn" aria-label={v.pending ? `${v.pending} requests to approve` : "Approvals"} onClick={v.openApprovals}>
+          <button className="ibtn" aria-label={v.alertCount ? `Alerts: ${v.alertCount}` : "Alerts"} data-tip="Alerts" onClick={v.openAlerts}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"></path>
             </svg>
-            {v.pending > 0 && <span className="pip"></span>}
+            {v.alertCount > 0 && <span className="pip"></span>}
           </button>
           <button className="btn pri" onClick={v.onboard}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -83,7 +77,7 @@ export function FleetView({ v }: { v: any }) {
               )}
               {v.canRollback && (
                 <button className="btn sm" onClick={v.rollback} disabled={v.busy}>
-                  Roll back
+                  Mark rolled back
                 </button>
               )}
               {!v.canPause && !v.canRollback && (
@@ -101,7 +95,7 @@ export function FleetView({ v }: { v: any }) {
                 </svg>
                 Schools
               </span>
-              <button className="arrow" aria-label="Open onboarding" onClick={v.onboard}>
+              <button className="arrow" aria-label="Open the schools list" onClick={v.openSchools}>
                 <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                   <path className="i" d="M7 17L17 7M9 7h8v8"></path>
                 </svg>
@@ -129,6 +123,11 @@ export function FleetView({ v }: { v: any }) {
               <span className="num" style={{ marginLeft: "auto", font: "700 13px var(--fb)", opacity: ".7" } as CSSProperties}>
                 {v.p95}
               </span>
+              <button className="arrow" aria-label="Open health" onClick={v.openHealth}>
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
+                </svg>
+              </button>
             </div>
             <div className="hbar" aria-hidden="true">
               <i style={{ flex: v.hOk || 0.001, background: "var(--g)" } as CSSProperties}></i>
@@ -152,6 +151,7 @@ export function FleetView({ v }: { v: any }) {
           <div className="card s12 rise" style={{ "--d": ".2s" } as CSSProperties} aria-labelledby="req">
             <div className="ch">
               <h2 id="req">Requests per minute</h2>
+              <span className="chip">{v.chartSub}</span>
               <span className="lgd">
                 <span>
                   <i style={{ background: "var(--v)" } as CSSProperties}></i>Today
@@ -196,7 +196,7 @@ export function FleetView({ v }: { v: any }) {
               {v.cells.length === 0 && <div className="help">No cells yet. Cells appear when the first school is placed.</div>}
               {v.cells.map((c: any, $i: number) => (
                 <Fragment key={$i}>
-                  <div className="cell" onClick={v.openCells}>
+                  <a className="cell" href={c.href} onClick={c.open} style={{ color: "inherit", textDecoration: "none" } as CSSProperties}>
                     <svg className="gz" viewBox="0 0 54 54" aria-hidden="true">
                       <circle className="bg" cx="27" cy="27" r="22"></circle>
                       <circle className="fg" cx="27" cy="27" r="22" style={{ stroke: c.col, strokeDashoffset: c.off } as CSSProperties}></circle>
@@ -211,7 +211,7 @@ export function FleetView({ v }: { v: any }) {
                       <i></i>
                       {c.st}
                     </span>
-                  </div>
+                  </a>
                 </Fragment>
               ))}
             </div>
@@ -220,8 +220,9 @@ export function FleetView({ v }: { v: any }) {
         <section className="grid">
           <div className="card tbl s12 rise" style={{ "--d": ".3s", padding: "0" } as CSSProperties} aria-labelledby="sch">
             <div className="ch" style={{ padding: "24px 24px 16px" } as CSSProperties}>
-              <h2 id="sch">Schools</h2>
-              <span className="chip">{v.rows.length} · newest first</span>
+              <h2 id="sch">Newest schools</h2>
+              <span className="grow"></span>
+              <button className="btn sm" onClick={v.openSchools}>{v.more ? `All ${v.more} schools` : "All schools"}</button>
             </div>
             {v.rows.length === 0 && !v.loading && (
               <div style={{ padding: "0 24px 24px" } as CSSProperties}>
@@ -252,7 +253,7 @@ export function FleetView({ v }: { v: any }) {
                   {v.rows.map((r: any) => (
                     <Fragment key={r.id}>
                       <a
-                        className={`grd rw ${r.up ?? ""}`}
+                        className="grd rw"
                         href={r.href}
                         onClick={r.open}
                         style={{ "--cols": "minmax(0,2fr) 70px 130px 130px 80px", height: "58px", color: "inherit", textDecoration: "none" } as CSSProperties}
@@ -312,7 +313,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
               </div>
             )}
-            <div className="tile t-l rise" style={{ "--d": ".4s", display: "flex", alignItems: "center", gap: "12px", padding: "20px 20px" } as CSSProperties}>
+            <button className="tile t-l rise" onClick={v.openOnboarding} aria-label="Open onboarding" style={{ "--d": ".4s", display: "flex", alignItems: "center", gap: "12px", padding: "20px 20px", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer", border: 0, width: "100%" } as CSSProperties}>
               <div style={{ width: "92px", flex: "none" } as CSSProperties}>
                 <Illustration scene="calendar" />
               </div>
@@ -322,7 +323,7 @@ export function FleetView({ v }: { v: any }) {
                 </b>
                 <div style={{ font: "600 13px var(--fb)", color: "var(--ink3)", marginTop: "2px" } as CSSProperties}>{v.up.body}</div>
               </div>
-            </div>
+            </button>
           </div>
         </section>
       </main>

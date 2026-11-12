@@ -13,6 +13,56 @@
       "hindi",
       "social",
       "computer"
+    ],
+    "papers": [
+      {
+        "subject": "maths",
+        "date": "today-18T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "science",
+        "date": "today-17T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "english",
+        "date": "today-16T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "hindi",
+        "date": "today-15T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "social",
+        "date": "today-14T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "computer",
+        "date": "today-13T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      }
     ]
   },
   {
@@ -29,6 +79,56 @@
       "hindi",
       "social",
       "computer"
+    ],
+    "papers": [
+      {
+        "subject": "maths",
+        "date": "today-40T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "science",
+        "date": "today-39T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "english",
+        "date": "today-38T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "hindi",
+        "date": "today-37T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "social",
+        "date": "today-36T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "computer",
+        "date": "today-36T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      }
     ]
   },
   {
@@ -45,6 +145,56 @@
       "hindi",
       "social",
       "computer"
+    ],
+    "papers": [
+      {
+        "subject": "maths",
+        "date": "today+14T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "science",
+        "date": "today+15T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "english",
+        "date": "today+16T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "hindi",
+        "date": "today+17T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "social",
+        "date": "today+18T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "computer",
+        "date": "today+18T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      }
     ]
   },
   {
@@ -60,6 +210,48 @@
       "hindi",
       "science",
       "art"
+    ],
+    "papers": [
+      {
+        "subject": "maths",
+        "date": "today-18T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "english",
+        "date": "today-17T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "hindi",
+        "date": "today-16T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "science",
+        "date": "today-15T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "art",
+        "date": "today-14T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      }
     ]
   },
   {
@@ -74,6 +266,40 @@
       "english",
       "hindi",
       "science"
+    ],
+    "papers": [
+      {
+        "subject": "maths",
+        "date": "today+15T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "english",
+        "date": "today+16T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "hindi",
+        "date": "today+17T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      },
+      {
+        "subject": "science",
+        "date": "today+18T09:30",
+        "startsAt": "09:30",
+        "endsAt": "12:30",
+        "room": "Exam hall",
+        "maxMarks": 100
+      }
     ]
   }
 ]

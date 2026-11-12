@@ -8,7 +8,7 @@ let second: string;
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.c('POST', '/console/v1/team', { token: t, body: { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'], password: 'another-long-pass' } });
+  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
   second = await h.signIn('second@gradeon.app', 'another-long-pass');
 }, 240_000);
 afterAll(async () => {
@@ -38,6 +38,11 @@ describe('connections', () => {
   it('goes live only after a passing test, and only with a second person', async () => {
     expect((await h.c('POST', `/console/v1/integrations/connections/${id}/live`, { token: t })).status).toBe(400);
     await h.registry.query('update integration_connections set health_ok = true where id = $1', [id]);
+    // A text connection goes live only once every message has its approved template.
+    const missing = (await h.c('GET', `/console/v1/integrations/connections/${id}/missing-templates`, { token: t })).json.keys as string[];
+    expect(missing.length).toBeGreaterThan(20);
+    expect((await h.c('POST', `/console/v1/integrations/connections/${id}/live`, { token: t })).json.message).toMatch(/no approved template/);
+    for (const key of missing) await h.c('PUT', '/console/v1/integrations/templates', { token: t, body: { connectionId: id, messageKey: key, providerTemplateId: `tpl_${key}`, approvedText: 'Approved wording {code}' } });
     const asked = await h.c('POST', `/console/v1/integrations/connections/${id}/live`, { token: t });
     expect(asked.json).toMatchObject({ action: 'integration.live', status: 'pending_approval', schoolId: null });
     expect((await h.c('POST', `/console/v1/actions/${asked.json.id}/approve`, { token: t })).status).toBe(403);
@@ -62,7 +67,7 @@ describe('connections', () => {
   });
 
   it('refuses a payment webhook whose signature does not match', async () => {
-    const made = await h.c('POST', '/console/v1/integrations/connections', { token: t, body: { provider: 'razorpay', name: 'Razorpay test', scope: 'platform', settings: { keyId: 'rzp_test_1' }, secrets: { keySecret: 's', webhookSecret: 'whsec' } } });
+    const made = await h.c('POST', '/console/v1/integrations/connections', { token: t, body: { provider: 'razorpay', name: 'Razorpay test', scope: 'platform', settings: { keyId: 'rzp_test_1234567890' }, secrets: { keySecret: 's', webhookSecret: 'whsec' } } });
     const url = (await h.c('GET', '/console/v1/integrations', { token: t })).json.connections.find((c: any) => c.id === made.json.id).webhookUrl;
     const res = await h.api.inject({ method: 'POST', url: hookPath(url), headers: { 'content-type': 'application/json', 'x-razorpay-signature': 'forged' }, payload: JSON.stringify({ event: 'payment_link.paid' }) });
     expect(res.statusCode).toBe(401);

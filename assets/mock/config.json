@@ -1,0 +1,442 @@
+{
+  "version": 1001,
+  "school": {
+    "name": "Greenfield International School",
+    "shortName": "Greenfield",
+    "color": "#6A4CF5",
+    "logoText": "G",
+    "language": "en",
+    "tagline": "Curiosity first. Kindness always.",
+    "place": "Pune",
+    "address": "42, Baner Road, Baner, Pune 411045",
+    "phone": "+912045678900",
+    "email": "hello@greenfield.edu.in"
+  },
+  "modules": [
+    "school",
+    "people",
+    "attendance",
+    "timetable",
+    "homework",
+    "exams",
+    "fees",
+    "notices",
+    "chat",
+    "events",
+    "gallery",
+    "library",
+    "transport"
+  ],
+  "features": [
+    "people.admissions",
+    "attendance.parentAlerts",
+    "attendance.teacherApp",
+    "attendance.periodWise",
+    "timetable.cover",
+    "homework.onlineSubmission",
+    "homework.grading",
+    "exams.resultsInApp",
+    "fees.onlinePayment",
+    "fees.reminders",
+    "fees.lateFines",
+    "fees.gstReceipts",
+    "fees.refunds",
+    "notices.teacherPosts",
+    "chat.familyChat",
+    "chat.studentChat",
+    "chat.calls",
+    "events.rsvp",
+    "gallery.downloads",
+    "library.reservations",
+    "transport.routes",
+    "transport.liveBus"
+  ],
+  "settings": {
+    "school.tagline": "Curiosity first. Kindness always.",
+    "school.place": "Pune",
+    "school.phone": "+912045678900",
+    "school.email": "hello@greenfield.edu.in",
+    "school.address": "42, Baner Road, Baner, Pune 411045",
+    "school.language": "en",
+    "brand.logoText": "G",
+    "theme.colors": {},
+    "approvals.feeWaiver": "principal",
+    "approvals.notice": "required",
+    "attendance.notifyParents": true,
+    "attendance.lockAfterDays": 2,
+    "fees.lateFeePct": 0,
+    "fees.remindDaysBefore": 3,
+    "fees.dailyTarget": 150000,
+    "attendance.goalPct": 95,
+    "homework.goalPct": 85,
+    "dashboard.rollClasses": [],
+    "security.twoFactor": true,
+    "security.passwordMinLength": 8,
+    "security.webSessionDays": 7,
+    "security.appSessionDays": 30,
+    "staff.schoolAssignsRoles": true,
+    "timetable.schoolEdits": true,
+    "classes.schoolEdits": true,
+    "calendar.schoolEdits": true,
+    "calendar.weeklyOff": [],
+    "feeStructures.schoolEdits": true,
+    "fees.receiptPrefix": "RCPT-{year}-",
+    "fees.receiptStart": 9001,
+    "fees.receiptNote": "",
+    "fees.gstin": "",
+    "fees.gstSac": "999293",
+    "fees.gstRatePct": 18,
+    "fees.gstHeads": [],
+    "fees.refundApprovalAbove": 5000,
+    "brand.logoFileId": "",
+    "library.loanDays": 14,
+    "library.finePerDay": 1,
+    "library.maxRenewals": 1,
+    "library.maxLoans": 3,
+    "library.staffMaxLoans": 5,
+    "transport.nearMinutes": 10,
+    "fees.paymentMethods": [
+      "cash",
+      "upi",
+      "card",
+      "netbanking",
+      "cheque"
+    ],
+    "vocab.student": "Student",
+    "vocab.class": "Class",
+    "vocab.students": "",
+    "vocab.classes": "",
+    "people.houses": [
+      {
+        "key": "emerald",
+        "name": "Emerald",
+        "color": "#2E9E6A"
+      },
+      {
+        "key": "sapphire",
+        "name": "Sapphire",
+        "color": "#3D6FE0"
+      },
+      {
+        "key": "ruby",
+        "name": "Ruby",
+        "color": "#D64545"
+      },
+      {
+        "key": "amber",
+        "name": "Amber",
+        "color": "#E0A030"
+      }
+    ],
+    "calendar.weekStarts": "mon",
+    "attendance.statuses": [
+      "present",
+      "absent",
+      "late",
+      "leave"
+    ],
+    "leave.reasons": [
+      "Unwell",
+      "Family function",
+      "Travel",
+      "Appointment",
+      "Other"
+    ],
+    "homework.showClassProgress": false,
+    "homework.handedInBy": "either",
+    "results.showRank": false,
+    "grading.scale": [
+      {
+        "grade": "A1",
+        "minPct": 91
+      },
+      {
+        "grade": "A2",
+        "minPct": 81
+      },
+      {
+        "grade": "B1",
+        "minPct": 71
+      },
+      {
+        "grade": "B2",
+        "minPct": 61
+      },
+      {
+        "grade": "C1",
+        "minPct": 51
+      },
+      {
+        "grade": "C2",
+        "minPct": 41
+      },
+      {
+        "grade": "D",
+        "minPct": 33
+      },
+      {
+        "grade": "E",
+        "minPct": 0
+      }
+    ],
+    "grading.passPct": 33,
+    "notices.categories": [
+      {
+        "key": "academic",
+        "name": "Academic",
+        "tone": "v"
+      },
+      {
+        "key": "exams",
+        "name": "Exams",
+        "tone": "c"
+      },
+      {
+        "key": "events",
+        "name": "Events",
+        "tone": "g"
+      },
+      {
+        "key": "sports",
+        "name": "Sports",
+        "tone": "a"
+      },
+      {
+        "key": "holiday",
+        "name": "Holiday",
+        "tone": "g"
+      },
+      {
+        "key": "fees",
+        "name": "Fees",
+        "tone": "a"
+      }
+    ],
+    "events.categories": [
+      {
+        "key": "academic",
+        "name": "Academic",
+        "tone": "v"
+      },
+      {
+        "key": "cultural",
+        "name": "Cultural",
+        "tone": "g"
+      },
+      {
+        "key": "sports",
+        "name": "Sports",
+        "tone": "a"
+      },
+      {
+        "key": "meeting",
+        "name": "Meeting",
+        "tone": "v"
+      },
+      {
+        "key": "holiday",
+        "name": "Holiday",
+        "tone": "c"
+      }
+    ],
+    "events.showGoing": false,
+    "transport.familyCalls": "office",
+    "app.roles": [
+      "parent",
+      "student",
+      "teacher",
+      "driver"
+    ],
+    "app.layout": {
+      "parent": {
+        "dock": [
+          "home",
+          "academics",
+          "fees",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "dueStack",
+          "attendance",
+          "nextExam",
+          "homework",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "payFees",
+          "applyLeave",
+          "messageTeacher",
+          "timetable"
+        ]
+      },
+      "student": {
+        "dock": [
+          "home",
+          "homework",
+          "timetable",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "homework",
+          "nextExam",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "homework",
+          "timetable",
+          "events"
+        ]
+      },
+      "teacher": {
+        "dock": [
+          "home",
+          "classes",
+          "timetable",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "markAttendance",
+          "assignHomework",
+          "grade",
+          "postNotice"
+        ]
+      },
+      "driver": {
+        "dock": [
+          "home",
+          "trips",
+          "chat"
+        ],
+        "home": [],
+        "quick": []
+      }
+    },
+    "app.languages": [
+      "en",
+      "hi",
+      "mr"
+    ],
+    "notify.rules": {},
+    "notify.quietFrom": "21:00",
+    "notify.quietTo": "07:00",
+    "templates.messages": {},
+    "privacy.notice": "",
+    "privacy.officerName": "Dr. Anil Kulkarni",
+    "privacy.officerEmail": "hello@greenfield.edu.in",
+    "privacy.officerPhone": "",
+    "privacy.retentionMonths": 36,
+    "privacy.photoConsent": true,
+    "privacy.consentRequired": true,
+    "school.name": "Greenfield International School",
+    "school.shortName": "Greenfield",
+    "brand.color": "#6A4CF5"
+  },
+  "vocabulary": {
+    "student": "Student",
+    "students": "Students",
+    "class": "Class",
+    "classes": "Classes"
+  },
+  "limits": {
+    "students": 5000,
+    "storageGb": 100,
+    "smsPerMonth": 20000
+  },
+  "app": {
+    "roles": [
+      "parent",
+      "student",
+      "teacher",
+      "driver"
+    ],
+    "layout": {
+      "parent": {
+        "dock": [
+          "home",
+          "academics",
+          "fees",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "dueStack",
+          "attendance",
+          "nextExam",
+          "homework",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "payFees",
+          "applyLeave",
+          "messageTeacher",
+          "timetable"
+        ]
+      },
+      "student": {
+        "dock": [
+          "home",
+          "homework",
+          "timetable",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "homework",
+          "nextExam",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "homework",
+          "timetable",
+          "events"
+        ]
+      },
+      "teacher": {
+        "dock": [
+          "home",
+          "classes",
+          "timetable",
+          "chat"
+        ],
+        "home": [
+          "dayRibbon",
+          "notices",
+          "events"
+        ],
+        "quick": [
+          "markAttendance",
+          "assignHomework",
+          "grade",
+          "postNotice"
+        ]
+      },
+      "driver": {
+        "dock": [
+          "home",
+          "trips",
+          "chat"
+        ],
+        "home": [],
+        "quick": []
+      }
+    }
+  },
+  "privacy": {
+    "notice": "",
+    "officerName": "Dr. Anil Kulkarni",
+    "officerEmail": "hello@greenfield.edu.in",
+    "officerPhone": ""
+  },
+  "flags": {}
+}

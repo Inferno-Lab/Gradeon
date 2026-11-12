@@ -16,17 +16,14 @@ services:
         value: "24"
       - key: NODE_ENV
         value: production
-      # A Neon database for the registry (the list of schools) and for the schools themselves. Use the direct connection string, not the pooled one.
+      # A Neon database for the registry (the list of schools). Use the direct connection string, not the pooled one. Schools'
+      # databases are made on this server too, unless a cell is given a School databases connection in the console.
       - key: REGISTRY_DATABASE_URL
-        sync: false
-      - key: SHARED_PG_ADMIN_URL
         sync: false
       # Generated once by Render. Changing SECRETS_KEY later makes every school's stored connection unreadable.
       - key: SECRETS_KEY
         generateValue: true
       - key: JWT_SECRET
-        generateValue: true
-      - key: BUILD_CALLBACK_TOKEN
         generateValue: true
       # How you sign in to the console. The password is generated; read it under Environment once the service exists.
       - key: BOOTSTRAP_EMAIL

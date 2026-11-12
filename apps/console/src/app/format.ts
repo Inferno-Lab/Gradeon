@@ -6,6 +6,7 @@ export type Tone = 'g' | 'a' | 'v' | 'c' | 'n';
 export function statusOf(s: Pick<SchoolRow, 'status' | 'health'>): { text: string; tone: Tone } {
   if (s.status === 'onboarding') return { text: 'Setting up', tone: 'v' };
   if (s.status === 'suspended') return { text: 'Suspended', tone: 'c' };
+  if (s.status === 'moving') return { text: 'Moving', tone: 'v' };
   if (s.status === 'offboarding') return { text: 'Leaving', tone: 'a' };
   if (s.status === 'archived') return { text: 'Archived', tone: 'n' };
   if (s.health === 'ok') return { text: 'Healthy', tone: 'g' };

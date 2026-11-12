@@ -1,10 +1,11 @@
 import { Body, Controller, Get, HttpCode, Injectable, Put } from '@nestjs/common';
-import { ACTIONS, ThemeColorsSchema, type ConsoleRole, type PolicyDoc, type ThemeColors } from '@gradeon/contracts';
+import { ACTIONS, ROLE_TEMPLATES, RoleTemplatesPut, ThemeColorsSchema, type ConsoleRole, type PolicyDoc, type RoleTemplate, type ThemeColors } from '@gradeon/contracts';
+import { ZodPipe } from '@gradeon/nest-kit';
 import { ApiError } from '@gradeon/nest-kit';
 import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';
 
 export const DEFAULT_POLICY: PolicyDoc = {
-  approvals: Object.fromEntries(ACTIONS.map((a) => [a, { needed: ['school.erase', 'school.move', 'backup.restore', 'config.apply', 'integration.live', 'retention.erase'].includes(a), roles: ['super_admin'] as ConsoleRole[] }])),
+  approvals: Object.fromEntries(ACTIONS.map((a) => [a, { needed: ['school.erase', 'school.move', 'backup.restore', 'config.apply', 'integration.live', 'integration.mode', 'retention.erase'].includes(a), roles: ['super_admin'] as ConsoleRole[] }])),
   waves: [
     { name: 'Internal', matches: 'internal', batch: 1 },
     { name: 'Pilot', matches: 'pilot', batch: 5 },
@@ -12,7 +13,8 @@ export const DEFAULT_POLICY: PolicyDoc = {
   ],
   halt: { errorRatePct: 2, p95Ms: 1500 },
   freeze: false,
-  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'in.gradeon.' },
+  freezeReason: '',
+  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'com.gradeon.' },
   maintenanceWindow: 'Sun 01:00–03:00 IST',
 };
 
@@ -32,9 +34,48 @@ export class Policy {
     if (!doc.waves.length || doc.waves.some((w) => w.batch < 1 || !w.name.trim())) throw new ApiError('validation', 'Each wave needs a name and a batch size of at least 1.');
     if (doc.waves.at(-1)!.matches !== 'rest') throw new ApiError('validation', 'The last wave must be “Everyone else”, so no school is left out of a release.');
     if (!doc.naming.bundlePrefix.trim()) throw new ApiError('validation', 'The app bundle prefix cannot be empty.');
+    if (doc.freeze && (doc.freezeReason ?? '').trim().length < 5) throw new ApiError('validation', 'Say why changes are frozen.');
+    if (Object.values(doc.approvals).some((r) => r.needed && !r.roles.length)) throw new ApiError('validation', 'Each rule needs at least one role that may approve it.');
     await this.db.pool.query("insert into console_settings (key, value, updated_by) values ('policy', $1, $2) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()", [JSON.stringify(doc), user]);
-    await this.db.audit(user, 'policy.changed', 'policy', 'policy', { freeze: doc.freeze });
+    await this.db.audit(user, 'policy.changed', 'policy', 'policy', { freeze: doc.freeze, reason: doc.freezeReason ?? '' });
     return this.get();
+  }
+}
+
+/** The roles a new school starts with (decision D6): data the console edits, the built-in ones until it does. */
+@Injectable()
+export class RoleTemplates {
+  constructor(private readonly db: Db) {}
+
+  async get(): Promise<RoleTemplate[]> {
+    const { rows } = await this.db.pool.query<{ value: RoleTemplate[] }>("select value from console_settings where key = 'role_templates'");
+    return rows[0]?.value?.length ? rows[0].value : ROLE_TEMPLATES;
+  }
+
+  async set(user: string, list: RoleTemplate[]): Promise<RoleTemplate[]> {
+    const keys = list.map((r) => r.key);
+    if (new Set(keys).size !== keys.length) throw new ApiError('validation', 'Two starting roles have the same key.');
+    // Demo schools and every school's principal rely on these; they can be renamed and changed, not removed.
+    const missing = ROLE_TEMPLATES.filter((t) => !keys.includes(t.key));
+    if (missing.length) throw new ApiError('validation', `${missing.map((t) => t.name).join(', ')} cannot be removed; change what it can do instead.`);
+    await this.db.pool.query("insert into console_settings (key, value, updated_by) values ('role_templates', $1, $2) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()", [JSON.stringify(list), user]);
+    await this.db.audit(user, 'role_templates.changed', 'policy', 'role_templates', { roles: list.length });
+    return this.get();
+  }
+}
+
+@Controller('console/v1/role-templates')
+export class RoleTemplatesController {
+  constructor(private readonly roles: RoleTemplates) {}
+
+  @Get() @Needs('schools.read')
+  get(): Promise<RoleTemplate[]> {
+    return this.roles.get();
+  }
+
+  @Put() @HttpCode(200) @Needs('blueprints.write')
+  set(@Me() me: ConsoleUser, @Body(new ZodPipe(RoleTemplatesPut)) body: RoleTemplate[]): Promise<RoleTemplate[]> {
+    return this.roles.set(me.email, body);
   }
 }
 

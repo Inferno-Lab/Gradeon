@@ -14,7 +14,7 @@ import { withSchoolDb } from './school-db.js';
 
 /** What a template never carries from one school to another: who the school is. */
 const OWN_KEYS = ['school.name', 'school.shortName', 'school.tagline', 'school.place', 'school.phone', 'school.email', 'school.address', 'brand.logoText',
-  'privacy.officerName', 'privacy.officerEmail', 'privacy.officerPhone', 'students.pinnedClass', 'dashboard.rollClasses', 'demo.mode'];
+  'privacy.officerName', 'privacy.officerEmail', 'privacy.officerPhone', 'dashboard.rollClasses', 'people.houses'];
 const KNOWN = new Set<string>(PERMISSIONS);
 
 type Q = pg.Pool | pg.PoolClient;
@@ -64,14 +64,15 @@ export class ConfigService implements OnModuleInit {
     const versions = await this.db.pool.query<{ id: string; version: number; changes: ConfigVersionRow['changes']; note: string; by: string; at: Date }>(
       'select id, version, changes, note, by, at from config_versions where school_id = $1 order by at desc limit 30', [schoolId]);
     return this.school(schoolId, async (p) => {
-      const [cur, roles, classes, staff] = await Promise.all([
+      const [cur, roles, classes, heads, staff] = await Promise.all([
         this.values(p), this.roles(p),
         p.query<{ id: string; name: string }>('select id, name from classes order by grade, section'),
+        p.query<{ key: string; name: string }>('select key, name from fee_heads order by sort, name'),
         p.query<{ id: string; name: string; designation: string; role_id: string | null }>(
           "select u.id, u.name, s.designation, (select ur.role_id from user_roles ur where ur.user_id = u.id limit 1) role_id from users u join staff s on s.user_id = u.id where u.status = 'active' order by u.name"),
       ]);
       return {
-        ...cur, entitled: activeModules(ent), features: activeFeatures(ent, activeModules(ent)), roles, classes: classes.rows,
+        ...cur, entitled: activeModules(ent), features: activeFeatures(ent, activeModules(ent)), roles, classes: classes.rows, feeHeads: heads.rows,
         staff: staff.rows.map((s) => ({ id: s.id, name: s.name, designation: s.designation, roleId: s.role_id })),
         versions: versions.rows.map((v) => ({ id: v.id, version: v.version, changes: v.changes, note: v.note, by: v.by, at: v.at.toISOString() })),
       };
@@ -86,12 +87,6 @@ export class ConfigService implements OnModuleInit {
     if (!checked.ok) throw new ApiError('validation', checked.problems[0]!.message, { fields: Object.fromEntries(checked.problems.map((p) => [p.key, p.message])) });
     const unknown = resets.find((k) => !(k in SETTINGS_META));
     if (unknown) throw new ApiError('validation', 'That setting does not exist.', { fields: { [unknown]: 'That setting does not exist.' } });
-    const mods = checked.values['modules.enabled'];
-    if (Array.isArray(mods)) {
-      const entitled = activeModules(await this.entitlement(schoolId));
-      const outside = (mods as string[]).filter((m) => !entitled.includes(m));
-      if (outside.length) throw new ApiError('validation', `Not in this school’s plan: ${outside.join(', ')}. Change the plan under Entitlements first.`, { fields: { 'modules.enabled': 'Outside the plan.' } });
-    }
     const after = await this.school(schoolId, async (p) => {
       const client = await p.connect();
       try {
@@ -124,7 +119,11 @@ export class ConfigService implements OnModuleInit {
     if (after.changes.length) {
       await this.db.pool.query('insert into config_versions (id, school_id, version, values, changes, note, by) values ($1,$2,$3,$4,$5,$6,$7)',
         [newId('cfv'), schoolId, after.version, JSON.stringify(after.values), JSON.stringify(after.changes), patch.note ?? '', by]);
-      await this.db.pool.query('update schools set config_version = config_version + 1 where id = $1', [schoolId]);
+      // Who the school is lives in its settings; the registry keeps a copy for the fleet, the console and the school's address.
+      const v = after.values as Record<string, unknown>;
+      const id = (k: string) => (typeof v[k] === 'string' && (v[k] as string).trim() ? (v[k] as string).trim() : null);
+      await this.db.pool.query('update schools set config_version = config_version + 1, name = coalesce($2, name), short_name = coalesce($3, short_name), color = coalesce($4, color), logo_text = coalesce($5, logo_text) where id = $1',
+        [schoolId, id('school.name'), id('school.shortName'), id('brand.color'), id('brand.logoText')]);
       await this.db.audit(by, 'config.changed', 'school', schoolId, { keys: after.changes.map((c) => c.key).join(', ') });
     }
     return this.get(schoolId);
@@ -212,9 +211,7 @@ export class ConfigService implements OnModuleInit {
       'select name, values, roles from config_templates where id = $1', [templateId])).rows[0];
     if (!t) throw notFound('That template');
     for (const schoolId of schoolIds) {
-      const ent = activeModules(await this.entitlement(schoolId));
-      const values = { ...t.values };
-      if (Array.isArray(values['modules.enabled'])) values['modules.enabled'] = (values['modules.enabled'] as string[]).filter((m) => ent.includes(m));
+      const values = Object.fromEntries(Object.entries(t.values).filter(([k]) => k in SETTINGS_META));
       await this.apply(schoolId, by, { changes: values, note: `Template “${t.name}”` });
       await this.school(schoolId, async (p) => {
         for (const r of t.roles) {
@@ -230,12 +227,13 @@ export class ConfigService implements OnModuleInit {
   }
 
   /** What one role sees: the admin menu, and the app's tabs, cards and buttons, as the school's apps would resolve them. */
-  async preview(schoolId: string, roleId: string): Promise<Pick<EffectiveConfig, 'nav' | 'app' | 'modules' | 'school'>> {
+  async preview(schoolId: string, roleId: string): Promise<Pick<EffectiveConfig, 'menu' | 'app' | 'modules' | 'school'>> {
     const ent = await this.entitlement(schoolId);
     const { cur, role } = await this.school(schoolId, async (p) => ({ cur: await this.values(p), role: (await this.roles(p)).find((r) => r.id === roleId) }));
     if (!role) throw notFound('That role');
-    const c = resolveConfig({ settings: { version: cur.version, values: cur.values, locked: [], updatedAt: null }, entitlement: ent, audience: { permissions: role.permissions } });
-    return { nav: c.nav, app: c.app, modules: c.modules, school: c.school };
+    const live = (await this.db.pool.query<{ status: string }>('select status from schools where id = $1', [schoolId])).rows[0]?.status === 'live';
+    const c = resolveConfig({ settings: { version: cur.version, values: cur.values, locked: [], updatedAt: null }, entitlement: ent, audience: { permissions: role.permissions }, live });
+    return { menu: c.menu, app: c.app, modules: c.modules, school: c.school };
   }
 
   // What schools ask for.
@@ -272,7 +270,10 @@ export class ConfigController {
   async patch(@Me() me: ConsoleUser, @Param('id') id: string, @Body(new ZodPipe(ConfigPatch)) body: ConfigPatch): Promise<SchoolConfig | { pending: true; actionId: string }> {
     const risky = Object.keys(body.changes).filter((k) => SETTINGS_META[k as keyof typeof SETTINGS_META]?.risky);
     if (risky.length) {
-      const a = await this.actions.request(me, { action: 'config.apply', schoolId: id, params: { changes: body.changes, note: body.note, expectedVersion: body.expectedVersion }, dryRun: false });
+      // The approver sees each setting as it is now and as it would become.
+      const now = (await this.config.get(id)).values;
+      const diff = Object.entries(body.changes).map(([key, after]) => ({ key, before: now[key] ?? null, after }));
+      const a = await this.actions.request(me, { action: 'config.apply', schoolId: id, params: { changes: body.changes, note: body.note, expectedVersion: body.expectedVersion, diff }, dryRun: false });
       if (a.status === 'pending_approval') return { pending: true, actionId: a.id };
       return this.config.get(id);
     }

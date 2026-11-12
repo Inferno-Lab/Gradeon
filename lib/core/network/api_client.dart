@@ -124,6 +124,28 @@ class ApiClient {
 
   Future<dynamic> patch(String path, Map<String, dynamic> body) => _send('PATCH', path, body: body);
 
+  /// Any other method (DELETE, PUT), for the few calls that need one.
+  Future<dynamic> send(String method, String path, [Map<String, dynamic>? body]) => _send(method, path, body: body);
+
+  /// Opens the school's event stream (server-sent events) for the signed-in person; the caller reads it line by line.
+  /// An expired token is renewed once first, as for any call.
+  Future<HttpClientResponse> openStream() async {
+    if (_base.isEmpty || _school.isEmpty) throw const AppException('errors.remote_unconfigured');
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final req = await HttpClient().getUrl(_uri('/stream', null)).timeout(_timeout);
+      req.headers
+        ..set('x-school', _school)
+        ..set('accept', 'text/event-stream');
+      final token = _storage.read<String>(StorageKeys.accessToken);
+      if (token != null) req.headers.set('authorization', 'Bearer $token');
+      final res = await req.close().timeout(_timeout);
+      if (res.statusCode == 200) return res;
+      await res.drain<void>();
+      if (res.statusCode != 401 || !await _renew()) throw AppException('errors.network');
+    }
+    throw const AppException('errors.network');
+  }
+
   Uri _uri(String path, Map<String, dynamic>? query) {
     final full = path.startsWith('/v1/') ? path : '/v1/f$path';
     final q = {

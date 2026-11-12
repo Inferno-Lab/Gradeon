@@ -15,6 +15,7 @@ export const PERMISSIONS = [
   'notices.read',
   'notices.write',
   'notices.publish',
+  'notices.pin',
   'approvals.read',
   'approvals.decide',
   'timetable.read',
@@ -62,7 +63,7 @@ export interface PermissionInfo {
 export const PERMISSION_NEEDS: Partial<Record<Permission, string>> = {
   'attendance.read': 'attendance', 'attendance.mark': 'attendance',
   'fees.read': 'fees', 'fees.collect': 'fees', 'fees.waive': 'fees',
-  'notices.read': 'notices', 'notices.write': 'notices', 'notices.publish': 'notices',
+  'notices.read': 'notices', 'notices.write': 'notices', 'notices.publish': 'notices', 'notices.pin': 'notices',
   'timetable.read': 'timetable', 'timetable.edit': 'timetable', 'timetable.publish': 'timetable',
   'homework.read': 'homework', 'homework.write': 'homework',
   'exams.read': 'exams', 'exams.write': 'exams', 'exams.publish': 'exams',
@@ -93,7 +94,8 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'fees.waive', area: 'Fees', label: 'Waive or reduce fees', sensitive: true },
   { key: 'notices.read', area: 'Notices', label: 'See notices' },
   { key: 'notices.write', area: 'Notices', label: 'Write notices' },
-  { key: 'notices.publish', area: 'Notices', label: 'Publish notices to families' },
+  { key: 'notices.publish', area: 'Notices', label: 'Publish notices to families and to the whole school' },
+  { key: 'notices.pin', area: 'Notices', label: 'Pin notices to the top' },
   { key: 'approvals.read', area: 'Approvals', label: 'See the approvals queue' },
   { key: 'approvals.decide', area: 'Approvals', label: 'Approve or decline requests' },
   { key: 'timetable.read', area: 'Timetable', label: 'See the timetable' },
@@ -134,6 +136,14 @@ export interface RoleTemplate {
 
 const ALL: Permission[] = [...PERMISSIONS];
 
+/** The starting roles as the console saves them: the built-in ones stay (they can be renamed and changed), more can be added. */
+export const RoleTemplatesPut = z.array(z.object({
+  key: z.string().trim().regex(/^[a-z][a-z0-9_]{1,23}$/, 'Use 2 to 24 lowercase letters, numbers or _'),
+  name: z.string().trim().min(2, 'Name the role').max(40),
+  description: z.string().trim().max(160).default(''),
+  permissions: z.array(z.enum(PERMISSIONS)),
+})).min(1).max(30);
+
 export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: 'principal', name: 'Principal', description: 'Everything in the school.', permissions: ALL },
   {
@@ -141,7 +151,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     name: 'Office staff',
     description: 'Admissions, people, notices and the timetable.',
     permissions: [
-      'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write',
+      'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write', 'notices.pin',
       'approvals.read', 'timetable.read', 'timetable.edit', 'reports.read', 'admissions.read', 'admissions.write', 'messages.read', 'messages.write',
       'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write', 'library.read', 'library.write', 'transport.read', 'transport.write', 'gallery.read', 'gallery.write',
     ],

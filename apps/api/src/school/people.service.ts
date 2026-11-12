@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
+import { commitImport, exportRows, newId, previewImport, toCsv } from '@gradeon/db';
 import {
-  PERMISSIONS, initials,
+  PERMISSIONS, initials, type ImportResult,
   type EnquiryCreate, type EnquiryEnrol, type EnquiryPatch, type EnquiryRow, type EnquiryStage, type RoleRow, type StaffCreate, type StaffPatch, type StaffRow, type StudentDetail,
 } from '@gradeon/contracts';
 import { hashPassword, randomToken } from '@gradeon/security';
@@ -18,6 +18,7 @@ type User = { id: string; name: string };
 
 interface StaffSql {
   id: string; name: string; email: string | null; phone: string | null; status: string; designation: string; department: string | null; joined_on: string | null; max_periods: number; periods: string;
+  invited: boolean; signed_in: boolean;
 }
 
 /** Staff, the admissions pipeline and the roles that decide what each person may do. */
@@ -41,6 +42,7 @@ export class PeopleService {
   async staff(t: TenantCtx, q: { query?: string; id?: string } = {}): Promise<StaffRow[]> {
     const { rows } = await t.pool.query<StaffSql>(
       `select u.id, u.name, u.email, u.phone, u.status, s.designation, s.department, s.joined_on::text, s.max_periods_per_week max_periods,
+         u.invited_at is not null or u.password_hash is not null invited, u.last_login_at is not null signed_in,
          (select count(*) from timetable_slots ts where ts.teacher_id = u.id) periods
        from users u join staff s on s.user_id = u.id
        where ($1::text is null or u.id = $1) and ($2::text is null or u.name ilike '%' || $2 || '%' or s.designation ilike '%' || $2 || '%' or s.department ilike '%' || $2 || '%')
@@ -56,6 +58,7 @@ export class PeopleService {
       subjects: subs.rows.filter((s) => s.user_id === r.id).map((s) => ({ id: s.id, name: s.name })),
       roles: roles.rows.filter((x) => x.user_id === r.id).map((x) => ({ id: x.id, name: x.name })),
       periodsPerWeek: Number(r.periods), maxPeriods: r.max_periods, status: r.status === 'active' ? 'active' : 'inactive', joinedOn: r.joined_on,
+      access: r.signed_in ? 'signed_in' : r.invited ? 'invited' : 'none',
     }));
   }
 
@@ -102,6 +105,10 @@ export class PeopleService {
     const client = await t.pool.connect();
     try {
       await client.query('begin');
+      if (body.name || body.email || body.phone) {
+        // A changed email is how they sign in from now on.
+        await client.query('update users set name = coalesce($2, name), email = coalesce($3, email), phone = coalesce($4, phone) where id = $1', [id, body.name ?? null, body.email ?? null, body.phone ?? null]);
+      }
       if (body.designation !== undefined || body.department !== undefined) {
         await client.query('update staff set designation = coalesce($2, designation), department = case when $3 then $4 else department end where user_id = $1',
           [id, body.designation ?? null, body.department !== undefined, body.department ?? null]);
@@ -123,6 +130,7 @@ export class PeopleService {
       await client.query('commit');
     } catch (err) {
       await client.query('rollback').catch(() => undefined);
+      if ((err as { code?: string }).code === '23505') throw new ApiError('validation', 'Someone already uses that email or phone number.', { fields: { email: 'Someone already uses that email or phone number.' } });
       throw err;
     } finally {
       client.release();
@@ -130,6 +138,43 @@ export class PeopleService {
     if (body.roleId || body.status === 'inactive') await this.auth.bumpVersion(t, id);
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'staff.changed', entity: 'staff', entityId: id, detail: Object.fromEntries(Object.entries(body).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])) });
     return (await this.staff(t, { id }))[0]!;
+  }
+
+  /** A new first password for someone who has not signed in yet (lost the email, or was brought in by an import). */
+  async inviteOne(t: TenantCtx, user: User, id: string): Promise<{ to: string }> {
+    const p = (await t.pool.query<{ name: string; email: string | null; phone: string | null; status: string; last_login_at: string | null }>(
+      "select name, email, phone, status, last_login_at from users where id = $1 and kind = 'staff'", [id])).rows[0];
+    if (!p) throw notFound('That person');
+    if (p.status !== 'active') throw new ApiError('validation', 'Switch them on first.');
+    if (p.last_login_at) throw new ApiError('validation', `${p.name} has signed in already. If they forgot their password, they reset it from the sign-in page.`);
+    if (!p.email && !p.phone) throw new ApiError('validation', 'Add their email or phone first: there is nowhere to send the invite.');
+    const temp = tempPassword();
+    await t.pool.query('update users set password_hash = $2, invited_at = now() where id = $1', [id, await hashPassword(temp)]);
+    await this.messenger.notify(t, 'staff.invite', [{ to: p.phone ?? p.email ?? '', email: p.email, vars: { name: p.name.split(' ')[0]!, password: temp } }]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'staff.invited', entity: 'staff', entityId: id, detail: { name: p.name } });
+    return { to: p.email ?? p.phone ?? '' };
+  }
+
+  /** Staff from a sheet, through the one import engine; they are invited from the Staff page once they are in. */
+  async importStaff(t: TenantCtx, csv: string, user: User): Promise<ImportResult> {
+    const input = { kind: 'staff', csv, fileName: 'Staff page' };
+    const p = await previewImport(t.pool, input);
+    if (p.missing.length) throw new ApiError('validation', `The first row must name the columns. Nothing is matched to ${p.missing.join(', ')}.`);
+    const limit = t.info.entitlement.limits.staff;
+    const count = Number((await t.pool.query<{ n: string }>("select count(*) n from users where kind = 'staff' and status = 'active'")).rows[0]!.n);
+    if (limit && count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} staff accounts and this sheet would make ${count + p.counts.create}. Ask Gradeon to raise the limit.`);
+    const errors = p.rows.filter((r) => r.errors.length).map((r) => ({ line: r.line, message: r.errors.join(' ') }));
+    if (p.counts.create + p.counts.update === 0) return { created: 0, updated: 0, skipped: errors.length, errors };
+    const batch = await commitImport(t.pool, input, user.name);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'staff.imported', entity: 'staff', detail: { created: batch.created, updated: batch.updated, skipped: batch.skipped } });
+    return { created: batch.created, updated: batch.updated, skipped: errors.length, errors };
+  }
+
+  /** Everyone on staff, in the import sheet's columns, so it can go back in after editing. */
+  async exportStaff(t: TenantCtx): Promise<string> {
+    const rows = await exportRows(t.pool, 'staff');
+    const cols = rows[0] ? Object.keys(rows[0]) : [];
+    return toCsv([cols, ...rows.map((r) => cols.map((c) => r[c] ?? ''))]);
   }
 
   // Admissions
@@ -166,13 +211,19 @@ export class PeopleService {
     const cur = await this.enquiry(t, id);
     if (cur.stage === 'enrolled') throw new ApiError('conflict', 'This child is already enrolled. Change them from the Students page.');
     if (body.stage === 'enrolled') throw new ApiError('validation', 'Use “Enrol” to turn an application into a student.');
+    const stages = await this.settings.value<string[]>(t, 'admissions.stages', ['applied', 'test', 'offer']);
+    if (body.stage && body.stage !== cur.stage && !['enquiry', 'declined', ...stages].includes(body.stage)) throw new ApiError('validation', 'Your school does not use that stage.');
     const stage = body.stage ?? cur.stage;
     if (stage === 'test' && !(body.testOn ?? cur.testOn)) throw new ApiError('validation', 'Pick the day of the entrance test.', { fields: { testOn: 'Pick the day of the test.' } });
-    await t.pool.query('update enquiries set stage = $2, test_on = $3, note = $4, updated_at = now() where id = $1', [id, stage, stage === 'test' ? (body.testOn ?? cur.testOn) : (body.testOn === undefined ? cur.testOn : body.testOn), body.note ?? cur.note]);
+    await t.pool.query(
+      `update enquiries set stage = $2, test_on = $3, note = $4, child_name = coalesce($5, child_name), grade_sought = coalesce($6, grade_sought), guardian_name = coalesce($7, guardian_name),
+         phone = coalesce($8, phone), email = case when $9::text is null then email else nullif($9, '') end, source = coalesce($10, source), updated_at = now() where id = $1`,
+      [id, stage, stage === 'test' ? (body.testOn ?? cur.testOn) : (body.testOn === undefined ? cur.testOn : body.testOn), body.note ?? cur.note,
+        body.childName ?? null, body.gradeSought ?? null, body.guardianName ?? null, body.phone ?? null, body.email ?? null, body.source ?? null]);
     if (body.stage === 'offer' && cur.stage !== 'offer' && cur.phone) {
       await this.messenger.notify(t, 'admissions.offer', [{ to: cur.phone, email: cur.email, vars: { child: cur.childName } }]);
     }
-    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'admission.moved', entity: 'enquiry', entityId: id, detail: { child: cur.childName, to: stage } });
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: stage === cur.stage ? 'admission.changed' : 'admission.moved', entity: 'enquiry', entityId: id, detail: { child: cur.childName, to: stage } });
     return this.enquiry(t, id);
   }
 

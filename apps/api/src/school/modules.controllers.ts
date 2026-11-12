@@ -1,12 +1,14 @@
-import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import {
   DataRequestCreate, DataRequestDecision, EnquiryCreate, EnquiryEnrol, EnquiryPatch, EventSave, ExamCreate, ExamMarksPut, HomeworkCreate, HomeworkMarks, InvoiceListQuery, StaffCreate, StaffPatch,
-  ThreadCreate, ThreadPatch, ThreadReply,
-  type DataRequestRow, type EnquiryRow, type EventRow, type ExamMarksView, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
+  ThreadCreate, ThreadPatch, ThreadReply, ReportQuery, StudentImport, istToday,
+  type DataRequestRow, type EnquiryRow, type EventReply, type EventRow, type ExamMarksView, type ImportResult, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
   type ReceiptRow, type ReportData, type ReportInfo, type RoleRow, type StaffRow, type StudentDetail, type ThreadDetail, type ThreadRow,
 } from '@gradeon/contracts';
 import { z } from 'zod';
 import { ZodPipe } from '@gradeon/nest-kit';
+import { templateXlsx } from '@gradeon/db';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { LearningService } from './learning.service.js';
@@ -15,6 +17,8 @@ import { PeopleService } from './people.service.js';
 
 const ClassFilter = z.object({ classId: z.string().optional(), subjectId: z.string().optional() });
 const Q = z.object({ query: z.string().trim().max(80).optional() });
+
+const Reopen = z.object({ note: z.string().trim().min(5, 'Say what is being corrected; families are told.').max(200) });
 
 @Controller('v1')
 @Core()
@@ -41,6 +45,11 @@ export class LearningController {
     return this.learning.homeworkDetail(t, id);
   }
 
+  @Put('homework/:id') @RequireModule('homework') @Require('homework.write')
+  updateHomework(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(HomeworkCreate)) b: HomeworkCreate): Promise<HomeworkDetail> {
+    return this.learning.updateHomework(t, u, id, b);
+  }
+
   @Put('homework/:id/marks') @RequireModule('homework') @Require('homework.write')
   markHomework(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(HomeworkMarks)) b: HomeworkMarks): Promise<HomeworkDetail> {
     return this.learning.markHomework(t, u, id, b);
@@ -59,6 +68,16 @@ export class LearningController {
   @Post('exams') @RequireModule('exams') @Require('exams.write')
   createExam(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(ExamCreate)) b: ExamCreate): Promise<ExamRow> {
     return this.learning.createExam(t, u, b);
+  }
+
+  @Put('exams/:id') @RequireModule('exams') @Require('exams.write')
+  updateExam(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(ExamCreate)) b: ExamCreate): Promise<ExamRow> {
+    return this.learning.updateExam(t, u, id, b);
+  }
+
+  @Post('exams/:id/reopen') @HttpCode(200) @RequireModule('exams') @Require('exams.publish')
+  reopen(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string, @Body(new ZodPipe(Reopen)) b: z.infer<typeof Reopen>): Promise<ExamRow> {
+    return this.learning.reopenExam(t, u, id, b.note);
   }
 
   @Get('exams/:id/marks') @RequireModule('exams') @Require('exams.read')
@@ -100,6 +119,26 @@ export class PeopleController {
   @Post('staff') @Require('staff.write')
   createStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(StaffCreate)) b: StaffCreate): Promise<StaffRow> {
     return this.people.createStaff(t, u, b);
+  }
+
+  @Get('staff/template') @Require('staff.write') @Header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  staffTemplate(): Buffer {
+    return templateXlsx('staff');
+  }
+
+  @Post('staff/import') @HttpCode(200) @Require('staff.write')
+  importStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(StudentImport)) b: StudentImport): Promise<ImportResult> {
+    return this.people.importStaff(t, b.csv, u);
+  }
+
+  @Get('staff/export') @Require('staff.read') @Header('content-type', 'text/csv; charset=utf-8')
+  exportStaff(@Tenant() t: TenantCtx): Promise<string> {
+    return this.people.exportStaff(t);
+  }
+
+  @Post('staff/:id/invite') @HttpCode(200) @Require('staff.write')
+  inviteStaff(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Param('id') id: string): Promise<{ to: string }> {
+    return this.people.inviteOne(t, u, id);
   }
 
   @Patch('staff/:id') @Require('staff.write')
@@ -145,24 +184,41 @@ export class OfficeController {
     return this.office.invoiceList(t, q);
   }
 
+  /** The invoice list as a spreadsheet, with the same filters as on screen, every page of it. */
+  @Get('fees/invoice-list/export') @RequireModule('fees') @Require('fees.read') @Header('content-type', 'text/csv; charset=utf-8') @Header('content-disposition', 'attachment; filename="invoices.csv"')
+  async invoiceExport(@Tenant() t: TenantCtx, @Query(new ZodPipe(InvoiceListQuery)) q: InvoiceListQuery): Promise<string> {
+    const rows: InvoiceListRow[] = [];
+    for (let page = 1; page <= 200; page++) {
+      const r = await this.office.invoiceList(t, { ...q, page, limit: 100 });
+      rows.push(...r.items);
+      if (rows.length >= r.total || !r.items.length) break;
+    }
+    const c = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    return ['student,class,head,fee,amount,waived,paid,outstanding,due_on,status', ...rows.map((r) => [r.studentName, r.className, r.head, r.title, r.amount, r.waived, r.paid, r.outstanding, r.dueOn, r.status].map(c).join(','))].join('\n');
+  }
+
   @Get('fees/receipts') @RequireModule('fees') @Require('fees.read')
-  receipts(@Tenant() t: TenantCtx, @Query(new ZodPipe(Q)) q: z.infer<typeof Q>): Promise<ReceiptRow[]> {
-    return this.office.receipts(t, q.query);
+  receipts(@Tenant() t: TenantCtx, @Query(new ZodPipe(Q.extend({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(25) }))) q: z.infer<typeof Q> & { page: number; limit: number }): Promise<Paged<ReceiptRow>> {
+    return this.office.receipts(t, q.query, q.page, q.limit);
   }
 
   @Get('reports') @Require('reports.read')
-  reports(): ReportInfo[] {
-    return this.office.reportList();
+  reports(@Tenant() t: TenantCtx): Promise<ReportInfo[]> {
+    return this.office.reportList(t);
   }
 
   @Get('reports/:id') @Require('reports.read')
-  report(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<ReportData> {
-    return this.office.report(t, id);
+  report(@Tenant() t: TenantCtx, @Param('id') id: string, @Query(new ZodPipe(ReportQuery)) q: ReportQuery): Promise<ReportData> {
+    return this.office.report(t, id, q);
   }
 
-  @Get('reports/:id/csv') @Require('reports.read') @Header('content-type', 'text/csv; charset=utf-8') @Header('content-disposition', 'attachment; filename="report.csv"')
-  async reportCsv(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<string> {
-    return this.office.csv(await this.office.report(t, id));
+  @Get('reports/:id/csv') @Require('reports.read') @Header('content-type', 'text/csv; charset=utf-8')
+  async reportCsv(@Tenant() t: TenantCtx, @Param('id') id: string, @Query(new ZodPipe(ReportQuery)) q: ReportQuery, @Res({ passthrough: true }) reply: FastifyReply): Promise<string> {
+    const r = await this.office.report(t, id, q);
+    // Named after the report, what it covers and the day: "Low attendance - Class 8 A - 2026-11-11.csv".
+    const name = `${r.title} - ${r.scope} - ${istToday()}.csv`.replace(/[^\w ,.-]+/g, ' ');
+    reply.header('content-disposition', `attachment; filename="${name}"`);
+    return this.office.csv(r);
   }
 
   @Get('messages') @RequireModule('chat') @Require('messages.read')
@@ -173,6 +229,11 @@ export class OfficeController {
   @Post('messages') @RequireModule('chat') @Require('messages.write')
   startThread(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(ThreadCreate)) b: ThreadCreate): Promise<ThreadDetail> {
     return this.office.startThread(t, u, b);
+  }
+
+  @Get('messages/staff') @RequireModule('chat') @Require('messages.write')
+  async messageStaff(@Tenant() t: TenantCtx): Promise<{ id: string; name: string }[]> {
+    return (await t.pool.query<{ id: string; name: string }>("select distinct u.id, u.name from users u join user_roles ur on ur.user_id = u.id join roles r on r.id = ur.role_id where u.status = 'active' and u.kind = 'staff' and r.permissions ? 'messages.write' order by u.name")).rows;
   }
 
   @Get('messages/:id') @RequireModule('chat') @Require('messages.read')
@@ -198,6 +259,11 @@ export class OfficeController {
   @Post('events') @RequireModule('events') @Require('events.write')
   createEvent(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser, @Body(new ZodPipe(EventSave)) b: EventSave): Promise<EventRow> {
     return this.office.saveEvent(t, u, null, b);
+  }
+
+  @Get('events/:id/replies') @RequireModule('events') @Require('events.read')
+  eventReplies(@Tenant() t: TenantCtx, @Param('id') id: string): Promise<EventReply[]> {
+    return this.office.eventReplies(t, id);
   }
 
   @Put('events/:id') @RequireModule('events') @Require('events.write')

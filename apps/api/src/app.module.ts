@@ -12,13 +12,16 @@ import { AttendanceService } from './school/attendance.service.js';
 import { DashboardService } from './school/dashboard.service.js';
 import { FeesService } from './school/fees.service.js';
 import {
-  ApprovalsController, AttendanceController, ClassesController, DashboardController, FeesController, HealthController, SettingsController, StudentsController, TimetableController,
+  ApprovalsController, NoticesController, AttendanceController, ClassesController, DashboardController, FeesController, HealthController, SettingsController, StudentsController, TimetableController,
 } from './school/school.controllers.js';
 import { FamilyController } from './school/family.controller.js';
 import { FamilyService } from './school/family.service.js';
 import { LearningService } from './school/learning.service.js';
 import { LearningController, OfficeController, PeopleController } from './school/modules.controllers.js';
 import { OfficeService } from './school/office.service.js';
+import { StreamService } from './school/stream.service.js';
+import { ChatService } from './school/chat.service.js';
+import { NoticesService } from './school/notices.service.js';
 import { PeopleService } from './school/people.service.js';
 import { StudentsService } from './school/students.service.js';
 import { AuditService, Messenger, SettingsService } from './school/support.js';
@@ -67,7 +70,7 @@ export class AppModule {
     return {
       module: AppModule,
       controllers: [
-        AuthController, MeController, ClassesController, StudentsController, AttendanceController, FeesController, ApprovalsController,
+        AuthController, MeController, ClassesController, StudentsController, AttendanceController, FeesController, ApprovalsController, NoticesController,
         TimetableController, DashboardController, SettingsController, HealthController, LearningController, PeopleController, OfficeController, FamilyController, ErrorsController, ChangeRequestsController, SetupController, MovingInController,
         HooksController, FilesController, SchoolLogoController, ChannelsController, FeesOnlineController, ReportCardsController, LibraryController, TransportController, GalleryController, YearController, FamilyCampusController, FinderController,
       ],
@@ -77,7 +80,7 @@ export class AppModule {
         { provide: POOLS, useValue: pools },
         { provide: OWNS, useValue: !shared },
         Shutdown,
-        TenantService, AuthService, AuditService, Messenger, SettingsService, StudentsService, AttendanceService, FeesService, ApprovalsService, TimetableService, DashboardService, MetricsService, LearningService, PeopleService, OfficeService, FamilyService, SweepService, ErrorReports, SetupService, MovingInService,
+        TenantService, AuthService, AuditService, Messenger, SettingsService, StudentsService, AttendanceService, FeesService, ApprovalsService, TimetableService, DashboardService, MetricsService, LearningService, PeopleService, OfficeService, FamilyService, StreamService, ChatService, NoticesService, SweepService, ErrorReports, SetupService, MovingInService,
         HubService, FilesService, PaymentsService, DocumentsService, LibraryService, TransportService, GalleryService, YearService,
         // Order matters: find the school, then the person, then what they may do.
         { provide: APP_GUARD, useClass: TenantGuard },

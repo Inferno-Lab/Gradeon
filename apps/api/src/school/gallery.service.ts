@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AlbumInput, AlbumRow, PhotoRow } from '@gradeon/contracts';
+import type { AlbumInput, AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { ApiError, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -70,6 +70,30 @@ export class GalleryService {
       .filter((f) => f.status === 'clean' || !forFamily)
       .map((f) => ({ ...f, students: tags.filter((x) => x.file_id === f.id).map((x) => ({ id: x.student_id, name: x.name, consent: x.consent })) }))
       .filter((p) => !forFamily || !ask || p.students.every((s) => s.consent === true));
+  }
+
+  /** A family reports a photo: the office sees it here and removes the photo or keeps it, with why. */
+  async report(t: TenantCtx, user: User, fileId: string, reason: string): Promise<void> {
+    const f = (await t.pool.query("select 1 from files where id = $1 and kind = 'gallery' and deleted_at is null", [fileId])).rowCount;
+    if (!f) throw notFound('That photo');
+    await t.pool.query('insert into gallery_reports (id, file_id, user_id, reason) values ($1,$2,$3,$4)', [newId('grp'), fileId, user.id, reason]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'gallery.photo.reported', entity: 'file', entityId: fileId, detail: { reason } });
+  }
+
+  async reports(t: TenantCtx): Promise<GalleryReportRow[]> {
+    const { rows } = await t.pool.query(
+      `select r.id, r.file_id, f.owner_id album_id, a.title album, u.name by_name, r.reason, r.created_at from gallery_reports r join files f on f.id = r.file_id
+       left join gallery_albums a on a.id = f.owner_id left join users u on u.id = r.user_id where r.resolved_at is null and f.deleted_at is null order by r.created_at`);
+    return rows.map((r) => ({ id: r.id, fileId: r.file_id, albumId: r.album_id, album: r.album, by: r.by_name ?? 'A family', reason: r.reason, createdAt: r.created_at.toISOString() }));
+  }
+
+  /** Removes the reported photo, or keeps it; either way every open report of that photo is closed. */
+  async resolve(t: TenantCtx, user: User, reportId: string, remove: boolean): Promise<void> {
+    const r = (await t.pool.query<{ file_id: string }>('select file_id from gallery_reports where id = $1', [reportId])).rows[0];
+    if (!r) throw notFound('That report');
+    if (remove) await t.pool.query('update files set deleted_at = now() where id = $1', [r.file_id]);
+    await t.pool.query('update gallery_reports set resolved_at = now(), resolution = $2 where file_id = $1 and resolved_at is null', [r.file_id, remove ? 'removed' : 'kept']);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: remove ? 'gallery.photo.removed' : 'gallery.report.kept', entity: 'file', entityId: r.file_id });
   }
 
   async tag(t: TenantCtx, user: User, fileId: string, studentIds: string[]): Promise<void> {

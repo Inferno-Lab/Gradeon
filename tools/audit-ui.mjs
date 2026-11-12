@@ -5,6 +5,7 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { auditPage } from './lib/audit.mjs';
+import { adminPaths as pages, consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -31,15 +32,19 @@ async function consoleSession() {
   return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
-const adminPaths = ['', '/students', '/timetable', '/settings', '/setup', '/moving-in', '/attendance', '/fees', '/notices', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/library', '/transport', '/gallery', '/year', '/online-payments', '/design', '/nope'];
+const adminPaths = [...pages, '/design', '/nope'];
 const jobs = [];
+// Sign-ins last 15 minutes and a full run takes longer: each pass signs in again.
+const fresh = [];
 if (only !== 'console') {
   const key = await adminSession();
+  fresh.push(async () => key.splice(0, 3, ...(await adminSession())));
   for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const c = await consoleSession();
-  const paths = ['/', `/schools/${c.school}`, '/onboarding', '/onboarding/new', '/cells', '/releases', '/migrations', '/integrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/requests', '/modules', '/support', '/inbox', '/billing', '/compliance', '/team', '/nope'];
+  fresh.push(async () => c.key.splice(0, 3, ...(await consoleSession()).key));
+  const paths = consolePaths(c.school);
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
 
@@ -47,6 +52,7 @@ const browser = await chromium.launch();
 let problems = 0;
 for (const dark of args.includes('--light') ? [false] : args.includes('--dark') ? [true] : [false, true]) {
   for (const [w, h] of SIZES) {
+    for (const f of fresh) await f();
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: dark ? 'dark' : 'light', reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     for (const j of jobs) {

@@ -59,6 +59,10 @@ export class YearService implements OnModuleInit {
     const y = (await t.pool.query<{ status: string; starts_on: Date }>('select status, starts_on from academic_years where id = $1', [id])).rows[0];
     if (!y) throw notFound('That year');
     if (y.status !== 'draft') throw new ApiError('conflict', 'Only a drafted year can be started.');
+    // Starting archives the year students are in: they are promoted into the new one first.
+    if (!(await t.pool.query('select 1 from promotion_runs where to_year = $1 and undone_at is null', [id])).rowCount) {
+      throw new ApiError('conflict', 'Promote students into this year first. Starting it archives the year they are in now.');
+    }
     const old = (await t.pool.query<{ id: string; starts_on: Date }>("select id, starts_on from academic_years where status = 'current' limit 1")).rows[0];
     const client = await t.pool.connect();
     try {
@@ -107,7 +111,7 @@ export class YearService implements OnModuleInit {
   async promote(t: TenantCtx, user: User, b: PromotionInput): Promise<{ runId: string; moved: number; left: number }> {
     const to = (await t.pool.query<{ status: string; ends_on: Date }>('select status, ends_on from academic_years where id = $1', [b.toYear])).rows[0];
     if (!to) throw notFound('That year');
-    if (to.status === 'archived') throw new ApiError('conflict', 'Students cannot be promoted into an archived year.');
+    if (to.status !== 'draft') throw new ApiError('conflict', 'Draft the next year first: students are promoted into it.');
     const from = (await t.pool.query<{ id: string; ends_on: string }>("select id, ends_on::text from academic_years where status = 'current' limit 1")).rows[0];
     const map = new Map(b.moves.map((m) => [m.fromClassId, m.toClassId]));
     const students = (await t.pool.query<{ id: string; class_id: string }>("select id, class_id from students where status = 'active' and class_id = any($1)", [[...map.keys()]])).rows;

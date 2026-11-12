@@ -17,10 +17,10 @@ void main() {
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.resetPhysicalSize);
     AppConfig.privacyNotice = List.filled(40, 'The school keeps marks and attendance for five years.').join(' ');
-    SchoolConfig.photoConsent = true;
+    SchoolConfig.debugSettings = {'privacy.photoConsent': true};
     addTearDown(() {
       AppConfig.privacyNotice = '';
-      SchoolConfig.photoConsent = false;
+      SchoolConfig.debugSettings = {};
     });
     await tester.pumpWidget(testApp(home: const Scaffold(body: SizedBox.expand())));
     showSheet<void>(const PrivacySheet(consent: true)).ignore();
