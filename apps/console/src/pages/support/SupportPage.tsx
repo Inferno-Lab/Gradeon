@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard, Select } from '@gradeon/web-ui';
+import { EmptyCard, Select, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -21,7 +21,7 @@ export function SupportPage() {
   if (!app.can('support.access')) {
     return (
       <Page title="Support sessions" sub="Looks inside schools to help their staff">
-        <div><EmptyCard title="Support sessions" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Support sessions are for the support team" body="Ask a super admin to add the Support role to your account if you need to look inside a school." /></div>
+        <div><EmptyCard title="Support sessions" chip={{ text: 'Not for your role', tone: 'a' }} icon="lock" heading="Support sessions are for the support team" body="Ask a super admin to add the Support role to your account if you need to look inside a school." /></div>
       </Page>
     );
   }
@@ -39,7 +39,7 @@ export function SupportPage() {
             <Select compact aria-label="Who" value={who} onChange={setWho} options={[{ value: '', label: 'Everyone' }, ...people.map((p) => ({ value: p, label: p }))]} />
           </div>
         )}
-        {all.length === 0 && <EmptyCard title="Sessions" chip={{ text: '0 so far', tone: 'v' }} scene="envelope" heading="No support sessions yet" body="Open a school and press Support session to look inside it. Each session, its reason and who started it are listed here." />}
+        {all.length === 0 && <EmptyState scene="support" onAction={() => app.go('/')} />}
         {all.length > 0 && rows.length === 0 && <div className="help">No session matches.</div>}
         {rows.map((r) => (
           <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>

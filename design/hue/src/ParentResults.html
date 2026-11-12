@@ -1,0 +1,35 @@
+<div class="hue s-emerald phone">
+  <div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div>
+  <header class="phead">
+    <div class="ptop"><button class="pib ond" aria-label="Back">[[ib:caret-left]]</button><h1>Results</h1><span class="sp"></span><span class="chip ond"><span class="av sm sp sp-rose">AS</span>Aarav[[ib:caret-down]]</span></div>
+    <div class="rw" style="gap:18px">
+      <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true" style="flex:none"><circle cx="52" cy="52" r="42" fill="none" stroke-width="10" style="stroke:var(--deep3)"/><circle cx="52" cy="52" r="42" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="232.2 263.9" transform="rotate(-90 52 52)" style="stroke:var(--bright)"/><text x="52" y="60" text-anchor="middle" style="fill:var(--on-deep);font:700 24px 'Mona Sans';font-stretch:112%">88%</text></svg>
+      <div class="col" style="gap:6px">
+        <span class="lbl" style="color:var(--on-deep2)">Unit test 2 · October</span>
+        <b class="d" style="font-size:28px;line-height:32px">105 of 120</b>
+        <div class="rw" style="gap:6px;flex-wrap:wrap"><span class="tag ptag" style="background:var(--deep2);color:var(--on-deep)">Rank 6 of 32</span><span class="tag ptag" style="background:var(--deep2);color:var(--bright)">[[ib:trend-up]]Up 4%</span></div>
+      </div>
+    </div>
+  </header>
+  <div class="sheet rise">
+    <div class="pb" style="padding-top:20px">
+      <section class="pcard" style="gap:12px">
+        <span class="ph2">By subject</span>
+        <sc-for list="{{subs}}" as="s" hint-placeholder-count="6">
+          <div class="{{s.cls}}" style="display:grid;grid-template-columns:116px 1fr 44px;gap:12px;align-items:center;min-height:24px;font-size:15px"><span>{{s.n}}</span><span class="bar"><i style="width:{{s.w}}%;background:var(--c)"></i></span><b class="num" style="text-align:right">{{s.m}}</b></div>
+        </sc-for>
+      </section>
+      <section class="pcard" style="flex-direction:row;gap:12px">
+        <span class="tile">[[if:quotes]]</span>
+        <span class="grow" style="font-size:15px;line-height:22px">Aarav explains his working clearly. More practice with word problems will lift Maths further.<small class="t2" style="display:block;font-size:13px;line-height:18px;margin-top:4px">Ms Kavita Iyer, class teacher</small></span>
+      </section>
+    </div>
+  </div>
+  <nav class="tabs"><a class="on">[[if:@home]]Home</a><a>[[i:@notices]]Notices</a><a>[[i:@fees]]Fees</a><a>[[i:@messages]]Chat</a><a>[[i:@profile]]Profile</a></nav>
+</div>
+<script>
+renderVals() {
+  const S = [["Maths", "blue", 18], ["Science", "teal", 17], ["English", "violet", 19], ["Hindi", "orange", 16], ["Marathi", "pink", 17], ["Social science", "amber", 18]];
+  return { subs: S.map(([n, k, m]) => ({ n, cls: "sp-" + k, m: m + "/20", w: m * 5 })) };
+}
+</script>

@@ -5,7 +5,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -56,10 +56,10 @@ class TimetableView extends GetView<TimetableController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'timetable.empty',
             emptyBody: 'timetable.empty_body',
-            emptyArt: EmptyArt.clock,
+            emptyArt: EmptyArt.timetable,
             emptyHint: 'timetable.empty_hint',
             child: day == null || day.periods.isEmpty
-                ? const EmptyState(art: EmptyArt.calendar, title: 'timetable.free_day', body: 'timetable.free_day_body')
+                ? const EmptyState(art: EmptyArt.timetable, title: 'timetable.free_day', body: 'timetable.free_day_body')
                 : _Timeline(controller: controller, day: day),
           ),
         ],
@@ -118,7 +118,7 @@ class _Timeline extends StatelessWidget {
               top: y(now) - 9,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(7)),
                 child: Text(clockOf(now), style: context.type.mono.copyWith(color: c.chalk)),
               ),
             ),
@@ -142,7 +142,7 @@ class _Block extends StatelessWidget {
     if (period.kind != PeriodKind.klass) {
       final mins = minutesOf(period.end) - minutesOf(period.start);
       return Hatch(
-        radius: BorderRadius.circular(14),
+        radius: BorderRadius.circular(12),
         background: c.paper2,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -162,7 +162,7 @@ class _Block extends StatelessWidget {
     final teacher = controller.teachers[period.teacherId];
     Widget block = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: pigment.fill, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Expanded(

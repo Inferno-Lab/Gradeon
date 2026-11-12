@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { dashboardPieces } from '@gradeon/config-engine';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
-import { Dialog, EmptyCard, IC, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
-import { DashboardView } from './dashboard.view';
+import { TodayView } from './TodayView';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { PhoneDashboard } from '../phone/PhoneDashboard';
 
@@ -15,8 +15,8 @@ const RANGES: [string, number][] = [['Today', 1], ['This week', 6]];
 const TABS: [string, 'attendance' | 'fees' | 'homework', string][] = [['Attendance', 'attendance', 'attendance.read'], ['Fees', 'fees', 'fees.read'], ['Homework', 'homework', 'homework.read']];
 const KIND_WORD: Record<string, [string, string]> = { leave: ['leave request', 'leave requests'], fee_waiver: ['fee waiver', 'fee waivers'], notice: ['notice', 'notices'], admission: ['admission', 'admissions'], photo: ['new photo', 'new photos'], receipt_cancel: ['receipt to cancel', 'receipts to cancel'] };
 const H = 236;
-const UP = 'M7 17L17 7M9 7h8v8';
-const DOWN = 'M7 7l10 10M17 9v8H9';
+const UP = 'upRight';
+const DOWN = 'downRight';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${Math.round(n / 1000)}k`);
 /** A round top for the chart so the gridlines fall on friendly numbers. */
@@ -91,7 +91,7 @@ function DashboardDesktop() {
         n: dense ? (i % 3 === 0 || p.isToday ? String(Number(p.date.slice(8))) : '') : p.label,
         v: fmt(x), full: kind === 'attendance' ? `${p.date}` : (p as { full: string }).full ?? p.date, prev: prev !== null ? fmt(prev) : '',
         h: Math.max(6, (x / max) * H), gh: prev !== null ? Math.max(6, (prev / max) * H) : 0,
-        c: 'var(--v2)', today: p.isToday ? 'today' : '',
+        c: 'var(--brand-line)', today: p.isToday ? 'today' : '',
       };
     });
     const grid = [0, 1, 2, 3, 4].map((g) => ({ b: 30 + (g / 4) * H, l: kind === 'fees' ? (g === 0 ? '0' : money((max / 4) * g)) : `${(max / 4) * g}%` }));
@@ -116,7 +116,9 @@ function DashboardDesktop() {
     const me = tintFor(app.user.name);
     const t = d.timeline;
     return {
-      ...chrome, goto: app.go, hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
+      ...chrome, goto: app.go, money,
+      remind: () => void app.api.attendance.remind().then(() => say('Reminders sent to the class teachers.')).catch((e: Error) => say(e.message, 'bad')),
+      hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
       has: { attendance: has('attendance') && may('attendance.read'), fees: has('fees') && may('fees.read'), chat: has('chat') && may('messages.read') }, showChart: tabsOn.length > 0,
       approvalKinds: (() => {
         const by = new Map<string, number>();
@@ -141,7 +143,7 @@ function DashboardDesktop() {
       rangeOpen, rangeLabel: RANGES[range]![0], setRangeOpen: (o: boolean) => { setRangeOpen(o); setNewOpen(false); },
       ranges: RANGES.map((r, i) => ({ t: r[0], on: i === range, sel: i === range ? 'true' : 'false', d: 50 + i * 45, pick: () => { setRange(i); setRangeOpen(false); } })),
       newOpen, setNewOpen: (o: boolean) => { setNewOpen(o); setRangeOpen(false); },
-      news: pieces.filter((p) => p.kind === 'new').map((n, i) => ({ t: n.label, ic: IC[(n.icon ?? 'dash') as keyof typeof IC], k: n.keys ?? '', d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n.to ?? '/'); } })),
+      news: pieces.filter((p) => p.kind === 'new').map((n, i) => ({ t: n.label, ic: ((n.icon && n.icon in IC ? n.icon : 'dashboard') as PageIcon), k: n.keys ?? '', d: 50 + i * 45, go: () => { setNewOpen(false); app.go(n.to ?? '/'); } })),
       dayLine: d.day.isToday ? `${d.day.label} · ${d.day.clock}` : `${d.day.label} · last school day`,
       kPresent: rollDigits(inr(d.present.value)), totalStudents: inr(d.present.total),
       presentTrend: trend(d.present.deltaPct), presentVersus: d.present.versus,
@@ -171,11 +173,21 @@ function DashboardDesktop() {
     return (
       <PageScope page="dashboard">
         <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
-          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+        </main>
+      </PageScope>
+    );
+  }
+  // A school with no students yet: the dashboard has nothing to show, so it says how to start.
+  if (d && d.present.total === 0) {
+    return (
+      <PageScope page="dashboard">
+        <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
+          <EmptyState scene="dashboard" onAction={() => app.go('/year/classes')} onLink={() => app.go('/staff')} />
         </main>
       </PageScope>
     );
   }
   if (!v) return <DashboardSkeleton />;
-  return <DashboardView v={v} />;
+  return <TodayView v={v} d={d!} />;
 }

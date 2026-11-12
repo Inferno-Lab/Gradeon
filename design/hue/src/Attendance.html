@@ -1,0 +1,44 @@
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Attendance" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Roll call</h1><p>8 A · Period 1 · Tuesday 10 November</p></div>
+      <span class="sp"></span>
+      <button class="btn quiet">[[i:caret-left]]7 D</button><button class="btn quiet">8 B[[i:caret-right]]</button>
+      <button class="btn" onClick="{{all}}">[[i:checks]]Mark all present</button>
+      <button class="btn pri">[[ib:check]]Save roll</button>
+    </header>
+    <section class="card deep" style="flex-direction:row;align-items:center;gap:40px">
+      <div class="col" style="gap:4px"><span class="lbl">Present</span><span class="fig" style="font-size:44px">{{n.p}}<small>of 32</small></span></div>
+      <div class="col" style="gap:4px"><span class="lbl">Late</span><span class="fig" style="font-size:44px;color:var(--warn-d)">{{n.l}}</span></div>
+      <div class="col" style="gap:4px"><span class="lbl">Absent</span><span class="fig" style="font-size:44px;color:var(--bad-d)">{{n.a}}</span></div>
+      <div class="col" style="gap:4px"><span class="lbl">Not marked</span><span class="fig" style="font-size:44px;color:var(--on-deep)">{{n.u}}</span></div>
+      <div class="col grow" style="gap:10px">
+        <div class="bar" style="height:14px;border-radius:7px"><i style="flex:{{n.p}};min-width:0;background:var(--bright)"></i><i style="flex:{{n.l}};min-width:0;background:var(--warn-d)"></i><i style="flex:{{n.a}};min-width:0;background:var(--bad-d)"></i><i style="flex:{{n.u}};min-width:0;background:var(--deep3)"></i></div>
+        <span style="font-size:14px;line-height:20px;color:var(--on-deep2)">{{note}}</span>
+      </div>
+    </section>
+    <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+      <sc-for list="{{cells}}" as="c" hint-placeholder-count="32">
+        <div class="cell"><b class="grow cut" style="font-size:14px;font-weight:600">{{c.n}}</b><span class="rw" style="gap:4px"><button class="{{c.p}}" aria-label="Present" aria-pressed="{{c.ip}}" onClick="{{c.gp}}">P</button><button class="{{c.l}}" aria-label="Late" aria-pressed="{{c.il}}" onClick="{{c.gl}}">L</button><button class="{{c.a}}" aria-label="Absent" aria-pressed="{{c.ia}}" onClick="{{c.ga}}">A</button></span></div>
+      </sc-for>
+    </div>
+    <div class="rw t2" style="gap:8px;font-size:14px">[[i:@messages]]Families of absent students are texted when you save. A late mark does not send a text.</div>
+  </main>
+</div>
+<script>
+renderVals() {
+  const N = ["Aarav Sharma", "Aditi Rao", "Advait Joshi", "Anika Verma", "Arnav Desai", "Avni Kapoor", "Dhruv Mehta", "Diya Nair", "Eshan Gupta", "Fatima Khan", "Gauri Patil", "Harsh Agarwal", "Ira Menon", "Ishaan Reddy", "Jiya Shah", "Kavya Iyer", "Krish Malhotra", "Lavanya Pillai", "Manav Chopra", "Meera Kulkarni", "Neil Pinto", "Nitya Bhatt", "Om Deshpande", "Pari Saxena", "Reyansh Singh", "Riya Banerjee", "Samar Qureshi", "Tara Fernandes", "Vihaan Jain", "Yash Pawar", "Zara Sheikh", "Zoya Shaikh"];
+  const first = N.map((_, i) => (i === 12 || i === 31 ? "A" : i === 5 ? "L" : i >= 26 && i <= 30 ? "" : "P"));
+  const m = (this.state && this.state.m) || first;
+  const set = (i, v) => () => this.setState({ m: m.map((x, j) => (j === i ? (x === v ? "" : v) : x)) });
+  const n = { p: 0, l: 0, a: 0, u: 0 };
+  m.forEach((v) => n[v === "P" ? "p" : v === "L" ? "l" : v === "A" ? "a" : "u"]++);
+  return {
+    n,
+    note: n.u ? n.u + " still to mark before you can save" : "Everyone is marked. Saving texts " + n.a + " " + (n.a === 1 ? "family" : "families") + ".",
+    all: () => this.setState({ m: m.map(() => "P") }),
+    cells: N.map((name, i) => ({ n: name, p: "pk" + (m[i] === "P" ? " ok" : ""), l: "pk" + (m[i] === "L" ? " warn" : ""), a: "pk" + (m[i] === "A" ? " bad" : ""), ip: m[i] === "P", il: m[i] === "L", ia: m[i] === "A", gp: set(i, "P"), gl: set(i, "L"), ga: set(i, "A") })),
+  };
+}
+</script>

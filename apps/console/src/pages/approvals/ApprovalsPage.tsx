@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { ACTION_LABELS, SETTINGS_META, type ActionRow } from '@gradeon/contracts';
-import { AreaField, Dialog, EmptyCard, Select, useShake } from '@gradeon/web-ui';
+import { AreaField, Dialog, Select, useShake, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -37,7 +37,7 @@ export function ApprovalsPage() {
       <section className="grid">
         <Card title="Waiting" chip={<span className={`chip ${waiting.length ? 'a' : 'g'}`}>{waiting.length}</span>} span="s12">
           {waiting.length === 0 && (
-            <EmptyCard title="Waiting" chip={{ text: 'All clear', tone: 'g' }} scene="checklist" heading="Nothing needs approving" body="Erasing a school, restoring a backup and other risky changes land here for a second person. Which ones is set under Console settings. You can’t approve your own." />
+            <EmptyState scene="approvals" label="Back to the fleet" onAction={() => app.go('/')} />
           )}
           {waiting.map((r) => {
             const own = r.requestedBy === app.user.email;
@@ -78,7 +78,7 @@ export function ApprovalsPage() {
                 <small style={{ display: 'block', color: 'var(--ink3)' }}>
                   {r.dryRun ? 'Rehearsal · ' : ''}Asked by {r.requestedBy}{r.approvedBy ? ` · ${r.status === 'rejected' ? 'rejected' : 'approved'} by ${r.approvedBy}` : ''} · {when(r.finishedAt ?? r.createdAt)}
                 </small>
-                {(r.status === 'rejected' ? r.decisionNote : r.summary !== r.asked ? r.summary : '') && <small style={{ display: 'block', color: r.status === 'failed' ? 'var(--c)' : 'var(--ink2)' }}>{r.status === 'rejected' ? `Why: ${r.decisionNote}` : r.summary}</small>}
+                {(r.status === 'rejected' ? r.decisionNote : r.summary !== r.asked ? r.summary : '') && <small style={{ display: 'block', color: r.status === 'failed' ? 'var(--bad)' : 'var(--ink2)' }}>{r.status === 'rejected' ? `Why: ${r.decisionNote}` : r.summary}</small>}
               </span>
               <b><span className={`st ${TONE[r.status]}`}><i></i>{LABEL[r.status]}</span></b>
             </div>

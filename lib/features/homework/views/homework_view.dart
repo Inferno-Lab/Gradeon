@@ -8,7 +8,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -106,13 +106,13 @@ class HomeworkView extends GetView<HomeworkController> {
     }
     return switch (tab) {
       0 => EmptyState(
-        art: EmptyArt.attendance,
+        art: EmptyArt.search,
         title: 'homework.all_done',
         body: 'homework.all_done_body',
         actions: [EmptyAction('homework.see_graded', icon: PhosphorIconsRegular.checks, onTap: () => controller.tab.value = 2)],
       ),
-      1 => const EmptyState(art: EmptyArt.plane, title: 'homework.none_sent', body: 'homework.none_sent_body'),
-      _ => const EmptyState(art: EmptyArt.columns, title: 'homework.none_graded', body: 'homework.none_graded_body'),
+      1 => const EmptyState(art: EmptyArt.search, title: 'homework.none_sent', body: 'homework.none_sent_body'),
+      _ => const EmptyState(art: EmptyArt.search, title: 'homework.none_graded', body: 'homework.none_graded_body'),
     };
   }
 
@@ -467,10 +467,10 @@ class _FileRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: c.paper2,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(6),
+                  topLeft: Radius.circular(7),
                   topRight: Radius.circular(10),
-                  bottomLeft: Radius.circular(6),
-                  bottomRight: Radius.circular(6),
+                  bottomLeft: Radius.circular(7),
+                  bottomRight: Radius.circular(7),
                 ),
                 border: Border.all(color: c.line2),
               ),

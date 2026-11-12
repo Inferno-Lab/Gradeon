@@ -6,9 +6,11 @@ import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/calendar.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -20,17 +22,18 @@ import 'package:gradeon/features/notices/controllers/notices_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Category badge text and colours.
-({String abbr, Color fill, Color on}) _category(BuildContext context, String category) {
+/// Category tile: an icon on the category's soft colour, as the boards' row tiles.
+({IconData icon, Color fill, Color on}) _category(BuildContext context, String category) {
   final c = context.app;
+  SubjectColor sp(String colour) => c.spectrumFor(colour);
   return switch (category) {
-    'sports' => (abbr: 'SPORT', fill: AppColors.subject('pe').fill, on: AppColors.subject('pe').on),
-    'fees' => (abbr: 'FEES', fill: c.lateSoft, on: c.lateText),
-    'holiday' => (abbr: 'HOL', fill: AppColors.subject('art').fill, on: AppColors.subject('art').on),
-    'exams' => (abbr: 'EXAM', fill: c.badSoft, on: c.badText),
-    'academic' => (abbr: 'ACAD', fill: c.mariSoft, on: c.mariText),
-    'events' => (abbr: 'EVENT', fill: AppColors.subject('social').fill, on: AppColors.subject('social').on),
-    _ => (abbr: 'NEWS', fill: c.paper2, on: c.ink2),
+    'sports' => (icon: PhosphorIconsRegular.soccerBall, fill: sp('lime').soft, on: sp('lime').ink),
+    'fees' => (icon: AppIcons.fees, fill: c.lateSoft, on: c.lateText),
+    'holiday' => (icon: PhosphorIconsRegular.sun, fill: sp('cyan').soft, on: sp('cyan').ink),
+    'exams' => (icon: AppIcons.exams, fill: c.badSoft, on: c.badText),
+    'academic' => (icon: AppIcons.homework, fill: c.mariSoft, on: c.mariText),
+    'events' => (icon: AppIcons.events, fill: sp('teal').soft, on: sp('teal').ink),
+    _ => (icon: AppIcons.notices, fill: c.paper2, on: c.ink2),
   };
 }
 
@@ -96,7 +99,7 @@ class NoticesView extends GetView<NoticesController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'notices.empty',
             emptyBody: 'notices.empty_body',
-            emptyArt: EmptyArt.notice,
+            emptyArt: EmptyArt.notices,
             emptyHint: 'notices.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +145,7 @@ class NoticesView extends GetView<NoticesController> {
                   ),
                 ],
                 if (pinned.isEmpty && week.isEmpty && earlier.isEmpty)
-                  const EmptyState(art: EmptyArt.notice, title: 'notices.none_here', body: 'notices.none_here_body'),
+                  const EmptyState(art: EmptyArt.notices, title: 'notices.none_here', body: 'notices.none_here_body'),
               ],
             ),
           ),
@@ -178,7 +181,7 @@ class _Slip extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 decoration: BoxDecoration(
                   color: c.paper,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(7),
                   border: Border.all(color: c.line),
                   boxShadow: [
                     BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: -14, offset: const Offset(0, 10)),
@@ -266,7 +269,7 @@ class _Row extends StatelessWidget {
         scale: .985,
         child: Stack(
           children: [
-            if (unread) Positioned(left: 5, top: 22, child: Dot(AppColors.mari, size: 7)),
+            if (unread) Positioned(left: 5, top: 22, child: Dot(context.app.brand, size: 7)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -276,8 +279,8 @@ class _Row extends StatelessWidget {
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(10)),
-                    child: Text(cat.abbr, style: AppText.o(color: cat.on)),
+                    decoration: BoxDecoration(color: cat.fill, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    child: Icon(cat.icon, size: 20, color: cat.on),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -439,7 +442,7 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Rise(index: 1, child: Text(notice.title, style: context.type.h1)),
+                      Rise(index: 1, child: Builder(builder: (context) => Text(notice.title, style: context.type.h1))),
                       const SizedBox(height: 12),
                       Rise(
                         index: 2,

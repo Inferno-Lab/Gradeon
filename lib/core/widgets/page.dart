@@ -6,13 +6,14 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/states.dart';
+import 'package:gradeon/core/widgets/ui/motion.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Space a tab page leaves for the floating dock.
-const kDockClearance = 112.0;
+/// Space a tab page leaves for the tab bar (kTabBarHeight) and a little air.
+const kDockClearance = 88.0;
 
-/// Phone page: content scrolls beneath floating glass controls at the top and
-/// an optional glass bar at the bottom.
+/// Phone page in Gradeon Hue: the title on the school's deep colour, the content on a sheet rising over it, the top
+/// controls and an optional action bar floating above.
 class PageFrame extends StatelessWidget {
   const PageFrame({
     required this.children,
@@ -20,6 +21,7 @@ class PageFrame extends StatelessWidget {
     this.actions = const [],
     this.bottomBar,
     this.bottomBarHeight = 64,
+    this.edgeBar = false,
     this.background,
     this.onRefresh,
     this.dockPage = false,
@@ -36,6 +38,10 @@ class PageFrame extends StatelessWidget {
   final List<Widget> actions;
   final Widget? bottomBar;
   final double bottomBarHeight;
+
+  /// The bar is the board's action bar (design/hue/src/RollCall.html): flush with the bottom edge, full width, drawing
+  /// its own background and the safe area under it, instead of a pill floating above the page.
+  final bool edgeBar;
   final Color? background;
   final Future<void> Function()? onRefresh;
 
@@ -60,7 +66,9 @@ class PageFrame extends StatelessWidget {
     final top = inset.top + 8;
     // On a tab page a bottom bar floats above the dock.
     final barLift = dockPage ? 76.0 : 0.0;
-    final bottomSpace = bottomBar != null
+    final bottomSpace = bottomBar != null && edgeBar
+        ? bottomBarHeight + 24 + inset.bottom
+        : bottomBar != null
         ? bottomBarHeight + 48 + barLift + inset.bottom
         : dockPage
         ? kDockClearance + inset.bottom
@@ -68,29 +76,66 @@ class PageFrame extends StatelessWidget {
     final hasTopRow = leading != null || actions.isNotEmpty;
     // On tablets the reading column stays phone-like and centred.
     final side = padContent ? math.max<double>(20, (MediaQuery.sizeOf(context).width - 720) / 2) : 0.0;
-    final list = ListView(
-      controller: controller,
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-      padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 8), side, bottomSpace),
-      children: [
-        if (underlay == null) const OfflineCapsule(),
-        ...children,
-      ],
-    );
+    final c = context.app;
+    // Gradeon Hue's frame (design/hue/src/ParentFees.html): the top of the page (its first child: the title row) sits on
+    // the school's deep colour, recoloured for it, and the content on a sheet that rises over it. Pages that draw their
+    // own art behind the top (underlay) keep it.
+    final hue = underlay == null && children.isNotEmpty;
+    // A page whose first child is its loading, empty or error state has no title row to lift: it all goes on the sheet.
+    final head = hue && !_isState(children.first);
+    final Widget list;
+    if (hue) {
+      final viewport = MediaQuery.sizeOf(context).height;
+      list = ListView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: EdgeInsets.zero,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 12), side, head ? 44 : 20),
+            child: head ? Theme(data: Theme.of(context).copyWith(extensions: [c.onDeepSide]), child: children.first) : null,
+          ),
+          Transform.translate(
+            offset: const Offset(0, -28),
+            child: Container(
+              constraints: BoxConstraints(minHeight: viewport),
+              decoration: BoxDecoration(color: background ?? c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
+              padding: EdgeInsets.fromLTRB(side, 20, side, bottomSpace),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [const OfflineCapsule(), ...children.skip(head ? 1 : 0)],
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      list = ListView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 8), side, bottomSpace),
+        children: [
+          if (underlay == null) const OfflineCapsule(),
+          ...children,
+        ],
+      );
+    }
     return Scaffold(
-      backgroundColor: background ?? context.app.chalk,
+      backgroundColor: hue ? (background ?? c.chalk) : background ?? c.chalk,
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
+          // The deep colour stays behind the top, so pulling down or scrolling never shows a light band above the title.
+          if (hue) Positioned(left: 0, right: 0, top: 0, height: MediaQuery.sizeOf(context).height * .6, child: ColoredBox(color: c.deep)),
           if (onRefresh == null)
             Positioned.fill(child: list)
           else
             Positioned.fill(
               child: _PullToRefresh(onRefresh: onRefresh!, top: top + 10, child: list),
             ),
-          // A thin scrim keeps the clock readable over text. Nothing else covers content: glass has to
-          // show what scrolls beneath it, and page-coloured bands read as dark shadows in dark themes.
-          if (underlay == null && topFade)
+          // A thin scrim keeps the clock readable over text. Nothing else covers content: page-coloured bands read as
+          // dark shadows in dark themes. The Hue frame needs none: the top is the deep colour.
+          if (underlay == null && topFade && !hue)
             Positioned(
               left: 0,
               right: 0,
@@ -103,8 +148,8 @@ class PageFrame extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        (background ?? context.app.chalk).withValues(alpha: .96),
-                        (background ?? context.app.chalk).withValues(alpha: 0),
+                        (background ?? c.chalk).withValues(alpha: .96),
+                        (background ?? c.chalk).withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -127,7 +172,9 @@ class PageFrame extends StatelessWidget {
                 ],
               ),
             ),
-          if (bottomBar != null)
+          if (bottomBar != null && edgeBar)
+            Positioned(left: 0, right: 0, bottom: keyboard, child: bottomBar!)
+          else if (bottomBar != null)
             Positioned(
               left: 16,
               right: 16,
@@ -179,13 +226,13 @@ class PageTitle extends StatelessWidget {
       if (subtitle != null)
         Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Text(subtitle!.tr, style: context.type.cap),
+          child: Text(subtitle!.tr, style: context.type.s),
         ),
     ],
   );
 }
 
-/// Section header: overline on the left, optional link on the right.
+/// Section header: a label on the left (Hue `.lbl`), an optional link on the right.
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {this.action, this.onAction, this.top = 22, super.key});
 
@@ -201,8 +248,8 @@ class SectionLabel extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            text.tr.toUpperCase(),
-            style: context.type.o,
+            text.tr,
+            style: context.type.capB.copyWith(color: context.app.ink2),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -215,7 +262,7 @@ class SectionLabel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
                 action!.tr,
-                style: context.type.capB.copyWith(color: context.app.ink2),
+                style: context.type.capB.copyWith(color: context.app.mariText),
               ),
             ),
           ),
@@ -293,3 +340,10 @@ class _PullToRefreshState extends State<_PullToRefresh> {
     );
   }
 }
+
+/// A loading, empty or error state, maybe padded or centred.
+bool _isState(Widget w) => switch (w) {
+  ViewStateView() || EmptyState() || ErrorState() => true,
+  Padding(:final Widget child) || Center(:final Widget child) || Rise(:final Widget child) => _isState(child),
+  _ => false,
+};

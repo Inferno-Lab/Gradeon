@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colour · one seed, every token</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="hue.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&amp;family=Noto+Sans+Devanagari:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="hue s-emerald doc" style="gap:24px">
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">Colour</h1><p class="lead">Three kinds of colour, and they never swap jobs. The school's own colour frames and acts. Twelve fixed hues name things. Status colours report.</p></div>
+  <div class="g" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;flex:1">
+    <section class="card">
+      <div class="ch"><h2>One seed, every token</h2><small>the same eight roles, light then dark</small></div>
+      <sc-for list="{{seeds}}" as="s" hint-placeholder-count="4">
+        <div class="col" style="gap:6px">
+          <span class="lbl">{{s.n}}</span>
+          <sc-for list="{{s.modes}}" as="m" hint-placeholder-count="2">
+            <div class="{{m.cls}}" style="display:flex;gap:4px;padding:6px;border-radius:16px;background:var(--s3)">
+              <sc-for list="{{m.roles}}" as="t" hint-placeholder-count="8"><div class="swt" style="height:44px;background:var({{t.bg}});color:var({{t.fg}})">{{t.n}}</div></sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <span class="cap">Deep frames the product, hero carries the headline number, bright says "you are here", brand is every button and link, soft is a selected row. Ground, panel and ink carry a little of the school's hue, so nothing is plain grey.</span>
+    </section>
+    <div class="col" style="gap:24px">
+      <section class="card">
+        <div class="ch"><h2>Twelve hues that name things</h2><small>subjects, houses, payment methods</small></div>
+        <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+          <sc-for list="{{spectrum}}" as="p" hint-placeholder-count="12"><div class="{{p.cls}}" style="min-height:40px;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px"><i class="dot"></i><b>{{p.t}}</b></div></sc-for>
+        </div>
+        <span class="cap">The same for every school, so Maths is one colour in the timetable, the results and the homework list. Never used for status.</span>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>Status</h2><small>solid, soft, and on the deep colour</small></div>
+        <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+          <sc-for list="{{status}}" as="k" hint-placeholder-count="4">
+            <div class="col" style="gap:6px">
+              <div class="swt" style="flex:none;height:40px;align-items:center;font-size:13px;background:var(--{{k.k}});color:var(--on-{{k.k}})">{{k.t}}</div>
+              <div class="swt" style="flex:none;height:40px;align-items:center;font-size:13px;background:var(--{{k.k}}-s);color:var(--{{k.k}}-i)">{{k.t}}</div>
+              <div class="swt" style="flex:none;height:40px;align-items:center;font-size:13px;background:var(--hero);color:var(--{{k.k}}-d)">{{k.t}}</div>
+              <span class="cap" style="font-size:12px;line-height:16px">{{k.d}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>How much</h2><small>one ramp of the school's colour</small></div>
+        <div class="rw" style="gap:16px;align-items:stretch">
+          <div class="col" style="gap:8px;flex:1"><div class="heat" style="grid-template-columns:repeat(6,1fr);gap:4px"><span class="h0">?</span><span class="h1">0</span><span class="h2">1</span><span class="h3">2</span><span class="h4">4</span><span class="h5">6</span></div><span class="cap">On a panel</span></div>
+          <div class="card deep" style="padding:12px;border-radius:14px;gap:8px;flex:1"><div class="heat" style="grid-template-columns:repeat(6,1fr);gap:4px"><span class="h0">?</span><span class="h1">0</span><span class="h2">1</span><span class="h3">2</span><span class="h4">4</span><span class="h5">6</span></div><span class="lbl" style="font-weight:500">On the hero colour</span></div>
+        </div>
+        <span class="cap">Quiet to loud. A question mark on grey means nobody has entered it yet.</span>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":992}}'>
+class Component extends DCLogic {
+renderVals() {
+  const roles = [["--deep", "--on-deep", "deep"], ["--hero", "--on-deep", "hero"], ["--bright", "--on-bright", "bright"], ["--brand", "--on-brand", "brand"], ["--brand-soft", "--brand-ink", "soft"], ["--bg", "--t1", "ground"], ["--s1", "--t1", "panel"], ["--t1", "--bg", "ink"]].map(([bg, fg, n]) => ({ bg, fg, n }));
+  const S = [["emerald", "Emerald · hue 162 · Greenfield International School"], ["cobalt", "Cobalt · hue 262 · the Gradeon console"], ["saffron", "Saffron · hue 62 · Sunrise Public School"], ["maroon", "Maroon · hue 12 · St Mary's Convent"]];
+  const P = [["rose", "Rose"], ["red", "Red"], ["orange", "Orange"], ["amber", "Amber"], ["lime", "Lime"], ["green", "Green"], ["teal", "Teal"], ["cyan", "Cyan"], ["blue", "Blue"], ["indigo", "Indigo"], ["violet", "Violet"], ["pink", "Pink"]];
+  return {
+    seeds: S.map(([s, n]) => ({ n, modes: [{ cls: "s-" + s + " scope", roles }, { cls: "s-" + s + " dark scope", roles }] })),
+    spectrum: P.map(([k, t]) => ({ cls: "per sp-" + k, t })),
+    status: [["ok", "Good", "Present, paid, healthy"], ["warn", "Watch", "Late, due soon, waiting"], ["bad", "Act", "Absent, overdue, failed"], ["info", "Note", "New, for your information"]].map(([k, t, d]) => ({ k, t, d })),
+  };
+}
+}
+</script>
+</body>
+</html>

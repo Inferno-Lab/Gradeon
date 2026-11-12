@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { leavingProps, useExit } from './Presence';
@@ -144,13 +145,13 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
         onKeyDown={onBtnKey}
       >
         <span className="sxv">{current?.label ?? placeholder ?? ''}</span>
-        <span className="sxc" aria-hidden="true"><svg viewBox="0 0 24 24"><path className="i" d="M7 10l5 5 5-5"></path></svg></span>
+        <span className="sxc" aria-hidden="true"><Icon name="caretDown" /></span>
       </button>
       {exit.shown && box && createPortal(
         <div ref={pop} className="sxp" {...leavingProps(exit.leaving)} style={{ left: box.left, width: box.width, top: box.top, bottom: box.bottom, transformOrigin: box.top !== undefined ? 'top left' : 'bottom left' }} onKeyDown={onPopKey}>
           {searchable && (
             <label className="sxs">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4"></path></svg>
+              <Icon name="search" />
               <input value={q} onChange={(e) => { setQ(e.target.value); setActive(0); }} placeholder="Search" aria-label="Search the list" />
             </label>
           )}
@@ -158,7 +159,7 @@ export function Select({ value, onChange, options, id, disabled, invalid, compac
             {shown.map((o, i) => (
               <div key={o.value} role="option" aria-selected={o.value === value} data-i={i} className={`sxo ${o.value === value ? 'on' : ''} ${i === active ? 'act' : ''}`} onPointerMove={() => i !== active && setActive(i)} onClick={() => pick(o.value)}>
                 <span className="sxv">{o.label}</span>
-                {o.value === value && <svg className="tick" viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path></svg>}
+                {o.value === value && <Icon name="check" className="tick" />}
               </div>
             ))}
             {shown.length === 0 && <div className="sxe">Nothing matches “{q}”.</div>}

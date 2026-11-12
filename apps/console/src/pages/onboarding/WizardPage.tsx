@@ -4,7 +4,7 @@ import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { closeModules } from '@gradeon/config-engine';
 import { DEFAULT_BRAND, DEPLOY_TARGET_LABELS, LANGUAGES, SCHOOL_BOARDS, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { ColourField, Field, FilePick, NumberField, SelectField, useShake } from '@gradeon/web-ui';
+import { ColourField, Field, FilePick, NumberField, SelectField, useShake, Icon } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -169,7 +169,7 @@ export function WizardPage() {
           <div style={{ display: 'grid', gap: 10 }} role="radiogroup" aria-label="Plan">
             {(plans.data ?? []).map((p) => (
               <button key={p.key} type="button" role="radio" aria-checked={p.key === data.plan.plan} className={`opt ${p.key === data.plan.plan ? 'on' : ''}`} onClick={() => { if (p.key === data.plan.plan) return; set('plan', 'plan', p.key); set('plan', 'modules', p.modules); setPlanNote(`Modules reset to the ${p.name} plan’s ${p.modules.length}. Change them below.`); }}>
-                <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span>
+                <span className="rd"><Icon name="check" /></span>
                 <span style={{ flex: 1 }}><b>{p.name} · {rupees(p.perStudentYear)} per student a year</b><small>{p.modules.length} modules · up to {count(p.limits.students)} students · {p.limits.storageGb} GB files · {count(p.limits.smsPerMonth)} texts a month</small></span>
               </button>
             ))}
@@ -183,7 +183,7 @@ export function WizardPage() {
               return (
                 <button key={m.key} type="button" className={`opt ${on ? 'on' : ''}`} aria-pressed={on} disabled={!inPlan} style={{ padding: 12, opacity: inPlan ? 1 : 0.45 }}
                   onClick={() => set('plan', 'modules', on ? mods.filter((x) => x !== m.key) : closeModules([...mods, m.key]))}>
-                  <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span>
+                  <span className="rd"><Icon name="check" /></span>
                   <span><b>{m.name}</b><small>{inPlan ? m.blurb : 'Not in this plan'}</small></span>
                 </button>
               );
@@ -218,11 +218,11 @@ export function WizardPage() {
           <div className="lbl" style={{ margin: '8px 0' }}>Brand colour</div>
           <ColourField label="Brand colour" value={String(data.branding.color)} onChange={(c) => set('branding', 'color', c)} />
           {errs['branding.color'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['branding.color']}</div>}
-          <div style={{ marginTop: 16, borderRadius: 24, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--sunk)' }} aria-label="App preview">
+          <div style={{ marginTop: 16, borderRadius: 24, border: '1px solid var(--line)', overflow: 'hidden', maxWidth: 260, background: 'var(--s2)' }} aria-label="App preview">
             <div style={{ padding: '16px 16px 20px', color: readableOn(str(data.branding.color)), background: str(data.branding.color), font: '700 13px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 26, height: 26, borderRadius: 10, background: 'color-mix(in srgb,var(--onCi) 28%,transparent)', display: 'grid', placeItems: 'center', font: '700 12px var(--fd)' }}>{str(data.branding.logoText) || '?'}</span>{str(data.branding.appName) || 'Your school'}
+              <span style={{ width: 26, height: 26, borderRadius: 10, background: 'color-mix(in srgb,var(--on-deep) 28%,transparent)', display: 'grid', placeItems: 'center', font: '700 semi-expanded 12px var(--fd)' }}>{str(data.branding.logoText) || '?'}</span>{str(data.branding.appName) || 'Your school'}
             </div>
-            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 6, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 6, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 14, background: str(data.branding.color), color: readableOn(str(data.branding.color)), textAlign: 'center', lineHeight: '34px', font: '700 12px var(--fb)' }}>{mods.includes('fees') ? 'Pay fees' : mods.includes('homework') ? 'Homework' : 'Notices'}</b></div>
+            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 7, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 7, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 12, background: str(data.branding.color), color: readableOn(str(data.branding.color)), textAlign: 'center', lineHeight: '34px', font: '700 12px var(--fb)' }}>{mods.includes('fees') ? 'Pay fees' : mods.includes('homework') ? 'Homework' : 'Notices'}</b></div>
           </div>
         </>
       );
@@ -235,7 +235,7 @@ export function WizardPage() {
           <div className="two">
             {([['path', 'A path on the shared site', 'Works with no domain: …/s/name'], ['subdomain', 'Its own subdomain', 'name.<platform domain>: set and checked from its Overview once it runs']] as const).map(([v, t, h]) => (
               <button key={v} type="button" className={`opt ${data.placement.addressing === v ? 'on' : ''}`} onClick={() => set('placement', 'addressing', v)} aria-pressed={data.placement.addressing === v}>
-                <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span><span><b>{t}</b><small>{h}</small></span>
+                <span className="rd"><Icon name="check" /></span><span><b>{t}</b><small>{h}</small></span>
               </button>
             ))}
           </div>
@@ -254,7 +254,7 @@ export function WizardPage() {
         <div style={{ display: 'grid', gap: 10 }} role="radiogroup" aria-label="Starting data">
           {([...(about.data?.demos ? [['demo', 'The demo school', 'Classes, students, fees and a timetable, so everything can be tried straight away. Only on the test track.']] as const : []), ['empty', 'Empty', 'A brand-new school with nothing in it. Every page shows its empty state.'], ['import', 'Empty, then import', 'Starts empty; Gradeon’s team brings its records in from the Data tab.']] as const).map(([v, t, h]) => (
             <button key={v} type="button" role="radio" aria-checked={data.data.start === v} className={`opt ${data.data.start === v ? 'on' : ''}`} onClick={() => set('data', 'start', v)}>
-              <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span><span><b>{t}</b><small>{h}</small></span>
+              <span className="rd"><Icon name="check" /></span><span><b>{t}</b><small>{h}</small></span>
             </button>
           ))}
         </div>
@@ -271,7 +271,7 @@ export function WizardPage() {
         <nav className="wst" aria-label="Steps">
           {STEPS.map((s, i) => (
             <button key={s.key} className={i === step ? 'on' : i < step ? 'ok' : ''} aria-current={i === step ? 'step' : undefined} onClick={() => jump(i)}>
-              <i>{i < step ? <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg> : i + 1}</i>{s.label}
+              <i>{i < step ? <Icon name="check" size={14} /> : i + 1}</i>{s.label}
             </button>
           ))}
         </nav>
@@ -285,7 +285,7 @@ export function WizardPage() {
                   <button className="btn" disabled={!payload.success || launch.isPending || problems.length > 0} onClick={() => launch.mutate(true)}>{launch.isPending && launch.variables ? 'Rehearsing…' : 'Rehearse'}</button>
                   <button className="btn pri" disabled={!payload.success || launch.isPending || problems.length > 0 || review.isLoading || !app.can('schools.write')} onClick={() => launch.mutate(false)}>{launch.isPending && !launch.variables ? 'Launching…' : 'Launch'}</button>
                 </span>
-              ) : <button className="btn pri" onClick={next}>Continue<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>}
+              ) : <button className="btn pri" onClick={next}>Continue<Icon name="next" /></button>}
             </div>
           </Card>
         </div>
@@ -296,7 +296,7 @@ export function WizardPage() {
 
 function ReviewStep({ review, loading, error, payloadOk, missing, rehearsal }: { review?: WizardReview; loading: boolean; error: string; payloadOk: boolean; missing: string[]; rehearsal: ProvisionRunRow | null }) {
   if (!payloadOk) return <div className="emsg" role="alert">Finish these steps first: {missing.join(', ')}.</div>;
-  if (loading) return <div className="skc" style={{ height: 240, borderRadius: 18 }} />;
+  if (loading) return <div className="skc" style={{ height: 240, borderRadius: 16 }} />;
   if (error) return <div className="emsg" role="alert">{error}</div>;
   if (!review) return null;
   return (

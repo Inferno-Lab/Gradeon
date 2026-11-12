@@ -1,8 +1,8 @@
 import { Body, Controller, Get, HttpCode, Injectable, Put } from '@nestjs/common';
-import { ACTIONS, ROLE_TEMPLATES, RoleTemplatesPut, ThemeColorsSchema, type ConsoleRole, type PolicyDoc, type RoleTemplate, type ThemeColors } from '@gradeon/contracts';
+import { ACTIONS, ROLE_TEMPLATES, RoleTemplatesPut, type ConsoleRole, type PolicyDoc, type RoleTemplate } from '@gradeon/contracts';
 import { ZodPipe } from '@gradeon/nest-kit';
 import { ApiError } from '@gradeon/nest-kit';
-import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';
+import { Db, Me, Needs, type ConsoleUser } from './core.js';
 
 export const DEFAULT_POLICY: PolicyDoc = {
   approvals: Object.fromEntries(ACTIONS.map((a) => [a, { needed: ['school.erase', 'school.move', 'backup.restore', 'config.apply', 'integration.live', 'integration.mode', 'retention.erase'].includes(a), roles: ['super_admin'] as ConsoleRole[] }])),
@@ -91,26 +91,5 @@ export class PolicyController {
   @Put() @HttpCode(200) @Needs('policy.write')
   set(@Me() me: ConsoleUser, @Body() body: PolicyDoc): Promise<PolicyDoc> {
     return this.policy.set(me.email, body);
-  }
-}
-
-/** The console's own colours (only `web.*` keys), kept beside the policy. Read before sign-in, so the sign-in page wears them too. */
-@Controller('console/v1/theme')
-export class ConsoleThemeController {
-  constructor(private readonly db: Db) {}
-
-  @Public() @Get()
-  async get(): Promise<ThemeColors> {
-    const { rows } = await this.db.pool.query<{ value: ThemeColors }>("select value from console_settings where key = 'theme'");
-    return rows[0]?.value ?? {};
-  }
-
-  @Put() @HttpCode(200) @Needs('policy.write')
-  async set(@Me() me: ConsoleUser, @Body() body: unknown): Promise<ThemeColors> {
-    const parsed = ThemeColorsSchema.safeParse(body);
-    if (!parsed.success || Object.keys(parsed.data).some((k) => !k.startsWith('web.'))) throw new ApiError('validation', parsed.success ? 'The console only has admin-style colours.' : parsed.error.issues[0]!.message);
-    await this.db.pool.query("insert into console_settings (key, value, updated_by) values ('theme', $1, $2) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()", [JSON.stringify(parsed.data), me.email]);
-    await this.db.audit(me.email, 'theme.changed', 'policy', 'theme', { colours: Object.keys(parsed.data).length });
-    return parsed.data;
   }
 }

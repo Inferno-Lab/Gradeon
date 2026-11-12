@@ -45,7 +45,7 @@ class ProfileView extends GetView<ProfileController> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('profile.title'.tr, style: context.type.h1)),
+              Expanded(child: Builder(builder: (context) => Text('profile.title'.tr, style: context.type.h1))),
               GlassIconButton(
                 icon: PhosphorIconsRegular.slidersHorizontal,
                 label: 'menu.settings'.tr,
@@ -173,7 +173,7 @@ class _IdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final on = color == AppColors.houses[3] ? AppColors.mariInk : AppColors.white;
+    final on = AppPalette.on(color);
     final now = DateTime.now();
     final start = now.month >= 6 ? now.year : now.year - 1;
     TextStyle k() => AppText.o(color: on.withValues(alpha: .75), height: 1.2);
@@ -225,7 +225,7 @@ class _IdCard extends StatelessWidget {
                     width: 78,
                     height: 96,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.light.paper, borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(color: AppColors.light.paper, borderRadius: BorderRadius.circular(12)),
                     clipBehavior: Clip.antiAlias,
                     child: local
                         ? Image.file(
@@ -359,7 +359,7 @@ class _Tiles extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: c.paper,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: c.line),
                       ),
                       child: Column(

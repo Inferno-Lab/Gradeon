@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { StaffRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Dialog, Field, Segmented, Select, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, Ico, problem, useSchoolConfig } from '../../app/kit';
 import { ImportDialog } from '../students/StudentDialogs';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['staff', 'dashboard', 'shell', 'roles', 'activation'].includes(String(q.queryKey[0])) });
-const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
+const SEARCH = 'search';
 type Show = 'all' | 'active' | 'waiting' | 'off';
 /** Where a person stands: switched off, or active and signed in, invited, or not invited yet. */
 const standing = (r: StaffRow) => r.status !== 'active' ? { label: 'Off', tone: 'n' } : r.access === 'signed_in' ? { label: 'Active', tone: 'g' } : r.access === 'invited' ? { label: 'Invited', tone: 'a' } : { label: 'Not invited', tone: 'a' };
@@ -70,7 +70,7 @@ export function StaffPage() {
         {editing && editing !== 'import' && <StaffDialog person={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onDone={(msg) => { setEditing(null); refresh(qc); say(msg); }} />}
       </>}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Staff" chip={{ text: '0 people', tone: 'v' }} scene="register" heading="Nobody has been added yet" body="Add teachers and office staff one by one or from a sheet. Each gets an invite to sign in, and a role that decides what they can do." actions={canWrite ? <><AddBtn onClick={() => setEditing('new')}>Add staff</AddBtn><button className="btn" onClick={() => setEditing('import')}>Import from a sheet</button></> : undefined} /></div>
+        <div><EmptyState scene="staff" onAction={canWrite ? () => setEditing('new') : undefined} onLink={canWrite ? () => setEditing('import') : undefined} /></div>
       ) : (
         <div className="stack" style={{ gap: 16 }}>
           {canWrite && waiting.length > 0 && (

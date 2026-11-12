@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fees</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="hue.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&amp;family=Noto+Sans+Devanagari:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Fees" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Fees</h1><p>November 2026 · Term 2 second instalment is due on 15 November</p></div>
+      <span class="sp"></span>
+      <button class="btn"><svg class="i" data-k="r" viewBox="0 0 256 256" aria-hidden="true"><path d="M216 112L216 208Q216 214.8 211.4 219.4Q206.8 224 200 224L200 224L56 224Q49.3 224 44.6 219.4Q40 214.8 40 208L40 208L40 112Q40 105.3 44.6 100.6Q49.3 96 56 96L56 96L80 96Q83.3 96 85.6 98.4Q88 100.8 88 104Q88 107.3 85.6 109.6Q83.3 112 80 112L80 112L56 112L56 208L200 208L200 112L176 112Q172.8 112 170.4 109.6Q168 107.3 168 104Q168 100.8 170.4 98.4Q172.8 96 176 96L176 96L200 96Q206.8 96 211.4 100.6Q216 105.3 216 112ZM93.8 69.8L120 43.3L120 136Q120 139.3 122.4 141.6Q124.8 144 128 144Q131.3 144 133.6 141.6Q136 139.3 136 136L136 136L136 43.3L162.3 69.8Q163.5 70.8 164.9 71.4Q166.3 72 168 72Q171.3 72 173.6 69.6Q176 67.3 176 64Q176 62.3 175.4 60.9Q174.8 59.5 173.8 58.3L173.8 58.3L133.8 18.3Q132.5 17.3 131.1 16.6Q129.8 16 128 16Q126.3 16 124.9 16.6Q123.5 17.3 122.3 18.3L122.3 18.3L82.3 58.3Q81.3 59.5 80.6 60.9Q80 62.3 80 64Q80 67.3 82.4 69.6Q84.8 72 88 72Q89.8 72 91.1 71.4Q92.5 70.8 93.8 69.8L93.8 69.8Z"/></svg>Export</button>
+      <button class="btn pri"><svg class="i" data-k="b" viewBox="0 0 256 256" aria-hidden="true"><path d="M228 128Q228 133 224.5 136.5Q221 140 216 140L216 140L140 140L140 216Q140 221 136.5 224.5Q133 228 128 228Q123 228 119.5 224.5Q116 221 116 216L116 216L116 140L40 140Q35 140 31.5 136.5Q28 133 28 128Q28 123 31.5 119.5Q35 116 40 116L40 116L116 116L116 40Q116 35 119.5 31.5Q123 28 128 28Q133 28 136.5 31.5Q140 35 140 40L140 40L140 116L216 116Q221 116 224.5 119.5Q228 123 228 128Z"/></svg>Record a payment</button>
+    </header>
+    <div class="g" style="grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr))">
+      <section class="card deep" style="gap:12px">
+        <span class="lbl">Collected in November</span>
+        <div class="fig" style="font-size:56px">₹13.2 L</div>
+        <div class="bar"><i style="flex:37;background:var(--bright)"></i><i style="flex:63;background:var(--deep3)"></i></div>
+        <span style="font-size:14px;line-height:20px;color:var(--on-deep2)">37% of ₹36 L · ₹22.8 L still to come</span>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Due this week</span>
+        <div class="fig" style="font-size:44px">₹4.6 L</div>
+        <span class="t2" style="font-size:14px">212 families</span>
+        <button class="btn ton sm" style="margin-top:auto;align-self:flex-start">Send reminders</button>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Overdue</span>
+        <div class="fig" style="font-size:44px;color:var(--bad-i)">₹2.9 L</div>
+        <span class="t2" style="font-size:14px">38 families</span>
+        <span class="tag bad" style="margin-top:auto;align-self:flex-start">4 over 30 days</span>
+      </section>
+      <section class="card" style="gap:8px">
+        <span class="lbl">Paid online</span>
+        <div class="fig" style="font-size:44px">86%</div>
+        <span class="t2" style="font-size:14px">of November's payments</span>
+        <span class="tag ok" style="margin-top:auto;align-self:flex-start"><svg class="i" data-k="b" viewBox="0 0 256 256" aria-hidden="true"><path d="M244 56L244 120Q244 125 240.5 128.5Q237 132 232 132Q227 132 223.5 128.5Q220 125 220 120L220 120L220 85L144.5 160.5Q142.8 162.3 140.6 163.1Q138.5 164 136 164Q133.5 164 131.3 163.1Q129 162.3 127.5 160.5L96 129L32.5 192.5Q30.8 194 28.6 195Q26.5 196 24 196Q19 196 15.5 192.5Q12 189 12 184Q12 181.5 12.9 179.3Q13.8 177 15.5 175.5L87.5 103.5Q89 101.8 91.3 100.9Q93.5 100 96 100Q98.5 100 100.6 100.9Q102.8 101.8 104.5 103.5L136 135L203 68L168 68Q163 68 159.5 64.5Q156 61 156 56Q156 51 159.5 47.5Q163 44 168 44L168 44L232 44Q237 44 240.5 47.5Q244 51 244 56Z"/></svg>Up from 79% in August</span>
+      </section>
+    </div>
+    <div class="g" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+      <section class="card">
+        <div class="ch"><h2>Collected each week</h2><small>in lakh · this week so far</small></div>
+        <div class="cols">
+          <div><b>2.1</b><i style="height:21px"></i>29 Sep</div><div><b>6.9</b><i style="height:69px"></i>6 Oct</div><div><b>3.2</b><i style="height:32px"></i>13 Oct</div><div><b>1.4</b><i style="height:14px"></i>20 Oct</div><div><b>0.9</b><i style="height:9px"></i>27 Oct</div><div><b>8.4</b><i style="height:84px"></i>3 Nov</div><div class="on"><b>4.8</b><i style="height:48px"></i>10 Nov</div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>How families paid</h2><small>November</small></div>
+        <div class="bar" style="height:14px;border-radius:7px"><i class="sp-blue" style="flex:58;background:var(--c)"></i><i class="sp-rose" style="flex:28;background:var(--c)"></i><i class="sp-lime" style="flex:9;background:var(--c)"></i><i class="sp-orange" style="flex:5;background:var(--c)"></i></div>
+        <div class="col" style="gap:6px;font-size:14px">
+          <div class="rw sp-blue" style="gap:8px"><i class="dot"></i><span class="grow">UPI</span><b class="num">58%</b><span class="t2 num" style="width:64px;text-align:right">₹7.7 L</span></div>
+          <div class="rw sp-rose" style="gap:8px"><i class="dot"></i><span class="grow">Card and net banking</span><b class="num">28%</b><span class="t2 num" style="width:64px;text-align:right">₹3.7 L</span></div>
+          <div class="rw sp-lime" style="gap:8px"><i class="dot"></i><span class="grow">Cash at the office</span><b class="num">9%</b><span class="t2 num" style="width:64px;text-align:right">₹1.2 L</span></div>
+          <div class="rw sp-orange" style="gap:8px"><i class="dot"></i><span class="grow">Cheque</span><b class="num">5%</b><span class="t2 num" style="width:64px;text-align:right">₹0.6 L</span></div>
+        </div>
+      </section>
+    </div>
+    <section class="card flush" style="--cols:minmax(0,1.4fr) 70px minmax(0,1fr) 110px 110px 96px">
+      <div class="ch" style="padding:18px 20px 6px"><h2>Overdue</h2><small>38 families · longest first</small><a href="#">Remind all 38<svg class="i" data-k="b" viewBox="0 0 256 256" aria-hidden="true"><path d="M224.5 136.5L152.5 208.5Q150.8 210 148.6 211Q146.5 212 144 212Q139 212 135.5 208.5Q132 205 132 200Q132 197.5 132.9 195.3Q133.8 193 135.5 191.5L187 140L40 140Q35 140 31.5 136.5Q28 133 28 128Q28 123 31.5 119.5Q35 116 40 116L40 116L187 116L135.5 64.5Q134 62.8 133 60.6Q132 58.5 132 56Q132 51 135.5 47.5Q139 44 144 44Q146.5 44 148.8 44.9Q151 45.8 152.5 47.5L224.5 119.5Q226.3 121 227.1 123.3Q228 125.5 228 128Q228 130.5 227.1 132.6Q226.3 134.8 224.5 136.5L224.5 136.5Z"/></svg></a></div>
+      <div class="tr h"><span>Student</span><span>Class</span><span>Parent</span><span class="r">Amount</span><span>Overdue by</span><span></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-orange">MO</span><b>Myra Oberoi</b></span><span>10 B</span><span class="t2">Rohan Oberoi</span><b class="r num">₹28,250</b><span><span class="tag bad">42 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-lime">RK</span><b>Rudra Kulkarni</b></span><span>6 D</span><span class="t2">Sneha Kulkarni</span><b class="r num">₹26,150</b><span><span class="tag bad">28 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-blue">TD</span><b>Tanvi Deshpande</b></span><span>9 A</span><span class="t2">Anil Deshpande</span><b class="r num">₹18,400</b><span><span class="tag warn">21 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+      <div class="tr"><span class="rw" style="gap:10px"><span class="av sm sp sp-rose">YG</span><b>Yash Gupta</b></span><span>4 C</span><span class="t2">Pooja Gupta</span><b class="r num">₹12,600</b><span><span class="tag warn">14 days</span></span><span class="r"><button class="btn ton sm">Remind</button></span></div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1049}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

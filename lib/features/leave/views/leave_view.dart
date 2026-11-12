@@ -7,7 +7,7 @@ import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -40,13 +40,13 @@ class LeaveView extends GetView<LeaveController> {
                 width: 200,
                 height: 56,
                 radius: 999,
-                tint: AppColors.mari,
+                tint: context.app.brand,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
+                    Icon(PhosphorIconsBold.plus, size: 22, color: context.app.onBrand),
                     const SizedBox(width: 8),
-                    Text('leave.new'.tr, style: AppText.t(color: AppColors.mariInk, height: 1)),
+                    Text('leave.new'.tr, style: AppText.t(color: context.app.onBrand, height: 1)),
                   ],
                 ),
               ),
@@ -80,7 +80,7 @@ class LeaveView extends GetView<LeaveController> {
                 const Rise(index: 3, child: SectionLabel('leave.requests')),
                 if (items.isEmpty)
                   const EmptyState(
-                    art: EmptyArt.plane,
+                    art: EmptyArt.leave,
                     title: 'leave.empty',
                     body: 'leave.empty_body',
                     hint: 'leave.empty_hint',
@@ -121,7 +121,7 @@ class _DateTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: 58,
     padding: const EdgeInsets.symmetric(vertical: 8),
-    decoration: BoxDecoration(color: background ?? context.app.paper2, borderRadius: BorderRadius.circular(14)),
+    decoration: BoxDecoration(color: background ?? context.app.paper2, borderRadius: BorderRadius.circular(12)),
     child: Column(
       children: [
         Text('$day', style: AppText.num(color: foreground ?? context.app.ink)),
@@ -244,7 +244,7 @@ class _Request extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.only(top: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(16)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -315,7 +315,7 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
           ),
         ),
         children: [
-          Text(past ? 'leave.explain_title'.tr : 'leave.ask_title'.tr, style: context.type.h2),
+          Builder(builder: (context) => Text(past ? 'leave.explain_title'.tr : 'leave.ask_title'.tr, style: context.type.h2)),
           const SizedBox(height: 12),
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,

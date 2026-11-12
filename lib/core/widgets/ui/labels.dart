@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -29,34 +30,54 @@ class Overline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-    text.toUpperCase(),
-    style: context.type.o.copyWith(color: color),
+    text,
+    style: context.type.capB.copyWith(color: color ?? context.app.ink2),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
   );
 }
 
-/// Rubber-stamp status label.
+/// A status tag (Gradeon Hue `.tag`): the status colour's soft fill with its ink, sentence case.
 class Stamp extends StatelessWidget {
-  const Stamp(this.text, {required this.color, this.size = 11, super.key});
+  const Stamp(this.text, {required this.color, this.size = 12, super.key});
 
   final String text;
   final Color color;
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: color, width: 1.6),
-    ),
-    child: Text(
-      text.toUpperCase(),
-      maxLines: 1,
-      style: anek(size, 760, width: 118, height: 1, em: .09, color: color),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final c = context.app;
+    final soft = color == c.badText || color == AppColors.bad
+        ? c.badSoft
+        : color == c.lateText || color == AppColors.late
+        ? c.lateSoft
+        : color == c.okText || color == AppColors.ok
+        ? c.okSoft
+        : color == c.mariText || color == c.brand
+        ? c.mariSoft
+        : color == c.infoText
+        ? c.infoSoft
+        : c.paper2;
+    final ink = soft == c.badSoft
+        ? c.badText
+        : soft == c.lateSoft
+        ? c.lateText
+        : soft == c.okSoft
+        ? c.okText
+        : soft == c.mariSoft
+        ? c.mariText
+        : soft == c.infoSoft
+        ? c.infoText
+        : c.ink2;
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(AppRadius.xs)),
+      // Center with widthFactor 1 keeps the tag as wide as its text (Container(alignment:) would fill the row).
+      child: Center(widthFactor: 1, child: Text(text, maxLines: 1, style: hueText(size, 600, height: 1, color: ink))),
+    );
+  }
 }
 
 class Dot extends StatelessWidget {

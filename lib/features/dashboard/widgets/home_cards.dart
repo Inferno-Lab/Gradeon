@@ -7,8 +7,10 @@ import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/utils/extensions.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/status.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/academics.dart';
@@ -24,12 +26,12 @@ class QuickRow extends StatelessWidget {
   const QuickRow({super.key});
 
   static const _buttons = <String, (String, IconData, String)>{
-    'payFees': ('quick.pay_fees', PhosphorIconsRegular.wallet, AppRoutes.fees),
-    'applyLeave': ('quick.apply_leave', PhosphorIconsRegular.calendarCheck, AppRoutes.leaveApply),
-    'messageTeacher': ('quick.message_teacher', PhosphorIconsRegular.chatCircle, AppRoutes.chat),
-    'timetable': ('quick.timetable', PhosphorIconsRegular.clock, AppRoutes.timetable),
-    'homework': ('quick.homework', PhosphorIconsRegular.books, AppRoutes.homework),
-    'events': ('quick.events', PhosphorIconsRegular.calendarBlank, AppRoutes.events),
+    'payFees': ('quick.pay_fees', AppIcons.fees, AppRoutes.fees),
+    'applyLeave': ('quick.apply_leave', AppIcons.calendar, AppRoutes.leaveApply),
+    'messageTeacher': ('quick.message_teacher', AppIcons.messages, AppRoutes.chat),
+    'timetable': ('quick.timetable', AppIcons.timetable, AppRoutes.timetable),
+    'homework': ('quick.homework', AppIcons.homework, AppRoutes.homework),
+    'events': ('quick.events', AppIcons.events, AppRoutes.events),
   };
 
   @override
@@ -37,19 +39,35 @@ class QuickRow extends StatelessWidget {
     return Obx(() {
       final keys = SchoolConfig.quick.where(_buttons.containsKey).toList();
       if (keys.isEmpty) return const SizedBox.shrink();
+      // The quick tiles of the ParentHome board: up to four, each an icon on the brand's soft fill with its name below.
+      final c = context.app;
       return Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            children: [
-              for (final (i, k) in keys.indexed) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Chip2(_buttons[k]!.$1, icon: _buttons[k]!.$2, onTap: () => Get.toNamed<void>(_buttons[k]!.$3)),
-              ],
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, k) in keys.take(4).indexed) ...[
+              if (i > 0) const SizedBox(width: 10),
+              Expanded(
+                child: Pressable(
+                  onTap: () => Get.toNamed<void>(_buttons[k]!.$3),
+                  label: _buttons[k]!.$1.tr,
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 60,
+                        decoration: BoxDecoration(color: c.mariSoft, borderRadius: BorderRadius.circular(AppRadius.panel)),
+                        alignment: Alignment.center,
+                        child: Icon(_buttons[k]!.$2, size: 24, color: c.mariText),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(_buttons[k]!.$1.tr, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: context.type.capB.copyWith(color: c.ink)),
+                    ],
+                  ),
+                ),
+              ),
             ],
-          ),
+          ],
         ),
       );
     });
@@ -174,14 +192,14 @@ class _MoneyCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     return Container(
-      width: 42,
-      height: 52,
+      width: 40,
+      height: 40,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: overdue ? c.badSoft : c.lateSoft,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: Text('₹', style: context.type.h3.copyWith(color: overdue ? c.badText : c.lateText)),
+      child: Icon(AppIcons.fees, size: 20, color: overdue ? c.badText : c.lateText),
     );
   }
 }

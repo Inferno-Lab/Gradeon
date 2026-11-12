@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/ui.dart';
+import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/features/auth/controllers/splash_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -20,15 +20,6 @@ double _phase(double t, double from, double to, [Curve curve = kEase]) =>
 /// Where the pager is, in pages (1.4 = most of the way to page two).
 double _position(PageController pager, int fallback) =>
     pager.hasClients && pager.position.haveDimensions ? pager.page ?? fallback.toDouble() : fallback.toDouble();
-
-/// A wash of the page's pigment on chalk, so the three stories stay in the same room.
-Color _wash(AppColors c, double p) {
-  final student = AppColors.subject('maths').fill;
-  final parent = AppColors.subject('hindi').fill;
-  final teacher = AppColors.ok;
-  final pigment = p < 1 ? Color.lerp(student, parent, p)! : Color.lerp(parent, teacher, (p - 1).clamp(0.0, 1.0))!;
-  return Color.lerp(c.chalk, pigment, c.dark ? .18 : .11)!;
-}
 
 class OnboardingView extends GetView<OnboardingController> {
   const OnboardingView({super.key});
@@ -78,9 +69,10 @@ class OnboardingView extends GetView<OnboardingController> {
                       child: Glass(
                         width: 84,
                         height: 40,
-                        radius: 18,
+                        radius: 20,
+                        onPigment: true,
                         child: Center(
-                          child: Text('common.skip'.tr, style: AppText.chip(color: context.app.ink, height: 1)),
+                          child: Text('common.skip'.tr, style: AppText.chip(color: context.app.onDeep, height: 1)),
                         ),
                       ),
                     ),
@@ -229,10 +221,10 @@ class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
     final still = context.reduceMotion;
     final inset = MediaQuery.paddingOf(context);
     final copy = _Page._copy[widget.index];
-    final pageColor = _wash(context.app, widget.index.toDouble());
+    final c = context.app;
     return ColoredBox(
       // Opaque fill so the previous page never shows through mid-swipe.
-      color: pageColor,
+      color: c.chalk,
       child: LayoutBuilder(
         builder: (context, box) {
           final artH = (box.maxHeight * .557).clamp(280.0, 520.0);
@@ -257,26 +249,45 @@ class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
+                  // As every Hue page: the art on the school's deep colour, the words on the sheet rising over it.
+                  Container(
                     height: artH,
                     width: double.infinity,
+                    color: c.deep,
+                    padding: EdgeInsets.fromLTRB(24, inset.top + 64, 24, 48),
                     // Clip parallax/scale so art cannot paint into the next page.
                     child: ClipRect(
                       child: Opacity(
                         opacity: still ? 1 : (.35 + .65 * near),
                         child: Transform.scale(
                           scale: still ? 1 : .97 + .03 * near,
-                          child: switch (widget.index) {
-                            0 => _DayArt(t: t),
-                            1 => _ParentArt(t: t),
-                            _ => _TeacherArt(t: t),
-                          },
+                          // On a short phone the art scales down instead of overflowing.
+                          child: LayoutBuilder(
+                            builder: (context, box) => FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.bottomCenter,
+                              child: SizedBox(
+                                width: box.maxWidth,
+                                child: switch (widget.index) {
+                                  0 => _DayArt(t: t),
+                                  1 => _ParentArt(t: t),
+                                  _ => _TeacherArt(t: t),
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: Container(
+                      transform: Matrix4.translationValues(0, -28, 0),
+                      decoration: BoxDecoration(
+                        color: c.chalk,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+                      ),
+                      child: SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(24, compact ? 24 : 32, 24, 112 + inset.bottom),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,6 +303,7 @@ class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
                           rise(.42, .78, Text(copy.$3.tr, style: context.type.b.copyWith(color: context.app.ink2))),
                         ],
                       ),
+                    ),
                     ),
                   ),
                 ],
@@ -348,8 +360,50 @@ class _Dots extends StatelessWidget {
   }
 }
 
-/// Thursday's periods as columns that rise one after another. A "Now" chip
-/// then settles on Computer, the period in progress.
+/// A card of the art: deep2 on the deep colour, or the bright colour for the one that matters now. It rises in at [v].
+class _ArtRow extends StatelessWidget {
+  const _ArtRow({required this.v, required this.child, this.on = false});
+
+  final double v;
+  final Widget child;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.app;
+    return Opacity(
+      opacity: v.clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, 18 * (1 - v)),
+        child: AnimatedContainer(
+          duration: AppMotion.t3,
+          curve: kEase,
+          height: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: on ? c.bright : c.deep2, borderRadius: BorderRadius.circular(AppRadius.panel)),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// A row's title and line, in the bright card's ink when it is the one on now.
+Widget _lines(BuildContext context, String title, String line, {bool on = false}) {
+  final c = context.app;
+  return Expanded(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.t.copyWith(color: on ? c.onBright : c.onDeep)),
+        Text(line, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.s.copyWith(color: on ? c.onBright : c.onDeep2)),
+      ],
+    ),
+  );
+}
+
+/// Today's periods as the ParentHome board's cards, one after another; the one on now turns bright.
 class _DayArt extends StatelessWidget {
   const _DayArt({required this.t});
 
@@ -357,385 +411,103 @@ class _DayArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cols = [
-      ('hindi', 'HI', 250.0),
-      ('social', 'SST', 330.0),
-      ('', '', 170.0),
-      ('computer', 'CS', 410.0),
-      ('art', 'ART', 300.0),
-      ('maths', 'MA', 360.0),
+    final c = context.app;
+    const rows = [
+      ('social', 'Social studies', '8:45 · Room B-204'),
+      ('computer', 'Computer', '9:40 · Lab 2'),
+      ('art', 'Art', '10:25 · Studio'),
+      ('maths', 'Maths', '11:25 · Room B-204'),
     ];
-    return LayoutBuilder(
-      builder: (context, box) {
-        final scale = box.maxHeight / 470;
-        final colW = (box.maxWidth - 16) / 6 - 4;
-        final now = _phase(t, .58, .88, kSpring);
-        return Stack(
-          children: [
-            for (var i = 0; i < cols.length; i++)
-              Builder(
-                builder: (context) {
-                  final h = cols[i].$3 * scale;
-                  final grow = _phase(t, i * .07, i * .07 + .52, kSpring);
-                  final label = _phase(t, i * .07 + .32, i * .07 + .58);
-                  return Positioned(
-                    left: 8 + i * (colW + 4),
-                    bottom: -h * (1 - grow),
-                    width: colW,
-                    height: h,
-                    child: cols[i].$1.isEmpty
-                        ? Hatch(
-                            radius: const BorderRadius.vertical(top: Radius.circular(14)),
-                            background: context.app.paper2,
-                          )
-                        : Container(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            alignment: Alignment.bottomCenter,
-                            decoration: BoxDecoration(
-                              color: AppColors.subject(cols[i].$1).fill,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                            ),
-                            child: Opacity(
-                              opacity: label,
-                              child: Text(
-                                cols[i].$2,
-                                style: AppText.stamp(color: AppColors.subject(cols[i].$1).on),
-                              ),
-                            ),
-                          ),
-                  );
-                },
-              ),
-            Positioned(
-              left: 8 + 3 * (colW + 4),
-              bottom: 410 * scale * _phase(t, 3 * .07, 3 * .07 + .52, kSpring) - 10,
-              width: colW,
-              child: Opacity(
-                opacity: now.clamp(0.0, 1.0),
-                child: Transform.translate(
-                  offset: Offset(0, 12 * (1 - now)),
-                  child: Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: context.app.paper,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.app.ink.withValues(alpha: .16),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        child: Text(
-                          'onboarding.now'.tr,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.tiny(color: context.app.ink),
-                        ),
-                      ),
-                    ),
-                  ),
+    final now = _phase(t, .6, .85) > .5;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, r) in rows.indexed) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _ArtRow(
+            v: _phase(t, i * .08, i * .08 + .4, kSpring),
+            on: now && i == 1,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(color: c.subjectFor(r.$1).soft, borderRadius: BorderRadius.circular(AppRadius.md)),
+                  child: Icon(AppIcons.homework, size: 20, color: c.subjectFor(r.$1).ink),
                 ),
-              ),
+                const SizedBox(width: 12),
+                _lines(context, r.$2, r.$3, on: now && i == 1),
+                if (now && i == 1) Stamp('onboarding.now'.tr, color: c.onBright),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// Two children's day cards drop in; then the switch capsule lands and
-/// smoothly hands focus from Aarav to Ananya — selection pill, labels, and
-/// card emphasis all move together.
-class _ParentArt extends StatefulWidget {
+/// Each child as a row: arrival and what is due; the switch at the top moves between them.
+class _ParentArt extends StatelessWidget {
   const _ParentArt({required this.t});
 
   final double t;
 
   @override
-  State<_ParentArt> createState() => _ParentArtState();
-}
-
-class _ParentArtState extends State<_ParentArt> with SingleTickerProviderStateMixin {
-  /// 0 = Aarav, 1 = Ananya. One smooth ease — no bounce, no overshoot.
-  late final AnimationController _switch = AnimationController(
-    vsync: this,
-    duration: AppMotion.celebrate,
-  );
-  late final Animation<double> _hand =
-      CurvedAnimation(parent: _switch, curve: kEase);
-  var _switched = false;
-
-  @override
-  void didUpdateWidget(_ParentArt old) {
-    super.didUpdateWidget(old);
-    if (widget.t < .2 && old.t >= .2) {
-      _switched = false;
-      _switch.value = 0;
-    }
-    if (!_switched && widget.t >= .72) {
-      _switched = true;
-      if (context.reduceMotion) {
-        _switch.value = 1;
-      } else {
-        unawaited(_switch.forward());
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _switch.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final t = widget.t;
-    final a = _phase(t, 0, .5);
-    final b = _phase(t, .15, .65);
-    final pill = _phase(t, .48, .78);
-    Widget drop(double v, double rise, Widget child) => Opacity(
-      opacity: v.clamp(0.0, 1.0),
-      child: Transform.translate(offset: Offset(0, rise * (1 - v)), child: child),
-    );
-    return AnimatedBuilder(
-      animation: _hand,
-      builder: (context, _) {
-        final s = _hand.value;
-        return LayoutBuilder(
-          builder: (context, box) {
-            final scale = box.maxHeight / 470;
-            return Stack(
+    final c = context.app;
+    final kids = [
+      ('AS', 'blue', 'onboarding.kid_a_over'.tr, 'onboarding.kid_a_big'.tr, 'onboarding.kid_a_line'.tr),
+      ('AN', 'pink', 'onboarding.kid_b_over'.tr, 'onboarding.kid_b_big'.tr, 'onboarding.kid_b_line'.tr),
+    ];
+    final second = _phase(t, .62, .86) > .5;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, k) in kids.indexed) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _ArtRow(
+            v: _phase(t, i * .12, i * .12 + .45, kSpring),
+            on: second ? i == 1 : i == 0,
+            child: Row(
               children: [
-                Positioned(
-                  left: 34,
-                  right: 34,
-                  top: 96 * scale,
-                  child: drop(
-                    a,
-                    -70,
-                    _KidCard(
-                      subject: 'maths',
-                      over: 'onboarding.kid_a_over'.tr,
-                      big: 'onboarding.kid_a_big'.tr,
-                      line: 'onboarding.kid_a_line'.tr,
-                      angle: -.07 * a,
-                      focus: 1 - s * .5,
-                    ),
-                  ),
+                Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: c.spectrumFor(k.$2).soft, shape: BoxShape.circle),
+                  child: Text(k.$1, style: context.type.capB.copyWith(color: c.spectrumFor(k.$2).ink)),
                 ),
-                Positioned(
-                  left: 34,
-                  right: 34,
-                  top: 250 * scale,
-                  child: drop(
-                    b,
-                    90,
-                    _KidCard(
-                      subject: 'hindi',
-                      over: 'onboarding.kid_b_over'.tr,
-                      big: 'onboarding.kid_b_big'.tr,
-                      line: 'onboarding.kid_b_line'.tr,
-                      angle: .052 * b,
-                      focus: .5 + s * .5,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: (box.maxWidth - 236) / 2,
-                  top: 226 * scale,
-                  child: Opacity(
-                    opacity: pill.clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(0, 10 * (1 - pill)),
-                      child: _SwitchCapsule(progress: s),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _KidCard extends StatelessWidget {
-  const _KidCard({
-    required this.subject,
-    required this.over,
-    required this.big,
-    required this.line,
-    required this.angle,
-    required this.focus,
-  });
-
-  final String subject;
-  final String over;
-  final String big;
-  final String line;
-  final double angle;
-  final double focus;
-
-  @override
-  Widget build(BuildContext context) {
-    final f = focus.clamp(0.0, 1.0);
-    return Opacity(
-      opacity: .42 + .58 * f,
-      child: Transform.scale(
-        scale: .94 + .06 * f,
-        child: Transform.rotate(
-          angle: angle,
-          child: Container(
-            height: 176,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.subject(subject).fill,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.light.ink.withValues(alpha: 0.6).withValues(alpha: .4 + .35 * f),
-                  blurRadius: 28 + 18 * f,
-                  spreadRadius: -18,
-                  offset: Offset(0, 14 + 10 * f),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Overline(over, color: AppColors.white.withValues(alpha: 0.8)),
-                const SizedBox(height: 10),
-                Text(big, style: context.type.h2.copyWith(color: AppColors.white)),
-                const SizedBox(height: 4),
-                Text(line, style: context.type.s.copyWith(color: AppColors.white.withValues(alpha: 0.88))),
+                const SizedBox(width: 12),
+                _lines(context, '${k.$3} · ${k.$4}', k.$5, on: second ? i == 1 : i == 0),
               ],
             ),
           ),
+        ],
+        const SizedBox(height: 8),
+        _ArtRow(
+          v: _phase(t, .3, .7, kSpring),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: c.lateSoft, borderRadius: BorderRadius.circular(AppRadius.md)),
+                child: Icon(AppIcons.fees, size: 20, color: c.lateText),
+              ),
+              const SizedBox(width: 12),
+              _lines(context, 'onboarding.fee_title'.tr, 'onboarding.fee_line'.tr),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-/// Parent switcher: a white disc (2px larger than the avatar) slides behind the
-/// active child — one clean rim, no glow, no scale. The name slides with it.
-class _SwitchCapsule extends StatelessWidget {
-  const _SwitchCapsule({required this.progress});
-
-  /// 0 = Aarav, 1 = Ananya.
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = progress.clamp(0.0, 1.0);
-    const width = 236.0;
-    const height = 52.0;
-    const pad = 8.0;
-    const avatar = 40.0;
-    const thumb = 44.0;
-    // Centres of the two avatars; the thumb stays locked to those centres.
-    const left0 = pad + (avatar - thumb) / 2;
-    const left1 = width - pad - avatar + (avatar - thumb) / 2;
-    final thumbLeft = left0 + (left1 - left0) * p;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(height / 2),
-      child: Glass(
-        width: width,
-        height: height,
-        radius: height / 2,
-        onPigment: true,
-        shadow: false,
-        child: Stack(
-          children: [
-            Positioned(
-              left: thumbLeft,
-              top: (height - thumb) / 2,
-              width: thumb,
-              height: thumb,
-              child: const DecoratedBox(
-                decoration: BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
-              ),
-            ),
-            Positioned(
-              left: pad,
-              top: (height - avatar) / 2,
-              child: Opacity(
-                opacity: .5 + .5 * (1 - p),
-                child: Avatar(
-                  'Aarav Sharma',
-                  background: AppColors.light.paper,
-                  foreground: AppColors.light.ink,
-                ),
-              ),
-            ),
-            Positioned(
-              right: pad,
-              top: (height - avatar) / 2,
-              child: Opacity(
-                opacity: .5 + .5 * p,
-                child: Avatar(
-                  'Ananya Sharma',
-                  initials: 'AN',
-                  background: AppColors.light.paper,
-                  foreground: AppColors.subject('hindi').fill,
-                ),
-              ),
-            ),
-            Positioned(
-              left: pad + avatar + 8,
-              right: pad + avatar + 8,
-              top: 0,
-              bottom: 0,
-              child: ClipRect(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Transform.translate(
-                      offset: Offset(-14 * p, 0),
-                      child: Opacity(
-                        opacity: (1 - p * 1.35).clamp(0.0, 1.0),
-                        child: Text(
-                          'onboarding.kid_a_over'.tr,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.capB(color: AppColors.white, height: 1.1),
-                        ),
-                      ),
-                    ),
-                    Transform.translate(
-                      offset: Offset(14 * (1 - p), 0),
-                      child: Opacity(
-                        opacity: ((p - .12) / .88).clamp(0.0, 1.0),
-                        child: Text(
-                          'onboarding.kid_b_over'.tr,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.capB(color: AppColors.white, height: 1.1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A class register: the children pop in, two are marked absent and one late,
-/// then the tally slides up.
+/// The RollCall board: names with their marks, two turning absent and one late, then the count.
 class _TeacherArt extends StatelessWidget {
   const _TeacherArt({required this.t});
 
@@ -743,169 +515,72 @@ class _TeacherArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mark = _phase(t, .68, .88, kSpring);
-    final tally = _phase(t, .8, 1);
-    const names = [
-      'AS',
-      'DM',
-      'KS',
-      'MK',
-      'VJ',
-      'AR',
-      'IG',
-      'SK',
-      'AN',
-      'KP',
-      'RM',
-      'TS',
-      'NB',
-      'PD',
-      'YC',
-      'HV',
-      'OB',
-      'ZA',
-      'LF',
-      'EG',
-    ];
-    const absent = {6, 18};
-    const late = {12};
-    return LayoutBuilder(
-      builder: (context, box) {
-        final s = box.maxHeight / 470;
-        final w = math.min<double>(box.maxWidth - 48, 342);
-        return Stack(
-          children: [
-            Positioned(
-              left: (box.maxWidth - w) / 2,
-              top: 110 * s,
-              width: w,
-              child: Wrap(
-                spacing: (w - 5 * 62) / 4,
-                runSpacing: 12,
-                children: [
-                  for (var i = 0; i < names.length; i++)
-                    Builder(
-                      builder: (context) {
-                        final pop = _phase(t, i * .02, i * .02 + .3, kSpring);
-                        return Opacity(
-                          opacity: pop.clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: pop,
-                            child: _RegisterDot(
-                              initials: names[i],
-                              colorIndex: i % 4,
-                              absent: absent.contains(i),
-                              late: late.contains(i),
-                              mark: mark,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
+    final c = context.app;
+    final mark = _phase(t, .55, .8) > .5;
+    const kids = [('Ishaan Gupta', 'IG', 'teal'), ('Kiara Patel', 'KP', 'amber'), ('Leo Fernandes', 'LF', 'violet'), ('Zoya Shaikh', 'ZS', 'blue')];
+    final marks = [AttendanceStatus.absent, AttendanceStatus.present, AttendanceStatus.lateArrival, AttendanceStatus.present];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Opacity(
+          opacity: _phase(t, .75, 1),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              '${'onboarding.tally_present'.tr} · ${'onboarding.tally_absent'.tr} · ${'onboarding.tally_late'.tr}',
+              style: context.type.t.copyWith(color: c.bright),
             ),
-            Positioned(
-              left: (box.maxWidth - w) / 2,
-              top: 110 * s + 268 + 22 * (1 - tally),
-              width: w,
-              child: Opacity(
-                opacity: tally,
-                child: Glass(
-                  height: 56,
-                  radius: 999,
-                  padding: const EdgeInsets.only(left: 20, right: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            text: '${'onboarding.tally_present'.tr} · ',
-                            children: [
-                              TextSpan(
-                                text: '${'onboarding.tally_absent'.tr} · ',
-                                style: TextStyle(color: context.app.badText),
-                              ),
-                              TextSpan(
-                                text: 'onboarding.tally_late'.tr,
-                                style: TextStyle(color: AppColors.late),
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.ts(color: context.app.ink, height: 1),
-                        ),
-                      ),
-                      Btn('common.submit', kind: BtnKind.ink, small: true, onPressed: () {}),
-                    ],
-                  ),
+          ),
+        ),
+        for (final (i, k) in kids.indexed) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _ArtRow(
+            v: _phase(t, i * .08, i * .08 + .4, kSpring),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: c.spectrumFor(k.$3).soft, shape: BoxShape.circle),
+                  child: Text(k.$2, style: context.type.capB.copyWith(color: c.spectrumFor(k.$3).ink)),
                 ),
-              ),
+                const SizedBox(width: 12),
+                _lines(context, k.$1, 'teacher.roll'.trp({'n': '${4 + i * 3}'})),
+                _Pill(mark: mark ? marks[i] : AttendanceStatus.present),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _RegisterDot extends StatelessWidget {
-  const _RegisterDot({
-    required this.initials,
-    required this.colorIndex,
-    required this.absent,
-    required this.late,
-    required this.mark,
-  });
+/// The RollCall board's status pill.
+class _Pill extends StatelessWidget {
+  const _Pill({required this.mark});
 
-  final String initials;
-  final int colorIndex;
-  final bool absent;
-  final bool late;
-
-  /// 0 before the teacher marks the register, 1 once the A and L badges are on.
-  final double mark;
+  final AttendanceStatus mark;
 
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final house = AppColors.houses[colorIndex];
-    final ink = colorIndex == 3 ? AppColors.mariInk : AppColors.white;
-    final m = mark.clamp(0.0, 1.0);
-    final bg = absent ? Color.lerp(house, c.paper, m)! : house;
-    final fg = absent ? Color.lerp(ink, c.badText, m)! : ink;
-    return SizedBox(
-      width: 62,
-      height: 62,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: bg,
-              shape: BoxShape.circle,
-              border: absent ? Border.all(color: AppColors.bad.withValues(alpha: m), width: 2.5) : null,
-            ),
-            child: Text(initials, style: AppText.t(color: fg, height: 1)),
-          ),
-          if (absent || late)
-            Positioned(
-              right: -2,
-              top: -2,
-              child: Transform.scale(
-                scale: mark,
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: absent ? AppColors.bad : AppColors.late, shape: BoxShape.circle),
-                  child: Text(absent ? 'A' : 'L', style: AppText.tiny(color: AppColors.white)),
-                ),
-              ),
-            ),
-        ],
+    final (label, soft, ink, icon) = switch (mark) {
+      AttendanceStatus.absent => ('teacher.absent_t', c.badSoft, c.badText, AppIcons.absent),
+      AttendanceStatus.lateArrival => ('teacher.late_t', c.lateSoft, c.lateText, AppIcons.late),
+      _ => ('teacher.present_t', c.okSoft, c.okText, AppIcons.present),
+    };
+    return AnimatedContainer(
+      duration: AppMotion.t2,
+      curve: kEase,
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(AppRadius.sm)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Icon(icon, size: 16, color: ink), const SizedBox(width: 6), Text(label.tr, style: context.type.ts.copyWith(color: ink))],
       ),
     );
   }

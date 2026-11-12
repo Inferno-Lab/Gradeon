@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReportQuery } from '@gradeon/contracts';
-import { DateField, EmptyCard, Select } from '@gradeon/web-ui';
+import { DateField, Select, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Ico, useOpenParam } from '../../app/kit';
 import { usePageTabs } from '../../app/tabs';
 
-const DOWNLOAD = 'M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14';
-const PRINT = 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z';
+const DOWNLOAD = 'download';
+const PRINT = 'print';
 /** Which reports each tab of the page (config-engine: the school module's reports page) holds, by the server's report areas. */
 const AREAS: Record<string, string> = { attendance: 'Attendance', money: 'Fees', learning: 'Learning', people: 'People' };
 /** A number in a cell ("88%", "₹1,200", 12) as a number, so columns sort by value. */
@@ -57,7 +57,7 @@ export function ReportsPage() {
         <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>
       </>}</>}>
       {(list?.length ?? 0) === 0 ? (
-        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports here yet" body="Reports in this area appear once the modules they read from are part of your school’s plan." /></div>
+        <div><EmptyState scene="reports" onAction={() => app.go('/attendance')} onLink={() => app.go('/fees')} /></div>
       ) : (
         <section className="rpg" data-even="fill">
           <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">

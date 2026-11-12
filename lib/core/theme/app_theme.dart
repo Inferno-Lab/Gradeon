@@ -9,14 +9,14 @@ abstract final class AppTheme {
     required AppThemeMode mode,
     required Brightness platformBrightness,
   }) {
-    return switch (mode) {
-      AppThemeMode.light => build(AppColors.light),
-      AppThemeMode.dark => build(AppColors.blackboard),
-      AppThemeMode.amoled => build(AppColors.amoled),
-      AppThemeMode.system => build(
-        platformBrightness == Brightness.dark ? AppColors.blackboard : AppColors.light,
-      ),
+    final colours = switch (mode) {
+      AppThemeMode.light => AppColors.light,
+      AppThemeMode.dark => AppColors.blackboard,
+      AppThemeMode.amoled => AppColors.amoled,
+      AppThemeMode.system => platformBrightness == Brightness.dark ? AppColors.blackboard : AppColors.light,
     };
+    AppColors.activeDark = colours.dark;
+    return build(colours);
   }
 
   static ThemeData build(AppColors c) {

@@ -1,4 +1,3 @@
-import type { ThemeColors } from './theme.js';
 import { ATTENDANCE_MARKS, type MenuGroup } from './config.js';
 import { z } from 'zod';
 import { IsoDate } from './common.js';
@@ -463,8 +462,8 @@ export interface ShellData {
   features: string[];
   /** The menu for this person, built from the module definitions (config-engine `adminMenu`). */
   menu: MenuGroup[];
-  /** The colours the console changed for this school. */
-  theme: ThemeColors;
+  /** The seed hue (0–359) of the school's colours, from its brand colour. */
+  hue: number;
 }
 
 // Search (command palette)

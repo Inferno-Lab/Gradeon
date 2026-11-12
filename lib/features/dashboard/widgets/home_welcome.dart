@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -29,7 +28,7 @@ class HomeWelcome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(child: EmptyArtView(EmptyArt.calendar, height: 120)),
+          const Center(child: EmptyArtView(EmptyArt.home)),
           const SizedBox(height: 12),
           Text('home.welcome_title'.trp({'school': AppConfig.schoolName.split(' ').first}), style: context.type.h2),
           const SizedBox(height: 6),
@@ -67,10 +66,10 @@ class _StepList extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: i == 0 ? AppColors.mari : c.paper2,
+                      color: i == 0 ? context.app.brand : c.paper2,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(s.$1, size: 20, color: i == 0 ? AppColors.mariInk : c.ink),
+                    child: Icon(s.$1, size: 20, color: i == 0 ? context.app.onBrand : c.ink),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

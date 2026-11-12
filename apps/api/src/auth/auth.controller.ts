@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Put, Req, Res } from '@nestjs/common';
-import { CodeRequest, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, resolveApp, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, DEFAULT_BRAND, hueOf, hueTokens, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import type { z } from 'zod';
@@ -135,9 +135,9 @@ export class MeController {
   @Public() @Get('brand')
   async brand(@Tenant() t: TenantCtx): Promise<SchoolBrand> {
     const cfg = await this.settings.effective(t);
-    const theme = (cfg.settings['theme.colors'] ?? {}) as SchoolBrand['theme'];
+    const hue = hueOf(cfg.school.color || DEFAULT_BRAND);
     return {
-      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, theme, palette: { light: resolveApp(theme, 'light'), dark: resolveApp(theme, 'dark'), amoled: resolveApp(theme, 'amoled') },
+      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, hue, palette: { light: hueTokens(hue, 'light'), dark: hueTokens(hue, 'dark'), amoled: hueTokens(hue, 'amoled') },
       privacy: cfg.privacy,
     };
   }

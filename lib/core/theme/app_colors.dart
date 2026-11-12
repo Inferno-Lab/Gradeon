@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gradeon/core/theme/app_palette_defaults.dart';
 
-/// Subject pigment ("notebook cover") and the colour that reads on top of it.
+/// A subject's spectrum colour: the solid, the text on it, its soft fill, and the ink that reads on the fill.
 class SubjectColor {
-  const SubjectColor(this.fill, this.on);
+  const SubjectColor(this.fill, this.on, {required this.soft, required this.ink});
 
   final Color fill;
   final Color on;
+  final Color soft;
+  final Color ink;
 }
 
-/// The palette in use: the design's defaults, or the school's from the console (`/v1/brand` → `palette`).
+/// The palette in use: Gradeon Hue's colours for the default seed, or the school's from the server (`/v1/brand` →
+/// `palette`, worked out from its brand colour by `packages/contracts/src/hue.ts`).
 abstract final class AppPalette {
   static Map<String, Map<String, Color>> _modes = appPaletteDefaults;
 
@@ -41,19 +44,20 @@ abstract final class AppPalette {
     return Color(int.parse('$alpha${h.substring(0, 6)}', radix: 16));
   }
 
-  /// White or the near-black ink, whichever reads better on [ground].
-  static Color on(Color ground) =>
-      ground.computeLuminance() > 0.36 ? const Color(0xFF1A1A1C) : const Color(0xFFFFFFFF);
+  /// White or the theme's darkest ink, whichever reads better on [ground].
+  static Color on(Color ground) => ground.computeLuminance() > 0.36 ? of('light', 't1') : const Color(0xFFFFFFFF);
 }
 
-/// Chalk & Glass tokens. Light is chalk, dark is blackboard, AMOLED is true black. Every colour comes from [AppPalette],
-/// so a school's colours from the console reach every screen.
+/// Gradeon Hue's colours for one theme (light, dark, AMOLED), all from [AppPalette], so a school's colour reaches every
+/// screen. The frame (header, tab bar) is [deep]; "you are here" is [bright]; actions are [brand]; panels are [paper] on
+/// [chalk]; status is ok, warn ([late]), bad and info; things are named by the spectrum ([subject]).
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.chalk,
     required this.paper,
     required this.paper2,
+    required this.paper3,
     required this.ink,
     required this.ink2,
     required this.ink3,
@@ -61,43 +65,74 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.line2,
     required this.scrim,
     required this.shadow,
+    required this.deep,
+    required this.deep2,
+    required this.deep3,
+    required this.hero,
+    required this.onDeep,
+    required this.onDeep2,
+    required this.bright,
+    required this.onBright,
+    required this.brand,
+    required this.onBrand,
     required this.mariText,
     required this.mariSoft,
     required this.okSoft,
+    required this.okText,
     required this.badSoft,
     required this.badText,
     required this.lateSoft,
     required this.lateText,
+    required this.infoSoft,
+    required this.infoText,
     required this.dark,
   });
 
   factory AppColors.of(String mode) {
     Color p(String key) => AppPalette.of(mode, key);
     return AppColors(
-      chalk: p('chalk'),
-      paper: p('paper'),
-      paper2: p('paper2'),
-      ink: p('ink'),
-      ink2: p('ink2'),
-      ink3: p('ink3'),
+      chalk: p('bg'),
+      paper: p('s1'),
+      paper2: p('s2'),
+      paper3: p('s3'),
+      ink: p('t1'),
+      ink2: p('t2'),
+      ink3: p('t3'),
       line: p('line'),
       line2: p('line2'),
       scrim: p('scrim'),
-      shadow: p('shadow'),
-      mariText: p('mariText'),
-      mariSoft: p('mariSoft'),
-      okSoft: p('okSoft'),
-      badSoft: p('badSoft'),
-      badText: p('badText'),
-      lateSoft: p('lateSoft'),
-      lateText: p('lateText'),
+      shadow: p('deep').withValues(alpha: mode == 'light' ? .14 : .5),
+      deep: p('deep'),
+      deep2: p('deep2'),
+      deep3: p('deep3'),
+      hero: p('hero'),
+      onDeep: p('on-deep'),
+      onDeep2: p('on-deep2'),
+      bright: p('bright'),
+      onBright: p('on-bright'),
+      brand: p('brand'),
+      onBrand: p('on-brand'),
+      mariText: p('brand-ink'),
+      mariSoft: p('brand-soft'),
+      okSoft: p('ok-s'),
+      okText: p('ok-i'),
+      badSoft: p('bad-s'),
+      badText: p('bad-i'),
+      lateSoft: p('warn-s'),
+      lateText: p('warn-i'),
+      infoSoft: p('info-s'),
+      infoText: p('info-i'),
       dark: mode != 'light',
     );
   }
 
+  /// The ground behind everything (Hue `bg`).
   final Color chalk;
+
+  /// Panels and cards (Hue `s1`), wells (`s2`) and deeper wells (`s3`).
   final Color paper;
   final Color paper2;
+  final Color paper3;
   final Color ink;
   final Color ink2;
   final Color ink3;
@@ -105,43 +140,92 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color line2;
   final Color scrim;
 
-  /// Under floating controls (dock, top buttons, sheets).
+  /// Under floating things only (sheets, toasts, the tab bar).
   final Color shadow;
+
+  /// The school's deep colour: the header and the tab bar; [hero] is the headline card.
+  final Color deep;
+  final Color deep2;
+  final Color deep3;
+  final Color hero;
+  final Color onDeep;
+  final Color onDeep2;
+
+  /// "You are here": the active tab, the one number that matters.
+  final Color bright;
+  final Color onBright;
+
+  /// Actions.
+  final Color brand;
+  final Color onBrand;
+
+  /// Brand as text and its soft fill.
   final Color mariText;
   final Color mariSoft;
   final Color okSoft;
+  final Color okText;
   final Color badSoft;
-
-  /// Bad as text: brighter on dark grounds, where the pigment fails contrast.
   final Color badText;
   final Color lateSoft;
-
-  /// Late as text: darker on paper in light, brighter in dark.
   final Color lateText;
+  final Color infoSoft;
+  final Color infoText;
   final bool dark;
 
-  // Colours that are the same in every theme.
-  static Color get mari => AppPalette.of('light', 'mari');
-  static Color get mariInk => AppPalette.of('light', 'mariInk');
+  // Solid colours for fills that carry their own text ([mariInk], [white] or [AppPalette.on]).
+  static Color get mari => AppPalette.of('light', 'brand');
+  static Color get mariInk => AppPalette.of('light', 'on-brand');
   static Color get ok => AppPalette.of('light', 'ok');
   static Color get bad => AppPalette.of('light', 'bad');
-  static Color get late => AppPalette.of('light', 'late');
-  static Color get off => AppPalette.of('light', 'off');
+  static Color get late => AppPalette.of('light', 'warn');
+  static Color get info => AppPalette.of('light', 'info');
+  static Color get off => AppPalette.of('light', 't3');
 
-  /// Text on a solid state or pigment fill; [AppPalette.on] picks it for any colour.
   static const white = Color(0xFFFFFFFF);
 
+  // A subject's spectrum colour, the same as the admin's (packages/contracts subjectColour).
+  static const _subjectSpectrum = {
+    'maths': 'blue', 'mathematics': 'blue', 'science': 'green', 'english': 'red', 'hindi': 'pink', 'social': 'teal',
+    'computer': 'indigo', 'computers': 'indigo', 'art': 'cyan', 'pe': 'lime', 'physical': 'lime', 'music': 'violet',
+  };
   static const _subjectIds = ['maths', 'science', 'english', 'hindi', 'social', 'computer', 'art', 'pe', 'music'];
 
   static Map<String, SubjectColor> get subjects => {for (final id in _subjectIds) id: subject(id)};
 
-  static SubjectColor subject(String id) {
-    final fill = AppPalette.of('light', _subjectIds.contains(id) ? 'subject.$id' : 'subject.other');
-    return SubjectColor(fill, AppPalette.on(fill));
+  static SubjectColor subject(String id) => spectrum(_subjectSpectrum[id.toLowerCase().split(' ').first] ?? 'teal');
+
+  /// Whether the app's theme is dark (set by AppTheme.resolve): the spectrum lookups below follow it.
+  static bool activeDark = false;
+
+  /// One of the twelve spectrum colours (rose … pink): solid, soft fill and ink, in the app's theme.
+  static SubjectColor spectrum(String colour) {
+    final mode = activeDark ? 'dark' : 'light';
+    final fill = AppPalette.of(mode, 'sp.$colour.c');
+    return SubjectColor(fill, AppPalette.on(fill), soft: AppPalette.of(mode, 'sp.$colour.cs'), ink: AppPalette.of(mode, 'sp.$colour.ci'));
+  }
+
+  /// A subject's spectrum colour in this theme (dark themes use the spectrum's dark soft fills and light inks).
+  SubjectColor subjectFor(String id) => spectrumFor(_subjectSpectrum[id.toLowerCase().split(' ').first] ?? 'teal');
+
+  /// One spectrum colour in this theme.
+  SubjectColor spectrumFor(String colour) {
+    final mode = dark ? 'dark' : 'light';
+    final fill = AppPalette.of(mode, 'sp.$colour.c');
+    return SubjectColor(fill, AppPalette.on(fill), soft: AppPalette.of(mode, 'sp.$colour.cs'), ink: AppPalette.of(mode, 'sp.$colour.ci'));
   }
 
   /// House colours used for student avatars.
-  static List<Color> get houses => [for (var i = 1; i <= 4; i++) AppPalette.of('light', 'house.$i')];
+  static List<Color> get houses => [for (final c in ['green', 'blue', 'pink', 'amber']) spectrum(c).fill];
+
+  /// The same theme as it reads on the deep colour (the Hue header): surfaces become deep2 and deep3, text the deep
+  /// colour's own, actions bright. Whatever sits in the header picks these up through `context.app`.
+  AppColors get onDeepSide => AppColors(
+    chalk: deep, paper: deep2, paper2: deep2, paper3: deep3, ink: onDeep, ink2: onDeep2, ink3: onDeep2, line: deep3, line2: deep3,
+    scrim: scrim, shadow: shadow, deep: deep, deep2: deep2, deep3: deep3, hero: hero, onDeep: onDeep, onDeep2: onDeep2,
+    bright: bright, onBright: onBright, brand: bright, onBrand: onBright, mariText: bright, mariSoft: deep2,
+    okSoft: okSoft, okText: okText, badSoft: badSoft, badText: badText, lateSoft: lateSoft, lateText: lateText,
+    infoSoft: infoSoft, infoText: infoText, dark: true,
+  );
 
   // Getters, not constants: the palette can change while the app runs.
   // ignore: prefer_constructors_over_static_methods
@@ -156,6 +240,7 @@ class AppColors extends ThemeExtension<AppColors> {
     chalk: chalk ?? this.chalk,
     paper: paper ?? this.paper,
     paper2: paper2 ?? this.paper2,
+    paper3: paper3,
     ink: ink,
     ink2: ink2,
     ink3: ink3,
@@ -163,13 +248,26 @@ class AppColors extends ThemeExtension<AppColors> {
     line2: line2,
     scrim: scrim,
     shadow: shadow,
+    deep: deep,
+    deep2: deep2,
+    deep3: deep3,
+    hero: hero,
+    onDeep: onDeep,
+    onDeep2: onDeep2,
+    bright: bright,
+    onBright: onBright,
+    brand: brand,
+    onBrand: onBrand,
     mariText: mariText,
     mariSoft: mariSoft,
     okSoft: okSoft,
+    okText: okText,
     badSoft: badSoft,
     badText: badText,
     lateSoft: lateSoft,
     lateText: lateText,
+    infoSoft: infoSoft,
+    infoText: infoText,
     dark: dark,
   );
 
@@ -181,6 +279,7 @@ class AppColors extends ThemeExtension<AppColors> {
       chalk: m(chalk, other.chalk),
       paper: m(paper, other.paper),
       paper2: m(paper2, other.paper2),
+      paper3: m(paper3, other.paper3),
       ink: m(ink, other.ink),
       ink2: m(ink2, other.ink2),
       ink3: m(ink3, other.ink3),
@@ -188,13 +287,26 @@ class AppColors extends ThemeExtension<AppColors> {
       line2: m(line2, other.line2),
       scrim: m(scrim, other.scrim),
       shadow: m(shadow, other.shadow),
+      deep: m(deep, other.deep),
+      deep2: m(deep2, other.deep2),
+      deep3: m(deep3, other.deep3),
+      hero: m(hero, other.hero),
+      onDeep: m(onDeep, other.onDeep),
+      onDeep2: m(onDeep2, other.onDeep2),
+      bright: m(bright, other.bright),
+      onBright: m(onBright, other.onBright),
+      brand: m(brand, other.brand),
+      onBrand: m(onBrand, other.onBrand),
       mariText: m(mariText, other.mariText),
       mariSoft: m(mariSoft, other.mariSoft),
       okSoft: m(okSoft, other.okSoft),
+      okText: m(okText, other.okText),
       badSoft: m(badSoft, other.badSoft),
       badText: m(badText, other.badText),
       lateSoft: m(lateSoft, other.lateSoft),
       lateText: m(lateText, other.lateText),
+      infoSoft: m(infoSoft, other.infoSoft),
+      infoText: m(infoText, other.infoText),
       dark: t < 0.5 ? dark : other.dark,
     );
   }

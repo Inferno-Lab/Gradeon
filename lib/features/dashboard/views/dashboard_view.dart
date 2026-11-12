@@ -19,7 +19,6 @@ import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:gradeon/features/dashboard/widgets/child_switcher.dart';
-import 'package:gradeon/features/dashboard/widgets/day_ribbon.dart';
 import 'package:gradeon/features/dashboard/widgets/home_cards.dart';
 import 'package:gradeon/features/dashboard/widgets/home_welcome.dart';
 import 'package:intl/intl.dart';
@@ -33,7 +32,6 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  final _ribbon = GlobalKey<DayRibbonState>();
   int? _scrub;
   var _pulled = false;
 
@@ -46,172 +44,155 @@ class _DashboardViewState extends State<DashboardView> {
       final data = controller.snapshot;
       final parent = auth.role == UserRole.parent;
       final wide = context.isWide;
-      // With no classes today there is no ribbon: a slim header and dark controls.
       final hasDay = data != null && data.periods.isNotEmpty && _show('dayRibbon', 'timetable');
-      final ribbonH = hasDay ? (parent ? 196.0 : 236.0) : 0.0;
-      final controlInk = hasDay ? AppColors.white : context.app.ink;
       final top = MediaQuery.paddingOf(context).top;
       controller.state.value; // rebuild on state changes
+      final c = context.app;
+      final user = auth.user.value;
+      final first = parent ? (user?.name ?? '').split(' ').first : (data?.student.name ?? '').split(' ').first;
+      final hello = parent ? '${Formatters.greetingKey(DateTime.now()).tr}, $first' : greeting(first);
+      final side = wide ? 130.0 : 20.0;
+      // Home as the ParentHome and TeacherHome boards (design/hue/src): the greeting on the school's deep colour, then a
+      // sheet with today's lessons as a strip and the cards the console chose.
       return Scaffold(
-        backgroundColor: context.app.chalk,
-        body: NotificationListener<ScrollUpdateNotification>(
-          // Pull down on Home opens search.
-          onNotification: (n) {
-            if (n.metrics.pixels < -90 && !_pulled) {
-              _pulled = true;
-              unawaited(Get.toNamed<void>(AppRoutes.search)?.then((_) => _pulled = false));
-            }
-            return false;
-          },
-          // No refresh circle here: pulling down is the search gesture, and Home reloads itself on any change.
-          child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-              padding: EdgeInsets.only(bottom: wide ? 40 : kDockClearance + MediaQuery.paddingOf(context).bottom),
-              children: [
-                SizedBox(
-                  height: hasDay || data == null ? ribbonH + 36 : top + 64,
-                  child: Stack(
-                    children: [
-                      if (data == null)
-                        const _RibbonPlaceholder(height: 189)
-                      else if (hasDay)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          child: DayRibbon(
-                            key: _ribbon,
-                            periods: data.periods,
-                            height: ribbonH,
-                            pxPerMinute: wide ? 3.6 : 2.4,
-                            leftInset: wide ? 110 : 0,
-                            showLabel: !parent,
-                            draggable: !parent,
-                            onScrub: (m) => setState(() => _scrub = m),
-                            blockDetail: wide ? (p) => data.teacherNames[p.teacherId] : null,
-                          ),
-                        ),
-                      if (hasDay)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: ribbonH + 6,
-                          child: RibbonScale(
-                            periods: data.periods,
-                            pxPerMinute: wide ? 3.6 : 2.4,
-                            leftInset: wide ? 110 : 0,
-                          ),
-                        ),
-                      Positioned(
-                        left: wide ? 130 : 16,
-                        top: top + 8,
-                        child: parent ? const ChildCapsule() : _ProfileCapsule(data: data),
-                      ),
-                      Positioned(
-                        right: wide ? 24 : 16,
-                        top: top + 8,
-                        child: Row(
+        backgroundColor: c.chalk,
+        body: Stack(
+          children: [
+            Positioned(left: 0, right: 0, top: 0, height: MediaQuery.sizeOf(context).height * .5, child: ColoredBox(color: c.deep)),
+            NotificationListener<ScrollUpdateNotification>(
+              // Pull down on Home opens search.
+              onNotification: (n) {
+                if (n.metrics.pixels < -90 && !_pulled) {
+                  _pulled = true;
+                  unawaited(Get.toNamed<void>(AppRoutes.search)?.then((_) => _pulled = false));
+                }
+                return false;
+              },
+              // No refresh circle here: pulling down is the search gesture, and Home reloads itself on any change.
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: EdgeInsets.zero,
+                children: [
+                  Theme(
+                    data: Theme.of(context).copyWith(extensions: [c.onDeepSide]),
+                    child: Builder(
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.fromLTRB(side, top + 8, wide ? 40 : 16, 48),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!parent) ...[
-                              GlassIconButton(
-                                icon: PhosphorIconsRegular.magnifyingGlass,
-                                label: 'common.search'.tr,
-                                color: controlInk,
-                                onTap: () => Get.toNamed<void>(AppRoutes.search),
-                              ),
-                              const SizedBox(width: 10),
-                            ],
-                            GlassIconButton(
-                              icon: PhosphorIconsRegular.bell,
-                              label: 'notifications.title'.tr,
-                              color: controlInk,
-                              badge: true,
-                              onTap: () => Get.toNamed<void>(AppRoutes.notifications),
+                            Row(
+                              children: [
+                                if (parent) const ChildCapsule() else _ProfileCapsule(data: data),
+                                const Spacer(),
+                                if (!parent) ...[
+                                  GlassIconButton(
+                                    icon: PhosphorIconsRegular.magnifyingGlass,
+                                    label: 'common.search'.tr,
+                                    onTap: () => Get.toNamed<void>(AppRoutes.search),
+                                  ),
+                                  const SizedBox(width: 10),
+                                ],
+                                GlassIconButton(
+                                  icon: PhosphorIconsRegular.bell,
+                                  label: 'notifications.title'.tr,
+                                  badge: true,
+                                  onTap: () => Get.toNamed<void>(AppRoutes.notifications),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 16),
+                            Rise(child: Text(todayLine(), style: context.type.capB)),
+                            const SizedBox(height: 6),
+                            Rise(index: 1, child: Text(hello, style: context.type.h1)),
                           ],
                         ),
                       ),
-                      if (_scrub != null)
-                        Positioned(
-                          right: 16,
-                          top: ribbonH + 30,
-                          child: GlassPress(
-                            onTap: () => _ribbon.currentState?.backToNow(),
-                            child: Glass(
-                              height: 36,
-                              radius: 18,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(PhosphorIconsRegular.clock, size: 15, color: context.app.ink),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'home.back_to_now'.tr,
-                                    style: AppText.capB(color: context.app.ink, height: 1),
-                                  ),
-                                ],
-                              ),
-                            ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: const Offset(0, -28),
+                    child: Container(
+                      constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height),
+                      decoration: BoxDecoration(color: c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
+                      padding: EdgeInsets.fromLTRB(side, 18, wide ? 40 : 20, wide ? 40 : kDockClearance + MediaQuery.paddingOf(context).bottom),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const OfflineCapsule(),
+                          if (hasDay) Padding(padding: const EdgeInsets.only(bottom: 16), child: PeriodStrip(periods: data.periods)),
+                          ViewStateView(
+                            state: controller.state.value,
+                            onRetry: controller.load,
+                            errorKey: controller.errorMessage.value,
+                            emptyTitle: 'home.empty_title',
+                            emptyBody: 'home.empty_body',
+                            child: data == null
+                                ? const SizedBox.shrink()
+                                : wide
+                                ? _WideBody(data: data, scrub: _scrub, parent: parent)
+                                : parent
+                                ? _ParentBody(data: data)
+                                : _StudentBody(data: data, scrub: _scrub),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(wide ? 130 : 20, 0, wide ? 40 : 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const OfflineCapsule(),
-                      ViewStateView(
-                        state: controller.state.value,
-                        onRetry: controller.load,
-                        errorKey: controller.errorMessage.value,
-                        emptyTitle: 'home.empty_title',
-                        emptyBody: 'home.empty_body',
-                        child: data == null
-                            ? const SizedBox.shrink()
-                            : wide
-                            ? _WideBody(data: data, scrub: _scrub, parent: parent)
-                            : parent
-                            ? _ParentBody(data: data)
-                            : _StudentBody(data: data, scrub: _scrub),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+          ],
         ),
       );
     });
   }
 }
 
-class _RibbonPlaceholder extends StatelessWidget {
-  const _RibbonPlaceholder({required this.height});
+/// Today's lessons as a strip of subject cards in their spectrum colours, the one on now outlined (the ParentHome board).
+class PeriodStrip extends StatelessWidget {
+  const PeriodStrip({required this.periods, this.label, super.key});
 
-  final double height;
+  final List<PeriodSlot> periods;
+
+  /// What a card says: the subject by default, a class for a teacher.
+  final String Function(PeriodSlot)? label;
 
   @override
-  Widget build(BuildContext context) => Sweep(
-    child: Row(
-      children: [
-        for (var i = 0; i < 4; i++)
-          Expanded(
-            child: Container(
-              height: height,
-              margin: const EdgeInsets.only(right: 4),
-              decoration: BoxDecoration(
-                color: context.app.paper2,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
-              ),
+  Widget build(BuildContext context) {
+    final now = nowMinutes();
+    final lessons = periods.where((p) => p.kind == PeriodKind.klass).toList();
+    return SizedBox(
+      height: 64,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: lessons.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final p = lessons[i];
+          final col = context.app.subjectFor(p.subject);
+          final on = now >= minutesOf(p.start) && now < minutesOf(p.end);
+          return Container(
+            width: 112,
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            decoration: BoxDecoration(
+              color: col.soft,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: on ? Border.all(color: col.ink, width: 2) : null,
             ),
-          ),
-      ],
-    ),
-  );
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label?.call(p) ?? subjectName(p.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.ts.copyWith(color: col.ink)),
+                const SizedBox(height: 2),
+                Text(on ? '${'home.now'.tr} · ${clockOf(minutesOf(p.start))}' : clockOf(minutesOf(p.start)), style: context.type.cap.copyWith(color: col.ink)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _ProfileCapsule extends StatelessWidget {
@@ -311,9 +292,6 @@ class _StudentBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Rise(child: Overline(todayLine())),
-        const SizedBox(height: 8),
-        Rise(index: 1, child: Text(greeting(data.student.name.split(' ').first), style: context.type.h1)),
         const Rise(index: 1, child: QuickRow()),
         const SizedBox(height: 16),
         if (data.isNew)
@@ -337,7 +315,6 @@ class _ParentBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Get.find<AuthService>().user.value;
     final c = context.app;
     final quiet = data.children.where(
       (child) => data.due.every((d) => d.childName != child.student.name.split(' ').first),
@@ -345,15 +322,6 @@ class _ParentBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Rise(child: Overline(todayLine())),
-        const SizedBox(height: 8),
-        Rise(
-          index: 1,
-          child: Text(
-            '${Formatters.greetingKey(DateTime.now()).tr}, ${(user?.name ?? '').split(' ').first}',
-            style: context.type.h1,
-          ),
-        ),
         const Rise(index: 1, child: QuickRow()),
         Rise(index: 2, child: SectionLabel('home.both_children'.tr)),
         Rise(index: 2, child: ChildrenStrip(children: data.children)),
@@ -534,7 +502,7 @@ class NowCard extends StatelessWidget {
             Cover(subject: p.subject, large: large)
           else
             Hatch(
-              radius: BorderRadius.circular(6),
+              radius: BorderRadius.circular(7),
               background: c.paper2,
               child: SizedBox(width: large ? 64 : 42, height: large ? 82 : 52),
             ),

@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { webThemeCss, type ThemeColors } from '@gradeon/contracts';
+import { CONSOLE_HUE, hueCss } from '@gradeon/contracts';
 
 export type Theme = 'light' | 'dark';
 const KEY = 'gradeon.theme';
@@ -33,9 +33,9 @@ export function setTheme(t: Theme | null): void {
   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-swap')));
 }
 
-/** Puts the console's colour changes on every `.nest` on the page (portals and sign-in pages included). */
-export function useThemeColors(changes: ThemeColors | undefined): void {
-  const css = changes ? webThemeCss(changes) : '';
+/** Puts a seed's colours (Gradeon Hue) on every `.nest` on the page, portals and sign-in pages included. hue.css holds the console's. */
+export function useHue(hue: number | undefined): void {
+  const css = hue === undefined || hue === CONSOLE_HUE ? '' : hueCss(hue, '.nest.nest');
   useEffect(() => {
     let tag = document.getElementById('gradeon-theme');
     if (!css) { tag?.remove(); return; }

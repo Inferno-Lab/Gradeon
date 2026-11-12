@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
-import 'package:gradeon/core/widgets/glass.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
 import 'package:gradeon/core/widgets/ui.dart';
@@ -17,14 +16,9 @@ import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
 import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-final _houses = {
-  'Emerald': AppColors.ok,
-  'Sapphire': AppColors.subject('maths').fill,
-  'Ruby': AppColors.subject('hindi').fill,
-  'Amber': AppColors.houses[3],
-};
+/// The avatar colours of the RollCall board: a spectrum colour per name, steady between visits.
+const _avatar = ['blue', 'pink', 'amber', 'lime', 'teal', 'violet', 'cyan', 'orange'];
 
 class MarkAttendanceView extends GetView<MarkAttendanceController> {
   const MarkAttendanceView({super.key});
@@ -32,114 +26,87 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final late = c.dark ? AppColors.blackboard.mariText : AppColors.late;
+    final mode = c.dark ? 'dark' : 'light';
     return Obx(() {
       controller.marks.length;
       final cls = controller.schoolClass;
+      final n = controller.students.length;
       return PageFrame(
-        leading: const BackGlass(),
-        actions: [
-          GlassPress(
-            onTap: controller.allPresent,
-            child: Semantics(
-              button: true,
-              child: Glass(
-                height: 44,
-                width: 150,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(PhosphorIconsRegular.arrowCounterClockwise, size: 15, color: c.ink),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        'teacher.all_present'.tr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.chip(color: c.ink, height: 1),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        leading: const BackGlass(close: true),
+        actions: [if (n > 0) Chip2('teacher.all_present'.tr, onTap: controller.allPresent)],
         topPadding: MediaQuery.paddingOf(context).top + 60,
-        padContent: false,
-        bottomBar: controller.students.isEmpty
+        onRefresh: controller.load,
+        edgeBar: true,
+        bottomBar: n == 0
             ? null
             : Semantics(
                 liveRegion: true,
                 child: TeacherActionBar(
-                  text: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: 'teacher.n_present'.trp({'n': '${controller.present}'})),
-                        if (controller.absent > 0)
-                          TextSpan(
-                            text: ' · ${'teacher.n_absent'.trp({'n': '${controller.absent}'})}',
-                            style: TextStyle(color: c.badText),
-                          ),
-                        if (controller.late > 0)
-                          TextSpan(
-                            text: ' · ${'teacher.n_late'.trp({'n': '${controller.late}'})}',
-                            style: TextStyle(color: late),
-                          ),
-                      ],
-                    ),
-                    style: AppText.ts(color: c.ink, height: 1.2, tabular: true),
-                  ),
-                  action: 'teacher.submit',
-                  kind: BtnKind.ink,
+                  text: Text('teacher.n_of_n'.trp({'n': '$n', 'total': '$n'})),
+                  sub: 'teacher.marked'.tr,
+                  action: 'teacher.save_roll',
                   loading: controller.saving.value,
                   onPressed: controller.saving.value ? null : () => unawaited(controller.submit()),
                 ),
               ),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // As the RollCall board: the class and the count on the school's deep colour, the names on the sheet.
+          Builder(
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  cls == null
-                      ? 'teacher.attendance'.tr
-                      : '${'teacher.class_n'.trp({'class': classLabel(cls)})} · ${DateFormat('EEEE').format(DateTime.now())}',
+                  cls == null ? 'teacher.attendance'.tr : 'teacher.class_n'.trp({'class': classLabel(cls)}),
                   style: context.type.h2,
                 ),
-                const SizedBox(height: 6),
-                Text('teacher.attendance_hint'.tr, style: context.type.cap),
+                Text(DateFormat('EEEE d MMMM').format(DateTime.now()), style: context.type.s),
+                if (n > 0) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _Count('teacher.present_t', controller.present, c.bright),
+                      const SizedBox(width: 24),
+                      _Count('teacher.absent_t', controller.absent, AppPalette.of(mode, 'bad-d')),
+                      const SizedBox(width: 24),
+                      _Count('teacher.late_t', controller.late, AppPalette.of(mode, 'warn-d')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                    child: SizedBox(
+                      height: 10,
+                      child: Row(
+                        children: [
+                          for (final (v, colour) in [
+                            (controller.present, c.bright),
+                            (controller.absent, AppPalette.of(mode, 'bad-d')),
+                            (controller.late, AppPalette.of(mode, 'warn-d')),
+                          ])
+                            if (v > 0) Expanded(flex: v, child: ColoredBox(color: colour)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ViewStateView(
-              state: controller.state.value,
-              onRetry: controller.load,
-              errorKey: controller.errorMessage.value,
-              emptyArt: EmptyArt.attendance,
+          ViewStateView(
+            state: controller.state.value,
+            onRetry: controller.load,
+            errorKey: controller.errorMessage.value,
+            emptyArt: EmptyArt.rollCall,
             emptyTitle: 'teacher.no_students',
-              emptyBody: 'teacher.no_students_body',
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final cols = box.maxWidth >= 600 ? 6 : 4;
-                  final w = (box.maxWidth - 6 * (cols - 1)) / cols;
-                  return Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      for (final s in controller.students)
-                        SizedBox(
-                          width: w,
-                          child: _Kid(student: s, mark: controller.marks[s.id], onTap: () => controller.cycle(s.id)),
-                        ),
-                    ],
-                  );
-                },
-              ),
+            emptyBody: 'teacher.no_students_body',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('teacher.attendance_hint'.tr, style: context.type.s),
+                const SizedBox(height: 8),
+                for (final (i, s) in controller.students.indexed)
+                  _Kid(student: s, first: i == 0, mark: controller.marks[s.id], onTap: () => controller.cycle(s.id)),
+              ],
             ),
           ),
         ],
@@ -148,96 +115,91 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
   }
 }
 
+class _Count extends StatelessWidget {
+  const _Count(this.label, this.n, this.colour);
+
+  final String label;
+  final int n;
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label.tr, style: context.type.capB),
+      Text('$n', style: context.type.h1.copyWith(color: colour)),
+    ],
+  );
+}
+
 class _Kid extends StatelessWidget {
-  const _Kid({required this.student, required this.mark, required this.onTap});
+  const _Kid({required this.student, required this.first, required this.mark, required this.onTap});
 
   final Student student;
+  final bool first;
   final AttendanceStatus? mark;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final absent = mark == AttendanceStatus.absent;
-    final late = mark == AttendanceStatus.lateArrival;
-    final house = _houses[student.house] ?? Avatar.houseFor(student.name);
-    final state = absent
-        ? 'teacher.absent'.tr
-        : late
-        ? 'teacher.late'.tr
-        : 'teacher.present'.tr;
+    final (label, soft, ink, icon) = switch (mark) {
+      AttendanceStatus.absent => ('teacher.absent_t', c.badSoft, c.badText, AppIcons.absent),
+      AttendanceStatus.lateArrival => ('teacher.late_t', c.lateSoft, c.lateText, AppIcons.late),
+      _ => ('teacher.present_t', c.okSoft, c.okText, AppIcons.present),
+    };
+    final av = c.spectrumFor(_avatar[student.name.hashCode.abs() % _avatar.length]);
     return Semantics(
       button: true,
-      label: '${student.name}, $state. ${'teacher.tap_to_change'.tr}',
+      label: '${student.name}, ${label.tr}. ${'teacher.tap_to_change'.tr}',
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.t3,
-          curve: const Cubic(.2, .8, .2, 1),
-          padding: const EdgeInsets.fromLTRB(2, 8, 2, 6),
-          decoration: BoxDecoration(
-            color: absent
-                ? c.badSoft
-                : late
-                ? c.lateSoft
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(border: first ? null : Border(top: BorderSide(color: c.line))),
+          child: Row(
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  AnimatedContainer(
-                    duration: AppMotion.t3,
-                    width: 52,
-                    height: 52,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: absent ? c.paper : house,
-                      shape: BoxShape.circle,
-                      border: absent ? Border.all(color: AppColors.bad, width: 2.5) : null,
-                    ),
-                    child: Text(
-                      Avatar.initialsOf(student.name),
-                      style: AppText.t(color: absent
-                            ? AppColors.bad
-                            : house == AppColors.houses[3]
-                            ? AppColors.mariInk
-                            : AppColors.white, height: 1),
-                    ),
-                  ),
-                  if (absent || late)
-                    Positioned(
-                      right: -3,
-                      top: -3,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: absent ? AppColors.bad : AppColors.late,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: c.chalk, width: 2),
-                        ),
-                        child: Text(absent ? 'A' : 'L', style: AppText.tiny(color: AppColors.white)),
-                      ),
-                    ),
-                ],
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: av.soft, shape: BoxShape.circle),
+                child: Text(Avatar.initialsOf(student.name), style: context.type.capB.copyWith(color: av.ink)),
               ),
-              const SizedBox(height: 6),
-              Text(
-                student.name.split(' ').first,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppText.capB(color: c.ink, height: 1.1),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(student.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.t),
+                    Text('teacher.roll'.trp({'n': student.rollNo}), style: context.type.s),
+                  ],
+                ),
               ),
-              Text('teacher.roll'.trp({'n': student.rollNo}), style: context.type.tiny),
+              const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: AppMotion.t2,
+                curve: kEase,
+                height: 40,
+                constraints: const BoxConstraints(minWidth: 104),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(AppRadius.md)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, size: 16, color: ink),
+                    const SizedBox(width: 6),
+                    Text(label.tr, style: context.type.ts.copyWith(color: ink)),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),),
+        ),
+      ),
     );
   }
 }

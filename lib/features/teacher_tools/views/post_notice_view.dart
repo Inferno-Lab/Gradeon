@@ -35,17 +35,17 @@ class PostNoticeView extends GetView<PostNoticeController> {
         leading: const BackGlass(close: true),
         actions: [Text('teacher.preview_live'.tr, style: AppText.capB(color: c.ink3))],
         topPadding: MediaQuery.paddingOf(context).top + 56,
+        edgeBar: true,
         bottomBar: TeacherActionBar(
           text: Text(
             'teacher.notified'.trn(controller.reach),
-            style: AppText.capB(color: c.ink3),
           ),
           action: 'teacher.post',
           loading: controller.saving.value,
           onPressed: controller.saving.value ? null : () => unawaited(controller.submit()),
         ),
         children: [
-          Text('teacher.new_notice'.tr, style: context.type.h2),
+          Builder(builder: (context) => Text('teacher.new_notice'.tr, style: context.type.h2)),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -117,7 +117,7 @@ class PostNoticeView extends GetView<PostNoticeController> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   decoration: BoxDecoration(
                     color: c.paper,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(7),
                     border: Border.all(color: c.line),
                     boxShadow: [
                       BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: -14, offset: const Offset(0, 10)),

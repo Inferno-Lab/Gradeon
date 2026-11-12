@@ -16,7 +16,7 @@ export interface AdminTab {
 export interface AdminPage {
   id: string;
   label: string;
-  /** An icon key of `@gradeon/web-ui`'s IC. */
+  /** The page's icon meaning (design/hue/icon-map.mjs, `@gradeon/web-ui`'s IC). */
   icon: string;
   /** `G` then a letter. */
   keys: string;
@@ -117,18 +117,18 @@ export const MODULES: ModuleManifest[] = [
     name: 'School', blurb: 'The dashboard, approvals, reports, the academic year, the school profile and its records.',
     features: [],
     pages: [
-      P('dash', 'Dashboard', 'dash', 'G D', '/', 'Home', []),
-      P('appr', 'Approvals', 'appr', 'G Q', '/approvals', 'Home', ['approvals.read'], { tabs: [{ key: 'waiting', label: 'Waiting for me' }, { key: 'sent', label: 'Sent by me' }, { key: 'decided', label: 'Decided' }] }),
-      P('rep', 'Reports', 'rep', 'G R', '/reports', 'Home', ['reports.read'], { tabs: [{ key: 'attendance', label: 'Attendance', feature: 'attendance' }, { key: 'money', label: 'Money', feature: 'fees' }, { key: 'learning', label: 'Learning' }, { key: 'people', label: 'People' }] }),
+      P('dash', 'Dashboard', 'dashboard', 'G D', '/', 'Home', []),
+      P('appr', 'Approvals', 'approvals', 'G Q', '/approvals', 'Home', ['approvals.read'], { tabs: [{ key: 'waiting', label: 'Waiting for me' }, { key: 'sent', label: 'Sent by me' }, { key: 'decided', label: 'Decided' }] }),
+      P('rep', 'Reports', 'reports', 'G R', '/reports', 'Home', ['reports.read'], { tabs: [{ key: 'attendance', label: 'Attendance', feature: 'attendance' }, { key: 'money', label: 'Money', feature: 'fees' }, { key: 'learning', label: 'Learning' }, { key: 'people', label: 'People' }] }),
       P('year', 'Academic year', 'year', 'G Y', '/year', 'School', ['settings.read', 'setup.write', 'year.manage'], {
         tabs: [{ key: 'terms', label: 'Years and terms' }, { key: 'holidays', label: 'Holidays' }, { key: 'classes', label: 'Classes' }, { key: 'subjects', label: 'Subjects' }, { key: 'bells', label: 'Bell times' }, { key: 'year-end', label: 'Year-end', anyOf: ['year.manage'] }],
       }),
-      P('profile', 'School profile', 'set', 'G ,', '/profile', 'School', ['settings.read'], {
+      P('profile', 'School profile', 'setup', 'G ,', '/profile', 'School', ['settings.read'], {
         tabs: [{ key: 'identity', label: 'Identity' }, { key: 'plan', label: 'Plan and modules' }, { key: 'app', label: 'The app' }, { key: 'roles', label: 'Roles' }, { key: 'messages', label: 'Messages' }, { key: 'privacy', label: 'Privacy notice' }, { key: 'data', label: 'Your data', anyOf: ['privacy.manage'] }],
       }),
-      P('privacy', 'Privacy requests', 'inbox', 'G P', '/privacy', 'School', ['privacy.manage']),
-      P('audit', 'Audit log', 'bp', 'G L', '/audit', 'School', ['audit.read']),
-      P('move', 'Moving in', 'mig', 'G U', '/moving-in', 'School', ['setup.write'], { untilLive: true }),
+      P('privacy', 'Privacy requests', 'privacy', 'G P', '/privacy', 'School', ['privacy.manage']),
+      P('audit', 'Audit log', 'audit', 'G L', '/audit', 'School', ['audit.read']),
+      P('move', 'Moving in', 'moving', 'G U', '/moving-in', 'School', ['setup.write'], { untilLive: true }),
     ],
     app: [A('dock', 'home', 'Home', EVERYONE)],
     settings: ['classes.schoolEdits', 'calendar.weeklyOff', 'calendar.weekStarts', 'calendar.schoolEdits', 'dashboard.rollClasses'],
@@ -143,9 +143,9 @@ export const MODULES: ModuleManifest[] = [
     name: 'People', blurb: 'Students, guardians and staff.',
     features: [{ key: 'people.admissions', name: 'Admissions', state: 'live' }, { key: 'people.udise', name: 'UDISE+ export', state: 'planned' }],
     pages: [
-      P('stu', 'Students', 'stu', 'G S', '/students', 'People', ['students.read'], { tabs: [{ key: 'list', label: 'Students' }, { key: 'app', label: 'On the app' }] }),
+      P('stu', 'Students', 'students', 'G S', '/students', 'People', ['students.read'], { tabs: [{ key: 'list', label: 'Students' }, { key: 'app', label: 'On the app' }] }),
       P('staff', 'Staff', 'staff', 'G F', '/staff', 'People', ['staff.read']),
-      P('adm', 'Admissions', 'adm', 'G M', '/admissions', 'People', ['admissions.read'], { feature: 'people.admissions' }),
+      P('adm', 'Admissions', 'admissions', 'G M', '/admissions', 'People', ['admissions.read'], { feature: 'people.admissions' }),
     ],
     app: [A('dock', 'academics', 'Academics', FAMILY), A('dock', 'classes', 'My classes', ['teacher'])],
     settings: ['vocab.student', 'vocab.students', 'vocab.class', 'vocab.classes', 'people.houses', 'students.required', 'letters.family', 'letters.student', 'admissions.sources', 'admissions.stages', 'staff.schoolAssignsRoles'],
@@ -153,7 +153,7 @@ export const MODULES: ModuleManifest[] = [
     messages: ['admissions.offer', 'family.invite', 'student.invite', 'staff.invite', 'office.message'],
     imports: ['staff', 'students', 'contacts', 'admissions'],
     approvals: ['admission', 'photo'],
-    dashboard: [{ kind: 'new', key: 'addStudent', label: 'Add student', blurb: 'A new student and their family', to: '/students?add=1', keys: 'N S', icon: 'stu', anyOf: ['students.write'] }],
+    dashboard: [{ kind: 'new', key: 'addStudent', label: 'Add student', blurb: 'A new student and their family', to: '/students?add=1', keys: 'N S', icon: 'students', anyOf: ['students.write'] }],
   },
   {
     key: 'attendance', state: 'live', addOnPerStudentYear: 40, requires: ['people'], backend: true,
@@ -163,7 +163,7 @@ export const MODULES: ModuleManifest[] = [
       { key: 'attendance.periodWise', name: 'Attendance every period', state: 'live' }, { key: 'attendance.staff', name: 'Staff attendance', state: 'planned' },
       { key: 'attendance.biometric', name: 'Biometric and RFID', state: 'planned' },
     ],
-    pages: [P('att', 'Attendance', 'att', 'G A', '/attendance', 'Teach', ['attendance.read'], { tabs: [{ key: 'roll', label: 'Roll call' }, { key: 'periods', label: 'Every period', feature: 'attendance.periodWise' }, { key: 'leave', label: 'Leave requests', anyOf: ['approvals.read'] }] })],
+    pages: [P('att', 'Attendance', 'attendance', 'G A', '/attendance', 'Teach', ['attendance.read'], { tabs: [{ key: 'roll', label: 'Roll call' }, { key: 'periods', label: 'Every period', feature: 'attendance.periodWise' }, { key: 'leave', label: 'Leave requests', anyOf: ['approvals.read'] }] })],
     app: [
       A('home', 'attendance', 'Attendance this month', FAMILY), A('quick', 'applyLeave', 'Apply for leave', ['parent']),
       A('quick', 'markAttendance', 'Mark attendance', ['teacher'], 'attendance.teacherApp'),
@@ -175,14 +175,14 @@ export const MODULES: ModuleManifest[] = [
     approvals: ['leave', 'attendance'],
     dashboard: [
       { kind: 'widget', key: 'rolls', label: 'Class rolls', blurb: 'Attendance of each class today' },
-      { kind: 'new', key: 'markAttendance', label: 'Mark attendance', blurb: 'Today’s roll call', to: '/attendance', keys: 'N A', icon: 'att', anyOf: ['attendance.mark'] },
+      { kind: 'new', key: 'markAttendance', label: 'Mark attendance', blurb: 'Today’s roll call', to: '/attendance', keys: 'N A', icon: 'attendance', anyOf: ['attendance.mark'] },
     ],
   },
   {
     key: 'timetable', state: 'live', addOnPerStudentYear: 40, requires: ['people'], backend: true,
     name: 'Timetable', blurb: 'Weekly periods, clashes and cover.',
     features: [{ key: 'timetable.cover', name: 'Cover for absent teachers', state: 'live' }],
-    pages: [P('tt', 'Timetable', 'tt', 'G T', '/timetable', 'Teach', ['timetable.read'])],
+    pages: [P('tt', 'Timetable', 'timetable', 'G T', '/timetable', 'Teach', ['timetable.read'])],
     app: [
       A('dock', 'timetable', 'Timetable', ['parent', 'student', 'teacher']), A('home', 'dayRibbon', 'Today’s timetable', ['parent', 'student', 'teacher']),
       A('quick', 'timetable', 'Timetable', FAMILY),
@@ -198,7 +198,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'homework', state: 'live', addOnPerStudentYear: 40, requires: ['people'], backend: true,
     name: 'Homework', blurb: 'Set, hand in, grade and review homework.',
     features: [{ key: 'homework.onlineSubmission', name: 'Hand in from the app', state: 'live' }, { key: 'homework.grading', name: 'Grades and feedback', state: 'live' }],
-    pages: [P('hw', 'Homework', 'hw', 'G H', '/homework', 'Teach', ['homework.read'])],
+    pages: [P('hw', 'Homework', 'homework', 'G H', '/homework', 'Teach', ['homework.read'])],
     app: [
       A('dock', 'homework', 'Homework', FAMILY), A('home', 'homework', 'Homework to do', FAMILY), A('quick', 'homework', 'Homework', FAMILY),
       A('quick', 'assignHomework', 'Set homework', ['teacher']), A('quick', 'grade', 'Grade', ['teacher'], 'homework.grading'),
@@ -217,14 +217,14 @@ export const MODULES: ModuleManifest[] = [
       { key: 'exams.resultsInApp', name: 'Results in the app', state: 'live' }, { key: 'exams.reportCards', name: 'Report cards in board formats', state: 'planned' },
       { key: 'exams.hpc', name: 'NEP Holistic Progress Card', state: 'planned' },
     ],
-    pages: [P('ex', 'Exams', 'ex', 'G X', '/exams', 'Teach', ['exams.read'])],
+    pages: [P('ex', 'Exams', 'exams', 'G X', '/exams', 'Teach', ['exams.read'])],
     app: [A('home', 'nextExam', 'Next exam', FAMILY), A('quick', 'enterMarks', 'Enter marks', ['teacher'])],
     settings: ['results.showRank', 'grading.scale', 'grading.passPct', 'exams.defaultMaxMarks', 'exams.leadDays'],
     permissions: ['exams.read', 'exams.write', 'exams.publish'],
     messages: ['exam.results', 'exam.reopened'],
     imports: ['marks'],
     approvals: [],
-    dashboard: [{ kind: 'new', key: 'scheduleExam', label: 'Schedule an exam', blurb: 'Dates and subjects for a class', to: '/exams?new=1', keys: 'N E', icon: 'ex', anyOf: ['exams.write'] }],
+    dashboard: [{ kind: 'new', key: 'scheduleExam', label: 'Schedule an exam', blurb: 'Dates and subjects for a class', to: '/exams?new=1', keys: 'N E', icon: 'exams', anyOf: ['exams.write'] }],
   },
   {
     key: 'fees', state: 'live', addOnPerStudentYear: 80, requires: ['people'], backend: true,
@@ -234,7 +234,7 @@ export const MODULES: ModuleManifest[] = [
       { key: 'fees.lateFines', name: 'Late fines', state: 'live' }, { key: 'fees.concessions', name: 'Concession rules', state: 'planned' },
       { key: 'fees.gstReceipts', name: 'GST receipts', state: 'live' }, { key: 'fees.refunds', name: 'Refunds', state: 'live' }, { key: 'fees.tally', name: 'Tally export', state: 'planned' },
     ],
-    pages: [P('fee', 'Fees', 'fee', 'G E', '/fees', 'Money', ['fees.read'], {
+    pages: [P('fee', 'Fees', 'fees', 'G E', '/fees', 'Money', ['fees.read'], {
       tabs: [{ key: 'overview', label: 'Overview' }, { key: 'invoices', label: 'Invoices' }, { key: 'receipts', label: 'Receipts' }, { key: 'online', label: 'Online payments', feature: 'fees.onlinePayment' }, { key: 'structure', label: 'Fee structure' }],
     })],
     app: [A('dock', 'fees', 'Fees', ['parent']), A('home', 'dueStack', 'Fees due', ['parent']), A('quick', 'payFees', 'Pay fees', ['parent'], 'fees.onlinePayment')],
@@ -248,14 +248,14 @@ export const MODULES: ModuleManifest[] = [
     approvals: ['fee_waiver', 'receipt_cancel'],
     dashboard: [
       { kind: 'widget', key: 'fees', label: 'Fees by type', blurb: 'What each kind of fee has collected' },
-      { kind: 'new', key: 'collectFee', label: 'Collect a fee', blurb: 'Record a payment at the desk', to: '/fees?collect=1', keys: 'N F', icon: 'fee', anyOf: ['fees.collect'] },
+      { kind: 'new', key: 'collectFee', label: 'Collect a fee', blurb: 'Record a payment at the desk', to: '/fees?collect=1', keys: 'N F', icon: 'fees', anyOf: ['fees.collect'] },
     ],
   },
   {
     key: 'notices', state: 'live', addOnPerStudentYear: 20, requires: [], backend: true,
     name: 'Notices', blurb: 'Announcements to families and staff: scheduled, acknowledged and approved.',
     features: [{ key: 'notices.teacherPosts', name: 'Teachers post from the app', state: 'live' }],
-    pages: [P('notice', 'Notices', 'notice', 'G N', '/notices', 'Reach', ['notices.read'])],
+    pages: [P('notice', 'Notices', 'notices', 'G N', '/notices', 'Reach', ['notices.read'])],
     app: [
       A('dock', 'notices', 'Notices', ['parent', 'student', 'teacher']), A('home', 'notices', 'Latest notices', ['parent', 'student', 'teacher']),
       A('quick', 'postNotice', 'Post a notice', ['teacher'], 'notices.teacherPosts'),
@@ -265,7 +265,7 @@ export const MODULES: ModuleManifest[] = [
     messages: ['notice.published'],
     imports: [],
     approvals: ['notice'],
-    dashboard: [{ kind: 'new', key: 'postNotice', label: 'Post a notice', blurb: 'To families, a class or staff', to: '/notices?new=1', keys: 'N N', icon: 'notice', anyOf: ['notices.write'] }],
+    dashboard: [{ kind: 'new', key: 'postNotice', label: 'Post a notice', blurb: 'To families, a class or staff', to: '/notices?new=1', keys: 'N N', icon: 'notices', anyOf: ['notices.write'] }],
   },
   {
     key: 'chat', state: 'live', addOnPerStudentYear: 40, requires: ['people'], backend: true,
@@ -274,7 +274,7 @@ export const MODULES: ModuleManifest[] = [
       { key: 'chat.familyChat', name: 'Families start conversations', state: 'live' }, { key: 'chat.studentChat', name: 'Students message teachers', state: 'live' },
       { key: 'chat.calls', name: 'Families may call the office from the app', state: 'live' },
     ],
-    pages: [P('msg', 'Messages', 'msg', 'G G', '/messages', 'Reach', ['messages.read'])],
+    pages: [P('msg', 'Messages', 'messages', 'G G', '/messages', 'Reach', ['messages.read'])],
     app: [A('dock', 'chat', 'Chat', EVERYONE), A('quick', 'messageTeacher', 'Message a teacher', FAMILY, 'chat.familyChat')],
     settings: [],
     permissions: ['messages.read', 'messages.write'],
@@ -287,7 +287,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'events', state: 'live', addOnPerStudentYear: 20, requires: [], backend: true,
     name: 'Events', blurb: 'The school calendar, events and RSVPs.',
     features: [{ key: 'events.rsvp', name: 'RSVPs from families', state: 'live' }],
-    pages: [P('evt', 'Events', 'evt', 'G V', '/events', 'Reach', ['events.read'])],
+    pages: [P('evt', 'Events', 'events', 'G V', '/events', 'Reach', ['events.read'])],
     app: [
       A('dock', 'events', 'Events', ['parent', 'student', 'teacher']), A('home', 'events', 'Coming up', ['parent', 'student', 'teacher']),
       A('quick', 'events', 'Events', FAMILY),
@@ -303,7 +303,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'gallery', state: 'live', addOnPerStudentYear: 20, requires: ['people'], backend: true,
     name: 'Gallery', blurb: 'Albums by class and event, shared with families who consented to photos.',
     features: [{ key: 'gallery.downloads', name: 'Families save and share photos', state: 'live' }],
-    pages: [P('gal', 'Gallery', 'photo', 'G O', '/gallery', 'Reach', ['gallery.read'])],
+    pages: [P('gal', 'Gallery', 'gallery', 'G O', '/gallery', 'Reach', ['gallery.read'])],
     app: [A('dock', 'gallery', 'Gallery', FAMILY)],
     settings: [],
     permissions: ['gallery.read', 'gallery.write'],
@@ -316,7 +316,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'library', state: 'live', addOnPerStudentYear: 30, requires: ['people'], backend: true,
     name: 'Library', blurb: 'The catalogue, loans to students and staff, fines and reservations.',
     features: [{ key: 'library.reservations', name: 'Reserve and renew from the app', state: 'live' }],
-    pages: [P('lib', 'Library', 'book', 'G B', '/library', 'Campus', ['library.read'], { tabs: [{ key: 'books', label: 'Books' }, { key: 'loans', label: 'Loans' }, { key: 'waiting', label: 'Waiting' }] })],
+    pages: [P('lib', 'Library', 'library', 'G B', '/library', 'Campus', ['library.read'], { tabs: [{ key: 'books', label: 'Books' }, { key: 'loans', label: 'Loans' }, { key: 'waiting', label: 'Waiting' }] })],
     app: [A('dock', 'library', 'Library', ['parent', 'student', 'teacher'])],
     settings: ['library.loanDays', 'library.finePerDay', 'library.maxRenewals', 'library.maxLoans', 'library.staffMaxLoans'],
     permissions: ['library.read', 'library.write'],
@@ -329,7 +329,7 @@ export const MODULES: ModuleManifest[] = [
     key: 'transport', state: 'live', addOnPerStudentYear: 60, requires: ['people'], backend: true,
     name: 'Transport', blurb: 'Routes, stops, who rides which bus, route fees, drivers’ trips and the live bus.',
     features: [{ key: 'transport.routes', name: 'Routes, stops and route fees', state: 'live' }, { key: 'transport.liveBus', name: 'Live bus tracking', state: 'live' }],
-    pages: [P('bus', 'Transport', 'bus', 'G J', '/transport', 'Campus', ['transport.read'], {
+    pages: [P('bus', 'Transport', 'transport', 'G J', '/transport', 'Campus', ['transport.read'], {
       tabs: [{ key: 'routes', label: 'Routes' }, { key: 'riders', label: 'Riders' }, { key: 'live', label: 'Live bus', feature: 'transport.liveBus' }],
     })],
     app: [A('dock', 'transport', 'Transport', FAMILY), A('dock', 'trips', 'Trips', ['driver'], 'transport.liveBus')],

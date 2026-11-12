@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleUserRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, tintFor, useShake } from '@gradeon/web-ui';
+import { Dialog, Field, tintFor, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { initials, ago } from '../../app/format';
@@ -25,13 +25,13 @@ export function TeamPage() {
   const canWrite = app.can('team.write');
   return (
     <Page title="Team" sub="Who can do what in the console" toast={toast} loading={team.isLoading} error={team.isError ? { message: (team.error as Error).message, retry: () => void team.refetch() } : null}
-      actions={canWrite ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Invite a person</button> : undefined}
+      actions={canWrite ? <button className="btn pri" onClick={() => setAdding(true)}><Icon name="plus" />Invite a person</button> : undefined}
       overlays={<>
         {adding && <AddDialog onClose={() => setAdding(false)} onDone={(name, l) => { setAdding(false); refresh(); setLink({ name, link: l }); }} />}
         {link && (
           <Dialog title={`${link.name} is invited`} tag={{ text: 'Link works for 7 days', tone: 'v' }} onClose={() => setLink(null)} width={520}>
             <p style={{ marginTop: 0 }}>The link went to their email. If it does not arrive, send them this one yourself: they choose their own password with it, and add an authenticator at their first sign-in.</p>
-            <div className="card" style={{ padding: 12, background: 'var(--sunk)', boxShadow: 'none', font: '600 13px var(--fb)', overflowWrap: 'anywhere' }}>{link.link}</div>
+            <div className="card" style={{ padding: 12, background: 'var(--s2)', boxShadow: 'none', font: '600 13px var(--fb)', overflowWrap: 'anywhere' }}>{link.link}</div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
               <button className="btn" onClick={() => void navigator.clipboard.writeText(link.link).then(() => say('Link copied.'))}>Copy the link</button>
               <button className="btn pri" onClick={() => setLink(null)}>Done</button>
@@ -45,7 +45,7 @@ export function TeamPage() {
         { label: 'Super admins', value: rows.filter((r) => r.roles.includes('super_admin')).length, note: 'can change anything', tone: 'a' },
         { label: 'Never signed in', value: rows.filter((r) => !r.lastSeenAt).length, note: 'invited, not yet joined', tone: 'i' },
       ]} />}
-      {rows.length === 0 ? <div><EmptyCard title="Team" chip={{ text: '0 people', tone: 'v' }} scene="register" heading="Just you so far" body="Add the people who will run releases, support schools and handle billing." /></div> : (
+      {rows.length === 0 ? <div><EmptyState scene="team" onAction={canWrite ? () => setAdding(true) : undefined} /></div> : (
         <Card style={{ padding: 0 }}>
           <div className="tbl scroll-x"><div style={{ minWidth: 620 }}>
             <div className="grd th" style={{ '--cols': 'minmax(0,2fr) minmax(0,2fr) 120px 170px' } as React.CSSProperties}><span>Person</span><span>Roles</span><span>Last seen</span><span></span></div>
@@ -84,7 +84,7 @@ function RoleChoice({ value, onChange }: { value: string[]; onChange: (v: string
         const on = value.includes(r);
         return (
           <button key={r} type="button" className={`opt ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== r) : [...value, r])} style={{ padding: 12 }}>
-            <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span>
+            <span className="rd"><Icon name="check" /></span>
             <span><b>{roleLabel(r)}</b><small>{CONSOLE_ROLE_INFO[r].help}</small></span>
           </button>
         );

@@ -180,7 +180,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      PulseDot(AppColors.mari),
+                      PulseDot(context.app.brand),
                       const SizedBox(width: 8),
                       Text(
                         (camera == null ? 'scan.starting' : 'scan.hold_still').tr,
@@ -217,7 +217,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                             Transform.rotate(
                               angle: -.1,
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(7),
                                 child: Image.file(File(_pages.last.path), width: 56, height: 70, fit: BoxFit.cover),
                               ),
                             ),
@@ -228,10 +228,10 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                                 constraints: const BoxConstraints(minWidth: 22),
                                 height: 22,
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(color: AppColors.mari, shape: BoxShape.circle),
+                                decoration: BoxDecoration(color: context.app.brand, shape: BoxShape.circle),
                                 child: Text(
                                   '${_pages.length}',
-                                  style: AppText.capB(color: AppColors.mariInk, height: 1),
+                                  style: AppText.capB(color: context.app.onBrand, height: 1),
                                 ),
                               ),
                             ),
@@ -333,7 +333,7 @@ class _GuideState extends State<_Guide> with SingleTickerProviderStateMixin {
                   height: 2,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [Colors.transparent, AppColors.mari, Colors.transparent]),
+                      gradient: LinearGradient(colors: [Colors.transparent, context.app.brand, Colors.transparent]),
                     ),
                   ),
                 ),

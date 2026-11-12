@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AddBtn, problem, useFeeHeads } from '../../app/kit';
 
@@ -33,8 +33,8 @@ export function useSetupSections(kinds: readonly string[], say: (text: string, t
   const sections = list.data ?? [];
   const overlay = editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
     onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />;
-  if (list.isLoading) return { view: <div className="skc" style={{ height: 240, borderRadius: 18 }} />, overlay: null };
-  if (list.isError) return { view: <EmptyCard error title="Setup" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} />, overlay: null };
+  if (list.isLoading) return { view: <div className="skc" style={{ height: 240, borderRadius: 16 }} />, overlay: null };
+  if (list.isError) return { view: <EmptyCard error title="Setup" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} />, overlay: null };
   const view = (
     <div className="stack" style={{ gap: 16 }}>
       {sections.filter((s) => kinds.includes(s.kind)).map((s) => <SectionCard key={s.kind} section={s} canWrite={canWrite} onOpen={(row) => setEditing({ section: s, row })} />)}
@@ -55,7 +55,9 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
         {edit && <span style={{ marginLeft: 'auto' }}><AddBtn onClick={() => onOpen(null)}>Add</AddBtn></span>}
       </div>
       {s.locked && <div className="help" style={{ padding: '0 24px 16px' }}>Gradeon keeps these for your school. To change them, use “Ask Gradeon” on School setup.</div>}
-      {s.rows.length === 0 ? (
+      {s.rows.length === 0 && s.kind === 'classes' ? (
+        <div style={{ padding: '0 24px 24px' }}><EmptyState scene="year" label="Add the first class" onAction={edit ? () => onOpen(null) : undefined} /></div>
+      ) : s.rows.length === 0 ? (
         <div className="help" style={{ padding: '0 24px 24px' }}>{importKind(s.kind)?.blurb} None yet{edit ? ': add the first, or send Gradeon your sheet from Moving in.' : '.'}</div>
       ) : (
         <div className="scroll-x lscroll">

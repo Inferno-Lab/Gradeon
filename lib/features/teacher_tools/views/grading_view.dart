@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -39,25 +39,25 @@ class GradingView extends GetView<GradingController> {
         leading: const BackGlass(),
         actions: [if (items.isNotEmpty) Chip2('teacher.oldest_first'.tr)],
         onRefresh: controller.load,
+        edgeBar: true,
         bottomBar: queue.isEmpty
             ? null
             : TeacherActionBar(
                 sub: 'teacher.next_in_queue'.tr,
                 text: Text(
                   controller.names[queue.first.$2.studentId] ?? '',
-                  style: context.type.ts,
                 ),
                 action: 'teacher.start_grading',
                 onPressed: () => openGradeSheet(controller, 0),
               ),
         children: [
-          Rise(child: Text('teacher.to_grade_n'.trp({'n': '${controller.total}'}), style: context.type.h1)),
+          Rise(child: Builder(builder: (context) => Text('teacher.to_grade_n'.trp({'n': '${controller.total}'}), style: context.type.h1))),
           const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
             errorKey: controller.errorMessage.value,
-            emptyArt: EmptyArt.homework,
+            emptyArt: EmptyArt.grading,
             emptyTitle: 'teacher.nothing_to_grade',
             emptyBody: 'teacher.nothing_to_grade_body',
             child: Column(
@@ -361,7 +361,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
     if (_queue.isEmpty) {
       return const PageFrame(
         leading: BackGlass(),
-        children: [EmptyState(art: EmptyArt.homework, title: 'teacher.nothing_to_grade', body: 'teacher.nothing_to_grade_body')],
+        children: [EmptyState(art: EmptyArt.grading, title: 'teacher.nothing_to_grade', body: 'teacher.nothing_to_grade_body')],
       );
     }
     final (g, s) = _queue[_i];
@@ -468,7 +468,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
             child: Container(
               decoration: BoxDecoration(
                 color: c.paper,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(top: BorderSide(color: c.line)),
               ),
               child: ListView(

@@ -8,7 +8,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -71,7 +71,7 @@ class GalleryView extends GetView<GalleryController> {
                   height: 44,
                   width: 150,
                   onPigment: ready,
-                  tint: controller.onlyChild.value ? AppColors.mari.withValues(alpha: 0.35) : null,
+                  tint: controller.onlyChild.value ? context.app.brand.withValues(alpha: 0.35) : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -93,21 +93,20 @@ class GalleryView extends GetView<GalleryController> {
         ],
         onRefresh: controller.load,
         children: [
+          if (!ready) const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: PageTitle('gallery.title')),
           if (!ready)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const PageTitle('gallery.title'),
-                  const SizedBox(height: 16),
                   ViewStateView(
                     state: controller.state.value == ViewState.success ? ViewState.empty : controller.state.value,
                     onRetry: controller.load,
                     errorKey: controller.errorMessage.value,
                     emptyTitle: controller.onlyChild.value ? 'gallery.none_with' : 'gallery.empty',
                     emptyBody: 'gallery.empty_body',
-                    emptyArt: EmptyArt.photos,
+                    emptyArt: EmptyArt.gallery,
                     emptyHint: controller.onlyChild.value ? null : 'gallery.empty_hint',
                     child: const SizedBox.shrink(),
                   ),
@@ -166,7 +165,7 @@ class _Hero extends StatelessWidget {
       child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(34)),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
           child: SizedBox(
             height: height,
             child: Stack(
@@ -261,7 +260,7 @@ class _AlbumTile extends StatelessWidget {
       child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [

@@ -9,5 +9,6 @@ export * from './dates.js';
 export * from './settings-meta.js';
 export * from './import.js';
 export * from './theme.js';
+export * from './hue.js';
 export * from './integrations.js';
 export * from './campus.js';

@@ -1,0 +1,33 @@
+<div class="hue s-emerald doc" style="gap:24px">
+  <div class="col" style="gap:8px"><h1 class="dh" style="font-size:40px;line-height:44px">Icons</h1><p class="lead">One family, Phosphor, already in the app. One meaning has one icon, everywhere: the menu, the app tabs, the Modules grid, Home and the empty states all read the same map (icon-map.mjs).</p></div>
+  <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:20px">
+    <section class="card">
+      <div class="ch"><h2>Weights</h2><small>three, each with one job</small></div>
+      <div class="rw icw"><span class="icx">[[i:@fees]]</span><span class="grow"><b>Regular</b><small>the default, 20 and 24 px</small></span></div>
+      <div class="rw icw"><span class="icx on">[[if:@fees]]</span><span class="grow"><b>Fill</b><small>selected: the active tab, menu or dock item</small></span></div>
+      <div class="rw icw"><span class="icx">[[ib:@check]]</span><span class="grow"><b>Bold</b><small>16 px and under, and small symbols</small></span></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>Four sizes</h2><small>the icon never sets the target</small></div>
+      <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end">
+        <span class="col icz">[[ib:@caretDown]]<small>14 · bold</small><em>chips, tags, ticks</em></span>
+        <span class="col icz s16">[[ib:@present]]<small>16 · bold</small><em>status, grids</em></span>
+        <span class="col icz s20">[[i:@messages]]<small>20</small><em>web, buttons</em></span>
+        <span class="col icz s24">[[i:@home]]<small>24</small><em>app tabs, tiles</em></span>
+      </div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>Words</h2><small>never an icon alone</small></div>
+      <div class="rw" style="gap:12px;flex-wrap:wrap"><button class="btn">[[i:@notices]]Write a notice</button><button class="ib" aria-label="Notifications" data-tip="Notifications">[[i:@notifications]]</button><span class="st ok">[[ib:@present]]Present</span></div>
+      <small class="t2" style="font-size:13px;line-height:18px">Next to words an icon is hidden from screen readers. Alone it has a spoken name and, on the web, a tooltip with the same words. Status always keeps its word.</small>
+    </section>
+  </div>
+  <section class="card">
+    <div class="ch"><h2>Pages, modules and tabs</h2><small>regular, and filled when selected · the meaning name, then the Phosphor name</small></div>
+    <div class="icg">[[iconmap:pages]]</div>
+  </section>
+  <section class="card">
+    <div class="ch"><h2>Small symbols and statuses</h2><small>always bold</small></div>
+    <div class="icg">[[iconmap:glyphs]]</div>
+  </section>
+</div>

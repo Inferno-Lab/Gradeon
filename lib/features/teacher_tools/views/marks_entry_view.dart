@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -92,30 +92,29 @@ class _MarksEntryViewState extends State<MarksEntryView> {
         actions: [
           Chip2('teacher.marks_chip'.trp({'max': '${MarksEntryController.maxMarks}'})),
         ],
+        edgeBar: true,
         bottomBar: controller.students.isEmpty
             ? null
             : TeacherActionBar(
                 sub: controller.saving.value ? 'teacher.saving'.tr : 'teacher.saved_typing'.tr,
                 text: Text(
                   next == null ? 'teacher.all_entered'.tr : 'teacher.next_name'.trp({'name': next.name}),
-                  style: context.type.ts,
                 ),
                 action: 'teacher.next',
-                kind: BtnKind.ink,
                 icon: PhosphorIconsRegular.arrowBendDownLeft,
                 onPressed: next == null && active == null ? null : _next,
               ),
         children: [
-          Text(
+          Builder(builder: (context) => Text(
             cls == null ? 'teacher.marks'.tr : 'teacher.marks_title'.trp({'class': classLabel(cls)}),
             style: context.type.h2,
-          ),
+          )),
           const SizedBox(height: 12),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,
             errorKey: controller.errorMessage.value,
-            emptyArt: EmptyArt.attendance,
+            emptyArt: EmptyArt.marks,
             emptyTitle: 'teacher.no_students',
             emptyBody: 'teacher.no_students_body',
             child: Column(
@@ -204,7 +203,7 @@ class _SubjectBar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: controller.subject.value == id ? AppColors.subject(id).fill : Colors.transparent,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         subjectName(id),
@@ -297,7 +296,7 @@ class _MarkRow extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: active ? c.paper : c.paper2,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   border: active ? Border.all(color: c.ink, width: 2) : null,
                 ),
                 child: active

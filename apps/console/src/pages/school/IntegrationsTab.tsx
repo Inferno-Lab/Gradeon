@@ -16,10 +16,10 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
   const [shown, setShown] = useState<Set<string>>(new Set());
   const view = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, enabled: app.can('integrations.read') });
   const fails = useQuery({ queryKey: ['activity', d.slug, '', 'failed'], queryFn: () => app.api.integrations.activity({ school: d.slug, status: 'failed', limit: 10 }), enabled: app.can('integrations.read') });
-  if (!app.can('integrations.read')) return <EmptyCard title="Messaging" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
+  if (!app.can('integrations.read')) return <EmptyCard title="Messaging" chip={{ text: 'Not for your role', tone: 'a' }} icon="lock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
   if (view.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 24 }} />;
   const v = view.data;
-  if (!v) return <EmptyCard error title="Integrations" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(view.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void view.refetch()}>Try again</button>} />;
+  if (!v) return <EmptyCard error title="Integrations" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(view.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void view.refetch()}>Try again</button>} />;
   const name = (id: string | null) => (id ? v.connections.find((c) => c.id === id)?.name ?? 'Deleted' : '');
   const caps = CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k)));
   const own = v.connections.filter((c) => c.schoolId === d.id);
@@ -58,7 +58,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         <div style={{ marginTop: 8 }}>
           {!(fails.data?.rows ?? []).length ? <div className="help">No message to this school’s families has failed lately.</div> : fails.data!.rows.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'center' }}>
-              <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--cD)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
+              <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--bad-i)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
               <b style={{ whiteSpace: 'nowrap' }}>{ago(m.createdAt)}</b>
             </div>
           ))}
@@ -104,12 +104,12 @@ function EraseLeavers({ d, due, onClose, onSent }: { d: SchoolDetail; due: numbe
     <Dialog dark title={`Erase ${due} leavers’ records?`} tag={{ text: 'Permanent · needs a second approver', tone: 'c' }} onClose={onClose} shake={shake.cls} width={480}>
       <p>Names, photos, documents and guardians of students who left {d.name} past its retention period are erased. Receipts stay, without a name.</p>
       <div>
-        <label htmlFor="ret-in">Type <b style={{ color: 'var(--onCi)' }}>{d.slug}</b> to continue</label>
+        <label htmlFor="ret-in">Type <b style={{ color: 'var(--on-deep)' }}>{d.slug}</b> to continue</label>
         <input id="ret-in" className={`shake ${bad ? 'err' : ''}`} value={typed} onChange={(e) => { setTyped(e.target.value); setBad(''); }} autoComplete="off" aria-invalid={!!bad} />
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: 'var(--onCi)', borderColor: 'color-mix(in srgb,var(--onCi) 18%,transparent)' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: 'var(--on-deep)', borderColor: 'color-mix(in srgb,var(--on-deep) 18%,transparent)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={() => (typed.trim() === d.slug ? send.mutate() : (setBad('That isn’t the school code. Nothing was erased.'), shake.hit()))} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

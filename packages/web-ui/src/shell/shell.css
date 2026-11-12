@@ -1,58 +1,59 @@
-/* Shell additions that are not part of the canvas boards: the console workspace block, and the phone layout. */
-.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:none;animation:none}
-.nest .pdot.stage{background:var(--a);box-shadow:none}
-.nest .pdot.local{background:var(--g);box-shadow:none}
+/* The shell beyond nest.css: the console workspace block, menus that open from a button, and the phone layout (Gradeon Hue). */
+.nest .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:none;animation:none}
+.nest .pdot.stage{background:var(--warn);box-shadow:none}
+.nest .pdot.local{background:var(--ok);box-shadow:none}
 
-.nest .wsw{display:flex;align-items:center;gap:12px;padding:8px;border-radius:18px;background:var(--card);border:1px solid var(--line);margin-bottom:6px;white-space:nowrap;overflow:hidden}
-.nest .wsw b{display:block;font:700 14px var(--fb);line-height:1.2}
-.nest .wsw small{display:flex;align-items:center;gap:6px;font:700 12px var(--fb);color:var(--ink3)}
+.nest .wsw{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:12px;background:var(--deep2);color:var(--on-deep);margin-bottom:6px;white-space:nowrap;overflow:hidden}
+.nest .wsw b{display:block;font:700 semi-expanded 15px/18px var(--fd)}
+.nest .wsw small{display:flex;align-items:center;gap:6px;font:400 12px var(--fb);color:var(--on-deep2)}
 /* On a phone the menu gives way to the floating dock. */
 @media (max-width:900px){
   .nest .app>.sb{display:none}
   .nest{padding:0!important}
   .nest>.fr{border-radius:0;border:0;box-shadow:none;min-height:100dvh!important}
+  .nest .mn{border-radius:0}
   .nest .app{min-height:100dvh!important}
   .nest .mn{padding-bottom:120px}
 }
 /* Overlays belong to the window, not to the page, so they stay put while a long page scrolls (the scrim, dialogs and toasts are fixed in nest.css). */
 .nest .drw,.nest .bulk,.nest .save,.nest .sbar,.nest .glow{position:fixed!important}
 .nest .glow{border-radius:0!important}
-.nest .popm{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh3);padding:8px;display:flex;flex-direction:column;gap:2px}
-.nest .popm button{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:0;border-radius:14px;background:none;color:var(--ink);font:700 14px var(--fb);cursor:pointer;text-align:left;transition:background var(--t1)}
-.nest .popm button:hover,.nest .popm button:focus-visible,.nest .popm button.on{background:var(--sunk);color:var(--ink)}
-.nest .popm button small{margin-left:auto;font:700 12px var(--fb);opacity:.6}
+.nest .popm{overflow:auto;background:var(--s1);border:0;border-radius:16px;box-shadow:var(--sh3);padding:6px;display:flex;flex-direction:column;gap:2px}
+.nest .popm button{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:400 14px var(--fb);cursor:pointer;text-align:left;transition:background var(--t1)}
+.nest .popm button:hover,.nest .popm button:focus-visible,.nest .popm button.on{background:var(--s2);color:var(--ink)}
+.nest .popm button small{margin-left:auto;font:400 12px var(--fb);color:var(--ink3)}
 .nest .popm hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
 /* The dock and its "more" sheet exist only on a phone. */
 .nest .dock{display:none}
 @media (max-width:900px){
-  .nest .dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:6px;border-radius:999px;background:var(--ci);box-shadow:none}
-  .nest .dock button{position:relative;width:56px;height:52px;border-radius:999px;border:0;background:none;color:color-mix(in srgb,var(--onCi) 72%,transparent);display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
-  .nest .dock button.on{width:112px;background:var(--card);color:var(--ink)}
+  .nest .dock{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:6px;border-radius:20px;background:var(--deep);box-shadow:var(--sh3)}
+  .nest .dock button{position:relative;width:56px;height:52px;border-radius:12px;border:0;background:none;color:var(--on-deep2);display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
+  .nest .dock button.on{width:124px;background:var(--bright);color:var(--on-bright)}
   .nest .dock button svg{width:22px;height:22px;grid-area:1/1}
-  .nest .dock button span{grid-area:1/1;font:700 13px var(--fb);margin-left:32px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}
-  .nest .dock button.on span{opacity:1;max-width:64px}
-  .nest .dock button.on svg{margin-right:48px}
-  .nest .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:82dvh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--sh3);animation:nSheet var(--t3) var(--e) both}
+  .nest .dock button span{grid-area:1/1;font:600 13px var(--fb);margin-left:32px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}
+  .nest .dock button.on span{opacity:1;max-width:76px}
+  .nest .dock button.on svg{margin-right:60px}
+  .nest .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:82dvh;overflow:auto;background:var(--s1);border-radius:24px 24px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--sh3);animation:nSheet var(--t3) var(--e) both}
   .nest .sheet[data-leaving]{animation:nSheetO var(--t2) var(--ei) forwards}
   .nest .sheet .grab{width:44px;height:5px;border-radius:2px;background:var(--line2);margin:0 auto 12px}
-  .nest .sheet a.nvm{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 6px;border-radius:14px;color:var(--ink);text-decoration:none;font:700 15px var(--fb)}
-  .nest .sheet a.nvm:active{background:var(--sunk)}
-  .nest .sheet a.nvm.on{background:var(--pri);color:var(--priT)}
+  .nest .sheet a.nvm{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 10px;border-radius:12px;color:var(--ink);text-decoration:none;font:400 15px var(--fb)}
+  .nest .sheet a.nvm:active{background:var(--s2)}
+  .nest .sheet a.nvm.on{background:var(--bright);color:var(--on-bright)}
   .nest .sheet a.nvm svg{width:20px;height:20px;flex:none}
   .nest .sheet .sl{margin:10px 6px 2px}
 }
 @media (max-width:900px){
   .nest .seg{max-width:100%;overflow-x:auto;scrollbar-width:thin}
   .nest .seg button{white-space:nowrap;flex:none}
-  .nest .bulk{left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));width:auto;overflow-x:auto;border-radius:28px;transform:translateY(160%) scale(.96)}
+  .nest .bulk{left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));width:auto;overflow-x:auto;border-radius:16px;transform:translateY(160%) scale(.96)}
   .nest .bulk.on{transform:none}
   .nest .bulk>*{flex:none}
 }
 @keyframes nSheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes nSheetO{to{transform:translateY(40px);opacity:0}}
 
-.nest .mebtn{display:flex;align-items:center;gap:12px;width:100%;padding:6px;margin:-6px;border:0;border-radius:14px;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background var(--t2)}
-.nest .mebtn:hover,.nest .mebtn[aria-expanded=true]{background:var(--sunk)}
+.nest .mebtn{display:flex;align-items:center;gap:10px;width:100%;padding:8px;margin:-6px;border:0;border-radius:12px;background:var(--deep2);color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background var(--t2)}
+.nest .mebtn:hover,.nest .mebtn[aria-expanded=true]{background:var(--deep3)}
 .nest .sb.col .mebtn{width:auto}
 /* The menu stays in view while a long page scrolls, and scrolls itself on a short window. `clip` keeps the rounded frame without making it a scroll container. */
 .nest .fr{overflow:clip}

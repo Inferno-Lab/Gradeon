@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DATA_REQUEST_KINDS, type DataRequestRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, SelectField, useShake, useToast } from '@gradeon/web-ui';
+import { Dialog, Field, SelectField, useShake, useToast, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AddBtn, AreaField, problem } from '../../app/kit';
 import { Page } from '../../app/Page';
@@ -29,8 +29,7 @@ export function PrivacyPage() {
         {deciding && <AnswerDialog r={deciding} onClose={() => setDeciding(null)} onDone={(m) => { setDeciding(null); refresh(); say(m); }} />}
       </>}>
       {!rows.length ? (
-        <EmptyCard title="Privacy requests" chip={{ text: '0', tone: 'v' }} scene="padlock" heading="No one has asked about their data"
-          body="Families can ask from the app for a copy of their data, a correction or erasure. Requests made in person are logged here too, and each is answered once." />
+        <EmptyState scene="privacy" onAction={() => app.go('/profile/privacy')} />
       ) : (
         <div className="card" style={{ padding: 0 }}>
           {rows.map((r) => (

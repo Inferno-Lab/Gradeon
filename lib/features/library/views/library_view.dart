@@ -6,7 +6,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -53,7 +53,7 @@ class LibraryView extends GetView<LibraryController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'library.empty',
             emptyBody: 'library.empty_body',
-            emptyArt: EmptyArt.books,
+            emptyArt: EmptyArt.homework,
             emptyHint: 'library.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,13 +190,13 @@ class _Book extends StatelessWidget {
   Widget build(BuildContext context) {
     final id = _styles[style];
     final night = id == 'night';
-    final pigment = night ? SubjectColor(AppColors.light.ink, AppColors.blackboard.ink) : AppColors.subject(id);
+    final pigment = night ? AppColors.spectrum('indigo') : AppColors.subject(id);
     final away = !book.available;
     final shapes = switch (id) {
       'computer' => [_shape(right: -24, top: 40, w: 80, h: 80, color: AppColors.white.withValues(alpha: 0.14))],
       'art' => [_shape(left: -10, top: 70, w: 120, h: 40, color: AppColors.white.withValues(alpha: 0.4), radius: 999)],
       'night' => [
-        _shape(left: 30, top: 76, w: 6, h: 6, color: AppColors.mari),
+        _shape(left: 30, top: 76, w: 6, h: 6, color: context.app.brand),
         _shape(left: 70, top: 96, w: 4, h: 4, color: AppColors.white),
         _shape(left: 52, top: 58, w: 5, h: 5, color: AppColors.white),
       ],
@@ -223,8 +223,8 @@ class _Book extends StatelessWidget {
       _ => const <Widget>[],
     };
     const radius = BorderRadius.only(
-      topLeft: Radius.circular(6),
-      bottomLeft: Radius.circular(6),
+      topLeft: Radius.circular(7),
+      bottomLeft: Radius.circular(7),
       topRight: Radius.circular(10),
       bottomRight: Radius.circular(10),
     );

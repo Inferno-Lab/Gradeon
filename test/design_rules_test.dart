@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 const _space = [0, 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56];
-const _radii = [2, 6, 10, 14, 18, 24, 34, 999];
+const _radii = [2, 7, 10, 12, 16, 20, 24, 28, 999];
 
 /// Screens, sheets and shared widgets: where things are drawn. Controllers, data and the theme are not.
 final _ui = Directory('lib')
@@ -52,7 +52,7 @@ void main() {
   });
 
   test('text is set from the type roles', () {
-    expect(_hits(features, RegExp(r'\banek\(')), isEmpty, reason: 'use context.type.<role> or AppText.<role>');
+    expect(_hits(features, RegExp(r'\bhueText\(')), isEmpty, reason: 'use context.type.<role> or AppText.<role>');
     expect(_hits(drawn, RegExp(r'fontSize:\s*\d|fontWeight:|FontVariation\(')), isEmpty,
         reason: 'pick another role instead of changing its size or weight');
   });

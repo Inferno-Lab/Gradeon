@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, ROLE_TEMPLATES, STEP_LABELS, type BlueprintRow, type RoleTemplate, DEPLOY_TARGET_LABELS } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -40,11 +40,11 @@ export function BlueprintsPage() {
   const keys = [...new Set(all.map((b) => b.key))];
   return (
     <Page title="Blueprints" sub="How a new school is set up, and the roles it starts with" toast={toast} loading={bps.isLoading} error={bps.isError ? { message: (bps.error as Error).message, retry: () => void bps.refetch() } : null}
-      actions={canBp ? <button className="btn pri" onClick={() => setAdding(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New blueprint</button> : undefined}
+      actions={canBp ? <button className="btn pri" onClick={() => setAdding(true)}><Icon name="plus" />New blueprint</button> : undefined}
       overlays={adding && <NewBlueprint from={all.filter((b) => b.active)} onClose={() => setAdding(false)} onDone={(m) => { setAdding(false); refresh(); say(m); }} />}>
       <section className="grid">
         <div className="s12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 16, alignItems: 'start', minWidth: 0 }}>
-          {keys.length === 0 && <EmptyCard title="Blueprints" chip={{ text: 'None', tone: 'v' }} scene="checklist" heading="No blueprint yet" body="The platform creates one for each place schools can run when it first starts." />}
+          {keys.length === 0 && <EmptyState scene="blueprints" onAction={canBp ? () => setAdding(true) : undefined} />}
           {keys.map((k) => {
             const versions = all.filter((b) => b.key === k).sort((x, y) => y.version - x.version);
             const on = versions.find((b) => b.active);
@@ -69,8 +69,8 @@ export function BlueprintsPage() {
                       const must = REQUIRED.includes(s.key);
                       return (
                         <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
-                          <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--sunk)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
-                          <span style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{STEP_LABELS[s.key]}</b><small style={{ color: 'var(--ink3)', font: '500 12px var(--fb)' }}>{must ? 'Always runs' : s.optional ? 'Optional: can be skipped if it stops' : 'Runs unless switched off'}</small></span>
+                          <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--s2)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
+                          <span style={{ flex: 1, minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{STEP_LABELS[s.key]}</b><small style={{ color: 'var(--ink3)', font: '400 12px var(--fb)' }}>{must ? 'Always runs' : s.optional ? 'Optional: can be skipped if it stops' : 'Runs unless switched off'}</small></span>
                           <button className={`sw ${s.enabled ? 'on' : ''}`} role="switch" aria-checked={s.enabled} aria-label={STEP_LABELS[s.key]} disabled={must || !canBp} onClick={() => setDraft({ ...draft, [bp.id]: steps.map((x) => (x.key === s.key ? { ...x, enabled: !x.enabled } : x)) })}></button>
                         </div>
                       );

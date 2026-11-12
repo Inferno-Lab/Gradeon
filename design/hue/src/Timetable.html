@@ -1,0 +1,58 @@
+<div class="hue s-emerald shell">
+  <div class="sidew"><dc-import name="Sidebar" app="admin" active="Timetable" theme="light" seed="emerald" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Timetable</h1><p>8 A · Class teacher Kavita Iyer · Room 204</p></div>
+      <span class="sp"></span>
+      <div class="seg"><span class="on">Class</span><span>Teacher</span><span>Room</span></div>
+      <button class="btn">[[i:printer]]Print</button>
+      <button class="btn pri">[[i:pencil-simple]]Edit week</button>
+    </header>
+    <section class="card">
+      <div class="tt" style="grid-template-columns:72px repeat(6,minmax(0,1fr))">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="60"><div class="{{c.cls}}"><b>{{c.a}}</b><small>{{c.b}}</small></div></sc-for>
+      </div>
+    </section>
+    <div class="g" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+      <section class="card">
+        <div class="ch"><h2>Periods this week</h2><small>40 taught, 2 free on Saturday</small></div>
+        <div class="rw" style="gap:6px;flex-wrap:wrap"><sc-for list="{{legend}}" as="l" hint-placeholder-count="11"><span class="{{l.cls}}"><i class="dot"></i>{{l.t}} · {{l.n}}</span></sc-for></div>
+      </section>
+      <section class="card">
+        <div class="ch"><h2>Changes this week</h2></div>
+        <div class="rows">
+          <div class="row" style="min-height:48px"><span class="tile date"><small>Thu</small>12</span><span class="grow"><b>Period 7 ends at 1:50</b><small>Parent teacher meeting starts at 4:00</small></span></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+renderVals() {
+  const T = { English: ["violet", "Ms Thomas"], Science: ["teal", "Mr Rao"], Maths: ["blue", "Ms Iyer"], Hindi: ["orange", "Ms Tiwari"], Marathi: ["pink", "Mr Jadhav"], "Social science": ["amber", "Ms Banerjee"], Computers: ["indigo", "Mr Khan"], Sport: ["green", "Mr Pawar"], Art: ["rose", "Ms Sen"], Music: ["cyan", "Mr Kale"], Sanskrit: ["red", "Ms Joshi"] };
+  const S = "Social science";
+  const week = [
+    ["8:00", "P1", ["English", "Science", "Maths", "Hindi", "English", "Sport"]],
+    ["8:45", "P2", ["Maths", "English", "Science", "Maths", "Science", "Sport"]],
+    ["9:30", "P3", ["Science", "Maths", "English", "Science", "Maths", "Art"]],
+    ["10:15", "", "Break · 20 minutes"],
+    ["10:35", "P4", ["Hindi", "Marathi", "Hindi", "English", "Marathi", "Music"]],
+    ["11:20", "P5", [S, "Computers", S, "Marathi", S, "Computers"]],
+    ["12:05", "", "Lunch · 40 minutes"],
+    ["12:45", "P6", ["Marathi", S, "Art", "Computers", "Hindi", ""]],
+    ["1:30", "P7", ["Sport", "Hindi", "Music", S, "Sanskrit", ""]],
+  ];
+  const cells = [{ cls: "th", a: "", b: "" }, ...["Mon 9", "Tue 10", "Wed 11", "Thu 12", "Fri 13", "Sat 14"].map((a, i) => ({ cls: i === 1 ? "th on" : "th", a, b: "" }))];
+  const count = {};
+  week.forEach(([time, p, row]) => {
+    cells.push({ cls: "tm", a: time, b: p });
+    if (typeof row === "string") return cells.push({ cls: "per brk", a: row, b: "" });
+    row.forEach((s, d) => {
+      if (!s) return cells.push({ cls: "per free", a: "Free", b: "Half day" });
+      count[s] = (count[s] || 0) + 1;
+      cells.push({ cls: "per sp-" + T[s][0] + (p === "P3" && d === 1 ? " now" : ""), a: s, b: T[s][1] + (p === "P3" && d === 1 ? " · now" : "") });
+    });
+  });
+  return { cells, legend: Object.keys(T).map((t) => ({ cls: "tag sp sp-" + T[t][0], t, n: count[t] || 0 })) };
+}
+</script>

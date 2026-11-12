@@ -61,6 +61,7 @@ void main() {
     await tester.runAsync(() => Get.find<MockJsonDataSource>().ensureLoaded());
     final parent = find.text('Parent');
     await tester.ensureVisible(parent);
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(parent);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));

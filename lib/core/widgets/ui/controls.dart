@@ -44,7 +44,7 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-enum BtnKind { primary, ink, quiet, danger, plain }
+enum BtnKind { primary, ink, bright, quiet, danger, plain }
 
 class Btn extends StatelessWidget {
   const Btn(
@@ -74,15 +74,18 @@ class Btn extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final (bg, fg) = switch (kind) {
-      BtnKind.primary => (AppColors.mari, AppColors.mariInk),
-      BtnKind.ink => (c.ink, c.chalk),
+      // Gradeon Hue: brand for the main action, the deep colour for a strong second one.
+      BtnKind.primary => (c.brand, c.onBrand),
+      BtnKind.ink => (c.deep, c.onDeep),
+      // On the deep header, the school's bright colour.
+      BtnKind.bright => (c.bright, c.onBright),
       BtnKind.quiet => (Colors.transparent, c.ink),
       BtnKind.danger => (AppColors.bad, AppColors.white),
       BtnKind.plain => (Colors.transparent, c.ink),
     };
-    final h = height ?? (small ? 40.0 : 52.0);
+    final h = height ?? (small ? 40.0 : 56.0);
     final disabled = onPressed == null && !loading;
-    final style = anek(small ? 14.5 : 16, 650, width: 108, height: 1, color: fg);
+    final style = hueText(small ? 14 : 16, 600, height: 1, color: fg);
     final content = Row(
       mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -90,11 +93,11 @@ class Btn extends StatelessWidget {
         if (loading)
           SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: fg))
         else ...[
-          if (icon != null) ...[Icon(icon, size: 18, color: fg), const SizedBox(width: 8)],
+          if (icon != null) ...[Icon(icon, size: 20, color: fg), const SizedBox(width: 8)],
           Flexible(
             child: Text(label.tr, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
-          if (trailing != null) ...[const SizedBox(width: 8), Icon(trailing, size: 18, color: fg)],
+          if (trailing != null) ...[const SizedBox(width: 8), Icon(trailing, size: 20, color: fg)],
         ],
       ],
     );
@@ -109,8 +112,8 @@ class Btn extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: small ? 16 : 24),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(h / 2),
-            border: kind == BtnKind.quiet ? Border.all(color: c.line2, width: 1.5) : null,
+            borderRadius: BorderRadius.circular(small ? AppRadius.md : AppRadius.field),
+            border: kind == BtnKind.quiet ? Border.all(color: c.line2) : null,
           ),
           child: content,
         ),

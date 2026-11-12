@@ -1,0 +1,38 @@
+<div class="hue s-emerald phone">
+  <div class="stat"><span>9:41</span><span class="rw" style="gap:6px">[[if:cell-signal-full]][[if:wifi-high]][[if:battery-full]]</span></div>
+  <header class="phead" style="gap:14px;padding-bottom:48px">
+    <div class="ptop"><button class="pib ond" aria-label="Close">[[ib:x]]</button><span class="col"><b class="d" style="font-size:20px;line-height:24px">8 A · Maths</b><small style="font-size:13px;line-height:18px;color:var(--on-deep2)">Period 3 · 9:30</small></span></div>
+    <div class="rw" style="gap:24px">
+      <span class="col"><span class="lbl" style="color:var(--on-deep2)">Present</span><b class="d" style="font-size:30px;line-height:34px;color:var(--bright)">{{n.p}}</b></span>
+      <span class="col"><span class="lbl" style="color:var(--on-deep2)">Absent</span><b class="d" style="font-size:30px;line-height:34px;color:var(--bad-d)">{{n.a}}</b></span>
+      <span class="col"><span class="lbl" style="color:var(--on-deep2)">Late</span><b class="d" style="font-size:30px;line-height:34px;color:var(--warn-d)">{{n.l}}</b></span>
+    </div>
+    <div class="bar"><i style="flex:{{n.p}};min-width:0;background:var(--bright)"></i><i style="flex:{{n.a}};min-width:0;background:var(--bad-d)"></i><i style="flex:{{n.l}};min-width:0;background:var(--warn-d)"></i></div>
+  </header>
+  <div class="sheet rise">
+    <div class="pb" style="padding-top:18px;gap:8px">
+      <span class="t2" style="font-size:14px;line-height:20px">Tap a name to change it. Everyone starts as present.</span>
+      <div class="prows" style="margin:0">
+        <sc-for list="{{kids}}" as="k" hint-placeholder-count="7">
+          <button class="prow" style="min-height:56px;width:100%;text-align:left" onClick="{{k.go}}"><span class="{{k.av}}">{{k.in}}</span><span class="grow"><b>{{k.n}}</b><small class="e0">{{k.note}}</small></span><span class="{{k.cls}}"><svg class="i" data-k="b" viewBox="0 0 256 256" aria-hidden="true"><path d="{{k.d}}"/></svg>{{k.t}}</span></button>
+        </sc-for>
+      </div>
+      <span class="rw t2" style="gap:6px;font-size:14px;justify-content:center">25 more, all present[[ib:caret-down]]</span>
+    </div>
+  </div>
+  <div class="pact"><span class="grow" style="font-size:14px;line-height:20px;color:var(--on-deep2)"><b style="display:block;font-size:16px;color:var(--on-deep)">32 of 32</b>marked</span><button class="btn bri xl">Save roll</button></div>
+</div>
+<script>
+renderVals() {
+  const K = [["Zoya Shaikh", "blue", "A", "On leave · note from parent"], ["Aarav Sharma", "rose", "P"], ["Aditi Rao", "orange", "P"], ["Advait Joshi", "lime", "P"], ["Anika Verma", "blue", "P"], ["Arnav Desai", "rose", "P"], ["Avni Kapoor", "orange", "P"]];
+  const m = (this.state && this.state.m) || K.map((k) => k[2]);
+  const next = { P: "A", A: "L", L: "P" };
+  const V = { P: ["st ok", "Present", "[[pb:@present]]"], A: ["st bad", "Absent", "[[pb:@absent]]"], L: ["st warn", "Late", "[[pb:@late]]"] };
+  const n = { p: 25, a: 0, l: 0 };
+  m.forEach((v) => n[v.toLowerCase()]++);
+  return {
+    n,
+    kids: K.map(([name, sp, , note], i) => ({ n: name, note: note || "", in: name.split(" ").map((w) => w[0]).join(""), av: "av sp sp-" + sp, cls: V[m[i]][0], t: V[m[i]][1], d: V[m[i]][2], go: () => this.setState({ m: m.map((x, j) => (j === i ? next[x] : x)) }) })),
+  };
+}
+</script>

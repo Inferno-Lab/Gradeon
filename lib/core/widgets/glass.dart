@@ -43,7 +43,7 @@ class Glass extends StatelessWidget {
     final fill = given != null && given.a >= .95
         ? given
         : onPigment
-        ? AppColors.light.ink
+        ? c.deep2
         : c.paper;
     return Container(
       width: width,
@@ -56,7 +56,7 @@ class Glass extends StatelessWidget {
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: c.dark ? AppColors.amoled.chalk.withValues(alpha: 0.4) : AppColors.light.ink.withValues(alpha: 0.14),
+                  color: c.shadow,
                   blurRadius: thick ? 10 : 18,
                   spreadRadius: thick ? 0 : -6,
                   offset: Offset(0, thick ? 2 : 8),
@@ -69,7 +69,7 @@ class Glass extends StatelessWidget {
   }
 }
 
-/// Round icon button (44px), the house top-bar control.
+/// Round icon button (44px) for the top of a page, which is the school's deep colour in Gradeon Hue.
 class GlassIconButton extends StatelessWidget {
   const GlassIconButton({
     required this.icon,
@@ -93,30 +93,31 @@ class GlassIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.app;
+    // Gradeon Hue's round button on the deep colour (`.pib.ond`): a solid deep2 disc, no shadow; the dot is bright.
     return GlassPress(
       onTap: onTap,
       label: label,
-      child: Glass(
-        width: size,
-        height: size,
-        radius: size / 2,
-        onPigment: onPigment ?? color == AppColors.white,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(icon, size: 22, color: color ?? context.app.ink),
-            if (badge)
-              Positioned(
-                top: 8,
-                right: 9,
-                child: SizedBox.square(
-                  dimension: 9,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: AppColors.bad, shape: BoxShape.circle),
+      child: SizedBox.square(
+        dimension: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: c.deep2, shape: BoxShape.circle),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, size: 22, color: c.onDeep),
+              if (badge)
+                Positioned(
+                  top: 10,
+                  right: 11,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: c.bright, shape: BoxShape.circle, border: Border.all(color: c.deep2, width: 2)),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

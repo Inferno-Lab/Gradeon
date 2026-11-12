@@ -10,9 +10,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -39,7 +37,6 @@ class AppSearchController extends GetxController {
   List<Notice> _notices = [];
   List<Teacher> _people = [];
   List<SchoolEvent> _events = [];
-  List<PeriodSlot> today = [];
   final Map<String, SchoolClass> _classes = {};
   String? studentId;
 
@@ -83,10 +80,6 @@ class AppSearchController extends GetxController {
     _notices = await soft(() => Get.find<NoticeRepository>().all()) ?? [];
     _people = await soft(directory.teachers) ?? [];
     _events = await soft(() => Get.find<EventRepository>().all()) ?? [];
-    if (classIds.isNotEmpty) {
-      final days = await soft(() => Get.find<TimetableRepository>().forClass(classIds.first)) ?? [];
-      today = days.where((d) => d.day == weekdayKey(DateTime.now())).firstOrNull?.periods ?? [];
-    }
     ready.value = true;
   }
 
@@ -123,7 +116,7 @@ class AppSearchController extends GetxController {
   }
 }
 
-/// Search, pulled down from Home: a glass field over today's ribbon.
+/// Search, pulled down from Home: the field on the school's deep colour (as Home's header), the results on the sheet.
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
 
@@ -169,18 +162,14 @@ class _SearchViewState extends State<SearchView> {
     final side = (MediaQuery.sizeOf(context).width - 720) / 2;
     final gutter = side > 16 ? side : 16.0;
     return Scaffold(
-      backgroundColor: app.chalk,
+      backgroundColor: app.deep,
       body: Stack(
         children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            height: 84 + inset.top,
-            child: Obx(() => _Ribbon(periods: c.today.toList(), ready: c.ready.value)),
-          ),
           Positioned.fill(
-            child: Obx(() {
+            top: inset.top + 84,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+              child: ColoredBox(color: app.chalk, child: Obx(() {
               c.query.value;
               c.scope.value;
               c.ready.value;
@@ -194,7 +183,7 @@ class _SearchViewState extends State<SearchView> {
               final total = c.homework.length + c.notices.length + c.people.length + c.events.length;
               return ListView(
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.fromLTRB(gutter + 4, inset.top + 102, gutter + 4, inset.bottom + 32),
+                padding: EdgeInsets.fromLTRB(gutter + 4, 16, gutter + 4, inset.bottom + 32),
                 children: [
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -299,7 +288,8 @@ class _SearchViewState extends State<SearchView> {
                   ],
                 ],
               );
-            }),
+            })),
+            ),
           ),
           Positioned(
             left: gutter,
@@ -491,49 +481,3 @@ class _Result extends StatelessWidget {
 }
 
 /// Today's periods as blocks, the Home ribbon peeking out behind the field.
-class _Ribbon extends StatelessWidget {
-  const _Ribbon({required this.periods, required this.ready});
-
-  final List<PeriodSlot> periods;
-  final bool ready;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!ready || periods.isEmpty) return const SizedBox.shrink();
-    final now = nowMinutes();
-    final first = minutesOf(periods.first.start);
-    // Centre the ribbon on now, as Home does.
-    const k = 2.07;
-    final width = MediaQuery.sizeOf(context).width;
-    final offset = width / 2 - (now.clamp(first, minutesOf(periods.last.end)) - first) * k;
-    return ClipRect(
-      child: Stack(
-        children: [
-          for (final p in periods)
-            Positioned(
-              left: offset + (minutesOf(p.start) - first) * k,
-              width: (minutesOf(p.end) - minutesOf(p.start)) * k - 3,
-              top: 0,
-              bottom: 0,
-              child: Opacity(
-                opacity: minutesOf(p.end) <= now ? .55 : 1,
-                child: p.kind == PeriodKind.klass
-                    ? DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: minutesOf(p.end) <= now
-                              ? Color.lerp(AppColors.subject(p.subject).fill, AppColors.off, .65)
-                              : AppColors.subject(p.subject).fill,
-                          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
-                        ),
-                      )
-                    : Hatch(
-                        radius: const BorderRadius.vertical(bottom: Radius.circular(18)),
-                        background: context.app.paper2,
-                      ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}

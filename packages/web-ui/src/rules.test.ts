@@ -5,7 +5,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { WEB_TOKENS } from '@gradeon/contracts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -17,7 +16,8 @@ const apps = ['apps/admin/src', 'apps/console/src'].flatMap((d) => walk(path.joi
 const ui = walk(path.join(root, 'packages/web-ui/src'));
 const tsx = apps.filter((f) => f.endsWith('.tsx'));
 const allTsx = [...tsx, ...ui.filter((f) => f.endsWith('.tsx'))];
-const css = [...apps, ...ui].filter((f) => f.endsWith('.css'));
+// hue.css and hue-parts.css are generated from the approved boards (tools/gen-hue.mjs, design/hue/build.mjs).
+const css = [...apps, ...ui].filter((f) => f.endsWith('.css') && !/hue(-parts)?\.css$/.test(f));
 const cache = new Map<string, string>();
 const read = (f: string) => cache.get(f) ?? cache.set(f, readFileSync(f, 'utf8')).get(f)!;
 
@@ -33,17 +33,18 @@ const definesColour = (line: string, f: string) => (/nest\.css$/.test(f) && /^(\
 const comment = (line: string) => /^\s*(\/\/|\/\*|\*)/.test(line);
 
 // The scales. Art numerals (the 404 page, illustrations) are drawings, not type; font-size 0 hides text.
-const SIZES = [11, 12, 13, 14, 15, 17, 22, 28, 34, 38];
-const WEIGHTS = [500, 600, 700];
-const RADII = [0, 2, 6, 10, 14, 18, 24, 28, 999];
-const SPACE = [0, 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56];
+// Gradeon Hue's scales, as the approved boards use them (design/hue/base.css).
+const SIZES = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 34, 38, 40, 44, 52, 56, 64, 72];
+const WEIGHTS = [400, 500, 600, 650, 700, 800];
+const RADII = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 999];
+const SPACE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 52, 56];
 const art = (line: string) => /\.es-nf \.n\b|\.il\b/.test(line);
 /** Whether any pixel number in the captured values is off the scale (percentages and `auto` are layout, not scale values). */
 const offScale = (line: string, re: RegExp, ok: (n: number) => boolean) => [...line.matchAll(re)].some((m) => [...m[1]!.matchAll(/(-?\d+(?:\.\d+)?)(px|%|em|rem|vh|vw|ch|s|ms)?/g)].some((x) => (x[2] ?? 'px') === 'px' && !ok(Math.abs(Number(x[1])))));
 
 describe('the design system', { timeout: 30_000 }, () => {
   it('has no browser widgets in the apps', () => {
-    expect(hits(tsx, /\btype=["'{]?\s*["']?(date|time|month|color|number|checkbox|file|datetime-local|week|range)\b/), 'use DateField, TimeField, MonthField, NumberField, ColourField, Checkbox or FilePick from @gradeon/web-ui').toEqual([]);
+    expect(hits(tsx, /\btype=["'{]?\s*["']?(date|time|month|color|number|checkbox|file|datetime-local|week|range)\b/, (l) => !/querySelector/.test(l)), 'use DateField, TimeField, MonthField, NumberField, ColourField, Checkbox or FilePick from @gradeon/web-ui').toEqual([]);
     expect(hits(tsx, /<select\b/), 'use Select from @gradeon/web-ui').toEqual([]);
   });
 
@@ -82,28 +83,17 @@ describe('the design system', { timeout: 30_000 }, () => {
   it('takes every colour from a token', () => {
     const raw = /#[0-9a-fA-F]{3,8}\b(?![\w-])|\b(rgba?|hsla?)\(|(?<![\w-])(white|black)(?![\w-])/;
     expect(hits([...css, ...allTsx].filter((f) => !fixed(f)), raw, (line, f) => !comment(line) && !definesColour(line, f) && !/white-space/.test(line)),
-      'use a colour token (var(--ink), var(--onCi), color-mix(in srgb,var(--onCi) 14%,transparent)…); the console can change every token').toEqual([]);
+      'use a colour token (var(--ink), var(--on-deep), color-mix(in srgb,var(--on-deep) 14%,transparent)…); the console can change every token').toEqual([]);
     expect(hits([...css, ...allTsx], /var\(--(b|bS|r|rS|rF|sbg)\)|\.btn\.v\b|\bbtn v\b/), 'retired: use --v, --vS, --c, --cS, --cF, --frame; the blue button is gone (btn pri)').toEqual([]);
-  });
-
-  it('keeps the stylesheet defaults equal to the colours the console edits', () => {
-    const sheet = read(path.join(root, 'packages/web-ui/src/nest.css'));
-    const block = (re: RegExp) => Object.fromEntries([...(sheet.match(re)?.[1] ?? '').matchAll(/--(\w+):(#[0-9A-Fa-f]{6,8})/g)].map((m) => [m[1]!, m[2]!.toUpperCase()]));
-    const light = block(/\.nest\{([^}]*)\}/), dark = block(/\.nest\.dark\{([^}]*)\}/);
-    const drift = WEB_TOKENS.flatMap((t) => [
-      ...(light[t.key] === t.light.toUpperCase() ? [] : [`light --${t.key}: ${light[t.key]} vs ${t.light}`]),
-      ...(dark[t.key] === t.dark.toUpperCase() ? [] : [`dark --${t.key}: ${dark[t.key]} vs ${t.dark}`]),
-    ]);
-    expect(drift, 'change nest.css and WEB_TOKENS in packages/contracts/src/theme.ts together').toEqual([]);
   });
 
   const files = [...css, ...allTsx].filter((f) => !fixed(f));
 
-  it('sets type from the scale: ten sizes, three weights', () => {
+  it('sets type from the scale', () => {
     const size = /(?:\bfont\s*:\s*['"`]?[1-9]00\s+|font-size\s*:\s*|fontSize\s*:\s*['"`]?)(\d+(?:\.\d+)?)/g;
     expect(hits(files, /font/i, (l) => !art(l) && [...l.matchAll(size)].some((m) => Number(m[1]) !== 0 && !SIZES.includes(Number(m[1])))), `font sizes are ${SIZES.join(', ')} px`).toEqual([]);
     const weight = /(?:\bfont\s*:\s*['"`]?|font-weight\s*:\s*|fontWeight\s*:\s*['"`]?)([1-9]00)\b/g;
-    expect(hits(files, /font/i, (l) => [...l.matchAll(weight)].some((m) => !WEIGHTS.includes(Number(m[1])))), 'font weights are 500, 600 and 700').toEqual([]);
+    expect(hits(files, /font/i, (l) => [...l.matchAll(weight)].some((m) => !WEIGHTS.includes(Number(m[1])))), `font weights are ${WEIGHTS.join(', ')}`).toEqual([]);
   });
 
   it('rounds corners from the scale', () => {

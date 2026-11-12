@@ -2,10 +2,9 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
-import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueContrast, hueOf, hueTokens } from '@gradeon/contracts';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { ThemeEditor } from '../../app/ThemeEditor';
 import { ago } from '../../app/format';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -15,7 +14,7 @@ const dflt = (k: string): unknown => shape[k]?.safeParse(undefined).data;
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 /** The channels a message can go through, as the Hub sends them. */
 const CHANNELS = [['push', 'App'], ['sms', 'SMS'], ['whatsapp', 'WhatsApp'], ['email', 'Email']] as const;
-const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' } as const;
+const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '400 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' } as const;
 
 /** The groups a school's settings sit in: the six school-wide ones, then one per module it has. */
 const groupLabel = (g: string) => (MODULES.find((m) => m.key === g) ? (g === 'school' ? 'Academic year' : MODULES.find((m) => m.key === g)!.name) : g);
@@ -70,7 +69,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
-  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
   const shown = (k: SettingKey) => unused || !SETTINGS_META[k].notUsedYet;
   const groups = [...SETTING_GROUPS as readonly string[], ...MODULES.filter((m) => m.settings.length && cfg.entitled.includes(m.key)).map((m) => m.key)];
@@ -88,7 +87,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       <div className="card s12 rise">
         <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}>
           <h2>Configuration</h2><span className="chip">Version {cfg.version}</span><span className="grow"></span>
-          <div className="srch" style={{ minWidth: 220, height: 38 }}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
+          <div className="srch" style={{ minWidth: 220, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
         <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).{off.length ? ` Not in its plan, so not shown: ${off.map((m) => m.name).join(', ')}.` : ''}</div>
         {dirtyGroups.length > 0 && (
@@ -166,10 +165,8 @@ function SettingRow({ meta, value, error, disabled, cfg, logo, onLogo, onChange 
       return box(<Select value={str} onChange={onChange} disabled={disabled} aria-label={meta.label} options={(meta.options ?? []).map(([v, l]) => ({ value: v, label: l }))} />);
     case 'number':
       return <div style={{ marginTop: 12 }}><NumberField label={meta.label} min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
-    case 'theme':
-      return box(<ThemeEditor scope="school" value={(value ?? {}) as ThemeColors} onChange={onChange} disabled={disabled} brand={typeof cfg.values['brand.color'] === 'string' ? cfg.values['brand.color'] : undefined} />);
     case 'color':
-      return box(<ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} />);
+      return box(<><ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} /><HueSwatches colour={str || DEFAULT_BRAND} /></>);
     case 'time': case 'date':
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
@@ -466,6 +463,29 @@ function GradingEditor({ value, max, disabled, onChange }: { value: { grade: str
         <button type="button" className="btn sm" disabled={disabled} onClick={() => onChange(sorted(value))}>Put in order</button>
       </div>
       {lowest > 0 && <div className="help">No grade starts at 0%, so marks below {lowest}% would get no grade. Add one that starts at 0.</div>}
+    </div>
+  );
+}
+
+/** The seed colour card of the School board: what the brand colour's hue makes, each colour with the text it carries checked against AA. */
+function HueSwatches({ colour }: { colour: string }) {
+  const h = hueOf(/^#[0-9a-fA-F]{6}$/.test(colour) ? colour : DEFAULT_BRAND);
+  const t = hueTokens(h, 'light');
+  const ROWS: [string, string, string, string][] = [['deep', 'Deep', 'Frame, menu and tab bar', 'on-deep'], ['bright', 'Bright', 'You are here, the main number', 'on-bright'], ['brand', 'Brand', 'Buttons and links', 'on-brand'],
+    ['brand-soft', 'Soft', 'Selected rows, quiet buttons', 'brand-ink'], ['hero', 'Hero', 'The headline card', 'on-deep'], ['heat4', 'Heat', 'How much, quiet to loud', 'heat-hi-t']];
+  return (
+    <div className="hue-sw" style={{ marginTop: 12 }}>
+      <div className="help" style={{ margin: '0 0 6px' }}>Hue {h}° · one hue makes every colour, in light, dark and AMOLED</div>
+      {ROWS.map(([k, name, what, on]) => (
+        <div key={k} className="kv" style={{ alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <i style={{ background: t[k] }} aria-hidden="true" />
+            <span><b style={{ display: 'block', color: 'var(--ink)', fontWeight: 600 }}>{name}</b><small>{what}</small></span>
+          </span>
+          <span className="chip g" data-tip={`Text on it: ${hueContrast(t[on]!, t[k]!).toFixed(1)} to 1`}>AA</span>
+        </div>
+      ))}
+      <div className="help" style={{ marginTop: 8 }}>Every text pair is checked against WCAG AA for every hue, so any colour can be published.</div>
     </div>
   );
 }

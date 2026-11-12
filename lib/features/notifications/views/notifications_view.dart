@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:flutter/semantics.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -21,12 +22,12 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 ({IconData? icon, String? glyph, Color fill, Color on, String label}) _kind(BuildContext context, String type) {
   final c = context.app;
   return switch (type) {
-    'fees' => (icon: null, glyph: '₹', fill: c.badSoft, on: c.badText, label: 'notifications.t_fees'.tr),
+    'fees' => (icon: AppIcons.fees, glyph: null, fill: c.badSoft, on: c.badText, label: 'notifications.t_fees'.tr),
     'homework' => (
-      icon: PhosphorIconsRegular.fileText,
+      icon: AppIcons.homework,
       glyph: null,
-      fill: AppColors.subject('maths').fill,
-      on: AppColors.subject('maths').on,
+      fill: AppColors.subject('maths').soft,
+      on: AppColors.subject('maths').ink,
       label: 'notifications.t_homework'.tr,
     ),
     'attendance' => (
@@ -135,7 +136,7 @@ class NotificationsView extends GetView<NotificationsController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'notifications.empty',
             emptyBody: 'notifications.empty_body',
-            emptyArt: EmptyArt.bell,
+            emptyArt: EmptyArt.notifications,
             emptyHint: 'notifications.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +169,7 @@ class NotificationsView extends GetView<NotificationsController> {
                   ),
                 ],
                 if (groups.isEmpty)
-                  const EmptyState(art: EmptyArt.bell, title: 'notifications.none_here', body: 'notifications.none_here_body'),
+                  const EmptyState(art: EmptyArt.notifications, title: 'notifications.none_here', body: 'notifications.none_here_body'),
                 for (var g = 0; g < groups.length; g++) ...[
                   Rise(index: 2 + g, child: SectionLabel(groups[g].$1.tr, top: 20)),
                   Rise(
@@ -255,7 +256,7 @@ class _Row extends StatelessWidget {
             onTap: () => Get.toNamed<void>(item.route),
             child: Stack(
               children: [
-                if (!item.read) Positioned(left: 5, top: 28, child: Dot(AppColors.mari, size: 7)),
+                if (!item.read) Positioned(left: 5, top: 28, child: Dot(context.app.brand, size: 7)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
@@ -265,7 +266,7 @@ class _Row extends StatelessWidget {
                         width: 40,
                         height: 40,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(color: kind.fill, borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(color: kind.fill, borderRadius: BorderRadius.circular(12)),
                         child: kind.glyph != null
                             ? Text(kind.glyph!, style: AppText.t(color: kind.on, height: 1))
                             : Icon(kind.icon, size: 18, color: kind.on),

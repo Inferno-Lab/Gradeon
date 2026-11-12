@@ -44,7 +44,7 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
   const changed = JSON.stringify(draft) !== JSON.stringify((q.data ?? []).map((x) => ({ key: x.key, name: x.name, concession: x.concession })));
   const set = (i: number, p: Partial<Draft>) => setDraft(draft.map((d, j) => (j === i ? { ...d, ...p } : d)));
   const move = (i: number, by: -1 | 1) => { const n = [...draft]; const j = i + by; [n[i], n[j]] = [n[j]!, n[i]!]; setDraft(n); };
-  if (q.isLoading) return <div className="skc" style={{ height: 200, borderRadius: 18 }} />;
+  if (q.isLoading) return <div className="skc" style={{ height: 200, borderRadius: 16 }} />;
   return (
     <Card title="Fee heads" chip={<span className="chip">{draft.length}</span>}>
       <p className="help" style={{ margin: '0 0 12px' }}>{may
@@ -59,9 +59,9 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
           {may ? <Checkbox checked={d.concession} onChange={(concession) => set(i, { concession })} label="Concessions apply" /> : d.concession && <span className="chip v">Concessions apply</span>}
           {may && (
             <span className="tgrow">
-              <button className="btn sm" aria-label={`Move ${d.name} up`} disabled={i === 0} onClick={() => move(i, -1)}><Ico d="M6 15l6-6 6 6" /></button>
-              <button className="btn sm" aria-label={`Move ${d.name} down`} disabled={i === draft.length - 1} onClick={() => move(i, 1)}><Ico d="M6 9l6 6 6-6" /></button>
-              <button className="btn sm" aria-label={`Remove ${d.name}`} disabled={draft.length === 1} data-tip="A head used by invoices stays" onClick={() => setDraft(draft.filter((_, j) => j !== i))}><Ico d="M6 6l12 12M18 6L6 18" /></button>
+              <button className="btn sm" aria-label={`Move ${d.name} up`} disabled={i === 0} onClick={() => move(i, -1)}><Ico d='caretUp' /></button>
+              <button className="btn sm" aria-label={`Move ${d.name} down`} disabled={i === draft.length - 1} onClick={() => move(i, 1)}><Ico d='caretDown' /></button>
+              <button className="btn sm" aria-label={`Remove ${d.name}`} disabled={draft.length === 1} data-tip="A head used by invoices stays" onClick={() => setDraft(draft.filter((_, j) => j !== i))}><Ico d='close' /></button>
             </span>
           )}
         </div>

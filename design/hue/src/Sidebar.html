@@ -1,0 +1,37 @@
+<nav class="{{cls}}" style="height:100%;min-height:940px" aria-label="Menu">
+  <div class="ws"><span class="crest">{{crest}}</span><span class="grow"><b>{{wsName}}</b><small class="cut">{{wsSub}}</small></span><svg class="i" data-k="b" style="width:16px;height:16px;opacity:.7" viewBox="0 0 256 256" aria-hidden="true"><path d="[[pb:@caretUpDown]]"/></svg></div>
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+    <div class="ng"><span>{{g.t}}</span>
+      <sc-for list="{{g.items}}" as="it" hint-placeholder-count="4">
+        <a href="#" class="{{it.cls}}"><svg class="i" data-k="{{it.k}}" viewBox="0 0 256 256" aria-hidden="true"><path d="{{it.d}}"/></svg>{{it.t}}<em>{{it.n}}</em></a>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div class="me"><span class="av" style="background:var(--bright);color:var(--on-bright)">{{meI}}</span><span class="grow"><b class="cut">{{meName}}</b><small class="cut">{{meRole}}</small></span>[[ib:@more]]</div>
+</nav>
+<script props='{"app":{"editor":"enum","options":["admin","console"],"default":"admin"},"active":{"editor":"text","default":"Dashboard"},"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"seed":{"editor":"enum","options":["emerald","cobalt","saffron","maroon"],"default":"emerald"}}'>
+renderVals() {
+  const app = this.props.app ?? 'admin', active = this.props.active ?? 'Dashboard', dark = this.props.theme === 'dark';
+  const seed = this.props.seed ?? (app === 'console' ? 'cobalt' : 'emerald');
+  // [label, outline, filled, count]
+  const A = [
+    ['Teach', [['Dashboard', '[[p:@dashboard]]', '[[pf:@dashboard]]'], ['Attendance', '[[p:@attendance]]', '[[pf:@attendance]]', '4'], ['Timetable', '[[p:@timetable]]', '[[pf:@timetable]]'], ['Homework', '[[p:@homework]]', '[[pf:@homework]]'], ['Exams', '[[p:@exams]]', '[[pf:@exams]]']]],
+    ['People', [['Students', '[[p:@students]]', '[[pf:@students]]'], ['Staff', '[[p:@staff]]', '[[pf:@staff]]'], ['Admissions', '[[p:@admissions]]', '[[pf:@admissions]]', '6']]],
+    ['Money', [['Fees', '[[p:@fees]]', '[[pf:@fees]]'], ['Invoices', '[[p:@invoices]]', '[[pf:@invoices]]'], ['Reports', '[[p:@reports]]', '[[pf:@reports]]']]],
+    ['Reach', [['Notices', '[[p:@notices]]', '[[pf:@notices]]'], ['Messages', '[[p:@messages]]', '[[pf:@messages]]', '4'], ['Events', '[[p:@events]]', '[[pf:@events]]'], ['Gallery', '[[p:@gallery]]', '[[pf:@gallery]]']]],
+    ['School', [['Classes and calendar', '[[p:@year]]', '[[pf:@year]]'], ['Moving in', '[[p:@moving]]', '[[pf:@moving]]'], ['Library', '[[p:@library]]', '[[pf:@library]]'], ['Transport', '[[p:@transport]]', '[[pf:@transport]]'], ['School setup', '[[p:@setup]]', '[[pf:@setup]]']]],
+  ];
+  const C = [
+    ['Operate', [['Fleet', '[[p:@fleet]]', '[[pf:@fleet]]'], ['Onboarding', '[[p:@onboarding]]', '[[pf:@onboarding]]'], ['Modules', '[[p:@modules]]', '[[pf:@modules]]'], ['Cells', '[[p:@cells]]', '[[pf:@cells]]'], ['Releases', '[[p:@releases]]', '[[pf:@releases]]'], ['Migrations', '[[p:@migrations]]', '[[pf:@migrations]]']]],
+    ['Ship', [['Mobile builds', '[[p:@builds]]', '[[pf:@builds]]'], ['Flags', '[[p:@flags]]', '[[pf:@flags]]'], ['Blueprints', '[[p:@blueprints]]', '[[pf:@blueprints]]'], ['Integrations', '[[p:@integrations]]', '[[pf:@integrations]]']]],
+    ['Care', [['Health', '[[p:@health]]', '[[pf:@health]]'], ['Approvals', '[[p:@approvals]]', '[[pf:@approvals]]', '2'], ['Requests', '[[p:@requests]]', '[[pf:@requests]]'], ['Support', '[[p:@support]]', '[[pf:@support]]'], ['Billing', '[[p:@billing]]', '[[pf:@billing]]'], ['Compliance', '[[p:@compliance]]', '[[pf:@compliance]]'], ['Team', '[[p:@team]]', '[[pf:@team]]']]],
+  ];
+  const con = app === 'console';
+  return {
+    cls: `hue s-${seed} ${dark ? 'dark ' : ''}side`,
+    crest: 'G', wsName: con ? 'Gradeon' : 'Greenfield International', wsSub: con ? 'Console · Mumbai cell' : 'Pune · 2026–27',
+    meI: con ? 'KB' : 'NM', meName: con ? 'Kaushal Bhatt' : 'Neha Menon', meRole: con ? 'Super admin' : 'Principal',
+    groups: (con ? C : A).map(([t, items]) => ({ t, items: items.map(([t, o, f, n]) => ({ t, n: n ?? '', d: t === active ? f : o, k: t === active ? 'f' : 'r', cls: t === active ? 'nv on' : 'nv' })) })),
+  };
+}
+</script>

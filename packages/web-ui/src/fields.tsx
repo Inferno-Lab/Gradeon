@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { addDays, istToday } from '@gradeon/contracts';
 import { ErrorLine } from './forms';
@@ -65,9 +66,9 @@ export function Calendar({ value, min, max, onPick }: { value: string; min?: str
   return (
     <div className="dpk">
       <div className="dpkh">
-        <button type="button" className="mini" aria-label="Previous month" onClick={() => go(addMonths(at, -1))}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path className="i" d="M15 6l-6 6 6 6"></path></svg></button>
+        <button type="button" className="mini" aria-label="Previous month" onClick={() => go(addMonths(at, -1))}><Icon name="caretLeft" size={16} /></button>
         <b aria-live="polite">{month}</b>
-        <button type="button" className="mini" aria-label="Next month" onClick={() => go(addMonths(at, 1))}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path className="i" d="M9 6l6 6-6 6"></path></svg></button>
+        <button type="button" className="mini" aria-label="Next month" onClick={() => go(addMonths(at, 1))}><Icon name="caretRight" size={16} /></button>
       </div>
       <div className="dpkw" aria-hidden="true">{['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((w) => <span key={w}>{w}</span>)}</div>
       <div className="dpkd" role="grid" aria-label={month} ref={grid} onKeyDown={key}>
@@ -96,8 +97,8 @@ function Frame({ id, label, error, hint, children, boxRef }: { id: string; label
   );
 }
 
-const CAL = 'M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4';
-const CLOCK = 'M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17M12 7.5V12l3 2';
+const CAL = 'calendar';
+const CLOCK = 'time';
 
 /** Typed text that turns into a value when the field is left (or Enter is pressed), and shows the value again after. */
 function useTyped(value: string, show: (v: string) => string, parse: (t: string) => string | null, onChange: (v: string) => void) {
@@ -132,7 +133,7 @@ export function DateField({ label, value, onChange, error, hint, disabled, min, 
         placeholder="e.g. 12 Nov 2026" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); t.commit(); } else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); } }} />
       <button ref={btn} type="button" className="fic" aria-label="Choose from a calendar" aria-haspopup="dialog" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={CAL}></path></svg>
+        <Icon name={CAL} />
       </button>
       <Pop open={open} anchor={box} returnTo={btn} onClose={() => setOpen(false)} label="Calendar" minWidth={0} focus="[tabindex='0']">
         <Calendar value={value} min={min} max={max} onPick={(d) => { onChange(d); setOpen(false); btn.current?.focus(); }} />
@@ -170,7 +171,7 @@ export function TimeField({ label, value, onChange, error, hint, disabled }: Fie
         placeholder="e.g. 08:30" aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); t.commit(); } else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); } }} />
       <button ref={btn} type="button" className="fic" aria-label="Choose a time" aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={CLOCK}></path></svg>
+        <Icon name={CLOCK} />
       </button>
       <Pop open={open} anchor={box} returnTo={btn} onClose={() => setOpen(false)} role="listbox" label={label} className="popm" minWidth={0} focus={`[data-t="${near}"]`}>
         {SLOTS.map((s) => <button key={s} type="button" role="option" data-t={s} aria-selected={s === value} className={s === value ? 'on' : ''} onClick={() => { onChange(s); setOpen(false); btn.current?.focus(); }}>{s}</button>)}
@@ -211,8 +212,8 @@ export function NumberField({ label, value, onChange, error, hint, disabled, min
   return (
     <Frame id={id} label={label} error={error} hint={hint}>
       <NumberInput id={id} className="" value={value} onChange={onChange} min={min} max={max} step={step} decimals={decimals} disabled={disabled} aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined} />
-      <button type="button" className="fic" aria-label="Decrease" disabled={disabled || (min !== undefined && Number(value) <= min)} onClick={() => bump(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 12h12"></path></svg></button>
-      <button type="button" className="fic" aria-label="Increase" disabled={disabled || (max !== undefined && Number(value) >= max)} onClick={() => bump(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 6v12M6 12h12"></path></svg></button>
+      <button type="button" className="fic" aria-label="Decrease" disabled={disabled || (min !== undefined && Number(value) <= min)} onClick={() => bump(-1)}><Icon name="minus" /></button>
+      <button type="button" className="fic" aria-label="Increase" disabled={disabled || (max !== undefined && Number(value) >= max)} onClick={() => bump(1)}><Icon name="plus" /></button>
     </Frame>
   );
 }
@@ -224,7 +225,7 @@ export function NumberField({ label, value, onChange, error, hint, disabled, min
 export function Checkbox({ checked, onChange, label, disabled, ...aria }: { checked: boolean; onChange: (v: boolean) => void; label?: ReactNode; disabled?: boolean; 'aria-label'?: string }) {
   const box = (
     <button type="button" role="checkbox" aria-checked={checked} disabled={disabled} className={`cb ${checked ? 'on' : ''}`} onClick={() => onChange(!checked)} {...aria}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 2.6 }}></path></svg>
+      <Icon name="check" />
     </button>
   );
   return label === undefined ? box : <label className="hwc">{box}{label}</label>;

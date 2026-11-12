@@ -1,0 +1,66 @@
+<div class="hue s-cobalt shell">
+  <div class="sidew"><dc-import name="Sidebar" app="console" active="Fleet" theme="light" seed="cobalt" hint-size="248px,940px"></dc-import></div>
+  <main class="main">
+    <header class="top">
+      <div><h1>Fleet</h1><p>38 schools live · 2 onboarding · Mumbai cell</p></div>
+      <span class="sp"></span>
+      <div class="search">[[i:magnifying-glass]]Find a school, a person, a build<kbd>Ctrl K</kbd></div>
+      <button class="ib" aria-label="Notifications" data-tip="Notifications">[[i:@notifications]]<span class="pip"></span></button>
+      <button class="btn pri">[[ib:plus]]Add a school</button>
+    </header>
+    <section class="card deep" style="gap:20px">
+      <div class="g" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:24px">
+        <div class="col" style="gap:4px"><span class="lbl">Schools live</span><span class="fig" style="font-size:52px">38<small>+ 2 onboarding</small></span></div>
+        <div class="col" style="gap:4px"><span class="lbl">Students</span><span class="fig" style="font-size:52px">61,240</span></div>
+        <div class="col" style="gap:4px"><span class="lbl">Parents in the app today</span><span class="fig" style="font-size:52px">68%</span></div>
+        <div class="col" style="gap:4px"><span class="lbl">Uptime, 30 days</span><span class="fig" style="font-size:52px">99.97%</span></div>
+      </div>
+      <div class="col" style="gap:10px">
+        <div class="bar" style="height:14px;border-radius:7px"><i style="flex:34;background:var(--bright)"></i><i style="flex:3;background:var(--warn-d)"></i><i style="flex:1;background:var(--bad-d)"></i></div>
+        <div class="rw" style="gap:20px;font-size:14px;color:var(--on-deep2)"><span class="rw" style="gap:8px"><i class="dot" style="--c:var(--bright)"></i>34 healthy</span><span class="rw" style="gap:8px"><i class="dot" style="--c:var(--warn-d)"></i>3 to watch</span><span class="rw" style="gap:8px"><i class="dot" style="--c:var(--bad-d)"></i>1 needs action: Vidya Niketan sync is failing</span><span class="sp"></span><button class="btn bri sm">Open health</button></div>
+      </div>
+    </section>
+    <div class="g" style="grid-template-columns:minmax(0,1fr) 320px;flex:1">
+      <section class="card flush" style="--cols:minmax(0,1.9fr) 56px 72px minmax(0,1fr) 84px 52px">
+        <div class="ch" style="padding:18px 20px 6px"><h2>Schools</h2><small>by health, then name</small><a href="#">All 38[[ib:arrow-right]]</a></div>
+        <div class="tr h"><span>School</span><span>Plan</span><span class="r">Students</span><span>Parents today</span><span>Health</span><span>App</span></div>
+        <sc-for list="{{schools}}" as="s" hint-placeholder-count="8">
+          <div class="tr"><span class="rw" style="gap:12px;min-width:0"><span class="{{s.crest}}">{{s.i}}</span><span class="col" style="min-width:0"><b class="cut">{{s.n}}</b><small>{{s.city}}</small></span></span><span><span class="{{s.pc}}">{{s.plan}}</span></span><span class="r num">{{s.st}}</span><span class="rw" style="gap:10px"><span class="bar grow"><i style="width:{{s.pa}}%"></i></span><span class="num" style="width:36px">{{s.pa}}%</span></span><span><span class="{{s.hc}}">{{s.h}}</span></span><span class="num t2">{{s.v}}</span></div>
+        </sc-for>
+        <div class="tr" style="min-height:48px;color:var(--t2);font-size:13px"><span>Showing 8 of 38</span></div>
+      </section>
+      <div class="col" style="gap:20px">
+        <section class="card">
+          <div class="ch"><h2>Approvals</h2><span class="tag warn">2 waiting</span></div>
+          <div class="rows">
+            <div class="row"><span class="crest s-saffron" style="width:32px;height:32px;border-radius:9px;font-size:13px">S</span><span class="grow"><b>Sunrise wants Transport</b><small>Asked by the principal, 2 days ago</small></span></div>
+            <div class="row"><span class="crest" style="width:32px;height:32px;border-radius:9px;font-size:13px">V</span><span class="grow"><b>Vidya Niketan wants Exams</b><small>Plan change to Plus</small></span></div>
+          </div>
+          <button class="btn ton">Review both</button>
+        </section>
+        <section class="card">
+          <div class="ch"><h2>App 4.2.0</h2><small>rolling out</small></div>
+          <div class="fig" style="font-size:44px">31<small>of 38 schools</small></div>
+          <div class="bar"><i style="flex:31"></i><i style="flex:5;background:var(--warn)"></i><i style="flex:2;background:var(--t3)"></i></div>
+          <div class="col" style="gap:4px;font-size:14px"><span class="rw" style="gap:8px"><i class="dot" style="--c:var(--warn)"></i>5 waiting for store review</span><span class="rw" style="gap:8px"><i class="dot"></i>2 held back by the school</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+renderVals() {
+  const S = [
+    ["Vidya Niketan", "Nagpur", "cobalt", "Core", "1,870", 44, "bad", "4.1.3"],
+    ["St Mary's Convent", "Mumbai", "maroon", "Plus", "3,120", 71, "warn", "4.1.3"],
+    ["Shree Ganesh Vidyalaya", "Satara", "saffron", "Core", "1,210", 52, "warn", "4.2.0"],
+    ["Bluebell High School", "Thane", "cobalt", "Core", "1,120", 59, "ok", "4.2.0"],
+    ["Greenfield International School", "Pune", "emerald", "Plus", "1,498", 78, "ok", "4.2.0"],
+    ["Little Flower School", "Kolhapur", "maroon", "Core", "940", 66, "ok", "4.2.0"],
+    ["Modern English School", "Aurangabad", "emerald", "Plus", "2,640", 73, "ok", "4.2.0"],
+    ["Sunrise Public School", "Nashik", "saffron", "Core", "2,310", 64, "ok", "4.2.0"],
+  ];
+  const H = { ok: "Healthy", warn: "Watch", bad: "Action" };
+  return { schools: S.map(([n, city, seed, plan, st, pa, h, v]) => ({ n, city, plan, st, pa, v, i: n[0], crest: "crest s-" + seed, pc: plan === "Plus" ? "tag br" : "tag", hc: "tag " + h, h: H[h] })) };
+}
+</script>

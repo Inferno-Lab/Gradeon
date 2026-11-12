@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { Dialog, EmptyCard, Field, NumberField, NumberInput, Select, useShake } from '@gradeon/web-ui';
+import { Dialog, Field, NumberField, NumberInput, Select, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import type { PolicyDoc, ReleaseRow } from '@gradeon/contracts';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -39,7 +39,7 @@ function ReleasesList({ tabs, toast, say }: { tabs: React.ReactNode; toast: Retu
   const canWrite = app.can('releases.write');
   return (
     <Page title="Releases" sub="A release signs schools off on the deployed code, wave by wave" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={<>{tabs}{canWrite && <button className="btn pri" onClick={() => setCreating(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New release</button>}</>}
+      actions={<>{tabs}{canWrite && <button className="btn pri" onClick={() => setCreating(true)}><Icon name="plus" />New release</button>}</>}
       overlays={<>
         {creating && <CreateDialog onClose={() => setCreating(false)} onDone={() => { setCreating(false); refresh(); say('Release created. Start it when you are ready.'); }} />}
         {back && (
@@ -50,7 +50,7 @@ function ReleasesList({ tabs, toast, say }: { tabs: React.ReactNode; toast: Retu
         )}
       </>}>
       {rows.length === 0 ? (
-        <div><EmptyCard title="Releases" chip={{ text: '0 releases', tone: 'v' }} scene="notebooks" heading="No releases yet" body="A release is a named version. Create one after a deploy, then start it: each school's health is checked wave by wave, and it pauses itself if a school looks unhealthy." actions={canWrite ? <button className="btn pri" onClick={() => setCreating(true)}>Create the first release</button> : undefined} /></div>
+        <div><EmptyState scene="releases" onAction={canWrite ? () => setCreating(true) : undefined} /></div>
       ) : [<Tiles key="tiles" items={[
         { label: 'Releases', value: rows.length, note: `${rows.filter((r) => r.status === 'rolling').length} rolling out now`, tone: 'v' },
         { label: 'Latest', value: rows[0]!.version, note: LABEL[rows[0]!.status], tone: 'a' },
@@ -130,7 +130,7 @@ function RolloutRules({ say }: { say: (m: string, tone?: 'ok' | 'bad') => void }
       <div className="lscroll" style={{ marginTop: 12 }}>
         {pol.waves.map((w, i) => (
           <div key={i} className="wvr">
-            <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--sunk)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
+            <span className="av" style={{ width: 28, height: 28, fontSize: 12, background: 'var(--s2)', color: 'var(--ink3)', boxShadow: 'none' }}>{i + 1}</span>
             <input className="hws wide" style={{ width: 'auto', textAlign: 'left', padding: '0 12px', flex: '1 1 160px' }} aria-label={`Name of wave ${i + 1}`} value={w.name} disabled={!can} onChange={(e) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })} />
             <Select compact aria-label={`Who is in wave ${i + 1}`} value={w.matches} disabled={!can} onChange={(v) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, matches: v as 'rest' } : x)) })} options={WAVE_KINDS.map(([value, label]) => ({ value, label }))} />
             <label className="hwc" style={{ whiteSpace: 'nowrap' }}>Schools at a time<NumberInput min={1} max={100} value={String(w.batch)} disabled={!can} aria-label="Schools at a time" onChange={(v) => setPol({ ...pol, waves: pol.waves.map((x, j) => (j === i ? { ...x, batch: Math.max(1, Number(v) || 1) } : x)) })} /></label>

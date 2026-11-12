@@ -8,7 +8,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -20,7 +20,7 @@ class ViewStateView extends StatelessWidget {
     required this.onRetry,
     this.emptyTitle = 'empty.title',
     this.emptyBody = 'empty.body',
-    this.emptyArt = EmptyArt.books,
+    this.emptyArt = EmptyArt.home,
     this.emptyActions = const [],
     this.emptyHint,
     this.errorKey,
@@ -76,7 +76,7 @@ class EmptyState extends StatelessWidget {
   const EmptyState({
     required this.title,
     required this.body,
-    this.art = EmptyArt.books,
+    this.art = EmptyArt.home,
     this.actions = const [],
     this.hint,
     super.key,
@@ -110,7 +110,7 @@ class EmptyState extends StatelessWidget {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(12)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -131,7 +131,7 @@ class EmptyState extends StatelessWidget {
                     for (final a in actions)
                       Btn(
                         a.label,
-                        kind: a.primary ? BtnKind.ink : BtnKind.quiet,
+                        kind: a.primary ? BtnKind.primary : BtnKind.quiet,
                         icon: a.icon,
                         small: true,
                         onPressed: a.onTap,
