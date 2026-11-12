@@ -467,10 +467,10 @@ class _FileRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: c.paper2,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(6),
+                  topLeft: Radius.circular(7),
                   topRight: Radius.circular(10),
-                  bottomLeft: Radius.circular(6),
-                  bottomRight: Radius.circular(6),
+                  bottomLeft: Radius.circular(7),
+                  bottomRight: Radius.circular(7),
                 ),
                 border: Border.all(color: c.line2),
               ),

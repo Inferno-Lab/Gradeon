@@ -110,7 +110,7 @@ class EmptyState extends StatelessWidget {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(12)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

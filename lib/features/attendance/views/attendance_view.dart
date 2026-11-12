@@ -381,7 +381,7 @@ class _Calendar extends StatelessWidget {
                       child: IgnorePointer(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: context.app.ink, width: 2),
                           ),
                         ),

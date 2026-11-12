@@ -64,7 +64,7 @@ class ChatListView extends GetView<ChatListController> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('chat.title'.tr, style: context.type.h1)),
+              Expanded(child: Builder(builder: (context) => Text('chat.title'.tr, style: context.type.h1))),
               if (suggested.isNotEmpty || controller.threads.isNotEmpty)
                 GlassIconButton(
                   icon: PhosphorIconsRegular.pencilSimple,
@@ -548,7 +548,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: c.paper,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: c.line2),
                       ),
                       child: Text(_quick[i].tr, style: AppText.chip(color: c.ink, height: 1)),
@@ -663,8 +663,8 @@ class _Bubble extends StatelessWidget {
           color: mine ? c.ink : c.paper,
           border: mine ? null : Border.all(color: c.line),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(mine ? 20 : 6),
             bottomRight: Radius.circular(mine ? 6 : 20),
           ),
@@ -703,10 +703,10 @@ class _TypingState extends State<_Typing> with SingleTickerProviderStateMixin {
           color: c.paper,
           border: Border.all(color: c.line),
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomRight: Radius.circular(18),
-            bottomLeft: Radius.circular(6),
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+            bottomLeft: Radius.circular(7),
           ),
         ),
         child: AnimatedBuilder(

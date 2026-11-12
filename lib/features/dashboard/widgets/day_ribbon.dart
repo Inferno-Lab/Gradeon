@@ -133,7 +133,7 @@ class DayRibbonState extends State<DayRibbon> {
     final left = xOf(a);
     final width = (b - a) * widget.pxPerMinute - 3;
     final past = b <= now;
-    const radius = BorderRadius.vertical(bottom: Radius.circular(18));
+    const radius = BorderRadius.vertical(bottom: Radius.circular(16));
     // Labels sit above the band the now badge travels in, so the badge never covers a start time.
     const foot = EdgeInsets.fromLTRB(10, 0, 8, 40);
     // A free period too narrow for its label reads like a break: the word runs up the hatch.
@@ -216,7 +216,7 @@ class DayRibbonState extends State<DayRibbon> {
   Widget _upright(BuildContext context, String key, double left, double width, bool past) {
     final c = context.app;
     Widget slot = Hatch(
-      radius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+      radius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       background: c.paper2,
       child: Center(
         child: RotatedBox(

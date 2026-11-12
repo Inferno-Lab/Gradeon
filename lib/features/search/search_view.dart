@@ -523,11 +523,11 @@ class _Ribbon extends StatelessWidget {
                           color: minutesOf(p.end) <= now
                               ? Color.lerp(AppColors.subject(p.subject).fill, AppColors.off, .65)
                               : AppColors.subject(p.subject).fill,
-                          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+                          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
                         ),
                       )
                     : Hatch(
-                        radius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+                        radius: const BorderRadius.vertical(bottom: Radius.circular(16)),
                         background: context.app.paper2,
                       ),
               ),

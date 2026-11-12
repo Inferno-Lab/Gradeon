@@ -106,10 +106,10 @@ class _MarksEntryViewState extends State<MarksEntryView> {
                 onPressed: next == null && active == null ? null : _next,
               ),
         children: [
-          Text(
+          Builder(builder: (context) => Text(
             cls == null ? 'teacher.marks'.tr : 'teacher.marks_title'.trp({'class': classLabel(cls)}),
             style: context.type.h2,
-          ),
+          )),
           const SizedBox(height: 12),
           ViewStateView(
             state: controller.state.value,
@@ -204,7 +204,7 @@ class _SubjectBar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: controller.subject.value == id ? AppColors.subject(id).fill : Colors.transparent,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         subjectName(id),
@@ -297,7 +297,7 @@ class _MarkRow extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: active ? c.paper : c.paper2,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   border: active ? Border.all(color: c.ink, width: 2) : null,
                 ),
                 child: active

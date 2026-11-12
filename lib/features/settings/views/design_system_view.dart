@@ -61,7 +61,7 @@ class _DesignSystemViewState extends State<DesignSystemView> {
       children: [
         Row(
           children: [
-            Flexible(child: Text('dev.title'.tr, style: context.type.h2, maxLines: 1, overflow: TextOverflow.ellipsis)),
+            Flexible(child: Builder(builder: (context) => Text('dev.title'.tr, style: context.type.h2, maxLines: 1, overflow: TextOverflow.ellipsis))),
             const SizedBox(width: 10),
             Stamp('dev.developer'.tr, color: c.mariText),
           ],

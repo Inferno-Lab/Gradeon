@@ -163,7 +163,7 @@ class _ArtPainter extends CustomPainter {
     const r = Rect.fromLTWH(50, 20, 120, 106);
     _shadow(canvas, r, 14);
     _rr(canvas, r, 14, paper);
-    canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(14)), _stroke(line, 1.5));
+    canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(12)), _stroke(line, 1.5));
     _rr(canvas, const Rect.fromLTWH(50, 20, 120, 28), 14, AppColors.mari);
     _rr(canvas, const Rect.fromLTWH(50, 34, 120, 14), 0, AppColors.mari);
     for (final x in [78.0, 142.0]) {
@@ -249,7 +249,7 @@ class _ArtPainter extends CustomPainter {
     const a = Rect.fromLTWH(34, 30, 112, 50);
     _shadow(canvas, a, 18);
     _rr(canvas, a, 18, paper);
-    canvas.drawRRect(RRect.fromRectAndRadius(a, const Radius.circular(18)), _stroke(line, 1.5));
+    canvas.drawRRect(RRect.fromRectAndRadius(a, const Radius.circular(16)), _stroke(line, 1.5));
     _lines(canvas, const Offset(50, 46), [78, 56, 66], gap: 9);
     const b = Rect.fromLTWH(84, 88, 104, 44);
     _rr(canvas, b, 18, ink);

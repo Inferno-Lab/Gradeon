@@ -47,7 +47,7 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
           onPressed: controller.saving.value ? null : () => unawaited(controller.submit()),
         ),
         children: [
-          Text('teacher.new_homework'.tr, style: context.type.h2),
+          Builder(builder: (context) => Text('teacher.new_homework'.tr, style: context.type.h2)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -102,7 +102,7 @@ class AssignHomeworkView extends GetView<AssignHomeworkController> {
                         height: 58,
                         decoration: BoxDecoration(
                           color: due != null && DateUtils.isSameDay(d, due) ? c.ink : c.paper,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                           border: due != null && DateUtils.isSameDay(d, due) ? null : Border.all(color: c.line),
                         ),
                         child: Column(

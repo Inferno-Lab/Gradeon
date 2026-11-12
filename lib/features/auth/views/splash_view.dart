@@ -266,8 +266,8 @@ class _Book extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.subject(subject).fill,
                 borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(6),
-                  right: Radius.circular(14),
+                  left: Radius.circular(7),
+                  right: Radius.circular(12),
                 ),
                 boxShadow: [
                   BoxShadow(

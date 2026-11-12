@@ -191,7 +191,7 @@ class _GlassSwitchState extends State<GlassSwitch> {
               height: 32,
               decoration: BoxDecoration(
                 color: on ? (widget.onColor ?? c.ink) : c.ink.withValues(alpha: .18),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Stack(
                 children: [

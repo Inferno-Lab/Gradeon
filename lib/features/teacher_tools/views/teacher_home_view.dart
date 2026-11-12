@@ -245,7 +245,7 @@ class _Body extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                         decoration: BoxDecoration(
                           color: c.paper,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: c.line),
                         ),
                         child: Column(
@@ -555,7 +555,7 @@ class _ClassCard extends StatelessWidget {
                   width: 64,
                   height: 64,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: tile, borderRadius: BorderRadius.circular(18)),
+                  decoration: BoxDecoration(color: tile, borderRadius: BorderRadius.circular(16)),
                   child: Text(
                     classLabel(cls).replaceAll(' ', ''),
                     style: AppText.h2(color: tileOn, height: 1),
@@ -621,7 +621,7 @@ class _ClassCard extends StatelessWidget {
                     child: Container(
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(12)),
                       child: Center(
                         widthFactor: 1,
                         child: Text(a.$1.tr, style: AppText.capB(color: c.ink2, height: 1)),

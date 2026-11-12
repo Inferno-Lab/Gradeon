@@ -217,7 +217,7 @@ class _HomeworkScanViewState extends State<HomeworkScanView> with WidgetsBinding
                             Transform.rotate(
                               angle: -.1,
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(7),
                                 child: Image.file(File(_pages.last.path), width: 56, height: 70, fit: BoxFit.cover),
                               ),
                             ),

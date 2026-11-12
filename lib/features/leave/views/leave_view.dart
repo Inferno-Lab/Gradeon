@@ -121,7 +121,7 @@ class _DateTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: 58,
     padding: const EdgeInsets.symmetric(vertical: 8),
-    decoration: BoxDecoration(color: background ?? context.app.paper2, borderRadius: BorderRadius.circular(14)),
+    decoration: BoxDecoration(color: background ?? context.app.paper2, borderRadius: BorderRadius.circular(12)),
     child: Column(
       children: [
         Text('$day', style: AppText.num(color: foreground ?? context.app.ink)),
@@ -244,7 +244,7 @@ class _Request extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.only(top: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(16)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -315,7 +315,7 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
           ),
         ),
         children: [
-          Text(past ? 'leave.explain_title'.tr : 'leave.ask_title'.tr, style: context.type.h2),
+          Builder(builder: (context) => Text(past ? 'leave.explain_title'.tr : 'leave.ask_title'.tr, style: context.type.h2)),
           const SizedBox(height: 12),
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,

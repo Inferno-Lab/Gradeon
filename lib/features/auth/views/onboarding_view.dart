@@ -385,7 +385,7 @@ class _DayArt extends StatelessWidget {
                     height: h,
                     child: cols[i].$1.isEmpty
                         ? Hatch(
-                            radius: const BorderRadius.vertical(top: Radius.circular(14)),
+                            radius: const BorderRadius.vertical(top: Radius.circular(12)),
                             background: context.app.paper2,
                           )
                         : Container(
@@ -393,7 +393,7 @@ class _DayArt extends StatelessWidget {
                             alignment: Alignment.bottomCenter,
                             decoration: BoxDecoration(
                               color: AppColors.subject(cols[i].$1).fill,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                             ),
                             child: Opacity(
                               opacity: label,

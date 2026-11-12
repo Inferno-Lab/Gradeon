@@ -118,7 +118,7 @@ class _PaySheetState extends State<PaySheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: _method == m.$1 ? c.paper2 : Colors.transparent,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: _method == m.$1 ? c.ink : Colors.transparent, width: 2),
                     ),
                     child: Row(
@@ -263,7 +263,7 @@ class _SlideToPay extends StatelessWidget {
             height: 64,
             decoration: BoxDecoration(
               color: paid ? AppColors.ok : AppColors.light.ink,
-              borderRadius: BorderRadius.circular(34),
+              borderRadius: BorderRadius.circular(28),
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(

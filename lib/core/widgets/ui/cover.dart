@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
+import 'package:gradeon/core/widgets/app_icons.dart';
 import 'package:gradeon/core/widgets/ui/labels.dart';
 
-/// Notebook cover: bound on the left, subject pigment, short label at the bottom.
+/// A subject's mark: in a row, the Hue tile (spectrum soft fill, icon); large, the notebook cover (shelves, heroes).
 class Cover extends StatelessWidget {
   const Cover({
     required this.subject,
@@ -23,6 +25,16 @@ class Cover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pigment = AppColors.subject(subject);
+    // In a list row a subject is Gradeon Hue's tile: its spectrum soft fill with the homework icon in its ink.
+    if (!large && width == null && height == null) {
+      return Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: pigment.soft, borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: Icon(AppIcons.homework, size: 20, color: pigment.ink),
+      );
+    }
     final w = width ?? (large ? 64.0 : 42.0);
     final h = height ?? (large ? 82.0 : 52.0);
     final r = large ? 14.0 : 11.0;
@@ -72,7 +84,7 @@ class _SpinePainter extends BoxPainter {
     canvas
       ..save()
       ..clipRRect(
-        RRect.fromRectAndCorners(rect, topLeft: const Radius.circular(6), bottomLeft: const Radius.circular(6)),
+        RRect.fromRectAndCorners(rect, topLeft: const Radius.circular(7), bottomLeft: const Radius.circular(7)),
       )
       ..drawRect(Rect.fromLTWH(rect.left, rect.top, width, rect.height), Paint()..color = AppColors.amoled.chalk.withValues(alpha: 0.2))
       ..drawRect(Rect.fromLTWH(rect.right - 1, rect.top, 1, rect.height), Paint()..color = AppColors.white.withValues(alpha: 0.15))

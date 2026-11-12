@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 const _space = [0, 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56];
-const _radii = [2, 6, 10, 14, 18, 24, 34, 999];
+const _radii = [2, 7, 10, 12, 16, 20, 24, 28, 999];
 
 /// Screens, sheets and shared widgets: where things are drawn. Controllers, data and the theme are not.
 final _ui = Directory('lib')

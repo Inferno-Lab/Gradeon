@@ -223,8 +223,8 @@ class _Book extends StatelessWidget {
       _ => const <Widget>[],
     };
     const radius = BorderRadius.only(
-      topLeft: Radius.circular(6),
-      bottomLeft: Radius.circular(6),
+      topLeft: Radius.circular(7),
+      bottomLeft: Radius.circular(7),
       topRight: Radius.circular(10),
       bottomRight: Radius.circular(10),
     );

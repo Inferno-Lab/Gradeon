@@ -32,7 +32,7 @@ class AcademicsView extends GetView<AcademicsController> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('nav.academics'.tr, style: context.type.h1)),
+              Expanded(child: Builder(builder: (context) => Text('nav.academics'.tr, style: context.type.h1))),
               GlassIconButton(
                 icon: PhosphorIconsRegular.magnifyingGlass,
                 label: 'common.search'.tr,
@@ -142,7 +142,7 @@ class _Book extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
           decoration: BoxDecoration(
             color: pigment.fill,
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(6), right: Radius.circular(14)),
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(7), right: Radius.circular(12)),
             boxShadow: [
               BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.5), blurRadius: 18, spreadRadius: -12, offset: const Offset(0, 10)),
             ],

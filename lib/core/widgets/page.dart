@@ -69,10 +69,10 @@ class PageFrame extends StatelessWidget {
     // On tablets the reading column stays phone-like and centred.
     final side = padContent ? math.max<double>(20, (MediaQuery.sizeOf(context).width - 720) / 2) : 0.0;
     final c = context.app;
-    // Gradeon Hue's frame (design/hue/src/ParentFees.html): the page's title sits on the school's deep colour, the
-    // content on a sheet that rises over it. A page whose first child is its PageTitle gets the frame; pages that draw
-    // their own art behind the top (underlay) keep it.
-    final hue = underlay == null && children.isNotEmpty && children.first is PageTitle;
+    // Gradeon Hue's frame (design/hue/src/ParentFees.html): the top of the page (its first child: the title row) sits on
+    // the school's deep colour, recoloured for it, and the content on a sheet that rises over it. Pages that draw their
+    // own art behind the top (underlay) keep it.
+    final hue = underlay == null && children.isNotEmpty;
     final Widget list;
     if (hue) {
       final viewport = MediaQuery.sizeOf(context).height;
@@ -83,13 +83,13 @@ class PageFrame extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 12), side, 44),
-            child: _OnDeep(child: children.first),
+            child: Theme(data: Theme.of(context).copyWith(extensions: [c.onDeepSide]), child: children.first),
           ),
           Transform.translate(
             offset: const Offset(0, -28),
             child: Container(
               constraints: BoxConstraints(minHeight: viewport),
-              decoration: BoxDecoration(color: background ?? c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
+              decoration: BoxDecoration(color: background ?? c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
               padding: EdgeInsets.fromLTRB(side, 20, side, bottomSpace),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -207,29 +207,17 @@ class PageTitle extends StatelessWidget {
   final bool small;
 
   @override
-  Widget build(BuildContext context) {
-    final deep = context.dependOnInheritedWidgetOfExactType<_OnDeep>() != null;
-    final c = context.app;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title.tr, style: (small ? context.type.h2 : context.type.h1).copyWith(color: deep ? c.onDeep : null)),
-        if (subtitle != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(subtitle!.tr, style: context.type.s.copyWith(color: deep ? c.onDeep2 : null)),
-          ),
-      ],
-    );
-  }
-}
-
-/// Marks the page title as sitting on the deep colour of the Hue frame.
-class _OnDeep extends InheritedWidget {
-  const _OnDeep({required super.child});
-
-  @override
-  bool updateShouldNotify(_OnDeep oldWidget) => false;
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title.tr, style: small ? context.type.h2 : context.type.h1),
+      if (subtitle != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(subtitle!.tr, style: context.type.s),
+        ),
+    ],
+  );
 }
 
 /// Section header: a label on the left (Hue `.lbl`), an optional link on the right.

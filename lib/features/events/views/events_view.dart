@@ -476,7 +476,7 @@ class EventDetailView extends GetView<EventsController> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(12)),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [

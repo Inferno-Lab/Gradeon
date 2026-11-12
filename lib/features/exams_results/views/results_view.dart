@@ -217,7 +217,7 @@ class _Column extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: pigment.fill,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             padding: const EdgeInsets.only(bottom: 12),
             alignment: Alignment.bottomCenter,

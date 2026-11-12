@@ -166,7 +166,7 @@ class _Hero extends StatelessWidget {
       child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(34)),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
           child: SizedBox(
             height: height,
             child: Stack(
@@ -261,7 +261,7 @@ class _AlbumTile extends StatelessWidget {
       child: Pressable(
         onTap: () => _open(album),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [

@@ -456,7 +456,7 @@ class _OtpScreenState extends State<_OtpScreen> {
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(18)),
+                        decoration: BoxDecoration(color: c.paper2, borderRadius: BorderRadius.circular(16)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -518,7 +518,7 @@ class _Cell extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: c.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: active ? c.ink : c.line2, width: active ? 2 : 1),
       ),
       child: char != null

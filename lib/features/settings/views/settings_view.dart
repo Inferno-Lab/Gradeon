@@ -265,7 +265,7 @@ class _ThemeTile extends StatelessWidget {
                         height: 30,
                         decoration: BoxDecoration(
                           color: AppColors.subject('maths').fill,
-                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(6)),
+                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(7)),
                         ),
                       ),
                     ),
@@ -277,7 +277,7 @@ class _ThemeTile extends StatelessWidget {
                         height: 24,
                         decoration: BoxDecoration(
                           color: AppColors.subject('hindi').fill,
-                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(6)),
+                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(2), right: Radius.circular(7)),
                         ),
                       ),
                     ),
@@ -287,7 +287,7 @@ class _ThemeTile extends StatelessWidget {
                       bottom: 8,
                       child: Container(
                         height: 12,
-                        decoration: BoxDecoration(color: bar, borderRadius: BorderRadius.circular(6)),
+                        decoration: BoxDecoration(color: bar, borderRadius: BorderRadius.circular(7)),
                       ),
                     ),
                   ],
@@ -388,7 +388,7 @@ class _AboutViewState extends State<AboutView> {
                         decoration: BoxDecoration(
                           color: AppColors.subject(b.$1).fill,
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
+                            topLeft: Radius.circular(7),
                             topRight: Radius.circular(10),
                           ),
                         ),
@@ -644,7 +644,7 @@ class _HelpViewState extends State<HelpView> {
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
                       decoration: BoxDecoration(
                         color: c.paper,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: c.line),
                       ),
                       child: Column(

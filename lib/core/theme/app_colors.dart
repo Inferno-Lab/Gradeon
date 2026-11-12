@@ -203,6 +203,16 @@ class AppColors extends ThemeExtension<AppColors> {
   /// House colours used for student avatars.
   static List<Color> get houses => [for (final c in ['green', 'blue', 'pink', 'amber']) AppPalette.of('light', 'sp.$c.c')];
 
+  /// The same theme as it reads on the deep colour (the Hue header): surfaces become deep2 and deep3, text the deep
+  /// colour's own, actions bright. Whatever sits in the header picks these up through `context.app`.
+  AppColors get onDeepSide => AppColors(
+    chalk: deep, paper: deep2, paper2: deep2, paper3: deep3, ink: onDeep, ink2: onDeep2, ink3: onDeep2, line: deep3, line2: deep3,
+    scrim: scrim, shadow: shadow, deep: deep, deep2: deep2, deep3: deep3, hero: hero, onDeep: onDeep, onDeep2: onDeep2,
+    bright: bright, onBright: onBright, brand: bright, onBrand: onBright, mariText: bright, mariSoft: deep2,
+    okSoft: okSoft, okText: okText, badSoft: badSoft, badText: badText, lateSoft: lateSoft, lateText: lateText,
+    infoSoft: infoSoft, infoText: infoText, dark: true,
+  );
+
   // Getters, not constants: the palette can change while the app runs.
   // ignore: prefer_constructors_over_static_methods
   static AppColors get light => AppColors.of('light');

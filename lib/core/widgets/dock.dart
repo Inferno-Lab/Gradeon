@@ -7,7 +7,6 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/glass.dart';
 
 /// A short spring with a little settle, the same family as a flicked sheet.
 const _lensSpring = SpringDescription(mass: 1, stiffness: 340, damping: 32);
@@ -291,7 +290,7 @@ class _Badge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.bad,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(7),
         border: Border.all(color: context.app.paper, width: 1.5),
       ),
       child: SizedBox(

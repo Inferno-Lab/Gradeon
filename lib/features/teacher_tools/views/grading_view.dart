@@ -51,7 +51,7 @@ class GradingView extends GetView<GradingController> {
                 onPressed: () => openGradeSheet(controller, 0),
               ),
         children: [
-          Rise(child: Text('teacher.to_grade_n'.trp({'n': '${controller.total}'}), style: context.type.h1)),
+          Rise(child: Builder(builder: (context) => Text('teacher.to_grade_n'.trp({'n': '${controller.total}'}), style: context.type.h1))),
           const SizedBox(height: 16),
           ViewStateView(
             state: controller.state.value,
@@ -468,7 +468,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
             child: Container(
               decoration: BoxDecoration(
                 color: c.paper,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(top: BorderSide(color: c.line)),
               ),
               child: ListView(

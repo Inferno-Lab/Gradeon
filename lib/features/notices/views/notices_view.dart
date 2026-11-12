@@ -178,7 +178,7 @@ class _Slip extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 decoration: BoxDecoration(
                   color: c.paper,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(7),
                   border: Border.all(color: c.line),
                   boxShadow: [
                     BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: -14, offset: const Offset(0, 10)),
@@ -439,7 +439,7 @@ class NoticeDetailView extends GetView<NoticeDetailController> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Rise(index: 1, child: Text(notice.title, style: context.type.h1)),
+                      Rise(index: 1, child: Builder(builder: (context) => Text(notice.title, style: context.type.h1))),
                       const SizedBox(height: 12),
                       Rise(
                         index: 2,

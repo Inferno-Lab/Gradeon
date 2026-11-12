@@ -97,7 +97,8 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
                 ),
               ),
         children: [
-          Padding(
+          // The header block sits on the deep colour: a Builder gives its text the header's colours.
+          Builder(builder: (context) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +113,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
                 Text('teacher.attendance_hint'.tr, style: context.type.cap),
               ],
             ),
-          ),
+          )),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -182,7 +183,7 @@ class _Kid extends StatelessWidget {
                 : late
                 ? c.lateSoft
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             children: [

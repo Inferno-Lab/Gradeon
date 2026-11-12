@@ -353,7 +353,7 @@ class _StopsSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: c.paper,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(top: BorderSide(color: c.line)),
       ),
       child: ListView(
