@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Segmented, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Segmented, tintFor, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { StudentPick } from '../../app/kit';
@@ -63,7 +63,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
           </Dialog>
         )}
       </>}>
-      {s && (
+      {s && s.due === 0 && s.collected === 0 && !s.byHead.length ? <EmptyState scene="fees" onAction={() => app.go('/fees/structure')} /> : s && (
         <section className="grid">
           <div className="tile t-v s4 rise"><span className="lbl">Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Not yet due</span><div className="big" style={{ marginTop: 8 }}>{money(s.pending)}</div><div style={{ font: '600 13px var(--fb)', opacity: .75 }}>not yet due</div></div>
@@ -89,7 +89,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
                 : <button className="btn sm" onClick={() => setConfirmRemind(true)}>Remind every overdue family</button>)}
             </div>
             {rows.length === 0 && !overdue.isLoading && (
-              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Overdue" chip={{ text: 'None', tone: 'g' }} scene="receipt" heading="Nobody is overdue" body="Families with an unpaid fee past its due date are listed here, largest first." /></div>
+              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Overdue" chip={{ text: 'None', tone: 'g' }} icon="invoices" heading="Nobody is overdue" body="Families with an unpaid fee past its due date are listed here, largest first." /></div>
             )}
             <div className="scroll-x" data-fill="">
               <div style={{ minWidth: 520 }}>

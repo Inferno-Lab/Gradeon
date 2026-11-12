@@ -47,7 +47,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
-  if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="lock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const readOnly = !can || !!cur?.locked;
   // A new role starts from one of the starting roles (Blueprints → Starting roles), or from nothing.
   const startNew = (from: string) => {

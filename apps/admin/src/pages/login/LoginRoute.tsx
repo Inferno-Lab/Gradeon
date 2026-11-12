@@ -49,8 +49,8 @@ function NoSchool({ error, retry, busy }: { error: Error; retry: () => void; bus
     <div className="nest" style={{ minHeight: '100dvh', padding: 12, display: 'grid', placeItems: 'center' }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
         {missing
-          ? <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'c' }} scene="search-paper" heading="We couldn’t find that school" body={error.message} actions={<a className="btn pri" href="/">Try another address</a>} />
-          : <EmptyCard error title="Sign in" chip={{ text: 'Not answering', tone: 'a' }} scene="plug" heading="The school isn’t answering yet" body={error instanceof HttpError ? error.message : 'Check your connection, then try again.'} actions={<button className="btn pri" disabled={busy} onClick={retry}>{busy ? 'Trying…' : 'Try again'}</button>} />}
+          ? <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'c' }} icon="search" heading="We couldn’t find that school" body={error.message} actions={<a className="btn pri" href="/">Try another address</a>} />
+          : <EmptyCard error title="Sign in" chip={{ text: 'Not answering', tone: 'a' }} icon="warning" heading="The school isn’t answering yet" body={error instanceof HttpError ? error.message : 'Check your connection, then try again.'} actions={<button className="btn pri" disabled={busy} onClick={retry}>{busy ? 'Trying…' : 'Try again'}</button>} />}
       </div>
     </div>
   );

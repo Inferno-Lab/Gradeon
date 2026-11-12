@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ApprovalKind, ApprovalRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Avatar, problem } from '../../app/kit';
 
@@ -39,9 +39,11 @@ export function useApprovalList(view: ApprovalView, kind: ApprovalKind | undefin
 
   const overlay = declining && <Decline row={declining} busy={decide.isPending} onClose={() => setDeclining(null)} onDecline={(note) => decide.mutate({ row: declining, decision: 'reject', note })} />;
   if (list.isLoading) return { list: <div className="skc" style={{ height: 240, borderRadius: 16 }} />, overlay };
-  if (list.isError) return { overlay, list: <EmptyCard error title="Approvals" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /> };
+  if (list.isError) return { overlay, list: <EmptyCard error title="Approvals" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /> };
   const rows = list.data ?? [];
-  if (!rows.length) return { overlay, list: <EmptyCard title="Approvals" chip={{ text: '0', tone: 'v' }} scene="checklist" heading={EMPTY[view].heading} body={EMPTY[view].body} /> };
+  // Nothing waiting is the good empty: the approvals scene. A sent or decided list with nothing in it is a plain line.
+  if (!rows.length && view === 'waiting' && !kind) return { overlay, list: <EmptyState scene="approvals" onAction={() => app.go('/approvals/decided')} /> };
+  if (!rows.length) return { overlay, list: <EmptyCard title="Approvals" chip={{ text: '0', tone: 'v' }} icon="checkCircle" heading={EMPTY[view].heading} body={EMPTY[view].body} /> };
   return { overlay, list: (
     <div className="card" style={{ padding: 0 }}>
       {rows.map((r) => (

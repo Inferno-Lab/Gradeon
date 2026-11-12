@@ -73,3 +73,4 @@
   .pg-students .tcap{flex-wrap:wrap}
   .pg-students .tcap .srch{order:3;flex:1 1 100%;min-width:0!important}
 }
+.pg-students .emic{width:56px;height:56px;border-radius:16px;background:var(--s2);color:var(--ink2);display:grid;place-items:center;margin-bottom:6px}

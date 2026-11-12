@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, Segmented, Select } from '@gradeon/web-ui';
+import { EmptyCard, Segmented, Select, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel, useFeeHeads, useOpenParam } from '../../app/kit';
@@ -65,7 +65,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
           )}
           {view === 'invoices' ? (
             (inv.data?.items.length ?? 0) === 0 ? (
-              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Invoices" chip={{ text: '0', tone: 'v' }} scene={term || status !== 'all' || head ? 'search-paper' : 'receipt'} heading={term || status !== 'all' || head ? 'No invoice matches' : 'Nothing has been billed yet'} body={term || status !== 'all' || head ? 'Try another word or clear the filters.' : 'Assign a fee from the Students page and the invoices appear here.'} actions={term || status !== 'all' || head ? <button className="btn" onClick={() => { setQ(''); setStatus('all'); setHead(''); }}>Clear filters</button> : undefined} /></div>
+              !(term || status !== 'all' || head) ? <div style={{ padding: '0 24px 24px' }}><EmptyState scene="invoices" label="Set up the fee structure" onAction={() => app.go('/fees/structure')} /></div> : <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Invoices" chip={{ text: '0', tone: 'v' }} icon="search" heading={term || status !== 'all' || head ? 'No invoice matches' : 'Nothing has been billed yet'} body={term || status !== 'all' || head ? 'Try another word or clear the filters.' : 'Assign a fee from the Students page and the invoices appear here.'} actions={term || status !== 'all' || head ? <button className="btn" onClick={() => { setQ(''); setStatus('all'); setHead(''); }}>Clear filters</button> : undefined} /></div>
             ) : (
               <>
                 <div className="scroll-x lscroll" data-fill="">
@@ -92,7 +92,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
               </>
             )
           ) : (rec.data?.items.length ?? 0) === 0 ? (
-            <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Receipts" chip={{ text: '0', tone: 'v' }} scene="receipt" heading={term ? 'No receipt matches' : 'No payments yet'} body={term ? 'Check the spelling or the receipt number.' : 'Every payment gets a numbered receipt. They are listed here, newest first.'} /></div>
+            <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Receipts" chip={{ text: '0', tone: 'v' }} icon="invoices" heading={term ? 'No receipt matches' : 'No payments yet'} body={term ? 'Check the spelling or the receipt number.' : 'Every payment gets a numbered receipt. They are listed here, newest first.'} /></div>
           ) : (
             <div className="scroll-x lscroll" data-fill="">
               <div style={{ minWidth: 720 }}>

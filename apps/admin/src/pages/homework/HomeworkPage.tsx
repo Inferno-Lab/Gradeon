@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
@@ -47,7 +47,7 @@ export function HomeworkPage() {
         {open && !changing && <HomeworkSheet id={open} canWrite={canWrite} onChange={setChanging} onClose={() => setOpen(null)} onSaved={(m) => { refresh(qc); say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Homework removed.'); }} />}
       </>}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Homework" chip={{ text: '0 set', tone: 'v' }} scene="notebooks" heading="No homework yet" body="Set homework for a class and it goes to every family in the app. You then tick who has handed it in." actions={canWrite ? <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="homework" onAction={canWrite ? () => setSetting(true) : undefined} /></div>
       ) : (
         <section className="grid">
           <div className="tile t-v s4 rise"><span className="lbl">Handed in</span><div className="big" style={{ marginTop: 8 }}>{pct(handed)}%</div><div style={{ font: '600 13px var(--fb)', opacity: 0.8 }}>{handed} of {total} pieces of work</div></div>

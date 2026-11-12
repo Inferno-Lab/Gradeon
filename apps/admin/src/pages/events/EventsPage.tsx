@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { EVENT_KINDS, istToday, type Category, type EventKind, type EventRow, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, NumberField, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, NumberField, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Ico, problem, useSetting } from '../../app/kit';
@@ -65,7 +65,7 @@ export function EventsPage() {
       actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add event</AddBtn> : undefined}
       overlays={editing && <EventDialog event={editing === 'new' ? null : editing} defaultDay={day} onClose={() => setEditing(null)} onDone={(m) => { setEditing(null); refresh(qc); say(m); }} />}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Events" chip={{ text: '0 events', tone: 'v' }} scene="calendar" heading="The calendar is empty" body="Add sports day, parent meetings, holidays and exam weeks. Families see them in the app and tell you if they are coming." actions={canWrite ? <AddBtn onClick={() => setEditing('new')}>Add event</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="events" onAction={canWrite ? () => setEditing('new') : undefined} /></div>
       ) : (
         <section className="evg" data-even="">
           <div className="evcol">

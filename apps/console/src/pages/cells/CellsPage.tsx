@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError, type CellRow } from '@gradeon/api-client';
 import { DEPLOY_TARGET_LABELS, type SchoolRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, NumberField, SelectField, useShake, Icon } from '@gradeon/web-ui';
+import { Dialog, Field, NumberField, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -33,7 +33,7 @@ export function CellsPage() {
       </>}>
       {list.length === 0 ? (
         <div>
-          <EmptyCard title="Cells" chip={{ text: '0 cells', tone: 'v' }} scene="map-pin" heading="No cells yet" body="The first cell is created when the platform starts. Add another here to place schools in more than one place." actions={canCells ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}>Add a cell</button> : undefined} />
+          <EmptyState scene="cells" onAction={canCells ? () => setDlg({ kind: 'add' }) : undefined} />
         </div>
       ) : (
         <>

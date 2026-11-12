@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, Segmented, Select, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState } from '@gradeon/web-ui';
 import { uploadFile } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
@@ -42,7 +42,7 @@ export function MessagesPage() {
       actions={canWrite ? <AddBtn onClick={() => setStarting(true)}>New message</AddBtn> : undefined}
       overlays={starting && <Start onClose={() => setStarting(false)} onDone={(t) => { setStarting(false); refresh(qc); setFilter('open'); setSel(t.id); say('Message sent. The family gets a notification.'); }} />}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Messages" chip={{ text: '0 conversations', tone: 'v' }} scene="envelope" heading="No messages yet" body="When a family writes to the school it appears here, and your reply goes to their app. You can also start a conversation with any student’s family." actions={canWrite ? <AddBtn onClick={() => setStarting(true)}>New message</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="messages" onAction={canWrite ? () => setStarting(true) : undefined} /></div>
       ) : (
         <section className={`msg ${sel ? 'has' : ''}`}>
           <div className="card msl rise" style={{ padding: 0 }}>

@@ -69,7 +69,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
-  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !cfg) return <EmptyCard error title="Configuration" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="The school’s configuration didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
 
   const shown = (k: SettingKey) => unused || !SETTINGS_META[k].notUsedYet;
   const groups = [...SETTING_GROUPS as readonly string[], ...MODULES.filter((m) => m.settings.length && cfg.entitled.includes(m.key)).map((m) => m.key)];

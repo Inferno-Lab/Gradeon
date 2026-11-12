@@ -83,7 +83,7 @@ export function SchoolPage() {
     return (
       <PageScope page="school">
         <main className="mn"><header className="hd"><div><h1>School</h1></div></header>
-          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="search-paper" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
+          <div><EmptyCard error title="School" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="search" heading="That school isn’t here" body={(school.error as Error).message} actions={<button className="btn pri" onClick={() => app.go('/')}>Back to the fleet</button>} /></div>
         </main>
       </PageScope>
     );
@@ -273,7 +273,7 @@ function Audit({ id }: { id: string }) {
   const before = pages.at(-1);
   const q = useQuery({ queryKey: ['audit', id, f, before], queryFn: () => app.api.audit(id, { ...clean(f), before }), enabled: app.can('audit.read') });
   const team = useQuery({ queryKey: ['team'], queryFn: app.api.team.list, staleTime: 60_000, enabled: app.can('audit.read') });
-  if (!app.can('audit.read')) return <EmptyCard title="Audit" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="The audit log is for auditors and admins" body="Ask a super admin if you need to see who changed what for this school." />;
+  if (!app.can('audit.read')) return <EmptyCard title="Audit" chip={{ text: 'Not for your role', tone: 'a' }} icon="lock" heading="The audit log is for auditors and admins" body="Ask a super admin if you need to see who changed what for this school." />;
   const rows = q.data ?? [];
   const set = (k: keyof typeof f) => (v: string) => { setF({ ...f, [k]: v }); setPages([]); };
   const download = () => void app.api.auditCsv(id, clean(f)).then((csv) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })); a.download = 'audit.csv'; a.click(); URL.revokeObjectURL(a.href); });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type EnquiryPatch, type EnquiryRow, type EnquiryStage } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem, useGrades, useSetting } from '../../app/kit';
@@ -58,7 +58,7 @@ export function AdmissionsPage() {
         {dlg?.kind === 'view' && <Details row={dlg.row} canWrite={canWrite} back={dlg.row.stage === 'declined' ? undefined : step(dlg.row.stage, -1)} onClose={() => setDlg(null)} onMove={(stage) => move.mutate({ id: dlg.row.id, stage })} onSaved={() => { refresh(qc); setDlg(null); say('Saved.'); }} />}
       </>}>
       {rows.length === 0 ? (
-        <div><EmptyCard title="Admissions" chip={{ text: '0 enquiries', tone: 'v' }} scene="calendar" heading="No enquiries yet" body="Add each family that asks about a seat. Move them from enquiry to application, entrance test and offer, then enrol the child in one step." actions={canWrite ? <AddBtn onClick={() => setAdding(true)}>New enquiry</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="admissions" onAction={canWrite ? () => setAdding(true) : undefined} /></div>
       ) : (
         <>
           <div className="adm" role="list">

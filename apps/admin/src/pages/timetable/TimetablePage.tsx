@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
-import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, weekday, type SlotRow, type TimetableView as TT } from '@gradeon/contracts';
-import { Dialog, EmptyCard, PageScope, tintFor, useToast } from '@gradeon/web-ui';
+import { addDays, dayLabel, dayMonth, dayName, istMinutes, istToday, weekday, type SlotRow, type TimetableView as TT, subjectColour } from '@gradeon/contracts';
+import { Dialog, EmptyCard, PageScope, tintFor, useToast, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { useSetting } from '../../app/kit';
@@ -13,7 +13,6 @@ const VIEWS = ['Week', 'Day', 'List'];
 const WEEK = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 } as const;
 const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
 
-const SUBJECT_COLOURS = ['maths', 'science', 'english', 'hindi', 'social', 'computer', 'art', 'pe', 'music'];
 
 export function TimetablePage() {
   const app = useApp();
@@ -56,7 +55,7 @@ export function TimetablePage() {
     return (
       <PageScope page="timetable">
         <main className="mn"><header className="hd"><div><h1>Timetable</h1></div></header>
-          <div><EmptyCard error title="Timetable" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(tt.error as Error).message} actions={<button className="btn pri" onClick={() => void tt.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Timetable" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(tt.error as Error).message} actions={<button className="btn pri" onClick={() => void tt.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -65,7 +64,7 @@ export function TimetablePage() {
     return (
       <PageScope page="timetable">
         <main className="mn"><header className="hd"><div><h1>Timetable</h1><p>No classes yet</p></div></header>
-          <div><EmptyCard title="Timetable" chip={{ text: '0 classes', tone: 'v' }} scene="calendar" heading="Nothing to schedule yet" body="Once your classes and teachers are added, build each week here and publish it to families." actions={<button className="btn pri" onClick={() => app.go('/students')}>Add students first</button>} /></div>
+          <div><EmptyState scene="timetable" onAction={() => app.go('/year/classes')} /></div>
         </main>
       </PageScope>
     );
@@ -88,11 +87,8 @@ export function TimetablePage() {
   const badIds = new Set(data.clashes.flatMap((c) => c.slotIds));
   const periodDef = (idx: number) => data.periods.find((p) => p.idx === idx);
   const now = istMinutes();
-  // The app's subject colours (lib/core/theme/app_colors.dart), so a subject looks the same in the admin and the app; others keep their stored tone.
-  const subjectKey = (s: Pick<SlotRow, 'subjectName' | 'subjectColor'>) => {
-    const k = (s.subjectName.trim().toLowerCase().split(/\s+/)[0] ?? '').replace(/^mathematics$/, 'maths').replace(/^physical$/, 'pe');
-    return SUBJECT_COLOURS.includes(k) ? `sub s-${k}` : s.subjectColor;
-  };
+  // A subject's spectrum colour (contracts subjectColour), the same in the admin and the app.
+  const subjectKey = (s: Pick<SlotRow, 'subjectName' | 'subjectColor'>) => `sub sp-${subjectColour(s.subjectName, s.subjectColor)}`;
   const running = data.periods.find((p) => p.kind === 'period' && now >= toMin(p.starts) && now < toMin(p.ends)) ?? data.periods.find((p) => p.kind === 'period');
   const at = { day: DAYS.includes(sel.day) ? sel.day : DAYS[0] ?? 1, period: sel.period || running?.idx || 0 };
   const cellOf = (day: number, p: { idx: number; starts: string; ends: string }, ri: number) => {

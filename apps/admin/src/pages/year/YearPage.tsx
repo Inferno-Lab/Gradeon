@@ -146,7 +146,7 @@ function Promote({ years, onClose, onDone }: { years: YearRow[]; onClose: () => 
   const total = moves.reduce((n, m) => n + m.students, 0);
   return (
     <Dialog title="Promote students" tag={target ? { text: `Into ${target.label}`, tone: 'v' } : undefined} onClose={onClose} width={640} shake={shake.cls}>
-      {preview.isLoading ? <div className="skc" style={{ height: 220, borderRadius: 16 }} /> : !classes.length ? <EmptyCard title="Promotion" chip={{ text: '0 classes', tone: 'v' }} scene="register" heading="No classes to promote" body="Classes come from Academic year → Classes, or from Moving in." /> : (
+      {preview.isLoading ? <div className="skc" style={{ height: 220, borderRadius: 16 }} /> : !classes.length ? <EmptyCard title="Promotion" chip={{ text: '0 classes', tone: 'v' }} icon="people" heading="No classes to promote" body="Classes come from Academic year → Classes, or from Moving in." /> : (
         <div className="stack">
           <div className="help">Each class moves to the next grade’s section with the same letter. Change any of them; the top class leaves the school.</div>
           <div className="lscroll" style={{ maxHeight: 280 }}>

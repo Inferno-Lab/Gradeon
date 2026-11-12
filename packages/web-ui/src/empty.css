@@ -1,41 +1,28 @@
-/* Empty, error and not-found states, from the Empties board. */
-.nest .eg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-.nest .es{position:relative;background:var(--s1);border:1px solid var(--line);border-radius:28px;box-shadow:var(--sh1);overflow:hidden;display:flex;flex-direction:column;transition:transform var(--t3) var(--e),box-shadow var(--t3);animation:nRise var(--t3) var(--e) both;animation-delay:var(--d)}
-.nest .es:hover{transform:translateY(-5px);box-shadow:var(--sh2)}
-.nest .eh{display:flex;align-items:center;gap:10px;padding:20px 24px;border-bottom:1px solid var(--line)}
-.nest .eh b{font:700 semi-expanded 15px var(--fd);letter-spacing:-.02em;flex:1}
-.nest .ghost{display:none}
-/* A wide empty state puts the picture beside the words instead of floating them in the middle of a long card. */
-.nest .es:not(.es-nf){container-type:inline-size}
+/* What is not an empty page (EmptyState): errors, closed doors, filters with no match, empty lists inside a page. Gradeon Hue. */
+.nest .es{position:relative;background:var(--s1);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;container-type:inline-size}
+.nest .eh{display:flex;align-items:center;gap:8px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.nest .eh b{font:700 semi-expanded 15px var(--fd);flex:1}
+.nest .eb{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 32px 32px;gap:8px}
+.nest .eic{width:56px;height:56px;border-radius:16px;background:var(--s2);color:var(--ink2);display:grid;place-items:center;margin-bottom:6px}
+.nest .es-err .eic{background:var(--bad-s);color:var(--bad-i)}
+.nest .eb h3{margin:0;font:700 semi-expanded 22px/28px var(--fd);letter-spacing:-.02em;text-wrap:balance}
+.nest .eb p{margin:0;font:400 14px/20px var(--fb);color:var(--ink2);max-width:46ch}
+.nest .es-act{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 @container (min-width:680px){
-  .nest .es .eb{display:grid;grid-template-columns:230px minmax(0,440px);column-gap:48px;justify-content:center;align-content:center;align-items:start;text-align:left;padding:32px 32px 40px}
-  .nest .es .eb .art{grid-row:1/span 8;align-self:center;margin:0}
-  .nest .es .eb h3{align-self:end}
-  .nest .es .eb p{max-width:none}
+  .nest .es .eb{display:grid;grid-template-columns:56px minmax(0,520px);column-gap:24px;justify-content:center;text-align:left;align-items:start}
+  .nest .es .eb .eic{grid-row:1/span 6;margin:0}
   .nest .es .eb .es-act{justify-content:flex-start}
 }
-.nest .eb{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 32px 32px;gap:8px}
-.nest .eb .art{width:230px;margin-bottom:6px}
-.nest .eb h3{margin:0;font:700 semi-expanded 22px/1.15 var(--fd);letter-spacing:-.03em}
-.nest .eb p{margin:0;font:400 14px/1.55 var(--fb);color:var(--ink2);max-width:310px}
-.nest .es-act{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
-.nest .es-nf{grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:10px;padding:32px 40px;background:var(--deep);color:var(--on-deep);border-radius:28px;overflow:hidden;position:relative}
-.nest .es-nf .n{font:700 semi-expanded 190px/.9 var(--fd);letter-spacing:-.07em;background:none;color:var(--on-deep)}
-.nest .es-nf .n span{color:var(--brand)}
-.nest .es-nf h3{margin:6px 0 8px;font:700 semi-expanded 30px/1.1 var(--fd);letter-spacing:-.03em}
-.nest .es-nf p{margin:0;font:400 15px/1.55 var(--fb);color:color-mix(in srgb,var(--on-deep) 72%,transparent);max-width:400px}
-.nest .es-err{border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
-.nest .in3{display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--s1);width:300px;transition:border-color var(--t2),box-shadow var(--t3) var(--e)}
-.nest .in3:focus-within{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
-.nest .in3 input{flex:1;min-width:0;border:0;outline:0;background:none;font:700 14px var(--fb);color:var(--ink)}
-.nest .in3 svg{width:18px;height:18px;color:var(--ink3);flex:none}
-@media (max-width:760px){
-  .nest .es-nf{grid-template-columns:minmax(0,1fr);padding:24px 24px}
-  .nest .es-nf .n{font-size:120px}
-  .nest .es-nf h3{font-size:22px}
-  .nest .es-nf>div:last-child{max-width:220px;margin:0 auto}
-}
 /* An empty state inside a card is that card's body: no second frame and no second title row. */
-.nest .card .es{border:0;box-shadow:none;background:none;border-radius:0}
-.nest .card .es:hover{transform:none;box-shadow:none}
+.nest .card .es{background:none;border-radius:0}
 .nest .card .es>.eh{display:none}
+/* The page that is not there. */
+.nest .es-nf{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:40px;border-radius:24px;background:var(--hero);color:var(--on-deep)}
+.nest .es-nf .n{font:700 semi-expanded 160px/.9 var(--fd);letter-spacing:-.06em}
+.nest .es-nf .n span{color:var(--bright)}
+.nest .es-nf h3{margin:8px 0 0;font:700 semi-expanded 30px/36px var(--fd);letter-spacing:-.02em}
+.nest .es-nf p{margin:0;font:400 15px/22px var(--fb);color:var(--on-deep2);max-width:52ch}
+.nest .es-nf .es-act{justify-content:flex-start}
+.nest .es-nf .btn.ond{background:none;color:var(--on-deep);box-shadow:inset 0 0 0 1px var(--deep3)}
+.nest .es-nf .btn.ond .kbd{background:var(--deep2);color:var(--on-deep2)}
+@media (max-width:760px){.nest .es-nf{padding:24px}.nest .es-nf .n{font-size:110px}}

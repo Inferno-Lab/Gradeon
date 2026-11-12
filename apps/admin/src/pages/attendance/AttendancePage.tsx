@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { addDays, dayLabel, type AttendanceStatus } from '@gradeon/contracts';
-import { DateField, EmptyCard, Segmented, Select, tintFor } from '@gradeon/web-ui';
+import { DateField, EmptyCard, Segmented, Select, tintFor, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useSetting } from '../../app/kit';
 import { Page, useToast } from '../../app/Page';
@@ -80,7 +80,7 @@ export function AttendancePage() {
           {leave.list}
         </div>
       ) : classes.data?.length === 0 ? (
-        <div><EmptyCard title="Attendance" chip={{ text: '0 classes', tone: 'v' }} scene="calendar" heading="No classes to mark yet" body="Add students to a class first. The roll call for each class appears here every school day." actions={<button className="btn pri" onClick={() => app.go('/students')}>Add students</button>} /></div>
+        <div><EmptyState scene="attendance" onAction={() => app.go('/year/classes')} onLink={() => app.go('/students')} /></div>
       ) : tab === 'periods' ? (
         classId && date ? <PeriodGrid classId={classId} date={date} say={say} /> : null
       ) : (
@@ -92,7 +92,7 @@ export function AttendancePage() {
               {canMark && marks.length > 0 && <button className="btn sm" onClick={() => setDraft(Object.fromEntries(marks.filter((m) => !m.onLeave && statusOf(m.studentId, m.status) !== 'present').map((m) => [m.studentId, 'present' as const])))}>Mark everyone present</button>}
             </div>
             {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 20px 20px', borderRadius: 16 }} />}
-            {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 24px 24px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
+            {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 24px 24px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} icon="people" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
             {marks.length > 0 && (
               <div className="scroll-x" data-fill="">
                 {marks.map((m) => {

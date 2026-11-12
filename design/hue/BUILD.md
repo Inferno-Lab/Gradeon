@@ -28,6 +28,20 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 | `--knob` | `--s1` | | `--present` | `--line2` |
 | `--sh1` `--sh2` `--sh3` | `--shadow` | | `--subj-<id>` | `.sp-<colour>` |
 
+## The owner's standard (12 November)
+
+"The design system must be the same caliber as the canvas; nothing else, because the canvas is what I approved." So:
+- A page with a board is rebuilt from the board's composition (its markup and classes), bound to real data, then compared side by side with the board shot (`design/hue/shots/<Board>.png`) at 1440 and checked at phone width and in dark.
+- Boarded web pages: dashboard ← Today, students ← Students, fees ← Fees, attendance ← Attendance, timetable ← Timetable, menu ← Sidebar, sign-in ← SignIn; console fleet ← Fleet, school ← School, modules ← Modules. App: parent home ← ParentHome, fees ← ParentFees, results ← ParentResults, teacher home ← TeacherHome, roll call ← RollCall, empty home ← EmptyHome, the kit ← AppKit.
+- Every other page is built only from the canvas's parts (Components, AppKit).
+- Hue's component CSS (`design/hue/base.css`, `base2.css`) is ported into web-ui as `hue-parts.css` under `.nest`; class names that already meant something else in Nest are renamed in the port: Hue `.rw` → `.fx`, `.tr` → `.trow`, `.tile` → `.ht`.
+
+## Progress log
+
+- Done (committed e7cb365 and after): contracts hue.ts + migrations; web tokens renamed; nest/shell/blocks/controls/polish restyled; Icon + icon map + every drawn icon replaced; sign-in rebuilt from SignIn; EmptyState (shadow-DOM scenes from the boards) wired on every truly-empty page (38 scenes incl. new audit, privacy, support sessions on EmptyAdmin6/EmptyConsole3); EmptyCard is the compact Hue card; illustrations deleted; /design style guide rebuilt; subjects use `subjectColour` (contracts).
+- Dev servers for checks: PostgreSQL 54339, server 4010 (scratchpad server-ds.sh), admin vite 5183, console vite 5184; `API=http://localhost:4010 node tools/shot.mjs <url> <png> 1440 960 [--console]`.
+- Next: hue-parts.css; rebuild dashboard from Today; then Students, Fees, Attendance, Timetable, console Fleet/School/Modules; then the app.
+
 ## Checklist
 
 Status: ☐ to do · ◐ built, not checked · ☑ built and checked.

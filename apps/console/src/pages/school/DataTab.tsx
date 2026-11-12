@@ -66,7 +66,7 @@ export function DataTab({ d, say, danger }: { d: SchoolDetail; say: Say; danger:
   const tpl = useMutation({ mutationFn: (k: string) => app.api.migration.template(schoolId, k), onSuccess: (blob, k) => save(blob, `${k}-template.xlsx`), onError: fail });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
-  if (q.isError || !v) return <EmptyCard error title="Data" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="The school’s data didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
+  if (q.isError || !v) return <EmptyCard error title="Data" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="The school’s data didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const pickKind = (k: string) => { setKindKey(k); change(null); };
   return (
     <section className="grid">

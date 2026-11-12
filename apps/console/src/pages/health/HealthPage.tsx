@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Checkbox, EmptyCard, Segmented, Select, tintFor } from '@gradeon/web-ui';
+import { Checkbox, Segmented, Select, tintFor, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -44,7 +44,7 @@ export function HealthPage() {
         ]} />;
       })()}
       {rows.length === 0 ? (
-        <div><EmptyCard title="Health" chip={{ text: '0 schools', tone: 'v' }} scene="plug" heading="Nothing to watch yet" body="Once a school is live its heartbeat shows here, with how fast its API answers." /></div>
+        <div><EmptyState scene="health" onAction={() => app.go('/onboarding/new')} /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           <div className="tbl scroll-x"><div style={{ minWidth: 620 }}>

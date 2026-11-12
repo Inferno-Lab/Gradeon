@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, ROLE_TEMPLATES, STEP_LABELS, type BlueprintRow, type RoleTemplate, DEPLOY_TARGET_LABELS } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, SelectField, useShake, Icon } from '@gradeon/web-ui';
+import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -44,7 +44,7 @@ export function BlueprintsPage() {
       overlays={adding && <NewBlueprint from={all.filter((b) => b.active)} onClose={() => setAdding(false)} onDone={(m) => { setAdding(false); refresh(); say(m); }} />}>
       <section className="grid">
         <div className="s12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 16, alignItems: 'start', minWidth: 0 }}>
-          {keys.length === 0 && <EmptyCard title="Blueprints" chip={{ text: 'None', tone: 'v' }} scene="checklist" heading="No blueprint yet" body="The platform creates one for each place schools can run when it first starts." />}
+          {keys.length === 0 && <EmptyState scene="blueprints" onAction={canBp ? () => setAdding(true) : undefined} />}
           {keys.map((k) => {
             const versions = all.filter((b) => b.key === k).sort((x, y) => y.version - x.version);
             const on = versions.find((b) => b.active);

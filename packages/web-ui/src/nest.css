@@ -213,3 +213,4 @@ font:400 15px/22px var(--fb);color:var(--ink);background:var(--deep);-webkit-fon
 /* transition:none, not a 1 ms duration: a duration on its own turns on `transition: all` for every element. */
 @media (prefers-reduced-motion:reduce){.nest *,.nest *::before,.nest *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}}
 .nest .ic{flex:none;display:block}
+.nest .itile{width:56px;height:56px;border-radius:16px;background:var(--brand-soft);color:var(--brand-ink);display:grid;place-items:center;flex:none}

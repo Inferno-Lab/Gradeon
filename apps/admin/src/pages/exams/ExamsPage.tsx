@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, Segmented, Select, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
@@ -36,7 +36,7 @@ export function ExamsPage() {
         {open && !changing && <ExamSheet id={open} onClose={() => setOpen(null)} onChange={(e) => setChanging(e)} onChanged={(m) => { refresh(qc); if (m) say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Exam removed.'); }} />}
       </>}>
       {rows.length === 0 ? (
-        <div><EmptyCard title="Exams" chip={{ text: '0 exams', tone: 'v' }} scene="checklist" heading="No exams yet" body="Add an exam for a class with its subjects and dates. Teachers enter marks here, and you publish the results to families." actions={canWrite ? <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="exams" onAction={canWrite ? () => setCreating(true) : undefined} /></div>
       ) : (
         <div className="exb">
           {groups.map((g) => (

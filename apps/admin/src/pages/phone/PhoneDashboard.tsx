@@ -27,7 +27,7 @@ export function PhoneDashboard() {
     return (
       <PageScope page="status">
         <main className="mn"><header className="hd"><div><h1>Home</h1></div></header>
-          <EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />
+          <EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />
         </main>
       </PageScope>
     );

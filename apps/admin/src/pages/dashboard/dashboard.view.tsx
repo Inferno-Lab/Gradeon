@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/Main.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, PageScope, Presence, ToastSlot, Segmented, MenuButton, Icon } from "@gradeon/web-ui";
+import { Roll, PageScope, Presence, ToastSlot, Segmented, MenuButton, Icon } from "@gradeon/web-ui";
 import "./dashboard.css";
 
 export function DashboardView({ v }: { v: any }) {
@@ -62,7 +62,7 @@ export function DashboardView({ v }: { v: any }) {
               )}
             </div>
             <div className="nst">
-              <Illustration scene="calendar" />
+              <span className="itile"><Icon name="calendar" size={24} /></span>
             </div>
           </div>
           {v.has.attendance && (
@@ -237,9 +237,7 @@ export function DashboardView({ v }: { v: any }) {
             {v.allDone && (
               <>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "6px 0" } as CSSProperties}>
-                  <div style={{ width: "150px" } as CSSProperties}>
-                    <Illustration scene="checklist" />
-                  </div>
+                  <span className="itile"><Icon name="checkCircle" size={24} /></span>
                   <b className="fd" style={{ fontSize: "17px" } as CSSProperties}>
                     All caught up
                   </b>

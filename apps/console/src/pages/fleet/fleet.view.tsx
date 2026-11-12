@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleFleet.dc.html: classes and structure are the design's. Values come from FleetPage.
 import { Fragment, type CSSProperties } from "react";
-import { EmptyCard, Illustration, PageScope, Presence, Icon } from "@gradeon/web-ui";
+import { PageScope, Presence, Icon, EmptyState } from "@gradeon/web-ui";
 import "./fleet.css";
 
 export function FleetView({ v }: { v: any }) {
@@ -208,18 +208,7 @@ export function FleetView({ v }: { v: any }) {
             </div>
             {v.rows.length === 0 && !v.loading && (
               <div style={{ padding: "0 24px 24px" } as CSSProperties}>
-                <EmptyCard
-                  title="Schools"
-                  chip={{ text: "0 schools", tone: "v" }}
-                  scene="register"
-                  heading="No schools on this platform yet"
-                  body="Onboard the first school from here. The console creates its database, address, first admin and app settings in a few minutes."
-                  actions={
-                    <button className="btn pri" onClick={v.onboard}>
-                      Onboard a school
-                    </button>
-                  }
-                />
+                <EmptyState scene="fleet" onAction={v.onboard} />
               </div>
             )}
             {v.rows.length > 0 && (
@@ -294,9 +283,7 @@ export function FleetView({ v }: { v: any }) {
               </div>
             )}
             <button className="tile t-l rise" onClick={v.openOnboarding} aria-label="Open onboarding" style={{ "--d": ".4s", display: "flex", alignItems: "center", gap: "12px", padding: "20px 20px", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer", border: 0, width: "100%" } as CSSProperties}>
-              <div style={{ width: "92px", flex: "none" } as CSSProperties}>
-                <Illustration scene="calendar" />
-              </div>
+              <span className="itile"><Icon name="calendar" size={24} /></span>
               <div>
                 <b className="fd" style={{ fontSize: "17px", letterSpacing: "-.02em" } as CSSProperties}>
                   {v.up.title}

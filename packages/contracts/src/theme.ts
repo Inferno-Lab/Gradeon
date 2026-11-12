@@ -26,3 +26,13 @@ export const HOUSE_COLOURS: SpectrumColour[] = ['green', 'blue', 'pink', 'amber'
 
 /** A notice or event category's tone (kept in the school's settings as v, g, a or c) as a spectrum colour. */
 export const TONE_COLOURS: Record<'v' | 'g' | 'a' | 'c', SpectrumColour> = { v: 'violet', g: 'green', a: 'amber', c: 'red' };
+
+// A subject is drawn in the same spectrum colour in the admin and the app: well-known subjects by name, others by the tone kept with them.
+const SUBJECT_COLOURS: Record<string, SpectrumColour> = { maths: 'blue', mathematics: 'blue', science: 'green', english: 'red', hindi: 'pink', social: 'teal', computer: 'indigo', computers: 'indigo', art: 'cyan', pe: 'lime', physical: 'lime', music: 'violet' };
+const STORED_TONES: Record<string, SpectrumColour> = { v: 'violet', c: 'red', g: 'green', a: 'amber', b: 'blue', n: 'teal' };
+
+/** The spectrum colour of a subject, from its name or the tone (or colour) kept with it. */
+export function subjectColour(name: string, stored?: string | null): SpectrumColour {
+  const k = (name.trim().toLowerCase().split(/\s+/)[0] ?? '');
+  return SUBJECT_COLOURS[k] ?? (stored ? STORED_TONES[stored] : undefined) ?? spectrumFor(stored);
+}

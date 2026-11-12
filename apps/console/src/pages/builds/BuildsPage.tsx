@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard, Field, Select } from '@gradeon/web-ui';
+import { Field, Select, EmptyState } from '@gradeon/web-ui';
 import type { BuildRow } from '@gradeon/contracts';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -26,7 +26,7 @@ export function BuildsPage() {
   return (
     <Page title="Mobile builds" sub="Each school gets its own app with its name, colours and address built in" toast={toast} loading={builds.isLoading} error={builds.isError ? { message: (builds.error as Error).message, retry: () => void builds.refetch() } : null}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Builds" chip={{ text: '0 builds', tone: 'v' }} scene="notebooks" heading="No apps built yet" body="Open a school, then its Technical tab, to build its Android or iPhone app. Every build shows here." /></div>
+        <div><EmptyState scene="builds" label="Choose a school" onAction={() => app.go('/schools')} /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           <div className="ch" style={{ padding: '20px 20px 8px', flexWrap: 'wrap', gap: 10 }}>

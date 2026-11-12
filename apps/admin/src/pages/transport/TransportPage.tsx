@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -38,9 +38,7 @@ export function TransportPage() {
         {billing && <BillDialog route={billing} onClose={() => setBilling(null)} onDone={(m) => { setBilling(null); say(m); }} />}
       </>}>
       {v && (!v.routes.length ? (
-        <div><EmptyCard title="Transport" chip={{ text: '0 routes', tone: 'v' }} scene="map-pin" heading="No bus routes yet"
-          body="Add each route with its stops and times, then put students on their bus. Families see their child’s route and stop in the app, and the bus’s position once the driver shares it."
-          actions={canWrite ? <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="transport" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
       ) : <>
         <section className="grid">
           {[

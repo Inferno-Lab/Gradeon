@@ -63,8 +63,5 @@
   .pg-timetable .lrow{grid-template-columns:54px minmax(0,1fr);height:auto;padding:10px 16px}
   .pg-timetable .lrow .num,.pg-timetable .lrow span:nth-child(3){grid-column:2}
 }
-/* Subject colours, as in the app: a 12% tint of the subject behind its name in light (22% in dark, name in ink). Art and PE are too light for text, so their names are ink. */
-.pg-timetable .s-maths{--sc:var(--subj-maths)}.pg-timetable .s-science{--sc:var(--subj-science)}.pg-timetable .s-english{--sc:var(--subj-english)}.pg-timetable .s-hindi{--sc:var(--subj-hindi)}.pg-timetable .s-social{--sc:var(--subj-social)}.pg-timetable .s-computer{--sc:var(--subj-computer)}.pg-timetable .s-music{--sc:var(--subj-music)}
-.pg-timetable .s-art{--sc:var(--subj-art)}.pg-timetable .s-pe{--sc:var(--subj-pe)}
-.pg-timetable .sub{background:color-mix(in srgb,var(--sc) 12%,var(--s1));color:color-mix(in srgb,var(--sc) 65%,var(--ink))}
-.dark .pg-timetable .sub{background:color-mix(in srgb,var(--sc) 22%,var(--s1));color:var(--ink)}
+/* Subjects in their spectrum colour (contracts subjectColour): the soft fill behind the ink, the same in the admin and the app. */
+.pg-timetable .sub{background:var(--cs);color:var(--ci)}

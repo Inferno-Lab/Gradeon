@@ -31,7 +31,7 @@ function Closed({ title, heading, body }: { title: string; heading: string; body
   return (
     <PageScope page="dashboard">
       <main className="mn">
-        <div><EmptyCard title={title} chip={{ text: 'Not here', tone: 'a' }} scene="padlock" heading={heading} body={body}
+        <div><EmptyCard title={title} chip={{ text: 'Not here', tone: 'a' }} icon="lock" heading={heading} body={body}
           actions={<button className="btn pri" onClick={() => app.go('/')}>Go to the dashboard</button>} /></div>
       </main>
     </PageScope>
@@ -45,7 +45,7 @@ function NotInPlan({ area }: { area: string }) {
   return (
     <PageScope page="dashboard" overlays={<Presence>{asking && <AskGradeon area={area} onClose={() => setAsking(false)} onDone={() => { setAsking(false); setSent(true); }} />}</Presence>}>
       <main className="mn">
-        <div><EmptyCard title={area} chip={{ text: 'Not included', tone: 'a' }} scene="padlock" heading="This is not part of your school’s plan"
+        <div><EmptyCard title={area} chip={{ text: 'Not included', tone: 'a' }} icon="lock" heading="This is not part of your school’s plan"
           body={sent ? 'Your request is with Gradeon. The answer shows on your school profile, under the plan.' : 'Your school does not have this module right now. Anything it held is kept safely. Ask Gradeon to add it.'}
           actions={<>
             {!sent && <button className="btn pri" onClick={() => setAsking(true)}>Ask Gradeon to add it</button>}

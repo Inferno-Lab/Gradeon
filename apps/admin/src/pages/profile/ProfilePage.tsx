@@ -150,10 +150,10 @@ function Roles({ cfg }: { cfg: EffectiveConfig }) {
   const roles = useQuery({ queryKey: ['roles'], queryFn: app.api.roles.list });
   const [sel, setSel] = useState('');
   if (roles.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 16 }} />;
-  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
+  if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="lock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   const list = roles.data ?? [];
   const cur = list.find((r) => r.id === sel) ?? list[0];
-  if (!cur) return <EmptyCard title="Roles" chip={{ text: '0', tone: 'v' }} scene="padlock" heading="No roles yet" body="Gradeon makes the school’s roles when it sets the school up." />;
+  if (!cur) return <EmptyCard title="Roles" chip={{ text: '0', tone: 'v' }} icon="lock" heading="No roles yet" body="Gradeon makes the school’s roles when it sets the school up." />;
   const has = { modules: cfg.modules, features: cfg.features };
   const allowed = PERMISSION_CATALOG.filter((p) => cur.permissions.includes(p.key) && (has.modules.length === 0 || true));
   const areas = [...new Set(allowed.map((p) => p.area))];

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectField, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -42,9 +42,7 @@ export function LibraryPage() {
         {cancelling && <CancelDialog title={cancelling.title} busy={cancel.isPending} onClose={() => setCancelling(null)} onSend={(reason) => cancel.mutate({ id: cancelling.id, reason })} />}
       </>}>
       {v && (v.books.length === 0 && v.loans.length === 0 ? (
-        <div><EmptyCard title="Library" chip={{ text: '0 books', tone: 'v' }} scene="notebooks" heading="The shelves are empty"
-          body="Add books one by one, or bring the whole catalogue in from a spreadsheet under Moving in. Families then see what is on the shelf and can reserve from the app."
-          actions={canWrite ? <AddBtn onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</AddBtn> : undefined} /></div>
+        <div><EmptyState scene="library" onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
       ) : <>
         <section className="grid">
           {[

@@ -35,7 +35,7 @@ export function FleetPage() {
     return (
       <PageScope page="fleet">
         <main className="mn"><header className="hd"><div><h1>Fleet</h1></div></header>
-          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );

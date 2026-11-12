@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, PageScope, Presence, Segmented, Panel, Icon } from "@gradeon/web-ui";
+import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState } from "@gradeon/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {
@@ -174,12 +174,11 @@ export function StudentsView({ v }: { v: any }) {
               </div>
             </>
           )}
-          {v.noRows && (
+          {v.noRows && v.emptySchool && <EmptyState scene="students" onAction={v.empty.act} onLink={v.empty.act2} />}
+          {v.noRows && !v.emptySchool && (
             <>
               <div className="empt">
-                <div style={{ width: "190px" } as CSSProperties}>
-                  <Illustration scene={v.empty.scene} />
-                </div>
+                <span className="emic"><Icon name="search" size={24} /></span>
                 <b className="fd" style={{ fontSize: "22px", letterSpacing: "-.025em" } as CSSProperties}>
                   {v.empty.title}
                 </b>

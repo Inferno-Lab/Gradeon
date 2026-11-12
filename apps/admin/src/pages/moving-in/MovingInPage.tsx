@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IMPORT_KINDS } from '@gradeon/contracts';
-import { Field, FilePick, Select } from '@gradeon/web-ui';
+import { Field, FilePick, Select, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp, useSchoolConfig } from '../../app/kit';
@@ -61,6 +61,7 @@ export function MovingInPage() {
     <Page title="Moving in" sub="Bring your records into Gradeon. Inviting families is on Students, staff on Staff." toast={toast} loading={uploads.isLoading && !uploads.data}
       error={uploads.isError && !uploads.data ? { message: (uploads.error as Error).message, retry: () => void uploads.refetch() } : null}>
       <div className="stack" style={{ gap: 16 }}>
+        {uploads.data?.length === 0 && !batches.data?.length && <EmptyState scene="moving" onAction={() => document.querySelector<HTMLInputElement>('main input[type=file]')?.click()} onLink={template} />}
         <Card title="Send us your files" chip={<span className="chip">{uploads.data?.length ?? 0} sent</span>}>
           <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Gradeon’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
           <div className="stack">

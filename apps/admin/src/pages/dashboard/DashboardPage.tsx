@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { dashboardPieces } from '@gradeon/config-engine';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
-import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { DashboardView } from './dashboard.view';
@@ -171,7 +171,17 @@ function DashboardDesktop() {
     return (
       <PageScope page="dashboard">
         <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
-          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>
+        </main>
+      </PageScope>
+    );
+  }
+  // A school with no students yet: the dashboard has nothing to show, so it says how to start.
+  if (d && d.present.total === 0) {
+    return (
+      <PageScope page="dashboard">
+        <main className="mn"><header className="hd"><div><h1>Dashboard</h1></div></header>
+          <EmptyState scene="dashboard" onAction={() => app.go('/year/classes')} onLink={() => app.go('/staff')} />
         </main>
       </PageScope>
     );

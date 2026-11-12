@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FlagRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, MenuButton, useShake } from '@gradeon/web-ui';
+import { Dialog, Field, MenuButton, useShake, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -59,7 +59,7 @@ export function FlagsPage() {
         </Dialog>
       )}>
       <Card title="Flags" chip={<span className="chip">{fleet.length}</span>}>
-        {fleet.length === 0 && <EmptyCard title="Flags" chip={{ text: '0 flags', tone: 'v' }} scene="checklist" heading="No flags yet" body="Add a flag to ship a feature switched off, then turn it on for one school before the rest." />}
+        {fleet.length === 0 && <EmptyState scene="flags" onAction={canWrite ? () => document.querySelector<HTMLInputElement>('input[name="flag-new"]')?.focus() : undefined} />}
         {fleet.map((f) => (
           <div key={f.key} style={{ padding: '16px 0', borderTop: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -92,7 +92,7 @@ export function FlagsPage() {
       {canWrite && (
         <Card title="New flag">
           <div className={shake.cls} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(240px,100%),1fr))', gap: 12 }}>
-            <Field label="Key" value={key} onChange={(v) => { setKey(v); setErr(''); }} error={err} placeholder="new.report-cards" hint="The name the code checks." />
+            <Field label="Key" name="flag-new" value={key} onChange={(v) => { setKey(v); setErr(''); }} error={err} placeholder="new.report-cards" hint="The name the code checks." />
             <Field label="What it does" value={label} onChange={setLabel} placeholder="New report card layout" />
           </div>
           <button className="btn pri" style={{ marginTop: 12 }} onClick={add} disabled={set.isPending}>Add flag</button>

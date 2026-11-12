@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -108,9 +108,7 @@ function Connections({ v, write, busy, onEdit, onTest, onDelete, onAct, onAdd }:
   onAct: (c: ConnectionRow, what: 'live' | 'pause' | 'resume') => void; onAdd: () => void;
 }) {
   if (!v.connections.length) {
-    return <div><EmptyCard title="Connections" chip={{ text: '0 connections', tone: 'v' }} scene="plug" heading="Everything goes to the Test inbox"
-      body="Until a connection is added, texts, emails and WhatsApp messages land in the Test inbox, files are kept in the registry, and payments open a test checkout. Add a provider to reach real families."
-      actions={write ? <button className="btn pri" onClick={onAdd}>Add a connection</button> : undefined} /></div>;
+    return <div><EmptyState scene="integrations" onAction={write ? onAdd : undefined} /></div>;
   }
   const groups = CAPABILITIES.map((cap) => ({ cap, list: v.connections.filter((c) => providerDef(c.provider)?.capabilities[0] === cap) })).filter((g) => g.list.length);
   return (
@@ -430,7 +428,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
     onError: (e) => say((e as Error).message, 'bad'),
   });
   const conns = v.connections.filter((c) => providerDef(c.provider)?.capabilities.some((k) => k === 'sms' || k === 'whatsapp'));
-  if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} scene="envelope" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
+  if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} icon="mail" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
   return (
     <>
       <div className="help rise">When a message is mapped, its approved wording is what goes out, filled with the message’s values, so DLT never rejects it. A text or WhatsApp connection goes live only when every message is mapped. “Copy for DLT” gives the wording with {'{#var#}'} where the values go, ready to register.</div>
@@ -537,7 +535,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
   const hooked = v.connections.filter((c) => c.webhookUrl);
   const [open, setOpen] = useState<string | null>(null);
   const events = useQuery({ queryKey: ['integrations', 'events', open], queryFn: () => app.api.integrations.events(open!), enabled: !!open });
-  if (!hooked.length) return <div><EmptyCard title="Webhooks" chip={{ text: '0 addresses', tone: 'v' }} scene="envelope" heading="No provider sends us anything yet" body="Delivery reports and payment confirmations come back to an address made for each connection. Add an SMS, WhatsApp or payments connection to get one." /></div>;
+  if (!hooked.length) return <div><EmptyCard title="Webhooks" chip={{ text: '0 addresses', tone: 'v' }} icon="mail" heading="No provider sends us anything yet" body="Delivery reports and payment confirmations come back to an address made for each connection. Add an SMS, WhatsApp or payments connection to get one." /></div>;
   return (
     <Card title="Addresses to paste into each provider’s dashboard" style={{ padding: 0 }}>
       {hooked.map((c) => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReportQuery } from '@gradeon/contracts';
-import { DateField, EmptyCard, Select } from '@gradeon/web-ui';
+import { DateField, Select, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Ico, useOpenParam } from '../../app/kit';
@@ -57,7 +57,7 @@ export function ReportsPage() {
         <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>
       </>}</>}>
       {(list?.length ?? 0) === 0 ? (
-        <div><EmptyCard title="Reports" chip={{ text: '0 reports', tone: 'v' }} scene="checklist" heading="No reports here yet" body="Reports in this area appear once the modules they read from are part of your school’s plan." /></div>
+        <div><EmptyState scene="reports" onAction={() => app.go('/attendance')} onLink={() => app.go('/fees')} /></div>
       ) : (
         <section className="rpg" data-even="fill">
           <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">

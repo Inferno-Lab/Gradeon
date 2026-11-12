@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { breachNotice, istToday, type ComplianceRow } from '@gradeon/contracts';
-import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
+import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -48,13 +48,13 @@ export function CompliancePage() {
       </>}>
       {tab === 'breaches' && (
         <Card title="Breaches" chip={<span className={`chip ${breaches.some((b) => b.status !== 'closed') ? 'c' : 'g'}`}>{breaches.filter((b) => b.status !== 'closed').length} open</span>}>
-          {breaches.length === 0 ? <EmptyCard title="Breaches" chip={{ text: 'None', tone: 'g' }} scene="padlock" heading="No breaches logged" body="If personal data may have reached the wrong person, log it here. The school must be told within 72 hours so it can meet its own duty." />
+          {breaches.length === 0 ? <EmptyCard title="Breaches" chip={{ text: 'None', tone: 'g' }} icon="lock" heading="No breaches logged" body="If personal data may have reached the wrong person, log it here. The school must be told within 72 hours so it can meet its own duty." />
             : breaches.map((b) => <Row key={b.id} r={b} canWrite={canWrite} busy={close.isPending} onTell={() => setTelling(b)} onClose={() => close.mutate(b.id)} />)}
         </Card>
       )}
       {tab === 'agreements' && (
         <Card title="Agreements" chip={<span className="chip">{agreements.filter((x) => x.status === 'open').length} to sign</span>}>
-          {agreements.length === 0 ? <div className="help">Add the data processing agreement each school has to sign. It stays here until it is signed, with the signed file.</div>
+          {agreements.length === 0 ? <EmptyState scene="compliance" label="Add an agreement" onAction={canWrite ? () => setAdding('dpa') : undefined} />
             : agreements.map((x) => <Row key={x.id} r={x} canWrite={canWrite} busy={false} onSign={() => setSigning(x)} onFile={() => download(x)} />)}
         </Card>
       )}

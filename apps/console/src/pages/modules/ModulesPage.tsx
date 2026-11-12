@@ -146,8 +146,8 @@ function Schools({ say }: { say: Say }) {
   });
 
   if (q.isLoading || cat.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 28 }} />;
-  if (q.isError) return <div><EmptyCard error title="Schools" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>;
-  if (!all.length) return <div><EmptyCard title="Plans and modules" chip={{ text: '0 schools', tone: 'v' }} scene="notebooks" heading="No schools yet" body="Once a school is onboarded, its modules appear here against every other school’s." /></div>;
+  if (q.isError) return <div><EmptyCard error title="Schools" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} /></div>;
+  if (!all.length) return <div><EmptyCard title="Plans and modules" chip={{ text: '0 schools', tone: 'v' }} icon="homework" heading="No schools yet" body="Once a school is onboarded, its modules appear here against every other school’s." /></div>;
   return (
     <>
       {review && <ReviewDialog list={review} onClose={() => setReview(null)} onDone={(m) => { setReview(null); setPicked(new Set()); say(m); }} />}

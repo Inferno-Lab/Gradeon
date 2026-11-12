@@ -16,10 +16,10 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
   const [shown, setShown] = useState<Set<string>>(new Set());
   const view = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, enabled: app.can('integrations.read') });
   const fails = useQuery({ queryKey: ['activity', d.slug, '', 'failed'], queryFn: () => app.api.integrations.activity({ school: d.slug, status: 'failed', limit: 10 }), enabled: app.can('integrations.read') });
-  if (!app.can('integrations.read')) return <EmptyCard title="Messaging" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
+  if (!app.can('integrations.read')) return <EmptyCard title="Messaging" chip={{ text: 'Not for your role', tone: 'a' }} icon="lock" heading="Integrations are for implementation and support" body="Ask a super admin if you need to see how this school’s messages and payments are routed." />;
   if (view.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 24 }} />;
   const v = view.data;
-  if (!v) return <EmptyCard error title="Integrations" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(view.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void view.refetch()}>Try again</button>} />;
+  if (!v) return <EmptyCard error title="Integrations" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(view.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void view.refetch()}>Try again</button>} />;
   const name = (id: string | null) => (id ? v.connections.find((c) => c.id === id)?.name ?? 'Deleted' : '');
   const caps = CAPABILITIES.filter((k) => INTEGRATION_PROVIDERS.some((p) => p.key !== 'sandbox' && p.capabilities.includes(k)));
   const own = v.connections.filter((c) => c.schoolId === d.id);

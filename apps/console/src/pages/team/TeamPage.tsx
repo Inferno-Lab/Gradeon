@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleUserRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, tintFor, useShake, Icon } from '@gradeon/web-ui';
+import { Dialog, Field, tintFor, useShake, Icon, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { initials, ago } from '../../app/format';
@@ -45,7 +45,7 @@ export function TeamPage() {
         { label: 'Super admins', value: rows.filter((r) => r.roles.includes('super_admin')).length, note: 'can change anything', tone: 'a' },
         { label: 'Never signed in', value: rows.filter((r) => !r.lastSeenAt).length, note: 'invited, not yet joined', tone: 'i' },
       ]} />}
-      {rows.length === 0 ? <div><EmptyCard title="Team" chip={{ text: '0 people', tone: 'v' }} scene="register" heading="Just you so far" body="Add the people who will run releases, support schools and handle billing." /></div> : (
+      {rows.length === 0 ? <div><EmptyState scene="team" onAction={canWrite ? () => setAdding(true) : undefined} /></div> : (
         <Card style={{ padding: 0 }}>
           <div className="tbl scroll-x"><div style={{ minWidth: 620 }}>
             <div className="grd th" style={{ '--cols': 'minmax(0,2fr) minmax(0,2fr) 120px 170px' } as React.CSSProperties}><span>Person</span><span>Roles</span><span>Last seen</span><span></span></div>

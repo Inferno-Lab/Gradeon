@@ -82,8 +82,9 @@ function StudentList({ tabs }: { tabs: React.ReactNode }) {
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('add')) setDialog({ kind: 'add' });
+    if (p.get('import')) setDialog({ kind: 'import' });
     if (p.get('open')) setOpenId(p.get('open'));
-    if (p.get('add')) history.replaceState(null, '', window.location.pathname);
+    if (p.get('add') || p.get('import')) history.replaceState(null, '', window.location.pathname);
   }, []);
 
   const filter = useMemo<StudentListQuery>(() => ({
@@ -199,6 +200,7 @@ function StudentList({ tabs }: { tabs: React.ReactNode }) {
     dir, flipSort: () => { setDir((d) => (d === 'asc' ? 'desc' : 'asc')); setPage(1); },
     perPage: <Select compact aria-label="Rows per page" value={String(per)} onChange={(x) => { setPer(Number(x)); setPage(1); }} options={[10, 25, 50].map((n) => ({ value: String(n), label: `${n} a page` }))} />,
     page, hasNext: page * per < total, prev: () => setPage((p) => Math.max(1, p - 1)), next: () => setPage((p) => p + 1),
+    emptySchool: allCount === 0 && !anyFilter && !views.isLoading,
     empty: allCount === 0 && !anyFilter
       ? { scene: 'register', title: 'No students yet', body: 'Add your first student, or bring the whole school in from an Excel sheet in about a minute.', actLabel: 'Import from Excel', act: () => setDialog({ kind: 'import' }), act2Label: 'Add one student', act2: () => setDialog({ kind: 'add' }) }
       : { scene: 'search-paper', title: dq ? `No one matches “${dq}”` : 'No one fits these filters', body: dq ? 'Try a first name, or an admission number like 2019/0412.' : 'Clear a filter to see more students.', actLabel: dq ? 'Clear search' : 'Clear filters', act: reset, act2Label: '', act2: undefined },
@@ -256,7 +258,7 @@ function StudentList({ tabs }: { tabs: React.ReactNode }) {
     return (
       <PageScope page="students">
         <main className="mn"><header className="hd"><div><h1>Students</h1></div></header>
-          <div><EmptyCard error title="Students" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Students" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );

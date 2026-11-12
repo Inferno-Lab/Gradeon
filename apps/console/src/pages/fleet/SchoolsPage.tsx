@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { EmptyCard, Select, tintFor, Icon } from '@gradeon/web-ui';
+import { Select, tintFor, Icon, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { Page } from '../../app/Page';
@@ -46,7 +46,7 @@ export function SchoolsPage() {
       back={{ label: 'Fleet', to: '/', go: app.go }}
       actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}>Onboard a school</button> : undefined}>
       {all.length === 0 ? (
-        <div><EmptyCard title="Schools" chip={{ text: '0 schools', tone: 'v' }} scene="register" heading="No schools on this platform yet" body="Onboard the first school. The console creates its database, address, first admin and app settings in a few minutes." /></div>
+        <div><EmptyState scene="fleet" onAction={app.can('schools.write') ? () => app.go('/onboarding/new') : undefined} /></div>
       ) : (
         <section className="card tbl rise" style={{ padding: 0 }}>
           <div className="ch" style={{ padding: '20px 20px 12px', flexWrap: 'wrap', gap: 10 }}>

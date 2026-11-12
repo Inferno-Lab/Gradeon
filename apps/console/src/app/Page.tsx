@@ -35,7 +35,7 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
         </header>
         {error ? (
           <div>
-            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
+            <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />
           </div>
         ) : loading ? <div className="skc" style={{ height: 320, borderRadius: 28 }} /> : children}
       </main>
