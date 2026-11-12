@@ -1,8 +1,15 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, markStyle, Icon } from "@gradeon/web-ui";
+import { DEFAULT_BRAND, hueOf, hueTokens } from '@gradeon/contracts';
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
 import "./school.css";
+
+// The school's own deep colour, worked out from its brand colour, so its page header looks like its admin (the School board).
+const schoolColours = (colour: string) => {
+  const t = hueTokens(hueOf(/^#[0-9a-fA-F]{6}$/.test(colour ?? '') ? colour : DEFAULT_BRAND), 'light');
+  return Object.fromEntries(['hero', 'on-deep', 'on-deep2', 'bright', 'on-bright', 'deep2', 'deep3'].map((k) => [`--${k}`, t[k]]));
+};
 
 export function SchoolView({ v }: { v: any }) {
   return (
@@ -35,8 +42,8 @@ export function SchoolView({ v }: { v: any }) {
           <Icon name="caretRight" size={14} />
           <b style={{ color: "var(--ink)" } as CSSProperties}>{v.name}</b>
         </div>
-        <header className="hd rise" style={{ "--d": ".05s", gap: "16px", flexWrap: "wrap" } as CSSProperties}>
-          <span className="slogo" style={{ ...markStyle(v.color) } as CSSProperties}>
+        <header className="hd sdeep rise" style={{ "--d": ".05s", gap: "16px", flexWrap: "wrap", ...schoolColours(v.color) } as CSSProperties}>
+          <span className="slogo">
             {v.logoText}
           </span>
           <div style={{ minWidth: "0" } as CSSProperties}>

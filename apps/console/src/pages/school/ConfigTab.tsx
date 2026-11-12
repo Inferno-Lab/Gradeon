@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
-import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueOf, hueTokens } from '@gradeon/contracts';
+import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueContrast, hueOf, hueTokens } from '@gradeon/contracts';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -467,16 +467,25 @@ function GradingEditor({ value, max, disabled, onChange }: { value: { grade: str
   );
 }
 
-/** What the brand colour's hue gives the school (Gradeon Hue): the frame, "you are here", actions and their soft fill, light and dark. */
+/** The seed colour card of the School board: what the brand colour's hue makes, each colour with the text it carries checked against AA. */
 function HueSwatches({ colour }: { colour: string }) {
   const h = hueOf(/^#[0-9a-fA-F]{6}$/.test(colour) ? colour : DEFAULT_BRAND);
-  const row = (mode: 'light' | 'dark') => {
-    const t = hueTokens(h, mode);
-    return (
-      <div className="hue-sw" style={Object.fromEntries(['deep', 'bright', 'brand', 'brand-soft', 'bg'].map((k) => [`--${k}`, t[k]]))} aria-hidden="true">
-        <i style={{ background: 'var(--deep)' }} /><i style={{ background: 'var(--bright)' }} /><i style={{ background: 'var(--brand)' }} /><i style={{ background: 'var(--brand-soft)' }} /><i style={{ background: 'var(--bg)' }} />
-      </div>
-    );
-  };
-  return <div className="help" style={{ marginTop: 8 }}>Hue {h}° · every colour passes the contrast check{row('light')}{row('dark')}</div>;
+  const t = hueTokens(h, 'light');
+  const ROWS: [string, string, string, string][] = [['deep', 'Deep', 'Frame, menu and tab bar', 'on-deep'], ['bright', 'Bright', 'You are here, the main number', 'on-bright'], ['brand', 'Brand', 'Buttons and links', 'on-brand'],
+    ['brand-soft', 'Soft', 'Selected rows, quiet buttons', 'brand-ink'], ['hero', 'Hero', 'The headline card', 'on-deep'], ['heat4', 'Heat', 'How much, quiet to loud', 'heat-hi-t']];
+  return (
+    <div className="hue-sw" style={{ marginTop: 12 }}>
+      <div className="help" style={{ margin: '0 0 6px' }}>Hue {h}° · one hue makes every colour, in light, dark and AMOLED</div>
+      {ROWS.map(([k, name, what, on]) => (
+        <div key={k} className="kv" style={{ alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <i style={{ background: t[k] }} aria-hidden="true" />
+            <span><b style={{ display: 'block', color: 'var(--ink)', fontWeight: 600 }}>{name}</b><small>{what}</small></span>
+          </span>
+          <span className="chip g" data-tip={`Text on it: ${hueContrast(t[on]!, t[k]!).toFixed(1)} to 1`}>AA</span>
+        </div>
+      ))}
+      <div className="help" style={{ marginTop: 8 }}>Every text pair is checked against WCAG AA for every hue, so any colour can be published.</div>
+    </div>
+  );
 }

@@ -41,7 +41,8 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 - Done (committed e7cb365 and after): contracts hue.ts + migrations; web tokens renamed; nest/shell/blocks/controls/polish restyled; Icon + icon map + every drawn icon replaced; sign-in rebuilt from SignIn; EmptyState (shadow-DOM scenes from the boards) wired on every truly-empty page (38 scenes incl. new audit, privacy, support sessions on EmptyAdmin6/EmptyConsole3); EmptyCard is the compact Hue card; illustrations deleted; /design style guide rebuilt; subjects use `subjectColour` (contracts).
 - Dev servers for checks: PostgreSQL 54339, server 4010 (scratchpad server-ds.sh), admin vite 5183, console vite 5184; `API=http://localhost:4010 node tools/shot.mjs <url> <png> 1440 960 [--console]`.
 - Rebuilt and compared with their boards: dashboard (Today), fees overview (Fees), roll call (Attendance), timetable (Timetable, also fixes six-day weeks), sign-in (SignIn), menu (Sidebar). Students already matches the board's language and keeps its extra functions.
-- Next: console Fleet, School, Modules; then the app (Flutter) from ParentHome, ParentFees, ParentResults, TeacherHome, RollCall, EmptyHome, AppKit and EmptyApp1–4; then rules tests, audit-ui, e2e, docs, canvas, push.
+- Console rebuilt and compared: Fleet (FleetHue.tsx), Modules grid (mx tiles, module icons), School header in the school's own colours + seed colour card (ConfigTab HueSwatches).
+- Next: the app (Flutter) from ParentHome, ParentFees, ParentResults, TeacherHome, RollCall, EmptyHome, AppKit and EmptyApp1–4; then rules tests, audit-ui, e2e, docs, canvas, push.
 
 ## Checklist
 

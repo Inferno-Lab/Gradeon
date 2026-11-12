@@ -49,4 +49,4 @@
 .nest .wvr:first-child{border-top:0}
 /* colour editor: one row per colour, a column per theme, live previews on top */
 .nest .thm{display:flex;flex-direction:column;gap:16px}
-.nest .hue-sw{display:flex;gap:6px;margin-top:8px}.nest .hue-sw i{width:32px;height:24px;border-radius:7px;box-shadow:inset 0 0 0 1px var(--line)}
+.nest .hue-sw i{display:block;width:28px;height:28px;border-radius:7px;box-shadow:inset 0 0 0 1px var(--line);flex:none}.nest .hue-sw small{color:var(--ink2);font-size:13px}
