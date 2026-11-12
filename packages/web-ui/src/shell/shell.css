@@ -28,11 +28,11 @@
 @media (max-width:900px){
   .nest .dock{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:6px;border-radius:20px;background:var(--deep);box-shadow:var(--sh3)}
   .nest .dock button{position:relative;width:56px;height:52px;border-radius:12px;border:0;background:none;color:var(--on-deep2);display:grid;place-items:center;cursor:pointer;transition:color var(--t3),width var(--t3) var(--e),background var(--t3)}
-  .nest .dock button.on{width:112px;background:var(--bright);color:var(--on-bright)}
+  .nest .dock button.on{width:124px;background:var(--bright);color:var(--on-bright)}
   .nest .dock button svg{width:22px;height:22px;grid-area:1/1}
   .nest .dock button span{grid-area:1/1;font:600 13px var(--fb);margin-left:32px;opacity:0;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity var(--t3)}
-  .nest .dock button.on span{opacity:1;max-width:64px}
-  .nest .dock button.on svg{margin-right:48px}
+  .nest .dock button.on span{opacity:1;max-width:76px}
+  .nest .dock button.on svg{margin-right:60px}
   .nest .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:82dvh;overflow:auto;background:var(--s1);border-radius:24px 24px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--sh3);animation:nSheet var(--t3) var(--e) both}
   .nest .sheet[data-leaving]{animation:nSheetO var(--t2) var(--ei) forwards}
   .nest .sheet .grab{width:44px;height:5px;border-radius:2px;background:var(--line2);margin:0 auto 12px}

@@ -29,7 +29,7 @@ export function PhoneView({ v }: { v: any }) {
               <small>Present today</small>
               <div className="n num">
                 {v.present}
-                <span style={{ fontSize: "22px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
+                <span style={{ fontSize: "17px", opacity: ".6" } as CSSProperties}>/{v.total}</span>
               </div>
             </button>
             )}

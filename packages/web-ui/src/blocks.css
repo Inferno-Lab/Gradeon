@@ -123,3 +123,6 @@
 .nest .rpb b{display:block;font:600 14px var(--fb)}
 .nest .rpb small{display:block;font:400 12px/16px var(--fb);color:var(--ink2);margin-top:2px}
 .nest .rpb.on small{color:inherit;opacity:.75}
+/* Boarded pages (.hb) on a phone: the board's grids stack (their columns are set inline, hence !important), the page
+   header wraps and its search box gives way to the dock's search. */
+@media (max-width:760px){.nest .hb .g{grid-template-columns:minmax(0,1fr)!important}.nest .hb .top{flex-wrap:wrap}.nest .hb .top .search{display:none}}
