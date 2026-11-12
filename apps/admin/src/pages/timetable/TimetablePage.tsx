@@ -125,7 +125,8 @@ export function TimetablePage() {
     classes: classList.map((c, i) => ({ n: `Class ${c.name}`, on: c.id === classId, sel: c.id === classId ? 'true' : 'false', d: 40 + Math.min(i, 8) * 30, pick: () => { setClassId(c.id); setClsOpen(false); } })),
     views: VIEWS.map((x, i) => ({ n: x, on: i === mode ? 'on' : '', sel: i === mode ? 'true' : 'false', pick: () => setMode(i) })),
     mode: ['week', 'day', 'list'][mode],
-    tgStyle: mode === 1 ? { gridTemplateColumns: '78px minmax(0,1fr)' } : undefined,
+    // One column per teaching day: a school that teaches six or seven days gets six or seven, never a wrapped row.
+    tgStyle: { '--days': String(shownDays.length) },
     publish: () => publish.mutate(),
     weekLabel: `Every week · shown for ${dayMonth(dateOf(DAYS[0] ?? 1))} – ${dayMonth(dateOf(DAYS.at(-1) ?? 5))}`,
     clashChip: data.clashes.length ? 'c' : 'g', clashText: data.clashes.length ? `${data.clashes.length} ${data.clashes.length === 1 ? 'clash' : 'clashes'} to fix` : 'No clashes',
