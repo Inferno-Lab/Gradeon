@@ -38,6 +38,7 @@ const _en = <String, String>{
   'common.get_started': 'Get started',
   'common.version': 'Version @version',
   'empty.title': 'Nothing here yet',
+  'empty.examples': 'Examples',
   'empty.body': 'When something arrives, it will show up on this screen.',
   'errors.title': 'Something went wrong',
   'errors.generic': 'We could not load this just now.',

@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -46,7 +46,7 @@ class AcademicsView extends GetView<AcademicsController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'academics.empty',
             emptyBody: 'academics.empty_body',
-            emptyArt: EmptyArt.books,
+            emptyArt: EmptyArt.results,
             emptyHint: 'academics.empty_hint',
             emptyActions: [EmptyAction('common.ask_teacher', icon: PhosphorIconsRegular.chatCircle, onTap: () => ShellController.showTab('chat'))],
             child: controller.shelf.isEmpty

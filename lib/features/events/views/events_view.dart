@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/calendar.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -64,7 +64,7 @@ class EventsView extends GetView<EventsController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'events.empty',
             emptyBody: 'events.empty_body',
-            emptyArt: EmptyArt.calendar,
+            emptyArt: EmptyArt.events,
             emptyHint: 'events.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class EventsView extends GetView<EventsController> {
                     ),
                   ),
                 ],
-                if (featured == null) const EmptyState(art: EmptyArt.calendar, title: 'events.none_coming', body: 'events.none_coming_body'),
+                if (featured == null) const EmptyState(art: EmptyArt.events, title: 'events.none_coming', body: 'events.none_coming_body'),
               ],
             ),
           ),

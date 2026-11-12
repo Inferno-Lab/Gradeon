@@ -4,7 +4,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -29,7 +29,7 @@ class HomeWelcome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(child: EmptyArtView(EmptyArt.calendar, height: 120)),
+          const Center(child: EmptyArtView(EmptyArt.home)),
           const SizedBox(height: 12),
           Text('home.welcome_title'.trp({'school': AppConfig.schoolName.split(' ').first}), style: context.type.h2),
           const SizedBox(height: 6),

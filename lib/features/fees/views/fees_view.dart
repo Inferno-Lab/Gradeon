@@ -11,7 +11,7 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
 import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -113,7 +113,7 @@ class _FeesViewState extends State<FeesView> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'fees.empty',
             emptyBody: 'fees.empty_body',
-            emptyArt: EmptyArt.wallet,
+            emptyArt: EmptyArt.fees,
             emptyHint: 'fees.empty_hint',
             emptyActions: [EmptyAction('common.ask_office', icon: PhosphorIconsRegular.lifebuoy, onTap: () => Get.toNamed<void>(AppRoutes.help))],
             child: account == null ? const SizedBox.shrink() : _Body(controller: controller, account: account),

@@ -143,7 +143,7 @@ class _DockButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(on ? item.activeIcon : item.icon, size: 24, color: color),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     item.label.tr,
                     maxLines: 1,

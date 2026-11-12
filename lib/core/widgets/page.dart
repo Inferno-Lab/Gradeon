@@ -6,6 +6,7 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/states.dart';
+import 'package:gradeon/core/widgets/ui/motion.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Space a tab page leaves for the tab bar (kTabBarHeight) and a little air.
@@ -73,6 +74,8 @@ class PageFrame extends StatelessWidget {
     // the school's deep colour, recoloured for it, and the content on a sheet that rises over it. Pages that draw their
     // own art behind the top (underlay) keep it.
     final hue = underlay == null && children.isNotEmpty;
+    // A page whose first child is its loading, empty or error state has no title row to lift: it all goes on the sheet.
+    final head = hue && !_isState(children.first);
     final Widget list;
     if (hue) {
       final viewport = MediaQuery.sizeOf(context).height;
@@ -82,8 +85,8 @@ class PageFrame extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 12), side, 44),
-            child: Theme(data: Theme.of(context).copyWith(extensions: [c.onDeepSide]), child: children.first),
+            padding: EdgeInsets.fromLTRB(side, topPadding ?? (hasTopRow ? top + 58 : top + 12), side, head ? 44 : 20),
+            child: head ? Theme(data: Theme.of(context).copyWith(extensions: [c.onDeepSide]), child: children.first) : null,
           ),
           Transform.translate(
             offset: const Offset(0, -28),
@@ -93,7 +96,7 @@ class PageFrame extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(side, 20, side, bottomSpace),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [const OfflineCapsule(), ...children.skip(1)],
+                children: [const OfflineCapsule(), ...children.skip(head ? 1 : 0)],
               ),
             ),
           ),
@@ -328,3 +331,10 @@ class _PullToRefreshState extends State<_PullToRefresh> {
     );
   }
 }
+
+/// A loading, empty or error state, maybe padded or centred.
+bool _isState(Widget w) => switch (w) {
+  ViewStateView() || EmptyState() || ErrorState() => true,
+  Padding(:final Widget child) || Center(:final Widget child) || Rise(:final Widget child) => _isState(child),
+  _ => false,
+};

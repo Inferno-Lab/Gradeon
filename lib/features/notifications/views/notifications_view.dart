@@ -8,7 +8,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -136,7 +136,7 @@ class NotificationsView extends GetView<NotificationsController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'notifications.empty',
             emptyBody: 'notifications.empty_body',
-            emptyArt: EmptyArt.bell,
+            emptyArt: EmptyArt.notifications,
             emptyHint: 'notifications.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +169,7 @@ class NotificationsView extends GetView<NotificationsController> {
                   ),
                 ],
                 if (groups.isEmpty)
-                  const EmptyState(art: EmptyArt.bell, title: 'notifications.none_here', body: 'notifications.none_here_body'),
+                  const EmptyState(art: EmptyArt.notifications, title: 'notifications.none_here', body: 'notifications.none_here_body'),
                 for (var g = 0; g < groups.length; g++) ...[
                   Rise(index: 2 + g, child: SectionLabel(groups[g].$1.tr, top: 20)),
                   Rise(

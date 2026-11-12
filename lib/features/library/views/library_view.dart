@@ -6,7 +6,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -53,7 +53,7 @@ class LibraryView extends GetView<LibraryController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'library.empty',
             emptyBody: 'library.empty_body',
-            emptyArt: EmptyArt.books,
+            emptyArt: EmptyArt.homework,
             emptyHint: 'library.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

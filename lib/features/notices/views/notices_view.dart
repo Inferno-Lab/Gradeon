@@ -8,7 +8,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/calendar.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -96,7 +96,7 @@ class NoticesView extends GetView<NoticesController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'notices.empty',
             emptyBody: 'notices.empty_body',
-            emptyArt: EmptyArt.notice,
+            emptyArt: EmptyArt.notices,
             emptyHint: 'notices.empty_hint',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class NoticesView extends GetView<NoticesController> {
                   ),
                 ],
                 if (pinned.isEmpty && week.isEmpty && earlier.isEmpty)
-                  const EmptyState(art: EmptyArt.notice, title: 'notices.none_here', body: 'notices.none_here_body'),
+                  const EmptyState(art: EmptyArt.notices, title: 'notices.none_here', body: 'notices.none_here_body'),
               ],
             ),
           ),

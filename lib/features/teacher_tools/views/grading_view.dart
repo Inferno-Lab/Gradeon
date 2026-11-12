@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -57,7 +57,7 @@ class GradingView extends GetView<GradingController> {
             state: controller.state.value,
             onRetry: controller.load,
             errorKey: controller.errorMessage.value,
-            emptyArt: EmptyArt.homework,
+            emptyArt: EmptyArt.grading,
             emptyTitle: 'teacher.nothing_to_grade',
             emptyBody: 'teacher.nothing_to_grade_body',
             child: Column(
@@ -361,7 +361,7 @@ class _GradeSheetViewState extends State<GradeSheetView> {
     if (_queue.isEmpty) {
       return const PageFrame(
         leading: BackGlass(),
-        children: [EmptyState(art: EmptyArt.homework, title: 'teacher.nothing_to_grade', body: 'teacher.nothing_to_grade_body')],
+        children: [EmptyState(art: EmptyArt.grading, title: 'teacher.nothing_to_grade', body: 'teacher.nothing_to_grade_body')],
       );
     }
     final (g, s) = _queue[_i];

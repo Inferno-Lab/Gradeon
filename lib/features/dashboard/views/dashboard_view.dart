@@ -106,7 +106,7 @@ class _DashboardViewState extends State<DashboardView> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 16),
                             Rise(child: Text(todayLine(), style: context.type.capB)),
                             const SizedBox(height: 6),
                             Rise(index: 1, child: Text(hello, style: context.type.h1)),
@@ -125,7 +125,7 @@ class _DashboardViewState extends State<DashboardView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const OfflineCapsule(),
-                          if (hasDay) Padding(padding: const EdgeInsets.only(bottom: 14), child: PeriodStrip(periods: data.periods)),
+                          if (hasDay) Padding(padding: const EdgeInsets.only(bottom: 16), child: PeriodStrip(periods: data.periods)),
                           ViewStateView(
                             state: controller.state.value,
                             onRetry: controller.load,

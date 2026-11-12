@@ -9,7 +9,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -41,7 +41,7 @@ class TransportView extends GetView<TransportController> {
               errorKey: controller.errorMessage.value,
               emptyTitle: 'transport.empty',
               emptyBody: 'transport.empty_body',
-              emptyArt: EmptyArt.bus,
+              emptyArt: EmptyArt.transport,
               emptyHint: 'transport.empty_hint',
               emptyActions: [EmptyAction('common.ask_office', icon: PhosphorIconsRegular.lifebuoy, onTap: () => Get.toNamed<void>(AppRoutes.help))],
               child: const SizedBox.shrink(),

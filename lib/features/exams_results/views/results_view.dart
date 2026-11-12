@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -76,7 +76,7 @@ class ResultsView extends GetView<ResultsController> {
                 state: controller.state.value,
                 onRetry: controller.load,
                 errorKey: controller.errorMessage.value,
-                emptyArt: EmptyArt.columns,
+                emptyArt: EmptyArt.results,
                 emptyHint: 'results.empty_hint',
                 emptyTitle: 'results.none_title',
                 emptyBody: 'results.none',

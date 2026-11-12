@@ -7,7 +7,7 @@ import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/glass_controls.dart';
 import 'package:gradeon/core/widgets/page.dart';
@@ -80,7 +80,7 @@ class LeaveView extends GetView<LeaveController> {
                 const Rise(index: 3, child: SectionLabel('leave.requests')),
                 if (items.isEmpty)
                   const EmptyState(
-                    art: EmptyArt.plane,
+                    art: EmptyArt.leave,
                     title: 'leave.empty',
                     body: 'leave.empty_body',
                     hint: 'leave.empty_hint',

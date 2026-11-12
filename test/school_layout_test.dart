@@ -65,20 +65,20 @@ void main() {
   testWidgets('home leaves out a card the school took away, and the notices card follows the list', (tester) async {
     SchoolConfig.home.assignAll(['notices']);
     await home(tester);
-    expect(find.text('LATEST NOTICES'), findsOneWidget);
-    expect(find.textContaining('DUE ACROSS'), findsNothing);
+    expect(find.text('Latest notices'), findsOneWidget);
+    expect(find.textContaining('due across'), findsNothing);
   });
 
   testWidgets('with the default cards, what is due comes before the notices', (tester) async {
     await home(tester);
-    expect(tester.getTopLeft(find.textContaining('DUE ACROSS')).dy, lessThan(tester.getTopLeft(find.text('LATEST NOTICES')).dy));
+    expect(tester.getTopLeft(find.textContaining('due across')).dy, lessThan(tester.getTopLeft(find.text('Latest notices')).dy));
   });
 
   testWidgets('a module switched off takes its card and its button with it', (tester) async {
     SchoolConfig.modules.assignAll(['people', 'attendance', 'timetable']);
     SchoolConfig.quick.assignAll(['timetable']);
     await home(tester);
-    expect(find.text('LATEST NOTICES'), findsNothing);
+    expect(find.text('Latest notices'), findsNothing);
     expect(find.text('Pay fees'), findsNothing);
   });
 

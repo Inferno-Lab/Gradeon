@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -30,7 +30,7 @@ class DriverView extends GetView<DriverController> {
             state: controller.state.value,
             onRetry: controller.load,
             errorKey: controller.errorMessage.value,
-            emptyArt: EmptyArt.bus,
+            emptyArt: EmptyArt.transport,
             emptyTitle: 'driver.empty',
             emptyBody: 'driver.empty_body',
             emptyHint: 'driver.empty_hint',

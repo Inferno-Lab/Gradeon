@@ -5,7 +5,7 @@ import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -56,10 +56,10 @@ class TimetableView extends GetView<TimetableController> {
             errorKey: controller.errorMessage.value,
             emptyTitle: 'timetable.empty',
             emptyBody: 'timetable.empty_body',
-            emptyArt: EmptyArt.clock,
+            emptyArt: EmptyArt.timetable,
             emptyHint: 'timetable.empty_hint',
             child: day == null || day.periods.isEmpty
-                ? const EmptyState(art: EmptyArt.calendar, title: 'timetable.free_day', body: 'timetable.free_day_body')
+                ? const EmptyState(art: EmptyArt.timetable, title: 'timetable.free_day', body: 'timetable.free_day_body')
                 : _Timeline(controller: controller, day: day),
           ),
         ],

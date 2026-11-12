@@ -9,7 +9,7 @@ import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/schedule.dart';
 import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/sheets.dart';
@@ -60,7 +60,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                           height: 44,
                           radius: 22,
                           shadow: false,
-                          padding: const EdgeInsets.only(left: 5, right: 14),
+                          padding: const EdgeInsets.only(left: 4, right: 16),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -79,7 +79,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 if (t != null) ...[
                   Rise(child: Text(todayLine(), style: context.type.capB)),
                   const SizedBox(height: 6),
@@ -90,7 +90,7 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
           ),
           if (hasDay)
             Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.only(bottom: 16),
               child: PeriodStrip(
                 periods: periods,
                 label: (p) => classOf[p.id] == null ? subjectName(p.subject) : classLabel(classOf[p.id]!),
@@ -170,7 +170,7 @@ class _Body extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Rise(child: Text(line, style: context.type.s)),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Rise(
           index: 2,
           child: Row(
@@ -237,7 +237,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: 20),
           const Rise(
             index: 3,
-            child: EmptyState(art: EmptyArt.attendance, title: 'teacher.all_clear', body: 'teacher.all_clear_body'),
+            child: EmptyState(art: EmptyArt.grading, title: 'teacher.all_clear', body: 'teacher.all_clear_body'),
           ),
         ],
         if (controller.own != null) ...[
@@ -426,7 +426,7 @@ class TeacherClassesView extends GetView<TeacherHomeController> {
             state: controller.state.value,
             onRetry: controller.load,
             errorKey: controller.errorMessage.value,
-            emptyArt: EmptyArt.books,
+            emptyArt: EmptyArt.search,
             emptyHint: 'teacher.no_classes_hint',
             emptyTitle: 'teacher.no_classes',
             emptyBody: 'teacher.no_classes_body',

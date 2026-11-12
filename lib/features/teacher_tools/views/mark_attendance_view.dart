@@ -7,7 +7,7 @@ import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
 import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_art.dart';
+import 'package:gradeon/core/widgets/empty_kit.dart';
 import 'package:gradeon/core/widgets/glass.dart';
 import 'package:gradeon/core/widgets/page.dart';
 import 'package:gradeon/core/widgets/states.dart';
@@ -121,7 +121,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
               state: controller.state.value,
               onRetry: controller.load,
               errorKey: controller.errorMessage.value,
-              emptyArt: EmptyArt.attendance,
+              emptyArt: EmptyArt.rollCall,
             emptyTitle: 'teacher.no_students',
               emptyBody: 'teacher.no_students_body',
               child: LayoutBuilder(
