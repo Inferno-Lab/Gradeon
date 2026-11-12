@@ -231,12 +231,18 @@ export function Checkbox({ checked, onChange, label, disabled, ...aria }: { chec
 }
 
 /** A button that opens the file chooser (the browser's own button never shows). */
-export function FilePick({ accept, onPick, className = 'btn', disabled, children }: { accept?: string; onPick: (file: File) => void; className?: string; disabled?: boolean; children: ReactNode }) {
+/** A button that opens the file chooser. With `multiple`, every chosen file is passed to `onPick` in turn (`onPickAll` gets them together). */
+export function FilePick({ accept, onPick, onPickAll, multiple, className = 'btn', disabled, children }: { accept?: string; onPick?: (file: File) => void; onPickAll?: (files: File[]) => void; multiple?: boolean; className?: string; disabled?: boolean; children: ReactNode }) {
   const input = useRef<HTMLInputElement>(null);
   return (
     <>
       <button type="button" className={className} disabled={disabled} onClick={() => input.current?.click()}>{children}</button>
-      <input ref={input} type="file" accept={accept} hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) onPick(f); }} />
+      <input ref={input} type="file" accept={accept} multiple={multiple} hidden onChange={(e) => {
+        const files = [...(e.target.files ?? [])];
+        e.target.value = '';
+        if (!files.length) return;
+        if (onPickAll) onPickAll(files); else files.forEach((f) => onPick?.(f));
+      }} />
     </>
   );
 }

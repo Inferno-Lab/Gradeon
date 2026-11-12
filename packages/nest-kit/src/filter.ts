@@ -23,6 +23,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       const res = err.getResponse();
       if (typeof res === 'object' && res && 'code' in res && 'message' in res) body = res as ApiErrorBody;
       else body = { code: BY_STATUS[status] ?? 'internal', message: status === 404 ? 'That was not found.' : typeof res === 'string' ? res : err.message };
+    } else if (typeof err === 'object' && err && (err as { statusCode?: number }).statusCode === 429) {
+      // The rate limiter throws its reply as a plain object, not an Error.
+      status = 429;
+      body = { code: 'rate_limited', message: 'Too many tries from this device. Wait a moment and try again.' };
     } else if (err instanceof Error && err.name === 'ImportError') {
       // The import engine's own words about a file or a batch (by name: nest-kit does not depend on the database package).
       status = 400;

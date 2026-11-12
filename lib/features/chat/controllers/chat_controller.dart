@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/live_stream.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/loadable.dart';
@@ -31,7 +34,14 @@ Future<ChatThread> threadForMe(ChatThread t, AppUser me) async {
   );
 }
 
-class ChatListController extends GetxController with Loadable {
+class ChatListController extends GetxController with Loadable, LiveListen {
+  @override
+  void onInit() {
+    super.onInit();
+    // A new message or a read receipt changes the list and its unread counts.
+    listenLive('chat.', (_) => unawaited(load()));
+  }
+
   List<ChatThread> threads = [];
   final previews = <String, ChatMessage>{};
   final unreadBy = <String, int>{};
@@ -106,12 +116,14 @@ class ChatListController extends GetxController with Loadable {
   }
 }
 
-class ChatThreadController extends GetxController with Loadable {
+class ChatThreadController extends GetxController with Loadable, LiveListen {
   final text = TextEditingController();
   final draft = ''.obs;
 
-  /// The other side is typing. shortcut: always false with mock data; wire to presence events with the backend.
+  /// The other side is typing: from the school's live events, for four seconds after each.
   final typing = false.obs;
+  Timer? _typingOff;
+  DateTime _saidTyping = DateTime(2000);
   List<ChatMessage> messages = [];
   ChatThread? thread;
   String? officePhone;
@@ -120,8 +132,24 @@ class ChatThreadController extends GetxController with Loadable {
 
   @override
   void onInit() {
-    text.addListener(() => draft.value = text.text);
+    text.addListener(() {
+      draft.value = text.text;
+      final id = thread?.id;
+      if (id != null && text.text.isNotEmpty && DateTime.now().difference(_saidTyping) > const Duration(seconds: 5)) {
+        _saidTyping = DateTime.now();
+        unawaited(Get.find<ChatRepository>().typing(id).catchError((Object _) {}));
+      }
+    });
     super.onInit();
+    bool here(LiveEvent e) => e.data['threadId'] == Get.parameters['id'];
+    listenLive('chat.message', (e) => here(e) ? unawaited(load()) : null);
+    listenLive('chat.read', (e) => here(e) ? unawaited(load()) : null);
+    listenLive('chat.typing', (e) {
+      if (!here(e) || e.data['userId'] == me) return;
+      typing.value = true;
+      _typingOff?.cancel();
+      _typingOff = Timer(const Duration(seconds: 4), () => typing.value = false);
+    });
   }
 
   @override
@@ -150,6 +178,30 @@ class ChatThreadController extends GetxController with Loadable {
       await Get.find<ChatRepository>().send(threadId: id, senderId: userId, text: value);
     } on AppException catch (error) {
       text.text = value;
+      ToastHelper.show(error.message, kind: ToastKind.error);
+    }
+  }
+
+  /// Long-press on a message: take back one's own, or report someone else's to the office.
+  Future<void> onHold(ChatMessage m) async {
+    final mine = m.senderId == me;
+    final ok = await confirmSheet(
+      title: mine ? 'chat.delete_title' : 'chat.report_title',
+      body: mine ? 'chat.delete_body' : 'chat.report_body',
+      confirm: mine ? 'chat.delete' : 'chat.report',
+      icon: mine ? PhosphorIconsRegular.trash : PhosphorIconsRegular.flag,
+    );
+    if (!ok) return;
+    try {
+      final repo = Get.find<ChatRepository>();
+      if (mine) {
+        await repo.delete(m.id);
+      } else {
+        await repo.report(m.id, 'Reported from the app');
+      }
+      await load();
+      ToastHelper.show(mine ? 'chat.deleted' : 'chat.reported', kind: ToastKind.success);
+    } on AppException catch (error) {
       ToastHelper.show(error.message, kind: ToastKind.error);
     }
   }

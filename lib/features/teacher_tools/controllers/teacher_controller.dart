@@ -658,6 +658,7 @@ class PostNoticeController extends GetxController {
           author: Get.find<AuthService>().user.value?.name ?? '',
           attachments: const [],
         ),
+        classId: audience.value == 'school' ? null : own?.id,
       );
       Get.back<void>();
       ToastHelper.show('teacher.notice_sent', kind: ToastKind.success);

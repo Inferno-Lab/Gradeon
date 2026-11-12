@@ -139,6 +139,7 @@ abstract class HomeworkRepository {
     required String homeworkId,
     required String studentId,
     required String fileName,
+    String? filePath,
   });
 
   Future<void> grade({
@@ -175,6 +176,7 @@ class MockHomeworkRepository implements HomeworkRepository {
     required String homeworkId,
     required String studentId,
     required String fileName,
+    String? filePath,
   }) => _ds.guard(
     () => _ds.submitHomework(
       homeworkId: homeworkId,
@@ -230,10 +232,16 @@ class RemoteHomeworkRepository implements HomeworkRepository {
     required String homeworkId,
     required String studentId,
     required String fileName,
-  }) => _remote.post('/homework/$homeworkId/submissions', {
-    'studentId': studentId,
-    'fileName': fileName,
-  });
+    String? filePath,
+  }) async {
+    // The work itself goes to the school's storage first; the hand-in then names it.
+    final fileId = filePath == null ? null : await _remote.client.upload(kind: 'homework_submission', ownerId: '$homeworkId:$studentId', path: filePath);
+    await _remote.post('/homework/$homeworkId/submissions', {
+      'studentId': studentId,
+      'fileName': fileName,
+      'fileIds': [?fileId],
+    });
+  }
 
   @override
   Future<void> grade({

@@ -152,7 +152,7 @@ describe('students', () => {
     const audit = (await h.call('GET', '/v1/settings/audit', { token })).json;
     expect(audit.some((a: any) => a.action === 'contact.revealed')).toBe(true);
     expect(d.facts.homework.total).toBeGreaterThan(0);
-    expect(d.routeName).toBe('Route 4');
+    expect(d.routeName).toBe('Route 4 · Kothrud');
   });
   it('adds a student and refuses a bad class', async () => {
     const bad = await h.call('POST', '/v1/students', { token, body: { name: 'Test Child', classId: 'nope', dob: '2014-01-02', guardianName: 'Parent One', guardianPhone: '+91 99999 11111' } });
@@ -171,6 +171,29 @@ describe('students', () => {
     const r = await h.call('GET', '/v1/students/export?ids=stu_aarav,stu_diya', { token });
     expect(r.text.split('\n')).toHaveLength(3);
     expect(r.text).toContain('Aarav Sharma');
+  });
+});
+
+describe('a student’s record', () => {
+  it('edits a student, moves them to a class, and keeps every guardian with who may collect', async () => {
+    const made = await h.call('POST', '/v1/students', { token, body: { name: 'Record Test', classId: 'cls_8a', dob: '2013-02-01', guardianName: 'Pat Test', guardianPhone: '9822099001', gender: 'female' } });
+    expect(made.status).toBe(201);
+    expect(made.json).toMatchObject({ gender: 'female', guardians: [expect.objectContaining({ name: 'Pat Test', isPrimary: true, canCollect: true })] });
+    const moved = await h.call('PATCH', `/v1/students/${made.json.id}`, { token, body: { classId: 'cls_8b', house: '', bloodGroup: 'O+' } });
+    expect(moved.status).toBe(200);
+    expect(moved.json).toMatchObject({ bloodGroup: 'O+' });
+    expect(moved.json.className).toMatch(/8 B/);
+    const first = moved.json.guardians[0];
+    const g = await h.call('PUT', `/v1/students/${made.json.id}/guardians`, { token, body: { guardians: [
+      { id: first.id, name: 'Pat Test', phone: first.phone, email: '', relation: 'Mother', canCollect: true, isPrimary: false },
+      { name: 'Sam Test', phone: '9822099002', email: 'sam@example.com', relation: 'Father', canCollect: false, isPrimary: true },
+    ] } });
+    expect(g.status).toBe(200);
+    expect(g.json).toEqual([expect.objectContaining({ name: 'Sam Test', isPrimary: true, canCollect: false }), expect.objectContaining({ name: 'Pat Test', relation: 'Mother', isPrimary: false })]);
+    expect((await h.call('PUT', `/v1/students/${made.json.id}/guardians`, { token, body: { guardians: [{ name: 'No One', phone: '9822099003', relation: 'Aunt', canCollect: true, isPrimary: false }] } })).status).toBe(400);
+    await h.setSettings({ 'students.required': ['address'] });
+    expect((await h.call('PATCH', `/v1/students/${made.json.id}`, { token, body: { address: '' } })).status).toBe(400);
+    await h.setSettings({ 'students.required': [] });
   });
 });
 
@@ -262,7 +285,48 @@ describe('attendance and fees', () => {
   });
 });
 
+describe('an invoice', () => {
+  it('opens with its payments, and a waiver or a receipt cancellation waits for someone else in Approvals', async () => {
+    const list = (await h.call('GET', '/v1/fees/invoice-list?status=overdue&limit=5', { token })).json;
+    const id = list.items[0].id;
+    const inv = (await h.call('GET', `/v1/fees/invoice/${id}`, { token })).json;
+    expect(inv).toMatchObject({ id, outstanding: expect.any(Number), payments: expect.any(Array), pending: null });
+    expect((await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: inv.outstanding + 1, reason: 'Too much' } })).status).toBe(400);
+    const asked = await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: 100, reason: 'Sibling concession' } });
+    expect(asked.status).toBe(200);
+    expect(asked.json.pending.title).toMatch(/Waive ₹100/);
+    expect((await h.call('POST', `/v1/fees/invoice/${id}/waive`, { token, body: { amount: 50, reason: 'Again' } })).status).toBe(409);
+    const mine = (await h.call('GET', '/v1/approvals?view=sent&kind=fee_waiver', { token })).json.find((a: any) => a.title.includes('Waive ₹100'));
+    expect((await h.call('POST', `/v1/approvals/${mine.id}/decision`, { token, body: { decision: 'approve' } })).status).toBe(403);
+    expect((await h.call('GET', '/v1/fees/receipts?limit=5', { token })).json).toMatchObject({ items: expect.any(Array), total: expect.any(Number) });
+  });
+});
+
+describe('the library desk', () => {
+  it('lends a book, renews it, and takes it back lost with the cost on the family’s fees; a cancelled reservation says why', async () => {
+    const view = (await h.call('GET', '/v1/library', { token })).json;
+    const book = view.books.find((b: any) => b.copies - b.out > 1);
+    const kabir = (await h.call('GET', '/v1/students?query=Kabir', { token })).json.items[0].id;
+    const loan = await h.call('POST', '/v1/library/loans', { token, body: { bookId: book.id, studentId: kabir } });
+    expect(loan.status).toBe(200);
+    const renewed = await h.call('POST', `/v1/library/loans/${loan.json.id}/renew`, { token });
+    expect(renewed.json.dueOn > loan.json.dueOn).toBe(true);
+    expect((await h.call('POST', `/v1/library/loans/${loan.json.id}/return`, { token, body: { outcome: 'lost', charge: 300, fine: 'waive', reason: '' } })).status).toBe(400);
+    const back = await h.call('POST', `/v1/library/loans/${loan.json.id}/return`, { token, body: { outcome: 'lost', charge: 300, fine: 'bill' } });
+    expect(back.json).toEqual({ fine: 300, billed: true });
+    expect((await h.call('GET', '/v1/library', { token })).json.books.find((b: any) => b.id === book.id).copies).toBe(book.copies - 1);
+    const inv = (await h.call('GET', `/v1/fees/invoice-list?query=${encodeURIComponent('Lost book')}`, { token })).json;
+    expect(inv.items.some((i: any) => i.amount === 300)).toBe(true);
+    const r = view.reservations[0];
+    if (r) {
+      expect((await h.call('POST', `/v1/library/reservations/${r.id}/cancel`, { token, body: { reason: '' } })).status).toBe(400);
+      expect((await h.call('POST', `/v1/library/reservations/${r.id}/cancel`, { token, body: { reason: 'The book was lost' } })).status).toBe(204);
+    }
+  });
+});
+
 describe('timetable', () => {
+
   it('shows the clash, fixes it with a cover, then publishes', async () => {
     const v = (await h.call('GET', '/v1/timetable?classId=cls_8a', { token })).json;
     expect(v.clashes).toHaveLength(1);
@@ -288,7 +352,19 @@ describe('timetable', () => {
     const r = await h.call('POST', '/v1/timetable/cover', { token, body: { slotId: slot.id, teacherId: other.teacherId } });
     expect(r.status).toBe(409);
   });
-});
+  it('frees a period and places a lesson in it, refusing a busy teacher, and shows a teacher’s and a room’s week', async () => {
+    const v = (await h.call('GET', '/v1/timetable?classId=cls_8a', { token })).json;
+    const slot = v.slots.find((s: any) => s.day === 1 && s.room && !s.substituteId);
+    expect((await h.call('DELETE', `/v1/timetable/slots/${slot.id}`, { token })).status).toBe(204);
+    const placed = await h.call('POST', '/v1/timetable/slots', { token, body: { classId: 'cls_8a', day: slot.day, period: slot.period, subjectId: slot.subjectId, teacherId: slot.teacherId, room: slot.room } });
+    expect(placed.status).toBe(201);
+    expect((await h.call('POST', '/v1/timetable/slots', { token, body: { classId: 'cls_8a', day: slot.day, period: slot.period, subjectId: slot.subjectId, teacherId: slot.teacherId } })).status).toBe(409);
+    const week = (await h.call('GET', `/v1/timetable/week?teacherId=${slot.teacherId}`, { token })).json;
+    expect(week.slots.some((s: any) => s.day === slot.day && s.period === slot.period && s.className)).toBe(true);
+    const room = (await h.call('GET', `/v1/timetable/week?room=${encodeURIComponent(slot.room)}`, { token })).json;
+    expect(room.title).toBe(`Room ${slot.room}`);
+    expect((await h.call('GET', '/v1/timetable/rooms', { token })).json).toContain(slot.room);
+  });});
 
 describe('settings', () => {
   it('shows the school its setup, and gives the school no way to change it (only the console can)', async () => {
@@ -300,13 +376,20 @@ describe('settings', () => {
     expect((await h.call('PUT', '/v1/roles/role_teacher', { token, body: { name: 'Mine', permissions: [] } })).status).toBe(404);
     expect((await h.call('GET', '/v1/me', { token })).json.permissions).not.toContain('settings.write');
   });
-  it('follows what the console sets: colour, and modules only within the plan', async () => {
-    await h.setSettings({ 'brand.color': '#0E7490', 'modules.enabled': ['people', 'attendance'] });
-    const cfg = (await h.call('GET', '/v1/config', { token })).json;
-    expect(cfg.school.color).toBe('#0E7490');
-    expect(cfg.modules).toEqual(['people', 'attendance']);
-    expect(cfg.nav.map((n: any) => n.label)).not.toContain('Fees');
-    await h.setSettings({ 'modules.enabled': [] });
+  it('follows what the console sets: colour, and the modules of the plan (the only place modules are chosen)', async () => {
+    const was = (await h.registry.query("select entitlement->'modules' m from schools where slug = 'greenfield'")).rows[0].m;
+    await h.setSettings({ 'brand.color': '#0E7490' });
+    await h.entitle({ modules: ['people', 'attendance'] });
+    try {
+      const cfg = (await h.call('GET', '/v1/config', { token })).json;
+      expect(cfg.school.color).toBe('#0E7490');
+      expect(cfg.modules).toEqual(['school', 'people', 'attendance']);
+      const labels = cfg.menu.flatMap((g: any) => g.pages.map((p: any) => p.label));
+      expect(labels).toContain('Attendance');
+      expect(labels).not.toContain('Fees');
+    } finally {
+      await h.entitle({ modules: was });
+    }
   }, 30_000);
   it('lets the school ask Gradeon for a change', async () => {
     const r = await h.call('POST', '/v1/change-requests', { token, body: { area: 'App layout', message: 'Please put Fees in the bottom tabs.' } });

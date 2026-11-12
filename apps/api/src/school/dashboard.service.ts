@@ -7,6 +7,7 @@ import type { TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';
 import { AttendanceService } from './attendance.service.js';
 import { FeesService } from './fees.service.js';
+import { FilesService } from './files.service.js';
 import { SettingsService } from './support.js';
 
 /** The run-up to exams that the sidebar card counts down through. */
@@ -24,6 +25,7 @@ export class DashboardService {
     private readonly approvals: ApprovalsService,
     private readonly attendance: AttendanceService,
     private readonly fees: FeesService,
+    private readonly files: FilesService,
   ) {}
 
   async get(t: TenantCtx, user: { id: string; name: string; permissions: readonly string[] }, count = 6): Promise<DashboardData> {
@@ -46,8 +48,8 @@ export class DashboardService {
       this.approvals.needsYou(t, user.permissions),
       this.approvals.counts(t, user.permissions),
       on('attendance', () => this.attendance.unmarked(t), []),
-      on('attendance', () => t.pool.query<{ present: string }>("select count(*) filter (where m.status in ('present','late')) present from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [last]), { rows: [{ present: '0' }] }),
-      on('attendance', () => t.pool.query<{ pct: number | null }>("select avg(case when m.status in ('present','late') then 1.0 else 0.0 end) pct from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [addDays(last, -7)]), { rows: [{ pct: null }] }),
+      on('attendance', () => t.pool.query<{ present: string }>("select count(*) filter (where m.status in ('present','late','half_day')) present from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [last]), { rows: [{ present: '0' }] }),
+      on('attendance', () => t.pool.query<{ pct: number | null }>("select avg(case when m.status in ('present','late','half_day') then 1.0 else 0.0 end) pct from attendance_sessions s join attendance_marks m on m.session_id = s.id where s.date = $1", [addDays(last, -7)]), { rows: [{ pct: null }] }),
       on('homework', () => this.homeworkWeek(t, last, count), Array.from({ length: count }, () => 0)),
       on('attendance', () => this.classRolls(t, last, rollIds), []),
       on('events', () => t.pool.query<{ id: string; at: Date; title: string; note: string }>("select id, starts_at at, title, note from events where (starts_at at time zone 'Asia/Kolkata')::date = $1 order by starts_at", [last]), noRows),
@@ -58,8 +60,7 @@ export class DashboardService {
     const presentNow = Number(present.rows[0]!.present);
     const lastWeekPct = prevPresent.rows[0]?.pct ?? null;
     const nowPct = total ? presentNow / total : 0;
-    const examsStart = (v['term.examsStart'] as string | undefined) ?? addDays(last, 30);
-    const daysToGo = Math.max(0, Math.round((new Date(examsStart).getTime() - new Date(today).getTime()) / 86_400_000));
+    const term = await this.term(t, today, modules.includes('exams'));
     const stamp = istNow();
     const clock = `${String(stamp.getUTCHours()).padStart(2, '0')}:${String(stamp.getUTCMinutes()).padStart(2, '0')}`;
     const timeline = events.rows.map((e) => {
@@ -80,7 +81,7 @@ export class DashboardService {
       modules,
       greetingName: me.rows[0]?.name ?? user.name, roleLabel: me.rows[0]?.role_name ?? (user.id.startsWith('support:') ? 'Gradeon support' : ''), schoolName: String(v['school.name'] ?? t.info.name),
       day: { date: last, label: dayLabel(last), isToday, clock },
-      term: { name: String(v['term.name'] ?? 'Term 1'), examsLabel: `Exams start ${dayMonth(examsStart)}`, daysToGo, progress: Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))) },
+      term,
       subtitle: { marked: Number(classCount.rows[0]!.n) - unmarked.length, classes: Number(classCount.rows[0]!.n) },
       present: {
         value: presentNow, total, deltaPct: lastWeekPct === null ? 0 : Math.round((nowPct - lastWeekPct) * 1000) / 10,
@@ -125,20 +126,34 @@ export class DashboardService {
     });
   }
 
+  /** The term today falls in (from the school's calendar) and the next exam (from the exam schedule): nothing typed by hand. */
+  private async term(t: TenantCtx, today: string, exams: boolean): Promise<DashboardData['term']> {
+    const [term, exam] = await Promise.all([
+      t.pool.query<{ name: string }>('select name from terms where starts_on <= $1 and ends_on >= $1 order by starts_on desc limit 1', [today]),
+      exams ? t.pool.query<{ starts_on: string; name: string }>("select to_char(starts_on, 'YYYY-MM-DD') starts_on, name from exams where starts_on >= $1 order by starts_on limit 1", [today]) : Promise.resolve({ rows: [] as { starts_on: string; name: string }[] }),
+    ]);
+    const next = exam.rows[0];
+    const daysToGo = next ? Math.max(0, Math.round((new Date(next.starts_on).getTime() - new Date(today).getTime()) / 86_400_000)) : null;
+    return {
+      name: term.rows[0]?.name ?? '',
+      examsLabel: next ? `${next.name} starts ${dayMonth(next.starts_on)}` : '',
+      daysToGo,
+      progress: daysToGo === null ? 0 : Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))),
+    };
+  }
+
   /** The small slice every page needs for the menu. */
   async shell(t: TenantCtx, modules: string[], features: string[], perms: readonly string[]): Promise<ShellData> {
-    const OFF_DAYS = await this.settings.offDays(t);
-    const last = latestSchoolDay(istToday(), OFF_DAYS);
     const v = (await this.settings.doc(t)).values;
     const [unmarked, counts] = await Promise.all([modules.includes('attendance') && perms.includes('attendance.read') ? this.attendance.unmarked(t) : Promise.resolve([]), this.approvals.counts(t, perms)]);
-    const examsStart = (v['term.examsStart'] as string | undefined) ?? addDays(last, 30);
-    const daysToGo = Math.max(0, Math.round((new Date(examsStart).getTime() - new Date(istToday()).getTime()) / 86_400_000));
+    const term = await this.term(t, istToday(), modules.includes('exams'));
     return {
-      school: { name: String(v['school.name'] ?? t.info.name), shortName: String(v['school.shortName'] ?? t.info.shortName), logoText: String(v['brand.logoText'] ?? '') || String(v['school.shortName'] ?? t.info.shortName).slice(0, 1).toUpperCase(), place: String(v['school.place'] ?? ''),
+      school: { name: String(v['school.name'] ?? t.info.name), shortName: String(v['school.shortName'] ?? t.info.shortName), logoText: String(v['brand.logoText'] ?? '') || String(v['school.shortName'] ?? t.info.shortName).slice(0, 1).toUpperCase(), logoUrl: await this.files.logoUrl(t), place: String(v['school.place'] ?? ''),
         color: String(v['brand.color'] ?? ''), address: String(v['school.address'] ?? ''), phone: String(v['school.phone'] ?? ''), receiptNote: String(v['fees.receiptNote'] ?? ''), studentWord: String(v['vocab.student'] ?? '').trim() || 'Student', classWord: String(v['vocab.class'] ?? '').trim() || 'Class',
         paymentMethods: Array.isArray(v['fees.paymentMethods']) ? (v['fees.paymentMethods'] as string[]) : ['cash', 'upi', 'card', 'netbanking', 'cheque'] },
-      term: { name: String(v['term.name'] ?? 'Term 1'), examsLabel: `Exams start ${dayMonth(examsStart)}`, daysToGo, progress: Math.max(0, Math.min(100, Math.round(100 * (1 - daysToGo / REVISION_WINDOW_DAYS)))) },
+      term,
       badges: { attendance: unmarked.length, admissions: counts.admissions, messages: counts.messages }, modules, features,
+      menu: (await this.settings.effective(t, [...perms])).menu,
       theme: (v['theme.colors'] ?? {}) as ShellData['theme'],
     };
   }

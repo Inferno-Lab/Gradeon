@@ -1,8 +1,10 @@
+import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/mock_writes.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 abstract class FeeRepository {
   Future<FeeAccount?> forStudent(String studentId);
@@ -53,26 +55,40 @@ class RemoteFeeRepository implements FeeRepository {
     return FeeAccount.fromJson(Map<String, dynamic>.from(json as Map));
   }
 
+  /// Opens the provider's checkout in the browser (no payment SDK in the app), then waits for the provider to confirm:
+  /// the receipt comes back once its webhook marks the order paid. Null when the family left without paying.
   @override
   Future<Receipt?> pay({
     required String studentId,
     required String installmentId,
     required String method,
   }) async {
-    final json = await _remote.post('/fees/$installmentId/pay', {
-      'studentId': studentId,
-      'method': method,
-    });
-    return json is Map
-        ? Receipt.fromJson(Map<String, dynamic>.from(json))
-        : null;
+    final order = Map<String, dynamic>.from(await _remote.post('/fees/$installmentId/order', {'studentId': studentId}) as Map);
+    final opened = await launchUrl(Uri.parse(order['url'] as String), mode: LaunchMode.externalApplication);
+    if (!opened) throw const AppException('fees.pay_open_failed');
+    // ponytail: polls every 3 s for 5 minutes; the checkout's page links back with gradeon://open/fees.
+    for (var i = 0; i < 100; i++) {
+      await Future<void>.delayed(const Duration(seconds: 3));
+      final status = Map<String, dynamic>.from(await _remote.get('/orders/${order['orderId']}') as Map);
+      if (status['status'] == 'paid' && status['receipt'] is Map) {
+        return Receipt.fromJson(Map<String, dynamic>.from(status['receipt'] as Map));
+      }
+      if (status['status'] == 'failed') throw const AppException('fees.pay_failed');
+    }
+    return null;
   }
 }
 
 abstract class NoticeRepository {
   Future<List<Notice>> all();
 
-  Future<void> post(Notice notice);
+  /// A teacher's notice, published now: to their own class when [classId] is given, else to everyone.
+  Future<void> post(Notice notice, {String? classId});
+
+  Future<void> read(String id);
+
+  /// "I have read this", for a notice that asks for it.
+  Future<void> acknowledge(String id);
 }
 
 class MockNoticeRepository implements NoticeRepository {
@@ -84,7 +100,18 @@ class MockNoticeRepository implements NoticeRepository {
   Future<List<Notice>> all() => _ds.guard(() => [..._ds.notices]);
 
   @override
-  Future<void> post(Notice notice) => _ds.guard(() => _ds.addNotice(notice));
+  Future<void> post(Notice notice, {String? classId}) => _ds.guard(() => _ds.addNotice(notice));
+
+  @override
+  Future<void> read(String id) => _ds.guard(() {});
+
+  @override
+  Future<void> acknowledge(String id) => _ds.guard(() {
+    final i = _ds.notices.indexWhere((n) => n.id == id);
+    if (i < 0) return;
+    final n = _ds.notices[i];
+    _ds.notices[i] = Notice(id: n.id, title: n.title, body: n.body, category: n.category, audience: n.audience, pinned: n.pinned, date: n.date, author: n.author, attachments: n.attachments, needsAck: n.needsAck, acked: true);
+  });
 }
 
 class RemoteNoticeRepository implements NoticeRepository {
@@ -102,7 +129,22 @@ class RemoteNoticeRepository implements NoticeRepository {
   }
 
   @override
-  Future<void> post(Notice notice) => _remote.post('/notices', notice.toJson());
+  Future<void> post(Notice notice, {String? classId}) => _remote.post('/notices', {
+    'title': notice.title,
+    'body': notice.body,
+    'category': notice.category,
+    'pinned': notice.pinned,
+    'needsAck': notice.needsAck,
+    'publish': true,
+    'audience': classId == null ? 'everyone' : 'class',
+    if (classId != null) 'classId': classId,
+  });
+
+  @override
+  Future<void> read(String id) => _remote.post('/notices/$id/read', const {});
+
+  @override
+  Future<void> acknowledge(String id) => _remote.post('/notices/$id/acknowledge', const {});
 }
 
 abstract class EventRepository {
@@ -176,6 +218,15 @@ abstract class ChatRepository {
 
   Future<void> markRead({required String threadId, required String userId});
 
+  /// Tells the other side this person is typing.
+  Future<void> typing(String threadId);
+
+  /// Takes back one's own message (it shows as deleted to both sides).
+  Future<void> delete(String messageId);
+
+  /// Reports someone else's message to the school office.
+  Future<void> report(String messageId, String reason);
+
   /// Opens (or finds) a one-to-one thread with [teacher]; returns its id.
   Future<String> start({required String userId, required Teacher teacher});
 }
@@ -222,6 +273,15 @@ class MockChatRepository implements ChatRepository {
   }) => _ds.guard(
     () => _ds.sendMessage(threadId: threadId, senderId: senderId, text: text),
   );
+
+  @override
+  Future<void> typing(String threadId) => _ds.guard(() {});
+
+  @override
+  Future<void> delete(String messageId) => _ds.guard(() => _ds.messages.removeWhere((m) => m.id == messageId));
+
+  @override
+  Future<void> report(String messageId, String reason) => _ds.guard(() {});
 
   @override
   Future<void> markRead({required String threadId, required String userId}) =>
@@ -281,6 +341,15 @@ class RemoteChatRepository implements ChatRepository {
   }
 
   @override
+  Future<void> typing(String threadId) => _remote.post('/threads/$threadId/typing', const {});
+
+  @override
+  Future<void> delete(String messageId) => _remote.client.send('DELETE', '/messages/$messageId');
+
+  @override
+  Future<void> report(String messageId, String reason) => _remote.post('/messages/$messageId/report', {'reason': reason});
+
+  @override
   Future<void> markRead({required String threadId, required String userId}) =>
       _remote.post('/threads/$threadId/read', {'userId': userId});
 
@@ -329,8 +398,10 @@ class RemoteLibraryRepository implements LibraryRepository {
   @override
   Future<List<LibraryBook>> all() async {
     final json = await _remote.get('/library/books');
+    // The server answers with the books, the history, the reservations and the rules; the shelf is the books.
+    final books = json is Map ? json['books'] : json;
     return [
-      for (final item in json as List)
+      for (final item in books as List)
         LibraryBook.fromJson(Map<String, dynamic>.from(item as Map)),
     ];
   }
@@ -386,6 +457,9 @@ abstract class LeaveRepository {
     required String reviewer,
     String? note,
   });
+
+  /// Takes back a request the school has not answered yet.
+  Future<void> withdraw(String id);
 }
 
 class MockLeaveRepository implements LeaveRepository {
@@ -401,6 +475,12 @@ class MockLeaveRepository implements LeaveRepository {
   @override
   Future<void> apply(LeaveRequest request) =>
       _ds.guard(() => _ds.applyLeave(request));
+
+  @override
+  Future<void> withdraw(String id) => _ds.guard(() {
+    final i = _ds.leaves.indexWhere((l) => l.id == id);
+    if (i >= 0) _ds.leaves[i] = _ds.leaves[i].copyWith(status: LeaveStatus.withdrawn);
+  });
 
   @override
   Future<void> review({
@@ -430,6 +510,9 @@ class RemoteLeaveRepository implements LeaveRepository {
   @override
   Future<void> apply(LeaveRequest request) =>
       _remote.post('/leave', request.toJson());
+
+  @override
+  Future<void> withdraw(String id) => _remote.post('/leave/$id/withdraw', const {});
 
   @override
   Future<void> review({
@@ -477,6 +560,9 @@ abstract class NotificationRepository {
 
   Future<void> dismiss(String id);
 
+  /// Brings back one dismissed by mistake.
+  Future<void> restore(String id);
+
   Future<void> markAllRead(String userId);
 }
 
@@ -496,6 +582,9 @@ class MockNotificationRepository implements NotificationRepository {
   @override
   Future<void> dismiss(String id) =>
       _ds.guard(() => _ds.dismissNotification(id));
+
+  @override
+  Future<void> restore(String id) => _ds.guard(() {});
 
   @override
   Future<void> markAllRead(String userId) =>
@@ -519,6 +608,9 @@ class RemoteNotificationRepository implements NotificationRepository {
   @override
   Future<void> dismiss(String id) =>
       _remote.post('/notifications/$id/dismiss', {});
+
+  @override
+  Future<void> restore(String id) => _remote.post('/notifications/$id/restore', const {});
 
   @override
   Future<void> markAllRead(String userId) =>

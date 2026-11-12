@@ -51,9 +51,11 @@ export const IMPORT_KINDS: ImportKind[] = [
     columns: [c('admission_no', 'Admission number', '2019/0412', { aliases: ['admission no', 'admn no', 'adm no', 'sr no', 'scholar no', 'gr no'] }), req('name', 'Student name', 'Aarav Sharma', ['student name', 'full name', 'name of student']), req('class', 'Class', '8 A', ['class name', 'class-section', 'batch', 'standard division']), c('roll_no', 'Roll number', '12', { aliases: ['roll', 'roll no'] }), req('dob', 'Date of birth', '2012-04-18', ['date of birth', 'birth date', 'd.o.b']),
       c('blood_group', 'Blood group', 'B+'), c('house', 'House', 'Emerald'), c('address', 'Address', '42 Baner Road, Pune'), c('admitted_on', 'Admitted on', '2019-06-10', { aliases: ['admission date', 'date of admission', 'doa'] }), c('status', 'Status', 'active', { options: ['active', 'inactive', 'left', 'transferred'] }),
       req('guardian_name', 'Guardian name', 'Priya Sharma', ['father name', "father's name", 'parent name', 'mother name', 'guardian']), c('guardian_phone', 'Guardian phone', '9822011002', { aliases: ['father mobile', 'parent mobile', 'mobile', 'phone', 'contact no', 'sms mobile'] }), c('guardian_email', 'Guardian email', 'priya@example.com', { aliases: ['parent email', 'father email', 'email'] }), c('relation', 'Relation', 'Mother'),
-      c('guardian2_name', 'Second guardian', 'Rohan Sharma', { aliases: ['mother name', "mother's name"] }), c('guardian2_phone', 'Second guardian phone', '9822011003', { aliases: ['mother mobile'] }), c('guardian2_relation', 'Second relation', 'Father')] },
+      c('guardian2_name', 'Second guardian', 'Rohan Sharma', { aliases: ['mother name', "mother's name"] }), c('guardian2_phone', 'Second guardian phone', '9822011003', { aliases: ['mother mobile'] }), c('guardian2_relation', 'Second relation', 'Father'), c('gender', 'Gender', 'female', { aliases: ['sex'], options: ['female', 'male', 'other'] })] },
   { key: 'admissions', label: 'Admissions in progress', blurb: 'Open enquiries and applications, so the pipeline does not restart.', module: 'people.admissions', matchOn: ['child_name', 'phone'],
     columns: [req('child_name', 'Child', 'Ira Rao', ['student name', 'child name', 'applicant']), req('grade_sought', 'Grade', '3', ['class', 'grade applied', 'class sought']), req('guardian_name', 'Guardian', 'Meera Rao', ['parent name', 'father name']), c('phone', 'Phone', '9822011010', { aliases: ['mobile', 'contact'] }), c('email', 'Email', 'meera@example.com'), c('source', 'Source', 'website'), c('stage', 'Stage', 'applied', { aliases: ['status'], options: ADMISSION_STAGES }), c('test_on', 'Test on', '2026-12-02'), c('note', 'Note', 'Sibling in 6 B')] },
+  { key: 'fee_heads', label: 'Fee heads', blurb: 'The kinds of fee the school charges (tuition, transport…), in the order they are shown, and which take concessions.', module: 'fees', matchOn: ['name'],
+    columns: [req('name', 'Fee head', 'Tuition', ['head', 'fee type', 'category']), c('order', 'Order', '1', { aliases: ['sort', 'position'] }), c('concession', 'Concessions apply', 'yes', { aliases: ['waivable', 'concession'], options: ['yes', 'no'] })] },
   { key: 'fee_structures', label: 'Fee structures', blurb: 'What each grade pays, per fee head and due date.', module: 'fees', matchOn: ['grade', 'title'],
     columns: [c('grade', 'Grade (blank for all)', '8'), req('head', 'Fee head', 'tuition', ['fee head', 'fee type', 'category']), req('title', 'Fee', 'Term 2 tuition', ['fee name', 'particular', 'description']), req('amount', 'Amount', '18500', ['fee amount', 'amount (rs)']), req('due_on', 'Due on', '2026-11-10', ['due date', 'last date'])] },
   { key: 'fee_dues', label: 'Opening dues', blurb: 'What each student owes on day one, reconciled to the rupee against the old system.', module: 'fees', matchOn: ['admission_no', 'title'],
@@ -68,6 +70,9 @@ export const IMPORT_KINDS: ImportKind[] = [
     columns: [req('class', 'Class', '8 A', ['class name', 'batch']), { ...req('day', 'Day', 'Monday', ['weekday']), options: WEEKDAYS }, req('period', 'Period', '1', ['period no']), req('subject', 'Subject', 'Mathematics', ['subject name']), req('teacher', 'Teacher email', 'kavita@school.in', ['teacher', 'teacher email']), c('room', 'Room', 'B-204')] },
   { key: 'library_loans', label: 'Library loans', blurb: 'Books students have out now.', module: 'library', matchOn: ['admission_no', 'title', 'due_on'],
     columns: [req('admission_no', 'Admission number', '2019/0412', ['admission no', 'admn no', 'adm no']), req('title', 'Book', 'Wings of Fire', ['book title', 'book name']), req('due_on', 'Due on', '2026-11-20', ['due date', 'return by']), c('returned_on', 'Returned on', '')] },
+  { key: 'library_books', label: 'Library catalogue', blurb: 'Every title the library has, with its copies and shelf.', module: 'library', matchOn: ['title', 'author'],
+    columns: [req('title', 'Title', 'Wings of Fire', ['book title', 'book name', 'name']), c('author', 'Author', 'A. P. J. Abdul Kalam', { aliases: ['writer', 'author name'] }), c('isbn', 'ISBN', '9788173711466'),
+      c('category', 'Category', 'Biography', { aliases: ['subject', 'genre'] }), c('shelf', 'Shelf', 'B-3', { aliases: ['rack', 'location'] }), c('copies', 'Copies', '3', { aliases: ['quantity', 'qty', 'no of copies'] })] },
   { key: 'contacts', label: 'Family phone numbers', blurb: 'A contact list (a phone’s, or a class WhatsApp group’s): each name is matched to a family that has no phone yet, so it can sign in.', module: 'core', matchOn: ['phone'],
     columns: [req('name', 'Name', 'Priya Sharma', ['contact name', 'display name', 'parent name', 'guardian name', 'first name']), req('phone', 'Phone', '9822011002', ['mobile', 'mobile phone', 'phone 1 - value', 'number', 'contact']),
       c('student', 'Child', 'Aarav Sharma', { aliases: ['child', 'student name', 'ward'] }), c('class', 'Class', '8 A', { aliases: ['class name', 'section'] })] },
@@ -139,7 +144,7 @@ export const UploadCreate = z.object({
 });
 export type UploadCreate = z.infer<typeof UploadCreate>;
 
-export interface UploadRow { id: string; fileName: string; note: string; rows: number; uploadedBy: string; at: string; status: 'new' | 'imported' | 'set_aside'; batchId: string | null }
+export interface UploadRow { id: string; fileName: string; note: string; rows: number; uploadedBy: string; at: string; status: 'new' | 'imported' | 'set_aside'; batchId: string | null; setAsideReason: string }
 
 /** What the school edits itself in Classes and calendar: the same kinds and columns as the importers, behind a console lock each. */
 export const SETUP_KINDS = [
@@ -187,3 +192,6 @@ export interface MigrationView {
 }
 export const SampleLoad = z.object({ students: z.number().int().min(10).max(3000) });
 export type SampleLoad = z.infer<typeof SampleLoad>;
+
+/** Where an imported file came from, as the import engine recognises it, in words. */
+export const IMPORT_SOURCES: Record<string, string> = { gradeon: 'Gradeon template', fedena: 'Fedena export', entab: 'Entab export', sheet: 'The school’s own sheet', typed: 'Typed or fixed here' };

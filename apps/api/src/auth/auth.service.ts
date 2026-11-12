@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { newId } from '@gradeon/db';
-import { initials, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { initials, type AppRoleKey, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@gradeon/security';
 import { ENV, type Env } from '../env.js';
 import { ApiError } from '@gradeon/nest-kit';
@@ -88,9 +88,7 @@ export class AuthService {
       throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     }
     await t.pool.query('update users set failed_logins = 0, locked_until = null where id = $1', [user.id]);
-    if (clientOf(body.client) === 'mobile' && user.kind === 'staff' && (await this.settings.doc(t)).values['app.teachers'] === false) {
-      throw new ApiError('forbidden', 'Your school uses Gradeon on the web for staff. Sign in to the admin instead.');
-    }
+    if (clientOf(body.client) === 'mobile') await this.mayUseApp(t, user);
     if (passwordNeedsRehash(user.password_hash)) {
       await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(body.password)]);
     }
@@ -107,7 +105,26 @@ export class AuthService {
     const user = await this.findUser(t, identifier);
     if (!user || user.status !== 'active') throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     if (user.kind === 'staff') throw new ApiError('validation', 'Staff sign in with their password, then a code.', { fields: { identifier: 'Staff sign in with their password.' } });
+    await this.mayUseApp(t, user);
     return this.sendCode(t, user, 'sign_in');
+  }
+
+  /** The app role a person signs in as: guardians are parents, students students, staff who drive a route drivers, other staff teachers. */
+  async appRole(t: TenantCtx, user: { id: string; kind: string }): Promise<AppRoleKey> {
+    if (user.kind === 'guardian') return 'parent';
+    if (user.kind === 'student') return 'student';
+    const { rowCount } = await t.pool.query('select 1 from transport_routes where driver_user_id = $1 limit 1', [user.id]);
+    return rowCount ? 'driver' : 'teacher';
+  }
+
+  /** The console chooses which roles use the app (`app.roles`); anyone else is told plainly where to go instead. */
+  private async mayUseApp(t: TenantCtx, user: { id: string; kind: string }): Promise<void> {
+    const role = await this.appRole(t, user);
+    const roles = (await this.settings.doc(t)).values['app.roles'];
+    if (Array.isArray(roles) && roles.includes(role)) return;
+    throw new ApiError('forbidden', role === 'teacher' || role === 'driver'
+      ? 'Your school does not use the app for staff yet. Sign in to the school’s admin on the web instead.'
+      : role === 'student' ? 'Your school does not use the app for students. A parent can sign in instead.' : 'Your school does not use the app for families yet. The school office can tell you when it does.');
   }
 
   /** "Forgot it?": a code to the person's phone or email lets them choose a new password. */
@@ -115,6 +132,18 @@ export class AuthService {
     const user = await this.findUser(t, identifier);
     if (!user || user.status !== 'active') throw new ApiError('unauthenticated', 'We couldn’t find an account with those details.', { fields: { identifier: 'We couldn’t find an account with those details.' } });
     return this.sendCode(t, user, 'reset');
+  }
+
+  /** A signed-in person changes their password: the current one first; every other device is signed out, this one stays. */
+  async changePassword(t: TenantCtx, user: { id: string; sid: string }, current: string, next: string): Promise<void> {
+    const u = (await t.pool.query<{ password_hash: string | null }>('select password_hash from users where id = $1', [user.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(current, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { current: 'Not your current password.' } });
+    const min = Number((await this.settings.doc(t)).values['security.passwordMinLength'] ?? 8);
+    if (next.length < min) throw new ApiError('validation', `Use at least ${min} characters.`, { fields: { next: `At least ${min} characters.` } });
+    if (next === current) throw new ApiError('validation', 'Choose a password you have not used here.', { fields: { next: 'The same as now.' } });
+    await t.pool.query('update users set password_hash = $2 where id = $1', [user.id, await hashPassword(next)]);
+    await t.pool.query('update sessions set revoked_at = now() where user_id = $1 and id <> $2 and revoked_at is null', [user.id, user.sid]);
+    await this.bumpVersion(t, user.id);
   }
 
   async resetFinish(t: TenantCtx, challengeId: string, code: string, password: string): Promise<void> {
@@ -147,7 +176,7 @@ export class AuthService {
   }
 
   private async sendCode(t: TenantCtx, user: { id: string; phone: string | null; email: string | null }, purpose: 'sign_in' | 'reset'): Promise<LoginChallenge> {
-    const demo = (await this.settings.doc(t)).values['demo.mode'] === true;
+    const demo = t.info.demo;
     if (!demo) {
       const { rows: [r] } = await t.pool.query<{ n: string; first: Date | null }>(
         `select count(*) n, min(created_at) first from otp_challenges where user_id = $1 and created_at > now() - interval '${OTP_WINDOW_MINUTES} minutes'`, [user.id]);
@@ -161,10 +190,16 @@ export class AuthService {
     const channel: 'sms' | 'email' = user.phone ? 'sms' : 'email';
     await t.pool.query('insert into otp_challenges (id, user_id, code_hash, channel, purpose, expires_at) values ($1,$2,$3,$4,$5,$6)', [id, user.id, sha256(`${id}:${code}`), channel, purpose, new Date(Date.now() + OTP_MINUTES * 60_000)]);
     const what = purpose === 'reset' ? 'code to set a new password' : 'sign-in code';
-    await this.messenger.send(t, {
-      channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
-      body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
-    });
+    try {
+      // Sent now (never queued or held): the person is waiting on the sign-in screen.
+      await this.messenger.send(t, {
+        channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
+        body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
+        key: purpose === 'reset' ? 'auth.reset' : 'auth.code', vars: { code, school: t.info.shortName, minutes: String(OTP_MINUTES) }, now: true,
+      });
+    } catch {
+      throw new ApiError('school_unavailable', 'We could not send the code just now. Try again in a minute.');
+    }
     return {
       challengeId: id, channel, maskedTo: channel === 'sms' ? maskPhone(user.phone!) : maskEmail(user.email!),
       expiresInSeconds: OTP_MINUTES * 60, ...(demo ? { demoCode: DEMO_CODE } : {}),

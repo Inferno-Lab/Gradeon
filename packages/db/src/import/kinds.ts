@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import { createHash } from 'node:crypto';
 import { ADMISSION_STAGES, PAY_METHODS, PERIOD_KINDS, WEEKDAYS } from '@gradeon/contracts';
 import { newId } from '../ids.js';
 
@@ -291,6 +292,7 @@ const students = kind<StudentLookups>({
       ...(r.guardian_phone && digits(r.guardian_phone).length < 10 ? ['The guardian’s phone needs 10 digits: families sign in with it.'] : []),
       ...(r.guardian2_phone && digits(r.guardian2_phone).length < 10 ? ['The second guardian’s phone needs 10 digits.'] : []),
       ...(r.status && !STATUS[norm(r.status)] ? ['Status is active or inactive (left, TC and transferred count as inactive).'] : []),
+      ...(r.gender && !['female', 'male', 'other'].includes(norm(r.gender)) ? ['Gender is female, male or other.'] : []),
     ];
     // No admission number (a sheet of new children): the same child is the same name and date of birth, and Gradeon numbers new ones.
     if (!r.admission_no) return ok(`new|${person(r.name!, isoDay(r.dob!) ?? '')}`, errors, l.people.has(person(r.name!, isoDay(r.dob!) ?? '')));
@@ -326,7 +328,7 @@ const students = kind<StudentLookups>({
       const id = was?.id ?? newId('stu');
       studs.push({
         id, admission_no: r.admission_no?.trim() || (was?.admission_no as string | undefined) || `${l.next.year}/${String(l.next.n++).padStart(4, '0')}`, name: r.name, class_id: l.classes.get(classKey(r.class!))!.id, roll_no: r.roll_no || (was?.roll_no as string) || '', dob: isoDay(r.dob!),
-        blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null,
+        blood_group: r.blood_group || was?.blood_group || null, house: r.house || was?.house || null, address: r.address || was?.address || null, gender: r.gender ? norm(r.gender) : was?.gender ?? null,
         status: r.status ? STATUS[norm(r.status)] : was?.status ?? 'active', admitted_on: r.admitted_on ? isoDay(r.admitted_on) : was?.admitted_on ?? null,
       });
       const g1 = guardian(r.guardian_name!, r.guardian_phone ?? '', r.guardian_email!, r.relation!, id);
@@ -339,7 +341,7 @@ const students = kind<StudentLookups>({
     return [
       { table: 'users', pk: ['id'], cols: [], rows: users },
       { table: 'guardians', pk: ['id'], cols: ['user_id', 'email'], rows: [...guardians.values()] },
-      { table: 'students', pk: ['id'], cols: ['name', 'class_id', 'roll_no', 'dob', 'blood_group', 'house', 'address', 'status', 'admitted_on'], rows: studs },
+      { table: 'students', pk: ['id'], cols: ['name', 'class_id', 'roll_no', 'dob', 'gender', 'blood_group', 'house', 'address', 'status', 'admitted_on'], rows: studs },
       { table: 'student_guardians', pk: ['student_id', 'guardian_id'], cols: [], rows: links },
     ];
   },
@@ -389,26 +391,45 @@ const admissions = kind<Map<string, string>>({
   },
 });
 
+/** A fee head as the school writes it ("Tuition", "tuition") to its key. */
+const headKey = (v: string) => lc(v).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+/** The school's fee heads by key and by name, so a file may use either. */
+async function headMap(db: Q): Promise<Map<string, string>> {
+  const { rows } = await db.query<{ key: string; name: string }>('select key, name from fee_heads');
+  return new Map(rows.flatMap((h) => [[h.key, h.key], [headKey(h.name), h.key]] as [string, string][]));
+}
+const needHead = (heads: Map<string, string>, v: string) => (heads.has(headKey(v)) ? [] : [`“${v}” is not one of the school’s fee heads. Bring in Fee heads first, or use one of: ${[...new Set(heads.values())].join(', ')}.`]);
+
+const feeHeads = kind<Map<string, string>>({
+  load: (db) => headMap(db),
+  check: (r, l) => ok(headKey(r.name!), headKey(r.name!) ? [] : ['A fee head needs a name, like Tuition.'], l.has(headKey(r.name!))),
+  writes: (rows, l) => [{ table: 'fee_heads', pk: ['key'], cols: ['name', 'sort', 'concession'], rows: rows.map((r, i) => ({
+    key: l.get(headKey(r.name!)) ?? headKey(r.name!), name: r.name!.trim(), sort: r.order ? whole(r.order) ?? i + 1 : i + 1, concession: r.concession ? yes(r.concession) : false,
+  })) }],
+  totals: (rows) => [{ label: 'Fee heads', value: String(rows.length) }],
+  async export(db) { return (await db.query<Row>("select key, name, sort::text as order, case when concession then 'yes' else 'no' end as concession from fee_heads order by sort, name")).rows; },
+});
+
 const feeKey = (grade: string, title: string) => `${whole(grade) ?? 0}|${lc(title)}`;
-const feeStructures = kind<Map<string, string>>({
+const feeStructures = kind<{ ids: Map<string, string>; heads: Map<string, string> }>({
   async load(db) {
     const { rows } = await db.query<{ id: string; grade: number | null; title: string }>('select id, grade, title from fee_structures');
-    return new Map(rows.map((r) => [`${r.grade ?? 0}|${lc(r.title)}`, r.id]));
+    return { ids: new Map(rows.map((r) => [`${r.grade ?? 0}|${lc(r.title)}`, r.id])), heads: await headMap(db) };
   },
   check(r, l) {
     const errors = [...(r.grade && whole(r.grade) === null ? ['Grade is a number like 8, or blank for every grade.'] : []), ...(whole(r.amount!) === null || whole(r.amount!)! < 0 ? ['Amount is whole rupees, like 18500.'] : []),
-      ...(!isoDay(r.due_on!) ? ['Write the due date as 2026-11-10 or 10/11/2026.'] : [])];
-    return ok(feeKey(r.grade ?? '', r.title!), errors, l.has(feeKey(r.grade ?? '', r.title!)));
+      ...(!isoDay(r.due_on!) ? ['Write the due date as 2026-11-10 or 10/11/2026.'] : []), ...needHead(l.heads, r.head!)];
+    return ok(feeKey(r.grade ?? '', r.title!), errors, l.ids.has(feeKey(r.grade ?? '', r.title!)));
   },
   writes: (rows, l) => [{ table: 'fee_structures', pk: ['id'], cols: ['head', 'amount', 'due_on'], rows: rows.map((r) => ({
-    id: l.get(feeKey(r.grade ?? '', r.title!)) ?? newId('fst'), grade: r.grade ? whole(r.grade) : null, head: lc(r.head!), title: r.title, amount: whole(r.amount!), due_on: isoDay(r.due_on!),
+    id: l.ids.get(feeKey(r.grade ?? '', r.title!)) ?? newId('fst'), grade: r.grade ? whole(r.grade) : null, head: l.heads.get(headKey(r.head!)), title: r.title, amount: whole(r.amount!), due_on: isoDay(r.due_on!),
   })) }],
   totals: (rows) => [{ label: 'Fees', value: String(rows.length) }, { label: 'Grades', value: String(new Set(rows.map((r) => r.grade || 'all')).size) }],
   async export(db) { return (await db.query<Row>("select id, coalesce(grade::text, '') as grade, head, title, amount::text, due_on::text from fee_structures order by grade nulls first, due_on, title")).rows; },
 });
 
 type InvoiceRow = { id: string; student_id: string; title: string; amount: number; waived_amount: number };
-type DueLookups = { students: Map<string, { id: string }>; invoices: Map<string, InvoiceRow> };
+type DueLookups = { students: Map<string, { id: string }>; invoices: Map<string, InvoiceRow>; heads: Map<string, string> };
 async function invoiceMap(db: Q) {
   const { rows } = await db.query<InvoiceRow>('select id, student_id, title, amount, waived_amount from fee_invoices');
   return new Map(rows.map((r) => [`${r.student_id}|${lc(r.title)}`, r]));
@@ -419,17 +440,17 @@ const sumBy = (rows: Row[], key: (r: Row) => string, amount: (r: Row) => number)
   return m;
 };
 const feeDues = kind<DueLookups>({
-  async load(db) { return { students: await studentMap(db), invoices: await invoiceMap(db) }; },
+  async load(db) { return { students: await studentMap(db), invoices: await invoiceMap(db), heads: await headMap(db) }; },
   check(r, l) {
     const s = l.students.get(lc(r.admission_no!));
     const [amount, waived] = [whole(r.amount!), r.waived ? whole(r.waived) : 0];
     const errors = [...needStudent(l.students, r.admission_no!), ...(amount === null || amount < 0 ? ['Amount is whole rupees, like 18500.'] : []),
-      ...(waived === null || waived < 0 || (amount !== null && waived > amount) ? ['Waived is whole rupees, no more than the amount.'] : []), ...(!isoDay(r.due_on!) ? ['Write the due date as 2026-11-10 or 10/11/2026.'] : [])];
+      ...(waived === null || waived < 0 || (amount !== null && waived > amount) ? ['Waived is whole rupees, no more than the amount.'] : []), ...(!isoDay(r.due_on!) ? ['Write the due date as 2026-11-10 or 10/11/2026.'] : []), ...needHead(l.heads, r.head!)];
     return ok(`${s?.id}|${lc(r.title!)}`, errors, !!s && l.invoices.has(`${s.id}|${lc(r.title!)}`));
   },
   writes: (rows, l) => [{ table: 'fee_invoices', pk: ['id'], cols: ['head', 'amount', 'due_on', 'waived_amount'], rows: rows.map((r) => {
     const sid = l.students.get(lc(r.admission_no!))!.id;
-    return { id: l.invoices.get(`${sid}|${lc(r.title!)}`)?.id ?? newId('inv'), student_id: sid, head: lc(r.head!), title: r.title, amount: whole(r.amount!), due_on: isoDay(r.due_on!), waived_amount: r.waived ? whole(r.waived) : 0 };
+    return { id: l.invoices.get(`${sid}|${lc(r.title!)}`)?.id ?? newId('inv'), student_id: sid, head: l.heads.get(headKey(r.head!)), title: r.title, amount: whole(r.amount!), due_on: isoDay(r.due_on!), waived_amount: r.waived ? whole(r.waived) : 0 };
   }) }],
   totals(rows) {
     const net = (r: Row) => whole(r.amount!)! - (r.waived ? whole(r.waived)! : 0);
@@ -441,7 +462,7 @@ const feeDues = kind<DueLookups>({
   },
 });
 
-type PayLookups = DueLookups & { payments: Map<string, string> };
+type PayLookups = Omit<DueLookups, 'heads'> & { payments: Map<string, string> };
 /** How the office was paid, in the words schools write it; anything else is asked about rather than stored as typed. */
 const METHOD: Record<string, string> = {
   cash: 'cash', upi: 'upi', gpay: 'upi', googlepay: 'upi', phonepe: 'upi', paytm: 'upi', bhim: 'upi', card: 'card', debitcard: 'card', creditcard: 'card', pos: 'card',
@@ -623,17 +644,44 @@ const libraryLoans = kind<LoanLookups>({
   },
 });
 
-type RouteLookups = { students: Map<string, { id: string }>; routes: Set<string> };
+const libraryBooks = kind<Map<string, string>>({
+  async load(db) {
+    const { rows } = await db.query<{ id: string; title: string; author: string }>('select id, title, author from library_books');
+    return new Map(rows.map((r) => [`${lc(r.title)}|${lc(r.author)}`, r.id]));
+  },
+  check(r, l) {
+    const copies = r.copies ? whole(r.copies) : 1;
+    return ok(`${lc(r.title!)}|${lc(r.author ?? '')}`, copies === null || copies < 0 ? ['Copies is a whole number, like 3.'] : [], l.has(`${lc(r.title!)}|${lc(r.author ?? '')}`));
+  },
+  writes: (rows, l) => [{ table: 'library_books', pk: ['id'], cols: ['isbn', 'category', 'shelf', 'copies'], rows: rows.map((r) => ({
+    id: l.get(`${lc(r.title!)}|${lc(r.author ?? '')}`) ?? newId('bok'), title: r.title!.trim(), author: (r.author ?? '').trim(), isbn: (r.isbn ?? '').trim(),
+    category: (r.category ?? '').trim() || 'General', shelf: (r.shelf ?? '').trim(), copies: r.copies ? whole(r.copies) : 1,
+  })) }],
+  totals: (rows) => [{ label: 'Titles', value: String(rows.length) }, { label: 'Copies', value: String(rows.reduce((n, r) => n + (r.copies ? whole(r.copies) ?? 0 : 1), 0)) }],
+  async export(db) { return (await db.query<Row>('select title, author, isbn, category, shelf, copies::text from library_books order by title')).rows; },
+});
+
+// A route's ID comes from its name, so the same route named on many rows (and in the admin) is one route.
+const routeId = (name: string) => `rte_${createHash('md5').update(name.trim()).digest('hex')}`;
+type RouteLookups = { students: Map<string, { id: string }>; routes: Set<string>; named: Map<string, string> };
 const transport = kind<RouteLookups>({
   async load(db) {
     const { rows } = await db.query<{ student_id: string }>('select student_id from transport_assignments');
-    return { students: await studentMap(db), routes: new Set(rows.map((r) => r.student_id)) };
+    const named = (await db.query<{ id: string; name: string }>('select id, name from transport_routes')).rows;
+    return { students: await studentMap(db), routes: new Set(rows.map((r) => r.student_id)), named: new Map(named.map((r) => [lc(r.name), r.id])) };
   },
   check(r, l) {
     const s = l.students.get(lc(r.admission_no!));
     return ok(lc(r.admission_no!), needStudent(l.students, r.admission_no!), !!s && l.routes.has(s.id));
   },
-  writes: (rows, l) => [{ table: 'transport_assignments', pk: ['student_id'], cols: ['route'], rows: rows.map((r) => ({ student_id: l.students.get(lc(r.admission_no!))!.id, route: r.route!.trim() })) }],
+  writes: (rows, l) => {
+    const id = (name: string) => l.named.get(lc(name)) ?? routeId(name);
+    const names = [...new Map(rows.map((r) => [lc(r.route!), r.route!.trim()])).values()];
+    return [
+      { table: 'transport_routes', pk: ['id'], cols: [], rows: names.map((name) => ({ id: id(name), name })) },
+      { table: 'transport_assignments', pk: ['student_id'], cols: ['route', 'route_id'], rows: rows.map((r) => ({ student_id: l.students.get(lc(r.admission_no!))!.id, route: r.route!.trim(), route_id: id(r.route!) })) },
+    ];
+  },
   totals: (rows) => [{ label: 'Students on a bus', value: String(rows.length) }, { label: 'Routes', value: String(new Set(rows.map((r) => lc(r.route!))).size) }],
   async export(db) { return (await db.query<Row>('select s.admission_no, t.route from transport_assignments t join students s on s.id = t.student_id order by t.route, s.admission_no')).rows; },
 });
@@ -697,5 +745,5 @@ function matchFamily(r: Row, waiting: Waiting[]): Waiting[] {
 }
 
 export const KINDS: Record<string, Impl<never>> = {
-  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, transport, contacts,
+  years, terms, holidays, subjects, classes, periods, staff, students, admissions, fee_heads: feeHeads, fee_structures: feeStructures, fee_dues: feeDues, payments, attendance, marks, timetable, library_loans: libraryLoans, library_books: libraryBooks, transport, contacts,
 } as unknown as Record<string, Impl<never>>;

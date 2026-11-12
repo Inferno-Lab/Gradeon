@@ -27,7 +27,7 @@ export function PhoneDashboard() {
     return (
       <PageScope page="status">
         <main className="mn"><header className="hd"><div><h1>Home</h1></div></header>
-          <EmptyCard error title="Home" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />
+          <EmptyCard error title="Dashboard" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(q.error as Error).message} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />
         </main>
       </PageScope>
     );
@@ -55,8 +55,8 @@ export function PhoneDashboard() {
   const peak = pts.reduce((m, p) => (p.amount > m ? p.amount : m), 0);
   const absent = Math.max(0, d.present.total - d.present.value);
   const v = {
-    ...chrome, has: { fees: d.modules.includes('fees'), attendance: d.modules.includes('attendance') }, logo: chrome.shell?.school.logoText ?? '', dayLine: d.day.isToday ? d.day.label : `${d.day.label} · last school day`,
-    greeting: `${hello()}, ${app.user.name.split(' ')[0]}`, pending: left, openSearch: chrome.openSearch,
+    ...chrome, has: { fees: d.modules.includes('fees') && app.user.permissions.includes('fees.read'), attendance: d.modules.includes('attendance') && app.user.permissions.includes('attendance.read') }, logo: chrome.shell?.school.logoText ?? '', dayLine: d.day.isToday ? d.day.label : `${d.day.label} · last school day`,
+    greeting: `${hello()}, ${app.user.name.split(' ')[0]}`, pending: left, openApprovals: () => app.go('/approvals'), goto: app.go,
     present: d.present.value, total: d.present.total, feeMonth: d.fees.monthLabel, fees: money(d.fees.collected),
     headline: left ? `${left} ${left === 1 ? 'thing needs' : 'things need'} you` : 'You’re all caught up',
     subline: d.modules.includes('attendance') ? `${absent} not marked present · ${d.term.examsLabel}` : d.term.examsLabel,

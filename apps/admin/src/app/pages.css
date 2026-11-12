@@ -5,6 +5,8 @@
 .pg-p .mk button[aria-pressed=true].p{background:var(--pri);color:var(--priT)}
 .pg-p .mk button[aria-pressed=true].l{background:var(--aS);color:var(--aD)}
 .pg-p .mk button[aria-pressed=true].a{background:var(--cS);color:var(--c)}
+.pg-p .mk button[aria-pressed=true].h{background:var(--gS);color:var(--gD)}
+.pg-p .mk button[aria-pressed=true].v{background:var(--vS);color:var(--vD)}
 .pg-p .mk button:disabled{cursor:not-allowed;opacity:.6}
 .pg-p .mk button:active:not(:disabled){transform:scale(.94)}
 .pg-p .rcall .grd.rw{min-height:60px}
@@ -63,12 +65,6 @@
 
 .nest .rpg{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px;align-items:start}
 .nest .rpl{padding:16px;display:flex;flex-direction:column;gap:12px;max-height:min(72dvh,720px);overflow-y:auto}
-.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
-.nest .rpb:hover{background:var(--sunk)}
-.nest .rpb.on{background:var(--vS);color:var(--vD)}
-.nest .rpb b{display:block;font:700 14px var(--fb)}
-.nest .rpb small{display:block;font:500 12px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
-.nest .rpb.on small{color:inherit;opacity:.75}
 @media (max-width:900px){.nest .rpg{grid-template-columns:minmax(0,1fr)}.nest .rpl{max-height:none;flex-direction:row;overflow-x:auto;overflow-y:hidden}.nest .rpl>div{display:flex;gap:8px;flex:none}.nest .rpl .lbl{display:none}.nest .rpb{width:220px;flex:none}}
 
 .nest .msg{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:16px;align-items:stretch}

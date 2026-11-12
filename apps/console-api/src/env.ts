@@ -5,29 +5,18 @@ const Env = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().default(4001),
   REGISTRY_DATABASE_URL: z.string().min(10),
-  /** A separate database for school backups (recommended in production); without it they are kept in the registry. */
-  BACKUP_DATABASE_URL: z.string().min(10).optional(),
   SECRETS_KEY: z.string().min(16),
   JWT_SECRET: z.string().min(16),
   JWT_SECRET_PREVIOUS: z.string().min(16).optional(),
   CORS_ORIGINS: z.string().default('*'),
   APP_VERSION: z.string().default('0.1.0'),
-  /** Postgres server where `local` and shared test schools get their own database. Defaults to the registry's server. */
-  SHARED_PG_ADMIN_URL: z.string().optional(),
-  /** Where `free-test` schools get their own Neon project instead of a shared server. */
-  NEON_API_KEY: z.string().optional(),
-  NEON_REGION: z.string().default('aws-ap-southeast-1'),
   /** Where school admin sites are served from. */
   // On Render the service's own address is known; elsewhere the local development addresses are the default.
   ADMIN_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'),
+  /** Where the console is served: invitation links point here. */
+  CONSOLE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL}/console` : 'http://localhost:5174'),
   API_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:4000'),
   BASE_DOMAIN: z.string().default('gradeon.app'),
-  /** Build profile commits and mobile build dispatches. Both stay switched off without a token. */
-  GITHUB_TOKEN: z.string().optional(),
-  GITHUB_REPO: z.string().optional(),
-  /** What the build workflow sends back to say a build is finished. Without it the callback stays closed. */
-  BUILD_CALLBACK_TOKEN: z.string().min(16).optional(),
-  GITHUB_BRANCH: z.string().default('main'),
   BOOTSTRAP_EMAIL: z.string().default('kaushal@gradeon.app'),
   BOOTSTRAP_NAME: z.string().default('Kaushal Bhatt'),
   BOOTSTRAP_PASSWORD: z.string().default('nest2026'),
@@ -37,13 +26,14 @@ const Env = z.object({
   SEED_DEMO: z.enum(['true', 'false']).default('false'),
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
   PROBE_SECONDS: z.coerce.number().int().default(60),
-  /** A Slack or Discord incoming webhook: new errors, a school not answering, failed backups and failed restore drills are posted there. */
-  ALERT_WEBHOOK_URL: z.string().url().optional(),
   STEP_PAUSE_MS: z.coerce.number().int().default(350),
   TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(20),
   TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
 });
 export type Env = z.infer<typeof Env>;
+
+/** Demo data (the demo school, a test school's sample records) belongs to development and the test track, never production. */
+export const demosAllowed = (env: Env) => env.NODE_ENV !== 'production' || env.ALLOW_DEMO === 'true';
 
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = Env.safeParse(source);

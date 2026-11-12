@@ -12,6 +12,12 @@ export const HomeworkCreate = z.object({
   description: z.string().trim().max(1000).default(''),
   dueOn: IsoDate,
   maxMarks: z.number().int().min(1).max(100).default(20),
+  /** false: checked when handed in, but not marked. */
+  graded: z.boolean().default(true),
+  /** Kept as the teacher's draft (only they see it) until set. */
+  draft: z.boolean().default(false),
+  /** Files already uploaded (kind homework_attachment). */
+  fileIds: z.array(z.string()).max(5).default([]),
 });
 export type HomeworkCreate = z.infer<typeof HomeworkCreate>;
 
@@ -36,13 +42,21 @@ export interface HomeworkRow {
   assignedOn: string;
   dueOn: string;
   maxMarks: number;
+  /** false: checked, not marked. */
+  graded: boolean;
   handedIn: number;
   onTime: number;
   total: number;
+  /** Who set it. */
+  teacherId: string | null;
+  teacherName: string;
 }
 
+export interface HomeworkFile { id: string; name: string; mime: string }
 export interface HomeworkDetail extends HomeworkRow {
-  students: { studentId: string; name: string; rollNo: string; handedAt: string | null; onTime: boolean; score: number | null; feedback: string }[];
+  /** What the teacher attached. */
+  files: HomeworkFile[];
+  students: { studentId: string; name: string; rollNo: string; handedAt: string | null; onTime: boolean; score: number | null; feedback: string; files: HomeworkFile[] }[];
 }
 
 // Exams
@@ -50,9 +64,14 @@ export interface HomeworkDetail extends HomeworkRow {
 export const ExamCreate = z.object({
   name: z.string().trim().min(3, 'Name the exam').max(80),
   classId: z.string().min(1, 'Choose a class'),
+  /** More classes sitting the same papers (a school-wide mid-term): one exam is made for each, together. */
+  alsoClassIds: z.array(z.string().min(1)).max(60).default([]),
   startsOn: IsoDate,
   endsOn: IsoDate,
-  subjects: z.array(z.object({ subjectId: z.string().min(1), onDate: IsoDate.nullable().optional(), maxMarks: z.number().int().min(1).max(200).default(100) })).min(1, 'Pick at least one subject').max(12),
+  subjects: z.array(z.object({
+    subjectId: z.string().min(1), onDate: IsoDate.nullable().optional(), maxMarks: z.number().int().min(1).max(200).default(100),
+    startsAt: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(), endsAt: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(), room: z.string().trim().max(40).default(''),
+  })).min(1, 'Pick at least one subject').max(12),
 });
 export type ExamCreate = z.infer<typeof ExamCreate>;
 
@@ -69,7 +88,9 @@ export interface ExamRow {
   startsOn: string;
   endsOn: string;
   status: 'upcoming' | 'marking' | 'published';
-  subjects: { subjectId: string; name: string; onDate: string | null; maxMarks: number }[];
+  subjects: { subjectId: string; name: string; onDate: string | null; maxMarks: number; startsAt: string | null; endsAt: string | null; room: string }[];
+  /** Why published results were reopened (empty unless they were). */
+  reopenedNote: string;
   /** Marks entered out of marks expected (students × subjects). */
   entered: number;
   expected: number;
@@ -103,6 +124,8 @@ export interface StaffRow {
   maxPeriods: number;
   status: 'active' | 'inactive';
   joinedOn: string | null;
+  /** invited: sent a first password, not signed in yet; none: never invited (brought in by an import). */
+  access: 'none' | 'invited' | 'signed_in';
 }
 
 export const StaffCreate = z.object({
@@ -117,6 +140,9 @@ export const StaffCreate = z.object({
 export type StaffCreate = z.infer<typeof StaffCreate>;
 
 export const StaffPatch = z.object({
+  name: z.string().trim().min(2, 'Enter the name').max(80).optional(),
+  email: z.string().trim().toLowerCase().email('Enter a valid email').optional(),
+  phone: z.string().trim().min(8, 'Enter a phone number').max(24).optional(),
   designation: z.string().trim().min(2).max(60).optional(),
   department: z.string().trim().max(60).nullable().optional(),
   subjectIds: z.array(z.string()).max(8).optional(),
@@ -127,6 +153,8 @@ export type StaffPatch = z.infer<typeof StaffPatch>;
 
 export const ENQUIRY_STAGES = ['enquiry', 'applied', 'test', 'offer', 'enrolled', 'declined'] as const;
 export type EnquiryStage = (typeof ENQUIRY_STAGES)[number];
+/** The stages between enquiry and enrolment a school may use (console: `admissions.stages`). */
+export const OPTIONAL_STAGES = ['applied', 'test', 'offer'] as const;
 
 export interface EnquiryRow {
   id: string;
@@ -146,16 +174,24 @@ export interface EnquiryRow {
 
 export const EnquiryCreate = z.object({
   childName: z.string().trim().min(2, 'Enter the child’s name').max(80),
-  gradeSought: z.number().int().min(1, 'Choose a grade').max(12),
+  // Early years are 0 and below (Nursery, LKG, UKG), as the school's classes number them.
+  gradeSought: z.number().int().min(-3, 'Choose a grade').max(14),
   guardianName: z.string().trim().min(2, 'Enter the guardian’s name').max(80),
   phone: z.string().trim().min(8, 'Enter a phone number').max(24),
   email: z.string().trim().email('Enter a valid email').optional().or(z.literal('')),
-  source: z.enum(['walk-in', 'phone', 'website', 'referral', 'event']).default('walk-in'),
+  /** One of the school's own enquiry sources (`admissions.sources`). */
+  source: z.string().trim().min(1).max(40).default('Walk-in'),
   note: z.string().trim().max(400).default(''),
 });
 export type EnquiryCreate = z.infer<typeof EnquiryCreate>;
 
 export const EnquiryPatch = z.object({
+  childName: z.string().trim().min(2, 'Enter the child’s name').max(80).optional(),
+  gradeSought: z.number().int().min(-3).max(14).optional(),
+  guardianName: z.string().trim().min(2, 'Enter the guardian’s name').max(80).optional(),
+  phone: z.string().trim().min(8, 'Enter a phone number').max(24).optional(),
+  email: z.string().trim().email('Enter a valid email').or(z.literal('')).optional(),
+  source: z.string().trim().min(1).max(40).optional(),
   stage: z.enum(ENQUIRY_STAGES).optional(),
   testOn: IsoDate.nullable().optional(),
   note: z.string().trim().max(400).optional(),
@@ -186,7 +222,7 @@ export type RoleSave = z.infer<typeof RoleSave>;
 
 export const InvoiceListQuery = z.object({
   status: z.enum(['paid', 'partial', 'due', 'overdue']).optional(),
-  head: z.enum(['tuition', 'transport', 'activities', 'lab']).optional(),
+  head: z.string().regex(/^[a-z0-9_]{1,40}$/).optional(),
   query: z.string().trim().max(80).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(25),
@@ -226,6 +262,9 @@ export interface ReceiptRow {
   reference: string | null;
   paidOn: string;
   recordedBy: string;
+  invoiceId: string;
+  cancelled: boolean;
+  cancelReason: string;
 }
 
 // Reports
@@ -235,13 +274,23 @@ export interface ReportInfo {
   title: string;
   blurb: string;
   area: 'Attendance' | 'Fees' | 'People' | 'Learning';
+  /** What the report can be narrowed by. */
+  filters: ('dates' | 'class')[];
+  /** The module it reads from; a school without it does not see the report. */
+  needs: string | null;
 }
+/** A report's filters; a period left out is the report's own default (said in its summary). */
+export const ReportQuery = z.object({ from: IsoDate.optional(), to: IsoDate.optional(), classId: z.string().optional() });
+export type ReportQuery = z.infer<typeof ReportQuery>;
 
 export interface ReportData {
   id: string;
   title: string;
+  /** What the rows are, for the download's name and the printed heading ("Class 8 A, 1 Oct to 31 Oct"). */
+  scope: string;
   summary: { label: string; value: string }[];
   columns: { key: string; label: string; align?: 'right' }[];
+  /** Each row by column key; `_student` (not a column) is the student a row is about, to open their record. */
   rows: Record<string, string | number>[];
 }
 
@@ -258,11 +307,12 @@ export interface ThreadRow {
   lastBody: string;
   lastFrom: 'staff' | 'guardian';
   unread: number;
+  assignedToId: string | null;
   assignedToName: string | null;
 }
 
 export interface ThreadDetail extends ThreadRow {
-  messages: { id: string; from: 'staff' | 'guardian'; sender: string; body: string; at: string }[];
+  messages: { id: string; from: 'staff' | 'guardian'; sender: string; body: string; at: string; deleted: boolean; files: { id: string; name: string; mime: string }[] }[];
 }
 
 export const ThreadCreate = z.object({
@@ -272,10 +322,11 @@ export const ThreadCreate = z.object({
 });
 export type ThreadCreate = z.infer<typeof ThreadCreate>;
 
-export const ThreadReply = z.object({ body: z.string().trim().min(1, 'Write a reply').max(1000) });
+export const ThreadReply = z.object({ body: z.string().trim().max(1000).default(''), fileIds: z.array(z.string()).max(5).default([]) }).refine((b) => b.body.length > 0 || b.fileIds.length > 0, { message: 'Write a reply', path: ['body'] });
 export type ThreadReply = z.infer<typeof ThreadReply>;
 
-export const ThreadPatch = z.object({ status: z.enum(['open', 'closed']).optional(), assignToMe: z.boolean().optional() });
+/** Close or reopen; take it, or hand it to a colleague who may write to families. */
+export const ThreadPatch = z.object({ status: z.enum(['open', 'closed']).optional(), assignToMe: z.boolean().optional(), assignTo: z.string().min(1).optional() });
 export type ThreadPatch = z.infer<typeof ThreadPatch>;
 
 // Events
@@ -290,10 +341,19 @@ export const EventSave = z.object({
   kind: z.enum(EVENT_KINDS).default('event'),
   venue: z.string().trim().max(80).default(''),
   note: z.string().trim().max(300).default(''),
-  audience: z.enum(['everyone', 'parents', 'staff']).default('everyone'),
+  audience: z.enum(['everyone', 'parents', 'staff', 'class']).default('everyone'),
+  /** The class, for audience 'class'. */
+  classId: z.string().nullable().default(null),
+  /** One of the school's event categories. */
+  category: z.string().trim().max(24).default(''),
+  /** Ask families whether they are coming. */
+  needsRsvp: z.boolean().default(false),
+  lat: z.number().min(-90).max(90).nullable().default(null),
+  lng: z.number().min(-180).max(180).nullable().default(null),
 });
 export type EventSave = z.infer<typeof EventSave>;
 
+export interface EventReply { studentName: string; className: string; guardianName: string; status: 'going' | 'maybe' | 'cant'; adults: number }
 export interface EventRow {
   id: string;
   title: string;
@@ -303,9 +363,17 @@ export interface EventRow {
   venue: string;
   note: string;
   audience: string;
+  category: string;
+  needsRsvp: boolean;
+  lat: number | null;
+  lng: number | null;
   going: number;
   maybe: number;
   cant: number;
+  /** Grown-ups coming with the children who are going. */
+  adults: number;
+  classId: string | null;
+  className: string | null;
 }
 
 // Privacy
@@ -330,6 +398,9 @@ export interface DataRequestRow {
   requestedBy: string;
   status: 'open' | 'done' | 'declined';
   note: string;
+  /** What the school answered; a request made in the app is answered there too. */
+  answer: string;
+  fromApp: boolean;
   createdAt: string;
   resolvedAt: string | null;
 }
@@ -349,21 +420,37 @@ export interface MessageEvent {
   /** Sent even in quiet hours. */
   urgent?: boolean;
   /** Not sent at all while the school does not have this module or feature (a catalogue key). */
-  needs?: string;
+  needs: string;
+  /** The app screen a notification opens (`/chat/{thread}` fills from the message's values). */
+  opens?: string;
 }
 
 export const MESSAGE_EVENTS: MessageEvent[] = [
-  { key: 'attendance.absent', label: 'Child marked absent or late', to: 'families', vars: ['student', 'status', 'school'], text: '{student} was marked {status} today at {school}.', defaults: { push: true, sms: true, email: false }, urgent: true, needs: 'attendance.parentAlerts' },
-  { key: 'attendance.reminder', label: 'Teacher has not marked attendance', to: 'staff', vars: ['teacher'], text: 'Hi {teacher}, please mark attendance for your class today.', defaults: { push: true, sms: true, email: false }, needs: 'attendance' },
-  { key: 'fees.reminder', label: 'Fee reminder', to: 'families', vars: ['student', 'school'], text: 'Reminder: fees for {student} are due. Pay in the Gradeon app to get an instant receipt.', defaults: { push: true, sms: true, email: false }, needs: 'fees.reminders' },
-  { key: 'fees.receipt', label: 'Payment received', to: 'families', vars: ['receipt', 'amount', 'title'], text: 'Receipt {receipt}: {amount} received for {title}. Thank you.', defaults: { push: true, sms: true, email: true }, needs: 'fees' },
-  { key: 'timetable.published', label: 'Timetable changed', to: 'staff', vars: ['school'], text: 'The timetable was updated. Open the Gradeon app to see your new periods.', defaults: { push: true, sms: true, email: false }, needs: 'timetable' },
-  { key: 'homework.new', label: 'New homework', to: 'families', vars: ['student', 'subject', 'title', 'due'], text: 'New {subject} homework for {student}: {title}, due {due}.', defaults: { push: true, sms: false, email: false }, needs: 'homework' },
-  { key: 'exam.results', label: 'Results published', to: 'families', vars: ['student', 'exam'], text: 'Results for {exam} are out. See how {student} did in the Gradeon app.', defaults: { push: true, sms: true, email: false }, needs: 'exams' },
-  { key: 'notice.published', label: 'New notice', to: 'families', vars: ['title', 'school'], text: 'New notice from {school}: {title}. Read it in the Gradeon app.', defaults: { push: true, sms: false, email: false }, needs: 'notices' },
-  { key: 'event.created', label: 'New event', to: 'families', vars: ['title', 'date'], text: '{title} on {date}. Tell us if you can come in the Gradeon app.', defaults: { push: true, sms: false, email: false }, needs: 'events' },
+  { key: 'attendance.absent', label: 'Child marked absent or late', to: 'families', vars: ['student', 'status', 'school'], text: '{student} was marked {status} today at {school}.', defaults: { push: true, sms: true, email: false }, urgent: true, opens: '/attendance', needs: 'attendance.parentAlerts' },
+  { key: 'attendance.reminder', label: 'Teacher has not marked attendance', to: 'staff', vars: ['teacher'], text: 'Hi {teacher}, please mark attendance for your class today.', defaults: { push: true, sms: true, email: false }, opens: '/teacher/attendance', needs: 'attendance' },
+  { key: 'fees.reminder', label: 'Fee reminder', to: 'families', vars: ['student', 'school'], text: 'Reminder: fees for {student} are due. Pay in the Gradeon app to get an instant receipt.', defaults: { push: true, sms: true, email: false }, opens: '/fees', needs: 'fees.reminders' },
+  { key: 'fees.receipt', label: 'Payment received', to: 'families', vars: ['receipt', 'amount', 'title'], text: 'Receipt {receipt}: {amount} received for {title}. Thank you.', defaults: { push: true, sms: true, email: true }, opens: '/fees', needs: 'fees' },
+  { key: 'timetable.published', label: 'Timetable changed', to: 'staff', vars: ['school'], text: 'The timetable was updated. Open the Gradeon app to see your new periods.', defaults: { push: true, sms: true, email: false }, opens: '/timetable', needs: 'timetable' },
+  { key: 'homework.new', label: 'New homework', to: 'families', vars: ['student', 'subject', 'title', 'due'], text: 'New {subject} homework for {student}: {title}, due {due}.', defaults: { push: true, sms: false, email: false }, opens: '/homework', needs: 'homework' },
+  { key: 'exam.results', label: 'Results published', to: 'families', vars: ['student', 'exam'], text: 'Results for {exam} are out. See how {student} did in the Gradeon app.', defaults: { push: true, sms: true, email: false }, opens: '/results', needs: 'exams' },
+  { key: 'notice.published', label: 'New notice', to: 'families', vars: ['title', 'school'], text: 'New notice from {school}: {title}. Read it in the Gradeon app.', defaults: { push: true, sms: false, email: false }, opens: '/notices', needs: 'notices' },
+  { key: 'event.created', label: 'New event', to: 'families', vars: ['title', 'date'], text: '{title} on {date}. Tell us if you can come in the Gradeon app.', defaults: { push: true, sms: false, email: false }, opens: '/events', needs: 'events' },
   { key: 'admissions.offer', label: 'Admission offer', to: 'families', vars: ['child', 'school'], text: 'Good news: {child} has been offered a place at {school}. Please visit the office to complete admission.', defaults: { push: false, sms: true, email: true }, needs: 'people.admissions' },
-  { key: 'leave.decided', label: 'Leave request answered', to: 'families', vars: ['who', 'from', 'to', 'status'], text: 'Leave for {who} from {from} to {to} was {status}.', defaults: { push: true, sms: true, email: false } },
-  { key: 'family.invite', label: 'Invite a family to the app', to: 'families', vars: ['student', 'school'], text: '{school} now uses Gradeon. Install the Gradeon app and sign in with this phone number to follow {student}’s day.', defaults: { push: false, sms: true, email: false }, urgent: true },
-  { key: 'staff.invite', label: 'Staff invite', to: 'staff', vars: ['name', 'school', 'password'], text: 'Welcome to {school}, {name}. Sign in with your email and the temporary password {password}, then choose your own.', defaults: { push: false, sms: false, email: true }, urgent: true },
+  { key: 'leave.decided', label: 'Leave request answered', to: 'families', vars: ['who', 'from', 'to', 'status'], text: 'Leave for {who} from {from} to {to} was {status}.', defaults: { push: true, sms: true, email: false }, opens: '/leave', needs: 'attendance' },
+  { key: 'family.invite', label: 'Invite a family to the app', to: 'families', vars: ['student', 'school'], text: '{school} now uses Gradeon. Install the Gradeon app and sign in with this phone number to follow {student}’s day.', defaults: { push: false, sms: true, email: false }, urgent: true, needs: 'people' },
+  { key: 'bus.near', label: 'Bus near the stop', to: 'families', vars: ['student', 'stop', 'minutes'], text: 'The bus is about {minutes} minutes from {stop}. Please get {student} ready.', defaults: { push: true, sms: false, email: false }, urgent: true, opens: '/transport', needs: 'transport.liveBus' },
+  { key: 'library.ready', label: 'Reserved book ready', to: 'families', vars: ['student', 'title'], text: '{title}, reserved for {student}, is ready at the library desk.', defaults: { push: true, sms: false, email: false }, opens: '/library', needs: 'library.reservations' },
+  { key: 'fees.refunded', label: 'Refund sent', to: 'families', vars: ['receipt', 'amount'], text: 'A refund of {amount} on receipt {receipt} is on its way to the account you paid from.', defaults: { push: true, sms: true, email: true }, opens: '/fees', needs: 'fees.refunds' },
+  { key: 'staff.invite', label: 'Staff invite', to: 'staff', vars: ['name', 'school', 'password'], text: 'Welcome to {school}, {name}. Sign in with your email and the temporary password {password}, then choose your own.', defaults: { push: false, sms: false, email: true }, urgent: true, needs: 'people' },
+  { key: 'student.invite', label: 'Invite a student to the app', to: 'families', vars: ['student', 'school'], text: '{school} now uses Gradeon. {student}, install the Gradeon app and sign in with this number to see your homework and timetable.', defaults: { push: false, sms: true, email: true }, urgent: true, needs: 'people' },
+  { key: 'office.message', label: 'A message from the office', to: 'families', vars: ['text', 'school'], text: '{text} ({school})', defaults: { push: true, sms: true, email: false }, needs: 'people' },
+  { key: 'privacy.answered', label: 'Data request answered', to: 'families', vars: ['request', 'status', 'note'], text: 'Your request ({request}) was {status}. {note}', defaults: { push: true, sms: false, email: true }, needs: 'school', opens: '/settings/privacy' },
+  { key: 'homework.graded', label: 'Homework graded', to: 'families', vars: ['student', 'subject', 'title', 'grade'], text: '{student}’s {subject} homework “{title}” was graded: {grade}.', defaults: { push: true, sms: false, email: false }, opens: '/homework', needs: 'homework.grading' },
+  { key: 'exam.reopened', label: 'Results corrected', to: 'families', vars: ['student', 'exam', 'note'], text: 'Results for {exam} were corrected: {note}. See {student}’s marks in the Gradeon app.', defaults: { push: true, sms: true, email: false }, opens: '/results', needs: 'exams' },
+  { key: 'chat.message', label: 'New message in a conversation', to: 'families', vars: ['from', 'text'], text: '{from}: {text}', defaults: { push: true, sms: false, email: false }, opens: '/chat', needs: 'chat' },
+  { key: 'gallery.album', label: 'New photo album', to: 'families', vars: ['album', 'school'], text: 'New photos from {school}: {album}. See them in the Gradeon app.', defaults: { push: true, sms: false, email: false }, opens: '/gallery', needs: 'gallery' },
+  { key: 'library.cancelled', label: 'Book reservation cancelled', to: 'families', vars: ['student', 'title', 'reason'], text: 'The reservation of {title} for {student} was cancelled: {reason}', defaults: { push: true, sms: false, email: false }, opens: '/library', needs: 'library.reservations' },
+  { key: 'library.overdue', label: 'Library book overdue', to: 'families', vars: ['student', 'title', 'days', 'fine'], text: '{title}, borrowed by {student}, is {days} days late. Fine so far: {fine}.', defaults: { push: true, sms: false, email: false }, opens: '/library', needs: 'library' },
+  { key: 'bus.late', label: 'Bus running late or stopped', to: 'families', vars: ['route', 'minutes', 'reason'], text: 'The {route} bus is running about {minutes} minutes late: {reason}.', defaults: { push: true, sms: true, email: false }, urgent: true, opens: '/transport', needs: 'transport.liveBus' },
+  { key: 'bus.dropped', label: 'Child got on or off the bus', to: 'families', vars: ['student', 'stop', 'event', 'time'], text: '{student} {event} the bus at {stop}, {time}.', defaults: { push: true, sms: false, email: false }, urgent: true, opens: '/transport', needs: 'transport.liveBus' },
 ];

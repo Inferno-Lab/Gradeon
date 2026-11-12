@@ -29,6 +29,18 @@ enum HomeworkStatus {
   submitted,
   @JsonValue('graded')
   graded,
+
+  /// The teacher sent it back to be done again, with a note.
+  @JsonValue('returned')
+  returned,
+}
+
+extension HomeworkToDo on HomeworkStatus {
+  /// Still to be done: never handed in, or sent back to be done again.
+  bool get toDo => this == HomeworkStatus.pending || this == HomeworkStatus.returned;
+
+  /// The tab it shows under (a returned one is to do again).
+  HomeworkStatus get shown => this == HomeworkStatus.returned ? HomeworkStatus.pending : this;
 }
 
 enum ExamStatus {
@@ -110,6 +122,7 @@ class HomeworkSubmission {
     this.marks,
     this.grade,
     this.feedback,
+    this.returnNote,
   });
 
   factory HomeworkSubmission.fromJson(Map<String, dynamic> json) =>
@@ -122,6 +135,9 @@ class HomeworkSubmission {
   final int? marks;
   final String? grade;
   final String? feedback;
+
+  /// Why the teacher sent it back, when the status is returned.
+  final String? returnNote;
 
   HomeworkSubmission copyWith({
     HomeworkStatus? status,
@@ -139,6 +155,7 @@ class HomeworkSubmission {
       marks: marks ?? this.marks,
       grade: grade ?? this.grade,
       feedback: feedback ?? this.feedback,
+      returnNote: status == HomeworkStatus.submitted ? null : returnNote,
     );
   }
 
@@ -209,6 +226,7 @@ class Exam {
     required this.endDate,
     required this.status,
     required this.subjects,
+    this.papers = const [],
   });
 
   factory Exam.fromJson(Map<String, dynamic> json) => _$ExamFromJson(json);
@@ -221,7 +239,33 @@ class Exam {
   final ExamStatus status;
   final List<String> subjects;
 
+  /// Each paper's day, time and room, as the school set them.
+  @JsonKey(defaultValue: <ExamPaper>[])
+  final List<ExamPaper> papers;
+
   Map<String, dynamic> toJson() => _$ExamToJson(this);
+}
+
+@JsonSerializable()
+class ExamPaper {
+  const ExamPaper({required this.subject, required this.date, this.subjectName = '', this.startsAt = '', this.endsAt = '', this.room = '', this.maxMarks = 0});
+
+  factory ExamPaper.fromJson(Map<String, dynamic> json) => _$ExamPaperFromJson(json);
+
+  final String subject;
+  @JsonKey(defaultValue: '')
+  final String subjectName;
+  final DateTime date;
+  @JsonKey(defaultValue: '')
+  final String startsAt;
+  @JsonKey(defaultValue: '')
+  final String endsAt;
+  @JsonKey(defaultValue: '')
+  final String room;
+  @JsonKey(defaultValue: 0)
+  final int maxMarks;
+
+  Map<String, dynamic> toJson() => _$ExamPaperToJson(this);
 }
 
 @JsonSerializable()

@@ -17,6 +17,8 @@ export interface Harness {
   c: (method: string, url: string, opts?: { token?: string; body?: unknown }) => Promise<{ status: number; json: any }>;
   s: (method: string, url: string, opts?: { token?: string; body?: unknown; school: string }) => Promise<{ status: number; json: any }>;
   signIn: (email?: string, password?: string) => Promise<string>;
+  /** Invites a team member and joins with the link, as the person would: they choose the password. */
+  invite: (token: string, body: { name: string; email: string; roles: string[] }, password: string) => Promise<{ status: number; json: any }>;
   close: () => Promise<void>;
 }
 
@@ -24,7 +26,7 @@ export async function startHarness(extra: Record<string, string> = {}): Promise<
   const server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-console-')), 'data'), fresh: true });
   const regUrl = await ensureDatabase(server.url, 'registry');
   const base = { NODE_ENV: 'test', REGISTRY_DATABASE_URL: regUrl, SECRETS_KEY: 'test-secret-key-for-sealing-0123456789', JWT_SECRET: 'jwt-secret-for-tests-0123456789abcd', PORT: '0' };
-  const env = loadEnv({ ...base, SHARED_PG_ADMIN_URL: server.url, DEMO_CODE: '424242', STEP_PAUSE_MS: '0', PROBE_SECONDS: '0', ADMIN_BASE_URL: 'http://localhost:5173', ...extra });
+  const env = loadEnv({ ...base, DEMO_CODE: '424242', STEP_PAUSE_MS: '0', PROBE_SECONDS: '0', ADMIN_BASE_URL: 'http://localhost:5173', ...extra });
   const registry = new Registry({ url: regUrl, secret: env.SECRETS_KEY });
   const pools = new PoolManager();
   const console_ = await createConsoleApp(env, { registry, pools });
@@ -52,8 +54,13 @@ export async function startHarness(extra: Record<string, string> = {}): Promise<
     const b = await c('POST', '/console/v1/auth/verify', { body: { challengeId: a.json.challenge.challengeId, code: '424242' } });
     return b.json.accessToken as string;
   };
+  const invite: Harness['invite'] = async (token, body, password) => {
+    const r = await c('POST', '/console/v1/team', { token, body });
+    if (r.status !== 200) return r;
+    return c('POST', '/console/v1/auth/join', { body: { token: new URL(r.json.link).searchParams.get('token'), password } });
+  };
   return {
-    console: console_, api, server, registry: pool, c, s, signIn,
+    console: console_, api, server, registry: pool, c, s, signIn, invite,
     close: async () => { await pool.end(); await console_.close(); await api.close(); await registry.close(); await pools.closeAll(); await server.stop(); },
   };
 }

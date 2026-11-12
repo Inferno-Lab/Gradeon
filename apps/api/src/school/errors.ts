@@ -2,21 +2,21 @@ import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, type On
 import { ChangeRequestCreate, ClientError, type ChangeRequestRow } from '@gradeon/contracts';
 import { newId } from '@gradeon/db';
 import { Limiter, ZodPipe, alerts, errorSink, recordError } from '@gradeon/nest-kit';
-import { ENV, type Env } from '../env.js';
 import type { Registry } from '@gradeon/tenancy';
 import type { FastifyRequest } from 'fastify';
 import { NoTenant, REGISTRY, Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { Core, CurrentUser, Public, Require } from '../auth/guards.js';
+import { HubService } from './hub.service.js';
 
 const limit = new Limiter(process.env.NODE_ENV === 'test' ? 10_000 : 60, 60_000);
 
 /** Errors are kept in the registry, where the console's Health page lists them. */
 @Injectable()
 export class ErrorReports implements OnModuleInit {
-  constructor(@Inject(REGISTRY) private readonly registry: Registry, @Inject(ENV) private readonly env: Env) {}
+  constructor(@Inject(REGISTRY) private readonly registry: Registry, private readonly hubs: HubService) {}
 
   onModuleInit(): void {
-    alerts.url ??= this.env.ALERT_WEBHOOK_URL;
+    alerts.send ??= (title, text) => this.hubs.hub.alert(title, text);
     errorSink.report = (e) => void recordError(this.registry.pool, e).catch(() => undefined);
   }
 }

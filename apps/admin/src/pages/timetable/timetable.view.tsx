@@ -24,31 +24,25 @@ export function TimetableView({ v }: { v: any }) {
           <span className="grow"></span>
           <Select compact aria-label="Class" value={String(Math.max(0, v.classes.findIndex((c: any) => c.on)))} onChange={(i) => v.classes[Number(i)]?.pick()} options={v.classes.map((c: any, i: number) => ({ value: String(i), label: c.n }))} />
           <Segmented label="Timetable view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n }))} />
+          <button className="btn" onClick={v.openWeek}>A teacher’s or room’s week</button>
+          <button className="btn" onClick={v.print}>Print</button>
+          {v.canPublish && (
           <button className="btn pri" onClick={v.publish}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path className="i" d="M4 12l16-8-6 16-3-7z"></path>
             </svg>
             Publish
           </button>
+          )}
         </header>
         <div className="wk rise" style={{ "--d": ".05s" } as CSSProperties}>
           <div className="wkp">
-            <button aria-label="Previous week" onClick={v.prevWeek}>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path className="i" d="M15 6l-6 6 6 6"></path>
-              </svg>
-            </button>
             <span>
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                 <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4"></path>
               </svg>
               {v.weekLabel}
             </span>
-            <button aria-label="Next week" onClick={v.nextWeek}>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path className="i" d="M9 6l6 6-6 6"></path>
-              </svg>
-            </button>
           </div>
           <span className="grow"></span>
           <span className={`chip ${v.clashChip ?? ""}`}>{v.clashText}</span>
@@ -218,6 +212,7 @@ export function TimetableView({ v }: { v: any }) {
                     )}
                   </>
                 )}
+                {v.periodTools}
               </div>
             </section>
             <section className="card" aria-labelledby="load">

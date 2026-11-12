@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ChangeRequestRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, ErrorLine, Segmented, tintFor, useShake } from '@gradeon/web-ui';
+import { SETTINGS_META, type ChangeRequestRow } from '@gradeon/contracts';
+import { AreaField, Dialog, EmptyCard, Segmented, tintFor, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { ago, initials } from '../../app/format';
 
-/** What schools ask Gradeon to change ("Ask Gradeon to change this" in their School setup). */
+/** What schools ask Gradeon to change ("Ask Gradeon to change this" on their School profile). */
+const tabFor = (area: string) => (/role/i.test(area) ? 'roles' : /plan|module/i.test(area) ? 'plan' : /data|import/i.test(area) ? 'data' : 'configuration');
 export function RequestsPage() {
   const app = useApp();
   const { toast, say } = useToast();
@@ -16,7 +17,7 @@ export function RequestsPage() {
   const q = useQuery({ queryKey: ['change-requests', show], queryFn: () => app.api.changeRequests.list(show) });
   const rows = q.data ?? [];
   return (
-    <Page title="Requests" sub="Changes schools have asked for. Make the change under the school’s Configuration or Roles, then answer here." toast={toast}
+    <Page title="Requests" sub="Changes schools have asked for. Open the setting, make the change, then answer: the school sees it." toast={toast}
       loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
       actions={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
       overlays={answering && <AnswerDialog r={answering} onClose={() => setAnswering(null)} onDone={(m) => { setAnswering(null); say(m); }} />}>
@@ -36,7 +37,7 @@ export function RequestsPage() {
                   <small style={{ color: 'var(--ink3)' }}>{r.requestedBy} · {ago(r.createdAt)}{r.answer ? ` · answered: ${r.answer}` : ''}</small>
                 </span>
                 {r.status === 'open'
-                  ? (app.can('schools.configure') && <button className="btn sm pri" onClick={() => setAnswering(r)}>Answer</button>)
+                  ? (app.can('schools.configure') && <span className="tgrow"><a className="btn sm" href={url(`/schools/${r.schoolId}/${tabFor(r.area)}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}/${tabFor(r.area)}`); }}>Open the setting</a><button className="btn sm pri" onClick={() => setAnswering(r)}>Answer</button></span>)
                   : <span className={`chip ${r.status === 'done' ? 'g' : 'c'}`}>{r.status === 'done' ? 'Done' : 'Declined'}</span>}
               </div>
             );
@@ -53,6 +54,10 @@ function AnswerDialog({ r, onClose, onDone }: { r: ChangeRequestRow; onClose: ()
   const [answer, setAnswer] = useState('');
   const [err, setErr] = useState('');
   const shake = useShake();
+  // What has been changed at this school since it asked, offered as the answer.
+  const cfg = useQuery({ queryKey: ['config', r.schoolId], queryFn: () => app.api.config.get(r.schoolId) });
+  const since = (cfg.data?.versions ?? []).filter((v) => v.at > r.createdAt).flatMap((v) => v.changes.map((c) => SETTINGS_META[c.key as keyof typeof SETTINGS_META]?.label ?? c.key));
+  const made = [...new Set(since)];
   const go = useMutation({
     mutationFn: (status: 'done' | 'declined') => app.api.changeRequests.answer(r.id, { status, answer: answer.trim() }),
     onSuccess: (_, status) => { void qc.invalidateQueries({ queryKey: ['change-requests'] }); onDone(status === 'done' ? 'Marked done. The school sees your answer.' : 'Declined. The school sees your answer.'); },
@@ -62,14 +67,13 @@ function AnswerDialog({ r, onClose, onDone }: { r: ChangeRequestRow; onClose: ()
   return (
     <Dialog title={`Answer ${r.schoolName}`} tag={{ text: r.area, tone: 'v' }} onClose={onClose} width={540} shake={shake.cls}>
       <p style={{ margin: '0 0 12px', font: '500 14px/1.5 var(--fb)' }}>{r.message}</p>
-      <div className="fld">
-        <label htmlFor="req-answer">Your answer</label>
-        <div className={`inp ${err ? 'err' : ''}`} style={{ height: 'auto' }}>
-          <textarea id="req-answer" value={answer} onChange={(e) => { setAnswer(e.target.value); setErr(''); }} maxLength={600} placeholder="For example: done, Fees is now in the app’s bottom tabs."
-            style={{ width: '100%', minHeight: 100, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' }} />
+      {made.length > 0 && (
+        <div className="help" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          Changed since they asked: {made.join(', ')}.
+          <button className="btn sm" onClick={() => { setAnswer(`Done. Changed: ${made.join(', ')}.`); setErr(''); }}>Use as the answer</button>
         </div>
-        {err && <ErrorLine>{err}</ErrorLine>}
-      </div>
+      )}
+      <AreaField label="Your answer" value={answer} onChange={(v) => { setAnswer(v); setErr(''); }} error={err} rows={4} maxLength={600} placeholder="For example: done, Fees is now in the app’s bottom tabs." />
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
         <button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn dng" disabled={go.isPending} onClick={() => send('declined')}>Decline</button>

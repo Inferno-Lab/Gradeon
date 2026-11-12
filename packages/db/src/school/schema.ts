@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  doublePrecision,
   date,
   index,
   integer,
@@ -148,6 +149,7 @@ export const students = pgTable(
     dob: date('dob').notNull(),
     bloodGroup: text('blood_group'),
     house: text('house'),
+    gender: text('gender'),
     avatarUrl: text('avatar_url'),
     address: text('address'),
     status: text('status').notNull().default('active'),
@@ -176,6 +178,8 @@ export const studentGuardians = pgTable(
     studentId: text('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
     guardianId: text('guardian_id').notNull().references(() => guardians.id, { onDelete: 'cascade' }),
     isPrimary: boolean('is_primary').notNull().default(true),
+    /** May collect the child from school (migration 0021). */
+    canCollect: boolean('can_collect').notNull().default(true),
   },
   (t) => [primaryKey({ columns: [t.studentId, t.guardianId] }), index('student_guardians_guardian_idx').on(t.guardianId)],
 );
@@ -190,6 +194,21 @@ export const attendanceSessions = pgTable(
     submittedAt: timestamp('submitted_at', { withTimezone: true }),
   },
   (t) => [uniqueIndex('attendance_sessions_uq').on(t.classId, t.date)],
+);
+
+/** Attendance every period (feature attendance.periodWise), beside the day's roll call (migration 0020). */
+export const periodMarks = pgTable(
+  'period_marks',
+  {
+    classId: text('class_id').notNull().references(() => classes.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    period: integer('period').notNull(),
+    studentId: text('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+    status: text('status').notNull(),
+    markedBy: text('marked_by').references(() => users.id, { onDelete: 'set null' }),
+    markedAt: at('marked_at'),
+  },
+  (t) => [primaryKey({ columns: [t.classId, t.date, t.period, t.studentId] }), index('period_marks_student_idx').on(t.studentId, t.date)],
 );
 
 export const attendanceMarks = pgTable(
@@ -244,24 +263,44 @@ export const notices = pgTable(
     status: text('status').notNull().default('draft'), // draft | pending | published
     authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    /** One of the school's notice categories (notices.categories). */
+    category: text('category').notNull().default('academic'),
+    pinned: boolean('pinned').notNull().default(false),
+    /** Published at this time by the job queue (status stays draft or approved until then). */
+    publishAt: timestamp('publish_at', { withTimezone: true }),
+    /** Families are asked to acknowledge it; the office sees who has not. */
+    needsAck: boolean('needs_ack').notNull().default(false),
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: at('created_at'),
   },
   (t) => [index('notices_status_pub_idx').on(t.status, t.publishedAt)],
 );
 
+export const noticeReads = pgTable('notice_reads', {
+  noticeId: text('notice_id').notNull().references(() => notices.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  readAt: at('read_at'),
+  ackedAt: timestamp('acked_at', { withTimezone: true }),
+}, (t) => [primaryKey({ columns: [t.noticeId, t.userId] })]);
+
 export const approvals = pgTable(
   'approvals',
   {
     id: text('id').primaryKey(),
-    kind: text('kind').notNull(), // leave | fee_waiver | admission | notice
+    kind: text('kind').notNull(), // leave | fee_waiver | admission | notice | attendance
     title: text('title').notNull(),
     subtitle: text('subtitle').notNull().default(''),
     requesterName: text('requester_name').notNull(),
+    /** Who sent it (a parent can correct or withdraw it while it waits). */
+    requestedBy: text('requested_by'),
     subjectRef: text('subject_ref'),
     payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
     status: text('status').notNull().default('pending'),
     decidedBy: text('decided_by').references(() => users.id, { onDelete: 'set null' }),
     decidedAt: timestamp('decided_at', { withTimezone: true }),
+    /** The reason given with the decision; a decline always has one. */
+    decisionNote: text('decision_note').notNull().default(''),
     createdAt: at('created_at'),
   },
   (t) => [index('approvals_status_idx').on(t.status)],
@@ -323,8 +362,17 @@ export const events = pgTable('events', {
   kind: text('kind').notNull().default('event'),
   note: text('note').notNull().default(''),
   audience: text('audience').notNull().default('everyone'),
+    /** For audience 'class' (migration 0023). */
+    classId: text('class_id'),
   venue: text('venue').notNull().default(''),
   createdBy: text('created_by'),
+  /** One of the school's event categories. */
+  category: text('category').notNull().default(''),
+  /** Families are asked whether they are coming (and how many). */
+  needsRsvp: boolean('needs_rsvp').notNull().default(false),
+  /** Where it is, for directions in the app. */
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
 });
 
 export const auditLog = pgTable(
@@ -354,6 +402,10 @@ export const homework = pgTable(
     description: text('description').notNull().default(''),
     maxMarks: integer('max_marks').notNull().default(20),
     createdBy: text('created_by'),
+    /** draft: the teacher is still writing it (only they see it); set: families see it. */
+    status: text('status').notNull().default('set'),
+    /** false: handed in and checked, but not marked. */
+    graded: boolean('graded').notNull().default(true),
   },
   (t) => [index('homework_class_due_idx').on(t.classId, t.dueOn)],
 );
@@ -367,6 +419,10 @@ export const homeworkSubmissions = pgTable(
     onTime: boolean('on_time').notNull().default(false),
     score: integer('score'),
     feedback: text('feedback').notNull().default(''),
+    /** Sent back for a redo, with why: the family can hand it in again. */
+    returnedAt: timestamp('returned_at', { withTimezone: true }),
+    returnNote: text('return_note').notNull().default(''),
+    gradedAt: timestamp('graded_at', { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.homeworkId, t.studentId] }), index('homework_sub_student_idx').on(t.studentId)],
 );
@@ -386,10 +442,12 @@ export const libraryLoans = pgTable(
   'library_loans',
   {
     id: text('id').primaryKey(),
-    studentId: text('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+    studentId: text('student_id').references(() => students.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     dueOn: date('due_on').notNull(),
     returnedOn: date('returned_on'),
+    /** A member of staff borrowing (then studentId is empty). */
+    staffUserId: text('staff_user_id'),
   },
   (t) => [index('library_student_idx').on(t.studentId)],
 );
@@ -408,6 +466,8 @@ export const exams = pgTable('exams', {
   endsOn: date('ends_on').notNull(),
   status: text('status').notNull().default('upcoming'), // upcoming | marking | published
   publishedAt: timestamp('published_at', { withTimezone: true }),
+  /** Why published results were reopened: told to families when they go out again. */
+  reopenedNote: text('reopened_note').notNull().default(''),
   createdBy: text('created_by'),
   createdAt: at('created_at'),
 });
@@ -417,6 +477,10 @@ export const examSubjects = pgTable('exam_subjects', {
   subjectId: text('subject_id').notNull().references(() => subjects.id),
   onDate: date('on_date'),
   maxMarks: integer('max_marks').notNull().default(100),
+  /** The paper's time ("09:00") and room, for the exam timetable families see. */
+  startsAt: text('starts_at'),
+  endsAt: text('ends_at'),
+  room: text('room').notNull().default(''),
 }, (t) => [primaryKey({ columns: [t.examId, t.subjectId] })]);
 
 export const examMarks = pgTable('exam_marks', {
@@ -450,6 +514,8 @@ export const threads = pgTable('threads', {
   subject: text('subject').notNull(),
   status: text('status').notNull().default('open'),
   assignedTo: text('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+  /** A student's own conversation (students message teachers when the school allows it). */
+  studentUserId: text('student_user_id'),
   lastAt: at('last_at'),
   createdAt: at('created_at'),
 });
@@ -457,17 +523,26 @@ export const threads = pgTable('threads', {
 export const threadMessages = pgTable('thread_messages', {
   id: text('id').primaryKey(),
   threadId: text('thread_id').notNull().references(() => threads.id, { onDelete: 'cascade' }),
-  fromKind: text('from_kind').notNull(), // staff | guardian
+  fromKind: text('from_kind').notNull(), // staff | guardian | student
   senderName: text('sender_name').notNull(),
+  senderId: text('sender_id'),
   body: text('body').notNull(),
+  fileIds: jsonb('file_ids').$type<string[]>().notNull().default([]),
   createdAt: at('created_at'),
   readAt: timestamp('read_at', { withTimezone: true }),
+  /** Taken back by its sender: shown as "message deleted". */
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  /** Reported to the office by the other side, with why. */
+  reportedAt: timestamp('reported_at', { withTimezone: true }),
+  reportReason: text('report_reason').notNull().default(''),
 });
 
 export const eventRsvps = pgTable('event_rsvps', {
   eventId: text('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   studentId: text('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
   status: text('status').notNull(), // going | maybe | cant
+  /** Grown-ups coming with the child. */
+  adults: integer('adults').notNull().default(0),
 }, (t) => [primaryKey({ columns: [t.eventId, t.studentId] })]);
 
 export const dataRequests = pgTable('data_requests', {
@@ -480,4 +555,7 @@ export const dataRequests = pgTable('data_requests', {
   createdAt: at('created_at'),
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   resolvedBy: text('resolved_by'),
+  /** Made from the app by this person, who follows it there. */
+  userId: text('user_id'),
+  answer: text('answer').notNull().default(''),
 });

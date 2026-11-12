@@ -3,8 +3,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { closeModules } from '@gradeon/config-engine';
-import { DEFAULT_BRAND, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { ColourField, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { DEFAULT_BRAND, DEPLOY_TARGET_LABELS, LANGUAGES, SCHOOL_BOARDS, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
+import { ColourField, Field, FilePick, NumberField, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -23,13 +23,14 @@ type Data = Record<Key, Record<string, unknown>>;
 
 const DEFAULTS: Data = {
   basics: { name: '', shortName: '', slug: '', board: 'CBSE', address: '', city: '', contactName: '', contactPhone: '', contactEmail: '', gstin: '', language: 'en' },
-  plan: { plan: '', modules: [], addOns: [], locks: [], students: 500 },
-  branding: { color: DEFAULT_BRAND, logoText: '', appName: '', tagline: '' },
+  plan: { plan: '', modules: [], students: 500 },
+  branding: { color: DEFAULT_BRAND, logoText: '', appName: '', tagline: '', logo: null },
   placement: { target: '', cell: '', addressing: 'path', customDomain: '' },
   admin: { name: '', email: '', phone: '', invite: 'both', roles: ['principal'] },
-  data: { start: 'demo' },
+  data: { start: 'empty' },
 };
-const TARGET: Record<string, string> = { local: 'This computer', 'free-test': 'Free test track', 'aws-cell': 'AWS cell' };
+const TARGET: Record<string, string> = DEPLOY_TARGET_LABELS;
+const RUN_WORDS: Record<string, string> = { done: 'Would run', failed: 'Would stop here', pending: 'Not reached', running: 'Checking', skipped: 'Skipped', succeeded: 'Everything would run', queued: 'Waiting', };
 const slugify = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
 /** The contracts carry their own friendly messages; the library's stock ones get a plain replacement. */
 const friendly = (m: string) => (/^Too small/.test(m) ? 'Please fill this in.' : /^(Too big|Invalid)/.test(m) ? 'Please check this value.' : m);
@@ -46,11 +47,14 @@ export function WizardPage() {
   const [draftId, setDraftId] = useState(draftParam ?? '');
   const [loaded, setLoaded] = useState(!draftParam);
   const [rehearsal, setRehearsal] = useState<ProvisionRunRow | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [planNote, setPlanNote] = useState('');
   const shake = useShake();
 
   const plans = useQuery({ queryKey: ['plans'], queryFn: app.api.plans, staleTime: 5 * 60_000 });
   const cells = useQuery({ queryKey: ['cells'], queryFn: app.api.cells });
   const catalog = useQuery({ queryKey: ['catalog'], queryFn: app.api.catalog, staleTime: 10 * 60_000 });
+  const about = useQuery({ queryKey: ['about'], queryFn: app.api.about, staleTime: Infinity });
   const saved = useQuery({ queryKey: ['draft', draftParam], queryFn: () => app.api.wizard.draft(draftParam!), enabled: !!draftParam });
 
   useEffect(() => {
@@ -81,8 +85,9 @@ export function WizardPage() {
     clearTimeout(save.current);
     save.current = setTimeout(() => {
       const body = { name: str(data.basics.name) || 'New school', step, data };
-      if (idRef.current) void app.api.wizard.saveDraft(idRef.current, body).catch(() => undefined);
-      else void app.api.wizard.createDraft(body).then((d) => { idRef.current = d.id; setDraftId(d.id); }).catch(() => undefined);
+      // A small "Saved" beside the steps says the draft is safe, so nobody wonders.
+      if (idRef.current) void app.api.wizard.saveDraft(idRef.current, body).then(() => setSavedAt(Date.now())).catch(() => undefined);
+      else void app.api.wizard.createDraft(body).then((d) => { idRef.current = d.id; setDraftId(d.id); setSavedAt(Date.now()); }).catch(() => undefined);
     }, 900);
     return () => clearTimeout(save.current);
   }, [data, step, loaded, app.api.wizard]);
@@ -102,6 +107,10 @@ export function WizardPage() {
       return next;
     });
     if (field !== 'name') setTouched((t) => new Set(t).add(`${k}.${field}`));
+  };
+  const checkSlug = () => {
+    const v = str(data.basics.slug);
+    if (v) void app.api.wizard.slug(v).then((r) => setErrs((e) => ({ ...e, 'basics.slug': r.problem })));
   };
   const f = (k: Key, field: string, label: string, extra: Record<string, unknown> = {}) => (
     <Field label={label} value={str(data[k][field])} onChange={(v) => set(k, field, v)} error={errs[`${k}.${field}`]} {...extra} />
@@ -132,16 +141,20 @@ export function WizardPage() {
   });
 
   const plan = plans.data?.find((p) => p.key === data.plan.plan);
+  const links = useQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, enabled: app.can('integrations.read'), staleTime: 60_000 });
+  // The first admin's invitation goes the ways the platform can send (sandbox stands in for all of them).
+  const can = (cap: 'sms' | 'email') => !links.data || links.data.mode === 'sandbox' || links.data.routes.some((r) => r.capability === cap && !r.schoolId);
+  const invite = [...(can('sms') && can('email') ? [{ value: 'both', label: 'Text and email' }] : []), ...(can('sms') ? [{ value: 'sms', label: 'Text message' }] : []), ...(can('email') ? [{ value: 'email', label: 'Email' }] : [])];
   const mods = (data.plan.modules as string[]) ?? [];
   const body: ReactNode = (() => {
     switch (STEPS[step]!.key) {
       case 'basics': return (
         <>
           {f('basics', 'name', 'School name', { placeholder: 'Banyan Ridge School' })}
-          <div className="two">{f('basics', 'shortName', 'Short name', { hint: 'Used in the menu and the app' })}{f('basics', 'slug', 'Address name', { hint: `Lives at …/s/${str(data.basics.slug) || 'name'}` })}</div>
+          <div className="two">{f('basics', 'shortName', 'Short name', { hint: 'Used in the menu and the app' })}{f('basics', 'slug', 'Address name', { hint: `Lives at …/s/${str(data.basics.slug) || 'name'}`, onBlur: checkSlug })}</div>
           <div className="two">
-            <SelectField label="Board" value={str(data.basics.board)} onChange={(v) => set('basics', 'board', v)} options={['CBSE', 'ICSE', 'State', 'IB', 'International', 'Other'].map((b) => ({ value: b, label: b }))} />
-            <SelectField label="App language" value={str(data.basics.language)} onChange={(v) => set('basics', 'language', v)} options={[{ value: 'en', label: 'English' }, { value: 'hi', label: 'हिन्दी' }, { value: 'mr', label: 'मराठी' }]} />
+            <SelectField label="Board" value={str(data.basics.board)} onChange={(v) => set('basics', 'board', v)} options={SCHOOL_BOARDS.map((b) => ({ value: b, label: b }))} />
+            <SelectField label="App language" value={str(data.basics.language)} onChange={(v) => set('basics', 'language', v)} options={LANGUAGES.map(([value, label]) => ({ value, label }))} />
           </div>
           <div className="two">{f('basics', 'city', 'Town or city')}{f('basics', 'gstin', 'GSTIN (optional)')}</div>
           {f('basics', 'address', 'Address (optional)')}
@@ -155,12 +168,13 @@ export function WizardPage() {
           <div className="lbl" style={{ marginBottom: 8 }}>Plan</div>
           <div style={{ display: 'grid', gap: 10 }} role="radiogroup" aria-label="Plan">
             {(plans.data ?? []).map((p) => (
-              <button key={p.key} type="button" role="radio" aria-checked={p.key === data.plan.plan} className={`opt ${p.key === data.plan.plan ? 'on' : ''}`} onClick={() => { set('plan', 'plan', p.key); set('plan', 'modules', p.modules); }}>
+              <button key={p.key} type="button" role="radio" aria-checked={p.key === data.plan.plan} className={`opt ${p.key === data.plan.plan ? 'on' : ''}`} onClick={() => { if (p.key === data.plan.plan) return; set('plan', 'plan', p.key); set('plan', 'modules', p.modules); setPlanNote(`Modules reset to the ${p.name} plan’s ${p.modules.length}. Change them below.`); }}>
                 <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span>
                 <span style={{ flex: 1 }}><b>{p.name} · {rupees(p.perStudentYear)} per student a year</b><small>{p.modules.length} modules · up to {count(p.limits.students)} students · {p.limits.storageGb} GB files · {count(p.limits.smsPerMonth)} texts a month</small></span>
               </button>
             ))}
           </div>
+          {planNote && <div className="help" role="status" style={{ marginTop: 10 }}>{planNote}</div>}
           <div className="lbl" style={{ margin: '20px 0 8px' }}>Modules</div>
           <div className="two">
             {(catalog.data?.modules ?? []).filter((m) => m.state !== 'planned').map((m) => {
@@ -176,13 +190,31 @@ export function WizardPage() {
             })}
           </div>
           {errs['plan.modules'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['plan.modules']}</div>}
-          <div style={{ marginTop: 16 }}>{f('plan', 'students', 'Students expected', { type: 'number', min: 1, hint: plan ? `Up to ${count(plan.limits.students)} on ${plan.name}` : undefined, value: String(data.plan.students ?? ''), onChange: (v: string) => set('plan', 'students', Number(v) || 0) })}</div>
+          <div style={{ marginTop: 16, maxWidth: 320 }}>
+            <NumberField label="Students expected" min={1} step={50} value={String(data.plan.students ?? '')} onChange={(v) => set('plan', 'students', Number(v) || 0)} error={errs['plan.students']}
+              hint={plan ? (Number(data.plan.students) > plan.limits.students ? `More than the ${count(plan.limits.students)} ${plan.name} allows: raise the limit after set-up, or choose a bigger plan.` : `Up to ${count(plan.limits.students)} on ${plan.name}`) : undefined} />
+          </div>
         </>
       );
       case 'branding': return (
         <>
           <div className="two">{f('branding', 'appName', 'Name in the app', { hint: 'Shown on the home screen' })}{f('branding', 'logoText', 'Logo letters', { maxLength: 2, hint: 'One or two letters' })}</div>
           {f('branding', 'tagline', 'Tagline (optional)')}
+          <div className="fld">
+            <label>Logo (optional)</label>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className={`chip ${data.branding.logo ? 'g' : ''}`}>{data.branding.logo ? (data.branding.logo as { name: string }).name : 'The letters until a logo is added'}</span>
+              <FilePick accept="image/png,image/jpeg" className="btn sm" onPick={(file) => {
+                if (!['image/png', 'image/jpeg'].includes(file.type)) { setErrs((e) => ({ ...e, 'branding.logo': 'Choose a PNG or JPEG image.' })); return; }
+                if (file.size > 2 * 1024 * 1024) { setErrs((e) => ({ ...e, 'branding.logo': 'The logo must be 2 MB or smaller.' })); return; }
+                const r = new FileReader();
+                r.onload = () => set('branding', 'logo', { name: file.name, mime: file.type, data: String(r.result).split(',')[1] ?? '' });
+                r.readAsDataURL(file);
+              }}>{data.branding.logo ? 'Choose another' : 'Choose a logo'}</FilePick>
+              {!!data.branding.logo && <button className="btn sm" onClick={() => set('branding', 'logo', null)}>Remove</button>}
+            </div>
+            {errs['branding.logo'] ? <div className="emsg" role="alert">{errs['branding.logo']}</div> : <div className="help">Stored with the school once its set-up has finished.</div>}
+          </div>
           <div className="lbl" style={{ margin: '8px 0' }}>Brand colour</div>
           <ColourField label="Brand colour" value={String(data.branding.color)} onChange={(c) => set('branding', 'color', c)} />
           {errs['branding.color'] && <div className="emsg" role="alert" style={{ marginTop: 8 }}>{errs['branding.color']}</div>}
@@ -190,7 +222,7 @@ export function WizardPage() {
             <div style={{ padding: '16px 16px 20px', color: readableOn(str(data.branding.color)), background: str(data.branding.color), font: '700 13px var(--fb)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 26, height: 26, borderRadius: 10, background: 'color-mix(in srgb,var(--onCi) 28%,transparent)', display: 'grid', placeItems: 'center', font: '700 12px var(--fd)' }}>{str(data.branding.logoText) || '?'}</span>{str(data.branding.appName) || 'Your school'}
             </div>
-            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 6, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 6, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 14, background: str(data.branding.color), color: readableOn(str(data.branding.color)), textAlign: 'center', lineHeight: '34px', font: '700 12px var(--fb)' }}>Pay fees</b></div>
+            <div style={{ padding: 12, display: 'grid', gap: 8 }}><i style={{ display: 'block', height: 12, width: '70%', borderRadius: 6, background: 'var(--line2)' }}></i><i style={{ display: 'block', height: 12, width: '46%', borderRadius: 6, background: 'var(--line2)' }}></i><b style={{ display: 'block', height: 34, borderRadius: 14, background: str(data.branding.color), color: readableOn(str(data.branding.color)), textAlign: 'center', lineHeight: '34px', font: '700 12px var(--fb)' }}>{mods.includes('fees') ? 'Pay fees' : mods.includes('homework') ? 'Homework' : 'Notices'}</b></div>
           </div>
         </>
       );
@@ -201,25 +233,26 @@ export function WizardPage() {
             options={(cells.data ?? []).map((c) => ({ value: c.key, label: `Cell ${c.key} · ${TARGET[c.target] ?? c.target} · ${c.schools} of ${c.maxSchools} used` }))} />
           <div className="lbl" style={{ margin: '16px 0 8px' }}>Address style</div>
           <div className="two">
-            {([['path', 'A path on the shared site', 'Works with no domain: …/s/name'], ['subdomain', 'Its own subdomain', 'name.example.com, needs DNS']] as const).map(([v, t, h]) => (
+            {([['path', 'A path on the shared site', 'Works with no domain: …/s/name'], ['subdomain', 'Its own subdomain', 'name.<platform domain>: set and checked from its Overview once it runs']] as const).map(([v, t, h]) => (
               <button key={v} type="button" className={`opt ${data.placement.addressing === v ? 'on' : ''}`} onClick={() => set('placement', 'addressing', v)} aria-pressed={data.placement.addressing === v}>
                 <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span><span><b>{t}</b><small>{h}</small></span>
               </button>
             ))}
           </div>
-          <div style={{ marginTop: 12 }}>{f('placement', 'customDomain', 'Custom domain (optional)', { placeholder: 'erp.banyanridge.in', hint: 'Leave empty to use the platform address' })}</div>
+          <div style={{ marginTop: 12 }}>{f('placement', 'customDomain', 'Custom domain (optional)', { placeholder: 'app.yourschool.org', hint: 'Leave empty to use the platform address. The school points its DNS at the address its Overview shows; the console checks it and turns on the certificate.' })}</div>
         </>
       );
       case 'admin': return (
         <>
           <div className="help" style={{ marginBottom: 12 }}>This person gets the principal role and is invited to sign in. They can add everyone else.</div>
           {f('admin', 'name', 'Name')}{f('admin', 'email', 'Email', { type: 'email' })}{f('admin', 'phone', 'Phone', { type: 'tel' })}
-          <SelectField label="Send the invitation by" value={str(data.admin.invite)} onChange={(v) => set('admin', 'invite', v)} options={[{ value: 'both', label: 'Text and email' }, { value: 'sms', label: 'Text message' }, { value: 'email', label: 'Email' }]} />
+          <SelectField label="Send the invitation by" value={invite.some((o) => o.value === str(data.admin.invite)) ? str(data.admin.invite) : invite[0]?.value ?? ''} onChange={(v) => set('admin', 'invite', v)} options={invite} />
+          {invite.length < 3 && <div className="help">{invite.length === 1 ? 'Only this' : 'Only these'} {invite.length === 1 ? 'is' : 'are'} connected under Integrations{links.data?.mode === 'sandbox' ? ' (in sandbox, it lands in the Test inbox)' : ''}.</div>}
         </>
       );
       case 'data': return (
         <div style={{ display: 'grid', gap: 10 }} role="radiogroup" aria-label="Starting data">
-          {([['demo', 'The demo school', 'Classes, students, fees and a timetable, so everything can be tried straight away.'], ['empty', 'Empty', 'A brand-new school with nothing in it. Every page shows its empty state.'], ['import', 'Empty, then import', 'Starts empty and opens the student import first.']] as const).map(([v, t, h]) => (
+          {([...(about.data?.demos ? [['demo', 'The demo school', 'Classes, students, fees and a timetable, so everything can be tried straight away. Only on the test track.']] as const : []), ['empty', 'Empty', 'A brand-new school with nothing in it. Every page shows its empty state.'], ['import', 'Empty, then import', 'Starts empty; Gradeon’s team brings its records in from the Data tab.']] as const).map(([v, t, h]) => (
             <button key={v} type="button" role="radio" aria-checked={data.data.start === v} className={`opt ${data.data.start === v ? 'on' : ''}`} onClick={() => set('data', 'start', v)}>
               <span className="rd"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: 3 }}></path></svg></span><span><b>{t}</b><small>{h}</small></span>
             </button>
@@ -233,7 +266,7 @@ export function WizardPage() {
   const last = step === STEPS.length - 1;
   const problems = review.data?.problems ?? [];
   return (
-    <Page title="Onboard a school" sub="Seven short steps. Nothing is created until you press Launch." toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
+    <Page title="Onboard a school" sub={`${STEPS.length} short steps. Nothing is created until you press Launch.${savedAt ? ' Draft saved.' : ''}`} toast={toast} back={{ label: 'Onboarding', to: '/onboarding', go: app.go }} loading={!loaded}>
       <div className="wiz">
         <nav className="wst" aria-label="Steps">
           {STEPS.map((s, i) => (
@@ -279,8 +312,8 @@ function ReviewStep({ review, loading, error, payloadOk, missing, rehearsal }: {
       <div className="help" style={{ marginTop: 10 }}>Cell {review.capacity.cell} holds {review.capacity.schools} of {review.capacity.max} schools{review.capacity.ok ? '.' : ' and is full.'}</div>
       {rehearsal && (
         <div style={{ marginTop: 16 }}>
-          <div className="lbl" style={{ marginBottom: 6 }}>Rehearsal result · {rehearsal.status}</div>
-          {rehearsal.steps.map((s) => <div key={s.key} className="kv">{s.label}<b><span className={`st ${s.status === 'done' ? 'g' : s.status === 'failed' ? 'c' : 'n'}`}><i></i>{s.status}</span></b></div>)}
+          <div className="lbl" style={{ marginBottom: 6 }}>Rehearsal · {RUN_WORDS[rehearsal.status] ?? rehearsal.status}</div>
+          {rehearsal.steps.map((s) => <div key={s.key} className="kv">{s.label}<b><span className={`st ${s.status === 'done' ? 'g' : s.status === 'failed' ? 'c' : 'n'}`}><i></i>{RUN_WORDS[s.status] ?? s.status}</span></b></div>)}
         </div>
       )}
     </>

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
+import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -19,6 +20,9 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
   const [perms, setPerms] = useState<Set<string>>(new Set());
   const [err, setErr] = useState<Record<string, string>>({});
   const [sure, setSure] = useState(false);
+  const [find, setFind] = useState('');
+  const [moving, setMoving] = useState<{ userId: string; name: string; roleId: string } | null>(null);
+  const templates = useQuery({ queryKey: ['role-templates'], queryFn: app.api.roleTemplates.get, staleTime: 5 * 60_000 });
   const shake = useShake();
   const roles = q.data?.roles ?? [];
   const cur: RoleDef | undefined = roles.find((r) => r.id === sel);
@@ -38,24 +42,29 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
   const remove = useMutation({ mutationFn: () => app.api.config.deleteRole(schoolId, sel), onSuccess: (r) => after('Role deleted.', r, r[0]?.id ?? ''), onError: fail });
   const assign = useMutation({
     mutationFn: (b: { userId: string; roleId: string }) => app.api.config.setStaffRole(schoolId, b.userId, b.roleId),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['config', schoolId] }); say('Role changed. They get it within a minute.'); },
+    onSuccess: () => { setMoving(null); void qc.invalidateQueries({ queryKey: ['config', schoolId] }); say('Role changed. They get it within a minute.'); },
     onError: (e) => say((e as Error).message, 'bad'),
   });
 
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
   if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const readOnly = !can || !!cur?.locked;
-  const startNew = () => { setSel('new'); setName(''); setDesc(''); setPerms(new Set(['students.read'])); setErr({}); };
+  // A new role starts from one of the starting roles (Blueprints → Starting roles), or from nothing.
+  const startNew = (from: string) => {
+    const t = templates.data?.find((x) => x.key === from);
+    setSel('new'); setName(t ? `${t.name} (copy)` : ''); setDesc(t?.description ?? ''); setPerms(new Set(t?.permissions ?? [])); setErr({});
+  };
+  const people = q.data.staff.filter((s) => !find.trim() || `${s.name} ${s.designation}`.toLowerCase().includes(find.trim().toLowerCase()));
   const options = roles.map((r) => ({ value: r.id, label: r.name }));
   return (
     <section className="grid">
       <div className={`card s12 rise ${shake.cls}`}>
         <div className="ch"><h2>Roles</h2><span className="chip">{roles.length}</span></div>
-        <div className="help">A role decides which modules a person can open and what they can do inside each. The school cannot make or change roles.</div>
+        <div className="help">A role decides which modules a person can open and what they can do inside each. The school cannot make or change roles. Who may sign in to the app (students, parents, teachers, drivers) is under <a href={url(`/schools/${schoolId}/configuration`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${schoolId}/configuration?group=app`); }}>Configuration → The app</a>.</div>
         <div className="tgrow" style={{ marginTop: 12 }}>
           {roles.map((r) => <button key={r.id} type="button" className={`chip ${r.id === sel ? 'v' : ''}`} aria-pressed={r.id === sel} onClick={() => setSel(r.id)} style={{ cursor: 'pointer' }}>{r.name} · {r.people}</button>)}
           {sel === 'new' && <span className="chip v">{name.trim() || 'New role'}</span>}
-          {can && sel !== 'new' && <button type="button" className="chip" onClick={startNew} style={{ cursor: 'pointer' }}>+ New role</button>}
+          {can && sel !== 'new' && <Select compact aria-label="New role" value="" onChange={startNew} options={[{ value: '', label: '+ New role from…' }, ...(templates.data ?? []).map((t) => ({ value: t.key, label: t.name })), { value: '_blank', label: 'Nothing (start empty)' }]} />}
         </div>
         {(cur || sel === 'new') && (
           <>
@@ -94,18 +103,30 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
       </div>
 
       <div className="card s12 rise">
-        <div className="ch"><h2>Who has which role</h2><span className="chip">{q.data.staff.length} staff</span></div>
-        <div className="help">Whether the school may also do this itself is under Configuration → People.</div>
-        {q.data.staff.map((s) => (
+        <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}><h2>Who has which role</h2><span className="chip">{q.data.staff.length} staff</span><span className="grow"></span>
+          <div className="srch" style={{ minWidth: 200, height: 38 }}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
+        </div>
+        <div className="help">Whether the school may also do this itself is under Configuration → Staff.</div>
+        {people.length === 0 && <div className="help">No one matches.</div>}
+        {people.map((s) => (
           <div key={s.id} className="kv" style={{ gap: 12 }}>
             <span style={{ minWidth: 0 }}>{s.name}<small style={{ display: 'block', color: 'var(--ink3)' }}>{s.designation}</small></span>
             <b style={{ minWidth: 200 }}>
-              <Select value={s.roleId ?? ''} onChange={(roleId) => assign.mutate({ userId: s.id, roleId })} disabled={!can || assign.isPending} aria-label={`Role for ${s.name}`}
+              <Select value={s.roleId ?? ''} onChange={(roleId) => setMoving({ userId: s.id, name: s.name, roleId })} disabled={!can || assign.isPending} aria-label={`Role for ${s.name}`}
                 options={[...(s.roleId ? [] : [{ value: '', label: 'No role yet' }]), ...options]} />
             </b>
           </div>
         ))}
       </div>
+      {moving && (
+        <Dialog title={`Put ${moving.name} in ${roles.find((r) => r.id === moving.roleId)?.name ?? 'this role'}?`} tag={{ text: 'Takes effect within a minute', tone: 'v' }} onClose={() => setMoving(null)} width={460}>
+          <p style={{ marginTop: 0 }}>What they can open and do changes to what this role allows. They are not signed out.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button className="btn" onClick={() => setMoving(null)}>Cancel</button>
+            <button className="btn pri" disabled={assign.isPending} onClick={() => assign.mutate({ userId: moving.userId, roleId: moving.roleId })}>Change role</button>
+          </div>
+        </Dialog>
+      )}
     </section>
   );
 }

@@ -88,7 +88,7 @@ export class Releases implements OnApplicationBootstrap {
     const rel = await this.get(id);
     if (rel.status !== 'draft') throw new ApiError('conflict', 'This release has already been started.');
     const pol = await this.policy.get();
-    if (pol.freeze) throw new ApiError('locked', 'Changes are frozen. A super admin can lift the freeze under Policy.');
+    if (pol.freeze) throw new ApiError('locked', 'Changes are frozen. A super admin can lift the freeze under Console settings.');
     const other = await this.current();
     if (other) throw new ApiError('conflict', `Release ${other.version} is still ${other.status}. Finish or roll it back first.`);
     const { rows } = await this.db.query<SchoolRecord>("select * from schools where status = 'live' and deleted_at is null order by created_at");

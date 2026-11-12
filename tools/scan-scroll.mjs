@@ -2,6 +2,7 @@
 // Scrolls every box that scrolls on its own and checks two things: its column titles stay in view, and each frame of
 // scrolling is quick (worst and 90th-percentile frame time). Usage: node tools/scan-scroll.mjs [--only admin|console] [--sizes 1440x900,390x844]
 import { chromium } from '@playwright/test';
+import { adminPaths, consolePaths } from './lib/pages.mjs';
 
 const args = process.argv.slice(2);
 const val = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
@@ -19,13 +20,13 @@ if (only !== 'console') {
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
   const key = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
-  for (const p of ['', '/students', '/timetable', '/attendance', '/fees', '/homework', '/exams', '/staff', '/admissions', '/invoices', '/reports', '/messages', '/events', '/settings']) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
+  for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
   const key = ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken];
-  for (const p of ['/', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key });
+  for (const p of consolePaths('').filter((p) => !p.startsWith('/schools/'))) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key });
 }
 
 const run = async () => {

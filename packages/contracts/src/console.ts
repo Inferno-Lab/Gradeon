@@ -4,13 +4,25 @@ import type { Limits, ModuleDates } from './config.js';
 
 export const CONSOLE_ROLES = ['super_admin', 'implementation', 'support', 'release_manager', 'finance', 'compliance', 'auditor'] as const;
 export const ConsoleRole = z.enum(CONSOLE_ROLES);
+/** What each console role is called and what it is for, kept with the roles so every page says the same. */
+export const CONSOLE_ROLE_INFO: Record<(typeof CONSOLE_ROLES)[number], { label: string; help: string }> = {
+  super_admin: { label: 'Super admin', help: 'Everything, including the team and the rules for risky changes' },
+  implementation: { label: 'Implementation', help: 'Set schools up: configuration, roles, imports and requests' },
+  support: { label: 'Support', help: 'Look inside schools, read-only, in support sessions' },
+  release_manager: { label: 'Release manager', help: 'Releases, database changes, app builds and flags' },
+  finance: { label: 'Finance', help: 'Plans, prices, billing and invoices' },
+  compliance: { label: 'Compliance', help: 'Agreements, breaches, erasure and data requests' },
+  auditor: { label: 'Auditor', help: 'Read everything, change nothing' },
+};
 export type ConsoleRole = z.infer<typeof ConsoleRole>;
 
-export const SchoolStatus = z.enum(['onboarding', 'live', 'suspended', 'offboarding', 'archived']);
+export const SchoolStatus = z.enum(['onboarding', 'live', 'suspended', 'moving', 'offboarding', 'archived']);
 export type SchoolStatus = z.infer<typeof SchoolStatus>;
 
 /** Where a cell runs. A cell has exactly one target; the blueprint steps are the same on every target. */
 export const DeployTarget = z.enum(['local', 'free-test', 'aws-cell']);
+/** What each place a school can run is called on every console page. */
+export const DEPLOY_TARGET_LABELS: Record<z.infer<typeof DeployTarget>, string> = { local: 'This computer', 'free-test': 'Free test track', 'aws-cell': 'Cloud cell' };
 export type DeployTarget = z.infer<typeof DeployTarget>;
 
 export const Slug = z
@@ -86,13 +98,42 @@ export interface PlanRow {
   /** Features this plan leaves out (false), like fees.onlinePayment on a starter plan. Applied when a school takes the plan. */
   features?: Record<string, boolean>;
   limits: Limits;
+  /** Schools on this plan now. */
+  schools?: number;
 }
+
+/** A plan as the console edits it: price per student a year, the modules it brings, features it leaves out, and its limits. */
+export const PlanSave = z.object({
+  key: z.string().trim().regex(/^[a-z][a-z0-9-]{1,23}$/, 'Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter'),
+  name: z.string().trim().min(2, 'Enter the plan’s name').max(40),
+  perStudentYear: z.number().int().min(0, 'Enter a price, or 0 for free').max(1_000_000),
+  modules: z.array(z.string()).min(1, 'Choose at least one module'),
+  features: z.record(z.string(), z.boolean()).default({}),
+  limits: z.object({
+    students: z.number().int().min(1, 'At least 1').max(1_000_000),
+    staff: z.number().int().min(0).max(100_000).optional(),
+    storageGb: z.number().int().min(1, 'At least 1').max(100_000),
+    smsPerMonth: z.number().int().min(0).max(10_000_000),
+  }),
+});
+export type PlanSave = z.infer<typeof PlanSave>;
+
+/** The boards a school can follow: the one list the wizard and a school's details offer. */
+export const SCHOOL_BOARDS = ['CBSE', 'ICSE', 'State', 'IB', 'International', 'Other'] as const;
+
+/** What Gradeon keeps about a school beside its own settings: the contact for Gradeon, tax number and board. */
+export const SchoolDetailsPatch = z.object({
+  contact: z.object({ name: z.string().trim().min(2, 'Enter the contact’s name').max(80), phone: z.string().trim().min(8, 'Enter a phone number').max(24), email: z.string().trim().email('Enter a valid email') }),
+  gstin: z.string().trim().max(20).default(''),
+  board: z.enum(SCHOOL_BOARDS),
+});
+export type SchoolDetailsPatch = z.infer<typeof SchoolDetailsPatch>;
 
 export const WizardBasics = z.object({
   name: z.string().trim().min(3, 'Enter the school’s full name').max(80),
   shortName: z.string().trim().min(2, 'Enter a short name').max(20),
   slug: Slug,
-  board: z.enum(['CBSE', 'ICSE', 'State', 'IB', 'International', 'Other']).default('CBSE'),
+  board: z.enum(SCHOOL_BOARDS).default('CBSE'),
   address: z.string().trim().max(240).default(''),
   city: z.string().trim().max(60).default(''),
   contactName: z.string().trim().min(2).max(80),
@@ -105,16 +146,21 @@ export const WizardBasics = z.object({
 export const WizardPlan = z.object({
   plan: z.string().min(1, 'Choose a plan'),
   modules: z.array(z.string()).min(1, 'Switch on at least one module'),
-  addOns: z.array(z.string()).default([]),
   locks: z.array(z.string()).default([]),
   students: z.number().int().min(1).max(20000).default(500),
 });
+
+/** A logo image as the console sends it: PNG or JPEG, base64, at most 2 MB once decoded. */
+export const LogoUpload = z.object({ name: z.string().min(1).max(120), mime: z.enum(['image/png', 'image/jpeg']), data: z.string().min(10).max(3_000_000) });
+export type LogoUpload = z.infer<typeof LogoUpload>;
 
 export const WizardBranding = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a colour like #6A4CF5'),
   logoText: z.string().trim().min(1).max(2),
   appName: z.string().trim().min(2).max(30),
   tagline: z.string().trim().max(120).default(''),
+  /** Stored in the school's storage once set-up has made it. */
+  logo: LogoUpload.nullable().default(null),
 });
 
 export const WizardPlacement = z.object({
@@ -214,11 +260,14 @@ export interface SchoolRow {
   lastIncident: string | null;
   adminUrl: string;
   createdAt: string;
+  /** When Gradeon pressed Go live; null while the school is still moving in. */
+  wentLiveAt: string | null;
 }
 
 export interface SchoolDetail extends SchoolRow {
   contact: { name: string; phone: string; email: string };
   gstin: string;
+  board: string;
   entitlement: {
     plan: string;
     /** As granted (with what they need), before dates are applied. */
@@ -233,7 +282,7 @@ export interface SchoolDetail extends SchoolRow {
     version: number;
   };
   usage: { students: number; storageGb: number; sms: number; staff: number };
-  checklist: { key: string; label: string; state: 'done' | 'waiting' | 'todo' }[];
+  checklist: { key: string; label: string; state: 'done' | 'waiting' | 'todo'; by: string | null; at: string | null }[];
   runs: ProvisionRunRow[];
   builds: BuildRow[];
 }
@@ -249,13 +298,22 @@ export interface BuildRow {
   createdAt: string;
 }
 
-export const ACTIONS = ['school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply'] as const;
+export const ACTIONS = ['school.golive', 'school.suspend', 'school.resume', 'school.erase', 'entitlements.push', 'migration.run', 'domain.set', 'build.app', 'backup.take', 'backup.restore', 'school.move', 'config.apply', 'integration.live', 'integration.mode', 'retention.erase'] as const;
+/** What each action is called on every console page (approvals, rules for risky changes, history). */
+export const ACTION_LABELS: Record<(typeof ACTIONS)[number], string> = {
+  'school.golive': 'Take a school live', 'school.suspend': 'Pause a school', 'school.resume': 'Bring a school back', 'school.erase': 'Erase a school',
+  'entitlements.push': 'Change a school’s plan and modules', 'migration.run': 'Run database changes', 'domain.set': 'Change a school’s address',
+  'build.app': 'Build a school’s app', 'backup.take': 'Take a backup', 'backup.restore': 'Restore a backup', 'school.move': 'Move a school to another cell',
+  'config.apply': 'Change a risky setting', 'integration.live': 'Take a connection live', 'integration.mode': 'Switch the platform to live messages',
+  'retention.erase': 'Erase leavers past retention',
+};
 export const ActionKey = z.enum(ACTIONS);
 export type ActionKey = z.infer<typeof ActionKey>;
 
 export const ActionRequest = z.object({
   action: ActionKey,
-  schoolId: z.string(),
+  /** Every action is about one school, except taking an integration live, which may serve them all. */
+  schoolId: z.string().optional(),
   params: z.record(z.string(), z.unknown()).default({}),
   dryRun: z.boolean().default(false),
   /** Danger actions need the school code typed exactly. */
@@ -272,7 +330,15 @@ export interface ActionRow {
   requestedBy: string;
   approvedBy: string | null;
   dryRun: boolean;
+  /** The result once it ran (or what was asked, before). */
   summary: string;
+  /** What was asked for, in words. */
+  asked: string;
+  /** Settings it changes, from what they are now to what they become. */
+  changes: { key: string; before: unknown; after: unknown }[];
+  /** The requester's note, and why it was rejected. */
+  note: string;
+  decisionNote: string;
   createdAt: string;
   finishedAt: string | null;
 }
@@ -282,6 +348,8 @@ export interface PolicyDoc {
   waves: { name: string; matches: 'internal' | 'pilot' | 'rest'; batch: number }[];
   halt: { errorRatePct: number; p95Ms: number };
   freeze: boolean;
+  /** Why changes are frozen, shown on every console page while they are. */
+  freezeReason: string;
   naming: { slugPattern: string; bundlePrefix: string };
   maintenanceWindow: string;
 }
@@ -317,7 +385,9 @@ export interface FleetSummary {
   requests24h: { hour: number; value: number; previous: number }[];
   p95Ms: number;
   cells: { key: string; target: DeployTarget; schools: number; max: number; region: string }[];
-  incident: { id: string; title: string; body: string; state: 'open' | 'resolved'; startedAt: string; schoolName: string | null } | null;
+  incident: { id: string; title: string; body: string; state: 'open' | 'resolved'; startedAt: string; schoolId: string | null; schoolName: string | null } | null;
+  /** When the last request numbers were read (null before the first). */
+  readingAt: string | null;
   upcoming: { name: string; id: string }[];
   release: ReleaseRow | null;
 }
@@ -396,8 +466,18 @@ export interface InvoiceRowC {
   amount: number;
   /** How the amount was worked out: the plan, then each module added on top of it. */
   lines: { label: string; amount: number }[];
+  /** Overdue is worked out: sent and not paid by the due date. */
   status: 'draft' | 'sent' | 'paid' | 'overdue';
+  /** Fifteen days after the month ends. */
+  dueOn: string;
+  sentAt: string | null;
+  sentTo: string | null;
+  paidOn: string | null;
+  paidRef: string | null;
 }
+
+export const InvoicePaid = z.object({ paidOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick the day it was paid'), reference: z.string().trim().min(2, 'Enter the payment reference').max(80) });
+export type InvoicePaid = z.infer<typeof InvoicePaid>;
 
 /** What each console role may do. The console hides what a role cannot use and the API refuses it. */
 export const CONSOLE_PERMISSIONS = [
@@ -405,17 +485,19 @@ export const CONSOLE_PERMISSIONS = [
   'support.access', 'billing.read', 'billing.write', 'team.write', 'audit.read', 'policy.write', 'sandbox.read', 'compliance.write',
   // Set up a school: its configuration, roles, who is in which role, and the requests schools send.
   'schools.configure',
+  // Third parties: connections, routes, templates and the delivery log.
+  'integrations.read', 'integrations.write',
 ] as const;
 export type ConsolePermission = (typeof CONSOLE_PERMISSIONS)[number];
 
 export const CONSOLE_ROLE_PERMISSIONS: Record<ConsoleRole, readonly ConsolePermission[]> = {
   super_admin: CONSOLE_PERMISSIONS,
-  implementation: ['schools.read', 'schools.configure', 'sandbox.read', 'audit.read'],
-  support: ['schools.read', 'support.access', 'sandbox.read', 'audit.read'],
+  implementation: ['schools.read', 'schools.configure', 'sandbox.read', 'audit.read', 'integrations.read', 'integrations.write'],
+  support: ['schools.read', 'support.access', 'sandbox.read', 'audit.read', 'integrations.read'],
   release_manager: ['schools.read', 'releases.write', 'builds.write', 'flags.write', 'sandbox.read'],
   finance: ['schools.read', 'billing.read', 'billing.write'],
   compliance: ['schools.read', 'audit.read', 'billing.read', 'compliance.write'],
-  auditor: ['schools.read', 'audit.read', 'billing.read', 'sandbox.read'],
+  auditor: ['schools.read', 'audit.read', 'billing.read', 'sandbox.read', 'integrations.read'],
 };
 
 export function consolePermissions(roles: readonly ConsoleRole[]): ConsolePermission[] {
@@ -459,23 +541,27 @@ export const CellCreate = z.object({
   target: DeployTarget,
   region: z.string().trim().min(2, 'Name the region').max(40),
   maxSchools: z.number().int().min(1, 'At least 1').max(500),
-});
+  /** The School databases connection (Integrations) that makes its schools' databases; needed on aws-cell. */
+  connectionId: z.string().nullable().default(null),
+}).refine((c) => c.target !== 'aws-cell' || !!c.connectionId, { message: 'A cell on AWS needs its School databases connection.', path: ['connectionId'] });
 export type CellCreate = z.infer<typeof CellCreate>;
 
 export const CellPatch = z.object({
   region: z.string().trim().min(2).max(40).optional(),
   maxSchools: z.number().int().min(1).max(500).optional(),
   accepting: z.boolean().optional(),
+  connectionId: z.string().nullable().optional(),
 });
 export type CellPatch = z.infer<typeof CellPatch>;
 
 // Compliance desk
 
-export const SUBPROCESSORS = [
-  { name: 'Neon', purpose: 'Databases for the registry and every school', region: 'Singapore' },
-  { name: 'Render', purpose: 'Runs the platform and serves the admin and console', region: 'Singapore' },
-  { name: 'GitHub', purpose: 'Source code and Android app builds', region: 'United States' },
-] as const;
+/** Who else handles a school's data: worked out from the Hub's live connections, not a list kept by hand. */
+export interface SubprocessorRow { name: string; purpose: string; serves: string; region: string }
+
+/** The notice a school gets about a breach: shown to the person sending it first, then sent as is. */
+export const breachNotice = (school: string, title: string, note: string) =>
+  `Gradeon has recorded an incident that may affect ${school}: ${title}. ${note}\nYou can use this to meet your 72-hour notification duty.`;
 
 export const ComplianceCreate = z.object({
   schoolId: z.string().min(1, 'Choose a school'),
@@ -485,7 +571,14 @@ export const ComplianceCreate = z.object({
 });
 export type ComplianceCreate = z.infer<typeof ComplianceCreate>;
 
-export const ComplianceUpdate = z.object({ status: z.enum(['open', 'signed', 'notified', 'closed']), note: z.string().trim().max(600).default('') });
+export const ComplianceUpdate = z.object({
+  status: z.enum(['open', 'signed', 'notified', 'closed']),
+  note: z.string().trim().max(600).default(''),
+  /** Signing: the day, who signed for the school, and the signed file (PDF or image, base64, up to 5 MB). */
+  signedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  signedBy: z.string().trim().min(2).max(80).optional(),
+  file: z.object({ name: z.string().min(1).max(120), data: z.string().min(10).max(7_000_000) }).optional(),
+});
 export type ComplianceUpdate = z.infer<typeof ComplianceUpdate>;
 
 export interface ComplianceRow {
@@ -501,7 +594,13 @@ export interface ComplianceRow {
   /** A breach must reach the school within 72 hours of being found. */
   deadlineAt: string | null;
   closedAt: string | null;
+  signedOn: string | null;
+  signedBy: string | null;
+  fileName: string | null;
 }
+
+/** A family's or staff member's data request at any school, for the one list across schools. */
+export interface DataRequestAcross { id: string; schoolId: string; schoolName: string; kind: string; subjectName: string; requestedBy: string; status: string; createdAt: string }
 
 export interface PublicStatus {
   updatedAt: string;
@@ -531,6 +630,9 @@ export interface ErrorGroup {
   count: number;
   firstAt: string;
   lastAt: string;
+  /** Marked handled, and it has not happened since. */
+  handledBy: string | null;
+  handledAt: string | null;
 }
 
 export interface BackupRow {
@@ -559,12 +661,14 @@ export interface RestoreDrillRow {
 export interface SchoolConfig {
   version: number;
   values: Record<string, unknown>;
-  /** Modules the plan allows: the most "Switched on" may hold. */
+  /** Modules the school has (its plan and dates): only their settings are shown. */
   entitled: string[];
   /** Features the school has inside those modules: roles only offer permissions for what the school has. */
   features: string[];
   roles: RoleDef[];
   classes: { id: string; name: string }[];
+  /** The school's own fee heads (a list it keeps; fees.gstHeads picks from it). */
+  feeHeads: { key: string; name: string }[];
   staff: { id: string; name: string; designation: string; roleId: string | null }[];
   versions: ConfigVersionRow[];
 }
@@ -600,4 +704,38 @@ export type ChangeRequestCreate = z.infer<typeof ChangeRequestCreate>;
 export interface ChangeRequestRow {
   id: string; schoolId: string; schoolSlug: string; schoolName: string; area: string; message: string; requestedBy: string;
   status: 'open' | 'done' | 'declined'; answer: string; answeredBy: string | null; createdAt: string; closedAt: string | null;
+}
+
+/** The store ID a school's app is listed under: the same package name on Android and bundle ID on iPhone. */
+export const appIdFor = (slug: string, prefix = 'com.gradeon.') => `${prefix.endsWith('.') ? prefix : `${prefix}.`}${slug.replace(/[^a-z0-9]/g, '')}`;
+
+/** Console history in words: each entry's action key as people read it (every console page shows these, never the key). */
+const AUDIT_WORDS: Record<string, string> = {
+  'auth.authenticator_added': 'Added an authenticator', 'auth.authenticator_reset': 'Reset their authenticator', 'auth.password_changed': 'Changed their password',
+  'auth.password_reset': 'Reset their password', 'auth.refresh_replayed': 'A stolen sign-in was stopped', 'billing.generated': 'Created the month’s invoices',
+  'blueprint.activated': 'Switched a blueprint on', 'blueprint.saved': 'Saved a blueprint', 'build.requested': 'Asked for an app build', 'cell.changed': 'Changed a cell',
+  'cell.created': 'Added a cell', 'cell.removed': 'Removed a cell', 'checklist.changed': 'Changed an app store step', 'config.changed': 'Changed settings', 'flag.removed': 'Removed a flag',
+  'flag.set': 'Switched a flag', 'import.committed': 'Imported records', 'import.file_set_aside': 'Set a school’s file aside', 'import.sample_loaded': 'Loaded a test school',
+  'import.undone': 'Undid an import', 'integration.allowlist': 'Changed who gets real messages in test', 'integration.changed': 'Changed a connection',
+  'integration.created': 'Added a connection', 'integration.deleted': 'Deleted a connection', 'integration.mode': 'Switched messages to live or test',
+  'integration.retried': 'Sent a failed message again', 'integration.routed': 'Chose a school’s connection', 'integration.template': 'Saved an approved template',
+  'integration.template.deleted': 'Deleted an approved template', 'integration.tested': 'Tested a connection', 'integration.unrouted': 'Put a school back on Gradeon’s connection',
+  'invoice.status': 'Changed an invoice', 'job.retried': 'Retried a background job', 'migration.readiness': 'Ticked a go-live item', 'plan.added': 'Added a plan',
+  'plan.changed': 'Changed a plan', 'plan.removed': 'Removed a plan', 'policy.changed': 'Changed the rules for risky changes', 'provision.retried': 'Retried a set-up step',
+  'provision.step_skipped': 'Skipped a set-up step', 'release.created': 'Created a release', 'release.done': 'Finished a release', 'release.halted': 'A release stopped by itself',
+  'release.rolled_back': 'Marked a release rolled back', 'release.started': 'Started a release', 'role.removed': 'Removed a role', 'role.saved': 'Saved a role',
+  'school.created': 'Created the school', 'school.details': 'Changed the school’s details', 'school.exported': 'Exported everything', 'school.logo': 'Changed the logo',
+  'school.went_live': 'Took the school live', 'staff.role_set': 'Put a person into a role', 'support.ended': 'Ended a support session', 'support.started': 'Started a support session',
+  'team.added': 'Added a team member', 'team.changed': 'Changed a team member', 'team.invited': 'Invited a team member', 'team.removed': 'Removed a team member', 'theme.changed': 'Changed the console colours',
+  'request.done': 'Answered a request: done', 'request.declined': 'Answered a request: declined',
+};
+const PHASES: Record<string, string> = { requested: 'asked', rejected: 'rejected', finished: 'carried out', approved: 'approved' };
+
+export function auditLabel(action: string): string {
+  if (AUDIT_WORDS[action]) return AUDIT_WORDS[action]!;
+  const m = /^action\.(.+)\.(requested|rejected|finished|approved)$/.exec(action);
+  if (m && m[1]! in ACTION_LABELS) return `${ACTION_LABELS[m[1] as keyof typeof ACTION_LABELS]}: ${PHASES[m[2]!]}`;
+  const c = /^compliance\.([a-z_]+)\.([a-z_]+)$/.exec(action);
+  if (c) return `${c[1] === 'breach' ? 'Breach' : c[1] === 'agreement' ? 'Agreement' : 'Compliance item'} ${c[2]!.replace(/_/g, ' ')}`;
+  return action.replace(/[._]/g, ' ').replace(/^./, (x) => x.toUpperCase());
 }

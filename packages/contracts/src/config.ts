@@ -2,6 +2,28 @@ import { z } from 'zod';
 import { ThemeColorsSchema, type AppMode, type ThemeColors } from './theme.js';
 
 
+/** Attendance marks the data model knows; a school picks which it uses (`attendance.statuses`). */
+export const ATTENDANCE_MARKS = ['present', 'absent', 'late', 'half_day', 'leave'] as const;
+export type AttendanceMark = (typeof ATTENDANCE_MARKS)[number];
+
+/** A category of notices or events: its name, and the tone (a theme colour pair) it is drawn in. */
+export const CATEGORY_TONES = ['v', 'g', 'a', 'c'] as const;
+export const CATEGORY_TONE_LABELS: Record<(typeof CATEGORY_TONES)[number], string> = { v: 'Violet', g: 'Green', a: 'Amber', c: 'Coral' };
+const CATEGORY = z.object({ key: z.string().regex(/^[a-z0-9-]{1,24}$/), name: z.string().trim().min(1).max(24), tone: z.enum(CATEGORY_TONES) });
+export type Category = z.infer<typeof CATEGORY>;
+
+/** The app's roles (config-engine's APP_ROLES is the same list). */
+export const APP_ROLE_KEYS = ['parent', 'student', 'teacher', 'driver'] as const;
+export type AppRoleKey = (typeof APP_ROLE_KEYS)[number];
+const APP_LAYOUT = z.object({ dock: z.array(z.string()).max(4), home: z.array(z.string()).max(12), quick: z.array(z.string()).max(6) });
+export type AppLayout = z.infer<typeof APP_LAYOUT>;
+export const DEFAULT_APP_LAYOUT: Record<AppRoleKey, AppLayout> = {
+  parent: { dock: ['home', 'academics', 'fees', 'chat'], home: ['dayRibbon', 'dueStack', 'attendance', 'nextExam', 'homework', 'notices', 'events'], quick: ['payFees', 'applyLeave', 'messageTeacher', 'timetable'] },
+  student: { dock: ['home', 'homework', 'timetable', 'chat'], home: ['dayRibbon', 'homework', 'nextExam', 'notices', 'events'], quick: ['homework', 'timetable', 'events'] },
+  teacher: { dock: ['home', 'classes', 'timetable', 'chat'], home: ['dayRibbon', 'notices', 'events'], quick: ['markAttendance', 'assignHomework', 'grade', 'postNotice'] },
+  driver: { dock: ['home', 'trips', 'chat'], home: [], quick: [] },
+};
+
 /** Every setting a school can change (config layer 4). Defaults here are the platform defaults (layer 1). */
 export const SchoolSettingsSchema = z.object({
   'school.name': z.string().min(2).max(80),
@@ -16,8 +38,6 @@ export const SchoolSettingsSchema = z.object({
   'brand.logoText': z.string().max(2).default(''),
   // Every colour of the school's admin and app that Gradeon changed from the design's defaults (keys from THEME_KEYS).
   'theme.colors': ThemeColorsSchema.default({}),
-  'modules.enabled': z.array(z.string()).default([]),
-  'approvals.feeWaiver': z.enum(['principal', 'office', 'anyone']).default('principal'),
   'approvals.notice': z.enum(['required', 'off']).default('required'),
   'attendance.notifyParents': z.boolean().default(true),
   'attendance.lockAfterDays': z.number().int().min(0).max(30).default(2),
@@ -26,9 +46,6 @@ export const SchoolSettingsSchema = z.object({
   'fees.dailyTarget': z.number().int().min(0).max(100000000).default(150000),
   'attendance.goalPct': z.number().min(50).max(100).default(95),
   'homework.goalPct': z.number().min(50).max(100).default(85),
-  'term.name': z.string().max(30).default('Term 1'),
-  'term.examsStart': z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  'students.pinnedClass': z.string().optional(),
   'dashboard.rollClasses': z.array(z.string()).max(8).default([]),
   'security.twoFactor': z.boolean().default(true),
   'security.passwordMinLength': z.number().int().min(8).max(64).default(8),
@@ -50,20 +67,80 @@ export const SchoolSettingsSchema = z.object({
   // Printed under the school's name on every receipt: the trust, its registration or GST number.
   'fees.receiptNote': z.string().max(300).default(''),
   // How the office may record a payment (families pay in the app by UPI, card or net banking).
+  // GST on receipts (feature fees.gstReceipts): the school's GSTIN, the service code and rate, and which fee heads are taxable.
+  'fees.gstin': z.string().trim().regex(/^$|^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'A GSTIN has 15 characters, like 27AAAAA0000A1Z5').default(''),
+  'fees.gstSac': z.string().trim().max(8).default('999293'),
+  'fees.gstRatePct': z.number().min(0).max(28).default(18),
+  'fees.gstHeads': z.array(z.string()).default([]),
+  // Refunds above this many rupees need a second person in the school (fees.refund on both).
+  'fees.refundApprovalAbove': z.number().int().min(0).max(10_000_000).default(5000),
+  // The school's logo image (a file kept in its storage); the letters stand in until there is one.
+  'brand.logoFileId': z.string().default(''),
+  // Library rules.
+  'library.loanDays': z.number().int().min(1).max(60).default(14),
+  'library.finePerDay': z.number().int().min(0).max(100).default(1),
+  'library.maxRenewals': z.number().int().min(0).max(5).default(1),
+  // Books a student, and a member of staff, may have out at once.
+  'library.maxLoans': z.number().int().min(1).max(20).default(3),
+  'library.staffMaxLoans': z.number().int().min(1).max(50).default(5),
+  // Families are told the bus is near when it is this many minutes from their stop.
+  'transport.nearMinutes': z.number().int().min(2).max(30).default(10),
   'fees.paymentMethods': z.array(z.enum(['cash', 'upi', 'card', 'netbanking', 'cheque'])).min(1).default(['cash', 'upi', 'card', 'netbanking', 'cheque']),
-  'demo.mode': z.boolean().default(false),
   'vocab.student': z.string().max(24).default('Student'),
   'vocab.class': z.string().max(24).default('Class'),
-  // The app: what sits in the dock, what the home screen shows, which quick buttons it offers.
-  'app.dock': z.array(z.string()).max(4).default(['home', 'academics', 'fees', 'chat']),
-  'app.home': z.array(z.string()).max(12).default(['dayRibbon', 'dueStack', 'attendance', 'nextExam', 'notices', 'events']),
-  'app.quick': z.array(z.string()).max(6).default(['payFees', 'applyLeave', 'messageTeacher', 'timetable']),
+  // Plurals, for words that do not take an "s" ("Children"); empty means the singular with the usual English ending.
+  'vocab.students': z.string().max(24).default(''),
+  'vocab.classes': z.string().max(24).default(''),
+  // Where enquiries come from, as the school counts them (Admissions and its reports).
+  'admissions.sources': z.array(z.string().trim().min(1).max(40)).min(1).max(16).default(['Walk-in', 'Phone', 'Website', 'Referral', 'Event']),
+  // The stages between enquiry and enrolment the school uses (some have no entrance test).
+  'admissions.stages': z.array(z.enum(['applied', 'test', 'offer'])).max(3).default(['applied', 'test', 'offer']),
+  // The school's houses, if it has them: on student profiles, the roll-call grid and the app.
+  /** The letters sent home to start families and students on the app (placeholders: {school} {student} {class} {guardian} {phoneEnd} {link}). */
+  'letters.family': z.string().max(3000).default('Dear {guardian},\n\n{school} now has its own app. You can follow {student}’s school day on your phone: attendance, homework, results, fees and notices, as your school uses them.\n\n1. Scan the code, or open {link}, to get the {school} app.\n2. Sign in with your phone number ending {phoneEnd}.\n3. Type the code we send you. There is no password to remember.\n\nIf your phone number has changed, tell the school office.'),
+  'letters.student': z.string().max(3000).default('Dear {student},\n\n{school} now has its own app for you: your timetable, homework, results and notices.\n\n1. Scan the code, or open {link}, to get the {school} app.\n2. Sign in with the phone number or email the school has for you.\n3. Type the code we send you.\n\nAsk your class teacher if you need help.'),
+  'students.required': z.array(z.enum(['gender', 'house', 'admissionNo', 'bloodGroup', 'address'])).default([]),
+  'people.houses': z.array(z.object({ key: z.string().regex(/^[a-z0-9-]{1,24}$/), name: z.string().min(1).max(24), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) })).max(12).default([]),
+  // The first column of every week grid (attendance, leave, the app's calendars).
+  'calendar.weekStarts': z.enum(['mon', 'sun']).default('mon'),
+  // The attendance marks the school uses (present and absent always).
+  'attendance.statuses': z.array(z.enum(ATTENDANCE_MARKS)).min(2).default(['present', 'absent', 'late', 'leave']),
+  // Reasons a family picks when asking for leave.
+  'leave.reasons': z.array(z.string().trim().min(1).max(40)).min(1).max(12).default(['Unwell', 'Family function', 'Travel', 'Appointment', 'Other']),
+  // Families see how many classmates have handed in; who may hand in from the app.
+  'homework.showClassProgress': z.boolean().default(false),
+  'homework.defaultDueDays': z.number().int().min(1).max(30).default(2),
+  'homework.defaultMarks': z.number().int().min(1).max(100).default(20),
+  'homework.handedInBy': z.enum(['parent', 'student', 'either']).default('either'),
+  // Results: class rank shown to families; the grading scale (highest first) and the pass mark.
+  'exams.defaultMaxMarks': z.number().int().min(1).max(200).default(100),
+  'exams.leadDays': z.number().int().min(0).max(120).default(7),
+  'results.showRank': z.boolean().default(false),
+  'grading.scale': z.array(z.object({ grade: z.string().min(1).max(4), minPct: z.number().min(0).max(100) })).min(1).max(12).default([
+    { grade: 'A1', minPct: 91 }, { grade: 'A2', minPct: 81 }, { grade: 'B1', minPct: 71 }, { grade: 'B2', minPct: 61 }, { grade: 'C1', minPct: 51 },
+    { grade: 'C2', minPct: 41 }, { grade: 'D', minPct: 33 }, { grade: 'E', minPct: 0 },
+  ]),
+  'grading.passPct': z.number().min(0).max(100).default(33),
+  // Categories of notices and events: one list each, used by the people who write them and the people who read them.
+  'notices.categories': z.array(CATEGORY).min(1).max(16).default([
+    { key: 'academic', name: 'Academic', tone: 'v' }, { key: 'exams', name: 'Exams', tone: 'c' }, { key: 'events', name: 'Events', tone: 'g' },
+    { key: 'sports', name: 'Sports', tone: 'a' }, { key: 'holiday', name: 'Holiday', tone: 'g' }, { key: 'fees', name: 'Fees', tone: 'a' },
+  ]),
+  'events.categories': z.array(CATEGORY).min(1).max(16).default([
+    { key: 'academic', name: 'Academic', tone: 'v' }, { key: 'cultural', name: 'Cultural', tone: 'g' }, { key: 'sports', name: 'Sports', tone: 'a' },
+    { key: 'meeting', name: 'Meeting', tone: 'v' }, { key: 'holiday', name: 'Holiday', tone: 'c' },
+  ]),
+  // Families see how many are going to an event.
+  'events.showGoing': z.boolean().default(false),
+  // Who a family may call about the bus from the app (never the driver while driving).
+  'transport.familyCalls': z.enum(['attendant', 'office', 'none']).default('office'),
+  // Who signs in to the app, and what each role sees: its bottom tabs, Home cards and quick buttons.
+  'app.roles': z.array(z.enum(APP_ROLE_KEYS)).default(['parent', 'teacher']),
+  'app.layout': z.object({ parent: APP_LAYOUT, student: APP_LAYOUT, teacher: APP_LAYOUT, driver: APP_LAYOUT }).default(DEFAULT_APP_LAYOUT),
   // Which languages the app offers; the school's default language comes first.
   'app.languages': z.array(z.enum(['en', 'hi', 'mr'])).min(1).default(['en', 'hi', 'mr']),
-  // Whether teachers sign in to the app (families always do; teachers can always use the admin).
-  'app.teachers': z.boolean().default(true),
   // Notifications: which message goes out on which channel, and when families are left in peace.
-  'notify.rules': z.record(z.string(), z.object({ push: z.boolean(), sms: z.boolean(), email: z.boolean() })).default({}),
+  'notify.rules': z.record(z.string(), z.object({ push: z.boolean(), sms: z.boolean(), email: z.boolean(), whatsapp: z.boolean().default(false) })).default({}),
   'notify.quietFrom': z.string().regex(/^\d{2}:\d{2}$/, 'Use a time like 21:00').default('21:00'),
   'notify.quietTo': z.string().regex(/^\d{2}:\d{2}$/, 'Use a time like 07:00').default('07:00'),
   // Message templates by key, with {placeholders}. Empty means the built-in wording.
@@ -127,6 +204,8 @@ export interface SchoolBrand {
   shortName: string;
   color: string;
   logoText: string;
+  /** A link to the school's logo image (valid an hour), or null while it has only letters. */
+  logoUrl: string | null;
   tagline: string;
   language: string;
   demoMode: boolean;
@@ -137,19 +216,47 @@ export interface SchoolBrand {
   privacy: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
 }
 
+export interface MenuGroup {
+  group: string;
+  pages: { id: string; module: string; label: string; icon: string; keys: string; href: string; tabs: { key: string; label: string; href: string }[] }[];
+}
+
 /** What the apps fetch: layers 1 to 5 resolved for one audience, with the version it was built from. */
 export interface EffectiveConfig {
   version: number;
-  school: { name: string; shortName: string; color: string; logoText: string; language: string; tagline: string };
+  school: { name: string; shortName: string; color: string; logoText: string; language: string; tagline: string; place: string; address: string; phone: string; email: string };
   modules: string[];
   /** Features inside those modules the school has (catalogue keys like fees.onlinePayment). */
   features: string[];
-  nav: { module: string; label: string; icon: string; href: string }[];
+  /** The admin menu for this audience, built from the module definitions: groups of pages, each with its tabs. */
+  menu: MenuGroup[];
   settings: Record<string, unknown>;
   vocabulary: Record<string, string>;
   limits: EntitlementDoc['limits'];
-  /** What the mobile app lays out: dock, home sections and quick actions, already limited to modules the school has. */
-  app: { dock: string[]; home: string[]; quick: string[] };
+  /** The app: which roles may sign in, and each role's dock, Home cards and quick buttons, already limited to what the school has. */
+  app: { roles: AppRoleKey[]; layout: Record<AppRoleKey, AppLayout> };
+  privacy: { notice: string; officerName: string; officerEmail: string; officerPhone: string };
   /** Kill switches and rollouts the console set for this school. */
   flags: Record<string, boolean>;
+}
+
+/** What a person chooses for themselves (`/v1/me/prefs`): saved to their account, so it follows them from browser to phone. */
+export const USER_PREFS = {
+  /** The class the admin's Students page opens on. */
+  'students.class': z.string().max(60).nullable(),
+  /** The admin dashboard's widgets this person hid. */
+  'dashboard.widgets': z.array(z.string().max(40)).max(12),
+  /** Messages this person turned off in the app (message keys; urgent ones cannot be). */
+  'notify.off': z.array(z.string().max(60)).max(60),
+  /** The app's welcome after the first sign-in has been seen. */
+  'welcome.seen': z.boolean(),
+} as const;
+export type UserPrefKey = keyof typeof USER_PREFS;
+export const UserPrefPut = z.object({ key: z.enum(Object.keys(USER_PREFS) as [UserPrefKey, ...UserPrefKey[]]), value: z.unknown() });
+
+/** A grading scale (`grading.scale`): each grade from the lowest percentage that earns it. */
+export type GradingScale = { grade: string; minPct: number }[];
+/** The grade a percentage earns on the school's scale ('' when the scale has no grade that low). */
+export function gradeFor(pct: number, scale: GradingScale): string {
+  return [...scale].sort((a, b) => b.minPct - a.minPct).find((g) => pct >= g.minPct)?.grade ?? '';
 }

@@ -23,6 +23,7 @@ export interface Harness {
   close: () => Promise<void>;
   /** Writes a school's settings straight into its database, as the console does (schools cannot). */
   setSettings: (changes: Record<string, unknown>, slug?: string) => Promise<void>;
+  setDemo: (on: boolean, slug?: string) => Promise<void>;
   addSchool: (slug: string, o: { plan: string; data: 'demo' | 'empty'; demoMode?: boolean; status?: string }) => Promise<void>;
   /** Changes a school's entitlement in the registry as the console does (fields given replace the stored ones) and drops the API's cached copy. */
   entitle: (patch: Record<string, unknown>, slug?: string) => Promise<void>;
@@ -46,13 +47,15 @@ export async function startHarness(port?: number): Promise<Harness> {
     await seedSchool(pool, {
       school: { name: 'Greenfield International School', shortName: 'Greenfield', tagline: 'Curiosity first.', phone: '', email: '', address: '', color: '#6A4CF5', logoText: 'G', language: 'en' },
       admin: { name: 'Neha Menon', email: 'neha.menon@greenfield.edu.in', phone: '+91 98220 41200', passwordHash: demoHash },
-      modules: plan.modules, demoMode: o.demoMode ?? true, data: o.data, demoPasswordHash: demoHash,
+      modules: plan.modules, data: o.data, demoPasswordHash: demoHash,
     });
+    // No quiet hours unless a test sets them: messages are held in quiet hours, so results would depend on the clock.
+    await pool.query("insert into settings (key, value) values ('notify.quietFrom', '\"00:00\"'), ('notify.quietTo', '\"00:00\"') on conflict (key) do update set value = excluded.value");
     await pool.end();
     await registry.query(
-      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, db_url_sealed, db_name, entitlement, contact)
-       values ($1,$2,'Greenfield International School','Greenfield','#6A4CF5','G',$3,$4,'local-1','local','local',$5,$6,$7,$8)`,
-      [newId('sch'), slug, o.status ?? 'live', o.plan, seal(url, SECRET), dbName, JSON.stringify({ modules: plan.modules, limits: plan.limits, locks: [], overrides: {}, version: 1 }), JSON.stringify({ name: 'Neha', phone: '1', email: 'a@b.c' })]);
+      `insert into schools (id, slug, name, short_name, color, logo_text, status, plan, cell, target, region, db_url_sealed, db_name, entitlement, contact, demo)
+       values ($1,$2,'Greenfield International School','Greenfield','#6A4CF5','G',$3,$4,'local-1','local','local',$5,$6,$7,$8,$9)`,
+      [newId('sch'), slug, o.status ?? 'live', o.plan, seal(url, SECRET), dbName, JSON.stringify({ modules: plan.modules, limits: plan.limits, locks: [], overrides: {}, version: 1 }), JSON.stringify({ name: 'Neha', phone: '1', email: 'a@b.c' }), o.demoMode ?? true]);
   };
 
   const env = loadEnv({ NODE_ENV: 'test', REGISTRY_DATABASE_URL: regUrl, SECRETS_KEY: SECRET, JWT_SECRET: 'jwt-secret-for-tests-0123456789abcd', PORT: '0' });
@@ -102,12 +105,16 @@ export async function startHarness(port?: number): Promise<Harness> {
     await pool.end();
     await new Promise((r) => setTimeout(r, 5_100)); // the API caches a school's settings for five seconds
   };
+  const setDemo: Harness['setDemo'] = async (on, school = slug) => {
+    await registry.query('update schools set demo = $2 where slug = $1', [school, on]);
+    app.get<{ invalidate: (s?: string) => void }>(REGISTRY).invalidate(school);
+  };
   const entitle: Harness['entitle'] = async (patch, school = slug) => {
     await registry.query('update schools set entitlement = entitlement || $2::jsonb where slug = $1', [school, JSON.stringify(patch)]);
     app.get<{ invalidate: (s?: string) => void }>(REGISTRY).invalidate(school);
   };
   return {
-    app, server, registry, slug, call, login, addSchool, setSettings, entitle,
+    app, server, registry, slug, call, login, addSchool, setSettings, setDemo, entitle,
     close: async () => { await app.close(); await registry.end(); await server.stop(); },
   };
 }

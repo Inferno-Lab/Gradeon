@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { Clash, CoverRequest, PeriodDef, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView } from '@gradeon/contracts';
+import type { Clash, CoverRequest, PeriodDef, SlotCreate, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView, WeekOf } from '@gradeon/contracts';
+import { newId } from '@gradeon/db';
 import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
@@ -92,7 +93,7 @@ export class TimetableService {
   }
 
   async patchSlot(t: TenantCtx, user: { id: string; name: string }, id: string, patch: SlotPatch): Promise<void> {
-    if ((await this.settings.value<boolean>(t, 'timetable.schoolEdits', true)) === false) throw forbidden('Gradeon keeps your timetable. Ask Gradeon to change it.');
+    await this.editable(t);
     const sets: string[] = [];
     const params: unknown[] = [id];
     const add = (col: string, v: unknown) => { params.push(v); sets.push(`${col} = $${params.length}`); };
@@ -103,6 +104,59 @@ export class TimetableService {
     const res = await t.pool.query(`update timetable_slots set ${sets.join(', ')} where id = $1`, params);
     if (!res.rowCount) throw notFound('That period');
     await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'timetable.slot_changed', entity: 'slot', entityId: id, detail: patch as Record<string, unknown> });
+  }
+
+  private async editable(t: TenantCtx): Promise<void> {
+    if ((await this.settings.value<boolean>(t, 'timetable.schoolEdits', true)) === false) throw forbidden('Gradeon keeps your timetable. Ask Gradeon to change it.');
+  }
+
+  /** Places a lesson in a free period. A teacher already teaching then is refused, so no clash is made here. */
+  async createSlot(t: TenantCtx, user: { id: string; name: string }, b: SlotCreate): Promise<{ id: string }> {
+    await this.editable(t);
+    if ((await t.pool.query('select 1 from timetable_slots where class_id = $1 and day = $2 and period = $3', [b.classId, b.day, b.period])).rowCount) throw new ApiError('conflict', 'That period already has a lesson. Change it instead.');
+    if (!(await t.pool.query("select 1 from periods where idx = $1 and kind = 'period'", [b.period])).rowCount) throw new ApiError('validation', 'That is not a teaching period.');
+    if ((await t.pool.query('select 1 from timetable_slots where day = $1 and period = $2 and coalesce(cover_teacher_id, teacher_id) = $3', [b.day, b.period, b.teacherId])).rowCount) {
+      throw new ApiError('conflict', 'That teacher already has a class in this period.', { fields: { teacherId: 'Busy then.' } });
+    }
+    const id = newId('slt');
+    await t.pool.query('insert into timetable_slots (id, class_id, day, period, subject_id, teacher_id, room) values ($1,$2,$3,$4,$5,$6,$7)', [id, b.classId, b.day, b.period, b.subjectId, b.teacherId, b.room || null]);
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'timetable.slot_placed', entity: 'slot', entityId: id, detail: { class: b.classId, day: b.day, period: b.period } });
+    return { id };
+  }
+
+  /** Frees a period: the class has no lesson then. */
+  async removeSlot(t: TenantCtx, user: { id: string; name: string }, id: string): Promise<void> {
+    await this.editable(t);
+    const r = await t.pool.query('delete from timetable_slots where id = $1', [id]);
+    if (!r.rowCount) throw notFound('That period');
+    await this.audit.record(t, { actorId: user.id, actorName: user.name, action: 'timetable.slot_freed', entity: 'slot', entityId: id });
+  }
+
+  /** A teacher's week (their own lessons and the ones they cover) or a room's, across every class. */
+  async weekOf(t: TenantCtx, by: { teacherId?: string; room?: string }): Promise<WeekOf> {
+    const where = by.teacherId ? 'coalesce(ts.cover_teacher_id, ts.teacher_id) = $1' : 'lower(ts.room) = lower($1)';
+    const [periods, rows, who] = await Promise.all([
+      this.periods(t),
+      t.pool.query<SlotQ & { class_name: string }>(
+        `select ts.id, ts.class_id, c.name class_name, ts.day, ts.period, ts.subject_id, s.name subject_name, s.color subject_color, ts.teacher_id, u.name teacher_name, ts.room,
+           ts.cover_teacher_id cover_id, cu.name cover_name
+         from timetable_slots ts join classes c on c.id = ts.class_id join subjects s on s.id = ts.subject_id join users u on u.id = ts.teacher_id left join users cu on cu.id = ts.cover_teacher_id
+         where ${where} order by ts.day, ts.period`, [by.teacherId ?? by.room]),
+      by.teacherId ? t.pool.query<{ name: string }>('select name from users where id = $1', [by.teacherId]) : null,
+    ]);
+    if (by.teacherId && !who?.rows[0]) throw notFound('That teacher');
+    return {
+      title: by.teacherId ? who!.rows[0]!.name : `Room ${by.room}`, periods,
+      slots: rows.rows.map((r) => ({
+        id: r.id, classId: r.class_id, className: r.class_name, day: r.day, period: r.period, subjectId: r.subject_id, subjectName: r.subject_name, subjectColor: r.subject_color,
+        teacherId: r.teacher_id, teacherName: r.teacher_name, room: r.room, substituteId: r.cover_id, substituteName: r.cover_name,
+      })),
+    };
+  }
+
+  /** The rooms the timetable uses, for the room view. */
+  async rooms(t: TenantCtx): Promise<string[]> {
+    return (await t.pool.query<{ room: string }>("select distinct room from timetable_slots where coalesce(room, '') <> '' order by room")).rows.map((r) => r.room);
   }
 
   async cover(t: TenantCtx, user: { id: string; name: string }, body: CoverRequest): Promise<void> {

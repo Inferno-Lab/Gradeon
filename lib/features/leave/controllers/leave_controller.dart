@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/widgets/sheets.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
 import 'package:gradeon/core/utils/extensions.dart';
@@ -36,6 +37,18 @@ class LeaveController extends GetxController with Loadable {
   DateTime? unexplained;
 
   int get waiting => items.where((i) => i.status == LeaveStatus.pending).length;
+
+  Future<void> withdraw(LeaveRequest item) async {
+    final ok = await confirmSheet(title: 'leave.withdraw_title', body: 'leave.withdraw_body', confirm: 'leave.withdraw');
+    if (!ok) return;
+    try {
+      await Get.find<LeaveRepository>().withdraw(item.id);
+      await load();
+      ToastHelper.show('leave.withdrawn_done', kind: ToastKind.success);
+    } on AppException catch (e) {
+      ToastHelper.show(e.message, kind: ToastKind.error);
+    }
+  }
 
   int get takenThisTerm {
     final start = termStart(DateTime.now());
@@ -73,7 +86,6 @@ class LeaveController extends GetxController with Loadable {
 }
 
 class LeaveApplyController extends GetxController {
-  static const reasons = ['unwell', 'family', 'travel', 'appointment', 'other'];
 
   /// 0: upcoming leave, 1: explaining a past absence.
   final mode = 0.obs;
@@ -210,7 +222,8 @@ class LeaveApplyController extends GetxController {
           studentId: id,
           from: s,
           to: e,
-          reason: 'leave.reason_${reason.value}'.tr,
+          // The school's own words (console: Attendance → leave reasons); the server checks it is one of them.
+          reason: reason.value!,
           note: [if (text.isNotEmpty) text, if (attachment.value != null) 'leave.note_attached'.tr].join(' '),
           status: LeaveStatus.pending,
           appliedOn: DateTime.now(),

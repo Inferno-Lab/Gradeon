@@ -15,6 +15,7 @@ export const PERMISSIONS = [
   'notices.read',
   'notices.write',
   'notices.publish',
+  'notices.pin',
   'approvals.read',
   'approvals.decide',
   'timetable.read',
@@ -38,6 +39,14 @@ export const PERMISSIONS = [
   'events.read',
   'events.write',
   'setup.write',
+  'fees.refund',
+  'library.read',
+  'library.write',
+  'transport.read',
+  'transport.write',
+  'gallery.read',
+  'gallery.write',
+  'year.manage',
 ] as const;
 export const Permission = z.enum(PERMISSIONS);
 export type Permission = z.infer<typeof Permission>;
@@ -54,13 +63,17 @@ export interface PermissionInfo {
 export const PERMISSION_NEEDS: Partial<Record<Permission, string>> = {
   'attendance.read': 'attendance', 'attendance.mark': 'attendance',
   'fees.read': 'fees', 'fees.collect': 'fees', 'fees.waive': 'fees',
-  'notices.read': 'notices', 'notices.write': 'notices', 'notices.publish': 'notices',
+  'notices.read': 'notices', 'notices.write': 'notices', 'notices.publish': 'notices', 'notices.pin': 'notices',
   'timetable.read': 'timetable', 'timetable.edit': 'timetable', 'timetable.publish': 'timetable',
   'homework.read': 'homework', 'homework.write': 'homework',
   'exams.read': 'exams', 'exams.write': 'exams', 'exams.publish': 'exams',
   'admissions.read': 'people.admissions', 'admissions.write': 'people.admissions',
   'messages.read': 'chat', 'messages.write': 'chat',
   'events.read': 'events', 'events.write': 'events',
+  'fees.refund': 'fees.refunds',
+  'library.read': 'library', 'library.write': 'library',
+  'transport.read': 'transport', 'transport.write': 'transport',
+  'gallery.read': 'gallery', 'gallery.write': 'gallery',
 };
 
 /** Whether a school with these modules and features can use the permission. */
@@ -81,7 +94,8 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'fees.waive', area: 'Fees', label: 'Waive or reduce fees', sensitive: true },
   { key: 'notices.read', area: 'Notices', label: 'See notices' },
   { key: 'notices.write', area: 'Notices', label: 'Write notices' },
-  { key: 'notices.publish', area: 'Notices', label: 'Publish notices to families' },
+  { key: 'notices.publish', area: 'Notices', label: 'Publish notices to families and to the whole school' },
+  { key: 'notices.pin', area: 'Notices', label: 'Pin notices to the top' },
   { key: 'approvals.read', area: 'Approvals', label: 'See the approvals queue' },
   { key: 'approvals.decide', area: 'Approvals', label: 'Approve or decline requests' },
   { key: 'timetable.read', area: 'Timetable', label: 'See the timetable' },
@@ -102,6 +116,14 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'messages.write', area: 'Messages', label: 'Write to families' },
   { key: 'events.read', area: 'Events', label: 'See the calendar' },
   { key: 'events.write', area: 'Events', label: 'Add and change events' },
+  { key: 'fees.refund', area: 'Fees', label: 'Refund online payments', sensitive: true },
+  { key: 'library.read', area: 'Library', label: 'See the catalogue and loans' },
+  { key: 'library.write', area: 'Library', label: 'Add books, issue and take back' },
+  { key: 'transport.read', area: 'Transport', label: 'See routes, stops and the bus' },
+  { key: 'transport.write', area: 'Transport', label: 'Change routes and who rides them' },
+  { key: 'gallery.read', area: 'Gallery', label: 'See albums' },
+  { key: 'gallery.write', area: 'Gallery', label: 'Add albums and photos, publish them to families' },
+  { key: 'year.manage', area: 'School setup', label: 'Promote students, start a new year and record leavers', sensitive: true },
   { key: 'setup.write', area: 'School setup', label: 'Edit classes, subjects, periods, terms, holidays and fee structures (where Gradeon allows)' },
 ];
 
@@ -114,6 +136,14 @@ export interface RoleTemplate {
 
 const ALL: Permission[] = [...PERMISSIONS];
 
+/** The starting roles as the console saves them: the built-in ones stay (they can be renamed and changed), more can be added. */
+export const RoleTemplatesPut = z.array(z.object({
+  key: z.string().trim().regex(/^[a-z][a-z0-9_]{1,23}$/, 'Use 2 to 24 lowercase letters, numbers or _'),
+  name: z.string().trim().min(2, 'Name the role').max(40),
+  description: z.string().trim().max(160).default(''),
+  permissions: z.array(z.enum(PERMISSIONS)),
+})).min(1).max(30);
+
 export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: 'principal', name: 'Principal', description: 'Everything in the school.', permissions: ALL },
   {
@@ -121,16 +151,16 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     name: 'Office staff',
     description: 'Admissions, people, notices and the timetable.',
     permissions: [
-      'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write',
+      'students.read', 'students.write', 'staff.read', 'attendance.read', 'notices.read', 'notices.write', 'notices.pin',
       'approvals.read', 'timetable.read', 'timetable.edit', 'reports.read', 'admissions.read', 'admissions.write', 'messages.read', 'messages.write',
-      'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write',
+      'events.read', 'events.write', 'homework.read', 'exams.read', 'setup.write', 'library.read', 'library.write', 'transport.read', 'transport.write', 'gallery.read', 'gallery.write',
     ],
   },
   {
     key: 'accountant',
     name: 'Accountant',
     description: 'Fees, payments and reports.',
-    permissions: ['students.read', 'fees.read', 'fees.collect', 'reports.read', 'notices.read', 'events.read'],
+    permissions: ['students.read', 'fees.read', 'fees.collect', 'fees.refund', 'reports.read', 'notices.read', 'events.read'],
   },
   {
     key: 'teacher',

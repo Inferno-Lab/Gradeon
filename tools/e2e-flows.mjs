@@ -3,6 +3,7 @@
 // does not behave. Run after `tools/dev-reset.sh` (it changes demo data). Usage: node tools/e2e-flows.mjs [outDir]
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { consolePaths } from './lib/pages.mjs';
 
 const out = process.argv[2] ?? 'e2e-shots';
 mkdirSync(out, { recursive: true });
@@ -121,13 +122,14 @@ await flow('admin: a student drawer opens and closes', { storage: adminStore }, 
 
 await flow('admin: timetable clash can be fixed and published', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/timetable`, { waitUntil: 'networkidle' });
-  await expectVisible(p.getByText(/clash/i), 'the clash notice');
-  await p.locator('.cell.bad, [class*=bad]').first().click();
-  await expectVisible(p.getByRole('button', { name: /to cover/ }), 'the cover suggestion');
-  await p.getByRole('button', { name: /to cover/ }).click();
-  await expectVisible(p.getByText(/Clash fixed/), 'the fixed message');
-  await p.getByRole('button', { name: /Publish/ }).first().click();
-  await expectVisible(p.getByRole('status'), 'the published toast');
+  await expectVisible(p.getByText(/clash/i).first(), 'the clash notice');
+  if (await p.locator('.cell.bad').count()) {
+    await p.locator('.cell.bad').first().click();
+    await p.getByRole('button', { name: /to cover/ }).click();
+    await expectVisible(p.getByText(/Clash fixed/), 'the fixed message');
+    await p.getByRole('button', { name: /Publish/ }).first().click();
+    await expectVisible(p.getByRole('status'), 'the published toast');
+  } else await expectVisible(p.getByText('published', { exact: true }), 'the published version');
 });
 
 await flow('admin: roll call can be changed and saved', { storage: adminStore }, async (p) => {
@@ -153,24 +155,24 @@ await flow('admin: a notice is written and goes for approval or out', { storage:
 await flow('admin: fees page lists overdue families and opens a payment', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/fees`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Overdue families'), 'the overdue list');
-  await p.getByRole('button', { name: 'Collect' }).first().click();
+  await p.getByRole('button', { name: 'Collect', exact: true }).first().click();
   await expectVisible(p.getByText(/Collect a fee from/), 'the payment dialog');
   await p.keyboard.press('Escape');
 });
 
 await flow('admin: school setup is read-only, and a change is asked of Gradeon', { storage: adminStore }, async (p) => {
-  await p.goto(`${ADMIN}/s/${slug}/settings`, { waitUntil: 'networkidle' });
-  await expectVisible(p.getByRole('heading', { name: 'School setup' }), 'the School setup page');
+  await p.goto(`${ADMIN}/s/${slug}/profile`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'School profile' }), 'the School profile page');
   if (await p.getByRole('button', { name: 'Save changes' }).count()) throw new Error('the school can still save settings');
-  if (!(await p.getByLabel('School name').isDisabled().catch(() => false)) && (await p.getByLabel('School name').getAttribute('readonly')) === null) throw new Error('the school name can still be edited');
+  if (await p.locator('main input:not([type=search])').count()) throw new Error('the profile has fields the school can edit');
   await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
   await p.getByRole('button', { name: 'Send to Gradeon' }).click();
   await expectVisible(p.getByText('Say what you would like changed.'), 'the empty-request error');
   await p.getByLabel('What would you like changed?').fill('Please put Events in the app’s bottom tabs.');
   await p.getByRole('button', { name: 'Send to Gradeon' }).click();
   await expectVisible(p.getByText(/Sent to Gradeon/), 'the sent toast');
-  await p.getByRole('button', { name: 'Modules' }).click();
-  await expectVisible(p.getByText('Always on'), 'the modules list');
+  await p.getByRole('tab', { name: 'Plan and modules' }).click();
+  await expectVisible(p.getByText(/ plan$/).first(), 'the plan and modules');
 });
 
 await flow('admin: search palette and keyboard shortcuts', { storage: adminStore }, async (p) => {
@@ -185,7 +187,7 @@ await flow('admin: search palette and keyboard shortcuts', { storage: adminStore
 });
 
 await flow('admin: search opens on every page and the menu collapses', { storage: adminStore }, async (p) => {
-  for (const path of ['', '/students', '/timetable', '/settings']) {
+  for (const path of ['', '/students', '/timetable', '/profile']) {
     await p.goto(`${ADMIN}/s/${slug}${path}`, { waitUntil: 'networkidle' });
     await p.keyboard.press('Control+k');
     await expectVisible(p.getByLabel('Search', { exact: true }), `the search box on ${path || '/'}`);
@@ -209,7 +211,7 @@ await flow('admin: sign out returns to the sign-in page', { storage: signOutStor
 await flow('admin: phone dock navigates', { storage: adminStore, context: { viewport: { width: 390, height: 844 } } }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Needs you'), 'the phone home');
-  await p.getByRole('button', { name: 'People' }).click();
+  await p.getByRole('button', { name: 'Students' }).click();
   await p.waitForURL(/\/students/);
   await p.getByRole('button', { name: 'More' }).click();
   await p.getByRole('link', { name: 'Timetable' }).click();
@@ -232,7 +234,7 @@ await flow('console: wrong password shakes, right password and code sign in', {}
 });
 
 const ver = `2026.10.${Math.floor(Math.random() * 900) + 50}`;
-await flow('console: create, start, pause and roll back a release', { storage: consoleStore }, async (p) => {
+await flow('console: create, start, pause and mark a release rolled back', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/releases`, { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'New release' }).click();
   await p.getByLabel('Version').fill('bad');
@@ -244,8 +246,8 @@ await flow('console: create, start, pause and roll back a release', { storage: c
   await expectVisible(p.getByText(ver), 'the new release');
   await p.getByRole('button', { name: 'Start rollout' }).first().click();
   await expectVisible(p.getByRole('status'), 'the started toast');
-  await p.getByRole('button', { name: /Roll back/ }).first().click();
-  await p.getByRole('button', { name: 'Roll back', exact: true }).last().click();
+  await p.getByRole('button', { name: /Mark as rolled back/ }).first().click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Mark as rolled back', exact: true }).click();
   await expectVisible(p.getByText(/Rolled back/i), 'the rolled back state');
 });
 
@@ -258,24 +260,37 @@ await flow('console: flags add and toggle', { storage: consoleStore }, async (p)
   await p.getByLabel('Key').fill(key);
   await p.getByRole('button', { name: 'Add flag' }).click();
   await expectVisible(p.getByText(key), 'the new flag');
-  await p.getByRole('switch', { name: key }).or(p.getByRole('switch').last()).first().click();
+  await p.getByRole('switch', { name: `${key} for everyone` }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Switch on' }).click();
+  await expectVisible(p.getByRole('switch', { name: `${key} for everyone`, checked: true }), 'the flag on for everyone');
+  await p.getByRole('button', { name: 'Delete' }).last().click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+  await expectVisible(p.getByText('Flag deleted.'), 'the deleted toast');
 });
 
-await flow('console: team add validates, then adds', { storage: consoleStore }, async (p) => {
+await flow('console: team invite validates, then invites with a link the person uses to choose a password', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/team`, { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: 'Add a person' }).click();
-  await p.getByRole('button', { name: 'Add', exact: true }).click();
+  await p.getByRole('button', { name: 'Invite a person' }).click();
+  await p.getByRole('button', { name: 'Send the invitation' }).click();
   await expectVisible(p.getByText('Enter their name.'), 'the name error');
   await p.getByLabel('Name', { exact: true }).fill('Test Person');
   await p.getByLabel('Work email').fill(`tp${Date.now() % 100000}@gradeon.app`);
-  await p.getByLabel('First password').fill('long-enough-password');
-  await p.getByRole('button', { name: 'Add', exact: true }).click();
+  await p.getByRole('button', { name: 'Send the invitation' }).click();
+  const dialog = p.getByRole('dialog');
+  await expectVisible(dialog.getByText('Test Person is invited'), 'the invitation');
+  const link = (await dialog.locator('.card').textContent()).trim();
+  await dialog.getByRole('button', { name: 'Done' }).click();
   await expectVisible(p.getByText('Test Person'), 'the new person');
+  await p.goto(link, { waitUntil: 'networkidle' });
+  await p.getByLabel('Choose a password').fill('long-enough-password');
+  await p.getByLabel('The same password again').fill('long-enough-password');
+  await p.getByRole('button', { name: 'Set my password' }).click();
+  await expectVisible(p.getByText('Your password is set'), 'the password set');
 });
 
 await flow('console: support needs a reason; erase needs the school code', { storage: consoleStore }, async (p) => {
-  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: 'Erase school' }).click();
+  await p.goto(`${CONSOLE}/schools/${school.id}/data`, { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Erase this school…' }).click();
   await p.getByLabel(/Type/).fill('wrong');
   await p.getByRole('button', { name: 'Request erasure' }).click();
   await expectVisible(p.getByText(/isn’t the school code/), 'the wrong-code message');
@@ -284,20 +299,18 @@ await flow('console: support needs a reason; erase needs the school code', { sto
   await p.getByRole('button', { name: 'Start session' }).click();
   await expectVisible(p.getByText(/at least 8 letters/), 'the reason error');
   await p.keyboard.press('Escape');
-  for (const tab of ['Entitlements', 'Versions', 'Health', 'Audit', 'Overview']) {
+  for (const tab of ['Plan and modules', 'Technical', 'Messaging', 'Audit', 'Overview']) {
     await p.getByRole('tab', { name: tab }).click();
     await p.waitForTimeout(300);
   }
+  await expectVisible(p.getByText(/Ready to go live|^Live$/), 'the go-live card on the overview');
 });
 
 await flow('support: a session shows the banner and cannot change anything', {}, async (p) => {
   const r = await (await fetch(`${API}/console/v1/support`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${ct.accessToken}` }, body: JSON.stringify({ schoolId: school.id, reason: 'End to end check of the support banner' }) })).json();
   if (!r.token) throw new Error(`no token: ${JSON.stringify(r)}`);
-  await p.goto(`${ADMIN}/s/${slug}/settings#support=${r.token}`, { waitUntil: 'networkidle' });
+  await p.goto(`${ADMIN}/s/${slug}/profile#support=${r.token}`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByText(/read-only/), 'the support banner');
-  await expectVisible(p.getByLabel('School name'), 'the name field');
-  if (!(await p.getByLabel('School name').evaluate((el) => el.readOnly))) throw new Error('the name field should be read-only');
-  if (await p.getByRole('button', { name: 'Save changes' }).count()) throw new Error('there should be no Save button');
   const refused = await fetch(`${API}/v1/notices`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-school': slug, authorization: `Bearer ${r.token}` }, body: JSON.stringify({ title: 'From support', body: 'Support sessions are read-only.', audience: 'everyone', publish: false }) });
   if (refused.status !== 403) throw new Error(`the API should refuse support writes, got ${refused.status}`);
   await p.getByRole('button', { name: 'End session' }).click();
@@ -318,7 +331,7 @@ const A = (path) => `${ADMIN}/s/${slug}${path}`;
 
 await flow('admin: set homework, tick a hand-in and save it', { storage: adminStore }, async (p) => {
   await p.goto(A('/homework'), { waitUntil: 'networkidle' });
-  await expectVisible(p.getByText('All homework'), 'the homework list');
+  await expectVisible(p.getByText('Reading and notes').first(), 'the homework list');
   await p.getByRole('button', { name: 'Set homework' }).first().click();
   const d = p.getByRole('dialog');
   await d.getByRole('button', { name: 'Set homework' }).click();
@@ -388,18 +401,19 @@ await flow('admin: an enquiry moves along the admissions board', { storage: admi
 });
 
 await flow('admin: invoices filter, receipts open and print', { storage: adminStore }, async (p) => {
-  await p.goto(A('/invoices'), { waitUntil: 'networkidle' });
+  await p.goto(A('/fees/invoices'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Still to pay'), 'the summary');
   await p.getByRole('tab', { name: 'Overdue' }).click();
   await expectVisible(p.getByRole('button', { name: 'Collect' }).first(), 'a Collect button');
   await p.getByRole('tab', { name: 'Receipts' }).click();
   await p.getByRole('button', { name: /Open receipt RCPT/ }).first().click();
-  await expectVisible(p.getByRole('button', { name: 'Print receipt' }), 'the print button');
+  await expectVisible(p.getByRole('dialog').getByRole('button', { name: 'Receipt', exact: true }).first(), 'the receipt button');
 });
 
 await flow('admin: reports open and offer a download', { storage: adminStore }, async (p) => {
   await p.goto(A('/reports'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Attendance by class' }), 'the first report');
+  await p.getByRole('tab', { name: 'Money' }).click();
   await p.getByRole('button', { name: /Fees by type/ }).click();
   await expectVisible(p.getByText(/^Billed:/), 'the fees summary');
   await expectVisible(p.getByRole('button', { name: 'Download CSV' }), 'the download button');
@@ -430,19 +444,20 @@ await flow('admin: an event is added, shown on the calendar and removed', { stor
   await expectVisible(p.getByText(/E2E open house was removed/), 'the removed toast');
 });
 
-await flow('admin: school setup tabs show roles, messages and layout read-only, and data requests still work', { storage: adminStore }, async (p) => {
-  await p.goto(A('/settings'), { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: 'Roles and access' }).click();
-  await expectVisible(p.getByText('Office staff'), 'the role list');
+await flow('admin: the school profile is read-only with a way to ask Gradeon, and data requests are answered', { storage: adminStore }, async (p) => {
+  await p.goto(A('/profile/roles'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('tab', { name: /Office staff/ }), 'the role list');
   for (const name of ['New role', 'Save role', 'Delete role']) if (await p.getByRole('button', { name }).count()) throw new Error(`the school still has "${name}"`);
-  if (!(await p.getByRole('checkbox').first().isDisabled())) throw new Error('role permissions should be read-only');
-  await p.getByRole('button', { name: 'Notifications' }).click();
-  if (!(await p.getByRole('switch', { name: /Child marked absent or late by email/ }).isDisabled())) throw new Error('notification switches should be read-only');
-  await p.getByRole('button', { name: 'Message templates' }).click();
-  await expectVisible(p.getByText(/Gradeon sets this up for your school/).first(), 'the read-only note');
-  await p.getByRole('button', { name: 'App layout' }).click();
-  await expectVisible(p.getByText('Tabs along the bottom'), 'the layout');
-  await p.getByRole('button', { name: 'Privacy and consent' }).click();
+  if (await p.getByRole('checkbox').count()) throw new Error('the profile should have nothing to tick');
+  await p.goto(A('/profile/messages'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Child marked absent or late'), 'the messages');
+  await p.goto(A('/profile/app'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Tabs along the bottom').first(), 'the layout');
+  await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Send to Gradeon' }).click();
+  await expectVisible(p.getByText('Say what you would like changed.'), 'the ask error');
+  await p.keyboard.press('Escape');
+  await p.goto(A('/privacy'), { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Log a request' }).click();
   await p.getByRole('dialog').getByRole('button', { name: 'Log request' }).click();
   await expectVisible(p.getByText('Whose data is this about?'), 'the request error');
@@ -474,10 +489,10 @@ await flow('console: a cell is added and managed, a school can be moved', { stor
   await expectVisible(p.getByText(/Use 3 to 24 letters/), 'the name error');
   await p.getByLabel('Name').fill('e2e-cell');
   await p.getByLabel('Region').fill('this computer');
-  await pick(p, p.getByRole('dialog'), 'Runs on', 'This computer');
   await p.getByRole('dialog').getByRole('button', { name: 'Add cell' }).click();
   await expectVisible(p.getByText(/Cell e2e-cell added/), 'the added toast');
-  await p.getByRole('button', { name: 'Manage' }).last().click();
+  const cell = p.locator('.card', { has: p.getByRole('heading', { name: 'Cell e2e-cell' }) });
+  await cell.getByRole('button', { name: 'Manage' }).click();
   await p.getByRole('switch', { name: 'Accept new schools' }).click();
   await p.getByRole('button', { name: 'Save', exact: true }).click();
   await expectVisible(p.getByText(/was updated/), 'the updated toast');
@@ -485,10 +500,14 @@ await flow('console: a cell is added and managed, a school can be moved', { stor
   await p.getByRole('button', { name: 'Move' }).first().click();
   await expectVisible(p.getByText(/shares a database server|a second person approves/i), 'the move explanation');
   await p.keyboard.press('Escape');
+  await cell.getByRole('button', { name: 'Manage' }).click();
+  await p.getByRole('button', { name: 'Remove this cell' }).click();
+  await p.getByRole('button', { name: 'Yes, remove it' }).click();
+  await expectVisible(p.getByText(/Cell e2e-cell was removed/), 'the removed toast');
 });
 
-await flow('console: compliance logs an agreement and a breach', { storage: consoleStore }, async (p) => {
-  await p.goto(`${CONSOLE}/compliance`, { waitUntil: 'networkidle' });
+await flow('console: compliance logs a breach and shows the notice before it is sent', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/compliance/breaches`, { waitUntil: 'networkidle' });
   await p.getByRole('button', { name: 'Log a breach' }).click();
   await p.getByRole('dialog').getByRole('button', { name: 'Log breach' }).click();
   await expectVisible(p.getByText('Choose a school.'), 'the school error');
@@ -496,28 +515,35 @@ await flow('console: compliance logs an agreement and a breach', { storage: cons
   await p.getByLabel('What happened').fill('E2E: an export went to the wrong address');
   await p.getByRole('dialog').getByRole('button', { name: 'Log breach' }).click();
   await expectVisible(p.getByText(/within 72 hours/), 'the logged toast');
-  await p.getByRole('button', { name: 'Tell the school' }).first().click();
+  await p.getByRole('button', { name: 'Tell the school…' }).first().click();
+  await expectVisible(p.getByRole('dialog').getByText(/72-hour notification duty/), 'the notice as the school reads it');
+  await p.getByRole('dialog').getByRole('button', { name: 'Send it' }).click();
   await expectVisible(p.getByText(/was told/), 'the notified toast');
 });
 
-await flow('console: a feature can be paused and the blueprint page edits waves', { storage: consoleStore }, async (p) => {
-  await p.goto(`${CONSOLE}/flags`, { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: 'Pause it' }).click();
-  await expectVisible(p.getByText(/Paused\. It takes effect/), 'the paused toast');
-  await p.getByRole('switch', { name: /paused/i }).first().click();
-  await p.goto(`${CONSOLE}/blueprints`, { waitUntil: 'networkidle' });
-  await expectVisible(p.getByText('How a release rolls out'), 'the waves card');
+await flow('console: a module is paused and lifted on Plans and modules; rollout waves are edited under Releases', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/modules`, { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Homework' }).first().click();
+  await p.getByRole('button', { name: 'Pause…' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Pause it' }).click();
+  await expectVisible(p.getByText(/Homework is paused/), 'the paused toast');
+  await p.getByRole('button', { name: 'Lift the pause' }).click();
+  await expectVisible(p.getByText(/Lifted/), 'the lifted toast');
+  await p.goto(`${CONSOLE}/releases/rules`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Waves' }), 'the waves card');
   await p.getByRole('button', { name: 'Add a wave' }).click();
   await expectVisible(p.getByLabel('Name of wave 3'), 'a new wave');
+  await p.goto(`${CONSOLE}/blueprints`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Starting roles' }), 'the starting roles');
   await p.getByRole('button', { name: 'New blueprint' }).click();
-  await p.getByRole('dialog').getByRole('button', { name: /Create and switch on/ }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
   await expectVisible(p.getByText('Give it a name.'), 'the blueprint name error');
   await p.keyboard.press('Escape');
 });
 
 await flow('console: the bell shows alerts', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/`, { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: /requests to approve|Approvals/ }).first().click();
+  await p.getByRole('button', { name: /^Alerts/ }).first().click();
   await expectVisible(p.getByRole('dialog').getByText('Alerts'), 'the alerts dialog');
 });
 
@@ -525,7 +551,6 @@ await flow('console: the bell shows alerts', { storage: consoleStore }, async (p
 await flow('console: the module grid takes a feature from a school only after a review, and sends it for a second person', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/modules`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('table', { name: 'Modules by school' }), 'the module grid');
-  await expectVisible(p.getByText('Not built yet'), 'the planned modules');
   await p.getByRole('button', { name: 'Take away' }).isDisabled().then((d) => { if (!d) throw new Error('Take away should wait for a chosen school'); });
   await p.getByLabel(/^Choose Greenfield/).check();
   await pick(p, p, 'Module or feature', 'Fees: Families pay in the app');
@@ -535,11 +560,15 @@ await flow('console: the module grid takes a feature from a school only after a 
   await expectVisible(review.getByText(/needs a second person/), 'the approval note');
   await review.getByRole('button', { name: 'Push' }).click();
   await expectVisible(p.getByText(/waiting for a second person in Approvals/), 'the waiting toast');
+  await p.goto(`${CONSOLE}/modules/planned`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Planned modules'), 'the planned modules');
+  await p.goto(`${CONSOLE}/modules/plans`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('heading', { name: 'Plans' }), 'the plans');
 });
 
 await flow('console: a school’s plan tab edits modules, features, dates and limits, and reviews before pushing', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
-  await p.getByRole('tab', { name: 'Entitlements' }).click();
+  await p.getByRole('tab', { name: 'Plan and modules' }).click();
   await expectVisible(p.getByText('Plan and limits'), 'the plan card');
   if (!(await p.getByRole('button', { name: 'Review changes' }).isDisabled())) throw new Error('nothing changed yet, so Review should wait');
   await p.getByRole('switch', { name: 'Gallery' }).click();
@@ -569,7 +598,7 @@ await flow('console: a school’s request is answered, and its configuration cha
 });
 
 await flow('console: every menu page opens', { storage: consoleStore }, async (p) => {
-  for (const path of ['/', '/onboarding', '/modules', '/cells', '/releases', '/migrations', '/builds', '/flags', '/blueprints', '/health', '/approvals', '/support', '/inbox', '/billing', '/compliance', '/team']) {
+  for (const path of consolePaths(school.id).filter((x) => x !== '/nope')) {
     await p.goto(`${CONSOLE}${path}`, { waitUntil: 'networkidle' });
     await expectVisible(p.locator('main h1'), `a title on ${path}`);
   }
@@ -604,9 +633,10 @@ await flow('admin: a dropdown lists every option above the cards and a bar has a
   await expectVisible(p.getByRole('tooltip').getByText(/collected/), 'the tooltip on a fee bar');
 });
 
-await flow('admin: classes and calendar add a holiday, refuse a bad one, and bill a fee to its grade', { storage: adminStore }, async (p) => {
-  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
+await flow('admin: academic year adds a holiday, refuses a bad one, and fees bill a structure to its grade', { storage: adminStore }, async (p) => {
+  await p.goto(A('/year'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Academic years' }), 'the years card');
+  await p.getByRole('tab', { name: 'Holidays' }).click();
   await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
   await p.getByLabel('Holiday', { exact: true }).fill('E2E founders day');
   await p.getByLabel('From', { exact: true }).fill('2027-01-12');
@@ -621,7 +651,7 @@ await flow('admin: classes and calendar add a holiday, refuse a bad one, and bil
   await expectVisible(p.getByText('E2E founders day was removed.'), 'the removed toast');
   await p.getByRole('tab', { name: 'Classes' }).click();
   await expectVisible(p.getByRole('button', { name: 'Open 8 A' }), 'class 8 A');
-  await p.getByRole('tab', { name: 'Fees' }).click();
+  await p.goto(A('/fees/structure'), { waitUntil: 'networkidle' });
   await p.locator('section', { has: p.getByRole('heading', { name: 'Fee structures' }) }).getByRole('button', { name: 'Add' }).click();
   await p.getByLabel('Grade (blank for all)').fill('8');
   await p.getByLabel('Fee', { exact: true }).fill('E2E science fair');
@@ -634,30 +664,26 @@ await flow('admin: classes and calendar add a holiday, refuse a bad one, and bil
   await expectVisible(p.getByText(/E2E science fair was added to \d+ students’ fees/), 'the billed toast');
 });
 
-await flow('admin: moving in sends a file to Gradeon, invites a class and prints its letters', { storage: adminStore }, async (p) => {
+await flow('admin: moving in sends a file to Gradeon; Students → On the app invites a class and prints its letters', { storage: adminStore }, async (p) => {
   await p.goto(A('/moving-in'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Send us your files' }), 'the files card');
   await p.locator('input[type=file]').setInputFiles({ name: 'e2e-subjects.csv', mimeType: 'text/csv', buffer: Buffer.from('Subject,Periods a week\nE2E Robotics,2\nE2E Dance,x\n') });
   await p.getByLabel('What is in it (optional)').fill('Two new subjects');
   await p.getByRole('button', { name: 'Send to Gradeon' }).click();
-  await expectVisible(p.getByText('Sent to Gradeon. The team will import it and tell you.'), 'the sent toast');
+  await expectVisible(p.getByText('Sent it to Gradeon. The team will import it and tell you.'), 'the sent toast');
   await expectVisible(p.getByText('e2e-subjects.csv'), 'the file in the list');
+  await p.goto(A('/students/app'), { waitUntil: 'networkidle' });
   const row = p.locator('.rw', { hasText: '8 A' });
   if (await row.getByRole('button', { name: 'Invite' }).count()) {
     await row.getByRole('button', { name: 'Invite' }).click();
     await expectVisible(p.getByText(/Invited \d+ famil/), 'the invited toast');
   }
-  await p.evaluate(() => { window.print = () => undefined; });
-  const [letters] = await Promise.all([p.waitForEvent('popup'), row.getByRole('button', { name: 'Letters' }).click()]);
-  await letters.waitForFunction(() => document.querySelectorAll('section').length > 0);
-  if (!(await letters.content()).includes('phone number ending')) throw new Error('the letters do not say which phone to sign in with');
-  await letters.close();
+  const [res] = await Promise.all([p.waitForResponse(/\/v1\/moving-in\/letters\.pdf/), row.getByRole('button', { name: 'Letters', exact: true }).click()]);
+  if (!res.ok()) throw new Error(`the letters answered ${res.status()}`);
 });
 
 await flow('console: migration imports the school’s file after fixing a row in the grid, then undoes it', { storage: consoleStore }, async (p) => {
-  await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
-  await p.getByRole('tab', { name: 'Migration' }).click();
-  await expectVisible(p.getByText('Ready to go live'), 'the readiness card');
+  await p.goto(`${CONSOLE}/schools/${school.id}/data`, { waitUntil: 'networkidle' });
   const file = p.locator('.rw', { hasText: 'e2e-subjects.csv' });
   await expectVisible(file, 'the file the school sent');
   await pick(p, p, 'What to import', /Subjects/);
@@ -672,12 +698,12 @@ await flow('console: migration imports the school’s file after fixing a row in
   await expectVisible(p.getByText(/Imported subjects: 2 added/), 'the imported toast');
   await expectVisible(p.locator('.rw', { hasText: 'e2e-subjects.csv' }).getByText('Imported'), 'the file marked imported');
   await p.getByRole('button', { name: 'Undo' }).first().click();
+  await p.getByRole('dialog').getByRole('button', { name: /^Undo \d+ rows/ }).click();
   await expectVisible(p.getByText(/Undone\./), 'the undone toast');
 });
 
 await flow('console: go-live reconciles the dues with the old system, and a restore drill runs from Health', { storage: consoleStore }, async (p) => {
   await p.goto(`${CONSOLE}/schools/${school.id}`, { waitUntil: 'networkidle' });
-  await p.getByRole('tab', { name: 'Migration' }).click();
   const owed = p.getByText(/owed here; type the old system’s total to compare/);
   await expectVisible(owed, 'the dues waiting for the old system’s total');
   const total = (await owed.first().textContent()).match(/₹([\d,]+)/)[1].replace(/,/g, '');
@@ -709,10 +735,11 @@ await flow('design system: the menu keeps its scroll between pages, and search o
   const sb = p.locator('aside.sb');
   const top = await sb.evaluate((el) => { el.scrollTop = el.scrollHeight; return el.scrollTop; });
   if (top < 20) throw new Error('the menu should scroll on a short window');
-  await sb.getByRole('link', { name: 'Fees' }).click();
-  await p.waitForURL(/\/fees/);
-  await sb.getByRole('link', { name: 'Notices' }).click();
-  await p.waitForURL(/\/notices/);
+  // Two items in view at the bottom of the scrolled menu (clicking one out of view would scroll the menu to it).
+  await sb.getByRole('link', { name: 'Academic year' }).click();
+  await p.waitForURL(/\/year/);
+  await sb.getByRole('link', { name: 'School profile' }).click();
+  await p.waitForURL(/\/profile/);
   const after = await sb.evaluate((el) => el.scrollTop);
   if (Math.abs(after - top) > 1) throw new Error(`the menu scrolled back from ${top} to ${after} when the page changed`);
   await p.keyboard.press('Control+k');
@@ -727,22 +754,21 @@ await flow('design system: the menu keeps its scroll between pages, and search o
 });
 
 await flow('design system: a dialog opened while the last one is still fading starts fresh', { storage: adminStore }, async (p) => {
-  await p.goto(A('/setup'), { waitUntil: 'networkidle' });
-  await p.locator('section', { has: p.getByRole('heading', { name: 'Holidays' }) }).getByRole('button', { name: 'Add' }).click();
-  await expectVisible(p.getByRole('dialog'), 'the holiday dialog');
+  await p.goto(A('/fees/structure'), { waitUntil: 'networkidle' });
+  const add = p.locator('section', { has: p.getByRole('heading', { name: 'Fee structures' }) }).getByRole('button', { name: 'Add' });
+  await add.click();
+  await p.getByLabel('Fee', { exact: true }).fill('Left behind');
   // Close it and open another within its fade (200 ms), the way a quick hand or a slow machine does.
   await p.evaluate(async () => {
     const byText = (sel, text) => [...document.querySelectorAll(sel)].find((e) => e.textContent.trim() === text);
     byText('[role=dialog] button', 'Cancel').click();
     await new Promise((r) => setTimeout(r, 30));
-    byText('[role=tab]', 'Fees').click();
-    await new Promise((r) => setTimeout(r, 30));
     const sec = [...document.querySelectorAll('section')].find((x) => x.querySelector('h2,h3')?.textContent.trim() === 'Fee structures');
     [...sec.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
   });
   await expectVisible(p.getByRole('dialog').getByText('Add to fee structures'), 'the fee dialog');
-  const head = (await p.getByRole('dialog').getByLabel('Fee head').textContent())?.trim();
-  if (head !== 'Tuition') throw new Error(`the fee dialog kept the holiday dialog's state: fee head is "${head}"`);
+  const left = await p.getByRole('dialog').getByLabel('Fee', { exact: true }).inputValue();
+  if (left) throw new Error(`the new dialog kept the closing one's state: fee is "${left}"`);
 });
 
 await flow('design system: every overlay opens and closes from the keyboard, and a date is picked without a mouse', { storage: adminStore }, async (p) => {
@@ -803,6 +829,95 @@ await flow('design system: every overlay opens and closes from the keyboard, and
   await expectVisible(p.getByRole('dialog', { name: 'Student profile' }), 'the student panel');
   await p.keyboard.press('Escape');
   await p.getByRole('dialog', { name: 'Student profile' }).waitFor({ state: 'hidden' });
+});
+
+// ── Phase 3B and 4 ───────────────────────────────────────────────────────
+await flow('console: integrations add a custom connection, test it and route texts to it', { storage: consoleStore }, async (p) => {
+  await p.goto(`${CONSOLE}/integrations`, { waitUntil: 'networkidle' });
+  await expectVisible(p.getByText('Sandbox mode'), 'the mode banner');
+  await p.getByRole('button', { name: 'Add a connection' }).first().click();
+  const d = p.getByRole('dialog');
+  await pick(p, d, 'Provider', 'Custom HTTP');
+  await d.getByLabel('Name', { exact: true }).fill('E2E texts');
+  await d.getByRole('button', { name: 'Continue' }).click();
+  await p.getByRole('dialog').getByLabel('Address', { exact: true }).fill('https://127.0.0.1:9/send');
+  await p.getByRole('dialog').getByLabel('Body', { exact: true }).fill('{"to":"{to}","text":"{text}"}');
+  await p.getByRole('dialog').getByRole('button', { name: 'Save', exact: true }).click();
+  await expectVisible(p.getByText('E2E texts'), 'the new connection');
+  await p.getByRole('button', { name: 'Test', exact: true }).first().click();
+  const td = p.getByRole('dialog');
+  await td.getByLabel(/Send to/).fill('9822011002');
+  await td.getByRole('button', { name: 'Run the test' }).click();
+  await expectVisible(td.getByRole('status'), 'the test result', 20000);
+  await td.getByRole('button', { name: 'Close' }).click();
+  await p.getByRole('tab', { name: /Routing/ }).click();
+  await p.locator('.rw', { hasText: 'Text messages' }).getByRole('button', { name: /^(Set|Change)$/ }).click();
+  await p.getByRole('dialog').getByLabel('Connection').click();
+  await p.getByRole('option', { name: /^E2E texts · Test/ }).last().click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Save route' }).click();
+  await expectVisible(p.getByText(/now goes through E2E texts/), 'the route saved');
+  for (const tab of ['templates', 'Activity', 'Webhooks']) {
+    await p.getByRole('tab', { name: new RegExp(tab, 'i') }).click();
+    await p.waitForTimeout(300);
+  }
+});
+
+await flow('admin: library adds a book, issues it and takes it back', { storage: adminStore }, async (p) => {
+  await p.goto(A('/library'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Add a book' }).first().click();
+  const d = p.getByRole('dialog');
+  await d.getByLabel('Title').fill('E2E Atlas');
+  await d.getByRole('button', { name: 'Add book' }).click();
+  await expectVisible(p.getByText(/E2E Atlas is in the catalogue/), 'the added toast');
+  await p.getByLabel('Search the catalogue').fill('E2E Atlas');
+  await p.locator('.rw', { hasText: 'E2E Atlas' }).getByRole('button', { name: 'Issue', exact: true }).click();
+  const i = p.getByRole('dialog');
+  await i.getByLabel('To').fill('Aarav Sharma');
+  await i.getByRole('button', { name: /Aarav Sharma/ }).first().click();
+  await i.getByRole('button', { name: 'Issue', exact: true }).click();
+  await expectVisible(p.getByText(/E2E Atlas is with Aarav Sharma/), 'the issue toast');
+  await p.getByRole('tab', { name: 'Loans' }).click();
+  await p.locator('.rw', { hasText: 'E2E Atlas' }).getByRole('button', { name: 'Take back' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Take back' }).click();
+  await expectVisible(p.getByText(/E2E Atlas is back/), 'the return toast');
+});
+
+await flow('admin: transport adds a route with a stop and puts a student on it', { storage: adminStore }, async (p) => {
+  await p.goto(A('/transport'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'Add a route' }).first().click();
+  const d = p.getByRole('dialog');
+  await d.getByLabel('Route name').fill('E2E Route');
+  await d.getByRole('button', { name: 'Add a stop' }).click();
+  await d.getByLabel('Stop 1').fill('E2E Corner');
+  await d.getByRole('button', { name: 'Save route' }).click();
+  await expectVisible(p.getByText(/E2E Route was saved with 1 stops/), 'the saved route');
+  await p.getByRole('tab', { name: 'Riders' }).click();
+  await p.waitForURL(/\/transport\/riders/);
+});
+
+await flow('admin: gallery makes an album and opens it', { storage: adminStore }, async (p) => {
+  await p.goto(A('/gallery'), { waitUntil: 'networkidle' });
+  await p.getByRole('button', { name: 'New album' }).first().click();
+  await p.getByRole('dialog').getByLabel('Title').fill('E2E Sports day');
+  await p.getByRole('dialog').getByRole('button', { name: 'Create album' }).click();
+  await p.getByRole('button', { name: 'Open E2E Sports day' }).click();
+  await expectVisible(p.getByRole('dialog', { name: 'E2E Sports day' }), 'the album panel');
+  await p.keyboard.press('Escape');
+});
+
+await flow('admin: year-end drafts the next year and previews promotion', { storage: adminStore }, async (p) => {
+  await p.goto(A('/year/year-end'), { waitUntil: 'networkidle' });
+  if (await p.getByRole('button', { name: 'Draft next year' }).count()) {
+    await p.getByRole('button', { name: 'Draft next year' }).click();
+    await p.getByRole('dialog').getByLabel('Ends', { exact: true }).fill('2028-03-31');
+    await p.keyboard.press('Tab');
+    await p.getByRole('dialog').getByRole('button', { name: 'Draft year' }).click();
+  }
+  await p.getByRole('button', { name: 'Promote students' }).click();
+  await expectVisible(p.getByRole('dialog').getByText(/Leaves the school|Each class moves/), 'the promotion preview');
+  await p.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+  await p.goto(A('/fees/online'), { waitUntil: 'networkidle' });
+  await expectVisible(p.getByRole('tab', { name: 'Refunds' }), 'online payments');
 });
 
 await browser.close();

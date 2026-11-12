@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/services/auth_service.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/services/session_bus.dart';
 import 'package:gradeon/core/services/storage_service.dart';
 import 'package:gradeon/core/services/theme_service.dart';
@@ -61,6 +62,9 @@ Future<void> bootMock() async {
       MockNotificationRepository(source),
       permanent: true,
     );
+  // The sample school's setup, as the app loads it before the first frame. Once per run: reloading would rebuild the screens
+  // the last test left mounted. A test that changes the setup clears SchoolConfig.modules afterwards, and the next one reloads.
+  if (SchoolConfig.modules.isEmpty) await SchoolConfig.load();
 }
 
 Future<T?> real<T>(WidgetTester tester, Future<T> Function() body) {

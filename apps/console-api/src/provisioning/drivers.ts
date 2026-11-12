@@ -1,6 +1,6 @@
 import dns from 'node:dns/promises';
 import { closeModules } from '@gradeon/config-engine';
-import type { DeployTarget, StepKey, WizardPayload } from '@gradeon/contracts';
+import type { DeployTarget, RoleTemplate, StepKey, WizardPayload } from '@gradeon/contracts';
 import { migrate, pg } from '@gradeon/db';
 import { seedSchool } from '@gradeon/db/seed';
 import { hashPassword, randomToken, seal, unseal } from '@gradeon/security';
@@ -8,6 +8,7 @@ import type { Registry } from '@gradeon/tenancy';
 import type { Db, reg } from '../core.js';
 import type { Env } from '../env.js';
 import type { Sandbox } from '../sandbox.js';
+import type { Hub } from '@gradeon/integrations';
 
 type SchoolRecord = typeof reg.schools.$inferSelect;
 
@@ -25,6 +26,8 @@ export interface DescribeCtx {
 export interface StepCtx extends DescribeCtx {
   env: Env;
   db: Db;
+  /** The console's Integrations Hub: the cell's database connection, the App builds connection. */
+  hub: Hub;
   registry: Registry;
   sandbox: Sandbox;
   fetch: typeof fetch;
@@ -32,6 +35,8 @@ export interface StepCtx extends DescribeCtx {
   payload: WizardPayload;
   target: DeployTarget;
   params: Record<string, unknown>;
+  /** The starting roles (Blueprints → Starting roles) as they were when this run began. */
+  roles: RoleTemplate[];
   log: (level: 'info' | 'warn' | 'error', text: string) => void;
   /** Read the school again after an earlier step changed it. */
   reload: () => Promise<SchoolRecord>;
@@ -48,7 +53,7 @@ export interface Driver {
   run: (c: StepCtx) => Promise<StepResult>;
 }
 
-const dbName = (slug: string) => `school_${slug.replace(/-/g, '_')}`;
+export const dbName = (slug: string) => `school_${slug.replace(/-/g, '_')}`;
 const SQL_NAME = /^[a-z][a-z0-9_]{0,62}$/;
 
 export function adminUrlFor(env: Env, slug: string, addressing: string, custom: string): string {
@@ -65,7 +70,7 @@ export function withCredentials(url: string, user: string, password: string, dat
   return u.toString();
 }
 
-async function adminQuery<T>(url: string, fn: (c: pg.Client) => Promise<T>): Promise<T> {
+export async function adminQuery<T>(url: string, fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const c = new pg.Client({ connectionString: url, connectionTimeoutMillis: 15_000 });
   await c.connect();
   try {
@@ -76,8 +81,7 @@ async function adminQuery<T>(url: string, fn: (c: pg.Client) => Promise<T>): Pro
 }
 
 /** A database of the school's own, on a server we already have, owned by a role of its own. */
-async function createOnServer(ctx: StepCtx, adminUrl: string): Promise<{ url: string; name: string }> {
-  const name = dbName(ctx.school.slug);
+export async function createOnServer(log: StepCtx['log'], adminUrl: string, name: string): Promise<{ url: string; name: string }> {
   const role = `${name}_app`;
   if (!SQL_NAME.test(name) || !SQL_NAME.test(role)) throw new Error('That address cannot be used as a database name.');
   const password = randomToken(18).replace(/[^a-zA-Z0-9]/g, 'x');
@@ -89,7 +93,7 @@ async function createOnServer(ctx: StepCtx, adminUrl: string): Promise<{ url: st
       await c.query(`grant ${role} to current_user`).catch(() => undefined);
       owner = role;
     } catch (err) {
-      ctx.log('warn', `Could not create a database role (${(err as Error).message}). The school will use the server’s own role.`);
+      log('warn', `Could not create a database role (${(err as Error).message}). The school will use the server’s own role.`);
     }
     const found = await c.query('select 1 from pg_database where datname = $1', [name]);
     if (!found.rowCount) await c.query(`create database ${name}${owner ? ` owner ${owner}` : ''}`);
@@ -105,37 +109,27 @@ async function createOnServer(ctx: StepCtx, adminUrl: string): Promise<{ url: st
   });
 }
 
-async function createNeonProject(ctx: StepCtx): Promise<{ url: string; name: string }> {
-  const res = await ctx.fetch('https://console.neon.tech/api/v2/projects', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${ctx.env.NEON_API_KEY}`, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ project: { name: `gradeon-${ctx.school.slug}`, region_id: ctx.env.NEON_REGION } }),
-  });
-  if (!res.ok) throw new Error(`Neon refused to create the project (${res.status}): ${(await res.text()).slice(0, 200)}`);
-  const body = (await res.json()) as { project: { id: string }; connection_uris: { connection_uri: string }[] };
-  const uri = body.connection_uris[0]?.connection_uri;
-  if (!uri) throw new Error('Neon created the project but did not return a connection string.');
-  return { url: uri, name: `neon:${body.project.id}` };
-}
-
 const database: Driver = {
-  describe: (c) => (c.target === 'free-test' && c.env.NEON_API_KEY ? `A Neon project of its own, gradeon-${c.slug}` : `${dbName(c.slug)} with its own role and password`),
+  describe: (c) => `${dbName(c.slug)}, a database of its own on the cell’s server, with its own role and password`,
   run: async (c) => {
     if (c.school.dbUrlSealed) {
       const existing = unseal(c.school.dbUrlSealed, c.env.SECRETS_KEY);
       await adminQuery(existing, (x) => x.query('select 1'));
       return { detail: `${c.school.dbName ?? dbName(c.school.slug)} is ready (kept from the earlier try)` };
     }
+    // The cell's School databases connection makes it (a PostgreSQL server, or a Neon project per school); a cell without one
+    // uses the registry's own server, which is how the local and shared test cells work.
+    const cell = (await c.db.pool.query<{ connection_id: string | null }>('select connection_id from cells where key = $1', [c.school.cell])).rows[0];
     let made: { url: string; name: string };
-    if (c.target === 'free-test' && c.env.NEON_API_KEY) {
-      c.log('info', 'creating a Neon project');
-      made = await createNeonProject(c);
+    if (cell?.connection_id) {
+      const { conn, adapter, ctx } = await c.hub.use(cell.connection_id);
+      c.log('info', `creating it through ${conn.name}`);
+      const r = await adapter.databases!.create(ctx, dbName(c.school.slug), randomToken(18).replace(/[^a-zA-Z0-9]/g, 'x'));
+      made = { url: r.url, name: r.dbName };
     } else if (c.target === 'aws-cell') {
-      const adminUrl = process.env[`CELL_${c.school.cell.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_ADMIN_URL`];
-      if (!adminUrl) throw new StepBlocked(`Cell ${c.school.cell} has no database admin connection. Set CELL_${c.school.cell.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_ADMIN_URL and retry.`);
-      made = await createOnServer(c, adminUrl);
+      throw new StepBlocked(`Cell ${c.school.cell} has no School databases connection. Add one under Integrations, give it to the cell under Cells, then retry.`);
     } else {
-      made = await createOnServer(c, c.env.SHARED_PG_ADMIN_URL ?? c.env.REGISTRY_DATABASE_URL);
+      made = await createOnServer(c.log, c.env.REGISTRY_DATABASE_URL, dbName(c.school.slug));
     }
     await c.db.pool.query('update schools set db_url_sealed = $2, db_name = $3 where id = $1', [c.school.id, seal(made.url, c.env.SECRETS_KEY), made.name]);
     c.log('info', `created ${made.name}`);
@@ -170,7 +164,7 @@ const migrateSeed: Driver = {
         const report = await seedSchool(pool, {
           school: { name: p.basics.name, shortName: p.basics.shortName, tagline: p.branding.tagline, place: [p.basics.board, p.basics.city].filter(Boolean).join(' · '), phone: p.basics.contactPhone, email: p.basics.contactEmail, address: [p.basics.address, p.basics.city].filter(Boolean).join(', '), color: p.branding.color, logoText: p.branding.logoText, language: p.basics.language },
           admin: { name: p.admin.name, email: p.admin.email, phone: p.admin.phone, passwordHash: '!' },
-          modules: closeModules(p.plan.modules), demoMode: p.data.start === 'demo', data: p.data.start === 'demo' ? 'demo' : 'empty', demoPasswordHash: await demoHash,
+          modules: closeModules(p.plan.modules), data: p.data.start === 'demo' ? 'demo' : 'empty', demoPasswordHash: await demoHash, roleTemplates: c.roles,
         });
         tail = report.students ? `roles, periods and templates, then ${report.students.toLocaleString('en-IN')} sample students in ${report.classes} classes` : 'roles, periods and templates';
         c.log('info', `seeded in ${report.ms} ms`);
@@ -248,22 +242,16 @@ export function profileYaml(env: Env, school: SchoolRecord, payload: WizardPaylo
 }
 
 const buildProfile: Driver = {
-  describe: (c) => `Write schools/${c.slug}/school.yaml${c.env.GITHUB_TOKEN ? ' to the repository' : ''}`,
+  describe: (c) => `Write schools/${c.slug}/school.yaml`,
   run: async (c) => {
     const school = await c.reload();
     const yaml = profileYaml(c.env, school, c.payload);
     await c.db.pool.query('update schools set profile_yaml = $2, app_name = $3 where id = $1', [school.id, yaml, c.payload.branding.appName]);
-    if (!c.env.GITHUB_TOKEN || !c.env.GITHUB_REPO) {
-      return { detail: 'Saved in the registry. Connect GitHub to commit it to the repository', skipped: true };
-    }
+    const builds = await c.hub.platform('builds');
+    if (!builds?.adapter.builds) return { detail: 'Saved in the registry. With an App builds connection (Integrations) it is also committed to the repository', skipped: true };
     const path = `schools/${school.slug}/school.yaml`;
-    const api = `https://api.github.com/repos/${c.env.GITHUB_REPO}/contents/${path}`;
-    const headers = { authorization: `Bearer ${c.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'gradeon-console' };
-    const existing = await c.fetch(`${api}?ref=${c.env.GITHUB_BRANCH}`, { headers });
-    const sha = existing.ok ? ((await existing.json()) as { sha: string }).sha : undefined;
-    const put = await c.fetch(api, { method: 'PUT', headers, body: JSON.stringify({ message: `chore(schools): build profile for ${school.slug}`, content: Buffer.from(yaml).toString('base64'), branch: c.env.GITHUB_BRANCH, sha }) });
-    if (!put.ok) throw new Error(`GitHub refused the commit (${put.status}): ${(await put.text()).slice(0, 160)}`);
-    return { detail: `Committed ${path} to ${c.env.GITHUB_BRANCH}` };
+    await builds.adapter.builds.commit(builds.ctx, path, yaml, `chore(schools): build profile for ${school.slug}`);
+    return { detail: `Committed ${path} through ${builds.conn.name}` };
   },
 };
 

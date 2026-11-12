@@ -20,6 +20,10 @@ export interface TenantInfo {
   apiVersion: string;
   /** Console flags that apply to this school (its own value beats the fleet-wide one). */
   flags: Record<string, boolean>;
+  /** A demo school: demo sign-in cards and the demo code work. */
+  demo: boolean;
+  /** Gradeon pressed Go live: the school has moved in. */
+  wentLive: boolean;
 }
 
 export interface RegistryOptions {
@@ -29,7 +33,9 @@ export interface RegistryOptions {
   max?: number;
 }
 
-const POSITIVE_TTL_MS = 15_000;
+/** How long a school's record (and so its database address) is cached by each server. */
+export const TENANT_CACHE_MS = 15_000;
+const POSITIVE_TTL_MS = TENANT_CACHE_MS;
 const NEGATIVE_TTL_MS = 5_000;
 
 /** Read access to the school registry for the school API. The console API uses the same database with full rights. */
@@ -72,6 +78,8 @@ export class Registry {
         configVersion: row.configVersion,
         apiVersion: row.apiVersion,
         flags: Object.fromEntries(fl.rows.map((f) => [f.key, f.enabled])),
+        demo: row.demo,
+        wentLive: !!row.wentLiveAt,
       };
     }
     this.cache.set(slug, { at: now, value });

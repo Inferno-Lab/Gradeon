@@ -64,3 +64,9 @@ playwright-report/
 test-results/
 .shots/
 .vite/
+
+# Written by the mobile build workflow from the console's connections; never committed.
+android/key.properties
+android/*.jks
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

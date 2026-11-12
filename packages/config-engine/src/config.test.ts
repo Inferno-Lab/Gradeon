@@ -7,8 +7,8 @@ const entitlement = (modules: string[], locks: string[] = [], overrides = {}) =>
 
 describe('modules', () => {
   it('always keeps core modules and adds requirements', () => {
-    expect(closeModules(['fees'])).toEqual(['people', 'fees']);
-    expect(closeModules(['nonsense'])).toEqual(['people']);
+    expect(closeModules(['fees'])).toEqual(['school', 'people', 'fees']);
+    expect(closeModules(['nonsense'])).toEqual(['school', 'people']);
   });
   it('reports what a switch-off would break', () => {
     expect(dependents('people', ['people', 'fees', 'notices'])).toEqual(['fees']);
@@ -18,12 +18,12 @@ describe('modules', () => {
   });
   it('a module counts only within its dates', () => {
     const ent = { modules: ['fees', 'library'], dates: { library: { until: '2026-11-30' }, fees: { from: '2026-12-01' } } };
-    expect(activeModules(ent, '2026-11-05')).toEqual(['people', 'library']);
-    expect(activeModules(ent, '2026-12-01')).toEqual(['people', 'fees']);
+    expect(activeModules(ent, '2026-11-05')).toEqual(['school', 'people', 'library']);
+    expect(activeModules(ent, '2026-12-01')).toEqual(['school', 'people', 'fees']);
   });
   it('built features are on unless taken away, planned ones never', () => {
-    expect(activeFeatures({}, ['fees'])).toEqual(['fees.onlinePayment', 'fees.reminders']);
-    expect(activeFeatures({ features: { 'fees.onlinePayment': false, 'fees.lateFines': true } }, ['fees'])).toEqual(['fees.reminders']);
+    expect(activeFeatures({}, ['fees'])).toEqual(['fees.onlinePayment', 'fees.reminders', 'fees.lateFines', 'fees.gstReceipts', 'fees.refunds']);
+    expect(activeFeatures({ features: { 'fees.onlinePayment': false, 'fees.concessions': true } }, ['fees'])).toEqual(['fees.reminders', 'fees.lateFines', 'fees.gstReceipts', 'fees.refunds']);
   });
   it('every catalogue key is unique and every feature is named after its module', () => {
     const keys = [...MODULES.map((m) => m.key), ...MODULES.flatMap((m) => m.features.map((f) => f.key))];
@@ -36,12 +36,26 @@ describe('resolveConfig', () => {
   const settings = { version: 2, values: { 'school.name': 'Greenfield', 'school.shortName': 'GIS', 'brand.color': '#123456' }, locked: [], updatedAt: null };
   it('limits modules to the plan and filters the menu by permission', () => {
     const cfg = resolveConfig({ settings, entitlement: entitlement(['fees', 'notices']), audience: { permissions: ['students.read'] } });
-    expect(cfg.modules).toEqual(['people', 'fees', 'notices']);
-    expect(cfg.nav.map((n) => n.label)).toEqual(['Students']);
+    expect(cfg.modules).toEqual(['school', 'people', 'fees', 'notices']);
+    expect(cfg.menu.flatMap((g) => g.pages.map((p) => p.label))).toEqual(['Dashboard', 'Students']);
   });
-  it('a school cannot switch on a module the plan does not include', () => {
-    const cfg = resolveConfig({ settings: { ...settings, values: { ...settings.values, 'modules.enabled': ['people', 'fees', 'transport'] } }, entitlement: entitlement(['fees']) });
-    expect(cfg.modules).toEqual(['people', 'fees']);
+  it('builds the whole menu in group order, tabs with their own addresses, Moving in only before go-live', () => {
+    const all = resolveConfig({ settings, entitlement: entitlement(['fees', 'library']), live: false });
+    expect(all.menu.map((g) => g.group)).toEqual(['Home', 'People', 'Money', 'Campus', 'School']);
+    expect(all.menu.find((g) => g.group === 'Money')!.pages[0]!.tabs.map((t) => t.href)).toEqual(['/fees/overview', '/fees/invoices', '/fees/receipts', '/fees/online', '/fees/structure']);
+    expect(all.menu.flatMap((g) => g.pages.map((p) => p.id))).toContain('move');
+    expect(resolveConfig({ settings, entitlement: entitlement(['fees']) }).menu.flatMap((g) => g.pages.map((p) => p.id))).not.toContain('move');
+  });
+  it('lays out each app role from what the school has', () => {
+    const values = { ...settings.values, 'app.roles': ['parent', 'driver', 'nobody'], 'app.layout': { parent: { dock: ['home', 'fees', 'library'], home: [], quick: ['payFees'] }, student: { dock: ['home'], home: [], quick: [] }, teacher: { dock: [], home: [], quick: [] }, driver: { dock: ['trips'], home: [], quick: [] } } };
+    const cfg = resolveConfig({ settings: { ...settings, values }, entitlement: entitlement(['fees']) });
+    expect(cfg.app.roles).toEqual(['parent', 'driver']);
+    expect(cfg.app.layout.parent).toEqual({ dock: ['home', 'fees'], home: [], quick: ['payFees'] });
+    expect(cfg.app.layout.driver.dock).toEqual([]);
+  });
+  it('words: plurals from the console, or the usual English ending', () => {
+    expect(resolveConfig({ settings: { ...settings, values: { ...settings.values, 'vocab.student': 'Child', 'vocab.students': 'Children' } }, entitlement: entitlement([]) }).vocabulary)
+      .toEqual({ student: 'Child', students: 'Children', class: 'Class', classes: 'Classes' });
   });
   it('platform locks beat school values', () => {
     const cfg = resolveConfig({ settings, entitlement: entitlement(['fees'], ['brand.color'], { 'brand.color': '#ABCDEF' }) });
@@ -55,10 +69,6 @@ describe('validateSettingsChanges', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.problems.map((p) => p.key).sort()).toEqual(['brand.color', 'fees.lateFeePct', 'nope']);
   });
-  it('closes the module list', () => {
-    const r = validateSettingsChanges({ 'modules.enabled': ['fees'] }, []);
-    expect(r.ok && r.values['modules.enabled']).toEqual(['people', 'fees']);
-  });
 });
 
 describe('changeEntitlement', () => {
@@ -68,11 +78,11 @@ describe('changeEntitlement', () => {
     expect(r.problems).toEqual([]);
     expect(r.removed).toEqual(['chat', 'fees.onlinePayment']);
     expect(r.added).toEqual(['library']);
-    expect(r.next).toMatchObject({ modules: ['people', 'fees', 'library'], features: { 'fees.onlinePayment': false }, version: 4 });
+    expect(r.next).toMatchObject({ modules: ['school', 'people', 'fees', 'library'], features: { 'fees.onlinePayment': false }, version: 4 });
   });
   it('refuses what is not built, bad dates and the core module', () => {
     expect(changeEntitlement(cur, { modules: ['hostel'] }).problems[0]).toMatch(/not built yet/);
-    expect(changeEntitlement(cur, { features: { 'fees.lateFines': true } }).problems[0]).toMatch(/not built yet/);
+    expect(changeEntitlement(cur, { features: { 'fees.concessions': true } }).problems[0]).toMatch(/not built yet/);
     expect(changeEntitlement(cur, { dates: { fees: { from: '2026-12-01', until: '2026-11-01' } } }).problems[0]).toMatch(/ends before it starts/);
     expect(changeEntitlement(cur, { dates: { fees: { until: '2020-01-01' } } }).removed).toEqual(['fees']);
   });

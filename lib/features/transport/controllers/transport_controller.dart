@@ -1,13 +1,21 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/live_stream.dart';
 import 'package:gradeon/core/services/auth_service.dart';
 import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class TransportController extends GetxController with Loadable {
+class TransportController extends GetxController with Loadable, LiveListen {
+  @override
+  void onInit() {
+    super.onInit();
+    // The bus moved, or a trip started or ended.
+    listenLive('bus.', (_) => unawaited(load()));
+  }
+
   TransportInfo? route;
 
   @override
@@ -23,7 +31,7 @@ class TransportController extends GetxController with Loadable {
   }
 
   Future<void> callDriver() async {
-    final phone = route?.driver.phone;
+    final phone = route?.call?.phone;
     if (phone == null) return;
     await launchUrl(Uri(scheme: 'tel', path: phone));
   }

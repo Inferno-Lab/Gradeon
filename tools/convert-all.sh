@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/.."
 for spec in \
   "Main dashboard apps/admin/src/pages/dashboard" "AdminStudents students apps/admin/src/pages/students" "AdminTimetable timetable apps/admin/src/pages/timetable" \
-  "AdminSettings settings apps/admin/src/pages/settings" "AdminPhone phone apps/admin/src/pages/phone" \
+  "AdminPhone phone apps/admin/src/pages/phone" \
   "ConsoleFleet fleet apps/console/src/pages/fleet" "ConsoleSchool school apps/console/src/pages/school" "Components components apps/admin/src/design/components" \
   ; do
   set -- $spec

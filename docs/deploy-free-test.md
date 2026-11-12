@@ -25,7 +25,6 @@ The repository already exists at `Inferno-Lab/Gradeon`. Render builds from `main
 2. **New +** → **Blueprint** → pick `Gradeon` → branch `main` → **Connect**.
 3. Render reads `render.yaml` and shows one service, `gradeon`. It asks for three values:
    - `REGISTRY_DATABASE_URL`: paste the Neon string.
-   - `SHARED_PG_ADMIN_URL`: paste the **same** Neon string.
    - `DEMO_CODE`: six digits you choose, for example `482915`. The console asks for it after your password.
 4. Press **Apply**. The first build takes 6 to 10 minutes.
 5. When the service says **Live**, open `https://<your-service>.onrender.com`.
@@ -44,19 +43,23 @@ The demo school Greenfield is created by the first start (a minute or two; watch
 
 Texts and emails are caught in the console under **Test inbox**; nothing is sent to real phones. New schools created from **Onboarding** get their invite and sign-in codes there.
 
-Optional: to hear about trouble (a new kind of error, a school not answering, a failed backup or restore drill), add `ALERT_WEBHOOK_URL` in Render → **Environment** with a Slack or Discord incoming webhook. Backups run daily and a restore drill weekly; both show on the console's **Health** page.
+Optional: to hear about trouble (a new kind of error, a school not answering, a failed backup or restore drill), add an Alerts connection in the console under **Integrations** (Slack, Discord or e-mail: the template asks for the webhook address or the inbox). Backups run daily and a restore drill weekly; both show on the console's **Health** page.
 
-## 5. Optional: Android app builds
+Messages, files and payments: the test track starts in test mode (the switch at the top of **Integrations**), so texts and emails land in the console's **Test inbox**, files are kept in the database and payments open a test checkout. To try a real provider, add it in the console under **Integrations**, route it, and put your own number on the allow-list; nothing else changes. For real families turn the switch to live (a second person approves; the console lists what is not live yet). A File scanning connection (ClamAV) scans uploads. See `docs/integrations.md`.
 
-The console's **Build Android app** starts a GitHub Actions workflow (`.github/workflows/mobile-build.yml`) that builds the APK and posts the install link back.
+## 5. Optional: app builds
 
-1. GitHub → your profile → *Settings* → *Developer settings* → *Personal access tokens* → fine-grained token for `Gradeon` with **Actions: read and write** and **Contents: read and write**.
-2. In Render → **Environment** add `GITHUB_TOKEN` (that token) and `GITHUB_REPO` = `Inferno-Lab/Gradeon`, and `GITHUB_BRANCH` = `main`.
-3. In GitHub → repository → *Settings* → *Secrets and variables* → *Actions*: add the secret `BUILD_CALLBACK_TOKEN` (copy the value of the same variable from Render) and the variable `API_BASE_URL` = your Render address.
+The console's **Build the app** (a school's page → App) starts the GitHub Actions workflow (`.github/workflows/mobile-build.yml`). Each build gets a one-time code to fetch its signing kit from the console and to report back, so no signing secret sits in GitHub. Everything is a connection under the console's **Integrations**; each template says where to find every value:
+
+1. **App builds → GitHub**: the repository (`Inferno-Lab/Gradeon`), the branch (`main`) and a fine-grained token with **Actions: read and write** on it. Test lists the workflow.
+2. **Phone notifications → Firebase**: the service account and the app files (`google-services.json`, `GoogleService-Info.plist`). Test checks the files belong to the project.
+3. **App stores → Google Play** (the upload key store, its passwords and a service account with release rights; the track) and/or **App Store Connect** (team ID, issuer ID, key ID and the `.p8` key).
+
+Android builds go to the chosen Google Play track; iPhone builds go to TestFlight. The link appears on the school's page when the workflow reports back.
 
 ### What the app does against the test track
 
-A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (teachers: password, then the code; families: a code to their phone; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). It follows what the console set for the school: tabs, Home cards and quick buttons, languages, the privacy notice and consent. What a teacher marks in the app shows up in the admin. The workflow leaves the sample content out of the package. Not yet: library catalogue, gallery photos, live transport, push.
+A build made with `SCHOOL` and `API_BASE_URL` (the workflow passes both) signs in with the school's real accounts (teachers: password, then the code; families: a code to their phone; the demo school hands out `424242`) and reads every screen from the family API (`/v1/f/*`). It follows what the console set for the school: tabs, Home cards and quick buttons, languages, the privacy notice and consent. What a teacher marks in the app shows up in the admin. The workflow leaves the sample content out of the package. Payments open the provider's checkout (the test checkout on the test track), and files, the library, transport with the live bus and the gallery work from the school's data. Not yet: push notifications (the app needs the owner's Firebase project files; see `docs/integrations.md`).
 
 ## Updating
 
@@ -64,4 +67,4 @@ Pushing to `main` redeploys automatically. Database changes are applied by the s
 
 ## Using real infrastructure later
 
-The same steps run on AWS: a cell in the console gets the `aws-cell` target, and the blueprints under **Blueprints** describe what is created for each school. See `docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`.
+The same steps run on AWS: a cell in the console gets the `aws-cell` target, and the blueprints under **Blueprints** describe what is created for each school.

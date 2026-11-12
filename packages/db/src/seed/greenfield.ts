@@ -1,4 +1,4 @@
-import { ROLE_TEMPLATES, addDays, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
+import { PERMISSIONS, ROLE_TEMPLATES, addDays, type RoleTemplate, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
 import type { Pool, PoolClient } from 'pg';
 import { newId } from '../ids.js';
 import { bulkInsert } from './bulk.js';
@@ -20,11 +20,12 @@ export interface SeedInput {
   };
   admin: { name: string; email: string; phone: string; passwordHash: string };
   modules: string[];
-  demoMode: boolean;
   /** `empty` is a brand-new school: roles, periods and settings only. `demo` adds a full year of sample data. */
   data: 'empty' | 'demo';
   /** Hash used for every demo staff and guardian login. Needed for `demo`. */
   demoPasswordHash?: string;
+  /** The starting roles the console keeps (Blueprints → Starting roles); the built-in ones when not given. */
+  roleTemplates?: RoleTemplate[];
   today?: string;
 }
 
@@ -127,7 +128,7 @@ async function run(db: PoolClient, input: SeedInput): Promise<Omit<SeedReport, '
 
   // Roles, periods and subjects exist in every school, empty or not.
   await bulkInsert(db, 'roles', ['id', 'key', 'name', 'description', 'permissions', 'locked'],
-    ROLE_TEMPLATES.map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.permissions), t.key === 'principal']));
+    (input.roleTemplates?.length ? input.roleTemplates : ROLE_TEMPLATES).map((t) => [`role_${t.key}`, t.key, t.name, t.description, JSON.stringify(t.key === 'principal' ? [...PERMISSIONS] : t.permissions), t.key === 'principal']));
   await bulkInsert(db, 'periods', ['idx', 'label', 'starts_at', 'ends_at', 'kind'], PERIOD_ROWS);
   await bulkInsert(db, 'subjects', ['id', 'name', 'color', 'per_week'], SUBJECTS.map((s) => [s.id, s.name, s.color, s.perWeek]));
 
@@ -138,16 +139,15 @@ async function run(db: PoolClient, input: SeedInput): Promise<Omit<SeedReport, '
   await db.query("insert into staff (user_id, designation, department, joined_on) values ($1,'Principal','Administration',$2)", [adminId, addDays(last, -2000)]);
   await db.query('insert into user_roles (user_id, role_id) values ($1,$2)', [adminId, 'role_principal']);
 
-  const examsStart = addDays(last, 6);
   const s = input.school;
   const settings: [string, unknown][] = [
     ['school.name', s.name], ['school.shortName', s.shortName], ['school.tagline', s.tagline], ['school.place', s.place ?? ''], ['school.phone', s.phone],
     ['school.email', s.email], ['school.address', s.address], ['school.language', s.language], ['brand.color', s.color],
-    ['brand.logoText', s.logoText], ['modules.enabled', input.modules], ['approvals.feeWaiver', 'principal'],
+    ['brand.logoText', s.logoText],
     ['approvals.notice', 'required'], ['attendance.notifyParents', true], ['attendance.lockAfterDays', 2],
     ['fees.lateFeePct', 0], ['fees.remindDaysBefore', 3], ['fees.dailyTarget', 150000], ['attendance.goalPct', 95],
-    ['homework.goalPct', 85], ['students.pinnedClass', 'cls_8a'], ['dashboard.rollClasses', ['cls_8a', 'cls_8b', 'cls_9a', 'cls_9b', 'cls_10a', 'cls_10b']], ['term.name', 'Term 1'], ['term.examsStart', examsStart], ['security.twoFactor', true],
-    ['demo.mode', input.demoMode], ['vocab.student', 'Student'], ['vocab.class', 'Class'],
+    ['homework.goalPct', 85], ['dashboard.rollClasses', ['cls_8a', 'cls_8b', 'cls_9a', 'cls_9b', 'cls_10a', 'cls_10b']], ['security.twoFactor', true],
+    ['vocab.student', 'Student'], ['vocab.class', 'Class'],
   ];
   await bulkInsert(db, 'settings', ['key', 'value', 'updated_by'], settings.map(([k, v]) => [k, JSON.stringify(v), 'system']));
   await bulkInsert(db, 'meta', ['key', 'value'], [
@@ -483,15 +483,46 @@ async function seedLearning(ctx: Ctx, classes: ClassRow[], students: StudentRow[
   });
   await bulkInsert(db, 'exam_results', ['student_id', 'exam', 'grade', 'pct'], results, { chunk: 4000 });
 
+  // The library: a catalogue with copies, and the books students have out (some late, so fines show).
+  const catalogue: [string, string, string][] = [
+    ['The Hobbit', 'J. R. R. Tolkien', 'Fiction'], ['Wings of Fire', 'A. P. J. Abdul Kalam', 'Biography'], ['Matilda', 'Roald Dahl', 'Fiction'], ['Malgudi Days', 'R. K. Narayan', 'Fiction'],
+    ['Charlotte’s Web', 'E. B. White', 'Fiction'], ['The Jungle Book', 'Rudyard Kipling', 'Fiction'], ['Hatchet', 'Gary Paulsen', 'Adventure'], ['Swami and Friends', 'R. K. Narayan', 'Fiction'],
+    ['A Brief History of Time', 'Stephen Hawking', 'Science'], ['The Story of My Experiments with Truth', 'M. K. Gandhi', 'Biography'], ['Panchatantra', 'Vishnu Sharma', 'Stories'], ['Ignited Minds', 'A. P. J. Abdul Kalam', 'Non-fiction'],
+  ];
   const loans: unknown[][] = [];
-  const books = ['The Hobbit', 'Wings of Fire', 'Matilda', 'Malgudi Days', 'Charlotte’s Web', 'The Jungle Book', 'Hatchet', 'Swami and Friends'];
+  const out = catalogue.map(() => 0);
   for (const s of students) {
     const n = s.name === 'Aarav Sharma' ? 2 : r.chance(0.3) ? r.int(1, 2) : 0;
-    for (let i = 0; i < n; i++) loans.push([newId('lib'), s.id, r.pick(books), addDays(last, r.int(2, 12)), null]);
+    for (let i = 0; i < n; i++) {
+      // The last title (Ignited Minds) is always on the shelf, so a family can reserve or be issued it in the demo.
+      const book = s.name === 'Aarav Sharma' ? i : r.int(0, catalogue.length - 2);
+      out[book]!++;
+      loans.push([newId('lib'), s.id, catalogue[book]![0], addDays(last, r.chance(0.1) ? -r.int(1, 6) : r.int(2, 12)), null, `bok_${book + 1}`, addDays(last, -10)]);
+    }
   }
-  await bulkInsert(db, 'library_loans', ['id', 'student_id', 'title', 'due_on', 'returned_on'], loans, { chunk: 3000 });
-  const routes = students.filter((s) => s.name === 'Aarav Sharma' || r.chance(0.4)).map((s) => [s.id, s.name === 'Aarav Sharma' ? 'Route 4' : `Route ${r.int(1, 8)}`]);
-  await bulkInsert(db, 'transport_assignments', ['student_id', 'route'], routes, { chunk: 3000 });
+  // Every title has a few copies on the shelf beyond those out on loan.
+  const bookRows = catalogue.map(([title, author, category], i) => [`bok_${i + 1}`, title, author, category, `${'ABCD'[i % 4]}-${1 + (i % 5)}`, out[i]! + r.int(3, 9)]);
+  await bulkInsert(db, 'library_books', ['id', 'title', 'author', 'category', 'shelf', 'copies'], bookRows);
+  await bulkInsert(db, 'library_loans', ['id', 'student_id', 'title', 'due_on', 'returned_on', 'book_id', 'issued_on'], loans, { chunk: 3000 });
+
+  // Eight bus routes around Pune, each with its stops, times and place on the map.
+  const base: [number, number][] = [[18.559, 73.7868], [18.5679, 73.8143], [18.5362, 73.8939], [18.5089, 73.8259], [18.5913, 73.7389], [18.4529, 73.8652], [18.5204, 73.8567], [18.6298, 73.7997]];
+  const areas = ['Baner', 'Aundh', 'Kalyani Nagar', 'Kothrud', 'Hinjawadi', 'Katraj', 'Shivajinagar', 'Pimpri'];
+  const routeRows = areas.map((a, i) => [`rte_${i + 1}`, `Route ${i + 1} · ${a}`, `MH12 ${'ABCDEFGH'[i]}${'K'} ${4100 + i * 37}`, ['Suresh Patil', 'Raju Kamble', 'Anil Jadhav', 'Imran Shaikh', 'Ganesh More', 'Sunil Pawar', 'Vijay Shinde', 'Prakash Gaikwad'][i], `98220${String(30001 + i)}`, 4500 + i * 250]);
+  await bulkInsert(db, 'transport_routes', ['id', 'name', 'vehicle', 'driver_name', 'driver_phone', 'fee'], routeRows);
+  const stopRows: unknown[][] = [];
+  areas.forEach((a, i) => {
+    for (let k = 0; k < 4; k++) {
+      const [lat, lng] = base[i]!;
+      stopRows.push([`stp_${i + 1}_${k + 1}`, `rte_${i + 1}`, `${a} ${['gaon', 'chowk', 'phata', 'naka'][k]}`, k + 1, `07:${String(5 + k * 7).padStart(2, '0')}`, `14:${String(10 + k * 7).padStart(2, '0')}`, lat + k * 0.006, lng + k * 0.005]);
+    }
+  });
+  await bulkInsert(db, 'transport_stops', ['id', 'route_id', 'name', 'position', 'pickup', 'drop_time', 'lat', 'lng'], stopRows);
+  const routes = students.filter((s) => s.name === 'Aarav Sharma' || r.chance(0.4)).map((s) => {
+    const n = s.name === 'Aarav Sharma' ? 4 : r.int(1, 8);
+    return [s.id, routeRows[n - 1]![1], `rte_${n}`, `stp_${n}_${r.int(1, 4)}`];
+  });
+  await bulkInsert(db, 'transport_assignments', ['student_id', 'route', 'route_id', 'stop_id'], routes, { chunk: 3000 });
 }
 
 async function seedOffice(ctx: Ctx, classes: ClassRow[], students: StudentRow[], teachers: Teacher[]): Promise<void> {

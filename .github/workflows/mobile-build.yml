@@ -1,5 +1,7 @@
 name: Mobile build
-# Started by the console ("Build Android app" on a school) with the school's address name and the build's id.
+# Started by the console (a school's Technical tab → Build the app) through its App builds connection. Everything the build needs
+# (Firebase files, the signing keys, where to publish) comes from the console's Integrations with this build's own code, which
+# works only while the build runs: no signing secret is kept in this repository or in GitHub.
 on:
   workflow_dispatch:
     inputs:
@@ -9,21 +11,41 @@ on:
       build_id:
         description: The console's id for this build
         required: true
+      platform:
+        description: android or ios
+        required: true
+      token:
+        description: This build's own code (from the console, good until the build reports back)
+        required: true
+      api:
+        description: The console's public address
+        required: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  android:
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
+  build:
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-14' || 'ubuntu-latest' }}
+    timeout-minutes: 60
     env:
-      API_BASE_URL: ${{ vars.API_BASE_URL }}
-      BUILD_CALLBACK_TOKEN: ${{ secrets.BUILD_CALLBACK_TOKEN }}
-      TAG: app-${{ inputs.school }}-${{ inputs.build_id }}
+      API: ${{ inputs.api }}
+      BUILD: ${{ inputs.build_id }}
     steps:
+      - name: Keep the build code out of the logs
+        run: echo "::add-mask::${{ inputs.token }}"
       - uses: actions/checkout@v4
+      - name: Fetch this build's kit from the console
+        run: |
+          curl -fsS -H "x-build-token: ${{ inputs.token }}" "${API%/}/console/v1/builds/${BUILD}/kit" -o "$RUNNER_TEMP/kit.json"
+          for k in .android.keystore .android.storePassword .android.keyPassword .android.serviceAccount .ios.privateKey; do
+            v=$(jq -r "$k // empty" "$RUNNER_TEMP/kit.json"); [ -n "$v" ] && echo "::add-mask::$v" || true
+          done
+          echo "APP_ID=$(jq -r .appId "$RUNNER_TEMP/kit.json")" >> "$GITHUB_ENV"
+          echo "APP_NAME=$(jq -r .appName "$RUNNER_TEMP/kit.json" | sed 's/[&<>"]//g')" >> "$GITHUB_ENV"
+          echo "SCHOOL_API=$(jq -r .apiBaseUrl "$RUNNER_TEMP/kit.json")" >> "$GITHUB_ENV"
       - uses: actions/setup-java@v4
+        if: inputs.platform == 'android'
         with:
           distribution: temurin
           java-version: '17'
@@ -33,22 +55,105 @@ jobs:
           cache: true
       - name: Leave the sample content out
         # A school's app only talks to its school; the sample content and its code never ship (InitialBinding drops it in release too).
-        run: sed -i '\#- assets/mock/#d' pubspec.yaml && rm -rf assets/mock && ! grep -q 'assets/mock' pubspec.yaml
-      - run: flutter pub get
-      - name: Build the school's app
-        run: flutter build apk --release --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${API_BASE_URL}
-      - name: Publish the install link
-        id: publish
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "${{ inputs.school }}.apk"
-          gh release create "$TAG" "${{ inputs.school }}.apk" --prerelease --title "App for ${{ inputs.school }}" --notes "Built for the console. Install on an Android phone."
-          echo "url=https://github.com/${{ github.repository }}/releases/download/$TAG/${{ inputs.school }}.apk" >> "$GITHUB_OUTPUT"
+          sed -i.bak '\#- assets/mock/#d' pubspec.yaml && rm -f pubspec.yaml.bak && rm -rf assets/mock && ! grep -q 'assets/mock' pubspec.yaml
+      - name: The school's name and logo on the phone
+        # From the school's brand (set in the console): its short name under the icon, its logo as the icon. Without a logo the Gradeon icon stays.
+        run: |
+          BRAND=$(curl -fsS -H "x-school: ${{ inputs.school }}" "${SCHOOL_API%/}/v1/brand")
+          LOGO=$(echo "$BRAND" | jq -r '.logoUrl // empty')
+          if [ "${{ inputs.platform }}" = "android" ]; then
+            sed -i "s#android:label=\"Gradeon\"#android:label=\"${APP_NAME}\"#" android/app/src/main/AndroidManifest.xml
+            if [ -n "$LOGO" ]; then
+              curl -fsSL "$LOGO" -o /tmp/logo
+              rm -rf android/app/src/main/res/mipmap-anydpi-v26  # the adaptive Gradeon icon would win over the school's
+              for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+                convert /tmp/logo -resize "${d#*:}x${d#*:}^" -gravity center -extent "${d#*:}x${d#*:}" "android/app/src/main/res/mipmap-${d%%:*}/ic_launcher.png"
+              done
+            fi
+          else
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${APP_NAME}" ios/Runner/Info.plist
+            if [ -n "$LOGO" ]; then
+              curl -fsSL "$LOGO" -o /tmp/logo
+              for f in ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png; do
+                s=$(sips -g pixelWidth "$f" | awk '/pixelWidth/{print $2}'); sips -z "$s" "$s" /tmp/logo --out "$f" >/dev/null
+              done
+            fi
+          fi
+      - name: Firebase files for notifications
+        run: |
+          if [ "${{ inputs.platform }}" = "android" ]; then
+            jq -r '.firebase.android // empty' "$RUNNER_TEMP/kit.json" | base64 -d > android/app/google-services.json
+            # Firebase answers for the package name the build uses; the console's file must list this school's app.
+            grep -q "\"${APP_ID}\"" android/app/google-services.json || { echo "google-services.json has no Android app ${APP_ID}: add it in Firebase and update the file in the console."; exit 1; }
+          else
+            jq -r '.firebase.ios // empty' "$RUNNER_TEMP/kit.json" | base64 -d > ios/Runner/GoogleService-Info.plist
+          fi
+      - run: flutter pub get
+
+      # ── Android: signed with the Google Play upload key, sent to the chosen track ──
+      - name: Signing key
+        if: inputs.platform == 'android'
+        run: |
+          jq -r .android.keystore "$RUNNER_TEMP/kit.json" | base64 -d > android/upload.jks
+          {
+            echo "storeFile=upload.jks"
+            echo "storePassword=$(jq -r .android.storePassword "$RUNNER_TEMP/kit.json")"
+            echo "keyAlias=$(jq -r .android.keyAlias "$RUNNER_TEMP/kit.json")"
+            echo "keyPassword=$(jq -r .android.keyPassword "$RUNNER_TEMP/kit.json")"
+          } > android/key.properties
+          jq -r .android.serviceAccount "$RUNNER_TEMP/kit.json" | base64 -d > "$RUNNER_TEMP/play.json"
+          echo "TRACK=$(jq -r .android.track "$RUNNER_TEMP/kit.json")" >> "$GITHUB_ENV"
+      - name: Build the Android app
+        if: inputs.platform == 'android'
+        run: |
+          flutter build appbundle --release --build-number=${{ github.run_number }} \
+            --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${SCHOOL_API} -PappId=${APP_ID}
+      - name: Send it to Google Play
+        if: inputs.platform == 'android'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJson: ${{ runner.temp }}/play.json
+          packageName: ${{ env.APP_ID }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ env.TRACK }}
+          status: completed
+
+      # ── iPhone: signed automatically with the App Store Connect key, sent to TestFlight ──
+      - name: App Store Connect key
+        if: inputs.platform == 'ios'
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          KEY_ID=$(jq -r .ios.keyId "$RUNNER_TEMP/kit.json")
+          jq -r .ios.privateKey "$RUNNER_TEMP/kit.json" | base64 -d > "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8"
+          echo "KEY_ID=${KEY_ID}" >> "$GITHUB_ENV"
+          echo "ISSUER_ID=$(jq -r .ios.issuerId "$RUNNER_TEMP/kit.json")" >> "$GITHUB_ENV"
+          echo "TEAM_ID=$(jq -r .ios.teamId "$RUNNER_TEMP/kit.json")" >> "$GITHUB_ENV"
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>$(jq -r .ios.teamId "$RUNNER_TEMP/kit.json")</string>
+            <key>destination</key><string>upload</string>
+          </dict></plist>
+          PLIST
+      - name: Build and send it to TestFlight
+        if: inputs.platform == 'ios'
+        run: |
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.gradeon.app;/PRODUCT_BUNDLE_IDENTIFIER = ${APP_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+          flutter build ios --release --no-codesign --build-number=${{ github.run_number }} --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${SCHOOL_API}
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic archive
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Runner.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/out" \
+            -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"
+
       - name: Tell the console
-        if: always() && env.API_BASE_URL != ''
+        if: always()
         run: |
           OK=${{ job.status == 'success' }}
-          curl -fsS -X POST "${API_BASE_URL%/}/console/v1/builds/${{ inputs.build_id }}/finish" \
-            -H "x-build-token: ${BUILD_CALLBACK_TOKEN}" -H "content-type: application/json" \
-            -d "{\"ok\": ${OK}, \"url\": \"${{ steps.publish.outputs.url }}\"}"
+          if [ "${{ inputs.platform }}" = "ios" ]; then URL="https://appstoreconnect.apple.com/apps"; NOTE="Build ${{ github.run_number }} is processing in TestFlight."; else URL="https://play.google.com/console"; NOTE="Build ${{ github.run_number }} is on the ${TRACK:-internal} track."; fi
+          curl -fsS -X POST "${API%/}/console/v1/builds/${BUILD}/finish" -H "x-build-token: ${{ inputs.token }}" -H "content-type: application/json" \
+            -d "{\"ok\": ${OK}, \"url\": \"${URL}\", \"note\": \"${NOTE}\"}"

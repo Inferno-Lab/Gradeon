@@ -42,7 +42,7 @@ GetX named routes (`AppRoutes`). Tab switching from inside a screen: `ShellContr
 
 ## The platform around the app
 
-This file describes the Flutter app. The rest of the repository is a TypeScript platform: school admin (`apps/admin`), console (`apps/console`), school API and console API (`apps/api`, `apps/console-api`) run together by `apps/server`, and shared packages. How it is built and why: `docs/HANDOFF.md`; the look: `docs/DESIGN.md`; the long-term plan: `docs/superpowers/specs/2026-10-14-gradeon-platform-design.md`.
+This file describes the Flutter app. The rest of the repository is a TypeScript platform: school admin (`apps/admin`), console (`apps/console`), school API and console API (`apps/api`, `apps/console-api`) run together by `apps/server`, and shared packages. How it is built and why: `docs/HANDOFF.md`; the look: `docs/DESIGN.md`; every feature and what is planned: `docs/features-plan.md`.
 
 ```
  admin (React)  ─┐

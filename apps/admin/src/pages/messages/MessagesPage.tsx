@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, Segmented, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, Segmented, Select, useShake } from '@gradeon/web-ui';
+import { uploadFile } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
-import { AddBtn, AreaField, Avatar, Ico, problem, stamp } from '../../app/kit';
+import { AddBtn, AreaField, Avatar, Ico, problem, stamp, useOpenParam } from '../../app/kit';
 
 const BACK = 'M15 5l-7 7 7 7';
 const SEND = 'M4 12l16-8-6 16-3-7z';
@@ -21,11 +22,16 @@ export function MessagesPage() {
   const app = useApp();
   const qc = useQueryClient();
   const { toast, say } = useToast();
-  const [sel, setSel] = useState<string | null>(null);
+  // The open conversation is in the address (?open=<conversation>).
+  const [sel, setSel] = useOpenParam();
   const [filter, setFilter] = useState<'open' | 'unread' | 'closed'>('open');
+  const [q, setQ] = useState('');
+  const [mine, setMine] = useState(false);
   const [starting, setStarting] = useState(false);
   const list = useQuery({ queryKey: ['messages'], queryFn: app.api.messages.list, refetchInterval: 20_000 });
-  const rows = (list.data ?? []).filter((t) => (filter === 'closed' ? t.status === 'closed' : filter === 'unread' ? t.unread > 0 && t.status === 'open' : t.status === 'open'));
+  const term = q.trim().toLowerCase();
+  const rows = (list.data ?? []).filter((t) => (filter === 'closed' ? t.status === 'closed' : filter === 'unread' ? t.unread > 0 && t.status === 'open' : t.status === 'open'))
+    .filter((t) => (!mine || t.assignedToId === app.user.id) && (!term || `${t.subject} ${t.guardianName} ${t.studentName ?? ''} ${t.lastBody}`.toLowerCase().includes(term)));
   const canWrite = app.user.permissions.includes('messages.write');
   const all = list.data ?? [];
   const unread = all.filter((t) => t.unread > 0).length;
@@ -40,9 +46,13 @@ export function MessagesPage() {
       ) : (
         <section className={`msg ${sel ? 'has' : ''}`}>
           <div className="card msl rise" style={{ padding: 0 }}>
-            <div style={{ padding: '16px 16px 10px' }}><Segmented value={filter} onChange={(v) => { setFilter(v); setSel(null); }} label="Show" options={[{ value: 'open', label: 'Open' }, { value: 'unread', label: 'Unread', count: unread || undefined }, { value: 'closed', label: 'Closed' }]} /></div>
+            <div style={{ padding: '16px 16px 10px', display: 'grid', gap: 10 }}>
+              <Segmented value={filter} onChange={(v) => { setFilter(v); setSel(null); }} label="Show" options={[{ value: 'open', label: 'Open' }, { value: 'unread', label: 'Unread', count: unread || undefined }, { value: 'closed', label: 'Closed' }]} />
+              <Field label="Search conversations" value={q} onChange={setQ} placeholder="Family, student or words" />
+              <Checkbox checked={mine} onChange={setMine} label="Only the ones with me" />
+            </div>
             <div className="lscroll" style={{ maxHeight: 'min(68dvh,640px)' }}>
-              {rows.length === 0 && <div className="help" style={{ padding: '10px 20px 20px' }}>{filter === 'unread' ? 'Nothing unread.' : filter === 'closed' ? 'No closed conversations.' : 'No open conversations.'}</div>}
+              {rows.length === 0 && <div className="help" style={{ padding: '10px 20px 20px' }}>{term || mine ? 'Nothing matches.' : filter === 'unread' ? 'Nothing unread.' : filter === 'closed' ? 'No closed conversations.' : 'No open conversations.'}</div>}
               {rows.map((t) => <ThreadItem key={t.id} t={t} on={t.id === sel} onOpen={() => setSel(t.id)} />)}
             </div>
           </div>
@@ -74,20 +84,28 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['messages', id], queryFn: () => app.api.messages.get(id), refetchInterval: 15_000 });
   const [body, setBody] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [err, setErr] = useState('');
+  const staff = useQuery({ queryKey: ['messages', 'staff'], queryFn: app.api.messages.staff, enabled: canWrite, staleTime: 5 * 60_000 });
   const shake = useShake();
   const end = useRef<HTMLDivElement>(null);
   const t = q.data;
   useEffect(() => { void qc.invalidateQueries({ queryKey: ['shell'] }); }, [qc, t?.messages.length]);
   useEffect(() => { end.current?.scrollIntoView({ block: 'end' }); }, [t?.messages.length]);
   const reply = useMutation({
-    mutationFn: () => app.api.messages.reply(id, { body: body.trim() }),
-    onSuccess: (r) => { setBody(''); setErr(''); qc.setQueryData(['messages', id], r); onChanged(); },
+    // Files go up first (to the conversation), then the reply names them.
+    mutationFn: async () => {
+      const fileIds: string[] = [];
+      for (const f of files) fileIds.push((await uploadFile(app.api, 'chat', id, f)).id);
+      return app.api.messages.reply(id, { body: body.trim(), fileIds });
+    },
+    onSuccess: (r) => { setBody(''); setFiles([]); setErr(''); qc.setQueryData(['messages', id], r); onChanged(); },
     onError: (e) => { setErr(problem(e)._ ?? 'Could not send.'); shake.hit(); },
   });
-  const patch = useMutation({ mutationFn: (b: { status?: 'open' | 'closed'; assignToMe?: boolean }) => app.api.messages.patch(id, b), onSuccess: (r, b) => { qc.setQueryData(['messages', id], r); onChanged(b.status === 'closed' ? 'Conversation closed.' : b.status === 'open' ? 'Conversation reopened.' : 'It is yours now.'); }, onError: (e) => setErr((e as Error).message) });
+  const patch = useMutation({ mutationFn: (b: { status?: 'open' | 'closed'; assignToMe?: boolean; assignTo?: string }) => app.api.messages.patch(id, b), onSuccess: (r, b) => { qc.setQueryData(['messages', id], r); onChanged(b.status === 'closed' ? 'Conversation closed.' : b.status === 'open' ? 'Conversation reopened.' : b.assignTo && b.assignTo !== app.user.id ? `Handed to ${r.assignedToName}.` : 'It is yours now.'); }, onError: (e) => setErr((e as Error).message) });
   if (!t) return <div className="skc" style={{ height: 360, borderRadius: 24, margin: 16 }} />;
-  const send = () => { if (body.trim()) reply.mutate(); else { setErr('Write a reply first.'); shake.hit(); } };
+  const send = () => { if (body.trim() || files.length) reply.mutate(); else { setErr('Write a reply first.'); shake.hit(); } };
+  const open = (fileId: string) => void app.api.files.url(fileId, true).then((u) => window.open(u.url, '_blank', 'noopener')).catch((e: Error) => setErr(e.message));
   return (
     <div className="mcv">
       <header className="mch">
@@ -97,14 +115,15 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
           <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{t.guardianName}{t.studentName ? ` · ${t.studentName}, Class ${t.className}` : ''}{t.assignedToName ? ` · with ${t.assignedToName}` : ''}</small>
         </div>
         {canWrite && <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {!t.assignedToName && <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ assignToMe: true })}>Take it</button>}
+          {t.assignedToId !== app.user.id && <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ assignToMe: true })}>Take it</button>}
+          {(staff.data?.length ?? 0) > 1 && <Select compact aria-label="Hand to" value="" onChange={(to) => to && patch.mutate({ assignTo: to })} options={[{ value: '', label: 'Hand to…' }, ...(staff.data ?? []).filter((s) => s.id !== t.assignedToId).map((s) => ({ value: s.id, label: s.name }))]} />}
           <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ status: t.status === 'open' ? 'closed' : 'open' })}>{t.status === 'open' ? 'Close' : 'Reopen'}</button>
         </span>}
       </header>
       <div className="mlist lscroll" style={{ ['--scbg' as string]: 'var(--card)' }}>
         {t.messages.map((m) => (
           <div key={m.id} className={`mb ${m.from}`}>
-            <div className="mbb">{m.body}</div>
+            <div className="mbb">{m.deleted ? <i>This message was deleted.</i> : m.body}{m.files.length > 0 && <span className="tgrow" style={{ marginTop: m.body ? 8 : 0 }}>{m.files.map((f) => <button key={f.id} type="button" className="chip" onClick={() => open(f.id)}>{f.name}</button>)}</span>}</div>
             <small>{m.sender} · {stamp(m.at)}</small>
           </div>
         ))}
@@ -113,6 +132,10 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
       {canWrite ? (
         <footer className={`mcm ${shake.cls}`}>
           <AreaField label="Your reply" value={body} onChange={(v) => { setBody(v); setErr(''); }} rows={2} maxLength={1000} error={err} />
+          <div className="tgrow">
+            <FilePick className="btn sm" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={files.length >= 5} onPick={(f) => setFiles([...files, f])}>Attach a file</FilePick>
+            {files.map((f, i) => <button key={`${f.name}-${i}`} type="button" className="chip v" data-tip="Remove" onClick={() => setFiles(files.filter((_, j) => j !== i))}>{f.name} ×</button>)}
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span className="help">The family sees this in their app and gets a notification.{t.status === 'closed' ? ' Replying reopens the conversation.' : ''}</span>
             <button className="btn pri" disabled={reply.isPending} onClick={send}><Ico d={SEND} />{reply.isPending ? 'Sending…' : 'Send reply'}</button>

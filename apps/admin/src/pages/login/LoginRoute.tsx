@@ -19,7 +19,7 @@ export function LoginRoute() {
   return (
     <LoginPage
       controller={{
-        product: 'admin', schoolName: b?.name ?? 'Gradeon', shortName: b?.shortName ?? 'school', color: b?.color, logoText: b?.logoText, privacy: b?.privacy, demoMode: !!b?.demoMode, goName: 'the dashboard',
+        product: 'admin', schoolName: b?.name ?? 'Gradeon', shortName: b?.shortName ?? 'school', color: b?.color, logoText: b?.logoText, logoUrl: b?.logoUrl, privacy: b?.privacy, demoMode: !!b?.demoMode, goName: 'the dashboard',
         initialEmail: (() => { try { return localStorage.getItem(`gradeon.admin.${slug}.email`) ?? ''; } catch { return ''; } })(),
         submitCredentials: async (email, password) => {
           const res = await client.api.login({ identifier: email, password });

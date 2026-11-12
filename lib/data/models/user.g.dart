@@ -38,4 +38,5 @@ const _$UserRoleEnumMap = {
   UserRole.student: 'student',
   UserRole.parent: 'parent',
   UserRole.teacher: 'teacher',
+  UserRole.driver: 'driver',
 };

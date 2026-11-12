@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gradeon/core/services/school_config.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
@@ -185,6 +186,7 @@ class _Request extends StatelessWidget {
       LeaveStatus.pending => ('leave.waiting', c.dark ? AppColors.blackboard.mariText : AppColors.late),
       LeaveStatus.approved => ('leave.approved', AppColors.ok),
       LeaveStatus.rejected => ('leave.declined', c.badText),
+      LeaveStatus.withdrawn => ('leave.withdrawn', c.ink3),
     };
     final sameMonth = item.from.month == item.to.month;
     final range = days == 1
@@ -220,14 +222,22 @@ class _Request extends StatelessWidget {
                 if (item.status == LeaveStatus.pending)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      teacher == null
-                          ? 'leave.sent_on'.trp({'date': DateFormat('EEE d MMM').format(item.appliedOn)})
-                          : 'leave.sent_to'.trp({
-                              'date': DateFormat('EEE d MMM').format(item.appliedOn),
-                              'name': teacher!,
-                            }),
-                      style: context.type.cap,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            teacher == null
+                                ? 'leave.sent_on'.trp({'date': DateFormat('EEE d MMM').format(item.appliedOn)})
+                                : 'leave.sent_to'.trp({
+                                    'date': DateFormat('EEE d MMM').format(item.appliedOn),
+                                    'name': teacher!,
+                                  }),
+                            style: context.type.cap,
+                          ),
+                        ),
+                        // Not answered yet: the parent can take it back.
+                        Btn('leave.withdraw', kind: BtnKind.quiet, small: true, onPressed: () => unawaited(Get.find<LeaveController>().withdraw(item))),
+                      ],
                     ),
                   )
                 else if (item.reviewNote != null)
@@ -339,11 +349,11 @@ class LeaveApplyView extends GetView<LeaveApplyController> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final r in LeaveApplyController.reasons)
+              for (final r in SchoolConfig.leaveReasons)
                 Semantics(
                   selected: controller.reason.value == r,
                   child: Chip2(
-                    'leave.reason_$r',
+                    r,
                     on: controller.reason.value == r,
                     onTap: () => controller.reason.value = r,
                   ),

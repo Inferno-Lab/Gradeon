@@ -9,6 +9,8 @@ enum UserRole {
   parent,
   @JsonValue('teacher')
   teacher,
+  @JsonValue('driver')
+  driver,
 }
 
 @JsonSerializable()

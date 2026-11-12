@@ -423,30 +423,32 @@ class _StopsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          // The driver is named; the call goes to the attendant or the office, never to someone driving.
           Row(
             children: [
-              Avatar(route.driver.name, background: c.paper2, foreground: c.ink),
+              Avatar(route.driverName.isEmpty ? route.busNumber : route.driverName, background: c.paper2, foreground: c.ink),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(route.driver.name, style: context.type.t),
-                    Text('transport.driver'.tr, style: context.type.cap),
+                    Text(route.driverName.isEmpty ? route.busNumber : route.driverName, style: context.type.t),
+                    Text(route.driverName.isEmpty ? 'transport.bus'.tr : 'transport.driver'.tr, style: context.type.cap),
                   ],
                 ),
               ),
-              Semantics(
-                label: 'transport.call_driver'.trp({'name': route.driver.name}),
-                excludeSemantics: true,
-                child: Btn(
-                  'transport.call',
-                  kind: BtnKind.quiet,
-                  small: true,
-                  icon: PhosphorIconsRegular.phone,
-                  onPressed: () => unawaited(controller.callDriver()),
+              if (route.call != null)
+                Semantics(
+                  label: 'transport.call_driver'.trp({'name': route.call!.name}),
+                  excludeSemantics: true,
+                  child: Btn(
+                    'transport.call',
+                    kind: BtnKind.quiet,
+                    small: true,
+                    icon: PhosphorIconsRegular.phone,
+                    onPressed: () => unawaited(controller.callDriver()),
+                  ),
                 ),
-              ),
             ],
           ),
         ],

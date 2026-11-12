@@ -1,13 +1,16 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, type OnModuleInit } from '@nestjs/common';
-import { LoginRequest, RefreshRequest, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
+import { LoginRequest, PasswordChange, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
 import { newId, scheduleJob } from '@gradeon/db';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@gradeon/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@gradeon/nest-kit';
 import { Db, Me, Public, type ConsoleUser } from './core.js';
-import { ENV, type Env } from './env.js';
+import { ENV, demosAllowed, type Env } from './env.js';
 import { Sandbox } from './sandbox.js';
+import { PlatformHub } from './platform-hub.js';
+import { randomInt } from 'node:crypto';
+import { z } from 'zod';
 
 const ACCESS_SECONDS = 15 * 60;
 const WEB_DAYS = 7;
@@ -27,6 +30,7 @@ export class ConsoleAuth implements OnModuleInit {
     private readonly db: Db,
     private readonly sandbox: Sandbox,
     @Inject(ENV) private readonly env: Env,
+    private readonly platform: PlatformHub,
   ) {}
 
   private get production(): boolean {
@@ -82,20 +86,89 @@ export class ConsoleAuth implements OnModuleInit {
     return { step: 'otp', challenge: { challengeId: id, channel: 'app', maskedTo: 'your authenticator app', expiresInSeconds: 600, enroll: { secret, uri: totpUri(secret, u.email) } } };
   }
 
+  /**
+   * "Forgot it?": a code to the person's email (through Gradeon's email connection; on the test track the fixed demo code)
+   * lets them choose a new password. The authenticator is still asked at the next sign-in, so a mailbox alone opens nothing.
+   */
+  async resetStart(email: string): Promise<{ challengeId: string; channel: 'email'; maskedTo: string; expiresInSeconds: number; demoCode?: string }> {
+    const u = (await this.db.pool.query<{ id: string; email: string }>("select id, email from console_users where lower(email) = $1 and status = 'active'", [email.trim().toLowerCase()])).rows[0];
+    const id = newId('cot');
+    // An unknown address gets the same answer, so the form does not say who has an account.
+    if (!u) return { challengeId: id, channel: 'email', maskedTo: maskEmail(email.trim()), expiresInSeconds: 600 };
+    const code = this.env.DEMO_CODE ?? String(randomInt(0, 1_000_000)).padStart(6, '0');
+    await this.db.pool.query("insert into console_otp (id, user_id, code_hash, method, expires_at) values ($1,$2,$3,'reset',$4)", [id, u.id, sha256(`${id}:${code}`), new Date(Date.now() + 10 * 60_000)]);
+    if (!this.env.DEMO_CODE) {
+      await this.platform.hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your code to choose a new console password is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`, now: true });
+    }
+    return { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, ...(this.env.DEMO_CODE && !this.production ? { demoCode: code } : {}) };
+  }
+
+  async resetFinish(challengeId: string, code: string, password: string): Promise<void> {
+    const r = (await this.db.pool.query<{ id: string; user_id: string; code_hash: string; method: string; attempts: number; expires_at: Date; used_at: Date | null }>('select * from console_otp where id = $1', [challengeId])).rows[0];
+    if (!r || r.method !== 'reset' || r.used_at || r.expires_at < new Date()) throw new ApiError('unauthenticated', 'That code has expired. Ask for a new one.', { fields: { code: 'That code has expired.' } });
+    if (r.attempts >= 3) throw new ApiError('locked', 'Too many wrong codes. Ask for a new one.');
+    if (!constantTimeEqual(sha256(`${challengeId}:${code}`), r.code_hash)) {
+      await this.db.pool.query('update console_otp set attempts = attempts + 1 where id = $1', [r.id]);
+      throw new ApiError('unauthenticated', 'That code isn’t right.', { attemptsLeft: 2 - r.attempts, fields: { code: 'That code isn’t right.' } });
+    }
+    if (password.length < 10) throw new ApiError('validation', 'Use at least 10 characters.', { fields: { password: 'Use at least 10 characters.' } });
+    await this.db.pool.query('update console_otp set used_at = now() where id = $1', [r.id]);
+    // Every session ends: whoever had the old password is signed out.
+    await this.db.pool.query('update console_users set password_hash = $2, failed_logins = 0, locked_until = null, token_version = token_version + 1 where id = $1', [r.user_id, await hashPassword(password)]);
+    await this.db.audit(r.user_id, 'auth.password_reset', 'user', r.user_id);
+  }
+
+  /** Which console this is, said by the server: a guess from the address could call production "Test". */
+  about(): { environment: 'Production' | 'Test track' | 'Local'; version: string; demos: boolean } {
+    const environment = this.env.NODE_ENV !== 'production' ? 'Local' : this.env.DEMO_CODE || this.env.ALLOW_DEMO === 'true' ? 'Test track' : 'Production';
+    return { environment, version: this.env.APP_VERSION, demos: demosAllowed(this.env) };
+  }
+
+  /** An invitation link: the person chooses their password; their authenticator is added at their first sign-in. */
+  async join(token: string, password: string): Promise<{ email: string }> {
+    const u = (await this.db.pool.query<{ id: string; email: string; invite_expires: Date | null }>("select id, email, invite_expires from console_users where invite_hash = $1 and status = 'invited'", [sha256(token)])).rows[0];
+    if (!u || !u.invite_expires || u.invite_expires < new Date()) throw new ApiError('unauthenticated', 'This invitation has expired or was used. Ask for a new one.');
+    if (password.length < 10) throw new ApiError('validation', 'Use at least 10 characters.', { fields: { password: 'Use at least 10 characters.' } });
+    await this.db.pool.query("update console_users set password_hash = $2, status = 'active', invite_hash = null, invite_expires = null where id = $1", [u.id, await hashPassword(password)]);
+    await this.db.audit(u.email, 'team.joined', 'user', u.id);
+    return { email: u.email };
+  }
+
+  /** My account: a new password needs the current one; every other session of mine ends. */
+  async changePassword(me: ConsoleUser, body: PasswordChange): Promise<void> {
+    const u = (await this.db.pool.query<{ password_hash: string | null }>('select password_hash from console_users where id = $1', [me.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(body.current, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { current: 'That is not your current password.' } });
+    if (body.next.length < 10) throw new ApiError('validation', 'Use at least 10 characters.', { fields: { next: 'Use at least 10 characters.' } });
+    await this.db.pool.query('update console_users set password_hash = $2 where id = $1', [me.id, await hashPassword(body.next)]);
+    await this.db.pool.query('update console_sessions set revoked_at = now() where user_id = $1 and id <> $2 and revoked_at is null', [me.id, me.sid]);
+    await this.db.audit(me.email, 'auth.password_changed', 'user', me.id);
+  }
+
+  /** A new phone: the old authenticator key is dropped and the next sign-in adds a new one. The password proves it is me. */
+  async resetAuthenticator(me: ConsoleUser, password: string): Promise<void> {
+    const u = (await this.db.pool.query<{ password_hash: string | null }>('select password_hash from console_users where id = $1', [me.id])).rows[0];
+    if (!u?.password_hash || !(await verifyPassword(password, u.password_hash))) throw new ApiError('validation', 'That is not your current password.', { fields: { password: 'That is not your current password.' } });
+    await this.db.pool.query('update console_users set totp_secret = null, totp_last = null where id = $1', [me.id]);
+    await this.db.audit(me.email, 'auth.authenticator_reset', 'user', me.id);
+  }
+
   async verify(body: VerifyRequest, reply?: FastifyReply): Promise<ConsoleTokens> {
-    const { rows } = await this.db.pool.query<{ id: string; user_id: string; code_hash: string; method: string; pending_secret: string | null; attempts: number; expires_at: Date; used_at: Date | null; totp_secret: string | null }>(
-      'select o.*, u.totp_secret from console_otp o join console_users u on u.id = o.user_id where o.id = $1', [body.challengeId]);
+    const { rows } = await this.db.pool.query<{ id: string; user_id: string; code_hash: string; method: string; pending_secret: string | null; attempts: number; expires_at: Date; used_at: Date | null; totp_secret: string | null; totp_last: string | null }>(
+      'select o.*, u.totp_secret, u.totp_last from console_otp o join console_users u on u.id = o.user_id where o.id = $1', [body.challengeId]);
     const r = rows[0];
     if (!r || r.used_at || r.expires_at < new Date()) throw new ApiError('unauthenticated', 'That code has expired. Go back and sign in again.', { fields: { code: 'That code has expired.' } });
     if (r.attempts >= 3) throw new ApiError('locked', 'Too many wrong codes. Go back and sign in again.');
-    // ponytail: an authenticator code can be replayed inside its 90-second window by someone who also has the password; store the last step used if that matters.
     const secret = r.method === 'enroll' ? r.pending_secret : r.method === 'app' ? r.totp_secret : null;
-    const good = secret ? verifyTotp(unseal(secret, this.env.SECRETS_KEY), body.code) : constantTimeEqual(sha256(`${body.challengeId}:${body.code}`), r.code_hash);
+    // An authenticator code is valid for about 90 seconds; one already used in that time is refused, so it cannot be replayed.
+    const [lastCode, lastAt] = (r.totp_last ?? '').split('@');
+    const replay = r.method === 'app' && lastCode === body.code.trim() && Date.now() / 1000 - Number(lastAt) < 120;
+    const good = !replay && (secret ? verifyTotp(unseal(secret, this.env.SECRETS_KEY), body.code) : constantTimeEqual(sha256(`${body.challengeId}:${body.code}`), r.code_hash));
     if (!good) {
       await this.db.pool.query('update console_otp set attempts = attempts + 1 where id = $1', [r.id]);
       throw new ApiError('unauthenticated', 'That code isn’t right.', { attemptsLeft: 2 - r.attempts, fields: { code: 'That code isn’t right.' } });
     }
     await this.db.pool.query('update console_otp set used_at = now() where id = $1', [r.id]);
+    if (r.method === 'app' || r.method === 'enroll') await this.db.pool.query('update console_users set totp_last = $2 where id = $1', [r.user_id, `${body.code.trim()}@${Math.floor(Date.now() / 1000)}`]);
     if (r.method === 'enroll') {
       await this.db.pool.query('update console_users set totp_secret = $2 where id = $1', [r.user_id, r.pending_secret]);
       await this.db.audit(r.user_id, 'auth.authenticator_added', 'user', r.user_id);
@@ -203,6 +276,18 @@ export class AuthController {
     return this.auth.login(body);
   }
 
+  @Public() @Post('reset/start') @HttpCode(200)
+  resetStart(@Body(new ZodPipe(ResetStart)) body: ResetStart, @Req() req: FastifyRequest) {
+    limiter.check(`r|${req.ip}`);
+    return this.auth.resetStart(body.identifier);
+  }
+
+  @Public() @Post('reset/finish') @HttpCode(204)
+  async resetFinish(@Body(new ZodPipe(ResetFinish)) body: ResetFinish, @Req() req: FastifyRequest): Promise<void> {
+    limiter.check(`r|${req.ip}`);
+    await this.auth.resetFinish(body.challengeId, body.code, body.password);
+  }
+
   @Public() @Post('verify') @HttpCode(200)
   verify(
     @Body(new ZodPipe(VerifyRequest)) body: VerifyRequest,
@@ -236,5 +321,26 @@ export class AuthController {
   @Get('me')
   me(@Me() me: ConsoleUser): ConsoleUser {
     return me;
+  }
+
+  @Public() @Post('join') @HttpCode(200)
+  join(@Body(new ZodPipe(z.object({ token: z.string().min(10).max(200), password: z.string().min(1).max(200) }))) body: { token: string; password: string }, @Req() req: FastifyRequest): Promise<{ email: string }> {
+    limiter.check(`j|${req.ip}`);
+    return this.auth.join(body.token, body.password);
+  }
+
+  @Public() @Get('about')
+  about(): { environment: string; version: string; demos: boolean } {
+    return this.auth.about();
+  }
+
+  @Post('password') @HttpCode(204)
+  async password(@Me() me: ConsoleUser, @Body(new ZodPipe(PasswordChange)) body: PasswordChange): Promise<void> {
+    await this.auth.changePassword(me, body);
+  }
+
+  @Post('authenticator/reset') @HttpCode(204)
+  async authenticator(@Me() me: ConsoleUser, @Body(new ZodPipe(z.object({ password: z.string().min(1, 'Type your password').max(200) }))) body: { password: string }): Promise<void> {
+    await this.auth.resetAuthenticator(me, body.password);
   }
 }

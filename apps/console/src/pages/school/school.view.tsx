@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { PageScope, Presence, ToastSlot, Segmented, markStyle } from "@gradeon/web-ui";
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, markStyle } from "@gradeon/web-ui";
 import "./school.css";
 
 export function SchoolView({ v }: { v: any }) {
@@ -59,19 +59,34 @@ export function SchoolView({ v }: { v: any }) {
               Support session
             </button>
           )}
-          {v.canErase && (
-            <button className="btn dng" onClick={v.openErase}>
-              Erase school
-            </button>
+          {v.menuItems.length > 0 && (
+            <MenuButton label="More" chevron open={v.menu} onOpenChange={v.setMenu} menuLabel="School actions">
+              {v.menuItems.map((m: any) => (
+                <button key={m.label} role="menuitem" onClick={() => { v.setMenu(false); m.run(); }}>
+                  {m.label}
+                </button>
+              ))}
+            </MenuButton>
           )}
         </header>
-        <Segmented label="School" className="rise" value={String(v.tab)} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} />
-        {v.tab !== 0 && v.extra}
-        {v.tab === 0 && (
+        <Segmented label="School" className="rise" value={v.tab} onChange={v.pickTab} options={v.tabs.map((t: any) => ({ value: t.key, label: t.n }))} style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} />
+        {v.tab !== "overview" && v.extra}
+        {v.tab === "overview" && (
           <section className="grid" data-even="">
+            {v.golive}
             <div className="card s7 rise" style={{ "--d": ".15s" } as CSSProperties} aria-labelledby="prov">
               <div className="ch">
                 <h2 id="prov">{v.provTitle}</h2>
+                {v.folded && (
+                  <button className="btn sm" onClick={v.showSteps}>
+                    Show the steps
+                  </button>
+                )}
+                {!v.folded && v.hideSteps && (
+                  <button className="btn sm" onClick={v.hideSteps}>
+                    Fold
+                  </button>
+                )}
                 {v.canRetry && (
                   <button className="btn pri sm" onClick={v.retry} disabled={v.busy}>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -86,7 +101,10 @@ export function SchoolView({ v }: { v: any }) {
                   </button>
                 )}
               </div>
-              {v.steps.length === 0 && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
+              {v.folded && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>{v.setupLine}. Every step finished.</div>}
+              {!v.folded && v.steps.length === 0 && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
+              {!v.folded && (
+              <>
               <div className="steps">
                 {v.steps.map((s: any, $i: number) => (
                   <Fragment key={$i}>
@@ -122,6 +140,8 @@ export function SchoolView({ v }: { v: any }) {
                   </Fragment>
                 ))}
               </div>
+              </>
+              )}
             </div>
             <div className="s5" style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: "0" } as CSSProperties}>
               <div className="tkt rise" style={{ "--d": ".2s" } as CSSProperties}>
@@ -129,12 +149,14 @@ export function SchoolView({ v }: { v: any }) {
                   <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em" } as CSSProperties}>
                     Gradeon {v.planName}
                   </div>
+                  {v.invoiceLine && (
                   <div className="tl2">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17"></path>
                     </svg>
                     {v.invoiceLine}
                   </div>
+                  )}
                   <div className="tl2">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
@@ -200,24 +222,26 @@ export function SchoolView({ v }: { v: any }) {
                 </div>
                 <div style={{ marginTop: "8px" } as CSSProperties}>
                   {v.checks.length === 0 && <div className="help">The store checklist is created with the school.</div>}
-                  {v.checks.map((c: any, $i: number) => (
-                    <Fragment key={$i}>
-                      <button className="ck" onClick={c.flip} disabled={!v.canWrite} aria-label={`${c.n}: ${c.state}. Press to change.`}>
-                        <i className={c.cls}>
-                          {c.cls === "d" && (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
-                            </svg>
-                          )}
-                          {c.cls === "w" && (
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path className="i" d="M12 7v5l3 2" style={{ strokeWidth: "2.6" } as CSSProperties}></path>
-                            </svg>
-                          )}
-                        </i>
+                  {v.checks.map((c: any) => (
+                    <div key={c.key} className="ck" style={{ cursor: "default", alignItems: "center", flexWrap: "wrap" } as CSSProperties}>
+                      <i className={c.cls}>
+                        {c.cls === "d" && (
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
+                          </svg>
+                        )}
+                        {c.cls === "w" && (
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path className="i" d="M12 7v5l3 2" style={{ strokeWidth: "2.6" } as CSSProperties}></path>
+                          </svg>
+                        )}
+                      </i>
+                      <span style={{ flex: "1 1 160px", minWidth: 0 } as CSSProperties}>
                         {c.n}
-                      </button>
-                    </Fragment>
+                        {c.who && <small style={{ display: "block", color: "var(--ink3)", font: "600 12px var(--fb)" } as CSSProperties}>{c.who}</small>}
+                      </span>
+                      <Select compact aria-label={c.n} value={c.state} onChange={c.set} disabled={!v.canWrite} options={v.checkOptions} />
+                    </div>
                   ))}
                 </div>
               </div>

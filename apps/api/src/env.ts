@@ -13,13 +13,12 @@ const Env = z.object({
   JWT_SECRET_PREVIOUS: z.string().min(16).optional(),
   CORS_ORIGINS: z.string().default('*'),
   APP_VERSION: z.string().default('0.1.0'),
-  MESSAGING_MODE: z.enum(['sandbox']).default('sandbox'),
+  /** This server's public address: webhook addresses, payment return links and sandbox file links start with it. */
+  API_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:4000'),
   TENANT_MAX_POOLS: z.coerce.number().int().min(1).max(500).default(20),
   TENANT_PER_POOL: z.coerce.number().int().min(1).max(20).default(3),
   /** Lets a hosted test track keep SEED_DEMO / DEMO_CODE while NODE_ENV=production. */
   ALLOW_DEMO: z.enum(['true', 'false']).default('false'),
-  /** A Slack or Discord incoming webhook: new errors, a school not answering, failed backups and failed restore drills are posted there. */
-  ALERT_WEBHOOK_URL: z.string().url().optional(),
 });
 export type Env = z.infer<typeof Env>;
 

@@ -58,6 +58,8 @@ export function ThemeEditor({ value, onChange, disabled, scope, brand }: { value
         </div>
       )}
 
+      {/* A sample page in these colours: its menu and buttons are an example, not this school's. */}
+      <div className="lbl" style={{ margin: '16px 0 6px' }}>Sample, in these colours</div>
       {isApp ? <AppPreview app={app} /> : <WebPreview web={web} />}
 
       {isApp ? (
