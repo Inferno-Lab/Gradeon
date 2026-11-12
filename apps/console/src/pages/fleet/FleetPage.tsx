@@ -5,7 +5,7 @@ import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
 import { curve, initials, statusOf } from '../../app/format';
-import { FleetView } from './fleet.view';
+import { FleetHue } from './FleetHue';
 
 const TICKS = 60;
 const STATE: Record<string, string> = { draft: 'Ready to start', rolling: 'Rolling out', paused: 'Paused', halted: 'Halted', done: 'Finished', rolled_back: 'Rolled back' };
@@ -156,5 +156,5 @@ export function FleetPage() {
       </Dialog>
     ) : null,
   };
-  return <FleetView v={v} />;
+  return <FleetHue v={{ ...v, openApprovals: () => app.go('/approvals'), schoolHref: (id: string) => url(`/schools/${id}`), goSchool: (id: string) => app.go(`/schools/${id}`) }} f={f} schools={schools.data ?? []} actions={chrome.actions?.data ?? []} />;
 }

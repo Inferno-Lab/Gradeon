@@ -45,8 +45,8 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
               </div>
               <div className="vc" style={{ gap: 12 }}>
                 <div className="bar" style={{ height: 14, borderRadius: 7 }} aria-hidden="true">
-                  <i style={{ flex: onTime || 0.0001, background: 'var(--bright)' }} /><i style={{ flex: late, background: 'var(--warn-d)' }} />
-                  <i style={{ flex: absent, background: 'var(--bad-d)' }} /><i style={{ flex: unmarked, background: 'var(--deep3)' }} />
+                  <i style={{ flex: onTime || 0.0001, minWidth: 0, background: 'var(--bright)' }} /><i style={{ flex: late, minWidth: 0, background: 'var(--warn-d)' }} />
+                  <i style={{ flex: absent, minWidth: 0, background: 'var(--bad-d)' }} /><i style={{ flex: unmarked, minWidth: 0, background: 'var(--deep3)' }} />
                 </div>
                 <div className="fx" style={{ gap: 20, fontSize: 13, lineHeight: '18px', flexWrap: 'wrap' }}>
                   {[['On time', onTime, '--bright'], ['Late', late, '--warn-d'], ['Absent', absent, '--bad-d'], ['Not marked', unmarked, '--deep3']].map(([t, n, c]) => (
