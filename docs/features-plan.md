@@ -184,7 +184,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Annual planners, weekly trackers and curriculum coverage views.
 - Subject-wise syllabus management.
 - Lesson plans created and approved on mobile.
@@ -289,7 +289,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Course management with video lectures and quizzes.
 - Offline downloads in the app, course progress tracking, and Q&A threads with instructors and classmates.
 - Rule-based auto-enrollment into courses.
@@ -310,7 +310,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Online examination with MCQ and descriptive questions and auto-grading of objective items.
 - Question banks and offline assessment tools.
 - Quick formative assessments and standards progress monitoring.
@@ -377,7 +377,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - General ledger/accounts.
 - Vendor and purchase management.
 - Expense requests, approvals and reimbursement.
@@ -461,7 +461,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Hostel/dormitory and room allocation and room transfers.
 - In/out timing logs with parent notifications.
 - Meals/mess management and hostel mess fees.
@@ -476,7 +476,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Asset tagging, stock-in/stock-out, vendor master and depreciation.
 - Inventory module.
 - Inventory and purchasing.
@@ -493,7 +493,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Cashless canteen with parent-loaded RFID/QR wallets, real-time spend alerts and a POS terminal for canteen staff.
 - Online canteen ordering, order tracking and point-of-sale kiosks.
 - Canteen ordering with payments.
@@ -512,7 +512,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Medical records: allergies, immunizations, medications and insurance.
 - Sick-bay/infirmary visit logs with treatments recorded and parents notified.
 - Medical centre module.
@@ -530,7 +530,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Positive and negative behaviour records with school-defined descriptors and severities.
 - Customizable reward/conduct types with unlimited categories and house points.
 - Point awards.
@@ -553,7 +553,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - IEP and 504-plan management with compliance tracking.
 - Special-ed IEPs inside the SIS. Special education with Medicaid billing. IEP tracking reports.
 - Individual Needs designation and IEP archive for longitudinal progress, with differentiation hints surfaced in lesson planning.
@@ -632,7 +632,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Visitor logbook.
 - Visitor approvals from mobile.
 - Gate management.
@@ -683,7 +683,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Students carry a house, used as a filter; no house points or co-curricular tracking.
+- **Gradeon – Not yet** Students carry a house, used as a filter; no house points or co-curricular tracking.
 - House points systems.
 - Badges/awards.
 - "Off Games" registers.
@@ -700,7 +700,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Alumni registration linked to existing user accounts.
 - Seamless student-to-alumni profile transition with ongoing communication. Alumni and development/fundraising.
 - Alumni data within lifecycle records.
@@ -735,7 +735,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** EduNest's own console runs every school (fleet view, pushing plan and module settings, read-only support sessions), but a school group or trust has no view of its schools.
+- **Gradeon – Not yet** Gradeon's own console runs every school (fleet view, pushing plan and module settings, read-only support sessions), but a school group or trust has no view of its schools.
 - Single dashboard to manage and track all institutions.
 - Multi-school group dashboards.
 - Trust-wide reporting, central communications, school clusters, remote log-in to a school, and central configuration pushdown.
@@ -772,7 +772,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** EduNest's API serves only its own app and admin. No open API, accounting or LMS integrations; the payment gateway (Razorpay) is not connected.
+- **Gradeon – Not yet** Gradeon's API serves only its own app and admin. No open API, accounting or LMS integrations; the payment gateway (Razorpay) is not connected.
 - **Payments:** payment gateways.
 - **Accounting:** Tally, QuickBooks, Paybooks; Tally.
 - **Productivity:** Google Workspace; Microsoft.
@@ -791,7 +791,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - **India:**
 - UDISE+ data export.
 - UDISE+ auto-sync, bulk APAAR ID creation and real-time validation. NEP 2020 HPC, competency assessment and CPD hours.
@@ -839,7 +839,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** An assistant is planned behind a switch but not built.
+- **Gradeon – Not yet** An assistant is planned behind a switch but not built.
 - **Operational insight:** AI surfaces overdue fees, attendance dips, admission bottlenecks and exam outliers, and times fee reminders.
 - **Predictive analytics:** student-performance and attendance predictions; at-risk indicators; "AI-powered analytics" (Academia).
 - **Natural-language assistants and reporting:** ask questions of the school’s data in plain words, and smart reports.
@@ -857,7 +857,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Doc Manager.
 - Document attachments on records.
 - Form Builder, integrated online form builder, and dynamic forms.
@@ -888,7 +888,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Polls.
 - School surveys. service
 - Feedback mechanisms.
@@ -940,7 +940,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Placement module.
 - Higher-education application support and collaborative reference writing.
 - College and career readiness.
@@ -954,6 +954,6 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Features:**
 
-- **EduNest – Not yet** Not in EduNest.
+- **Gradeon – Not yet** Not in Gradeon.
 - Development/fundraising tied to the same household record.
 - Donations and fundraising.

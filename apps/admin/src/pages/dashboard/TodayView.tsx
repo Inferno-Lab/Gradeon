@@ -98,8 +98,8 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
               <div className="fig" style={{ fontSize: 44 }}>{v.money(d.fees.collected)}<small>of {v.money(d.fees.due)} due</small></div>
               <div className="vc" style={{ gap: 8 }}><div className="bar"><i style={{ width: `${d.fees.pct}%` }} /></div><span className="cap">{d.fees.pct}% collected</span></div>
               <div className="fx" style={{ gap: 10, marginTop: 'auto' }}>
-                <div className="mcard grow"><span className="lbl">Still to come</span><b className="d">{v.money(Math.max(0, d.fees.due - d.fees.collected))}</b><small>this month</small></div>
-                <div className="mcard grow"><span className="lbl">Overdue</span><b className="d" style={{ color: 'var(--bad-i)' }}>{d.fees.overdueFamilies}</b><small>{d.fees.overdueFamilies === 1 ? 'family' : 'families'}</small></div>
+                <div className="mcard grow tint sp-amber"><span className="lbl">Still to come</span><b className="d">{v.money(Math.max(0, d.fees.due - d.fees.collected))}</b><small>this month</small></div>
+                <div className="mcard grow tint sp-rose"><span className="lbl">Overdue</span><b className="d" style={{ color: 'var(--bad-i)' }}>{d.fees.overdueFamilies}</b><small>{d.fees.overdueFamilies === 1 ? 'family' : 'families'}</small></div>
               </div>
             </section>
           )}

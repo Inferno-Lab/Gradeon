@@ -137,7 +137,7 @@ await flow('admin: roll call can be changed and saved', { storage: adminStore },
   await expectVisible(p.getByText('Roll call'), 'the roll call');
   await p.getByRole('group', { name: /^Attendance for/ }).first().getByRole('button', { name: 'Absent' }).click();
   await expectVisible(p.getByText(/1 change/), 'the unsaved count');
-  await p.getByRole('button', { name: 'Save roll call' }).click();
+  await p.getByRole('button', { name: 'Save roll' }).click();
   await expectVisible(p.getByRole('status'), 'the saved toast');
 });
 
@@ -154,7 +154,7 @@ await flow('admin: a notice is written and goes for approval or out', { storage:
 
 await flow('admin: fees page lists overdue families and opens a payment', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/fees`, { waitUntil: 'networkidle' });
-  await expectVisible(p.getByText('Overdue families'), 'the overdue list');
+  await expectVisible(p.getByRole('heading', { name: 'Overdue', exact: true }), 'the overdue list');
   await p.getByRole('button', { name: 'Collect', exact: true }).first().click();
   await expectVisible(p.getByText(/Collect a fee from/), 'the payment dialog');
   await p.keyboard.press('Escape');
@@ -466,14 +466,15 @@ await flow('admin: the school profile is read-only with a way to ask Gradeon, an
 
 await flow('admin: the dashboard widgets can be hidden and added back', { storage: adminStore }, async (p) => {
   await p.goto(A('/'), { waitUntil: 'networkidle' });
-  await p.getByRole('button', { name: /Choose what the dashboard shows/ }).click();
+  // The class rolls widget is the Today board's "In school today" card.
+  await p.getByRole('button', { name: /Choose what (the dashboard|this page) shows/ }).click();
   await p.getByRole('switch', { name: 'Class rolls' }).click();
   await p.getByRole('button', { name: 'Done' }).click();
-  if (await p.getByText('Class rolls · today').count()) throw new Error('the hidden widget is still shown');
-  await p.getByRole('button', { name: /Choose what the dashboard shows/ }).click();
+  if (await p.getByText('In school today').count()) throw new Error('the hidden widget is still shown');
+  await p.getByRole('button', { name: /Choose what (the dashboard|this page) shows/ }).click();
   await p.getByRole('switch', { name: 'Class rolls' }).click();
   await p.getByRole('button', { name: 'Done' }).click();
-  await expectVisible(p.getByText('Class rolls · today'), 'the widget back');
+  await expectVisible(p.getByText('In school today'), 'the widget back');
 });
 
 await flow('status: the public status page opens without signing in', {}, async (p) => {
@@ -629,8 +630,10 @@ await flow('admin: a dropdown lists every option above the cards and a bar has a
   await p.getByRole('option', { name: 'Class 3 B' }).click();
   await expectVisible(p.getByText(/Class 3 B/).first(), 'the chosen class');
   await p.goto(A('/fees'), { waitUntil: 'networkidle' });
-  await p.locator('.us').first().hover();
-  await expectVisible(p.getByRole('tooltip').getByText(/collected/), 'the tooltip on a fee bar');
+  // A day's column in "Collected each day" names the day and the amount.
+  await p.locator('[role=img][aria-label="Fees collected each day"] [data-tip]').last().hover();
+  await expectVisible(p.getByRole('tooltip'), 'the tooltip on a fee bar');
+  if (await p.getByRole('tooltip').count() !== 1) throw new Error('a bar shows more than one tooltip');
 });
 
 await flow('admin: academic year adds a holiday, refuses a bad one, and fees bill a structure to its grade', { storage: adminStore }, async (p) => {
@@ -723,8 +726,9 @@ await flow('console: go-live reconciles the dues with the old system, and a rest
 await flow('admin: the sign-in page shows the school’s mark and its privacy notice', {}, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
   const mark = p.locator('.pnl .lg').first();
-  const bg = await mark.evaluate((el) => getComputedStyle(el).backgroundColor);
-  if (!/rgb\(106, 76, 245\)/.test(bg)) throw new Error(`the mark should be in the school's colour, got ${bg}`);
+  // Gradeon Hue: the crest is the school's bright colour, worked out from its brand colour (#6A4CF5, hue 284).
+  const [bg, bright] = await mark.evaluate((el) => [getComputedStyle(el).backgroundColor, (() => { const t = document.createElement('i'); t.style.background = 'var(--bright)'; el.parentElement.append(t); const c = getComputedStyle(t).backgroundColor; t.remove(); return c; })()]);
+  if (bg !== bright || /rgba\(0, 0, 0, 0\)/.test(bg)) throw new Error(`the mark should be in the school's bright colour, got ${bg}`);
   await p.getByRole('button', { name: 'Privacy' }).click();
   await expectVisible(p.getByRole('region', { name: 'Privacy' }), 'the privacy notice');
   if (!(await p.getByRole('link', { name: 'Help' }).getAttribute('href'))?.startsWith('mailto:')) throw new Error('Help should write to support');

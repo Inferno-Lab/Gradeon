@@ -13,7 +13,9 @@ interface Box { left?: number; right?: number; minWidth: number; top?: number; b
 /** Where a popup goes: under its button, over it when there is no room below, or beside it (`right`, for the collapsed menu). */
 export function placeBy(anchor: HTMLElement, side: 'auto' | 'right', min = 220): Box {
   const r = anchor.getBoundingClientRect();
-  if (side === 'right') return { left: r.right + 12, minWidth: min, bottom: window.innerHeight - r.bottom, maxH: r.bottom - EDGE, origin: 'left bottom' };
+  // Beside the whole menu rail, not just the button, so the popup never sits over the rail.
+  const rail = anchor.closest('.sb')?.getBoundingClientRect().right ?? r.right;
+  if (side === 'right') return { left: Math.max(r.right, rail) + 12, minWidth: min, bottom: window.innerHeight - r.bottom, maxH: r.bottom - EDGE, origin: 'left bottom' };
   const below = window.innerHeight - r.bottom - EDGE;
   const above = r.top - EDGE;
   const up = below < 240 && above > below;

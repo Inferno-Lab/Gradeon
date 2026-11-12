@@ -1,10 +1,19 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { SPECTRUM_COLOURS, spectrumTokens } from '@gradeon/contracts';
 import { SCENE_CSS, SCENES } from './scenes';
 
 export type EmptyScene = keyof typeof SCENES;
 
 // Inside the scene's own style scope the kit's text colours are the page's ink (on the web --t1..--t3 are motion timings).
-const HOST = ':host{display:block;--t1:var(--ink);--t2:var(--ink2);--t3:var(--ink3);--shadow:var(--sh2)}.hue{background:none;font-family:var(--fb)}.nolink .lk,.noact .acts .btn{display:none!important}';
+// The page's spectrum classes cannot reach into the shadow root, so the scene carries its own (else every block is the brand
+// colour). The boards' grey panels behind the words are dropped: the words sit on the card itself.
+const SPECTRUM = SPECTRUM_COLOURS.map((c) => {
+  const decl = (m: 'light' | 'dark') => Object.entries(spectrumTokens(c, m)).map(([k, v]) => `--${k}:${v}`).join(';');
+  return `.sp-${c}{${decl('light')}}.dark .sp-${c}{${decl('dark')}}`;
+}).join('');
+// The main button glows as it does on the page (alive.css; its variables inherit into the shadow root).
+const ALIVE = '.btn{transition:transform var(--t2) var(--e),box-shadow var(--t2) var(--e)}.btn:hover{transform:translateY(-1px)}.btn.pri{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,var(--on-brand)) 0%,var(--brand) 55%);box-shadow:var(--glow)}.btn.pri:hover{box-shadow:var(--glow2)}';
+const HOST = SPECTRUM + ALIVE + '[style*="background:var(--s2)"]{background:none!important}' + ':host{display:block;--t1:var(--ink);--t2:var(--ink2);--t3:var(--ink3);--shadow:var(--sh2)}.hue{background:none;font-family:var(--fb)}.nolink .lk,.noact .acts .btn{display:none!important}';
 
 /**
  * A page with nothing in it yet (Gradeon Hue, design/hue/EMPTY-STATES.md): the approved composition for that page, its words
@@ -19,7 +28,7 @@ export function EmptyState({ scene, onAction, onLink, label }: { scene: EmptySce
   useLayoutEffect(() => {
     const el = host.current!;
     const root = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
-    root.innerHTML = `<style>${SCENE_CSS}${HOST}</style><div class="hue${onLink ? '' : ' nolink'}${onAction ? '' : ' noact'}">${SCENES[scene]}</div>`;
+    root.innerHTML = `<style>${SCENE_CSS}${HOST}</style><div class="hue${el.closest('.dark') ? ' dark' : ''}${onLink ? '' : ' nolink'}${onAction ? '' : ' noact'}">${SCENES[scene]}</div>`;
     const btn = root.querySelector('.acts .btn');
     if (label && btn) btn.textContent = label;
   }, [scene, !onLink, !onAction, label]);

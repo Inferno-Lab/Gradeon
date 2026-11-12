@@ -26,8 +26,8 @@ export function JoinPage() {
     finally { setBusy(false); }
   };
   return (
-    <div className="nest" style={{ minHeight: '100dvh', padding: 16, display: 'grid', placeItems: 'center' }}>
-      <div className={`card ${shake.cls}`} style={{ maxWidth: 440, width: '100%' }}>
+    <div className="nest" style={{ minHeight: '100dvh', padding: 16, display: 'grid', placeItems: 'center', background: 'var(--hero-fill)' }}>
+      <div className={`card ${shake.cls}`} style={{ maxWidth: 440, width: '100%', padding: 32, borderRadius: 28 }}>
         <div className="ch"><h2>{done ? 'Your password is set' : 'Join the Gradeon console'}</h2></div>
         {done ? (
           <>

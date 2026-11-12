@@ -106,7 +106,9 @@ const WEB_NAME: Record<string, string> = { t1: 'ink', t2: 'ink2', t3: 'ink3' };
 /** The CSS for a seed: light on `.nest`, dark on `.nest.dark`, spectrum on `.sp-<colour>`. */
 export function hueCss(h: number, scope = '.nest'): string {
   const decl = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `--${WEB_NAME[k] ?? k}:${v}`).join(';');
-  const flat = (mode: HueMode) => ({ ...seedTokens(h, mode), ...fixedTokens(mode) });
+  // Each spectrum colour also as page-wide variables (--sp-rose-cs, --sp-rose-ci…), for things coloured by data such as avatars.
+  const spread = (mode: HueMode) => Object.fromEntries(SPECTRUM_COLOURS.flatMap((c) => { const t = spectrumTokens(c, mode); return [[`sp-${c}-cs`, t.cs], [`sp-${c}-ci`, t.ci]]; }));
+  const flat = (mode: HueMode) => ({ ...seedTokens(h, mode), ...fixedTokens(mode), ...spread(mode) });
   let css = `${scope}{${decl(flat('light'))}}${scope}.dark,${scope} .dark{${decl(flat('dark'))}}`;
   for (const c of SPECTRUM_COLOURS) css += `${scope} .sp-${c}{${decl(spectrumTokens(c, 'light'))}}${scope}.dark .sp-${c},${scope} .dark .sp-${c}{${decl(spectrumTokens(c, 'dark'))}}`;
   return css;

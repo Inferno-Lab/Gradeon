@@ -5,6 +5,7 @@ import './shell/shell.css';
 import './blocks.css';
 import './controls.css';
 import './polish.css';
+import './alive.css';
 
 export * from './theme';
 export * from './icons';
