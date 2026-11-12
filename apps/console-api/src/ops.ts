@@ -366,7 +366,9 @@ export class Bootstrap implements OnApplicationBootstrap {
 
   /** Test tracks start with the Greenfield demo school already live, so the admin and the app have something to show. Runs in the background. */
   async seedDemo(): Promise<void> {
-    const there = await this.db.pool.query("select 1 from schools where slug = 'greenfield' and deleted_at is null");
+    // A Greenfield made before schools carried the demo flag (registry migration 0013 only caught schools with a matching
+    // provision run) would refuse the demo code and hide the demo buttons: it is the demo school, so say so.
+    const there = await this.db.pool.query("update schools set demo = true where slug = 'greenfield' and deleted_at is null returning 1");
     if (there.rowCount) return;
     const cell = (await this.db.pool.query<{ key: string; target: DeployTarget }>('select key, target from cells order by key limit 1')).rows[0];
     if (!cell) return;
