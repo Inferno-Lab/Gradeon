@@ -41,7 +41,9 @@ describe('rollDigits', () => {
 });
 
 describe('tintFor', () => {
-  it('gives everyone the same neutral avatar, from the theme', () => {
-    for (const name of ['', 'Neha Menon', '🙂']) expect(tintFor(name)).toEqual({ bg: 'var(--s2)', fg: 'var(--ink2)' });
+  it('gives each person a steady spectrum colour, from the theme', () => {
+    expect(tintFor('Neha Menon')).toEqual(tintFor('Neha Menon'));
+    for (const name of ['', 'Neha Menon', '🙂']) expect(tintFor(name).bg).toMatch(/^var\(--sp-[a-z]+-cs\)$/);
+    expect(new Set(['Ana', 'Ben', 'Chen', 'Dara', 'Eli', 'Femi'].map((n) => tintFor(n).bg)).size).toBeGreaterThan(1);
   });
 });

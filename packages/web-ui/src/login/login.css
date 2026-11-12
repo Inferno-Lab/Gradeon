@@ -54,3 +54,16 @@
 .pg-login .okt svg{width:28px;height:28px}
 @media (max-width:900px){.pg-login .pnl{display:none}.pg-login .form{border-radius:0}}
 .pg-login .cellart{order:3}.pg-login .ph2{order:4}
+
+/* Alive (12 Nov): the left side is one centred group (no gap above the headline), and the form is a floating card on the
+   lit deep colour instead of a tall empty panel. */
+.pg-login .pnl{justify-content:center;background:transparent}
+.pg-login .ph1{margin:20px 0 0}
+.pg-login .lgrid{min-height:calc(100dvh - 24px);background:var(--hero-fill);border-radius:24px}
+.pg-login .form{background:transparent;align-items:center}
+.pg-login .fw{background:var(--s1);border-radius:28px;padding:36px 36px 32px;box-shadow:var(--lift2),var(--rim);max-width:460px}
+.pg-login .top .lang{background:var(--deep2)}
+.pg-login .top .lang button{color:var(--on-deep2)}
+.pg-login .top .lang button.on{background:var(--s1);color:var(--ink)}
+.pg-login .foot,.pg-login .foot a{color:var(--on-deep2)}
+@media (max-width:900px){.pg-login .lgrid{border-radius:0}.pg-login .form{padding:16px}.pg-login .fw{padding:28px 20px}}

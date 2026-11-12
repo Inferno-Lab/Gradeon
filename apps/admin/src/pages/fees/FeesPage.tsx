@@ -76,13 +76,13 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
               <div className="bar" style={{ height: 10, background: 'var(--deep3)' }}><i style={{ width: `${s.pct}%`, background: 'var(--bright)' }} /></div>
               <span className="lbl" style={{ fontWeight: 400 }}>{s.pct}% of {money(s.due)} · {money(Math.max(0, s.due - s.collected))} still to come</span>
             </section>
-            <section className="card">
+            <section className="card tint sp-blue">
               <span className="lbl">Not yet due</span>
               <b className="d" style={{ fontSize: 40, lineHeight: '44px' }}>{money(s.pending)}</b>
               <small className="t2" style={{ fontSize: 14 }}>falls due later {period === 'month' ? 'this month' : period === 'term' ? 'this term' : 'this year'}</small>
               {s.collectedDelta !== 0 && <span className={`tag ${s.collectedDelta > 0 ? 'ok' : 'bad'}`} style={{ alignSelf: 'flex-start', marginTop: 'auto' }}><Icon name={s.collectedDelta > 0 ? 'upRight' : 'downRight'} size={14} className="i" />{Math.abs(s.collectedDelta)}% on last {period}</span>}
             </section>
-            <section className="card">
+            <section className="card tint sp-rose">
               <span className="lbl">Overdue</span>
               <b className="d" style={{ fontSize: 40, lineHeight: '44px', color: 'var(--bad-i)' }}>{money(s.overdue)}</b>
               <small className="t2" style={{ fontSize: 14 }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</small>
@@ -101,7 +101,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
                     return (
                       <div key={x.date} className="vc" style={{ flex: 1, alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }} data-tip={`${x.full}: ${money(x.amount)}`}>
                         {x.amount > 0 && <b className="num" style={{ fontSize: 12 }}>{money(x.amount)}</b>}
-                        <i style={{ display: 'block', width: '100%', height: `${Math.max(4, (x.amount / top) * 120)}px`, borderRadius: 7, background: x.isToday ? 'var(--brand)' : 'var(--brand-line)' }} />
+                        <i style={{ display: 'block', width: '100%', height: `${Math.max(4, (x.amount / top) * 120)}px`, borderRadius: 7, background: x.isToday ? 'var(--bar-up)' : 'var(--bar-soft)' }} />
                         <small className="t3" style={{ fontSize: 12 }}>{x.label}</small>
                       </div>
                     );

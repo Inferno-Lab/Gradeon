@@ -1,0 +1,75 @@
+/* Gradeon Hue, alive: depth, light and motion over the flat parts. Loaded last, so it lifts every page (boarded or not)
+   without touching their layout. Every colour is a token or a mix of tokens; every motion is timed with --t1..3. */
+.nest{
+  /* Elevation: a soft contact shadow and a wide, faint one, tinted with the school's deep colour. */
+  --lift1:0 1px 2px color-mix(in srgb,var(--deep) 5%,transparent),0 8px 24px -10px color-mix(in srgb,var(--deep) 18%,transparent);
+  --lift2:0 2px 6px color-mix(in srgb,var(--deep) 7%,transparent),0 22px 44px -16px color-mix(in srgb,var(--deep) 30%,transparent);
+  --glow:0 10px 22px -10px color-mix(in srgb,var(--brand) 75%,transparent);
+  --glow2:0 14px 28px -10px color-mix(in srgb,var(--brand) 85%,transparent);
+  --rim:inset 0 0 0 1px color-mix(in srgb,var(--line) 70%,transparent);
+  /* The hero colour with light falling on it: bright from the top right, brand from the bottom left. */
+  --hero-fill:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--bright) 26%,transparent),transparent 55%),radial-gradient(90% 80% at 0% 100%,color-mix(in srgb,var(--brand) 55%,transparent),transparent 65%),var(--hero);
+  --bar-fill:linear-gradient(90deg,var(--brand),color-mix(in srgb,var(--brand) 55%,var(--bright)));
+  /* Chart columns: the one that matters lit from above, the rest a soft glass of the brand. */
+  --bar-up:linear-gradient(180deg,color-mix(in srgb,var(--brand) 65%,var(--bright)) 0%,var(--brand) 100%);
+  --bar-soft:linear-gradient(180deg,var(--brand-line) 0%,color-mix(in srgb,var(--brand-line) 45%,transparent) 100%)
+}
+.nest.dark{
+  --lift1:0 1px 2px color-mix(in srgb,var(--bg) 70%,transparent),0 10px 28px -10px color-mix(in srgb,var(--bg) 90%,transparent),inset 0 1px 0 color-mix(in srgb,var(--on-deep) 5%,transparent);
+  --lift2:0 2px 6px color-mix(in srgb,var(--bg) 80%,transparent),0 24px 48px -16px color-mix(in srgb,var(--bg) 95%,transparent),inset 0 1px 0 color-mix(in srgb,var(--on-deep) 7%,transparent);
+  --rim:inset 0 0 0 1px color-mix(in srgb,var(--on-deep) 6%,transparent)
+}
+
+/* The frame: the deep colour with a little light at the bottom, and the work area as a lit canvas, not a sheet of paper. */
+.nest .fr{background:linear-gradient(180deg,var(--deep) 0%,color-mix(in srgb,var(--deep) 86%,var(--brand)) 100%)}
+.nest .mn{background:radial-gradient(70% 45% at 100% 0%,color-mix(in srgb,var(--brand) 9%,transparent),transparent 70%),radial-gradient(55% 40% at 0% 0%,color-mix(in srgb,var(--bright) 30%,transparent),transparent 70%),var(--bg);box-shadow:0 0 0 1px color-mix(in srgb,var(--on-deep) 6%,transparent)}
+
+/* Cards float. */
+.nest .card,.nest .hb .card,.nest .hb .pcard,.nest .es,.nest .tcard,.nest .pan,.nest .sxl{box-shadow:var(--lift1),var(--rim)}
+.nest .card,.nest .hb .card,.nest .hb .pcard,.nest .tcard,.nest .tile{transition:transform var(--t3) var(--e),box-shadow var(--t3) var(--e)}
+.nest a.card:hover,.nest button.card:hover,.nest .card[role=button]:hover,.nest .card.lift:hover,.nest .tile.lift:hover,.nest .hb .mx:hover{transform:translateY(-3px);box-shadow:var(--lift2),var(--rim)}
+.nest .card .card,.nest .card .es{box-shadow:none}
+.nest .hb .mcard{background:color-mix(in srgb,var(--brand-soft) 45%,var(--s1));box-shadow:var(--rim)}
+
+/* Tinted cards: a spectrum colour washed across the card (the class names the colour: tint sp-rose…). */
+.nest .tint,.nest .hb .tint{background:linear-gradient(155deg,var(--cs) 0%,color-mix(in srgb,var(--cs) 55%,var(--s1)) 100%);box-shadow:var(--lift1)}
+.nest .tint .lbl,.nest .hb .tint .lbl{color:var(--ci)}
+
+/* Hero cards: the deep colour lit, with a glow under them. */
+.nest .hb .card.deep,.nest .hb .pcard.deep,.nest .t-i,.nest .es-nf{background:var(--hero-fill);box-shadow:0 22px 44px -22px color-mix(in srgb,var(--deep) 75%,transparent),inset 0 1px 0 color-mix(in srgb,var(--on-deep) 10%,transparent)}
+
+/* Buttons: the main one carries a soft sheen and glows; every button lifts a little under the pointer and settles when pressed. */
+.nest .btn{transition:transform var(--t2) var(--e),box-shadow var(--t2) var(--e),background var(--t2),color var(--t2)}
+.nest .btn:not([disabled]):hover{transform:translateY(-1px)}
+.nest .btn:not([disabled]):active{transform:translateY(0) scale(.98)}
+.nest .btn.pri,.nest .hb .btn.pri{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,var(--on-brand)) 0%,var(--brand) 55%);box-shadow:var(--glow),inset 0 1px 0 color-mix(in srgb,var(--on-brand) 22%,transparent)}
+.nest .btn.pri:not([disabled]):hover,.nest .hb .btn.pri:not([disabled]):hover{background:linear-gradient(180deg,color-mix(in srgb,var(--brand-h) 86%,var(--on-brand)) 0%,var(--brand-h) 55%);box-shadow:var(--glow2),inset 0 1px 0 color-mix(in srgb,var(--on-brand) 22%,transparent)}
+.nest .btn.bri,.nest .hb .btn.bri,.nest .btn.wht{box-shadow:0 10px 22px -12px color-mix(in srgb,var(--bright) 90%,transparent)}
+
+/* The menu: the chosen page is a lit pill. */
+.nest .nv{transition:background var(--t2),color var(--t2),transform var(--t2) var(--e)}
+.nest .nv.on{box-shadow:0 8px 20px -10px color-mix(in srgb,var(--bright) 85%,transparent),inset 0 1px 0 color-mix(in srgb,var(--on-bright) 8%,transparent)}
+
+/* Progress and bars fill with light. */
+.nest .bar i,.nest .hb .bar>i:only-child{background:var(--bar-fill)}
+
+/* Fields: a soft halo on focus. */
+.nest .inp:focus-within,.nest .srch:focus-within{box-shadow:inset 0 0 0 2px var(--brand),0 0 0 4px color-mix(in srgb,var(--brand) 16%,transparent)}
+.nest .srch,.nest .hb .search{box-shadow:var(--lift1),var(--rim)}
+
+/* Rows answer the pointer with the brand's tint, not grey. */
+.nest .rw:hover,.nest .tbl .grd.rw:hover,.nest .hb .trow:not(.h):hover{background:color-mix(in srgb,var(--brand-soft) 55%,transparent)}
+
+/* Pages arrive: each block of the page rises in turn (only with motion allowed). */
+@media (prefers-reduced-motion:no-preference){
+  .nest .mn>*:not(.rise){animation:aliveIn var(--t3) var(--e) both}
+  .nest .mn>*:nth-child(2){animation-delay:40ms}
+  .nest .mn>*:nth-child(3){animation-delay:80ms}
+  .nest .mn>*:nth-child(4){animation-delay:120ms}
+  .nest .mn>*:nth-child(n+5){animation-delay:160ms}
+  .nest .hb .g>*{animation:aliveIn var(--t3) var(--e) both}
+  .nest .hb .g>*:nth-child(2){animation-delay:60ms}
+  .nest .hb .g>*:nth-child(3){animation-delay:120ms}
+  .nest .hb .g>*:nth-child(n+4){animation-delay:180ms}
+}
+@keyframes aliveIn{from{opacity:0;transform:translateY(10px)}}

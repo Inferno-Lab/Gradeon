@@ -272,8 +272,6 @@
 .nest .hb .swb{width:44px;height:44px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:var(--on-brand);flex:none}
 .nest .hb .swb.on{box-shadow:0 0 0 3px var(--s1),0 0 0 5.5px var(--ink)}
 .nest .hb .swb:not(.on) .i{visibility:hidden}
-.nest .hb [data-tip]{position:relative}
-.nest .hb [data-tip]:hover::after,.nest .hb [data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:5;white-space:nowrap;pointer-events:none;padding:4px 8px;border-radius:7px;background:var(--ink);color:var(--bg);font:600 12px/16px var(--fb);box-shadow:var(--shadow)}
 .nest .hb .icw{gap:14px}
 .nest .hb .icw b{display:block;font-weight:600}
 .nest .hb .icw small{color:var(--ink2);font-size:13px}

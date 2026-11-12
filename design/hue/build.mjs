@@ -166,6 +166,8 @@ const parts = ['base.css', 'base2.css'].map((n) => fs.readFileSync(`${HERE}${n}`
     const s = sel.split(',').map((x) => x.trim()).filter(Boolean).map((x) => {
       if (!x.startsWith('.hue')) return null;
       if (x === '.hue') return null;
+      // the product's own tooltip (Tip.tsx) shows every data-tip; the board's CSS one would draw a second
+      if (x.includes('[data-tip]')) return null;
       return x.replace(/^\.hue\.([\w-]+)/, '.nest .hb .$1, .nest .hb.$1').replace(/^\.hue /, '.nest .hb ').replace(/\.(rw|tr|tile|mini|st|float|sheet|col)(?![\w-])/g, (m, c) => `.${RENAME[c]}`);
     }).filter(Boolean);
     // Hue's text font is --ft; on the web it is --fb (--fd is the same name in both)
