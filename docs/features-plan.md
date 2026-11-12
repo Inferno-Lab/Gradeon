@@ -49,7 +49,6 @@ A module counts as done when it works end to end for a real school: its screens 
 
 | Item | What it is |
 |---|---|
-| The bus driver's screen in the teacher app | A driver shares the bus's position from their phone, so families see the live bus and get "the bus is near" |
 | Receipts and report cards in the app | Families open and save their receipts and report cards as PDF from the app; the admin's Exams page opens a student's report card |
 | Attachments in the app | Tapping a homework or notice attachment opens it |
 | Attachments in chat | Staff and families send and open photos and PDFs in a conversation |
@@ -94,7 +93,7 @@ A module counts as done when it works end to end for a real school: its screens 
 | **Wave A** | Admissions online forms and follow-up (1), staff attendance and leave (3), academics: syllabus and lesson plans (4), report cards and the NEP progress card (6), digital diary (7), fee structures (10), Tally export (11), visitor and gate pass (23), certificates and ID cards (24), trips and consent (25), house points and co-curricular (26), UDISE+, APAAR and RTE (32), form builder (35), front office (38), scholarships and RTE seats (39) |
 | **Wave B** | LMS (8), online exams (9), payroll and HR (12), hostel (15), inventory (16), health (18), behaviour (19), alumni (27), report builder (28), multi-campus (29), helpdesk (36), surveys (37), SIS gaps (2) |
 | **Wave C** | Biometric and RFID attendance (3), GPS devices on buses (14), canteen wallet (17), AI (34) |
-| **Later** | Automatic timetable (5), full accounting (11), voice calls (21), student app (22), single sign-on (30), open API (31), collaboration (40) |
+| **Later** | Automatic timetable (5), full accounting (11), voice calls (21), single sign-on (30), open API (31), collaboration (40) |
 | **Not planned** | Special education and IEPs (20), placement and careers (41), fundraising (42) |
 
 ---
@@ -440,7 +439,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Wave C (GPS hardware)
 
-**Gradeon today:** Routes, stops with times and places, vehicles and drivers, riders per stop, route fees, the live bus from the driver’s phone with arrival times and a “bus is near” message. Not yet: the driver’s screen in the teacher app, GPS devices, fleet maintenance.
+**Gradeon today:** Routes, stops with times and places, vehicles and drivers, riders per stop, route fees, the live bus from the driver’s phone (the driver’s Trips tab in the app: start and end a trip, mark pick-ups and drop-offs, report a delay) or from a GPS device read by the tracking provider, with arrival times and a “bus is near” message. Not yet: fleet maintenance.
 
 **Features:**
 
@@ -590,9 +589,9 @@ A module counts as done when it works end to end for a real school: its screens 
 
 ### 22. Parent, Student and Teacher Apps and Portals
 
-**Status:** Built · **When:** Later (student app)
+**Status:** Built · **When:** Done in the one-pass repair
 
-**Gradeon today:** Parent and teacher app (Android and iPhone), offline Home, deep links, a branded app per school, a phone-friendly admin. Not yet: student sign-in and a student app.
+**Gradeon today:** Parent, teacher, student and bus-driver app (Android and iPhone), each role switched on per school from the console, live chat, notifications and bus, offline Home, deep links, a branded app per school, a phone-friendly admin. Not yet: push notifications on the phone (needs the owner's Firebase project).
 
 **Features:**
 

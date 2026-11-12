@@ -7,7 +7,7 @@ Gradeon is a school platform with four parts that work together:
 | **School admin** | The website a school's office and principal use: dashboard, students, attendance, fees, notices, timetable, its classes and calendar, moving in, and a read-only view of how Gradeon set the school up. | `apps/admin` |
 | **Console** | Gradeon's own control room: onboard a school, set its modules, configuration and roles, move its data in, roll out releases, watch health and backups, give support, bill, manage the team. | `apps/console` |
 | **Backend** | Two NestJS APIs (one for schools, one for the console) in one process, with a PostgreSQL database per school. | `apps/api`, `apps/console-api`, `apps/server`, `packages/*` |
-| **Mobile app** | A Flutter app for parents and teachers ("Chalk & Glass" look; students do not sign in). Built for a school (`SCHOOL` and `API_BASE_URL`), it signs in for real and reads that school's data through the family API (`/v1/f/*`); built without them, it runs on demo content. | `lib/`, `android/`, `ios/` |
+| **Mobile app** | A Flutter app for parents and teachers, and for students and bus drivers where the school turns them on ("Chalk & Glass" look). Built for a school (`SCHOOL` and `API_BASE_URL`), it signs in for real and reads that school's data through the family API (`/v1/f/*`); built without them, it runs on demo content. | `lib/`, `android/`, `ios/` |
 
 Start here depending on who you are:
 
@@ -115,4 +115,4 @@ flutter pub get && flutter run          # demo content, no backend needed
 flutter run --dart-define=SCHOOL=greenfield --dart-define=API_BASE_URL=https://gradeon.onrender.com   # the demo school's real data (password nest2026, code 424242)
 ```
 
-Demo accounts on demo content (password `demo123`, OTP `123456`): parent Priya Sharma, teacher Kavita Iyer. On a school build the same people sign in with `nest2026` and code `424242`. Students do not sign in.
+Demo accounts on demo content (password `demo123`, OTP `123456`): parent Priya Sharma, teacher Kavita Iyer. On a school build the same people sign in with `nest2026` and code `424242`. Students and drivers sign in once the console turns their role on and the admin invites them.
