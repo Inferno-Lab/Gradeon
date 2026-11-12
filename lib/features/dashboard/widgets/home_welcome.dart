@@ -67,10 +67,10 @@ class _StepList extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: i == 0 ? AppColors.mari : c.paper2,
+                      color: i == 0 ? context.app.brand : c.paper2,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(s.$1, size: 20, color: i == 0 ? AppColors.mariInk : c.ink),
+                    child: Icon(s.$1, size: 20, color: i == 0 ? context.app.onBrand : c.ink),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

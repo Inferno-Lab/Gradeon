@@ -473,7 +473,7 @@ class _StopRow extends StatelessWidget {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: last ? AppColors.mari : c.paper,
+              color: last ? context.app.brand : c.paper,
               shape: BoxShape.circle,
               border: Border.all(color: c.ink, width: 3),
             ),

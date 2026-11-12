@@ -871,7 +871,7 @@ class _RegisterDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final house = AppColors.houses[colorIndex];
-    final ink = colorIndex == 3 ? AppColors.mariInk : AppColors.white;
+    final ink = colorIndex == 3 ? context.app.onBrand : AppColors.white;
     final m = mark.clamp(0.0, 1.0);
     final bg = absent ? Color.lerp(house, c.paper, m)! : house;
     final fg = absent ? Color.lerp(ink, c.badText, m)! : ink;

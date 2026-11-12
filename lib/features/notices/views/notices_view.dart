@@ -266,7 +266,7 @@ class _Row extends StatelessWidget {
         scale: .985,
         child: Stack(
           children: [
-            if (unread) Positioned(left: 5, top: 22, child: Dot(AppColors.mari, size: 7)),
+            if (unread) Positioned(left: 5, top: 22, child: Dot(context.app.brand, size: 7)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(

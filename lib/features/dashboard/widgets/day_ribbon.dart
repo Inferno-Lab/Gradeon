@@ -171,7 +171,7 @@ class DayRibbonState extends State<DayRibbon> {
       ),
       foregroundDecoration: widget.blockAccent?.call(p) ?? false
           ? BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.mari, width: 5)),
+              border: Border(bottom: BorderSide(color: context.app.brand, width: 5)),
               borderRadius: radius,
             )
           : null,
@@ -298,7 +298,7 @@ class _NowMarker extends StatelessWidget {
             child: Container(
               width: 3,
               decoration: BoxDecoration(
-                color: AppColors.mari,
+                color: context.app.brand,
                 borderRadius: BorderRadius.circular(2),
                 boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.25), blurRadius: 4)],
               ),
@@ -314,14 +314,14 @@ class _NowMarker extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.mari,
+                color: context.app.brand,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [BoxShadow(color: AppColors.light.ink.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 2))],
               ),
               child: Text(
                 [?label, time].join(' · '),
                 maxLines: 1,
-                style: AppText.tiny(color: AppColors.mariInk, height: 1.1, tabular: true),
+                style: AppText.tiny(color: context.app.onBrand, height: 1.1, tabular: true),
               ),
             ),
           ),

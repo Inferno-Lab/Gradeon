@@ -40,13 +40,13 @@ class LeaveView extends GetView<LeaveController> {
                 width: 200,
                 height: 56,
                 radius: 999,
-                tint: AppColors.mari,
+                tint: context.app.brand,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(PhosphorIconsBold.plus, size: 22, color: AppColors.mariInk),
+                    Icon(PhosphorIconsBold.plus, size: 22, color: context.app.onBrand),
                     const SizedBox(width: 8),
-                    Text('leave.new'.tr, style: AppText.t(color: AppColors.mariInk, height: 1)),
+                    Text('leave.new'.tr, style: AppText.t(color: context.app.onBrand, height: 1)),
                   ],
                 ),
               ),

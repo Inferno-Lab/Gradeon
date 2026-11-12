@@ -273,7 +273,7 @@ class _SlideToPay extends StatelessWidget {
                   top: 0,
                   bottom: 0,
                   width: x + 40,
-                  child: ColoredBox(color: AppColors.mari.withValues(alpha: 0.35)),
+                  child: ColoredBox(color: context.app.brand.withValues(alpha: 0.35)),
                 ),
                 Center(
                   child: Opacity(

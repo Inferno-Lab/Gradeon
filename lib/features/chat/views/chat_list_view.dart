@@ -251,8 +251,8 @@ class _ThreadRow extends StatelessWidget {
                             height: 22,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(10)),
-                            child: Text('$unread', style: AppText.capB(color: AppColors.mariInk, height: 1)),
+                            decoration: BoxDecoration(color: context.app.brand, borderRadius: BorderRadius.circular(10)),
+                            child: Text('$unread', style: AppText.capB(color: context.app.onBrand, height: 1)),
                           ),
                         ],
                       ],
@@ -615,7 +615,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                               width: 46,
                               height: 46,
                               decoration: BoxDecoration(
-                                color: AppColors.mari.withValues(alpha: 0.85),
+                                color: context.app.brand.withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppColors.white, width: .6),
                                 boxShadow: [
@@ -627,7 +627,7 @@ class ChatThreadView extends GetView<ChatThreadController> {
                                   ),
                                 ],
                               ),
-                              child: Icon(PhosphorIconsBold.arrowUp, color: AppColors.mariInk, size: 22),
+                              child: Icon(PhosphorIconsBold.arrowUp, color: context.app.onBrand, size: 22),
                             ),
                           ),
                         ),

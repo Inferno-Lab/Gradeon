@@ -154,8 +154,8 @@ class _MarkState extends State<_Mark> with TickerProviderStateMixin {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                AppColors.mari.withValues(alpha: .5),
-                                AppColors.mari.withValues(alpha: 0),
+                                context.app.brand.withValues(alpha: .5),
+                                context.app.brand.withValues(alpha: 0),
                               ],
                             ),
                           ),

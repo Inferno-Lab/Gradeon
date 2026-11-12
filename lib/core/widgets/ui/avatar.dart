@@ -38,7 +38,7 @@ class Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = background ?? houseFor(name);
-    final fg = foreground ?? (bg == AppColors.houses[3] ? AppColors.mariInk : AppColors.white);
+    final fg = foreground ?? (bg == AppColors.houses[3] ? context.app.onBrand : AppColors.white);
     return Container(
       width: size,
       height: size,
@@ -68,7 +68,7 @@ class SchoolMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = AppConfig.schoolColor ?? context.app.ink;
-    final fg = bg.computeLuminance() > .36 ? AppColors.mariInk : AppColors.white;
+    final fg = bg.computeLuminance() > .36 ? context.app.onBrand : AppColors.white;
     return Avatar(AppConfig.schoolName, size: size, background: bg, foreground: fg, initials: AppConfig.schoolMark);
   }
 }

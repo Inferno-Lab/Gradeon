@@ -225,7 +225,7 @@ class _ThemeTile extends StatelessWidget {
       AppThemeMode.light => (AppColors.light.chalk, AppColors.light.paper, 'settings.theme_chalk'),
       AppThemeMode.dark => (AppColors.blackboard.chalk, AppColors.blackboard.paper, 'settings.theme_blackboard'),
       AppThemeMode.amoled => (AppColors.amoled.chalk, AppColors.amoled.paper, 'settings.theme_amoled'),
-      AppThemeMode.system => (null, AppColors.mari, 'settings.theme_auto'),
+      AppThemeMode.system => (null, context.app.brand, 'settings.theme_auto'),
     };
     return Semantics(
       button: true,

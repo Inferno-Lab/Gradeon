@@ -205,7 +205,7 @@ class _Kid extends StatelessWidget {
                       style: AppText.t(color: absent
                             ? AppColors.bad
                             : house == AppColors.houses[3]
-                            ? AppColors.mariInk
+                            ? context.app.onBrand
                             : AppColors.white, height: 1),
                     ),
                   ),

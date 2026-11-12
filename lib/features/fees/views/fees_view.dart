@@ -265,7 +265,7 @@ class _Body extends StatelessWidget {
                   () => GlassSwitch(
                     value: theme.notifyFees.value,
                     label: 'fees.remind_early',
-                    onColor: AppColors.mari,
+                    onColor: context.app.brand,
                     onChanged: (v) => theme.setNotify(fees: v),
                   ),
                 ),
@@ -349,10 +349,10 @@ class _DueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final overdue = moneyStatus(item) == MoneyStatus.overdue;
     final days = Formatters.daysUntil(item.dueDate);
-    final ink = AppColors.mariInk;
+    final ink = context.app.onBrand;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      decoration: BoxDecoration(color: AppColors.mari, borderRadius: BorderRadius.circular(24)),
+      decoration: BoxDecoration(color: context.app.brand, borderRadius: BorderRadius.circular(24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

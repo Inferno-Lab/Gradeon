@@ -140,8 +140,8 @@ class _WelcomeOverlayState extends State<WelcomeOverlay> with TickerProviderStat
                                             shape: BoxShape.circle,
                                             gradient: RadialGradient(
                                               colors: [
-                                                AppColors.mari.withValues(alpha: .5),
-                                                AppColors.mari.withValues(alpha: 0),
+                                                context.app.brand.withValues(alpha: .5),
+                                                context.app.brand.withValues(alpha: 0),
                                               ],
                                             ),
                                           ),
@@ -260,10 +260,10 @@ class _TipChip extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: highlight ? AppColors.mari : c.paper2,
+              color: highlight ? context.app.brand : c.paper2,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 20, color: highlight ? AppColors.mariInk : c.ink),
+            child: Icon(icon, size: 20, color: highlight ? context.app.onBrand : c.ink),
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(label, style: context.type.ts)),

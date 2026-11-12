@@ -71,7 +71,7 @@ class GalleryView extends GetView<GalleryController> {
                   height: 44,
                   width: 150,
                   onPigment: ready,
-                  tint: controller.onlyChild.value ? AppColors.mari.withValues(alpha: 0.35) : null,
+                  tint: controller.onlyChild.value ? context.app.brand.withValues(alpha: 0.35) : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

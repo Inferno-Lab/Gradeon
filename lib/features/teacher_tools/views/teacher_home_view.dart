@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:gradeon/core/routes/app_routes.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/schedule.dart';
 import 'package:gradeon/core/utils/view_state.dart';
@@ -16,7 +17,7 @@ import 'package:gradeon/core/widgets/states.dart';
 import 'package:gradeon/core/widgets/ui.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/features/dashboard/views/dashboard_view.dart' show greeting;
+import 'package:gradeon/features/dashboard/views/dashboard_view.dart' show PeriodStrip, greeting, todayLine;
 import 'package:gradeon/features/dashboard/widgets/day_ribbon.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
@@ -38,113 +39,74 @@ class TeacherHomeView extends GetView<TeacherHomeController> {
       final ready = controller.state.value == ViewState.success && t != null;
       final periods = controller.today.map((p) => p.slot).toList();
       final classOf = {for (final p in controller.today) p.slot.id: p.schoolClass};
-      // With no periods there is no ribbon: a slim header and dark controls.
       final hasDay = ready && periods.isNotEmpty;
-      final ribbonH = hasDay ? 156 + inset.top : inset.top + 64;
-      final ink = hasDay ? AppColors.white : context.app.ink;
+      // As the TeacherHome board: who and when on the school's deep colour (PageFrame puts the first child there), then
+      // today's classes as a strip and the tasks.
       return PageFrame(
         dockPage: true,
-        padContent: false,
-        topPadding: 0,
-        topFade: !hasDay,
         onRefresh: controller.load,
+        topPadding: inset.top + 8,
         children: [
-          SizedBox(
-            height: ribbonH,
-            child: Stack(
+          Builder(
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (hasDay)
-                  Positioned.fill(
-                    child: DayRibbon(
-                      periods: periods,
-                      height: ribbonH,
-                      pxPerMinute: 2.1,
-                      showLabel: false,
-                      draggable: false,
-                      blockLabel: (p) {
-                        final c = classOf[p.id];
-                        return c == null ? subjectName(p.subject) : classLabel(c);
-                      },
-                      blockAccent: (p) => classOf[p.id]?.id != null && classOf[p.id]?.id == controller.own?.id,
-                    ),
-                  ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  top: inset.top + 8,
-                  child: Row(
-                    children: [
-                      if (t != null)
-                        GlassPress(
-                          onTap: () => ShellController.showTab('profile'),
-                          child: Glass(
-                            height: 44,
-                            width: 160,
-                            // Frosted, with ink text: over a ribbon the pill can sit on pale hatching as well as colour.
-                            padding: const EdgeInsets.only(left: 6, right: 16),
-                            child: Row(
-                              children: [
-                                Avatar(
-                                  t.name,
-                                  size: 34,
-                                  background: AppColors.light.paper,
-                                  foreground: AppColors.light.ink,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        t.name.split(' ').first,
-                                        maxLines: 1,
-                                        style: AppText.chip(color: context.app.ink, height: 1.05),
-                                      ),
-                                      Text(
-                                        [
-                                          subjectName(t.subject),
-                                          if (controller.own != null) classLabel(controller.own!),
-                                        ].join(' · '),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppText.tiny(color: context.app.ink3, height: 1.05),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                Row(
+                  children: [
+                    if (t != null)
+                      GlassPress(
+                        onTap: () => ShellController.showTab('profile'),
+                        child: Glass(
+                          height: 44,
+                          radius: 22,
+                          shadow: false,
+                          padding: const EdgeInsets.only(left: 5, right: 14),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Avatar(t.name, size: 34),
+                              const SizedBox(width: 8),
+                              Text(t.name.split(' ').first, maxLines: 1, style: AppText.chip(color: context.app.ink, height: 1.05)),
+                            ],
                           ),
                         ),
-                      const Spacer(),
-                      GlassIconButton(
-                        icon: PhosphorIconsRegular.bell,
-                        label: 'menu.notifications'.tr,
-                        color: ink,
-                        onTap: () => Get.toNamed<void>(AppRoutes.notifications),
                       ),
-                    ],
-                  ),
+                    const Spacer(),
+                    GlassIconButton(
+                      icon: PhosphorIconsRegular.bell,
+                      label: 'menu.notifications'.tr,
+                      onTap: () => Get.toNamed<void>(AppRoutes.notifications),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 18),
+                if (t != null) ...[
+                  Rise(child: Text(todayLine(), style: context.type.capB)),
+                  const SizedBox(height: 6),
+                  Rise(index: 1, child: Text(greeting(t.name.split(' ').first), style: context.type.h1)),
+                ],
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: ViewStateView(
-              state: controller.state.value,
-              onRetry: controller.load,
-              errorKey: controller.errorMessage.value,
-              child: t == null ? const SizedBox.shrink() : _Body(controller: controller, teacher: t),
+          if (hasDay)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: PeriodStrip(
+                periods: periods,
+                label: (p) => classOf[p.id] == null ? subjectName(p.subject) : classLabel(classOf[p.id]!),
+              ),
             ),
+          ViewStateView(
+            state: controller.state.value,
+            onRetry: controller.load,
+            errorKey: controller.errorMessage.value,
+            child: t == null ? const SizedBox.shrink() : _Body(controller: controller, teacher: t),
           ),
         ],
       );
     });
   }
 }
-
 
 class _Body extends StatelessWidget {
   const _Body({required this.controller, required this.teacher});
@@ -207,10 +169,8 @@ class _Body extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Rise(child: Overline(line)),
-        const SizedBox(height: 8),
-        Rise(index: 1, child: Text(greeting(teacher.name.split(' ').first), style: context.type.h1)),
-        const SizedBox(height: 16),
+        Rise(child: Text(line, style: context.type.s)),
+        const SizedBox(height: 14),
         Rise(
           index: 2,
           child: Row(
@@ -241,22 +201,18 @@ class _Body extends StatelessWidget {
                     excludeSemantics: true,
                     child: Pressable(
                       onTap: a.$3,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: c.paper,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: c.line),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(a.$1, size: 22, color: c.ink),
-                            const SizedBox(height: 8),
-                            // Icon and word, like the dock: siblings share one size, and a long word ends in an ellipsis rather than shrinking.
-                            Text(a.$2.tr, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.tiny(color: c.ink, height: 1.2)),
-                          ],
-                        ),
+                      // The quick tiles of the home boards: the icon on the brand's soft fill, the word below.
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 60,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(color: c.mariSoft, borderRadius: BorderRadius.circular(AppRadius.panel)),
+                            child: Icon(a.$1, size: 24, color: c.mariText),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(a.$2.tr, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: context.type.capB.copyWith(color: c.ink)),
+                        ],
                       ),
                     ),
                   ),
@@ -533,7 +489,7 @@ class _ClassCard extends StatelessWidget {
     final taken = controller.taken(cls.id);
     final pigment = AppColors.subject(subject);
     final (Color tile, Color tileOn) = mine
-        ? (AppColors.mari, AppColors.mariInk)
+        ? (context.app.brand, context.app.onBrand)
         : live != null
         ? (pigment.fill, pigment.on)
         : (c.paper2, c.ink);
@@ -543,7 +499,7 @@ class _ClassCard extends StatelessWidget {
       ('teacher.homework', () => Get.toNamed<void>(AppRoutes.teacherAssign, arguments: {'classId': cls.id})),
     ];
     return EduCard(
-      ring: mine ? AppColors.mari : null,
+      ring: mine ? context.app.brand : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

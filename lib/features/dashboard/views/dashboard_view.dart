@@ -156,9 +156,12 @@ class _DashboardViewState extends State<DashboardView> {
 
 /// Today's lessons as a strip of subject cards in their spectrum colours, the one on now outlined (the ParentHome board).
 class PeriodStrip extends StatelessWidget {
-  const PeriodStrip({required this.periods, super.key});
+  const PeriodStrip({required this.periods, this.label, super.key});
 
   final List<PeriodSlot> periods;
+
+  /// What a card says: the subject by default, a class for a teacher.
+  final String Function(PeriodSlot)? label;
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +188,7 @@ class PeriodStrip extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(subjectName(p.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.ts.copyWith(color: col.ink)),
+                Text(label?.call(p) ?? subjectName(p.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.ts.copyWith(color: col.ink)),
                 const SizedBox(height: 2),
                 Text(on ? '${'home.now'.tr} · ${clockOf(minutesOf(p.start))}' : clockOf(minutesOf(p.start)), style: context.type.cap.copyWith(color: col.ink)),
               ],
