@@ -7,7 +7,8 @@ describe('Gradeon Hue', () => {
     expect(hueTokens(162, 'dark').brand).toBe('#55F1B0');
   });
 
-  it('reaches WCAG AA on every pair for every hue in every mode, so the console can accept any colour', () => {
+  // 360 hues × 3 modes: slow under a loaded machine, so it gets more time than the default 5 s.
+  it('reaches WCAG AA on every pair for every hue in every mode, so the console can accept any colour', { timeout: 60_000 }, () => {
     for (let h = 0; h < 360; h++) for (const mode of ['light', 'dark', 'amoled'] as HueMode[]) {
       const t = hueTokens(h, mode);
       for (const [a, b, min] of HUE_PAIRS) expect(hueContrast(t[a]!, t[b]!), `${h} ${mode} ${a}/${b}`).toBeGreaterThanOrEqual(min);

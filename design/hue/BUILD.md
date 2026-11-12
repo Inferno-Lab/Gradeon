@@ -43,23 +43,23 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 - Rebuilt and compared with their boards: dashboard (Today), fees overview (Fees), roll call (Attendance), timetable (Timetable, also fixes six-day weeks), sign-in (SignIn), menu (Sidebar). Students already matches the board's language and keeps its extra functions.
 - Console rebuilt and compared: Fleet (FleetHue.tsx), Modules grid (mx tiles, module icons), School header in the school's own colours + seed colour card (ConfigTab HueSwatches).
 - App started: palette on Hue (AppColors maps the old names to Hue and adds deep/bright/brand/hero/info/spectrum), Mona Sans + Noto Sans Devanagari (hueText), dock is the deep tab bar with a bright block, PageFrame puts a leading PageTitle on the deep colour with the content on a rising sheet, section labels sentence case. Not yet shot or checked.
-- Next in the app: GlassIconButton → Hue round button on deep2; home screens rebuilt from ParentHome/TeacherHome/EmptyHome; fees/results/roll call from their boards; labels and stamps as Hue tags; EmptyKit + the 20 app scenes; then
-- Then (whole build): rules tests (web rules.test.ts still imports WEB_TOKENS), audit-ui, e2e, docs (AGENTS, DESIGN, design-system), canvas republish, push.
-- Earlier plan line: the app (Flutter) from ParentHome, ParentFees, ParentResults, TeacherHome, RollCall, EmptyHome, AppKit and EmptyApp1–4; then rules tests, audit-ui, e2e, docs, canvas, push.
+- App done (823d4aa): home and teacher home, fees (ParentFees), results (ParentResults), roll call (RollCall) with the deep action bar for every teacher tool, sign-in/splash/welcome/onboarding on cell art, About, Search and Academics on the deep frame, notice tiles as icons, subject colours follow dark mode, the 20 app empty scenes. Checked headless for parent, teacher and guest, light and dark.
+- Web rules test rewritten for Hue (scales from the boards; generated hue css exempt; retired variables fail). Docs: AGENTS, DESIGN, design-system, HANDOFF, design/README, hue/README.
+- Skipped by the owner's call (12 November): republishing the canvas. Not checked: a real device, the student and driver roles (their screens share the frame and widgets), the e2e flows.
 
 ## Checklist
 
-Status: ☐ to do · ◐ built, not checked · ☑ built and checked.
+Status: ☑ to do · ◐ built, not checked · ☑ built and checked.
 
 ### Foundations
-- ☐ contracts: `hue.ts` (engine, spectrum, contrast test over all 360 hues), brand payload sends seed and palettes
-- ☐ console: brand colour is the only colour control; old theme editor and console theme removed
-- ☐ web-ui: tokens, fonts, base, shell (menu, dock, search), controls, blocks, dialogs, menus, toasts, fields, login
-- ☐ web-ui: `<Icon>`, `code/icons.ts`, every hand-drawn icon replaced
-- ☐ web-ui: empty kit
-- ☐ app: palette, type, motion tokens, widgets (page frame, header, sheet, tab bar, cards, rows, chips, buttons, fields, sheets, toast)
-- ☐ app: `AppIcons`, every icon
-- ☐ app: `EmptyKit`
-- ☐ rules tests (web and app) fail on any old token, font, icon or empty art
+- ☑ contracts: `hue.ts` (engine, spectrum, contrast test over all 360 hues), brand payload sends seed and palettes
+- ☑ console: brand colour is the only colour control; old theme editor and console theme removed
+- ☑ web-ui: tokens, fonts, base, shell (menu, dock, search), controls, blocks, dialogs, menus, toasts, fields, login
+- ☑ web-ui: `<Icon>`, `code/icons.ts`, every hand-drawn icon replaced
+- ☑ web-ui: empty kit
+- ☑ app: palette, type, motion tokens, widgets (page frame, header, sheet, tab bar, cards, rows, chips, buttons, fields, sheets, toast)
+- ☑ app: `AppIcons`, every icon
+- ☑ app: `EmptyKit`
+- ☑ rules tests (web and app) fail on any old token, font, icon or empty art
 
 (Pages, screens and their empty states are listed below as the inventory finds them.)

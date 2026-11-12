@@ -1,6 +1,6 @@
 # Gradeon Hue
 
-The approved design system for the Flutter app, the school admin and the console (approved by the owner on 10 November 2026; not built yet). It replaces Chalk & Glass in the app and the current look of admin and console once it is implemented. The empty states for every page ([EMPTY-STATES.md](EMPTY-STATES.md)) were approved with it, and the plan is to build both together, once the work in progress on `main` has landed. Canvas: https://claude.ai/artifact/4RCDhHVgQxkny97QSknsd8 (private to the owner).
+The approved design system for the Flutter app, the school admin and the console (approved by the owner on 10 November 2026; built on `design/system-v2`, November 2026). It replaced Chalk & Glass in the app and Nest in admin and console. The empty states for every page ([EMPTY-STATES.md](EMPTY-STATES.md)) were built with it. `build.mjs` writes the product files straight from the boards: `packages/web-ui/src/hue-parts.css`, `icons.ts`, `empty/scenes.ts` and `lib/core/widgets/app_icons.dart`. Canvas: https://claude.ai/artifact/4RCDhHVgQxkny97QSknsd8 (private to the owner).
 
 ## Files
 
