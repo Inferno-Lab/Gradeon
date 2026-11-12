@@ -38,7 +38,7 @@ export function useApprovalList(view: ApprovalView, kind: ApprovalKind | undefin
   });
 
   const overlay = declining && <Decline row={declining} busy={decide.isPending} onClose={() => setDeclining(null)} onDecline={(note) => decide.mutate({ row: declining, decision: 'reject', note })} />;
-  if (list.isLoading) return { list: <div className="skc" style={{ height: 240, borderRadius: 18 }} />, overlay };
+  if (list.isLoading) return { list: <div className="skc" style={{ height: 240, borderRadius: 16 }} />, overlay };
   if (list.isError) return { overlay, list: <EmptyCard error title="Approvals" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /> };
   const rows = list.data ?? [];
   if (!rows.length) return { overlay, list: <EmptyCard title="Approvals" chip={{ text: '0', tone: 'v' }} scene="checklist" heading={EMPTY[view].heading} body={EMPTY[view].body} /> };

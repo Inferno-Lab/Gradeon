@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleFleet.dc.html: classes and structure are the design's. Values come from FleetPage.
 import { Fragment, type CSSProperties } from "react";
-import { EmptyCard, Illustration, PageScope, Presence } from "@gradeon/web-ui";
+import { EmptyCard, Illustration, PageScope, Presence, Icon } from "@gradeon/web-ui";
 import "./fleet.css";
 
 export function FleetView({ v }: { v: any }) {
@@ -15,15 +15,11 @@ export function FleetView({ v }: { v: any }) {
           </div>
           <span className="grow"></span>
           <button className="ibtn" aria-label={v.alertCount ? `Alerts: ${v.alertCount}` : "Alerts"} data-tip="Alerts" onClick={v.openAlerts}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"></path>
-            </svg>
+            <Icon name="notifications" />
             {v.alertCount > 0 && <span className="pip"></span>}
           </button>
           <button className="btn pri" onClick={v.onboard}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M12 5v14M5 12h14"></path>
-            </svg>
+            <Icon name="plus" />
             Onboard a school
           </button>
         </header>
@@ -31,16 +27,12 @@ export function FleetView({ v }: { v: any }) {
           <div className={`tile t-v s5 rise ${v.pausedCls ?? ""}`} style={{ "--d": ".05s" } as CSSProperties}>
             <div className="tt">
               <span className="chip">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"></path>
-                </svg>
+                <Icon name="releases" size={14} />
                 Release
               </span>
               <span style={{ font: "700 13px var(--fb)", opacity: ".8" } as CSSProperties}>{v.relState}</span>
               <button className="arrow" aria-label="Open releases" onClick={v.openReleases}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="fd" style={{ fontSize: "28px", letterSpacing: "-.035em", marginTop: "16px" } as CSSProperties}>
@@ -69,9 +61,7 @@ export function FleetView({ v }: { v: any }) {
 <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" } as CSSProperties}>
               {v.canPause && (
                 <button className="btn sm" onClick={v.pause} disabled={v.busy}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path className="i" d={v.pauseIc}></path>
-                  </svg>
+                  <Icon name={v.pauseIc} />
                   {v.pauseLabel}
                 </button>
               )}
@@ -90,15 +80,11 @@ export function FleetView({ v }: { v: any }) {
           <div className="tile t-a s3 lift rise" style={{ "--d": ".1s" } as CSSProperties}>
             <div className="tt">
               <span className="chip">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path>
-                </svg>
+                <Icon name="grid" size={14} />
                 Schools
               </span>
               <button className="arrow" aria-label="Open the schools list" onClick={v.openSchools}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
@@ -114,35 +100,31 @@ export function FleetView({ v }: { v: any }) {
           </div>
           <div className="tile t-i s4 rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "color-mix(in srgb,var(--onCi) 14%,transparent)", color: "var(--onCi)" } as CSSProperties}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M3 12h4l3-7 4 14 3-7h4"></path>
-                </svg>
+              <span className="chip" style={{ background: "color-mix(in srgb,var(--on-deep) 14%,transparent)", color: "var(--on-deep)" } as CSSProperties}>
+                <Icon name="pulse" size={14} />
                 Health
               </span>
               <span className="num" style={{ marginLeft: "auto", font: "700 13px var(--fb)", opacity: ".7" } as CSSProperties}>
                 {v.p95}
               </span>
               <button className="arrow" aria-label="Open health" onClick={v.openHealth}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="hbar" aria-hidden="true">
-              <i style={{ flex: v.hOk || 0.001, background: "var(--g)" } as CSSProperties}></i>
-              <i style={{ flex: v.hWarn || 0.001, background: "var(--a)" } as CSSProperties}></i>
-              <i style={{ flex: v.hBad || 0.001, background: "var(--c)" } as CSSProperties}></i>
+              <i style={{ flex: v.hOk || 0.001, background: "var(--ok)" } as CSSProperties}></i>
+              <i style={{ flex: v.hWarn || 0.001, background: "var(--warn)" } as CSSProperties}></i>
+              <i style={{ flex: v.hBad || 0.001, background: "var(--bad)" } as CSSProperties}></i>
             </div>
             <div className="hl">
               <div>
-                <i style={{ background: "var(--g)" } as CSSProperties}></i>Healthy<b>{v.hOk}</b>
+                <i style={{ background: "var(--ok)" } as CSSProperties}></i>Healthy<b>{v.hOk}</b>
               </div>
               <div>
-                <i style={{ background: "var(--a)" } as CSSProperties}></i>Degraded<b>{v.hWarn}</b>
+                <i style={{ background: "var(--warn)" } as CSSProperties}></i>Degraded<b>{v.hWarn}</b>
               </div>
               <div>
-                <i style={{ background: "var(--c)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
+                <i style={{ background: "var(--bad)" } as CSSProperties}></i>Down<b>{v.hBad}</b>
               </div>
             </div>
           </div>
@@ -154,7 +136,7 @@ export function FleetView({ v }: { v: any }) {
               <span className="chip">{v.chartSub}</span>
               <span className="lgd">
                 <span>
-                  <i style={{ background: "var(--v)" } as CSSProperties}></i>Today
+                  <i style={{ background: "var(--brand)" } as CSSProperties}></i>Today
                 </span>
                 <span>
                   <i style={{ background: "var(--ink3)" } as CSSProperties}></i>Yesterday
@@ -166,7 +148,7 @@ export function FleetView({ v }: { v: any }) {
                 <line className="gl" x1="0" y1="60" x2="600" y2="60"></line>
                 <line className="gl" x1="0" y1="120" x2="600" y2="120"></line>
                 <line className="gl" x1="0" y1="180" x2="600" y2="180"></line>
-                <path className="area" d={v.pArea} style={{ fill: "var(--vS)" } as CSSProperties}></path>
+                <path className="area" d={v.pArea} style={{ fill: "var(--brand-soft)" } as CSSProperties}></path>
                 <path className="ln2" d={v.p2}></path>
                 <path className="ln" d={v.p1}></path>
               </svg>
@@ -268,7 +250,7 @@ export function FleetView({ v }: { v: any }) {
                         <span className="ver">
                           <span style={{ transform: `translateY(${r.vy ?? ""}px)` } as CSSProperties}>
                             <b>{r.from}</b>
-                            <b style={{ color: "var(--v)" } as CSSProperties}>{r.to}</b>
+                            <b style={{ color: "var(--brand)" } as CSSProperties}>{r.to}</b>
                           </span>
                         </span>
                         <span className={`st ${r.cc ?? ""}`}>
@@ -284,7 +266,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
               </div>
             )}
-            {v.loading && <div className="skc" style={{ height: "260px", margin: "0 20px 20px", borderRadius: "18px" } as CSSProperties}></div>}
+            {v.loading && <div className="skc" style={{ height: "260px", margin: "0 20px 20px", borderRadius: "16px" } as CSSProperties}></div>}
           </div>
           <div className="s12" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(320px,100%),1fr))", gap: "12px", alignItems: "start" } as CSSProperties}>
             {v.inc && (
@@ -292,9 +274,7 @@ export function FleetView({ v }: { v: any }) {
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" } as CSSProperties}>
                   <span className={`chip ${v.inc.chip ?? ""}`}>{v.inc.tag}</span>
                   <button className="xb" style={{ marginLeft: "auto" } as CSSProperties} aria-label="Dismiss" onClick={v.inc.dismiss}>
-                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-                      <path className="i" d="M6 6l12 12M18 6 6 18"></path>
-                    </svg>
+                    <Icon name="close" size={16} />
                   </button>
                 </div>
                 <div>
@@ -303,7 +283,7 @@ export function FleetView({ v }: { v: any }) {
                 </div>
                 <div style={{ display: "flex", gap: "8px" } as CSSProperties}>
                   {v.inc.open && (
-                    <button className="btn sm" style={{ background: "color-mix(in srgb,var(--onCi) 10%,transparent)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
+                    <button className="btn sm" style={{ background: "color-mix(in srgb,var(--on-deep) 10%,transparent)", borderColor: "transparent", color: "inherit", flex: "1" } as CSSProperties} onClick={v.inc.open}>
                       Open the school
                     </button>
                   )}

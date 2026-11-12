@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import type { ReactNode } from 'react';
 import { Illustration, type Scene } from './illustrations/Illustration';
 import './empty.css';
@@ -40,9 +41,9 @@ export function NotFoundTile({ home, onHome, onSearch }: { home: string; onHome:
         <p>The link may be old, or the page may have moved. Search finds almost anything: a student, a receipt, a notice, a setting.</p>
         <div className="es-act" style={{ justifyContent: 'flex-start' }}>
           <a className="btn wht" href={home} onClick={(e) => { e.preventDefault(); onHome(); }}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M15 6l-6 6 6 6"></path></svg>Back to the dashboard
+            <Icon name="caretLeft" />Back to the dashboard
           </a>
-          <button className="btn" onClick={onSearch} style={{ background: 'color-mix(in srgb,var(--onCi) 10%,transparent)', color: 'var(--onCi)', borderColor: 'transparent' }}>Search<span className="kbd" style={{ background: 'color-mix(in srgb,var(--onCi) 14%,transparent)', color: 'var(--onCi)' }}>Ctrl K</span></button>
+          <button className="btn" onClick={onSearch} style={{ background: 'color-mix(in srgb,var(--on-deep) 10%,transparent)', color: 'var(--on-deep)', borderColor: 'transparent' }}>Search<span className="kbd" style={{ background: 'color-mix(in srgb,var(--on-deep) 14%,transparent)', color: 'var(--on-deep)' }}>Ctrl K</span></button>
         </div>
       </div>
       <div style={{ position: 'relative' }}><Illustration scene="torn-page" /></div>

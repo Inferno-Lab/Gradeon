@@ -81,7 +81,7 @@ export function FleetPage() {
     const pct = c.max ? Math.round((c.schools / c.max) * 100) : 0;
     const bad = here.some((s) => s.health === 'degraded' || s.health === 'down');
     const upd = here.some((s) => prevOf.get(s.id)?.state === 'rolling');
-    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--a)' } : upd ? { t: 'Updating', c: 'v', col: 'var(--v)' } : { t: 'Healthy', c: 'g', col: 'var(--g)' };
+    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--warn)' } : upd ? { t: 'Updating', c: 'v', col: 'var(--brand)' } : { t: 'Healthy', c: 'g', col: 'var(--ok)' };
     return { n: `Cell ${c.key}`, s: c.schools, p: pct, st: st.t, cc: st.c, col: st.col, off: (138 * (1 - Math.min(100, pct) / 100)).toFixed(1), href: url('/cells'), open: (e: React.MouseEvent) => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); app.go('/cells'); } };
   });
   // The newest few; the whole list, with search and filters, is the Schools page.
@@ -113,7 +113,7 @@ export function FleetPage() {
     hasRelease: !!rel, done, total, ticks: Array.from({ length: TICKS }, (_, k) => ({ c: k < on - 1 ? 'on' : k === on - 1 && rolling ? 'now' : k < on ? 'on' : '' })),
     waves: (rel?.waves ?? []).map((w) => ({ c: w.status === 'done' ? 'd' : w.status === 'rolling' || w.status === 'halted' ? 'c' : '' })),
     canPause: !!live && rel?.status !== 'halted', canRollback: !!live, relCta: rel ? 'Open releases' : 'Create a release', busy: pause.isPending || rollback.isPending,
-    pauseLabel: paused ? 'Resume wave' : 'Pause wave', pauseIc: paused ? 'M7 4l12 8-12 8z' : 'M7 5h4v14H7zM13 5h4v14h-4z',
+    pauseLabel: paused ? 'Resume wave' : 'Pause wave', pauseIc: paused ? 'play' : 'pause',
     pause: () => rel && pause.mutate({ id: rel.id, paused: !paused }), rollback: () => setConfirm(true),
     live: f.live, newThisMonth: (schools.data ?? []).filter((s) => s.createdAt.startsWith(month)).length,
     soon: f.onboarding ? `${f.onboarding} ${f.onboarding === 1 ? 'is' : 'are'} still being set up` : 'None waiting to start',

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError, uploadFile } from '@gradeon/api-client';
 import type { Category, NoticeRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, Icon } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Attach, useSetting } from '../../app/kit';
@@ -32,7 +32,7 @@ export function NoticesPage() {
   return (
     <Page title="Notices" sub="What the school tells families, students and staff" toast={toast} loading={list.isLoading}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'new' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>New notice</button> : undefined}
+      actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'new' })}><Icon name="plus" />New notice</button> : undefined}
       overlays={<>
         {(dlg?.kind === 'new' || dlg?.kind === 'edit') && <Compose n={dlg.kind === 'edit' ? dlg.n : undefined} onClose={() => setDlg(null)} onDone={done} />}
         {dlg?.kind === 'down' && <TakeDown n={dlg.n} onClose={() => setDlg(null)} onDone={done} />}

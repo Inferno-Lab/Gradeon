@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
 import { CONSOLE_ROLE_INFO, type ConsoleRole } from '@gradeon/contracts';
-import { Dialog, Dock, Field, IC, MoreSheet, Presence, SearchDialog, Sidebar, WorkspaceHeader, tintFor, useShake, useTheme, type DockTab, type PaletteHit } from '@gradeon/web-ui';
+import { Dialog, Dock, Field, MoreSheet, Presence, SearchDialog, Sidebar, WorkspaceHeader, tintFor, useShake, useTheme, type DockTab, type PaletteHit, Icon } from '@gradeon/web-ui';
 import { PAGES, SCHOOL_TABS, activeNav, consoleNav, shortcutTargets } from './nav';
 import { HttpError } from '@gradeon/api-client';
 import { useApp } from './context';
@@ -95,10 +95,10 @@ export function useChrome() {
 
   // On a phone: what is opened from a phone, the rest under More.
   const dockTabs: DockTab[] = [
-    { id: 'fleet', label: 'Fleet', icon: IC.fleet, onPress: () => goRef.current('/') },
-    { id: 'appr', label: 'Approvals', icon: IC.appr, onPress: () => goRef.current('/approvals') },
-    { id: 'health', label: 'Health', icon: IC.health, onPress: () => goRef.current('/health') },
-    { id: 'more', label: 'More', icon: 'M5 12h.01M12 12h.01M19 12h.01', onPress: () => setMore(true) },
+    { id: 'fleet', label: 'Fleet', icon: 'fleet', onPress: () => goRef.current('/') },
+    { id: 'appr', label: 'Approvals', icon: 'approvals', onPress: () => goRef.current('/approvals') },
+    { id: 'health', label: 'Health', icon: 'health', onPress: () => goRef.current('/health') },
+    { id: 'more', label: 'More', icon: 'more', onPress: () => setMore(true) },
   ];
   const dockActive = ['fleet', 'appr', 'health'].includes(active) ? active : 'more';
   const aside: ReactNode = (
@@ -132,7 +132,7 @@ export function useChrome() {
             <div className="sl">{g.name}</div>
             {g.items.map((n) => (
               <a key={n.id} className={`nvm ${n.id === active ? 'on' : ''}`} href={n.href} onClick={(e) => { e.preventDefault(); setMore(false); goRef.current(path(n.href)); }}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={n.icon}></path></svg>{n.label}
+                <Icon name={n.icon} />{n.label}
               </a>
             ))}
           </div>
@@ -185,7 +185,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
         <Field label="Your password" type="password" value={f.password} onChange={set('password')} error={err.password} autoComplete="current-password" />
         <div><button className="btn" disabled={totp.isPending || !f.password} onClick={() => totp.mutate()}>Set up a new authenticator</button></div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
-        {done && <div className="help" role="status" style={{ color: 'var(--g)' }}>{done}</div>}
+        {done && <div className="help" role="status" style={{ color: 'var(--ok)' }}>{done}</div>}
       </div>
     </Dialog>
   );

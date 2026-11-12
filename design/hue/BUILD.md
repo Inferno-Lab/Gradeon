@@ -1,0 +1,46 @@
+# Building Gradeon Hue into the product
+
+The working checklist for the one-pass build of Hue, the icon system and the empty states into the admin, the console and the app (started 12 November 2026 on `design/system-v2`, after `main` @ 863abf3). Every row is ticked only after it is checked in the running product.
+
+## Decisions
+
+1. **Colour.** One seed per school: the hue of the school's brand colour (`brand.color`, set in the console). `packages/contracts/src/hue.ts` is `palette.mjs` in TypeScript: `hueTokens(seed, mode)` gives every token for `light`, `dark` and `amoled` (dark on true black). Every integer hue passes the contrast pairs (worst margin 1.15, a fixed status colour), so the console accepts any colour and never refuses one. The per-token colour editor (`theme.colors`, `WEB_TOKENS`, `APP_TOKENS`, `APP_SHARED`) goes: nobody picks a hex value. The console itself is the cobalt seed (262).
+2. **Web tokens** are Hue's names (`--bg --s1 --s2 --s3 --line --line2 --t1 --t2 --t3 --deep… --brand… --ok --ok-s --ok-i --ok-d --on-ok…`, spectrum `--c --cs --ci` under `.sp-<colour>`). Every old Nest variable is renamed through one table (below); none survives (`rules.test.ts` fails on them).
+3. **Web components keep their class names** (pages, tests and the e2e flows use them) and are restyled to the Hue boards: deep frame and menu, a light sheet with a 24 px radius, bright "you are here", brand actions, Mona Sans in two voices, the Hue scales. Class names are internal; the look is the system.
+4. **Icons** come only from `code/icons.ts` (`IC`, `GLYPH`) through one `<Icon>` piece; hand-drawn 24-grid icons are replaced one by one. The app uses `AppIcons`.
+5. **Empty states**: the web kit (`packages/web-ui/src/empty/`) ports `empty.css`; each page's scene is the approved board's scene. Pages that are new since the approval get a scene in the same kit, drawn on the canvas too. The app gets `EmptyKit` and one scene per screen.
+6. **App**: Chalk & Glass is replaced: Hue palette from the seed (sent by the server as today, new keys), Mona Sans and Noto Sans Devanagari (downloaded with the owner's yes, OFL), deep header, sheet, tab bar with a bright active block, Hue scales.
+
+## Old → new web variables
+
+| Nest | Hue | | Nest | Hue |
+| --- | --- | --- | --- | --- |
+| `--bd` | `--deep` (behind the frame) | | `--v` | `--brand` |
+| `--frame` | `--bg` | | `--onV` | `--on-brand` |
+| `--card` | `--s1` | | `--vS` | `--brand-soft` |
+| `--sunk` | `--s2` | | `--vD` | `--brand-ink` |
+| `--line` | `--line` | | `--v2` | `--brand-line` |
+| `--line2` | `--line2` | | `--vL` | `--brand-soft2` |
+| `--field` | `--t3` | | `--g` `--gS` `--gD` | `--ok` `--ok-s` `--ok-i` |
+| `--ink` `--ink2` `--ink3` | `--t1` `--t2` `--t3` | | `--a` `--aS` `--aD` | `--warn` `--warn-s` `--warn-i` |
+| `--pri` `--priT` | `--brand` `--on-brand` | | `--c` `--cS` `--cD` | `--bad` `--bad-s` `--bad-i` |
+| `--ci` `--onCi` | `--deep` `--on-deep` | | `--cF` `--onCF` | `--bad` `--on-bad` |
+| `--knob` | `--s1` | | `--present` | `--line2` |
+| `--sh1` `--sh2` `--sh3` | `--shadow` | | `--subj-<id>` | `.sp-<colour>` |
+
+## Checklist
+
+Status: ☐ to do · ◐ built, not checked · ☑ built and checked.
+
+### Foundations
+- ☐ contracts: `hue.ts` (engine, spectrum, contrast test over all 360 hues), brand payload sends seed and palettes
+- ☐ console: brand colour is the only colour control; old theme editor and console theme removed
+- ☐ web-ui: tokens, fonts, base, shell (menu, dock, search), controls, blocks, dialogs, menus, toasts, fields, login
+- ☐ web-ui: `<Icon>`, `code/icons.ts`, every hand-drawn icon replaced
+- ☐ web-ui: empty kit
+- ☐ app: palette, type, motion tokens, widgets (page frame, header, sheet, tab bar, cards, rows, chips, buttons, fields, sheets, toast)
+- ☐ app: `AppIcons`, every icon
+- ☐ app: `EmptyKit`
+- ☐ rules tests (web and app) fail on any old token, font, icon or empty art
+
+(Pages, screens and their empty states are listed below as the inventory finds them.)

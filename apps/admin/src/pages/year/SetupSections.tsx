@@ -33,7 +33,7 @@ export function useSetupSections(kinds: readonly string[], say: (text: string, t
   const sections = list.data ?? [];
   const overlay = editing && <RowDialog section={editing.section} row={editing.row} all={sections} onClose={() => setEditing(null)}
     onDone={(msg, next) => { setEditing(null); if (next) qc.setQueryData(['setup'], next); void qc.invalidateQueries({ predicate: (q) => ['classes', 'subjects', 'timetable', 'events', 'shell'].includes(String(q.queryKey[0])) }); say(msg); }} />;
-  if (list.isLoading) return { view: <div className="skc" style={{ height: 240, borderRadius: 18 }} />, overlay: null };
+  if (list.isLoading) return { view: <div className="skc" style={{ height: 240, borderRadius: 16 }} />, overlay: null };
   if (list.isError) return { view: <EmptyCard error title="Setup" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} />, overlay: null };
   const view = (
     <div className="stack" style={{ gap: 16 }}>

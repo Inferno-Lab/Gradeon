@@ -82,7 +82,7 @@ describe('the design system', { timeout: 30_000 }, () => {
   it('takes every colour from a token', () => {
     const raw = /#[0-9a-fA-F]{3,8}\b(?![\w-])|\b(rgba?|hsla?)\(|(?<![\w-])(white|black)(?![\w-])/;
     expect(hits([...css, ...allTsx].filter((f) => !fixed(f)), raw, (line, f) => !comment(line) && !definesColour(line, f) && !/white-space/.test(line)),
-      'use a colour token (var(--ink), var(--onCi), color-mix(in srgb,var(--onCi) 14%,transparent)…); the console can change every token').toEqual([]);
+      'use a colour token (var(--ink), var(--on-deep), color-mix(in srgb,var(--on-deep) 14%,transparent)…); the console can change every token').toEqual([]);
     expect(hits([...css, ...allTsx], /var\(--(b|bS|r|rS|rF|sbg)\)|\.btn\.v\b|\bbtn v\b/), 'retired: use --v, --vS, --c, --cS, --cF, --frame; the blue button is gone (btn pri)').toEqual([]);
   });
 

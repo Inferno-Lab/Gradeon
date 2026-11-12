@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps, Icon } from '@gradeon/web-ui';
 import { url } from './base';
 
 interface PageProps {
@@ -24,7 +24,7 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
         {back && (
           <div className="crumb rise">
             <a href={url(back.to)} onClick={(e) => { e.preventDefault(); back.go(back.to); }}>{back.label}</a>
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path className="i" d="M9 6l6 6-6 6"></path></svg>
+            <Icon name="caretRight" size={14} />
             <b style={{ color: 'var(--ink)' }}>{title}</b>
           </div>
         )}
@@ -61,7 +61,7 @@ export function Tiles({ items }: { items: { label: string; value: ReactNode; not
       {items.map((t, i) => (
         <div key={t.label} className={`tile t-${t.tone} s4 rise`} style={{ '--d': `${i * 0.05}s` } as React.CSSProperties}>
           <span className="lbl">{t.label}</span>
-          <div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
+          <div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
           <div style={{ opacity: 0.75, font: '600 13px var(--fb)' }}>{t.note}</div>
         </div>
       ))}

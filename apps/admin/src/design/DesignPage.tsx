@@ -1,6 +1,6 @@
 import { DEFAULT_BRAND } from '@gradeon/contracts';
 import { useState } from 'react';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, IC, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, ColourPicker, SelectField, TimeField, ToastSlot, tintFor, useToast, useShake, type Scene } from '@gradeon/web-ui';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, Illustration, MenuButton, NumberField, PageScope, Presence, Segmented, ColourPicker, SelectField, TimeField, ToastSlot, tintFor, useToast, useShake, type Scene } from '@gradeon/web-ui';
 import { useShellChrome } from '../app/Layout';
 
 const SCENES: Scene[] = ['register', 'noticeboard', 'receipt', 'notebooks', 'search-paper', 'checklist', 'plug', 'padlock', 'torn-page', 'envelope', 'map-pin', 'calendar'];
@@ -31,15 +31,15 @@ export function DesignPage() {
         <Section title="Colour">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
             {SWATCHES.map(([n, v]) => (
-              <div key={v}><div style={{ height: 64, borderRadius: 18, background: `var(${v})`, boxShadow: 'inset 0 0 0 1px var(--line)' }} /><b style={{ font: '700 13px var(--fb)', display: 'block', marginTop: 6 }}>{n}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{v}</small></div>
+              <div key={v}><div style={{ height: 64, borderRadius: 16, background: `var(${v})`, boxShadow: 'inset 0 0 0 1px var(--line)' }} /><b style={{ font: '700 13px var(--fb)', display: 'block', marginTop: 6 }}>{n}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{v}</small></div>
             ))}
           </div>
         </Section>
 
         <Section title="Type">
-          <div className="fd" style={{ fontSize: 38, letterSpacing: '-.04em', lineHeight: 1 }}>Bricolage Grotesque, for headings and numbers</div>
-          <p style={{ font: '500 15px/1.6 var(--fb)', color: 'var(--ink2)', maxWidth: 640 }}>Manrope carries every label, row and paragraph. It stays clear at small sizes and keeps numbers aligned, which matters for fees and attendance.</p>
-          <div className="num" style={{ font: '700 34px var(--fd)' }}>1,498 · ₹18.4L · 94.2%</div>
+          <div className="fd" style={{ fontSize: 40, letterSpacing: '-.04em', lineHeight: 1 }}>Bricolage Grotesque, for headings and numbers</div>
+          <p style={{ font: '400 15px/1.6 var(--fb)', color: 'var(--ink2)', maxWidth: 640 }}>Manrope carries every label, row and paragraph. It stays clear at small sizes and keeps numbers aligned, which matters for fees and attendance.</p>
+          <div className="num" style={{ font: '700 semi-expanded 30px var(--fd)' }}>1,498 · ₹18.4L · 94.2%</div>
         </Section>
 
         <Section title="Buttons and chips">
@@ -52,7 +52,7 @@ export function DesignPage() {
 
         <Section title="Inputs, errors and switches">
           <div className="two" style={{ maxWidth: 720 }}>
-            <div className={shake.cls}><Field label="School name" value={name} onChange={setName} placeholder="Banyan Ridge School" error={name === 'x' ? 'Enter the school’s full name' : undefined} hint="Press the button to see the error vibrate" icon={IC.adm} /></div>
+            <div className={shake.cls}><Field label="School name" value={name} onChange={setName} placeholder="Banyan Ridge School" error={name === 'x' ? 'Enter the school’s full name' : undefined} hint="Press the button to see the error vibrate" icon="admissions" /></div>
             <SelectField label="Board" value="CBSE" onChange={() => undefined} options={['CBSE', 'ICSE', 'State'].map((v) => ({ value: v, label: v }))} />
           </div>
           <div className="tgrow" style={{ marginTop: 12 }}>
@@ -75,7 +75,7 @@ export function DesignPage() {
             <Checkbox checked={tick} onChange={setTick} label="Send a copy to parents" />
             <ColourField label="Brand colour" value={colour} onChange={setColour} />
             <FilePick onPick={(f) => setFile(f.name)}>{file || 'Choose a file'}</FilePick>
-            <MenuButton label="New" icon="M12 5v14M5 12h14" primary open={menu} onOpenChange={setMenu} menuLabel="Add something new">
+            <MenuButton label="New" icon='plus' primary open={menu} onOpenChange={setMenu} menuLabel="Add something new">
               <button role="menuitem" onClick={() => setMenu(false)}>Add student<small>N S</small></button>
               <button role="menuitem" onClick={() => setMenu(false)}>Post a notice<small>N N</small></button>
             </MenuButton>
@@ -88,7 +88,7 @@ export function DesignPage() {
             {(['t-v', 't-a', 't-g', 't-i', 't-l', 't-p'] as const).map((t) => <div key={t} className={`tile ${t}`} style={{ minHeight: 120 }}><b className="fd" style={{ fontSize: 22 }}>{t}</b><div style={{ font: '600 13px var(--fb)', opacity: .7 }}>A tile</div></div>)}
           </div>
           <div style={{ display: 'grid', gap: 10, marginTop: 16, maxWidth: 520 }}>
-            {[78, 52, 31].map((w) => <div key={w} style={{ height: 22, borderRadius: 10, background: 'var(--sunk)', overflow: 'hidden' }}><i style={{ display: 'block', height: '100%', width: `${w}%`, borderRadius: 10, background: 'var(--v)' }} /></div>)}
+            {[78, 52, 31].map((w) => <div key={w} style={{ height: 22, borderRadius: 10, background: 'var(--s2)', overflow: 'hidden' }}><i style={{ display: 'block', height: '100%', width: `${w}%`, borderRadius: 10, background: 'var(--brand)' }} /></div>)}
           </div>
           <div className="tgrow" style={{ marginTop: 16 }}>{['Riya Mehta', 'Kabir Singh', 'Meera Nair', 'Kavita Iyer'].map((n) => { const t = tintFor(n); return <span key={n} className="av" style={{ background: t.bg, color: t.fg, width: 44, height: 44, display: "grid", placeItems: "center" }}>{n.split(' ').map((w) => w[0]).join('')}</span>; })}</div>
         </Section>

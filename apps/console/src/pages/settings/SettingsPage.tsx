@@ -1,49 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ACTIONS, ACTION_LABELS, CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleRole, type PolicyDoc, type ThemeColors } from '@gradeon/contracts';
+import { ACTIONS, ACTION_LABELS, CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleRole, type PolicyDoc } from '@gradeon/contracts';
 import { AreaField, Dialog, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { usePageTabs } from '../../app/tabs';
-import { ThemeEditor } from '../../app/ThemeEditor';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
 
-/** What configures the console itself: its colours, and which changes need a second person (and the freeze). */
+/** What configures the console itself: which changes need a second person (and the freeze). Its colours are Gradeon Hue's cobalt. */
 export function SettingsPage() {
-  const { tab, tabs } = usePageTabs('/settings');
+  const { tabs } = usePageTabs('/settings');
   const { toast, say } = useToast();
   return (
-    <Page title="Console settings" sub="How this console looks and which changes need a second person" toast={toast} actions={tabs}>
-      {tab === 'rules' ? <Rules say={say} /> : <Colours say={say} />}
+    <Page title="Console settings" sub="Which changes need a second person" toast={toast} actions={tabs}>
+      <Rules say={say} />
     </Page>
-  );
-}
-
-/** The console's own colours, for everyone who uses it. A school's colours are under its Configuration → Look. */
-function Colours({ say }: { say: Say }) {
-  const app = useApp();
-  const qc = useQueryClient();
-  const saved = useQuery({ queryKey: ['console-theme'], queryFn: app.api.theme.get });
-  const [draft, setDraft] = useState<ThemeColors | null>(null);
-  const can = app.can('policy.write');
-  const value = draft ?? saved.data ?? {};
-  const save = useMutation({
-    mutationFn: () => app.api.theme.set(value),
-    onSuccess: (v) => { qc.setQueryData(['console-theme'], v); setDraft(null); say('Saved. The console wears the new colours for everyone.'); },
-    onError: (e) => say((e as Error).message, 'bad'),
-  });
-  return (
-    <Card title="Console colours">
-      <div className="help">Every colour of this console, in light and dark. Changes show in the preview first and apply to everyone once saved.</div>
-      <div style={{ marginTop: 16 }}><ThemeEditor scope="console" value={value} onChange={setDraft} disabled={!can || saved.isLoading} /></div>
-      {can && (
-        <div className="tgrow" style={{ marginTop: 16, justifyContent: 'flex-end' }}>
-          <button className="btn" disabled={!draft || save.isPending} onClick={() => setDraft(null)}>Discard</button>
-          <button className="btn pri" disabled={!draft || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save colours'}</button>
-        </div>
-      )}
-    </Card>
   );
 }
 

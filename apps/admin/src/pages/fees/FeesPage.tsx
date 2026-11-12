@@ -67,7 +67,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
         <section className="grid">
           <div className="tile t-v s4 rise"><span className="lbl">Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Not yet due</span><div className="big" style={{ marginTop: 8 }}>{money(s.pending)}</div><div style={{ font: '600 13px var(--fb)', opacity: .75 }}>not yet due</div></div>
-          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Overdue</span><div className="big" style={{ marginTop: 8, color: 'var(--c)' }}>{money(s.overdue)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</div></div>
+          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Overdue</span><div className="big" style={{ marginTop: 8, color: 'var(--bad)' }}>{money(s.overdue)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</div></div>
           <div className="card s12 rise" style={{ '--d': '.14s' } as React.CSSProperties}>
             <div className="ch"><h2>Collected by type</h2></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(220px,100%),1fr))', gap: '16px 24px', marginTop: 16, alignContent: 'start' }}>
@@ -103,7 +103,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
                         <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.guardianName}</small></span>
                       </span>
                       <span className="chip">{r.className}</span>
-                      <b className="num" style={{ font: '700 14px var(--fb)', color: 'var(--c)' }}>₹{inr(r.amountDue)}</b>
+                      <b className="num" style={{ font: '700 14px var(--fb)', color: 'var(--bad)' }}>₹{inr(r.amountDue)}</b>
                       <span>{canPay && <button className="btn sm" disabled={open.isPending} onClick={(e) => { e.stopPropagation(); open.mutate(r.id); }}>Collect</button>}</span>
                     </div>
                   );

@@ -1,3 +1,5 @@
+import type { IconName } from './Icon';
+import { Icon } from './Icon';
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { leavingProps, useExit } from './Presence';
@@ -107,15 +109,15 @@ export function Menu({ open, anchor, onClose, side = 'auto', label, children }: 
 
 /** A pill button that opens a menu under it: the same button and the same menu everywhere. */
 export function MenuButton({ label, icon, primary, chevron, open, onOpenChange, menuLabel, children }: {
-  label: ReactNode; icon?: string; primary?: boolean; chevron?: boolean; open: boolean; onOpenChange: (open: boolean) => void; menuLabel?: string; children: ReactNode;
+  label: ReactNode; icon?: IconName; primary?: boolean; chevron?: boolean; open: boolean; onOpenChange: (open: boolean) => void; menuLabel?: string; children: ReactNode;
 }) {
   const btn = useRef<HTMLButtonElement>(null);
   return (
     <>
       <button ref={btn} type="button" className={`btn ${primary ? 'pri' : ''}`} aria-haspopup="menu" aria-expanded={open} onClick={() => onOpenChange(!open)}>
-        {icon && <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>}
+        {icon && <Icon name={icon} />}
         {label}
-        {chevron && <svg className="cv" viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 9l6 6 6-6"></path></svg>}
+        {chevron && <Icon name="caretDown" className="cv" />}
       </button>
       <Menu open={open} anchor={btn} onClose={() => onOpenChange(false)} label={menuLabel}>{children}</Menu>
     </>

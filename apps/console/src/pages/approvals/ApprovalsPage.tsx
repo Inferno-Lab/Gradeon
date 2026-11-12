@@ -78,7 +78,7 @@ export function ApprovalsPage() {
                 <small style={{ display: 'block', color: 'var(--ink3)' }}>
                   {r.dryRun ? 'Rehearsal · ' : ''}Asked by {r.requestedBy}{r.approvedBy ? ` · ${r.status === 'rejected' ? 'rejected' : 'approved'} by ${r.approvedBy}` : ''} · {when(r.finishedAt ?? r.createdAt)}
                 </small>
-                {(r.status === 'rejected' ? r.decisionNote : r.summary !== r.asked ? r.summary : '') && <small style={{ display: 'block', color: r.status === 'failed' ? 'var(--c)' : 'var(--ink2)' }}>{r.status === 'rejected' ? `Why: ${r.decisionNote}` : r.summary}</small>}
+                {(r.status === 'rejected' ? r.decisionNote : r.summary !== r.asked ? r.summary : '') && <small style={{ display: 'block', color: r.status === 'failed' ? 'var(--bad)' : 'var(--ink2)' }}>{r.status === 'rejected' ? `Why: ${r.decisionNote}` : r.summary}</small>}
               </span>
               <b><span className={`st ${TONE[r.status]}`}><i></i>{LABEL[r.status]}</span></b>
             </div>

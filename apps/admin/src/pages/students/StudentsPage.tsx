@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dayLabel, inr, istToday, plural, type StudentRow } from '@gradeon/contracts';
-import { EmptyCard, Menu, PageScope, Select, ToastSlot, rollDigits, tintFor, useToast } from '@gradeon/web-ui';
+import { EmptyCard, Menu, PageScope, Select, ToastSlot, rollDigits, tintFor, useToast, Icon, type IconName } from '@gradeon/web-ui';
 import type { StudentListQuery } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
@@ -14,26 +14,26 @@ import { usePageTabs } from '../../app/tabs';
 import { EditStudentDialog, GuardiansDialog, LeaveDialog } from './StudentRecord';
 import { StudentFiles } from './StudentFiles';
 
-const IC_OK = 'M5 12.5l4.5 4.5L19 7.5';
-const IC_CLK = 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2';
-const IC_AL = 'M12 3.5l9 15.5H3zM12 10v4M12 16.5h.01';
+const IC_OK = 'check';
+const IC_CLK = 'time';
+const IC_AL = 'warning';
 const PILL_ICON = {
-  cls: 'M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z',
-  house: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
-  fee: 'M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3',
-  add: 'M12 5v14M5 12h14',
-};
+  cls: 'columns',
+  house: 'star',
+  fee: 'fees',
+  add: 'plus',
+} as const;
 const fmtFee = (s: StudentRow) => (s.feeStatus === 'paid' ? 'Paid' : s.feeStatus === 'due' ? `Due ₹${inr(s.amountDue)}` : `Overdue ₹${inr(s.amountDue)}`);
 const tickClass = (st: string | null) => (st === 'late' ? 'l' : st === 'present' ? '' : st ? 'a' : 'h');
 
 type Dialog = null | { kind: 'add' } | { kind: 'import' } | { kind: 'message'; ids: string[]; label: string } | { kind: 'fee'; ids: string[]; label: string } | { kind: 'edit' } | { kind: 'guardians' } | { kind: 'leave' };
 
-function Pill({ id, open, setOpen, on, icon, children, menu }: { id: string; open: string; setOpen: (v: string) => void; on?: boolean; icon: string; children: ReactNode; menu: ReactNode }) {
+function Pill({ id, open, setOpen, on, icon, children, menu }: { id: string; open: string; setOpen: (v: string) => void; on?: boolean; icon: IconName; children: ReactNode; menu: ReactNode }) {
   const btn = useRef<HTMLButtonElement>(null);
   return (
     <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
       <button ref={btn} className={`fp ${on ? 'on' : ''} ${id === 'add' ? 'add' : ''}`} aria-haspopup="menu" aria-expanded={open === id} onClick={() => setOpen(open === id ? '' : id)}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>
+        <Icon name={icon} />
         {children}
       </button>
       <Menu open={open === id} anchor={btn} onClose={() => setOpen('')}>{menu}</Menu>
@@ -211,7 +211,7 @@ function StudentList({ tabs }: { tabs: React.ReactNode }) {
     canCollect: has.fees && app.user.permissions.includes('fees.collect') && !detail.data?.left,
     d: (() => {
       const s = detail.data;
-      if (!s) return { n: '…', ini: '', bg: 'var(--sunk)', fg: 'var(--ink3)', adm: '', roll: '', cls: '', house: null, route: null, fcls: 'due', fees: '', att: 0, exam: '–', examName: 'Latest test', homework: '–', library: 0, show: { att: false, exam: false, hw: false, lib: false }, rollTitle: '', rollAria: '', gi: '', g: '', activity: [] as { label: string; sub: string; color: string }[] };
+      if (!s) return { n: '…', ini: '', bg: 'var(--s2)', fg: 'var(--ink3)', adm: '', roll: '', cls: '', house: null, route: null, fcls: 'due', fees: '', att: 0, exam: '–', examName: 'Latest test', homework: '–', library: 0, show: { att: false, exam: false, hw: false, lib: false }, rollTitle: '', rollAria: '', gi: '', g: '', activity: [] as { label: string; sub: string; color: string }[] };
       const t = tintFor(s.name);
       const p = s.roll24.filter((x) => x === 'present').length, l = s.roll24.filter((x) => x === 'late').length, a = s.roll24.filter((x) => x === 'absent' || x === 'leave').length;
       return {
@@ -220,7 +220,7 @@ function StudentList({ tabs }: { tabs: React.ReactNode }) {
         homework: s.facts.homework.total ? `${s.facts.homework.onTime} of ${s.facts.homework.total}` : '–', library: s.facts.libraryOut,
         show: { att: has.attendance, exam: mods.includes('exams'), hw: mods.includes('homework'), lib: mods.includes('library') },
         rollTitle: `Last ${s.roll24.length} school days`, rollAria: `${p} present, ${l} late, ${a} absent`, gi: s.guardianName.split(' ').map((w) => w[0]).slice(0, 2).join(''), g: s.guardianName,
-        activity: s.recentActivity.map((e) => ({ label: e.label, sub: [e.sub, new Date(e.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })].filter(Boolean).join(' · '), color: e.tone === 'g' ? 'var(--g)' : e.tone === 'v' ? 'var(--v)' : 'var(--a)' })),
+        activity: s.recentActivity.map((e) => ({ label: e.label, sub: [e.sub, new Date(e.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })].filter(Boolean).join(' · '), color: e.tone === 'g' ? 'var(--ok)' : e.tone === 'v' ? 'var(--brand)' : 'var(--warn)' })),
       };
     })(),
     heat: (detail.data?.roll24 ?? []).map((x, i) => ({ c: x === 'late' ? 'l' : x === 'absent' ? 'a' : x === 'leave' ? 'h' : x === null ? 'h' : '', d: (0.2 + i * 0.02).toFixed(2) })),

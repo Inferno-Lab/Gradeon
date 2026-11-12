@@ -7,8 +7,8 @@ import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, Ico, problem, stamp, useOpenParam } from '../../app/kit';
 
-const BACK = 'M15 5l-7 7 7 7';
-const SEND = 'M4 12l16-8-6 16-3-7z';
+const BACK = 'caretLeft';
+const SEND = 'send';
 const ago = (iso: string) => {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 1) return 'now';
@@ -74,7 +74,7 @@ function ThreadItem({ t, on, onOpen }: { t: ThreadRow; on: boolean; onOpen: () =
         <span className="mts" data-tip={t.subject}>{t.subject}</span>
         <span className="mtp">{t.lastFrom === 'staff' ? 'You: ' : ''}{t.lastBody}</span>
       </span>
-      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '700 11px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
+      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '700 11px var(--fb)', background: 'var(--brand)', color: 'var(--on-brand)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
     </button>
   );
 }
@@ -120,7 +120,7 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
           <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ status: t.status === 'open' ? 'closed' : 'open' })}>{t.status === 'open' ? 'Close' : 'Reopen'}</button>
         </span>}
       </header>
-      <div className="mlist lscroll" style={{ ['--scbg' as string]: 'var(--card)' }}>
+      <div className="mlist lscroll" style={{ ['--scbg' as string]: 'var(--s1)' }}>
         {t.messages.map((m) => (
           <div key={m.id} className={`mb ${m.from}`}>
             <div className="mbb">{m.deleted ? <i>This message was deleted.</i> : m.body}{m.files.length > 0 && <span className="tgrow" style={{ marginTop: m.body ? 8 : 0 }}>{m.files.map((f) => <button key={f.id} type="button" className="chip" onClick={() => open(f.id)}>{f.name}</button>)}</span>}</div>

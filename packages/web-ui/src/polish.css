@@ -2,6 +2,7 @@
 html{scrollbar-width:thin}
 html:has(.nest.dark){color-scheme:dark}
 .nest{scrollbar-color:var(--line2) transparent}
+.nest .sb{scrollbar-color:var(--deep3) transparent}
 .nest *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ink3) 40%,transparent) transparent}
 .nest *::-webkit-scrollbar{width:12px;height:12px}
 .nest *::-webkit-scrollbar-track{background:transparent}
@@ -10,7 +11,7 @@ html:has(.nest.dark){color-scheme:dark}
 .nest *::-webkit-scrollbar-corner{background:transparent}
 
 /* A scroll area keeps a plain background: painted-in edge shadows (background-attachment: local) made every scroll frame repaint on the main thread, which is what made lists feel slow. The themed bar shows there is more. */
-.nest .scl,.nest .popm,.nest .lscroll,.nest .tbl>.scroll-x{background:var(--card)}
+.nest .scl,.nest .popm,.nest .lscroll,.nest .tbl>.scroll-x{background:var(--s1)}
 /* A long list scrolls inside its card so the page keeps its shape. */
 .nest .lscroll,.nest .tbl>.scroll-x{max-height:min(66dvh,680px);overflow-y:auto}
 .nest .lscroll>.grd.rw:first-child{border-top:0}
@@ -52,7 +53,7 @@ html:has(.nest.dark){color-scheme:dark}
 .nest .need>div{flex:1 1 112px}
 /* The account block stays at the bottom of the menu even when the list above it scrolls. */
 @media (min-width:901px){
-  .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 6px 12px;background:var(--frame);z-index:2;box-shadow:0 -14px 14px -10px var(--frame)}
+  .nest .app>.sb .me{position:sticky!important;bottom:-10px;margin-top:auto;padding:10px 0 12px;background:var(--deep);z-index:2;box-shadow:0 -14px 14px -10px var(--deep)}
   .nest .app>.sb .sbc{margin-top:12px}
   .nest .app>.sb .nv{scroll-margin:8px 0 88px}
 }
@@ -81,8 +82,8 @@ html:has(.nest.dark){color-scheme:dark}
 .nest .sb.col .ws,.nest .sb.col .wsw{flex-direction:column;height:auto;padding:0 0 8px;gap:8px;background:none;border-color:transparent}
 .nest .sb.col .ws .fade,.nest .sb.col .wsw .fade,.nest .sb.col .nv .fade,.nest .sb.col .me .fade{display:none}
 .nest .sb.col .nv{justify-content:center;padding:0}
-.nest .sb.col .sl{height:1px;padding:0;margin:10px 12px;background:var(--line);font-size:0;overflow:hidden}
-.nest .sb.col .nv .ct{display:block;position:absolute;top:7px;right:9px;width:9px;height:9px;padding:0;font-size:0;background:var(--c);box-shadow:0 0 0 2px var(--frame)}
+.nest .sb.col .sl{height:1px;padding:0;margin:10px 12px;background:var(--deep3);font-size:0;overflow:hidden}
+.nest .sb.col .nv .ct{display:block;position:absolute;top:7px;right:9px;width:9px;height:9px;padding:0;font-size:0;background:var(--bad);box-shadow:0 0 0 2px var(--deep)}
 .nest .sb.col .me{justify-content:center;padding-left:0;padding-right:0}
 .nest .sb.col .mebtn{width:auto;margin:0;padding:4px;justify-content:center}
 .nest .sb.col .me .av{margin:0}
@@ -91,8 +92,8 @@ html:has(.nest.dark){color-scheme:dark}
 .nest .hd{position:relative;z-index:10}
 /* Every box that scrolls on its own scrolls on the compositor, like the page does, instead of repainting its rows on each frame. */
 .nest .lscroll,.nest .scroll-x,.nest .popm,.nest .rpl,.nest .sxl,.nest .sheet,.nest .adm,.nest .wst,.nest .snav,.nest .db,.nest .tg,.nest .dlg,.nest .app>.sb,.nest .tbl{will-change:scroll-position}
-.nest .sxl{background:var(--card)}
+.nest .sxl{background:var(--s1)}
 /* A table that scrolls keeps its column titles in view. */
-.nest .scroll-x .grd.th,.nest .lscroll .grd.th{position:sticky;top:0;z-index:3;background:var(--card)}
+.nest .scroll-x .grd.th,.nest .lscroll .grd.th{position:sticky;top:0;z-index:3;background:var(--s1)}
 /* On a phone, where a table scrolls sideways, its first column (the name) stays put so a row can still be read. */
-@media (max-width:700px){.nest .tbl .grd>:first-child{position:sticky;left:0;z-index:1;background:var(--card)}.nest .tbl .grd.th>:first-child{z-index:4}}
+@media (max-width:700px){.nest .tbl .grd>:first-child{position:sticky;left:0;z-index:1;background:var(--s1)}.nest .tbl .grd.th>:first-child{z-index:4}}

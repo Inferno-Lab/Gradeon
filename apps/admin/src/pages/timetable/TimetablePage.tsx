@@ -153,7 +153,7 @@ export function TimetablePage() {
     ) : null,
     fix: () => { if (cur && clash?.suggestion) cover.mutate({ slotId: cur.id, teacherId: clash.suggestion.teacherId }, { onSuccess: () => say(`Clash fixed · ${clash.suggestion!.teacherName} covers ${dayName(dateOf(at.day), true)} ${periodDef(at.period)?.label}`) }); },
     change: () => setChooser(true),
-    ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--c)' : 'var(--v)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '–',
+    ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--bad)' : 'var(--brand)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '–',
     loads: top.map((l) => { const c = tintFor(l.name); return { n: l.name, s: l.subjects[0] ?? 'Teacher', ini: l.name.split(' ').map((w) => w[0]).slice(0, 2).join(''), bg: c.bg, fg: c.fg, v: l.periodsPerWeek, p: Math.round((l.periodsPerWeek / l.max) * 100), hot: l.periodsPerWeek > l.max * 0.9 ? 'hot' : '' }; }),
     unplaced: data.unplaced,
     toast,
@@ -174,7 +174,7 @@ function TeacherChooser({ slot, onClose, onPick }: { slot: SlotRow; onClose: () 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflow: 'auto', marginBottom: 12 }}>
         {q.isLoading && <div className="skc" style={{ height: 160 }} />}
         {(q.data ?? []).map((t) => (
-          <button key={t.id} className="btn" disabled={!t.free && t.id !== slot.teacherId} onClick={() => onPick(t.id)} style={{ justifyContent: 'space-between', height: 48, borderRadius: 14, opacity: t.free ? 1 : 0.55 }}>
+          <button key={t.id} className="btn" disabled={!t.free && t.id !== slot.teacherId} onClick={() => onPick(t.id)} style={{ justifyContent: 'space-between', height: 48, borderRadius: 12, opacity: t.free ? 1 : 0.55 }}>
             <span>{t.name}<small style={{ marginLeft: 8, color: 'var(--ink3)', fontWeight: 600 }}>{t.subjects.join(', ')}</small></span>
             <span className="chip" style={{ height: 24 }}>{t.free ? `${t.load} / ${t.max}` : 'Busy then'}</span>
           </button>

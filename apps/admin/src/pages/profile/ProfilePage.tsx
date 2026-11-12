@@ -26,12 +26,11 @@ function show(m: SettingMeta, v: unknown): ReactNode {
     case 'bool': return v ? 'Yes' : 'No';
     case 'enum': case 'language': return opt(String(v));
     case 'multi': case 'strings': return (v as string[]).map(opt).join(', ');
-    case 'color': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true" style={{ width: 18, height: 18, borderRadius: 6, background: String(v) }} />{String(v).toUpperCase()}</span>;
-    case 'houses': return <span className="tgrow">{(v as { name: string; color: string }[]).map((h) => <span key={h.name} className="chip" style={{ background: h.color, color: 'var(--onCi)' }}>{h.name}</span>)}</span>;
+    case 'color': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><span aria-hidden="true" style={{ width: 18, height: 18, borderRadius: 7, background: String(v) }} />{String(v).toUpperCase()}</span>;
+    case 'houses': return <span className="tgrow">{(v as { name: string; color: string }[]).map((h) => <span key={h.name} className="chip" style={{ background: h.color, color: 'var(--on-deep)' }}>{h.name}</span>)}</span>;
     case 'categories': return <span className="tgrow">{(v as { name: string; tone: string }[]).map((c) => <span key={c.name} className={`chip ${c.tone}`}>{c.name}</span>)}</span>;
     case 'gradingScale': return (v as { grade: string; minPct: number }[]).map((g) => `${g.grade} from ${g.minPct}%`).join(' · ');
     case 'logo': return 'Uploaded';
-    case 'theme': return Object.keys(v as object).length ? 'The school’s own colours' : 'Gradeon’s colours';
     case 'classes': return `${(v as string[]).length} chosen`;
     default: return typeof v === 'object' ? 'Set by Gradeon' : String(v);
   }
@@ -44,7 +43,7 @@ function Rows({ doc, keys }: { doc: SettingsResponse; keys: string[] }) {
         const m = SETTINGS_META[k as keyof typeof SETTINGS_META];
         return (
           <div key={k} className="kv" style={{ alignItems: 'flex-start', gap: 16 }}>
-            <span style={{ minWidth: 0 }}>{m.label}{m.help && <small style={{ display: 'block', color: 'var(--ink3)', font: '500 12px/1.4 var(--fb)' }}>{m.help}</small>}</span>
+            <span style={{ minWidth: 0 }}>{m.label}{m.help && <small style={{ display: 'block', color: 'var(--ink3)', font: '400 12px/1.4 var(--fb)' }}>{m.help}</small>}</span>
             <b style={{ textAlign: 'right', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{show(m, doc.values[k] !== undefined ? doc.values[k] : dflt(k))}</b>
           </div>
         );
@@ -86,7 +85,7 @@ export function ProfilePage() {
           {tab === 'data' && <YourData say={say} />}
           {tab === 'privacy' && <>
             <Card title="Privacy notice">
-              <p style={{ margin: 0, font: '500 14px/1.6 var(--fb)', whiteSpace: 'pre-wrap' }}>{c.privacy.notice || 'Gradeon has not written the school’s privacy notice yet.'}</p>
+              <p style={{ margin: 0, font: '400 14px/1.6 var(--fb)', whiteSpace: 'pre-wrap' }}>{c.privacy.notice || 'Gradeon has not written the school’s privacy notice yet.'}</p>
             </Card>
             <Card title="Privacy and consent"><Rows doc={d} keys={keysIn('Privacy').filter((k) => k !== 'privacy.notice')} /></Card>
           </>}
@@ -150,7 +149,7 @@ function Roles({ cfg }: { cfg: EffectiveConfig }) {
   const app = useApp();
   const roles = useQuery({ queryKey: ['roles'], queryFn: app.api.roles.list });
   const [sel, setSel] = useState('');
-  if (roles.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 18 }} />;
+  if (roles.isLoading) return <div className="skc" style={{ height: 240, borderRadius: 16 }} />;
   if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="padlock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   const list = roles.data ?? [];
   const cur = list.find((r) => r.id === sel) ?? list[0];
@@ -195,7 +194,7 @@ function Messages({ doc, cfg }: { doc: SettingsResponse; cfg: EffectiveConfig })
         const r = rules[e.key] ?? e.defaults;
         return (
           <div key={e.key} className="kv" style={{ alignItems: 'flex-start', gap: 16 }}>
-            <span style={{ minWidth: 0 }}>{e.label}<small style={{ display: 'block', color: 'var(--ink3)', font: '500 12px/1.4 var(--fb)' }}>“{words[e.key]?.trim() || e.text}”</small></span>
+            <span style={{ minWidth: 0 }}>{e.label}<small style={{ display: 'block', color: 'var(--ink3)', font: '400 12px/1.4 var(--fb)' }}>“{words[e.key]?.trim() || e.text}”</small></span>
             <b style={{ textAlign: 'right' }}>{CH.filter(([k]) => r[k]).map(([, l]) => l).join(' · ') || 'Not sent'}</b>
           </div>
         );

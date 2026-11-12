@@ -178,14 +178,14 @@ function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: 
   const nothing = !dirty || save.isPending;
   return (
     <Dialog title={d ? d.title : 'Homework'} tag={d ? { text: `${d.subjectName} · Class ${d.className}`, tone: 'v' } : undefined} onClose={onClose} width={720} shake={shake.cls}>
-      {!d ? <div className="skc" style={{ height: 240, borderRadius: 18 }} /> : (
+      {!d ? <div className="skc" style={{ height: 240, borderRadius: 16 }} /> : (
         <>
-          {d.description && <p style={{ margin: '0 0 6px', font: '500 14px/1.5 var(--fb)', color: 'var(--ink2)' }}>{d.description}</p>}
+          {d.description && <p style={{ margin: '0 0 6px', font: '400 14px/1.5 var(--fb)', color: 'var(--ink2)' }}>{d.description}</p>}
           <div className="tgrow" style={{ margin: '8px 0 12px' }}>
             <span className="chip">Set {dateLabel(d.assignedOn)}</span><span className="chip a">Due {dateLabel(d.dueOn)}</span>{d.graded ? <span className="chip">Out of {d.maxMarks}</span> : <span className="chip">Checked, not marked</span>}<span className="chip g">{d.handedIn} of {d.total} handed in</span>
             <FileChips files={d.files} />
           </div>
-          <div className="lscroll" style={{ maxHeight: 'min(48dvh,420px)', border: '1px solid var(--line)', borderRadius: 18 }}>
+          <div className="lscroll" style={{ maxHeight: 'min(48dvh,420px)', border: '1px solid var(--line)', borderRadius: 16 }}>
             {d.students.map((s) => {
               const x = draft[s.studentId] ?? { handed: false, score: '', feedback: '' };
               return (

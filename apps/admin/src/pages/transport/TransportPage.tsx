@@ -9,9 +9,9 @@ import { usePageTabs } from '../../app/tabs';
 import { useShellChrome } from '../../app/Layout';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
-const UP = 'M12 19V5M6 11l6-6 6 6';
-const DOWN = 'M12 5v14M6 13l6 6 6-6';
-const X = 'M6 6l12 12M18 6 6 18';
+const UP = 'up';
+const DOWN = 'down';
+const X = 'close';
 // A position older than ten minutes is "last seen", not live.
 const isLive = (at: string) => Date.now() - Date.parse(at) < 10 * 60_000;
 
@@ -50,7 +50,7 @@ export function TransportPage() {
           ].map((t, i) => (
             <div key={t.label} className={`tile t-${t.tone} s4 rise`} style={{ '--d': `${i * 0.05}s` } as React.CSSProperties}>
               <span className="lbl">{t.label}</span>
-              <div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
+              <div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
               <div style={{ opacity: 0.75, font: '600 13px var(--fb)' }}>{t.note}</div>
             </div>
           ))}
@@ -154,7 +154,7 @@ function RouteDialog({ route, onClose, onDone }: { route: BusRouteRow | null; on
         <div>
           <div className="lbl" style={{ marginBottom: 8 }}>Stops, in order</div>
           {stops.map((s, i) => (
-            <div key={s.id ?? `n${i}`} className="card" style={{ padding: 12, marginBottom: 8, boxShadow: 'none', background: 'var(--sunk)' }}>
+            <div key={s.id ?? `n${i}`} className="card" style={{ padding: 12, marginBottom: 8, boxShadow: 'none', background: 'var(--s2)' }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <div style={{ flex: 1, minWidth: 0 }}><Field label={`Stop ${i + 1}`} value={s.name} onChange={setStop(i, 'name')} placeholder="Baner gaon" /></div>
                 <button type="button" className="btn sm" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}><Ico d={UP} /></button>
@@ -234,7 +234,7 @@ function RouteMap({ id, at }: { id: string; at: string }) {
   const app = useApp();
   const q = useQuery({ queryKey: ['transport', 'map', id, at], queryFn: () => app.api.transport.map(id), staleTime: 60_000 });
   if (!q.data?.url) return null;
-  return <img src={q.data.url} alt="The route on a map, with the bus" loading="lazy" style={{ width: '100%', borderRadius: 14, marginTop: 8, display: 'block', background: 'var(--sunk)' }} />;
+  return <img src={q.data.url} alt="The route on a map, with the bus" loading="lazy" style={{ width: '100%', borderRadius: 12, marginTop: 8, display: 'block', background: 'var(--s2)' }} />;
 }
 
 /** Bills every rider of a route its fee as a Transport fee; billing twice under the same name adds nothing. */

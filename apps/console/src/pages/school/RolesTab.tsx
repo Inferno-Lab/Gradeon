@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon } from '@gradeon/web-ui';
 import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 
@@ -104,7 +104,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
 
       <div className="card s12 rise">
         <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}><h2>Who has which role</h2><span className="chip">{q.data.staff.length} staff</span><span className="grow"></span>
-          <div className="srch" style={{ minWidth: 200, height: 38 }}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
+          <div className="srch" style={{ minWidth: 200, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
         <div className="help">Whether the school may also do this itself is under Configuration → Staff.</div>
         {people.length === 0 && <div className="help">No one matches.</div>}

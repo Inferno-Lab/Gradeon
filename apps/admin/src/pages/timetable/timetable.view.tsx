@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminTimetable.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, PageScope, ToastSlot, Segmented } from "@gradeon/web-ui";
+import { Select, PageScope, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
 import "./timetable.css";
 
 export function TimetableView({ v }: { v: any }) {
@@ -18,7 +18,7 @@ export function TimetableView({ v }: { v: any }) {
             <h1>Timetable</h1>
             <p>
               Class {v.className} · {v.term} · version {v.version},{" "}
-              <span style={{ color: v.isDraft ? "var(--aD)" : "var(--gD)", fontWeight: "700" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>
+              <span style={{ color: v.isDraft ? "var(--warn-i)" : "var(--ok-i)", fontWeight: "700" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>
             </p>
           </div>
           <span className="grow"></span>
@@ -28,9 +28,7 @@ export function TimetableView({ v }: { v: any }) {
           <button className="btn" onClick={v.print}>Print</button>
           {v.canPublish && (
           <button className="btn pri" onClick={v.publish}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="i" d="M4 12l16-8-6 16-3-7z"></path>
-            </svg>
+            <Icon name="send" />
             Publish
           </button>
           )}
@@ -38,9 +36,7 @@ export function TimetableView({ v }: { v: any }) {
         <div className="wk rise" style={{ "--d": ".05s" } as CSSProperties}>
           <div className="wkp">
             <span>
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4"></path>
-              </svg>
+              <Icon name="calendar" size={16} />
               {v.weekLabel}
             </span>
           </div>
@@ -83,9 +79,7 @@ export function TimetableView({ v }: { v: any }) {
                     {r.brk && (
                       <>
                         <div className="br">
-                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                            <path className="i" d="M5 8h10v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM15 9h2a2 2 0 0 1 0 5h-2M8 3v2M12 3v2"></path>
-                          </svg>
+                          <Icon name="breakTime" size={16} />
                           {r.name}
                         </div>
                       </>
@@ -103,18 +97,14 @@ export function TimetableView({ v }: { v: any }) {
                               {c.isBad && (
                                 <>
                                   <span className="alert" aria-label="Clash">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
-                                      <path className="i" d="M12 7v6M12 17h.01" style={{ strokeWidth: "3" } as CSSProperties}></path>
-                                    </svg>
+                                    <Icon name="alert" size={14} />
                                   </span>
                                 </>
                               )}
                               {c.isFixed && (
                                 <>
                                   <span className="fixed">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
-                                      <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
-                                    </svg>
+                                    <Icon name="check" size={14} />
                                   </span>
                                 </>
                               )}
@@ -166,9 +156,7 @@ export function TimetableView({ v }: { v: any }) {
               {v.sel.bad && (
                 <>
                   <div className="call" role="alert">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path className="i" d="M12 3.5l9 15.5H3zM12 10v4M12 16.5h.01"></path>
-                    </svg>
+                    <Icon name="warning" />
                     <div>
                       <b>Clash with {v.sel.other}.</b> {v.sel.t} is also teaching {v.sel.other} at this time. Pick a fix; nothing changes until you publish.
                     </div>
@@ -178,9 +166,7 @@ export function TimetableView({ v }: { v: any }) {
               {v.sel.fixedNow && (
                 <>
                   <div className="call ok">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "2.4" } as CSSProperties}></path>
-                    </svg>
+                    <Icon name="check" />
                     <div>
                       <b>Clash fixed.</b> {v.sel.t} covers this period. Both classes are clear.
                     </div>
@@ -192,9 +178,7 @@ export function TimetableView({ v }: { v: any }) {
                   <>
                     {v.sel.suggest && (
                       <button className="btn pri sm" onClick={v.fix}>
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path className="i" d="M13 3 5 13h6l-1 8 8-10h-6z"></path>
-                        </svg>
+                        <Icon name="bolt" />
                         Ask {v.sel.suggest} to cover
                       </button>
                     )}
@@ -273,9 +257,7 @@ export function TimetableView({ v }: { v: any }) {
                 {v.unplaced.length === 0 && <div className="help">Every period this class needs has a place.</div>}
                 {v.unplaced.map((u: any, $i: number) => (
                   <div className="un" key={$i}>
-                    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" style={{ color: "var(--ink3)" } as CSSProperties}>
-                      <path className="i" d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01" style={{ strokeWidth: "3" } as CSSProperties}></path>
-                    </svg>
+                    <Icon name="drag" size={16} style={{ color: "var(--ink3)" }} />
                     {u.name} · {u.missing} {u.missing === 1 ? "period" : "periods"}
                   </div>
                 ))}

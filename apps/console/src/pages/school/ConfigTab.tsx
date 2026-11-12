@@ -2,10 +2,9 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
-import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, type ThemeColors } from '@gradeon/contracts';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
+import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueOf, hueTokens } from '@gradeon/contracts';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
-import { ThemeEditor } from '../../app/ThemeEditor';
 import { ago } from '../../app/format';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
@@ -15,7 +14,7 @@ const dflt = (k: string): unknown => shape[k]?.safeParse(undefined).data;
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 /** The channels a message can go through, as the Hub sends them. */
 const CHANNELS = [['push', 'App'], ['sms', 'SMS'], ['whatsapp', 'WhatsApp'], ['email', 'Email']] as const;
-const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '500 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' } as const;
+const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outline: 0, background: 'none', font: '400 14px/1.5 var(--fb)', color: 'var(--ink)', padding: '10px 0' } as const;
 
 /** The groups a school's settings sit in: the six school-wide ones, then one per module it has. */
 const groupLabel = (g: string) => (MODULES.find((m) => m.key === g) ? (g === 'school' ? 'Academic year' : MODULES.find((m) => m.key === g)!.name) : g);
@@ -88,7 +87,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
       <div className="card s12 rise">
         <div className="ch" style={{ flexWrap: 'wrap', gap: 10 }}>
           <h2>Configuration</h2><span className="chip">Version {cfg.version}</span><span className="grow"></span>
-          <div className="srch" style={{ minWidth: 220, height: 38 }}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
+          <div className="srch" style={{ minWidth: 220, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
         <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).{off.length ? ` Not in its plan, so not shown: ${off.map((m) => m.name).join(', ')}.` : ''}</div>
         {dirtyGroups.length > 0 && (
@@ -166,10 +165,8 @@ function SettingRow({ meta, value, error, disabled, cfg, logo, onLogo, onChange 
       return box(<Select value={str} onChange={onChange} disabled={disabled} aria-label={meta.label} options={(meta.options ?? []).map(([v, l]) => ({ value: v, label: l }))} />);
     case 'number':
       return <div style={{ marginTop: 12 }}><NumberField label={meta.label} min={meta.min} max={meta.max} value={value == null ? '' : String(value)} onChange={(v) => onChange(v === '' ? null : Number(v))} disabled={disabled} error={error} hint={help || undefined} /></div>;
-    case 'theme':
-      return box(<ThemeEditor scope="school" value={(value ?? {}) as ThemeColors} onChange={onChange} disabled={disabled} brand={typeof cfg.values['brand.color'] === 'string' ? cfg.values['brand.color'] : undefined} />);
     case 'color':
-      return box(<ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} />);
+      return box(<><ColourField label={meta.label} value={str || DEFAULT_BRAND} onChange={onChange} disabled={disabled} /><HueSwatches colour={str || DEFAULT_BRAND} /></>);
     case 'time': case 'date':
       return <div style={{ marginTop: 12 }}>{meta.kind === 'date' ? <DateField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} /> : <TimeField label={meta.label} value={str} onChange={(v) => onChange(v || null)} disabled={disabled} error={error} hint={help || undefined} />}</div>;
     case 'textarea':
@@ -468,4 +465,18 @@ function GradingEditor({ value, max, disabled, onChange }: { value: { grade: str
       {lowest > 0 && <div className="help">No grade starts at 0%, so marks below {lowest}% would get no grade. Add one that starts at 0.</div>}
     </div>
   );
+}
+
+/** What the brand colour's hue gives the school (Gradeon Hue): the frame, "you are here", actions and their soft fill, light and dark. */
+function HueSwatches({ colour }: { colour: string }) {
+  const h = hueOf(/^#[0-9a-fA-F]{6}$/.test(colour) ? colour : DEFAULT_BRAND);
+  const row = (mode: 'light' | 'dark') => {
+    const t = hueTokens(h, mode);
+    return (
+      <div className="hue-sw" style={Object.fromEntries(['deep', 'bright', 'brand', 'brand-soft', 'bg'].map((k) => [`--${k}`, t[k]]))} aria-hidden="true">
+        <i style={{ background: 'var(--deep)' }} /><i style={{ background: 'var(--bright)' }} /><i style={{ background: 'var(--brand)' }} /><i style={{ background: 'var(--brand-soft)' }} /><i style={{ background: 'var(--bg)' }} />
+      </div>
+    );
+  };
+  return <div className="help" style={{ marginTop: 8 }}>Hue {h}° · every colour passes the contrast check{row('light')}{row('dark')}</div>;
 }

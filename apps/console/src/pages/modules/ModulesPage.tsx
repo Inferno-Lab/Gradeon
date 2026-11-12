@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
 import { PlanSave, type EntitlementDoc, type EntitlementRow, type PlanRow } from '@gradeon/contracts';
 import { HttpError } from '@gradeon/api-client';
-import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, useShake } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, NumberField, Select, SelectField, useShake, Icon } from '@gradeon/web-ui';
 import type { CatalogDoc } from '@gradeon/api-client';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -80,7 +80,7 @@ export function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose:
 
 const dot = (on: boolean, until?: string, paused?: boolean) => (
   <span data-tip={paused ? 'Paused by Gradeon' : on ? (until ? `Until ${until}` : 'On') : 'Off'} aria-label={paused ? 'Paused' : on ? (until ? `On until ${until}` : 'On') : 'Off'}
-    style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: paused ? 'var(--c)' : on ? (until ? 'var(--a)' : 'var(--g)') : 'transparent', boxShadow: on || paused ? 'none' : 'inset 0 0 0 2px var(--line)' }} />
+    style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: paused ? 'var(--bad)' : on ? (until ? 'var(--warn)' : 'var(--ok)') : 'transparent', boxShadow: on || paused ? 'none' : 'inset 0 0 0 2px var(--line)' }} />
 );
 
 /** Plans and modules: which school has what, the plans schools start from, and what is planned. */
@@ -167,7 +167,7 @@ function Schools({ say }: { say: Say }) {
       <Card style={{ padding: 0 }}>
         <div className="ch" style={{ padding: '20px 20px 4px', flexWrap: 'wrap', gap: 10 }}>
           <div className="srch" style={{ minWidth: 200, height: 38, flex: '1 1 200px', maxWidth: 320 }}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg>
+            <Icon name="search" />
             <input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a school" aria-label="Find a school" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} />
           </div>
           <Select compact aria-label="Plan" value={plan} onChange={setPlan} options={[{ value: '', label: 'Every plan' }, ...[...new Set(all.map((r) => r.plan))].map((p) => ({ value: p, label: p }))]} />

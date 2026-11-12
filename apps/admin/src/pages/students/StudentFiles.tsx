@@ -26,7 +26,7 @@ export function StudentFiles({ id, say }: { id: string; say: (m: string) => void
     <div>
       <h3>Photo and documents</h3>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        {url.data ? <img src={url.data.url} alt="Student photo" style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover' }} /> : <span className="help">No photo yet.</span>}
+        {url.data ? <img src={url.data.url} alt="Student photo" style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover' }} /> : <span className="help">No photo yet.</span>}
         {canWrite && <FilePick accept="image/jpeg,image/png,image/webp" className="btn sm" disabled={add.isPending} onPick={(file) => add.mutate({ kind: 'student_photo', file })}>{photo ? 'Change photo' : 'Add a photo'}</FilePick>}
         {canWrite && <FilePick accept="application/pdf,image/jpeg,image/png" className="btn sm" disabled={add.isPending} onPick={(file) => add.mutate({ kind: 'student_document', file })}>Add a document</FilePick>}
       </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError, type CellRow } from '@gradeon/api-client';
 import { DEPLOY_TARGET_LABELS, type SchoolRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, NumberField, SelectField, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, SelectField, useShake, Icon } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -25,7 +25,7 @@ export function CellsPage() {
   return (
     <Page title="Cells" sub="Where schools run. Each cell is one database server and one API, and every school gets its own database inside it." toast={toast} loading={cells.isLoading}
       error={cells.isError ? { message: (cells.error as Error).message, retry: () => void cells.refetch() } : null}
-      actions={canCells ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a cell</button> : undefined}
+      actions={canCells ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><Icon name="plus" />Add a cell</button> : undefined}
       overlays={<>
         {dlg?.kind === 'add' && <AddCell onClose={() => setDlg(null)} onDone={(m) => { setDlg(null); refresh(); say(m); }} />}
         {dlg?.kind === 'manage' && <ManageCell cell={dlg.cell} onClose={() => setDlg(null)} onDone={(m) => { setDlg(null); refresh(); say(m); }} />}

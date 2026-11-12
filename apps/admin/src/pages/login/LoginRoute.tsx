@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
-import { EmptyCard, LoginPage, useThemeColors } from '@gradeon/web-ui';
+import { EmptyCard, LoginPage, useHue } from '@gradeon/web-ui';
 import { session } from '../../app/client';
 
 /** Signs in to the school named in the address: password first, then the code. */
@@ -13,7 +13,7 @@ export function LoginRoute() {
     queryKey: ['brand', slug], queryFn: client.api.brand, staleTime: 5 * 60_000,
     retry: (n, e) => !(e instanceof HttpError && e.status === 404) && n < 6, retryDelay: (n) => Math.min(1000 * 2 ** n, 8000),
   });
-  useThemeColors(brand.data?.theme);
+  useHue(brand.data?.hue);
   if (brand.isError) return <NoSchool error={brand.error} retry={() => void brand.refetch()} busy={brand.isFetching} />;
   const b = brand.data;
   return (

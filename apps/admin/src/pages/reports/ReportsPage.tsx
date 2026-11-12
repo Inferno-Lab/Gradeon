@@ -7,8 +7,8 @@ import { Page, useToast } from '../../app/Page';
 import { Ico, useOpenParam } from '../../app/kit';
 import { usePageTabs } from '../../app/tabs';
 
-const DOWNLOAD = 'M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14';
-const PRINT = 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z';
+const DOWNLOAD = 'download';
+const PRINT = 'print';
 /** Which reports each tab of the page (config-engine: the school module's reports page) holds, by the server's report areas. */
 const AREAS: Record<string, string> = { attendance: 'Attendance', money: 'Fees', learning: 'Learning', people: 'People' };
 /** A number in a cell ("88%", "₹1,200", 12) as a number, so columns sort by value. */

@@ -54,7 +54,7 @@ export function LibraryPage() {
           ].map((t, i) => (
             <div key={t.label} className={`tile t-${t.tone} s4 rise`} style={{ '--d': `${i * 0.05}s` } as React.CSSProperties}>
               <span className="lbl">{t.label}</span>
-              <div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
+              <div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{t.value}</div>
               <div style={{ opacity: 0.75, font: '600 13px var(--fb)' }}>{t.note}</div>
             </div>
           ))}

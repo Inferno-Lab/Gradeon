@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/Main.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Illustration, Roll, PageScope, Presence, ToastSlot, Segmented, MenuButton } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, ToastSlot, Segmented, MenuButton, Icon } from "@gradeon/web-ui";
 import "./dashboard.css";
 
 export function DashboardView({ v }: { v: any }) {
@@ -22,24 +22,20 @@ export function DashboardView({ v }: { v: any }) {
             <p>{v.subtitle}</p>
           </div>
           <span className="grow"></span>
-          <MenuButton label={v.rangeLabel} icon="M3.5 6.5h17v13h-17zM3.5 10.5h17M8 4v4M16 4v4" chevron open={!!v.rangeOpen} onOpenChange={v.setRangeOpen} menuLabel="Time range">
+          <MenuButton label={v.rangeLabel} icon='calendar' chevron open={!!v.rangeOpen} onOpenChange={v.setRangeOpen} menuLabel="Time range">
             {v.ranges.map((r: any, $i: number) => (
               <button key={$i} role="menuitemradio" aria-checked={r.on} className={r.on ? "on" : ""} onClick={r.pick}>
                 {r.t}
                 {r.on && (
-                  <svg className="ck" viewBox="0 0 24 24" aria-hidden="true">
-                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path>
-                  </svg>
+                  <Icon name="check" className="ck" />
                 )}
               </button>
             ))}
           </MenuButton>
-          <MenuButton label="New" icon="M12 5v14M5 12h14" primary open={!!v.newOpen} onOpenChange={v.setNewOpen} menuLabel="Add something new">
+          <MenuButton label="New" icon='plus' primary open={!!v.newOpen} onOpenChange={v.setNewOpen} menuLabel="Add something new">
             {v.news.map((r: any, $i: number) => (
               <button key={$i} role="menuitem" onClick={r.go}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d={r.ic}></path>
-                </svg>
+                <Icon name={r.ic} />
                 {r.t}
                 <small>{r.k}</small>
               </button>
@@ -61,9 +57,7 @@ export function DashboardView({ v }: { v: any }) {
             <div className="quick">
               {v.has.chat && (
               <button aria-label="Messages" data-tip="Messages" onClick={() => v.goto("/messages")}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M4 5h16v11H9l-5 4z"></path>
-                </svg>
+                <Icon name="messages" />
               </button>
               )}
             </div>
@@ -75,15 +69,11 @@ export function DashboardView({ v }: { v: any }) {
           <div className="tile t-a s3 lift rise" style={{ "--d": ".1s" } as CSSProperties}>
             <div className="tt">
               <span className="chip">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path>
-                </svg>
+                <Icon name="person" size={14} />
                 Attendance
               </span>
               <button className="arrow" aria-label="Open attendance" onClick={() => v.goto("/attendance")}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
@@ -96,35 +86,23 @@ export function DashboardView({ v }: { v: any }) {
             </div>
             <div className="statl" style={{ marginTop: "12px" } as CSSProperties}>
               <span className={`tr ${v.presentTrend.cls}`}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d={v.presentTrend.icon} style={{ strokeWidth: "2.4" } as CSSProperties}></path>
-                </svg>
+                <Icon name={v.presentTrend.icon} size={14} />
                 {v.presentTrend.text}
               </span>
               {v.presentVersus}
             </div>
-            <svg className="ghostic" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                className="i"
-                d="M4 5h16v15H4zM4 9h16M9 3v4M15 3v4M8.5 14l2 2 4-4"
-                style={{ fill: "none", stroke: "var(--ink)" } as CSSProperties}
-              ></path>
-            </svg>
+            <Icon name="attendance" className="ghostic" />
           </div>
           )}
           {v.has.fees && (
           <div className="tile t-v s3 lift rise" style={{ "--d": ".15s" } as CSSProperties}>
             <div className="tt">
               <span className="chip">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
-                </svg>
+                <Icon name="fees" size={14} />
                 Fees
               </span>
               <button className="arrow" aria-label="Open fees" onClick={() => v.goto("/fees")}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
@@ -139,34 +117,22 @@ export function DashboardView({ v }: { v: any }) {
             </div>
             <div className="statl" style={{ marginTop: "12px" } as CSSProperties}>
               <span className={`tr ${v.feeTrend.cls}`}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d={v.feeTrend.icon} style={{ strokeWidth: "2.4" } as CSSProperties}></path>
-                </svg>
+                <Icon name={v.feeTrend.icon} size={14} />
                 {v.feeTrend.text}
               </span>
               {v.overdueLine}
             </div>
-            <svg className="ghostic" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                className="i"
-                d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"
-                style={{ fill: "none", stroke: "var(--ink)" } as CSSProperties}
-              ></path>
-            </svg>
+            <Icon name="fees" className="ghostic" />
           </div>
           )}
           <div className="tile t-i s3 lift rise" style={{ "--d": ".2s" } as CSSProperties}>
             <div className="tt">
-              <span className="chip" style={{ background: "color-mix(in srgb,var(--onCi) 14%,transparent)", color: "var(--onCi)" } as CSSProperties}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path className="i" d="M5 12.5l4.5 4.5L19 7.5"></path>
-                </svg>
+              <span className="chip" style={{ background: "color-mix(in srgb,var(--on-deep) 14%,transparent)", color: "var(--on-deep)" } as CSSProperties}>
+                <Icon name="check" size={14} />
                 Approvals
               </span>
               <button className="arrow" aria-label="Open approvals" onClick={() => v.goto("/approvals")}>
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                  <path className="i" d="M7 17L17 7M9 7h8v8"></path>
-                </svg>
+                <Icon name="upRight" size={16} />
               </button>
             </div>
             <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em", marginTop: "16px" } as CSSProperties}>
@@ -182,7 +148,7 @@ export function DashboardView({ v }: { v: any }) {
                 <span
                   key={$i}
                   className="av"
-                  style={{ background: a.bg, color: a.fg, marginLeft: $i ? "-10px" : undefined, boxShadow: "0 0 0 2.5px var(--ci)" } as CSSProperties}
+                  style={{ background: a.bg, color: a.fg, marginLeft: $i ? "-10px" : undefined, boxShadow: "0 0 0 2.5px var(--deep)" } as CSSProperties}
                 >
                   {a.initials}
                 </span>
@@ -200,7 +166,7 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="chtt" style={{ fontSize: "22px" } as CSSProperties}>
                 {v.chartTitle}
               </h2>
-              <Segmented label="Chart" value={String(v.tabs.findIndex((t: any) => t.on))} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ background: "color-mix(in srgb,var(--v) 12%,transparent)" } as CSSProperties} />
+              <Segmented label="Chart" value={String(v.tabs.findIndex((t: any) => t.on))} onChange={(i: string) => v.tabs[Number(i)].pick()} options={v.tabs.map((t: any, i: number) => ({ value: String(i), label: t.n }))} style={{ background: "color-mix(in srgb,var(--brand) 12%,transparent)" } as CSSProperties} />
             </div>
             <div className={`plot ${v.chartEmpty ? "empty" : ""}`} role="img" aria-label={v.chartAlt}>
               {v.grid.map((g: any, $i: number) => (
@@ -291,13 +257,13 @@ export function DashboardView({ v }: { v: any }) {
               <h2 id="rolls">Class rolls · today</h2>
               <span className="lgd">
                 <span>
-                  <i style={{ background: "var(--present)" } as CSSProperties}></i>Present
+                  <i style={{ background: "var(--line2)" } as CSSProperties}></i>Present
                 </span>
                 <span>
-                  <i style={{ background: "var(--a)" } as CSSProperties}></i>Late
+                  <i style={{ background: "var(--warn)" } as CSSProperties}></i>Late
                 </span>
                 <span>
-                  <i style={{ background: "var(--c)" } as CSSProperties}></i>Absent
+                  <i style={{ background: "var(--bad)" } as CSSProperties}></i>Absent
                 </span>
               </span>
             </div>
@@ -370,9 +336,7 @@ export function DashboardView({ v }: { v: any }) {
           )}
           <button className="addw s3 rise" style={{ "--d": ".5s" } as CSSProperties} aria-label="Choose what the dashboard shows" onClick={v.openWidgets}>
             <span>
-              <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-                <path className="i" d="M12 5v14M5 12h14" style={{ strokeWidth: "2" } as CSSProperties}></path>
-              </svg>
+              <Icon name="plus" size={24} />
             </span>
             {v.hidden.length ? "Add a widget" : "Choose widgets"}
           </button>

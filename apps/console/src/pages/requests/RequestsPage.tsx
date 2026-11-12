@@ -33,7 +33,7 @@ export function RequestsPage() {
                 <span style={{ flex: 1, minWidth: 220 }}>
                   <a href={url(`/schools/${r.schoolId}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}`); }} style={{ font: '700 14px var(--fb)', color: 'inherit' }}>{r.schoolName}</a>
                   <span className="chip" style={{ marginLeft: 8 }}>{r.area}</span>
-                  <p style={{ margin: '6px 0 0', font: '500 14px/1.5 var(--fb)' }}>{r.message}</p>
+                  <p style={{ margin: '6px 0 0', font: '400 14px/1.5 var(--fb)' }}>{r.message}</p>
                   <small style={{ color: 'var(--ink3)' }}>{r.requestedBy} · {ago(r.createdAt)}{r.answer ? ` · answered: ${r.answer}` : ''}</small>
                 </span>
                 {r.status === 'open'
@@ -66,7 +66,7 @@ function AnswerDialog({ r, onClose, onDone }: { r: ChangeRequestRow; onClose: ()
   const send = (status: 'done' | 'declined') => { if (answer.trim().length < 2) { setErr('Write a short answer for the school.'); shake.hit(); } else go.mutate(status); };
   return (
     <Dialog title={`Answer ${r.schoolName}`} tag={{ text: r.area, tone: 'v' }} onClose={onClose} width={540} shake={shake.cls}>
-      <p style={{ margin: '0 0 12px', font: '500 14px/1.5 var(--fb)' }}>{r.message}</p>
+      <p style={{ margin: '0 0 12px', font: '400 14px/1.5 var(--fb)' }}>{r.message}</p>
       {made.length > 0 && (
         <div className="help" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           Changed since they asked: {made.join(', ')}.

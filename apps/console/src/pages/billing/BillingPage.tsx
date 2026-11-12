@@ -56,9 +56,9 @@ export function BillingPage() {
       overlays={open && <InvoiceDialog r={open} can={canWrite} onClose={() => setOpen(null)} onDone={(m) => { setOpen(null); refresh(); say(m); }} />}>
       {all.length > 0 && (
         <section className="grid">
-          <div className="tile t-v s4 rise"><span className="lbl">Invoiced · {shownMonth}</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(inMonth))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{inMonth.length} invoices · {rupees(sum(all))} all time</div></div>
-          <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Paid · {shownMonth}</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(paid(inMonth)))}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rupees(sum(paid(all)))} all time</div></div>
-          <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to collect</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(all) - sum(paid(all)))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{all.filter((r) => r.status === 'overdue').length} overdue, all time</div></div>
+          <div className="tile t-v s4 rise"><span className="lbl">Invoiced · {shownMonth}</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(inMonth))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{inMonth.length} invoices · {rupees(sum(all))} all time</div></div>
+          <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Paid · {shownMonth}</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(paid(inMonth)))}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rupees(sum(paid(all)))} all time</div></div>
+          <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to collect</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(all) - sum(paid(all)))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{all.filter((r) => r.status === 'overdue').length} overdue, all time</div></div>
         </section>
       )}
       {all.length === 0 ? (

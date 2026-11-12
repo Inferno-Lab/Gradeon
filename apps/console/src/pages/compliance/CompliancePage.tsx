@@ -69,7 +69,7 @@ export function CompliancePage() {
         <Card title="Data requests at every school" chip={<span className="chip">{requests.data?.length ?? 0} open</span>}>
           <div className="help" style={{ marginTop: 0 }}>Asked for by families and staff in the app or at the office. Each school answers its own under Privacy; erasure past retention is on the school’s Data tab.</div>
           {!app.can('audit.read') ? <div className="help">Your role does not include data requests.</div>
-            : requests.isLoading ? <div className="skc" style={{ height: 160, borderRadius: 18 }} />
+            : requests.isLoading ? <div className="skc" style={{ height: 160, borderRadius: 16 }} />
               : !(requests.data ?? []).length ? <div className="help">Nothing open.</div>
                 : requests.data!.map((r) => (
                   <div key={`${r.schoolId}${r.id}`} className="kv" style={{ alignItems: 'flex-start' }}>
@@ -151,7 +151,7 @@ function Tell({ r, onClose, onDone }: { r: ComplianceRow; onClose: () => void; o
     <Dialog title={`Tell ${r.schoolName}`} tag={{ text: 'Sent by email to its contact', tone: 'a' }} onClose={onClose} width={540}>
       <AreaField label="What happened, in words for the school" value={note} onChange={setNote} rows={3} maxLength={600} />
       <div className="lbl" style={{ margin: '12px 0 6px' }}>The school receives</div>
-      <div className="card" style={{ padding: 16, whiteSpace: 'pre-wrap', font: '500 14px/1.5 var(--fb)', background: 'var(--sunk)', boxShadow: 'none' }}>{breachNotice(r.schoolName, r.title, note.trim())}</div>
+      <div className="card" style={{ padding: 16, whiteSpace: 'pre-wrap', font: '400 14px/1.5 var(--fb)', background: 'var(--s2)', boxShadow: 'none' }}>{breachNotice(r.schoolName, r.title, note.trim())}</div>
       {go.isError && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{(go.error as Error).message}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>

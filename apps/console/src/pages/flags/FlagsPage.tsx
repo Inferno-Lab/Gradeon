@@ -63,7 +63,7 @@ export function FlagsPage() {
         {fleet.map((f) => (
           <div key={f.key} style={{ padding: '16px 0', borderTop: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 240px', minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{f.label}</b><small style={{ font: '500 13px var(--fb)', color: 'var(--ink3)' }}>{f.key} · changed {ago(f.updatedAt)} by {f.updatedBy}</small></div>
+              <div style={{ flex: '1 1 240px', minWidth: 0 }}><b style={{ font: '700 14px var(--fb)', display: 'block' }}>{f.label}</b><small style={{ font: '400 13px var(--fb)', color: 'var(--ink3)' }}>{f.key} · changed {ago(f.updatedAt)} by {f.updatedBy}</small></div>
               {canWrite && (
                 <MenuButton label="For one school" chevron open={menuFor === f.key} onOpenChange={(o) => setMenuFor(o ? f.key : '')} menuLabel="Choose a school">
                   {(schools.data ?? []).filter((s) => !per(f.key).some((x) => x.schoolId === s.id)).map((s) => (

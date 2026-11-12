@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Field, FilePick, tintFor } from '@gradeon/web-ui';
+import { Field, FilePick, tintFor, Icon, type IconName } from '@gradeon/web-ui';
 import { useApp } from './context';
 import { HttpError } from '@gradeon/api-client';
 
-export const Ico = ({ d }: { d: string }) => <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={d}></path></svg>;
-export const PLUS = 'M12 5v14M5 12h14';
+export const Ico = ({ d }: { d: IconName }) => <Icon name={d} />;
+export const PLUS = 'plus';
 
 /** The page's one dark action button, with a plus. */
 export function AddBtn({ children, onClick }: { children: ReactNode; onClick: () => void }) {
@@ -65,7 +65,7 @@ export async function openPdf(blob: Promise<Blob>): Promise<void> {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-export const SEARCH = 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4';
+export const SEARCH = 'search';
 
 /** Files to attach to something not saved yet: picked here, uploaded once it exists (images or PDFs, up to 15 MB each). */
 export function Attach({ files, onChange, max = 3 }: { files: File[]; onChange: (f: File[]) => void; max?: number }) {

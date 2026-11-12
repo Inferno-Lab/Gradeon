@@ -118,7 +118,7 @@ export function SchoolPage() {
   const done = d.checklist.filter((c) => c.state === 'done').length;
 
   const danger = app.can('schools.danger') && d.status !== 'archived' ? (
-    <div className="card s12 rise" style={{ boxShadow: 'inset 0 0 0 2px color-mix(in srgb,var(--c) 40%,transparent)' }}>
+    <div className="card s12 rise" style={{ boxShadow: 'inset 0 0 0 2px color-mix(in srgb,var(--bad) 40%,transparent)' }}>
       <div className="ch"><h2>Danger</h2></div>
       <div className="help">Erasing drops the school’s database, deletes its files and its key, so every backup becomes unreadable. It needs a second person.</div>
       <div style={{ marginTop: 12 }}><button className="btn dng" onClick={() => setDlg('erase')}>Erase this school…</button></div>
@@ -234,8 +234,8 @@ function Technical({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, 
         {d.builds.length === 0 && <div className="help">No builds yet. A build packages this school’s name, colours and address into its own app, signed and sent to the store.</div>}
         {d.builds.map((b) => (
           <div key={b.id} className="kv">
-            <span>{b.platform === 'android' ? 'Android' : 'iPhone'} · {b.version} · {when(b.createdAt)}<br /><small style={{ color: b.status === 'failed' ? 'var(--c)' : 'var(--ink3)' }}>{b.note}</small></span>
-            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--vD)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'c' : 'n'}`}><i></i>{STATE_WORDS[b.status] ?? b.status}</span>}</b>
+            <span>{b.platform === 'android' ? 'Android' : 'iPhone'} · {b.version} · {when(b.createdAt)}<br /><small style={{ color: b.status === 'failed' ? 'var(--bad)' : 'var(--ink3)' }}>{b.note}</small></span>
+            <b>{b.url ? <a href={b.url} target="_blank" rel="noreferrer" style={{ color: 'var(--brand-ink)' }}>Install</a> : <span className={`st ${b.status === 'done' ? 'g' : b.status === 'failed' ? 'c' : 'n'}`}><i></i>{STATE_WORDS[b.status] ?? b.status}</span>}</b>
           </div>
         ))}
       </Card>
@@ -456,12 +456,12 @@ function EraseDialog({ school, onClose, onSent }: { school: SchoolDetail; onClos
     <Dialog dark title={`Erase ${school.name}?`} tag={{ text: 'Permanent · needs a second approver', tone: 'c' }} onClose={onClose} shake={shake.cls} width={480}>
       <p>Its database is dropped, its files are deleted and its key is scheduled for deletion, so every backup becomes unreadable.</p>
       <div>
-        <label htmlFor="er-in">Type <b style={{ color: 'var(--onCi)' }}>{school.slug}</b> to continue</label>
+        <label htmlFor="er-in">Type <b style={{ color: 'var(--on-deep)' }}>{school.slug}</b> to continue</label>
         <input id="er-in" className={`shake ${bad ? 'err' : ''}`} value={typed} onChange={(e) => { setTyped(e.target.value); setBad(''); }} autoComplete="off" aria-invalid={!!bad} />
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: 'var(--onCi)', borderColor: 'color-mix(in srgb,var(--onCi) 18%,transparent)' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: 'var(--on-deep)', borderColor: 'color-mix(in srgb,var(--on-deep) 18%,transparent)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={go} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

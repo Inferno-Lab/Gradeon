@@ -10,8 +10,8 @@ import { useShellChrome } from '../../app/Layout';
 const KIND: Record<EventKind, { label: string; tone: string }> = { event: { label: 'Event', tone: 'v' }, holiday: { label: 'Holiday', tone: 'g' }, exam: { label: 'Exams', tone: 'a' }, ptm: { label: 'Parent meeting', tone: 'k' }, routine: { label: 'Routine', tone: '' } };
 const AUDIENCE: Record<string, string> = { everyone: 'Everyone', parents: 'Parents', staff: 'Staff only', class: 'One class' };
 const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const PREV = 'M15 5l-7 7 7 7';
-const NEXT = 'M9 5l7 7-7 7';
+const PREV = 'caretLeft';
+const NEXT = 'caretRight';
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const dayOf = (iso: string) => ymd(new Date(iso));
 const when = (e: EventRow) => {
@@ -167,7 +167,7 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
           <div className="tgrow"><span className="chip g">{event.going} going{event.adults ? ` · ${event.adults} adults` : ''}</span><span className="chip a">{event.maybe} maybe</span><span className="chip">{event.cant} cannot come</span>
             <button className="btn sm" onClick={() => setShowReplies((x) => !x)}>{showReplies ? 'Hide who' : 'See who'}</button></div>
           {showReplies && (
-            <div className="lscroll" style={{ maxHeight: 220, marginTop: 8, border: '1px solid var(--line)', borderRadius: 14, padding: '4px 12px' }}>
+            <div className="lscroll" style={{ maxHeight: 220, marginTop: 8, border: '1px solid var(--line)', borderRadius: 12, padding: '4px 12px' }}>
               {(replies.data ?? []).map((r, i) => <div key={i} className="kv"><span>{r.studentName} · Class {r.className}<small style={{ display: 'block', color: 'var(--ink3)' }}>{r.guardianName}</small></span><b>{r.status === 'going' ? `Going${r.adults ? ` · ${r.adults} adults` : ''}` : r.status === 'maybe' ? 'Maybe' : 'Cannot come'}</b></div>)}
             </div>
           )}
@@ -178,7 +178,7 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
           <div className="kv"><span>When</span><b>{when(event)}</b></div>
           {event.venue && <div className="kv"><span>Where</span><b>{event.venue}</b></div>}
           <div className="kv"><span>For</span><b>{event.audience === 'class' ? `Class ${event.className ?? ''}` : AUDIENCE[event.audience]}</b></div>
-          {event.note && <p style={{ margin: 0, font: '500 14px/1.5 var(--fb)' }}>{event.note}</p>}
+          {event.note && <p style={{ margin: 0, font: '400 14px/1.5 var(--fb)' }}>{event.note}</p>}
         </div>
       ) : (
       <div className="stack">

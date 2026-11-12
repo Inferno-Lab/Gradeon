@@ -91,7 +91,7 @@ export function AttendancePage() {
               <span className={`chip ${day.data?.submitted ? 'g' : 'a'}`}>{day.data?.submitted ? 'Submitted' : 'Not submitted yet'}</span>
               {canMark && marks.length > 0 && <button className="btn sm" onClick={() => setDraft(Object.fromEntries(marks.filter((m) => !m.onLeave && statusOf(m.studentId, m.status) !== 'present').map((m) => [m.studentId, 'present' as const])))}>Mark everyone present</button>}
             </div>
-            {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 20px 20px', borderRadius: 18 }} />}
+            {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 20px 20px', borderRadius: 16 }} />}
             {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 24px 24px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
             {marks.length > 0 && (
               <div className="scroll-x" data-fill="">
@@ -123,10 +123,10 @@ export function AttendancePage() {
               <span className="lbl">Present or late</span>
               <div className="big" style={{ marginTop: 8 }}>{counts.present + counts.late}<small style={{ fontSize: 17, opacity: .6 }}> / {marks.length}</small></div>
               <div className="meter" aria-hidden="true">
-                <i style={{ flex: counts.present || 0.001, background: 'var(--present)' }}></i>
-                <i style={{ flex: counts.late || 0.001, background: 'var(--a)' }}></i>
-                <i style={{ flex: counts.absent || 0.001, background: 'var(--c)' }}></i>
-                <i style={{ flex: counts.none || 0.001, background: 'var(--sunk)' }}></i>
+                <i style={{ flex: counts.present || 0.001, background: 'var(--line2)' }}></i>
+                <i style={{ flex: counts.late || 0.001, background: 'var(--warn)' }}></i>
+                <i style={{ flex: counts.absent || 0.001, background: 'var(--bad)' }}></i>
+                <i style={{ flex: counts.none || 0.001, background: 'var(--s2)' }}></i>
               </div>
               <div className="tgrow" style={{ marginTop: 12, font: '700 13px var(--fb)' }}>
                 <span>{counts.present} present</span><span>{counts.late} late</span><span>{counts.absent} away</span>{counts.none > 0 && <span>{counts.none} not marked</span>}

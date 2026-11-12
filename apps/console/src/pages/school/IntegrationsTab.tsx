@@ -58,7 +58,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         <div style={{ marginTop: 8 }}>
           {!(fails.data?.rows ?? []).length ? <div className="help">No message to this school’s families has failed lately.</div> : fails.data!.rows.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'center' }}>
-              <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--cD)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
+              <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--bad-i)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
               <b style={{ whiteSpace: 'nowrap' }}>{ago(m.createdAt)}</b>
             </div>
           ))}
@@ -104,12 +104,12 @@ function EraseLeavers({ d, due, onClose, onSent }: { d: SchoolDetail; due: numbe
     <Dialog dark title={`Erase ${due} leavers’ records?`} tag={{ text: 'Permanent · needs a second approver', tone: 'c' }} onClose={onClose} shake={shake.cls} width={480}>
       <p>Names, photos, documents and guardians of students who left {d.name} past its retention period are erased. Receipts stay, without a name.</p>
       <div>
-        <label htmlFor="ret-in">Type <b style={{ color: 'var(--onCi)' }}>{d.slug}</b> to continue</label>
+        <label htmlFor="ret-in">Type <b style={{ color: 'var(--on-deep)' }}>{d.slug}</b> to continue</label>
         <input id="ret-in" className={`shake ${bad ? 'err' : ''}`} value={typed} onChange={(e) => { setTyped(e.target.value); setBad(''); }} autoComplete="off" aria-invalid={!!bad} />
       </div>
       {bad && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{bad}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-        <button className="btn" style={{ background: 'transparent', color: 'var(--onCi)', borderColor: 'color-mix(in srgb,var(--onCi) 18%,transparent)' }} onClick={onClose}>Cancel</button>
+        <button className="btn" style={{ background: 'transparent', color: 'var(--on-deep)', borderColor: 'color-mix(in srgb,var(--on-deep) 18%,transparent)' }} onClick={onClose}>Cancel</button>
         <button className="btn dngf" onClick={() => (typed.trim() === d.slug ? send.mutate() : (setBad('That isn’t the school code. Nothing was erased.'), shake.hit()))} disabled={send.isPending}>Request erasure</button>
       </div>
     </Dialog>

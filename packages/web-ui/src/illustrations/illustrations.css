@@ -3,20 +3,20 @@
 .il .il-shadow { fill: color-mix(in srgb, var(--ink) 9%, transparent); }
 .il .il-line, .il .il-line-v, .il .il-line-w, .il .il-faint, .il .il-faint-w { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .il .il-line { stroke: var(--ink); stroke-width: 2.4; }
-.il .il-line-v { stroke: var(--v); stroke-width: 5; }
-.il .il-line-w { stroke: var(--onCi); stroke-width: 3.2; }
+.il .il-line-v { stroke: var(--brand); stroke-width: 5; }
+.il .il-line-w { stroke: var(--on-deep); stroke-width: 3.2; }
 .il .il-faint { stroke: var(--line2); stroke-width: 3; }
-.il .il-faint-w { stroke: color-mix(in srgb,var(--onCi) 55%,transparent); stroke-width: 3; }
-.il .il-spark { fill: none; stroke: var(--a); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.il .il-fill-card { fill: var(--card); }
-.il .il-fill-sunk { fill: var(--sunk); }
-.il .il-fill-ink { fill: var(--ci); }
-.il .il-fill-v { fill: var(--v); }
-.il .il-fill-a { fill: var(--a); }
-.il .il-fill-c { fill: var(--c); }
-.il .il-fill-g { fill: var(--g); }
-.il .il-fill-glass { fill: color-mix(in srgb, var(--v) 14%, transparent); }
-.il .il-slot { fill: var(--ci); }
+.il .il-faint-w { stroke: color-mix(in srgb,var(--on-deep) 55%,transparent); stroke-width: 3; }
+.il .il-spark { fill: none; stroke: var(--warn); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.il .il-fill-card { fill: var(--s1); }
+.il .il-fill-sunk { fill: var(--s2); }
+.il .il-fill-ink { fill: var(--deep); }
+.il .il-fill-v { fill: var(--brand); }
+.il .il-fill-a { fill: var(--warn); }
+.il .il-fill-c { fill: var(--bad); }
+.il .il-fill-g { fill: var(--ok); }
+.il .il-fill-glass { fill: color-mix(in srgb, var(--brand) 14%, transparent); }
+.il .il-slot { fill: var(--deep); }
 /* Strokes draw in once, in order. Reduce Motion shows the finished picture. */
 .il .il-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation:ilDraw var(--t3) var(--e, cubic-bezier(.22, 1, .36, 1)) both; animation-delay: calc(var(--n, 0) * .14s + .1s); }
 @keyframes ilDraw { to { stroke-dashoffset: 0; } }

@@ -157,7 +157,7 @@ function BatchRow({ b, kinds, canUndo, busy, onUndo }: { b: ImportBatchRow; kind
       <span style={{ minWidth: 0, flex: '1 1 260px' }}>
         <b style={{ font: '700 14px var(--fb)' }}>{kinds.find((k) => k.key === b.kind)?.label ?? b.kind}</b>
         <small style={{ display: 'block', color: 'var(--ink3)', font: '600 12px var(--fb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.fileName || 'Typed'} · {SOURCES[b.source] ?? b.source} · {b.byName} · {when(b.at)}</small>
-        {b.notes.map((n) => <small key={n} style={{ display: 'block', color: 'var(--a)', font: '600 12px var(--fb)', marginTop: 4 }}>{n}</small>)}
+        {b.notes.map((n) => <small key={n} style={{ display: 'block', color: 'var(--warn)', font: '600 12px var(--fb)', marginTop: 4 }}>{n}</small>)}
       </span>
       <span className="tgrow" style={{ gap: 6, flex: '1 1 260px' }}>
         <span className="chip g">{b.created} added</span><span className="chip">{b.updated} updated</span>{b.skipped > 0 && <span className="chip a">{b.skipped} left out</span>}
@@ -223,7 +223,7 @@ function PreviewPanel({ kind, src, preview: p, loading, error, onMap, onRows, on
                       <span style={{ font: '700 12px var(--fb)', color: 'var(--ink3)' }}>{r.line}</span>
                       {kind.columns.map((c) => <input key={c.key} className={`hws ${r.errors.length && c.required && !r.values[c.key] ? 'bad' : ''}`} style={{ width: '100%', textAlign: 'left' }} aria-label={`Line ${r.line}, ${c.label}`} placeholder={c.example} defaultValue={r.values[c.key] ?? ''}
                         onBlur={(e) => { if (e.target.value !== (r.values[c.key] ?? '')) edit(r.i, c.key, e.target.value); }} />)}
-                      <span style={{ font: '600 12px var(--fb)', color: r.errors.length ? 'var(--c)' : 'var(--g)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
+                      <span style={{ font: '600 12px var(--fb)', color: r.errors.length ? 'var(--bad)' : 'var(--ok)' }}>{r.errors.length ? r.errors.join(' ') : r.action === 'update' ? 'Updates what is there' : 'New'}</span>
                     </div>
                   ))}
                 </div>

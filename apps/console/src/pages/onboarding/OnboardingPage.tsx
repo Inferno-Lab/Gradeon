@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { WIZARD_STEPS, type WizardDraftRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, tintFor, Icon } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -32,7 +32,7 @@ export function OnboardingPage() {
           </div>
         </Dialog>
       )}
-      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Onboard a school</button> : undefined}>
+      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><Icon name="plus" />Onboard a school</button> : undefined}>
       {none && (
         <div>
           <EmptyCard title="Onboarding" chip={{ text: 'Nothing in progress', tone: 'v' }} scene="register" heading="No school is being set up" body="Start the wizard to add one. It asks about the school, its plan, its look and where it runs, then creates everything and tells you how it went." actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}>Onboard a school</button> : undefined} />

@@ -8,7 +8,7 @@ import { AddBtn, Avatar, Ico, problem, useSchoolConfig } from '../../app/kit';
 import { ImportDialog } from '../students/StudentDialogs';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['staff', 'dashboard', 'shell', 'roles', 'activation'].includes(String(q.queryKey[0])) });
-const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
+const SEARCH = 'search';
 type Show = 'all' | 'active' | 'waiting' | 'off';
 /** Where a person stands: switched off, or active and signed in, invited, or not invited yet. */
 const standing = (r: StaffRow) => r.status !== 'active' ? { label: 'Off', tone: 'n' } : r.access === 'signed_in' ? { label: 'Active', tone: 'g' } : r.access === 'invited' ? { label: 'Invited', tone: 'a' } : { label: 'Not invited', tone: 'a' };

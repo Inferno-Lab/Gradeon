@@ -40,7 +40,7 @@ export function BuildsPage() {
                 <div key={b.id} className="grd rw" style={{ '--cols': COLS, height: 'auto', minHeight: 58 } as React.CSSProperties}>
                   <span style={{ minWidth: 0 }}>
                     <a href={url(`/schools/${b.schoolId}/technical`)} onClick={open(b.schoolId)} style={{ display: 'block', font: '700 14px var(--fb)', color: 'inherit' }}>{name(b.schoolId)}</a>
-                    <small style={{ color: b.status === 'failed' ? 'var(--c)' : 'var(--ink3)' }}>{b.status === 'done' ? `Built ${ago(b.createdAt)}` : b.note}</small>
+                    <small style={{ color: b.status === 'failed' ? 'var(--bad)' : 'var(--ink3)' }}>{b.status === 'done' ? `Built ${ago(b.createdAt)}` : b.note}</small>
                   </span>
                   <span>{b.platform === 'android' ? 'Android' : 'iPhone'}</span><span className="num">{b.version}</span>
                   <span className={`st ${TONE[b.status]}`}><i></i>{LABEL[b.status]}</span>

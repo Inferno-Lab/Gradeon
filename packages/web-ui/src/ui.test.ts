@@ -42,6 +42,6 @@ describe('rollDigits', () => {
 
 describe('tintFor', () => {
   it('gives everyone the same neutral avatar, from the theme', () => {
-    for (const name of ['', 'Neha Menon', '🙂']) expect(tintFor(name)).toEqual({ bg: 'var(--sunk)', fg: 'var(--ink2)' });
+    for (const name of ['', 'Neha Menon', '🙂']) expect(tintFor(name)).toEqual({ bg: 'var(--s2)', fg: 'var(--ink2)' });
   });
 });
