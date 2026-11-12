@@ -50,7 +50,8 @@ export async function registerHttp(app: NestFastifyApplication, env: HttpEnv): P
   });
   await fastify.register(rateLimit as never, {
     global: true,
-    max: env.NODE_ENV === 'test' ? 10_000 : 300,
+    // Local runs load every page at four widths from one machine; the limit guards real servers.
+    max: env.NODE_ENV === 'production' ? 300 : 10_000,
     timeWindow: '1 minute',
     skip: (req: { url: string }) => req.url.startsWith('/health') || req.url.startsWith('/metrics'),
     errorResponseBuilder: () => ({ statusCode: 429, code: 'rate_limited', message: 'Too many tries from this device. Wait a moment and try again.' }),

@@ -34,12 +34,16 @@ async function consoleSession() {
 
 const adminPaths = [...pages, '/design', '/nope'];
 const jobs = [];
+// Sign-ins last 15 minutes and a full run takes longer: each pass signs in again.
+const fresh = [];
 if (only !== 'console') {
   const key = await adminSession();
+  fresh.push(async () => key.splice(0, 3, ...(await adminSession())));
   for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
   const c = await consoleSession();
+  fresh.push(async () => c.key.splice(0, 3, ...(await consoleSession()).key));
   const paths = consolePaths(c.school);
   for (const p of paths) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key: c.key });
 }
@@ -48,6 +52,7 @@ const browser = await chromium.launch();
 let problems = 0;
 for (const dark of args.includes('--light') ? [false] : args.includes('--dark') ? [true] : [false, true]) {
   for (const [w, h] of SIZES) {
+    for (const f of fresh) await f();
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: dark ? 'dark' : 'light', reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     for (const j of jobs) {

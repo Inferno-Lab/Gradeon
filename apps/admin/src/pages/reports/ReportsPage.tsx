@@ -79,7 +79,7 @@ export function ReportsPage() {
                 </div>
                 <div className="tgrow" style={{ padding: '10px 24px 16px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
                 {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><div className="help">Nothing to report for this. It fills in as the school uses Gradeon.</div></div> : (
-                  <div className="scroll-x lscroll" data-even-scroll="">
+                  <div className="scroll-x">
                     <div style={{ minWidth: Math.max(480, d.columns.length * 96) }}>
                       <div className="grd th" style={{ '--cols': cols } as React.CSSProperties}>
                         {d.columns.map((c) => (

@@ -39,7 +39,7 @@
 .pg-students .fs.pp{animation:nPop var(--t3) var(--e)}
 .pg-students .kebab{width:34px;height:34px;border-radius:50%;border:0;background:none;color:var(--ink3);display:grid;place-items:center;cursor:pointer;transition:background var(--t2)}
 .pg-students .kebab:hover{background:var(--sunk);color:var(--ink)}
-.pg-students .tfoot{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;font:600 13px var(--fb);color:var(--ink3);border-top:1px solid var(--line)}
+.pg-students .tfoot{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:16px 24px;font:600 13px var(--fb);color:var(--ink3);border-top:1px solid var(--line)}
 .pg-students .dh{padding:24px 24px 20px;display:flex;flex-direction:column;gap:16px;background:linear-gradient(180deg,var(--vL),transparent)}
 .pg-students .dtop{display:flex;gap:16px;align-items:center}
 .pg-students .dav{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font:700 28px var(--fb);box-shadow:0 0 0 4px var(--card),0 0 0 6px var(--v2)}

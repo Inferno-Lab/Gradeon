@@ -178,7 +178,7 @@ export function StudentsView({ v }: { v: any }) {
               </div>
               <div className="tfoot">
                 <span>Showing {v.range}</span>
-                <span style={{ display: "flex", gap: "8px", alignItems: "center" } as CSSProperties}>
+                <span style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" } as CSSProperties}>
                   {v.perPage}
                   <button className="btn sm" disabled={v.page <= 1} onClick={v.prev}>
                     Previous

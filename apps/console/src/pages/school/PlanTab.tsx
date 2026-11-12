@@ -96,7 +96,7 @@ export function PlanTab({ d, say }: { d: SchoolDetail; say: Say }) {
               {on && m.features.length > 0 && (
                 <div className="tgrow" style={{ marginTop: 10, paddingLeft: 56 }}>
                   {m.features.map((f) => f.state === 'planned'
-                    ? <span key={f.key} className="chip" data-tip="Planned: not built yet">{f.name} · planned</span>
+                    ? <span key={f.key} className="chip" style={{ maxWidth: '100%' }} data-tip={`${f.name}: planned, not built yet`}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name} · planned</span></span>
                     : (
                       <Fragment key={f.key}>
                         <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', font: '600 13px var(--fb)' }}>

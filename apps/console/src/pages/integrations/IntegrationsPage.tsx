@@ -222,7 +222,8 @@ function ConnectionDialog({ c: initial, schools, onClose, onDone }: { c?: Connec
   const start = useMutation({
     mutationFn: async () => {
       const r = await app.api.integrations.create({ provider, name: name.trim(), scope: platformOnly ? 'platform' : scope, schoolId: !platformOnly && scope === 'school' ? schoolId : undefined, settings: {}, secrets: {}, draft: true });
-      const view = await qc.fetchQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view });
+      // staleTime 0: the cached list predates the new connection.
+      const view = await qc.fetchQuery({ queryKey: ['integrations'], queryFn: app.api.integrations.view, staleTime: 0 });
       return view.connections.find((x) => x.id === r.id)!;
     },
     onSuccess: (row) => setC(row), onError: (e) => { setErr(fields(e)); shake.hit(); },
