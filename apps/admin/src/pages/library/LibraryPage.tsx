@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -29,6 +29,7 @@ export function LibraryPage() {
   const cancel = useMutation({ mutationFn: ({ id, reason }: { id: string; reason: string }) => app.api.library.cancel(id, reason), onSuccess: () => { setCancelling(null); refresh(); say('Reservation cancelled. The family is told why.'); }, onError: (e) => say((e as Error).message, 'bad') });
   const renew = useMutation({ mutationFn: app.api.library.renew, onSuccess: (l) => { refresh(); say(`${l.title} is renewed until ${dateLabel(l.dueOn)}.`); }, onError: (e) => say((e as Error).message, 'bad') });
   const v = view.data;
+  const loans = (v?.loans ?? []).filter((l) => !lq.trim() || `${l.title} ${l.student} ${l.className}`.toLowerCase().includes(lq.trim().toLowerCase()));
   const books = useMemo(() => (v?.books ?? []).filter((b) => !q.trim() || `${b.title} ${b.author} ${b.isbn} ${b.category}`.toLowerCase().includes(q.trim().toLowerCase())), [v, q]);
   const overdue = (v?.loans ?? []).filter((l) => l.overdueDays > 0);
   return (
@@ -42,10 +43,7 @@ export function LibraryPage() {
         {cancelling && <CancelDialog title={cancelling.title} busy={cancel.isPending} onClose={() => setCancelling(null)} onSend={(reason) => cancel.mutate({ id: cancelling.id, reason })} />}
       </>}>
       {v && (v.books.length === 0 && v.loans.length === 0 ? (
-        tab === 'loans' ? <EmptyCard title="Loans" art="notebooks" heading="No book is out yet" body="Once the catalogue has books, each one you issue shows here with who has it and when it is due back. Families see the date in the app."
-            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
-        : tab === 'waiting' ? <EmptyCard title="Waiting" art="checklist" heading="No one is waiting for a book" body="When a book is out, a family can reserve it from the app. The first in line is told the moment a copy comes back."
-            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
+        tab === 'loans' || tab === 'waiting' ? <div><EmptyState scene={tab} onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
         : <div><EmptyState scene="library" onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
       ) : <>
         <section className="grid">
@@ -61,11 +59,14 @@ export function LibraryPage() {
             </div>
           ))}
         </section>
-        {tab === 'books' && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search the catalogue" value={q} onChange={(x) => { setQ(x); setPage(1); }} icon={SEARCH} placeholder="Title, author or ISBN" /></div>}
-        {tab === 'loans' && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search loans" value={lq} onChange={setLq} icon={SEARCH} placeholder="Book or borrower" /></div>}
+        {tab === 'books' && v.books.length > 0 && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search the catalogue" value={q} onChange={(x) => { setQ(x); setPage(1); }} icon={SEARCH} placeholder="Title, author or ISBN" /></div>}
+        {tab === 'loans' && v.loans.length > 0 && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search loans" value={lq} onChange={setLq} icon={SEARCH} placeholder="Book or borrower" /></div>}
         {tab === 'books' && (
           <Card style={{ padding: 0 }}>
-            {!books.length ? <div style={{ padding: 20 }}><EmptyNote icon="search" title={`No book matches “${q}”`} body="Search by title, author or ISBN, or add the book to the catalogue." /></div> : (
+            {!books.length ? <div style={{ padding: 20 }}>{q.trim()
+              ? <EmptyNote icon="search" title={`No book matches “${q.trim()}”`} body="Search by title, author or ISBN, or add the book to the catalogue." />
+              : <EmptyNote icon="library" title="No books in the catalogue yet" body="Books on loan from the old register show under Loans. Add each title here so it can be issued and reserved."
+                  action={canWrite ? <button className="btn sm" onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</button> : undefined} />}</div> : (
               <div className="tbl scroll-x"><div style={{ minWidth: 680 }} className="lscroll">
                 <div className="grd th" style={{ '--cols': 'minmax(0,2.4fr) minmax(0,1fr) 90px 110px 170px' } as React.CSSProperties}><span>Book</span><span>Category</span><span>Shelf</span><span>On the shelf</span><span></span></div>
                 {books.slice((page - 1) * 50, page * 50).map((b) => (
@@ -95,7 +96,8 @@ export function LibraryPage() {
             {!v.loans.length ? <div style={{ padding: 20 }}><EmptyNote icon="library" title="No book is out" body="Books issued from the catalogue show here with who has them and when they are due back." /></div> : (
               <div className="tbl scroll-x"><div style={{ minWidth: 660 }} className="lscroll">
                 <div className="grd th" style={{ '--cols': 'minmax(0,2fr) minmax(0,1.4fr) 110px 150px 190px' } as React.CSSProperties}><span>Book</span><span>Borrower</span><span>Due</span><span>Status</span><span></span></div>
-                {v.loans.filter((l) => !lq.trim() || `${l.title} ${l.student} ${l.className}`.toLowerCase().includes(lq.trim().toLowerCase())).map((l) => (
+                {!loans.length && <div style={{ padding: '4px 20px 20px' }}><EmptyNote icon="search" title={`No loan matches “${lq.trim()}”`} body="Search by the book or the borrower’s name." /></div>}
+                {loans.map((l) => (
                   <div key={l.id} className="grd rw" style={{ '--cols': 'minmax(0,2fr) minmax(0,1.4fr) 110px 150px 190px', height: 'auto', minHeight: 56, padding: '8px 20px' } as React.CSSProperties}>
                     <b style={{ font: '700 14px/1.3 var(--fb)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={l.title}>{l.title}</b>
                     <span style={{ minWidth: 0 }}><b style={{ font: '600 13px var(--fb)' }}>{l.student}</b><small className="help" style={{ display: 'block' }}>{l.className}</small></span>

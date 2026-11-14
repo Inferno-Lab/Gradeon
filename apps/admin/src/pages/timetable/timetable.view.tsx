@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminTimetable.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, PageScope, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
+import { Select, PageScope, ToastSlot, Segmented, Icon, EmptyNote } from "@gradeon/web-ui";
 import "./timetable.css";
 
 export function TimetableView({ v }: { v: any }) {
@@ -256,7 +256,7 @@ export function TimetableView({ v }: { v: any }) {
                 {v.unplaced.length > 0 && <span className="chip a">{v.unplaced.length}</span>}
               </div>
               <div className="lscroll" data-even-scroll="" style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px", maxHeight: "176px" } as CSSProperties}>
-                {v.unplaced.length === 0 && <div className="help">Every period this class needs has a place.</div>}
+                {v.unplaced.length === 0 && <EmptyNote icon="checkCircle" title="Everything has a place" body="Every period this class needs is on the timetable." />}
                 {v.unplaced.map((u: any, $i: number) => (
                   <div className="un" key={$i}>
                     <Icon name="drag" size={16} style={{ color: "var(--ink3)" }} />

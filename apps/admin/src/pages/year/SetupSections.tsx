@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState, EmptyNote, type IconName } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState, EmptyNote, type EmptyScene, type IconName } from '@gradeon/web-ui';
 
+// The lists that have a scene of their own; the rest show an EmptyNote.
+const SCENE: Record<string, EmptyScene> = { classes: 'year', holidays: 'holidays', subjects: 'subjects', periods: 'bells' };
 const KIND_ICON: Record<string, IconName> = { years: 'year', terms: 'calendar', holidays: 'calendar', subjects: 'homework', periods: 'time', fee_heads: 'fees', fee_structures: 'invoices' };
 import { useApp } from '../../app/context';
 import { AddBtn, problem, useFeeHeads } from '../../app/kit';
@@ -57,8 +59,8 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
         {edit && <span style={{ marginLeft: 'auto' }}><AddBtn onClick={() => onOpen(null)}>Add</AddBtn></span>}
       </div>
       {s.locked && <div className="help" style={{ padding: '0 24px 16px' }}>Gradeon keeps these for your school. To change them, use “Ask Gradeon” on School setup.</div>}
-      {s.rows.length === 0 && s.kind === 'classes' ? (
-        <div style={{ padding: '0 24px 24px' }}><EmptyState scene="year" label="Add the first class" onAction={edit ? () => onOpen(null) : undefined} /></div>
+      {s.rows.length === 0 && SCENE[s.kind] ? (
+        <div style={{ padding: '0 24px 24px' }}><EmptyState scene={SCENE[s.kind]!} label={s.kind === 'classes' ? 'Add the first class' : undefined} onAction={edit ? () => onOpen(null) : undefined} /></div>
       ) : s.rows.length === 0 ? (
         <div style={{ padding: '0 24px 24px' }}><EmptyNote icon={KIND_ICON[s.kind] ?? 'setup'} title={`No ${s.label.toLowerCase()} yet`}
           body={`${importKind(s.kind)?.blurb ?? ''} ${edit ? 'Add the first, or send Gradeon your sheet from Moving in.' : 'Gradeon adds them for your school.'}`} /></div>

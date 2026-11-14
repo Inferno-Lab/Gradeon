@@ -63,6 +63,8 @@
 .nest .stp .tm{font:700 12px var(--fb);color:var(--ink3);padding-top:8px;display:flex;gap:8px;align-items:center}
 .nest .fld + .fld,.nest .fld + .two,.nest .two + .fld,.nest .two + .two,.nest .stack > * + *{margin-top:16px}
 .nest .two .fld{margin-top:0}
+/* Fields side by side (a grid or flex row) line up at the top: the stacking margin above is for fields in a column. */
+.nest :is([style*="display: grid"],[style*="display: flex"],[style*="display:grid"],[style*="display:flex"],.grid,.tgrow,.fx,.g)>:is(.fld,.two)+:is(.fld,.two){margin-top:0}
 /* A card's title row wraps on a narrow screen instead of pushing its buttons out of the card. */
 .nest .card>.ch{flex-wrap:wrap;row-gap:10px}
 .nest .card>.ch h2{min-width:min(100%,max-content)}

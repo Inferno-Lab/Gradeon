@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
 import { PlanSave, type EntitlementDoc, type EntitlementRow, type PlanRow } from '@gradeon/contracts';
 import { HttpError } from '@gradeon/api-client';
-import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, IC, Icon, NumberField, Select, SelectField, useShake, type PageIcon, EmptyNote } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, IC, Icon, NumberField, Select, SelectField, useShake, type PageIcon, EmptyNote, EmptyState } from '@gradeon/web-ui';
 import type { CatalogDoc } from '@gradeon/api-client';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -216,6 +216,7 @@ function Schools({ say }: { say: Say }) {
             ))}
           </div>
         </div>
+        {!rows.length && <div style={{ padding: '4px 20px 20px' }}><EmptyNote icon="search" title={find.trim() ? `No school matches “${find.trim()}”` : 'No school on this plan'} body={find.trim() ? 'Search by the school’s name.' : 'Choose another plan, or every plan.'} /></div>}
       </Card>
     </>
   );
@@ -358,7 +359,7 @@ function Planned() {
   return (
     <>
       <Card title="Planned modules" chip={<span className="chip">{planned.length}</span>}>
-        {planned.length === 0 && <EmptyNote icon="modules" title="Nothing planned right now" body="A module marked as planned shows here with what it will do." />}
+        {planned.length === 0 && <EmptyState scene="planned" onAction={() => app.go('/modules')} />}
         {planned.map((m) => <div key={m.key} className="kv" style={{ alignItems: 'flex-start' }}><span><b style={{ color: 'var(--ink)' }}>{m.name}</b><br /><small style={{ color: 'var(--ink3)' }}>{m.blurb}</small></span></div>)}
       </Card>
       {features.length > 0 && (

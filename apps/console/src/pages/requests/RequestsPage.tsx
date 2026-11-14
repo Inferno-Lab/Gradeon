@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SETTINGS_META, type ChangeRequestRow } from '@gradeon/contracts';
-import { AreaField, Dialog, EmptyCard, Segmented, tintFor, useShake, EmptyState } from '@gradeon/web-ui';
+import { AreaField, Dialog, Segmented, tintFor, useShake, EmptyState } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -22,7 +22,7 @@ export function RequestsPage() {
       filters={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
       overlays={answering && <AnswerDialog r={answering} onClose={() => setAnswering(null)} onDone={(m) => { setAnswering(null); say(m); }} />}>
       {rows.length === 0 ? !(q.data?.length) ? <EmptyState scene="requests" label="Back to the fleet" onAction={() => app.go('/')} /> : (
-        <div><EmptyCard title="Requests" chip={{ text: show === 'open' ? '0 open' : '0', tone: 'v' }} icon="mail" heading={show === 'open' ? 'Nothing waiting' : 'No requests yet'} body="When a school asks for a change to its setup, it appears here with who asked and why." /></div>
+        <div><EmptyState scene="open" onAction={() => setShow('all')} /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           {rows.map((r) => {

@@ -10,11 +10,6 @@ export type ApprovalView = 'waiting' | 'sent' | 'decided';
 const STATUS: Record<ApprovalRow['status'], { text: string; tone: string }> = {
   pending: { text: 'Waiting', tone: 'a' }, approved: { text: 'Approved', tone: 'g' }, rejected: { text: 'Declined', tone: 'c' }, withdrawn: { text: 'Withdrawn', tone: '' },
 };
-const EMPTY: Record<ApprovalView, { heading: string; body: string }> = {
-  waiting: { heading: 'Nothing is waiting for you', body: 'Leave requests, fee waivers, new photos and notices that need a second person arrive here.' },
-  sent: { heading: 'You have not asked for anything', body: 'What you send for approval, like a fee waiver or a notice, is listed here with its answer.' },
-  decided: { heading: 'No decisions yet', body: 'Requests you or others have approved or declined are kept here, with the reason given.' },
-};
 const when = (iso: string) => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' });
 
 /**
@@ -41,9 +36,13 @@ export function useApprovalList(view: ApprovalView, kind: ApprovalKind | undefin
   if (list.isLoading) return { list: <div className="skc" style={{ height: 240, borderRadius: 16 }} />, overlay };
   if (list.isError) return { overlay, list: <EmptyCard error title="Approvals" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(list.error as Error).message} actions={<button className="btn pri" onClick={() => void list.refetch()}>Try again</button>} /> };
   const rows = list.data ?? [];
-  // Nothing waiting is the good empty: the approvals scene. A sent or decided list with nothing in it is a plain line.
-  if (!rows.length && view === 'waiting' && !kind) return { overlay, list: <EmptyState scene="approvals" onAction={() => app.go('/approvals/decided')} /> };
-  if (!rows.length) return { overlay, list: <EmptyCard title="Approvals" chip={{ text: '0', tone: 'v' }} icon="checkCircle" heading={EMPTY[view].heading} body={EMPTY[view].body} /> };
+  // Each view has its own scene: nothing waiting, nothing sent, nothing decided, no leave asked for.
+  if (!rows.length && view === 'waiting') return { overlay, list: kind === 'leave'
+    ? <EmptyState scene="leave" onAction={() => app.go('/attendance')} />
+    : <EmptyState scene="approvals" onAction={() => app.go('/approvals/decided')} /> };
+  if (!rows.length) return { overlay, list: view === 'sent'
+    ? <EmptyState scene="sent" onAction={() => app.go('/fees')} />
+    : <EmptyState scene="decided" onAction={() => app.go(kind === 'leave' ? '/attendance/leave' : '/approvals')} /> };
   return { overlay, list: (
     <div className="card" style={{ padding: 0 }}>
       {rows.map((r) => (

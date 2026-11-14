@@ -2,7 +2,6 @@
 
 
 .pg-timetable .bd{display:grid;grid-template-columns:minmax(0,1fr) 308px;gap:20px;align-items:start}
-@media (max-width:1150px){.pg-timetable .bd{grid-template-columns:minmax(0,1fr)}}
 .pg-timetable .wk{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pg-timetable .wkp{display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 6px;border-radius:999px;border:1.5px solid var(--line2);background:var(--s1)}
 .pg-timetable .wkp button{width:30px;height:30px;border:0;border-radius:50%;background:none;color:var(--ink2);display:grid;place-items:center;cursor:pointer;transition:background var(--t2),transform var(--t3) var(--e)}
@@ -65,6 +64,5 @@
 }
 /* Subject colours, as in the app: a 12% tint of the subject behind its name in light (22% in dark, name in ink). Art and PE are too light for text, so their names are ink. */
 .pg-timetable .sub{background:var(--cs);color:var(--ci)}
-/* From Gradeon Hue. */
-.pg-timetable .dh.today b{background:none;color:inherit}
-.pg-timetable .dh.today{background:var(--bright);color:var(--on-bright)}
+/* Six or seven teaching days need about 750px; below that the side panel moves under the week, in columns. */
+@media (max-width:1400px){.pg-timetable .bd{grid-template-columns:minmax(0,1fr)}.pg-timetable .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));align-items:start}}

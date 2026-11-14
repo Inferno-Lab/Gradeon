@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, Segmented, Select, EmptyState } from '@gradeon/web-ui';
+import { EmptyCard, EmptyNote, Segmented, Select, EmptyState } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel, useFeeHeads, useOpenParam } from '../../app/kit';
@@ -92,7 +92,9 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
               </>
             )
           ) : (rec.data?.items.length ?? 0) === 0 ? (
-            <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Receipts" chip={{ text: '0', tone: 'v' }} icon="invoices" heading={term ? 'No receipt matches' : 'No payments yet'} body={term ? 'Check the spelling or the receipt number.' : 'Every payment gets a numbered receipt. They are listed here, newest first.'} /></div>
+            <div style={{ padding: '0 24px 24px' }}>{term
+              ? <EmptyNote icon="search" title={`No receipt matches “${term}”`} body="Check the spelling, or search by the receipt number." />
+              : <EmptyState scene="receipts" onAction={() => app.go('/fees')} />}</div>
           ) : (
             <div className="scroll-x lscroll" data-fill="">
               <div style={{ minWidth: 720 }}>

@@ -353,6 +353,15 @@
    "page": "empty-admin",
    "expand": "fill"
   },
+  "EmptyAdmin7.dc.html": {
+   "x": 12160,
+   "y": 0,
+   "w": 1440,
+   "h": 4200,
+   "title": "Admin · every tab: approvals, leave, periods, receipts, library, transport, the app, the year",
+   "page": "empty-admin",
+   "expand": "fill"
+  },
   "EmptyConsole1.dc.html": {
    "x": 0,
    "y": 0,
@@ -395,6 +404,15 @@
    "w": 1440,
    "h": 1474,
    "title": "Console · Billing, compliance, team",
+   "page": "empty-console",
+   "expand": "fill"
+  },
+  "EmptyConsole5.dc.html": {
+   "x": 7600,
+   "y": 0,
+   "w": 1440,
+   "h": 3000,
+   "title": "Console · every tab: compliance, integrations, modules, requests",
    "page": "empty-console",
    "expand": "fill"
   },
@@ -480,11 +498,13 @@
   "EmptyAdmin4.dc.html",
   "EmptyAdmin5.dc.html",
   "EmptyAdmin6.dc.html",
+  "EmptyAdmin7.dc.html",
   "EmptyConsole1.dc.html",
   "EmptyConsole1Dark.dc.html",
   "EmptyConsole2.dc.html",
   "EmptyConsole3.dc.html",
   "EmptyConsole4.dc.html",
+  "EmptyConsole5.dc.html",
   "EmptyApp1.dc.html",
   "EmptyApp1Dark.dc.html",
   "EmptyApp2.dc.html",
