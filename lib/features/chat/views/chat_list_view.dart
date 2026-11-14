@@ -21,6 +21,7 @@ import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/features/chat/controllers/chat_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Avatar pigment for a thread: the teacher's subject, ink for the office.
 ({Color fill, Color on}) _threadColor(BuildContext context, ChatThread t) {
@@ -35,7 +36,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 }
 
 String _stamp(DateTime t) {
-  final today = DateUtils.dateOnly(DateTime.now());
+  final today = DateUtils.dateOnly(Clock.now());
   final day = DateUtils.dateOnly(t);
   final ago = today.difference(day).inDays;
   if (ago == 0) return DateFormat('H:mm').format(t);

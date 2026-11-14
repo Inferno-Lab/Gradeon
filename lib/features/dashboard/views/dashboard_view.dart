@@ -23,6 +23,7 @@ import 'package:gradeon/features/dashboard/widgets/home_cards.dart';
 import 'package:gradeon/features/dashboard/widgets/home_welcome.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -50,7 +51,7 @@ class _DashboardViewState extends State<DashboardView> {
       final c = context.app;
       final user = auth.user.value;
       final first = parent ? (user?.name ?? '').split(' ').first : (data?.student.name ?? '').split(' ').first;
-      final hello = parent ? '${Formatters.greetingKey(DateTime.now()).tr}, $first' : greeting(first);
+      final hello = parent ? '${Formatters.greetingKey(Clock.now()).tr}, $first' : greeting(first);
       final side = wide ? 130.0 : 20.0;
       // Home as the ParentHome and TeacherHome boards (design/hue/src): the greeting on the school's deep colour, then a
       // sheet with today's lessons as a strip and the cards the console chose.
@@ -175,17 +176,22 @@ class PeriodStrip extends StatelessWidget {
           return Container(
             width: 112,
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-            decoration: BoxDecoration(
-              color: col.soft,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: on ? Border.all(color: col.ink, width: 2) : null,
-            ),
+            decoration: BoxDecoration(color: col.soft, borderRadius: BorderRadius.circular(AppRadius.md)),
+            // The outline of the lesson on now is drawn over the card, so it never changes the card's size.
+            foregroundDecoration: on
+                ? BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: col.ink, width: 2))
+                : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label?.call(p) ?? subjectName(p.subject), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.type.ts.copyWith(color: col.ink)),
                 const SizedBox(height: 2),
-                Text(on ? '${'home.now'.tr} · ${clockOf(minutesOf(p.start))}' : clockOf(minutesOf(p.start)), style: context.type.cap.copyWith(color: col.ink)),
+                Text(
+                  on ? '${'home.now'.tr} · ${clockOf(minutesOf(p.start))}' : clockOf(minutesOf(p.start)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.type.cap.copyWith(color: col.ink),
+                ),
               ],
             ),
           );
@@ -242,9 +248,9 @@ class _ProfileCapsule extends StatelessWidget {
 }
 
 
-String greeting(String first) => '${Formatters.greetingKey(DateTime.now()).tr},\n$first';
+String greeting(String first) => '${Formatters.greetingKey(Clock.now()).tr},\n$first';
 
-String todayLine() => DateFormat('EEEE · d MMMM', Get.locale?.languageCode).format(DateTime.now());
+String todayLine() => DateFormat('EEEE · d MMMM', Get.locale?.languageCode).format(Clock.now());
 
 /// Home sections follow what Gradeon set for the school (console → The app → Home screen cards) and its modules.
 bool _show(String card, [String? module]) => SchoolConfig.home.contains(card) && (module == null || SchoolConfig.has(module));
@@ -604,7 +610,7 @@ class StatsRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Overline(DateFormat('MMMM', Get.locale?.languageCode).format(DateTime.now())),
+                  Overline(DateFormat('MMMM', Get.locale?.languageCode).format(Clock.now())),
                   const SizedBox(height: 10),
                   BigNumber(value: data.summary.percent.round().toString(), unit: '%'),
                   const SizedBox(height: 10),

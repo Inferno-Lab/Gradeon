@@ -1,3 +1,5 @@
+import 'package:gradeon/core/utils/clock.dart';
+
 /// Turns `today-3` and `today+1T08:15` into ISO strings anchored on today.
 abstract final class DateSeed {
   static final _pattern = RegExp(r'^today([+-]\d+)?(?:T(\d{2}):(\d{2}))?$');
@@ -20,7 +22,7 @@ abstract final class DateSeed {
     final match = _pattern.firstMatch(value);
     if (match == null) return value;
     final offset = int.tryParse(match.group(1) ?? '') ?? 0;
-    final now = DateTime.now();
+    final now = Clock.now();
     final day = DateTime(now.year, now.month, now.day).add(Duration(days: offset));
     final iso =
         '${day.year.toString().padLeft(4, '0')}-'

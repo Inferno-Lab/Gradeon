@@ -9,6 +9,7 @@ import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class AttendanceController extends GetxController with Loadable {
   List<AttendanceDay> days = [];
@@ -16,7 +17,7 @@ class AttendanceController extends GetxController with Loadable {
   List<LeaveRequest> leaves = [];
   Student? student;
   String? classTeacher;
-  final focused = DateTime.now().obs;
+  final focused = Clock.now().obs;
   final picked = Rxn<DateTime>();
 
   List<AttendanceDay> get monthDays => days.where((day) {
@@ -28,7 +29,7 @@ class AttendanceController extends GetxController with Loadable {
   int get streak => attendanceStreak(days);
 
   bool get canGoForward {
-    final now = DateTime.now();
+    final now = Clock.now();
     return focused.value.year < now.year || (focused.value.year == now.year && focused.value.month < now.month);
   }
 

@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 abstract final class Formatters {
   static String inr(num amount) => NumberFormat.currency(
@@ -23,7 +24,7 @@ abstract final class Formatters {
   }
 
   static String countdown(DateTime due) {
-    final now = DateTime.now();
+    final now = Clock.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(due.year, due.month, due.day);
     final days = target.difference(today).inDays;
@@ -34,7 +35,7 @@ abstract final class Formatters {
   }
 
   static int daysUntil(DateTime date) {
-    final now = DateTime.now();
+    final now = Clock.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(date.year, date.month, date.day);
     return target.difference(today).inDays;

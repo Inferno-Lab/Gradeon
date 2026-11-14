@@ -8,6 +8,7 @@ import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class EventsController extends GetxController with Loadable {
   List<SchoolEvent> items = [];
@@ -19,7 +20,7 @@ class EventsController extends GetxController with Loadable {
   String? get _me => Get.find<AuthService>().user.value?.id;
 
   List<SchoolEvent> get upcoming {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(Clock.now());
     return items.where((e) => !e.date.isBefore(today)).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 

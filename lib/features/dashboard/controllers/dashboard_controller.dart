@@ -12,6 +12,7 @@ import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 enum DueKind { fee, homework, event }
 
@@ -98,7 +99,7 @@ class DashboardController extends GetxController with Loadable {
     await run(() async {
       final directory = Get.find<DirectoryRepository>();
       final user = auth.user.value;
-      final now = DateTime.now();
+      final now = Clock.now();
       final student = await directory.student(studentId);
       final results = await Future.wait<Object?>([
         directory.schoolClass(student.classId),

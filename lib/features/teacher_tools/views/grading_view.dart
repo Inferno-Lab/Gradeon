@@ -19,6 +19,7 @@ import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.da
 import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 // The answer sheet is drawn as paper: warm white, pencil and blue pen, all from the school's palette.
 Color get _sheet => Color.lerp(AppColors.light.paper, AppColors.mari, .04)!;
@@ -563,14 +564,14 @@ class _GradeSheetViewState extends State<GradeSheetView> {
 
 String agoLabel(DateTime? t) {
   if (t == null) return '';
-  final days = DateUtils.dateOnly(DateTime.now()).difference(DateUtils.dateOnly(t)).inDays;
+  final days = DateUtils.dateOnly(Clock.now()).difference(DateUtils.dateOnly(t)).inDays;
   if (days <= 0) return 'common.today'.tr.toLowerCase();
   return days == 1 ? 'teacher.one_day'.tr : 'teacher.n_days'.trn(days);
 }
 
 String sentLabel(DateTime? t) {
   if (t == null) return '';
-  return DateUtils.isSameDay(t, DateTime.now())
+  return DateUtils.isSameDay(t, Clock.now())
       ? 'teacher.sent_today'.trp({'time': DateFormat('H:mm').format(t)})
       : 'teacher.sent_on'.trp({'date': DateFormat('EEE d MMM').format(t)});
 }

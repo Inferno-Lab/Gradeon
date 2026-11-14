@@ -17,6 +17,7 @@ import 'package:gradeon/features/dashboard/controllers/academics_controller.dart
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class AcademicsView extends GetView<AcademicsController> {
   const AcademicsView({super.key});
@@ -217,7 +218,7 @@ class _Records extends StatelessWidget {
       (
         '${summary?.percent.round() ?? 0}%',
         'attendance.title'.tr,
-        '${DateFormat('MMMM').format(DateTime.now())} · ${'academics.streak'.trn(controller.streak)}',
+        '${DateFormat('MMMM').format(Clock.now())} · ${'academics.streak'.trn(controller.streak)}',
         AppRoutes.attendance,
       ),
       (

@@ -18,6 +18,7 @@ import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/features/events/controllers/events_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 const _answers = [RsvpStatus.going, RsvpStatus.maybe, RsvpStatus.cant];
 
@@ -185,7 +186,7 @@ class _DateBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = Clock.now();
     // Dates outside this month name the month so "2" is never ambiguous.
     final sub = date.month == now.month && date.year == now.year
         ? DateFormat('EEE').format(date)
@@ -253,7 +254,7 @@ class _MonthSheet extends StatefulWidget {
 }
 
 class _MonthSheetState extends State<_MonthSheet> {
-  var _month = DateTime(DateTime.now().year, DateTime.now().month);
+  var _month = DateTime(Clock.now().year, Clock.now().month);
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +263,7 @@ class _MonthSheetState extends State<_MonthSheet> {
     final lead = _month.weekday - 1;
     final count = DateUtils.getDaysInMonth(_month.year, _month.month);
     final rows = ((lead + count) / 7).ceil();
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(Clock.now());
     List<SchoolEvent> on(DateTime d) => events.where((e) => DateUtils.isSameDay(e.date, d)).toList();
     final listed = events.where((e) => e.date.year == _month.year && e.date.month == _month.month).toList()
       ..sort((a, b) => a.date.compareTo(b.date));

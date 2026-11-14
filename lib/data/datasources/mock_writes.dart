@@ -4,6 +4,7 @@ import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 extension MockWrites on MockJsonDataSource {
   void submitHomework({
@@ -19,7 +20,7 @@ extension MockWrites on MockJsonDataSource {
         if (submission.studentId == studentId)
           submission.copyWith(
             status: HomeworkStatus.submitted,
-            submittedAt: DateTime.now(),
+            submittedAt: Clock.now(),
             fileName: fileName,
           )
         else
@@ -47,7 +48,7 @@ extension MockWrites on MockJsonDataSource {
             marks: marks,
             grade: grade,
             feedback: feedback,
-            submittedAt: submission.submittedAt ?? DateTime.now(),
+            submittedAt: submission.submittedAt ?? Clock.now(),
           )
         else
           submission,
@@ -76,9 +77,9 @@ extension MockWrites on MockJsonDataSource {
         if (installment.id == installmentId && !installment.paid)
           paid = installment.copyWith(
             paid: true,
-            paidOn: DateTime.now(),
+            paidOn: Clock.now(),
             method: method,
-            reference: 'DEMO${DateTime.now().millisecondsSinceEpoch % 1000000}',
+            reference: 'DEMO${Clock.now().millisecondsSinceEpoch % 1000000}',
           )
         else
           installment,
@@ -116,7 +117,7 @@ extension MockWrites on MockJsonDataSource {
         threadId: threadId,
         senderId: senderId,
         text: text,
-        sentAt: DateTime.now(),
+        sentAt: Clock.now(),
         read: true,
       ),
     );
@@ -128,7 +129,7 @@ extension MockWrites on MockJsonDataSource {
           threadId: threadId,
           senderId: 'usr_office',
           text: 'Thanks, noted. I will follow up after the next period.',
-          sentAt: DateTime.now(),
+          sentAt: Clock.now(),
           read: false,
         ),
       );
@@ -137,7 +138,7 @@ extension MockWrites on MockJsonDataSource {
   }
 
   void markAttendance(Map<String, AttendanceStatus> byStudent) {
-    final today = DateTime.now().dateOnly;
+    final today = Clock.now().dateOnly;
     attendance.removeWhere(
       (day) =>
           byStudent.containsKey(day.studentId) && day.date.dateOnly == today,
@@ -211,7 +212,7 @@ extension MockWrites on MockJsonDataSource {
     books[index] = books[index].copyWith(
       available: false,
       borrowedBy: studentId,
-      dueDate: DateTime.now().add(const Duration(days: 14)),
+      dueDate: Clock.now().add(const Duration(days: 14)),
     );
     bump();
   }

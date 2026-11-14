@@ -8,6 +8,7 @@ import 'package:gradeon/core/config/app_config.dart';
 import 'package:gradeon/core/services/connectivity_service.dart';
 import 'package:gradeon/core/services/storage_service.dart';
 import 'package:gradeon/core/utils/app_exception.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Talks to the school's API. Every call names the school, carries the signed-in person's token and, when the token
 /// has expired, asks for a new one once and repeats the call. Family routes live under `/v1/f`; the sign-in routes
@@ -160,7 +161,7 @@ class ApiClient {
     final open = path.startsWith('/v1/auth/');
     final uri = _uri(path, query);
     final client = HttpClient()..connectionTimeout = _timeout;
-    final started = DateTime.now();
+    final started = Clock.now();
     final hasToken = _storage.read<String>(StorageKeys.accessToken) != null;
     _logRequest(method: method, uri: uri, body: body, retried: retried, authed: hasToken && !open);
     try {
@@ -176,12 +177,12 @@ class ApiClient {
       }
       final res = await req.close().timeout(_timeout);
       final text = await res.transform(utf8.decoder).join().timeout(_timeout);
-      final ms = DateTime.now().difference(started).inMilliseconds;
+      final ms = Clock.now().difference(started).inMilliseconds;
       final json = text.trim().isEmpty ? null : jsonDecode(text);
       _logResponse(method: method, uri: uri, status: res.statusCode, ms: ms, body: text);
       if (res.statusCode >= 200 && res.statusCode < 300) {
         if (method == 'GET' && _cacheable(uri.path)) {
-          unawaited(_storage.writeCache(uri.toString(), jsonEncode({'at': DateTime.now().toIso8601String(), 'body': text})));
+          unawaited(_storage.writeCache(uri.toString(), jsonEncode({'at': Clock.now().toIso8601String(), 'body': text})));
         }
         if (Get.isRegistered<ConnectivityService>()) Get.find<ConnectivityService>().lastSynced.value = null;
         return json;
@@ -199,7 +200,7 @@ class ApiClient {
     } on AppException {
       rethrow;
     } on Object catch (error) {
-      final ms = DateTime.now().difference(started).inMilliseconds;
+      final ms = Clock.now().difference(started).inMilliseconds;
       _logBlock([
         'API ERROR',
         '  method:   $method',

@@ -18,6 +18,7 @@ import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/features/profile/controllers/profile_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 final _houseColors = {
   'Emerald': AppColors.ok,
@@ -174,7 +175,7 @@ class _IdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = AppPalette.on(color);
-    final now = DateTime.now();
+    final now = Clock.now();
     final start = now.month >= 6 ? now.year : now.year - 1;
     TextStyle k() => AppText.o(color: on.withValues(alpha: .75), height: 1.2);
     final local = photo != null && photo!.isNotEmpty && !photo!.startsWith('http');

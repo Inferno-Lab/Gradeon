@@ -11,6 +11,7 @@ import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/models/user.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class MockJsonDataSource {
   final _random = Random();
@@ -113,7 +114,7 @@ class MockJsonDataSource {
   }
 
   String nextId(String prefix) =>
-      '${prefix}_${DateTime.now().microsecondsSinceEpoch}';
+      '${prefix}_${Clock.now().microsecondsSinceEpoch}';
 
   Future<List<T>> _list<T>(
     String file,

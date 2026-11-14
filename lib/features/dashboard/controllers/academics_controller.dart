@@ -8,6 +8,7 @@ import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class SubjectShelf {
   const SubjectShelf({
@@ -76,7 +77,7 @@ class AcademicsController extends GetxController with Loadable {
         return (mine == null || mine.status.toDo) && Formatters.daysUntil(hw.dueOn) >= 0;
       }).toList()..sort((a, b) => a.dueOn.compareTo(b.dueOn));
 
-      final today = DateTime.now();
+      final today = Clock.now();
       final key = weekdayKey(today);
       final todayPeriods = week.where((d) => d.day == key).expand((d) => d.periods).toList();
       final minute = nowMinutes(today);

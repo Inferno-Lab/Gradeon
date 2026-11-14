@@ -16,6 +16,7 @@ import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 DateTime dayOnly(DateTime d) => DateUtils.dateOnly(d);
 
@@ -51,7 +52,7 @@ class LeaveController extends GetxController with Loadable {
   }
 
   int get takenThisTerm {
-    final start = termStart(DateTime.now());
+    final start = termStart(Clock.now());
     return items
         .where((i) => i.status == LeaveStatus.approved && !i.from.isBefore(start))
         .fold(0, (sum, i) => sum + leaveSpan(i));
@@ -94,7 +95,7 @@ class LeaveApplyController extends GetxController {
 
   /// Which end of the range the next tap sets: 0 start, 1 end.
   final picking = 0.obs;
-  final month = DateTime(DateTime.now().year, DateTime.now().month).obs;
+  final month = DateTime(Clock.now().year, Clock.now().month).obs;
   final reason = RxnString();
   final attachment = RxnString();
   final sending = false.obs;
@@ -103,7 +104,7 @@ class LeaveApplyController extends GetxController {
   final holidays = <DateTime>{}.obs;
   String? teacherName;
 
-  DateTime get today => dayOnly(DateTime.now());
+  DateTime get today => dayOnly(Clock.now());
 
   @override
   void onInit() {
@@ -218,7 +219,7 @@ class LeaveApplyController extends GetxController {
       final text = note.text.trim();
       await Get.find<LeaveRepository>().apply(
         LeaveRequest(
-          id: 'lv_${DateTime.now().microsecondsSinceEpoch}',
+          id: 'lv_${Clock.now().microsecondsSinceEpoch}',
           studentId: id,
           from: s,
           to: e,
@@ -226,7 +227,7 @@ class LeaveApplyController extends GetxController {
           reason: reason.value!,
           note: [if (text.isNotEmpty) text, if (attachment.value != null) 'leave.note_attached'.tr].join(' '),
           status: LeaveStatus.pending,
-          appliedOn: DateTime.now(),
+          appliedOn: Clock.now(),
         ),
       );
       Get.back<void>();

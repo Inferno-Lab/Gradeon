@@ -22,6 +22,7 @@ import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 String _attendanceRoute(String classId) => AppRoutes.teacherAttendance.replaceFirst(':classId', classId);
 String _marksRoute(String classId) => AppRoutes.teacherMarks.replaceFirst(':classId', classId);
@@ -261,7 +262,7 @@ class _Body extends StatelessWidget {
 
   static String _gradingLine(GradingItem g) {
     final oldest = g.waiting.first.submittedAt;
-    final days = oldest == null ? 0 : DateUtils.dateOnly(DateTime.now()).difference(DateUtils.dateOnly(oldest)).inDays;
+    final days = oldest == null ? 0 : DateUtils.dateOnly(Clock.now()).difference(DateUtils.dateOnly(oldest)).inDays;
     return [
       g.homework.title,
       if (g.schoolClass != null) classLabel(g.schoolClass!),
@@ -409,7 +410,7 @@ class TeacherClassesView extends GetView<TeacherHomeController> {
                       : 'teacher.classes_sub'.trp({
                           'n': '${controller.classes.length}',
                           'students': '$total',
-                          'day': DateFormat('EEEE').format(DateTime.now()),
+                          'day': DateFormat('EEEE').format(Clock.now()),
                         }),
                 ),
               ),
