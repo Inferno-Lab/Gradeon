@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState, EmptyNote, type IconName } from '@gradeon/web-ui';
+
+const KIND_ICON: Record<string, IconName> = { years: 'year', terms: 'calendar', holidays: 'calendar', subjects: 'homework', periods: 'time', fee_heads: 'fees', fee_structures: 'invoices' };
 import { useApp } from '../../app/context';
 import { AddBtn, problem, useFeeHeads } from '../../app/kit';
 
@@ -58,7 +60,8 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
       {s.rows.length === 0 && s.kind === 'classes' ? (
         <div style={{ padding: '0 24px 24px' }}><EmptyState scene="year" label="Add the first class" onAction={edit ? () => onOpen(null) : undefined} /></div>
       ) : s.rows.length === 0 ? (
-        <div className="help" style={{ padding: '0 24px 24px' }}>{importKind(s.kind)?.blurb} None yet{edit ? ': add the first, or send Gradeon your sheet from Moving in.' : '.'}</div>
+        <div style={{ padding: '0 24px 24px' }}><EmptyNote icon={KIND_ICON[s.kind] ?? 'setup'} title={`No ${s.label.toLowerCase()} yet`}
+          body={`${importKind(s.kind)?.blurb ?? ''} ${edit ? 'Add the first, or send Gradeon your sheet from Moving in.' : 'Gradeon adds them for your school.'}`} /></div>
       ) : (
         <div className="scroll-x lscroll">
           <div style={{ minWidth: 120 * cols.length }}>

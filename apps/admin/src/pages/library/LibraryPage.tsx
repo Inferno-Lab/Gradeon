@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -42,7 +42,11 @@ export function LibraryPage() {
         {cancelling && <CancelDialog title={cancelling.title} busy={cancel.isPending} onClose={() => setCancelling(null)} onSend={(reason) => cancel.mutate({ id: cancelling.id, reason })} />}
       </>}>
       {v && (v.books.length === 0 && v.loans.length === 0 ? (
-        <div><EmptyState scene="library" onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
+        tab === 'loans' ? <EmptyCard title="Loans" art="notebooks" heading="No book is out yet" body="Once the catalogue has books, each one you issue shows here with who has it and when it is due back. Families see the date in the app."
+            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
+        : tab === 'waiting' ? <EmptyCard title="Waiting" art="checklist" heading="No one is waiting for a book" body="When a book is out, a family can reserve it from the app. The first in line is told the moment a copy comes back."
+            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
+        : <div><EmptyState scene="library" onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
       ) : <>
         <section className="grid">
           {[
@@ -106,7 +110,7 @@ export function LibraryPage() {
         )}
         {tab === 'waiting' && (
           <Card style={{ padding: 0 }}>
-            {!v.reservations.length ? <div className="help" style={{ padding: 20 }}>Nobody is waiting. Families reserve books from the app; the first in line is told when a copy comes back.</div>
+            {!v.reservations.length ? <div style={{ padding: 20 }}><EmptyNote icon="waiting" title="Nobody is waiting" body="Families reserve books from the app; the first in line is told when a copy comes back." /></div>
               : v.reservations.map((r) => (
                 <div key={r.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 52, padding: '10px 20px', flexWrap: 'wrap' }}>
                   <span className={`chip ${r.status === 'ready' ? 'g' : 'v'}`}>{r.status === 'ready' ? 'Ready at the desk' : 'Waiting'}</span>

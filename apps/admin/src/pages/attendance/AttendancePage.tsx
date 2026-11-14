@@ -81,7 +81,9 @@ export function AttendancePage() {
           {leave.list}
         </div>
       ) : classes.data?.length === 0 ? (
-        <div><EmptyState scene="attendance" onAction={() => app.go('/year/classes')} onLink={() => app.go('/students')} /></div>
+        tab === 'periods' ? <EmptyCard title="Every period" art="calendar" heading="No classes to take periods for" body="Each period’s roll is taken from the timetable. Add the school’s classes and their timetable, and every period shows here as it is marked."
+            actions={<button className="btn pri" onClick={() => app.go('/year/classes')}>Add classes</button>} />
+        : <div><EmptyState scene="attendance" onAction={() => app.go('/year/classes')} onLink={() => app.go('/students')} /></div>
       ) : tab === 'periods' ? (
         classId && date ? <PeriodGrid classId={classId} date={date} say={say} /> : null
       ) : (

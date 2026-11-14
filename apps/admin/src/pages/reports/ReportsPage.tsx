@@ -69,7 +69,7 @@ export function ReportsPage() {
             {!d ? <div className="skc" style={{ height: 320, borderRadius: 24 }} /> : (
               <>
                 <div className="ch" style={{ padding: '24px 24px 6px', flexWrap: 'wrap', gap: 10 }}>
-                  <h2>{d.title}</h2><span className="chip v">{d.scope}</span>
+                  <h2 style={{ whiteSpace: 'nowrap' }}>{d.title}</h2><span className="chip v">{d.scope}</span>
                   <span className="grow"></span>
                   {info?.filters.includes('class') && <Select compact aria-label="Class" value={q.classId ?? ''} onChange={(v) => setQ({ ...q, classId: v || undefined })} options={[{ value: '', label: 'Whole school' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
                   {info?.filters.includes('dates') && <>

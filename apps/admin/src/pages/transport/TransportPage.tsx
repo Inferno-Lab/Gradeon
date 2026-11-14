@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -38,7 +38,11 @@ export function TransportPage() {
         {billing && <BillDialog route={billing} onClose={() => setBilling(null)} onDone={(m) => { setBilling(null); say(m); }} />}
       </>}>
       {v && (!v.routes.length ? (
-        <div><EmptyState scene="transport" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
+        tab === 'riders' ? <EmptyCard title="Riders" icon="people" heading="No riders yet" body="Add a route first, then put students on it with their stop. Families see the bus, the stop and the pick-up time in the app."
+            actions={canWrite ? <button className="btn pri" onClick={() => setEdit('new')}>Add a route</button> : undefined} />
+        : tab === 'live' ? <EmptyCard title="Live bus" art="map-pin" heading="No bus on the road" body="When a route has a driver, the bus shows here live during each trip, and families at the next stop are told it is near."
+            actions={canWrite ? <button className="btn pri" onClick={() => setEdit('new')}>Add a route</button> : undefined} />
+        : <div><EmptyState scene="transport" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
       ) : <>
         <section className="grid">
           {[
