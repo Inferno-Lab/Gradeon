@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/features/shell/shell_controller.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/empty_kit.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/features/shell/shell_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 List<(IconData, String, String, VoidCallback)> _firstSteps() => [

@@ -54,7 +54,7 @@ export const s3: Adapter = {
     },
   },
   async test(c) {
-    const key = `.gradeon-test-${Date.now()}`;
+    const key = `.tangent-test-${Date.now()}`;
     try {
       await s3.storage!.put(c, key, Buffer.from('ok'), 'text/plain');
       const back = (await s3.storage!.get(c, key)).toString();

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { AlbumInput, AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+import type { AlbumInput, AlbumRow, GalleryReportRow, PhotoRow } from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { FilesService } from './files.service.js';
 import { AuditService, SettingsService } from './support.js';

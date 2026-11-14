@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Put, Req, Res } from '@nestjs/common';
-import { CodeRequest, DEFAULT_BRAND, appTokens, hueOf, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, DEFAULT_BRAND, appTokens, hueOf, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@tangent/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
+import { ApiError, Limiter, ZodPipe } from '@tangent/nest-kit';
 import type { z } from 'zod';
 import { FilesService } from '../school/files.service.js';
 import { SettingsService } from '../school/support.js';
@@ -106,7 +106,7 @@ export class MeController {
   @Get('me')
   async me(@Tenant() t: TenantCtx, @CurrentUser() u: AuthedUser): Promise<SessionUser> {
     // A console support session has no account in the school: describe it as what it is.
-    if (u.id.startsWith('support:')) return { id: u.id, name: u.name, email: null, phone: null, initials: 'GS', roles: ['support'], roleNames: ['Gradeon support'], permissions: u.permissions as SessionUser['permissions'] };
+    if (u.id.startsWith('support:')) return { id: u.id, name: u.name, email: null, phone: null, initials: 'GS', roles: ['support'], roleNames: ['Tangent support'], permissions: u.permissions as SessionUser['permissions'] };
     return this.auth.me(t, u.id);
   }
 

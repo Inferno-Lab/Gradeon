@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { dayLabel, inr, istToday, plural, type StudentRow } from '@gradeon/contracts';
-import { EmptyCard, Menu, PageScope, Select, ToastSlot, rollDigits, tintFor, useToast, Icon, type IconName } from '@gradeon/web-ui';
-import type { StudentListQuery } from '@gradeon/api-client';
+import { dayLabel, inr, istToday, plural, type StudentRow } from '@tangent/contracts';
+import { EmptyCard, Menu, PageScope, Select, ToastSlot, rollDigits, tintFor, useToast, Icon, type IconName } from '@tangent/web-ui';
+import type { StudentListQuery } from '@tangent/api-client';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { useSetting } from '../../app/kit';

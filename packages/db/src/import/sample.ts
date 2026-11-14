@@ -1,9 +1,9 @@
-import { IMPORT_KINDS } from '@gradeon/contracts';
+import { IMPORT_KINDS } from '@tangent/contracts';
 import { BLOOD, FIRST_FEMALE, FIRST_MALE, HOUSES, LAST } from '../seed/names.js';
 import { toCsv } from './files.js';
 
 /**
- * A realistic school as the files it would bring: every kind in Gradeon's templates, plus the student list as another
+ * A realistic school as the files it would bring: every kind in Tangent's templates, plus the student list as another
  * system exports it (Fedena-style columns, Indian dates, first and last names apart). Seeded, so a size always gives the
  * same school. Used by the import tests and by `tools/generate-school.mjs` for staging.
  */

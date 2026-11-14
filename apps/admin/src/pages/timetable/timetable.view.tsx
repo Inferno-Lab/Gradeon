@@ -1,7 +1,7 @@
 /* eslint-disable */
-// Markup converted from design/canvas/AdminTimetable.dc.html. Keep the markup and class names as designed.
+// Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Select, PageScope, ToastSlot, Segmented, Icon, EmptyNote } from "@gradeon/web-ui";
+import { Select, PageScope, ToastSlot, Segmented, Icon, EmptyNote } from "@tangent/web-ui";
 import "./timetable.css";
 
 export function TimetableView({ v }: { v: any }) {

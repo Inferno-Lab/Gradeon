@@ -1,6 +1,6 @@
 -- kind: expand
 -- Phase 3, moving a school in: terms and fee structures the school keeps itself, every import as an undoable batch,
--- the column matches people chose for a file shape, the files a school sends Gradeon, and when a person was invited.
+-- the column matches people chose for a file shape, the files a school sends Tangent, and when a person was invited.
 
 CREATE TABLE "terms" (
 	"id" text PRIMARY KEY NOT NULL,
@@ -26,7 +26,7 @@ CREATE UNIQUE INDEX "fee_structures_grade_title_uq" ON "fee_structures" (coalesc
 CREATE TABLE "import_batches" (
 	"id" text PRIMARY KEY NOT NULL,
 	"kind" text NOT NULL,
-	"source" text NOT NULL DEFAULT 'gradeon',
+	"source" text NOT NULL DEFAULT 'tangent',
 	"file_name" text NOT NULL DEFAULT '',
 	"created" integer NOT NULL DEFAULT 0,
 	"updated" integer NOT NULL DEFAULT 0,

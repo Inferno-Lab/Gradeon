@@ -2,21 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/widgets/sheets.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/widgets/sheets.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/haptics.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/utils/schedule.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 DateTime dayOnly(DateTime d) => DateUtils.dateOnly(d);
 

@@ -39,7 +39,7 @@
 .nest .card .es{border:0;box-shadow:none;background:none;border-radius:0}
 .nest .card .es:hover{transform:none;box-shadow:none}
 .nest .card .es>.eh{display:none}
-/* An empty card's icon tile (Gradeon Hue's icons) where the old design drew a picture. */
+/* An empty card's icon tile (Tangent Hue's icons) where the old design drew a picture. */
 .nest .eic{width:56px;height:56px;border-radius:16px;background:var(--s2);color:var(--ink2);display:grid;place-items:center;margin-bottom:6px}
 .nest .es-err .eic{background:var(--bad-s);color:var(--bad-i)}
 .nest .es-nf .es-act{justify-content:flex-start}

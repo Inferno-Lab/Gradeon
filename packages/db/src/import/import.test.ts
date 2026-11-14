@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureDatabase, startDevPostgres, type DevPostgres } from '../dev.js';
 import { migrate } from '../migrate.js';
 import { seedSchool } from '../seed/greenfield.js';
-import { IMPORT_KINDS } from '@gradeon/contracts';
+import { IMPORT_KINDS } from '@tangent/contracts';
 import { commitImport, exportAll, listBatches, previewImport, templateXlsx, undoBatch } from './engine.js';
 import { parseCsv, readTable, readXlsx } from './files.js';
 import { classKey, isoDay } from './kinds.js';
@@ -19,7 +19,7 @@ const school = sampleSchool(300);
 const n = async (sql: string) => Number((await pool.query<{ n: string }>(sql)).rows[0]!.n);
 
 beforeAll(async () => {
-  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-import-')), 'data'), fresh: true });
+  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'tangent-import-')), 'data'), fresh: true });
   pool = new pg.Pool({ connectionString: await ensureDatabase(server.url, 'school_import'), max: 4 });
   await migrate(pool, 'school');
   // An empty school: settings, roles and the first admin, nothing else, the way a school starts before it moves in.

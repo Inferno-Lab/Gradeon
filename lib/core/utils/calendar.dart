@@ -1,4 +1,4 @@
-import 'package:gradeon/core/widgets/toast.dart';
+import 'package:tangent/core/widgets/toast.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 

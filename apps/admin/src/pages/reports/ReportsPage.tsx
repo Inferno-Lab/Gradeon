@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { ReportQuery } from '@gradeon/contracts';
-import { DateField, Select, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { ReportQuery } from '@tangent/contracts';
+import { DateField, Select, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Ico, useOpenParam } from '../../app/kit';
@@ -78,7 +78,7 @@ export function ReportsPage() {
                   </>}
                 </div>
                 <div className="tgrow" style={{ padding: '10px 24px 16px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
-                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><EmptyNote icon="reports" title="Nothing to report for this yet" body="It fills in as the school uses Gradeon. Try a wider date range or the whole school." /></div> : (
+                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><EmptyNote icon="reports" title="Nothing to report for this yet" body="It fills in as the school uses Tangent. Try a wider date range or the whole school." /></div> : (
                   <div className="scroll-x">
                     <div style={{ minWidth: Math.max(480, d.columns.length * 96) }}>
                       <div className="grd th" style={{ '--cols': cols } as React.CSSProperties}>

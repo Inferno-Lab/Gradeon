@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { ActionRow, FleetSummary, SchoolRow } from '@gradeon/contracts';
-import { EmptyNote, EmptyState, Icon, PageScope, Presence, Roll, markStyle, rollDigits } from '@gradeon/web-ui';
+import type { ActionRow, FleetSummary, SchoolRow } from '@tangent/contracts';
+import { EmptyNote, EmptyState, Icon, PageScope, Presence, Roll, markStyle, rollDigits } from '@tangent/web-ui';
 
 // The console's front page as the Fleet board (design/hue/src/Fleet.html): the fleet on the deep colour, the schools by health,
 // what waits for approval and the app rolling out. `v` is what FleetPage works out; the rest is its data.

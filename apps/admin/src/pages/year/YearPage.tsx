@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PromotionPreview, YearRow } from '@gradeon/contracts';
-import { istToday } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, Select, useShake, EmptyNote } from '@gradeon/web-ui';
+import type { PromotionPreview, YearRow } from '@tangent/contracts';
+import { istToday } from '@tangent/contracts';
+import { DateField, Dialog, EmptyCard, Field, Select, useShake, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -72,7 +72,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
       {v && <>
         <section className="grid" data-even="">
           <Card span="s6" title="Academic years" chip={can && !draft ? <button className="btn sm" onClick={() => setDlg('year')}>Draft next year</button> : undefined}>
-            {!v.years.length && <EmptyNote icon="year" title="No year is set up" body="Gradeon adds the first one with the school." />}
+            {!v.years.length && <EmptyNote icon="year" title="No year is set up" body="Tangent adds the first one with the school." />}
             {v.years.map((y) => (
               <div key={y.id} className="kv" style={{ alignItems: 'center' }}>
                 <span style={{ minWidth: 0 }}><b style={{ color: 'var(--ink)' }}>{y.label}</b><br /><small className="help">{dateLabel(y.startsOn)} {y.startsOn.slice(0, 4)} to {dateLabel(y.endsOn)} {y.endsOn.slice(0, 4)}{y.status === 'current' ? ` · ${y.classes} classes, ${y.students} students` : ''}</small></span>

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
-import { uploadFile } from '@gradeon/api-client';
+import { uploadFile } from '@tangent/api-client';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['homework', 'dashboard'].includes(String(q.queryKey[0])) });
 

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { breachNotice, istToday, type ComplianceRow } from '@gradeon/contracts';
-import { AreaField, DateField, Dialog, Field, FilePick, SelectField, useShake, EmptyState, Icon } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { breachNotice, istToday, type ComplianceRow } from '@tangent/contracts';
+import { AreaField, DateField, Dialog, Field, FilePick, SelectField, useShake, EmptyState, Icon } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -146,7 +146,7 @@ function Sign({ r, onClose, onDone }: { r: ComplianceRow; onClose: () => void; o
 function Tell({ r, onClose, onDone }: { r: ComplianceRow; onClose: () => void; onDone: (m: string) => void }) {
   const app = useApp();
   const [note, setNote] = useState(r.note);
-  const go = useMutation({ mutationFn: () => app.api.compliance.update(r.id, { status: 'notified', note: note.trim() }), onSuccess: () => onDone(`${r.schoolName} was told, through Gradeon’s email.`) });
+  const go = useMutation({ mutationFn: () => app.api.compliance.update(r.id, { status: 'notified', note: note.trim() }), onSuccess: () => onDone(`${r.schoolName} was told, through Tangent’s email.`) });
   return (
     <Dialog title={`Tell ${r.schoolName}`} tag={{ text: 'Sent by email to its contact', tone: 'a' }} onClose={onClose} width={540}>
       <AreaField label="What happened, in words for the school" value={note} onChange={setNote} rows={3} maxLength={600} />

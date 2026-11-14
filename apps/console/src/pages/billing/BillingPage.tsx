@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { CAPABILITY_LABELS, istToday, type Capability, type InvoiceRowC } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { CAPABILITY_LABELS, istToday, type Capability, type InvoiceRowC } from '@tangent/contracts';
+import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees, when } from '../../app/format';
@@ -118,7 +118,7 @@ function InvoiceDialog({ r, can, onClose, onDone }: { r: InvoiceRowC; can: boole
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.write(`<!doctype html><meta charset="utf-8"><title>Invoice ${esc(r.schoolName)} ${r.period}</title><body style="font:15px/1.5 system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px">
-      <h1 style="font-size:22px">Gradeon invoice</h1><p>${esc(r.schoolName)}<br>Month: ${r.period}<br>Due by: ${r.dueOn}</p>
+      <h1 style="font-size:22px">Tangent invoice</h1><p>${esc(r.schoolName)}<br>Month: ${r.period}<br>Due by: ${r.dueOn}</p>
       <table style="width:100%;border-collapse:collapse">${r.lines.map((l) => `<tr><td style="padding:6px 0;border-bottom:1px solid color-mix(in srgb,currentColor 20%,transparent)">${esc(l.label)}</td><td style="text-align:right;border-bottom:1px solid color-mix(in srgb,currentColor 20%,transparent)">${rupees(l.amount)}</td></tr>`).join('')}
       <tr><td style="padding:10px 0"><b>Total</b></td><td style="text-align:right"><b>${rupees(r.amount)}</b></td></tr></table>
       ${r.status === 'paid' ? `<p>Paid on ${r.paidOn}, reference ${esc(r.paidRef ?? '')}.</p>` : ''}</body>`);

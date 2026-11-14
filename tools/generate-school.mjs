@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes a realistic test school as the files a school would bring: one CSV per import kind in Gradeon's templates, in the
+// Writes a realistic test school as the files a school would bring: one CSV per import kind in Tangent's templates, in the
 // order to import them, plus the same students as another system (Fedena-style) exports them, and what it all adds up to.
 // Load them in the console (school page, Migration) one by one, or press "Load a realistic test school" there.
 // Usage: node tools/generate-school.mjs [--students 300] [--seed 7] [--out ./test-school]   (build packages/db first)

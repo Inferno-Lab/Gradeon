@@ -2,7 +2,7 @@ import type {
   ActionRequest, ActionRow, LoginChallenge, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
   CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, DataRequestAcross, MigrationRow, PlanRow, PlanSave, SubprocessorRow, RoleTemplate, SchoolDetailsPatch, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow,
-  ActivityQuery, ActivityView, ConnectionInput, ConnectionPatch, HookEventRow, IntegrationsView, JobRow, RouteInput as IntRouteInput, TemplateInput } from '@gradeon/contracts';
+  ActivityQuery, ActivityView, ConnectionInput, ConnectionPatch, HookEventRow, IntegrationsView, JobRow, RouteInput as IntRouteInput, TemplateInput } from '@tangent/contracts';
 import type { Http } from './http';
 
 /** What the console sends to preview or import: the file name may be left out. */

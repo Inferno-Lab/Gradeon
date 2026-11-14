@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, type InvoiceDetail } from '@gradeon/contracts';
-import { Dialog, ErrorLine, NumberField, Segmented, useShake, EmptyNote } from '@gradeon/web-ui';
+import { inr, type InvoiceDetail } from '@tangent/contracts';
+import { Dialog, ErrorLine, NumberField, Segmented, useShake, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, dateLabel, problem } from '../../app/kit';
 

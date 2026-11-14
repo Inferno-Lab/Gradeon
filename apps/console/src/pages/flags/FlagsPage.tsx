@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FlagRow } from '@gradeon/contracts';
-import { Dialog, Field, MenuButton, useShake, EmptyState } from '@gradeon/web-ui';
+import type { FlagRow } from '@tangent/contracts';
+import { Dialog, Field, MenuButton, useShake, EmptyState } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

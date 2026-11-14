@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
 
 /// Squash-on-press wrapper used by cards, rows and buttons.
 class Pressable extends StatefulWidget {
@@ -74,7 +74,7 @@ class Btn extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final (bg, fg) = switch (kind) {
-      // Gradeon Hue: brand for the main action, the deep colour for a strong second one.
+      // Tangent Hue: brand for the main action, the deep colour for a strong second one.
       BtnKind.primary => (c.brand, c.onBrand),
       BtnKind.ink => (c.deep, c.onDeep),
       // On the deep header, the school's bright colour.

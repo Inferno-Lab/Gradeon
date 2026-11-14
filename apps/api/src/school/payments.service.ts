@@ -1,8 +1,8 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
-import { addDays, istToday, type OnlinePaymentRow, type ReconRow, type RefundRow } from '@gradeon/contracts';
-import { newId, type Job } from '@gradeon/db';
-import type { PaymentEvent } from '@gradeon/integrations';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { addDays, istToday, type OnlinePaymentRow, type ReconRow, type RefundRow } from '@tangent/contracts';
+import { newId, type Job } from '@tangent/db';
+import type { PaymentEvent } from '@tangent/integrations';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import { ENV, type Env } from '../env.js';
 import { TenantService, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { FeesService } from './fees.service.js';
@@ -113,7 +113,7 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  /** The provider confirms a refund: marked done in the connection's school, or (a Gradeon-wide connection) whichever school sent it. */
+  /** The provider confirms a refund: marked done in the connection's school, or (a Tangent-wide connection) whichever school sent it. */
   private async refunded(ev: PaymentEvent, schoolId: string | null): Promise<string> {
     if (!ev.refundId) return 'A refund without its ID';
     // ponytail: a shared connection looks through every live school; keep refund IDs in the registry if that list grows past a few hundred.

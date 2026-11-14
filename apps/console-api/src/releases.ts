@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Logger, Param, Post, type OnApplicationBootstrap } from '@nestjs/common';
 import { POOLS, REGISTRY } from './tokens.js';
-import type { MigrationRow, PolicyDoc, ReleaseRow } from '@gradeon/contracts';
-import { loadMigrations, migrate, newId, pg } from '@gradeon/db';
-import { ApiError, notFound } from '@gradeon/nest-kit';
-import { unseal } from '@gradeon/security';
-import type { PoolManager, Registry } from '@gradeon/tenancy';
+import type { MigrationRow, PolicyDoc, ReleaseRow } from '@tangent/contracts';
+import { loadMigrations, migrate, newId, pg } from '@tangent/db';
+import { ApiError, notFound } from '@tangent/nest-kit';
+import { unseal } from '@tangent/security';
+import type { PoolManager, Registry } from '@tangent/tenancy';
 import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
 import { ENV, type Env } from './env.js';

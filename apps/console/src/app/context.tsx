@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ConsoleTokens } from '@gradeon/contracts';
+import type { ConsoleTokens } from '@tangent/contracts';
 import type { Client } from './client';
 
 export interface AppCtx {

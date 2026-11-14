@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 class AppConfig {
   const AppConfig._();
 
-  static const appName = 'Gradeon';
+  static const appName = 'Tangent';
 
   /// Which school this build is for, and where its API lives:
   /// `--dart-define=SCHOOL=<slug> --dart-define=API_BASE_URL=<address>`; the console's build workflow sets both.

@@ -1,4 +1,4 @@
-# Gradeon Hue
+# Tangent Hue
 
 > **Web (admin and console), 14 November 2026:** Hue's layouts and empty states in the Nest look. The board stylesheets here (`base.css`, `base2.css`, `empty.css`) carry it: Manrope and Bricolage, pill controls, 24px cards, uppercase labels, and no tinted panels in the scenes. Web surfaces are the fixed neutrals of `WEB_NEUTRALS` (`packages/contracts/src/hue.ts`); the app keeps the seeded surfaces.
 

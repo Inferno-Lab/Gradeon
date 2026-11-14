@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/features/auth/controllers/login_controller.dart';
-import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:gradeon/features/fees/controllers/fees_controller.dart';
-import 'package:gradeon/features/homework/controllers/homework_controller.dart';
-import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/view_state.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/features/auth/controllers/login_controller.dart';
+import 'package:tangent/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tangent/features/fees/controllers/fees_controller.dart';
+import 'package:tangent/features/homework/controllers/homework_controller.dart';
+import 'package:tangent/features/teacher_tools/controllers/teacher_controller.dart';
 
 import 'support/harness.dart';
 

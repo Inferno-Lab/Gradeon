@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/session_bus.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/view_state.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/session_bus.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/view_state.dart';
 
 mixin Loadable on GetxController {
   final state = ViewState.loading.obs;

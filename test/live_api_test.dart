@@ -2,14 +2,14 @@
 // change in what the server sends shows up as a failure here instead of on a phone. Skipped unless LIVE_API is set:
 //   flutter test test/live_api_test.dart --dart-define=LIVE_API=http://localhost:4000 --dart-define=LIVE_SCHOOL=greenfield
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradeon/core/network/api_client.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/network/api_client.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 
 const _base = String.fromEnvironment('LIVE_API');
 const _school = String.fromEnvironment('LIVE_SCHOOL', defaultValue: 'greenfield');

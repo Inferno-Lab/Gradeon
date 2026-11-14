@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, EmptyNote, Segmented, Select, EmptyState } from '@gradeon/web-ui';
+import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@tangent/contracts';
+import { EmptyCard, EmptyNote, Segmented, Select, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel, useFeeHeads, useOpenParam } from '../../app/kit';

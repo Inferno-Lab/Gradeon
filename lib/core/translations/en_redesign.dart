@@ -576,12 +576,12 @@ const enRedesign = <String, String>{
   'settings.fee_reminders': 'Fee reminders',
   'settings.fee_reminders_hint': '3 days before a due date',
   'settings.account': 'Account',
-  'settings.logout_title': 'Sign out of Gradeon?',
+  'settings.logout_title': 'Sign out of Tangent?',
   'settings.logout_body':
       "You'll need your school email to sign in again. Saved receipts and downloaded files stay on this phone.",
   'settings.stay': 'Stay signed in',
   'menu.about': 'About',
-  'about.for': 'Gradeon @version for',
+  'about.for': 'Tangent @version for',
   'about.maps': 'Open in Maps',
   'about.office': 'Office: @hours',
   'about.principal': 'Principal: @name · since @year',
@@ -839,7 +839,7 @@ const enRedesign = <String, String>{
   'privacy.consent_intro': '@school keeps your family’s details to run the school. Please read how they are used.',
   'privacy.default_notice':
       'The school uses your family’s details only to run the school: attendance, fees, homework, results and messages. '
-      'They are kept in Gradeon’s databases for the school and are never sold or used for advertising. '
+      'They are kept in Tangent’s databases for the school and are never sold or used for advertising. '
       'Ask the school office for its full privacy notice.',
   'privacy.officer': 'Grievance officer: @who',
   'privacy.photos': 'The school may share photos of my child',

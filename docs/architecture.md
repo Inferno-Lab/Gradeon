@@ -37,7 +37,7 @@ GetX named routes (`AppRoutes`). Tab switching from inside a screen: `ShellContr
 
 ## Platform pieces
 
-- `Glass` (`core/widgets/glass.dart`) is a solid floating surface; the shaders in `shaders/` are not loaded. See `docs/design-system.md` → Glass.
+- `Glass` (`core/widgets/glass.dart`) is a solid floating surface. See `docs/design-system.md` → Glass.
 - Android: adaptive icon, Android 12 splash styles in `values-v31`, `kotlin.incremental=false` in `gradle.properties` (cross-drive builds).
 
 ## The platform around the app

@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 const log = new Logger('Alert');
 
 /**
- * Where the team hears about trouble: the "Alerts to the Gradeon team" connection in the console (Slack, Discord or email,
+ * Where the team hears about trouble: the "Alerts to the Tangent team" connection in the console (Slack, Discord or email,
  * through the Integrations Hub). Each server sets `send` at start-up; until a connection is set up, alerts reach the log only.
  */
 export const alerts: { send?: (title: string, text: string) => Promise<boolean> } = {};

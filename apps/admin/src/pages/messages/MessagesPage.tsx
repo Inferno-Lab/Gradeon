@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
-import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
-import { uploadFile } from '@gradeon/api-client';
+import type { ThreadDetail, ThreadRow } from '@tangent/contracts';
+import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
+import { uploadFile } from '@tangent/api-client';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, Ico, problem, stamp, useOpenParam } from '../../app/kit';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { APP_NEUTRALS, HUE_PAIRS, SPECTRUM_COLOURS, WEB_NEUTRALS, appTokens, hueContrast, hueCss, hueOf, hueTokens, spectrumTokens, type HueMode } from './hue.js';
 
-describe('Gradeon Hue', () => {
+describe('Tangent Hue', () => {
   it('gives the approved colours for a seed', () => {
     expect(hueTokens(162, 'light').deep).toBe('#0B281B');
     expect(hueTokens(162, 'dark').brand).toBe('#55F1B0');

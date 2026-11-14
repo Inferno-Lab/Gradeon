@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { SPECTRUM_COLOURS, spectrumTokens } from '@gradeon/contracts';
+import { SPECTRUM_COLOURS, spectrumTokens } from '@tangent/contracts';
 import { SCENE_CSS, SCENES } from './scenes';
 
 export type EmptyScene = keyof typeof SCENES;
@@ -16,7 +16,7 @@ const CARD = '.es{border-radius:28px;box-shadow:inset 0 0 0 1px var(--line)}';
 const HOST = SPECTRUM + CARD + '[style*="background:var(--s2)"]:not(.ring){background:none!important}' + ':host{display:block;--t1:var(--ink);--t2:var(--ink2);--t3:var(--ink3);--shadow:var(--sh2)}.hue{background:none;font-family:var(--fb)}.nolink .lk,.noact .acts .btn{display:none!important}';
 
 /**
- * A page with nothing in it yet (Gradeon Hue, design/hue/EMPTY-STATES.md): the approved composition for that page, its words
+ * A page with nothing in it yet (Tangent Hue, design/hue/EMPTY-STATES.md): the approved composition for that page, its words
  * and one main button, with the scene moving in a 10 s loop (still under reduced motion). Show it only when the data is truly
  * empty: loading, errors and a filter with no match keep their own states. Without `onAction` (no permission) the button is
  * left out; `label` renames it where this product's next step differs from the board's.

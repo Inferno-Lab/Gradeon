@@ -63,7 +63,7 @@ export function useLogin(c: LoginController, themeCls: string) {
   const [otpErr, setOtpErr] = useState(false);
   const [otpMsg, setOtpMsg] = useState('');
   const [lang, setLang] = useState(() => {
-    try { const i = LANGS.findIndex((l) => l[1] === localStorage.getItem('gradeon.lang')); return i < 0 ? 0 : i; } catch { return 0; }
+    try { const i = LANGS.findIndex((l) => l[1] === localStorage.getItem('tangent.lang')); return i < 0 ? 0 : i; } catch { return 0; }
   });
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [name, setName] = useState('');
@@ -81,7 +81,7 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   const next = async () => {
     if (busy) return;
-    if (!email.trim()) return bad(() => setEmErr(cons ? 'Enter your Gradeon email to continue.' : 'Enter your email or phone number to continue.'));
+    if (!email.trim()) return bad(() => setEmErr(cons ? 'Enter your Tangent email to continue.' : 'Enter your email or phone number to continue.'));
     if (!pw) return bad(() => { setPwErr(true); setPwMsg('Enter your password to continue.'); });
     setBusy(true);
     try {
@@ -143,31 +143,31 @@ export function useLogin(c: LoginController, themeCls: string) {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
     brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color), logoUrl: c.logoUrl ?? null,
     privacyOpen, privacy: c.privacy, togglePrivacy: () => setPrivacyOpen((o) => !o),
-    // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
-    gradeon: c.product === 'console' || c.schoolName === 'Gradeon',
+    // Tangent's own sign-in (the console, or the admin before a school is known) shows the Tangent icon; a school's shows its initial.
+    tangent: c.product === 'console' || c.schoolName === 'Tangent',
     cardA: cons ? 'Schools live' : 'Attendance today', aD: rollDigits(cons ? '312' : '94.2'), aU: cons ? '' : '%',
     cardB: cons ? 'Release 2026.10.3' : 'Fees this month', bN: cons ? 'Wave 3' : '18.4k', bU: cons ? 'of 6' : '', bChip: cons ? 'Healthy' : '+8.7%', bChip2: cons ? '141 updated' : '62% of due',
     toastT: cons ? 'Wave 3 passed every check' : 'Attendance sent for 8 A',
     headline: cons ? 'Run every school from one calm board.' : 'Everything the school office needs, in one calm place.',
-    subline: cons ? 'Releases, cells, support and billing for the whole Gradeon fleet.' : 'Attendance, fees, exams and every message to families.',
-    langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('gradeon.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
+    subline: cons ? 'Releases, cells, support and billing for the whole Tangent fleet.' : 'Attendance, fees, exams and every message to families.',
+    langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('tangent.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
     isCred: step === 'cred', isOtp: step === 'otp', isOk: step === 'ok',
-    title: cons ? 'Console sign in' : 'Welcome back', sub: cons ? 'Gradeon team members only. Every sign-in is recorded.' : `Sign in to the ${c.shortName} staff room.`, cta: cons ? 'Continue' : 'Sign in',
+    title: cons ? 'Console sign in' : 'Welcome back', sub: cons ? 'Tangent team members only. Every sign-in is recorded.' : `Sign in to the ${c.shortName} staff room.`, cta: cons ? 'Continue' : 'Sign in',
     email, onEmail: (e: { target: { value: string } }) => { setEmail(e.target.value); setEmErr(''); },
-    emailPh: cons ? 'you@gradeon.app' : 'Your email or phone number',
+    emailPh: cons ? 'you@tangent.app' : 'Your email or phone number',
     pw, onPw: (e: { target: { value: string } }) => { setPw(e.target.value); setPwErr(false); },
     pwType: show ? 'text' : 'password', eyeD: show ? EYE_OFF : EYE_ON, eyeLabel: show ? 'Hide password' : 'Show password', toggleEye: () => setShow((s) => !s),
     emCls: emErr ? 'err shake' : '', emInv: emErr ? 'true' : 'false', emErr: !!emErr, emMsg: emErr, pwCls: pwErr ? 'err shake' : '', pwInv: pwErr ? 'true' : 'false', pwErr, pwMsg,
     showDemo: c.demoMode, fillDemo: () => { setPw('nest2026'); setPwErr(false); },
     forgot: () => void forgot(), forgotNote, isReset: resetting, newPw, onNewPw: (e: { target: { value: string } }) => { setNewPw(e.target.value); setOtpErr(false); }, npCls: '',
-    idLabel: cons ? 'Gradeon email' : 'Email or phone number', idType: cons ? 'email' : 'text',
+    idLabel: cons ? 'Tangent email' : 'Email or phone number', idType: cons ? 'email' : 'text',
     busy, notBusy: !busy,
     next: () => void next(),
     otpTitle: challenge?.enroll ? 'Set up your authenticator' : challenge?.channel === 'app' ? 'Open your authenticator' : `Check your ${challenge?.channel === 'sms' ? 'messages' : 'inbox'}`,
     otpSub: challenge?.enroll
-      ? 'Add Gradeon to an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) with the key below, then type the 6-digit code it shows. You’ll use it at every sign-in.'
+      ? 'Add Tangent to an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) with the key below, then type the 6-digit code it shows. You’ll use it at every sign-in.'
       : challenge?.channel === 'app'
-        ? 'Type the 6-digit code your authenticator app shows for Gradeon.'
+        ? 'Type the 6-digit code your authenticator app shows for Tangent.'
         : `We sent a 6-digit code by ${challenge?.channel === 'sms' ? 'text message' : 'email'} to ${(challenge?.maskedTo ?? email).replace(/ /g, '\u00a0')}. It works for ${Math.max(1, Math.round((challenge?.expiresInSeconds ?? 600) / 60))} minutes.${resetting ? ' Type it with your new password.' : ''}`,
     enroll: challenge?.enroll ?? null, back: () => { setStep('cred'); setCode(''); setOtpErr(false); setResetting(false); },
     boxes, code, otpBad: otpErr ? 'bad shake' : '', otpErr, otpMsg, tries,

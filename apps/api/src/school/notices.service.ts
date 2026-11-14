@@ -1,7 +1,7 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { enqueue, newId, type Job } from '@gradeon/db';
-import type { NoticeCreate, NoticeRow } from '@gradeon/contracts';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { enqueue, newId, type Job } from '@tangent/db';
+import type { NoticeCreate, NoticeRow } from '@tangent/contracts';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import { TenantService, type TenantCtx } from '../tenancy/tenant.js';
 import { FilesService } from './files.service.js';
 import { HubService } from './hub.service.js';

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { StaffRow } from '@gradeon/contracts';
-import { Dialog, Field, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { StaffRow } from '@tangent/contracts';
+import { Dialog, Field, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, Ico, problem, useSchoolConfig } from '../../app/kit';

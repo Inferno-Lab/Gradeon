@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Post, Query, Res } from '@nestjs/common';
 import type { FastifyReply } from 'fastify';
-import { FamilyInvite, IMPORT_KINDS, UploadCreate, importKind, type Activation, type ImportBatchRow, type LetterRow, type UploadRow } from '@gradeon/contracts';
-import { exportAll, listBatches, newId, readTable, templateXlsx } from '@gradeon/db';
-import { hashPassword } from '@gradeon/security';
-import { ZodPipe, notFound } from '@gradeon/nest-kit';
+import { FamilyInvite, IMPORT_KINDS, UploadCreate, importKind, type Activation, type ImportBatchRow, type LetterRow, type UploadRow } from '@tangent/contracts';
+import { exportAll, listBatches, newId, readTable, templateXlsx } from '@tangent/db';
+import { hashPassword } from '@tangent/security';
+import { ZodPipe, notFound } from '@tangent/nest-kit';
 import { z } from 'zod';
 import { Core, CurrentUser, Require } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
@@ -21,7 +21,7 @@ const FAMILIES = `select distinct c.id class_id, g.id guardian_id, u.id user_id,
   join guardians g on g.id = sg.guardian_id left join users u on u.id = g.user_id where s.status = 'active'`;
 
 /**
- * Moving in, from the school's side: the files it sends Gradeon's team, and go-live (inviting staff, inviting families
+ * Moving in, from the school's side: the files it sends Tangent's team, and go-live (inviting staff, inviting families
  * class by class with letters to send home, and seeing who has signed in). The import itself is the console's job.
  */
 @Injectable()
@@ -160,7 +160,7 @@ export class MovingInController {
     return this.moving.uploads(t);
   }
 
-  /** What Gradeon imported, with the totals to check against the old system (undo stays with Gradeon). */
+  /** What Tangent imported, with the totals to check against the old system (undo stays with Tangent). */
   @Get('batches') @Require('setup.write')
   batches(@Tenant() t: TenantCtx): Promise<ImportBatchRow[]> {
     return listBatches(t.pool);

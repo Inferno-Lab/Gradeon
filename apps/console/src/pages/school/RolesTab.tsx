@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@tangent/contracts';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@tangent/web-ui';
 import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 

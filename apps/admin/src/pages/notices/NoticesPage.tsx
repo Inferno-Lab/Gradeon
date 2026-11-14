@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError, uploadFile } from '@gradeon/api-client';
-import type { Category, NoticeRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, SelectField, TimeField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { HttpError, uploadFile } from '@tangent/api-client';
+import type { Category, NoticeRow } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, Field, SelectField, TimeField, useShake, Icon, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Attach, useSetting } from '../../app/kit';

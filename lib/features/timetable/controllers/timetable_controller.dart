@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/formatters.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/utils/schedule.dart';
+import 'package:tangent/core/utils/status.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/student.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 class TimetableController extends GetxController with Loadable {
   final dayIndex = (Clock.now().weekday - 1).clamp(0, 6).obs;

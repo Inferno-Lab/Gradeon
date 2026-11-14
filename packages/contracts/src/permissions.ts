@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Every action a role can be allowed to do. The admin hides UI and the API refuses requests from this one list.
- * Nothing here changes the school's configuration or roles: only Gradeon does that, from the console.
+ * Nothing here changes the school's configuration or roles: only Tangent does that, from the console.
  */
 export const PERMISSIONS = [
   'students.read',
@@ -101,7 +101,7 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'timetable.read', area: 'Timetable', label: 'See the timetable' },
   { key: 'timetable.edit', area: 'Timetable', label: 'Edit periods and cover' },
   { key: 'timetable.publish', area: 'Timetable', label: 'Publish the timetable' },
-  { key: 'settings.read', area: 'Settings', label: 'See how Gradeon has set up the school' },
+  { key: 'settings.read', area: 'Settings', label: 'See how Tangent has set up the school' },
   { key: 'privacy.manage', area: 'Settings', label: 'Log and answer families’ data requests', sensitive: true },
   { key: 'audit.read', area: 'Settings', label: 'Read the audit log' },
   { key: 'reports.read', area: 'Reports', label: 'See reports' },
@@ -124,7 +124,7 @@ export const PERMISSION_CATALOG: PermissionInfo[] = [
   { key: 'gallery.read', area: 'Gallery', label: 'See albums' },
   { key: 'gallery.write', area: 'Gallery', label: 'Add albums and photos, publish them to families' },
   { key: 'year.manage', area: 'School setup', label: 'Promote students, start a new year and record leavers', sensitive: true },
-  { key: 'setup.write', area: 'School setup', label: 'Edit classes, subjects, periods, terms, holidays and fee structures (where Gradeon allows)' },
+  { key: 'setup.write', area: 'School setup', label: 'Edit classes, subjects, periods, terms, holidays and fee structures (where Tangent allows)' },
 ];
 
 export interface RoleTemplate {

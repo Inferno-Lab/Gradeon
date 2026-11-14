@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { enqueue, newId, type Job } from '@gradeon/db';
-import type { FileKind, FileRow, FileStart, FileUpload } from '@gradeon/contracts';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { enqueue, newId, type Job } from '@tangent/db';
+import type { FileKind, FileRow, FileStart, FileUpload } from '@tangent/contracts';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { AuthedUser, TenantCtx } from '../tenancy/tenant.js';
 import { HubService } from './hub.service.js';
 import { SettingsService } from './support.js';
@@ -90,7 +90,7 @@ export class FilesService implements OnModuleInit {
     const rule = RULES[kind];
     const cfg = await this.settings.effective(t);
     if (!cfg.modules.includes(rule.module) && !cfg.features.includes(rule.module)) throw new ApiError('locked', 'This feature is not part of your school’s plan.');
-    if (rule.write === 'console') throw forbidden('Only Gradeon adds these files.');
+    if (rule.write === 'console') throw forbidden('Only Tangent adds these files.');
     // A family's new photo of their own child waits for the office ("pending:<student>") before it is used.
     if (kind === 'student_photo' && ownerId.startsWith('pending:')) {
       if (!(await this.children(t, user.id)).includes(ownerId.slice(8))) throw forbidden('You can send a photo only of your own child.');
@@ -152,7 +152,7 @@ export class FilesService implements OnModuleInit {
   /** Records an upload and returns its address. Also used by the console for the school's logo. */
   async reserve(t: TenantCtx, userId: string | null, b: FileStart): Promise<FileUpload> {
     const limitGb = t.info.entitlement.limits.storageGb;
-    if (limitGb > 0 && (await this.usage(t)) + b.bytes > limitGb * 1024 * MB) throw new ApiError('locked', `The school's ${limitGb} GB of storage is full. Gradeon can raise the limit.`);
+    if (limitGb > 0 && (await this.usage(t)) + b.bytes > limitGb * 1024 * MB) throw new ApiError('locked', `The school's ${limitGb} GB of storage is full. Tangent can raise the limit.`);
     const id = newId('fil');
     const key = `schools/${t.info.slug}/${b.kind}/${id}/${b.name.replace(/[^\w.-]+/g, '_').slice(-80)}`;
     const { s, ctx } = await this.storage(t);
@@ -185,7 +185,7 @@ export class FilesService implements OnModuleInit {
       if ((await this.hubs.hub.mode()) === 'live') {
         await s.remove(ctx, f.storage_key).catch(() => undefined);
         await t.pool.query('update files set deleted_at = now() where id = $1', [id]);
-        throw new ApiError('locked', 'Uploads are paused while Gradeon sets up the virus check. Try again later.');
+        throw new ApiError('locked', 'Uploads are paused while Tangent sets up the virus check. Try again later.');
       }
       await this.markScanned(t.pool, id, null);
     } else await enqueue(this.hubs.hub.o.pool as never, 'files.scan', t.info.id, { fileId: id });

@@ -1,18 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { APP_CATALOG, MODULES } from '@gradeon/config-engine';
+import { APP_CATALOG, MODULES } from '@tangent/config-engine';
 import {
   APP_ROLE_KEYS, MESSAGE_EVENTS, PERMISSION_CATALOG, SETTINGS_META, SchoolSettingsSchema,
   type EffectiveConfig, type SettingMeta, type SettingsResponse,
-} from '@gradeon/contracts';
-import { EmptyCard, Segmented, useToast } from '@gradeon/web-ui';
+} from '@tangent/contracts';
+import { EmptyCard, Segmented, useToast } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page } from '../../app/Page';
 import { usePageTabs } from '../../app/tabs';
-import { AskGradeon } from './AskGradeon';
+import { AskTangent } from './AskTangent';
 
 /**
- * How Gradeon has set the school up, to read: the school changes none of it (docs/product-map.md, "schools configure nothing").
+ * How Tangent has set the school up, to read: the school changes none of it (docs/product-map.md, "schools configure nothing").
  * Every value is read from the settings and the module definitions, so a new setting shows here with no change to this page.
  */
 const dflt = (k: string): unknown => (SchoolSettingsSchema.shape as Record<string, { safeParse: (v: unknown) => { data?: unknown } }>)[k]?.safeParse(undefined).data;
@@ -32,7 +32,7 @@ function show(m: SettingMeta, v: unknown): ReactNode {
     case 'gradingScale': return (v as { grade: string; minPct: number }[]).map((g) => `${g.grade} from ${g.minPct}%`).join(' · ');
     case 'logo': return 'Uploaded';
     case 'classes': return `${(v as string[]).length} chosen`;
-    default: return typeof v === 'object' ? 'Set by Gradeon' : String(v);
+    default: return typeof v === 'object' ? 'Set by Tangent' : String(v);
   }
 }
 
@@ -64,10 +64,10 @@ export function ProfilePage() {
   const d = doc.data;
   const c = cfg.data;
   return (
-    <Page title="School profile" sub="How Gradeon has set up your school. To change anything, ask Gradeon." toast={toast} loading={doc.isLoading || cfg.isLoading}
+    <Page title="School profile" sub="How Tangent has set up your school. To change anything, ask Tangent." toast={toast} loading={doc.isLoading || cfg.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
-      tabs={tabs} actions={<><button className="btn pri" onClick={() => setAsking(true)}>Ask Gradeon to change this</button></>}
-      overlays={asking && <AskGradeon area={AREA[tab] ?? 'School profile'} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Gradeon. The answer shows when you ask again.'); }} />}>
+      tabs={tabs} actions={<><button className="btn pri" onClick={() => setAsking(true)}>Ask Tangent to change this</button></>}
+      overlays={asking && <AskTangent area={AREA[tab] ?? 'School profile'} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Tangent. The answer shows when you ask again.'); }} />}>
       {d && c && (
         <div className="stack" style={{ gap: 16 }}>
           {tab === 'identity' && <>
@@ -85,7 +85,7 @@ export function ProfilePage() {
           {tab === 'data' && <YourData say={say} />}
           {tab === 'privacy' && <>
             <Card title="Privacy notice">
-              <p style={{ margin: 0, font: '400 14px/1.6 var(--fb)', whiteSpace: 'pre-wrap' }}>{c.privacy.notice || 'Gradeon has not written the school’s privacy notice yet.'}</p>
+              <p style={{ margin: 0, font: '400 14px/1.6 var(--fb)', whiteSpace: 'pre-wrap' }}>{c.privacy.notice || 'Tangent has not written the school’s privacy notice yet.'}</p>
             </Card>
             <Card title="Privacy and consent"><Rows doc={d} keys={keysIn('Privacy').filter((k) => k !== 'privacy.notice')} /></Card>
           </>}
@@ -153,7 +153,7 @@ function Roles({ cfg }: { cfg: EffectiveConfig }) {
   if (roles.isError) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="lock" heading="You can’t see roles" body={(roles.error as Error).message} actions={<button className="btn pri" onClick={() => void roles.refetch()}>Try again</button>} />;
   const list = roles.data ?? [];
   const cur = list.find((r) => r.id === sel) ?? list[0];
-  if (!cur) return <EmptyCard title="Roles" chip={{ text: '0', tone: 'v' }} icon="lock" heading="No roles yet" body="Gradeon makes the school’s roles when it sets the school up." />;
+  if (!cur) return <EmptyCard title="Roles" chip={{ text: '0', tone: 'v' }} icon="lock" heading="No roles yet" body="Tangent makes the school’s roles when it sets the school up." />;
   const has = { modules: cfg.modules, features: cfg.features };
   const allowed = PERMISSION_CATALOG.filter((p) => cur.permissions.includes(p.key) && (has.modules.length === 0 || true));
   const areas = [...new Set(allowed.map((p) => p.area))];
@@ -185,7 +185,7 @@ function Messages({ doc, cfg }: { doc: SettingsResponse; cfg: EffectiveConfig })
   return <>
     <Card title="How messages travel">
       {ch.isError ? <p className="help">{(ch.error as Error).message}</p> : (ch.data?.channels ?? []).map((x) => (
-        <div key={x.capability} className="kv"><span style={{ minWidth: 0 }}>{x.label}<small style={{ display: 'block', color: 'var(--ink3)' }}>{x.provider ?? (x.state === 'sandbox' ? 'Messages go to Gradeon’s test inbox for now.' : '')}</small></span><b><span className={`chip ${STATE[x.state].tone}`}>{STATE[x.state].text}</span></b></div>
+        <div key={x.capability} className="kv"><span style={{ minWidth: 0 }}>{x.label}<small style={{ display: 'block', color: 'var(--ink3)' }}>{x.provider ?? (x.state === 'sandbox' ? 'Messages go to Tangent’s test inbox for now.' : '')}</small></span><b><span className={`chip ${STATE[x.state].tone}`}>{STATE[x.state].text}</span></b></div>
       ))}
       <Rows doc={doc} keys={keysIn('Messaging')} />
     </Card>
@@ -221,7 +221,7 @@ function YourData({ say }: { say: (m: string, tone?: 'bad') => void }) {
   };
   return (
     <Card title="Everything, to take with you">
-      <p className="help" style={{ marginTop: 0 }}>A ZIP with one sheet for each kind of record, in the same columns Gradeon imports. Your data is yours: this is what you would take to another system.</p>
+      <p className="help" style={{ marginTop: 0 }}>A ZIP with one sheet for each kind of record, in the same columns Tangent imports. Your data is yours: this is what you would take to another system.</p>
       <button className="btn" disabled={busy} onClick={() => void go()}>{busy ? 'Preparing…' : 'Download everything'}</button>
     </Card>
   );

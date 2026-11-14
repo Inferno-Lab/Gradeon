@@ -1,4 +1,4 @@
-/* The admin and console stylesheet: the Nest look (the owner's choice, 14 November 2026) in Gradeon Hue's tokens and layouts. */
+/* The admin and console stylesheet: the Nest look (the owner's choice, 14 November 2026) in Tangent Hue's tokens and layouts. */
 .nest{--sh1:0 1px 2px color-mix(in srgb,var(--ink) 5%,transparent);--sh2:0 8px 20px -12px color-mix(in srgb,var(--ink) 22%,transparent);--sh3:0 18px 44px -20px color-mix(in srgb,var(--ink) 34%,transparent);
 --fb:'Manrope','Noto Sans Devanagari',system-ui,sans-serif;--fd:'Bricolage Grotesque','Manrope','Noto Sans Devanagari',sans-serif;--fm:ui-monospace,'SF Mono',Consolas,monospace;--e:cubic-bezier(.22,1,.36,1);--ei:cubic-bezier(.4,0,1,1);
 /* Every timing in the admin and console: press and toggle, popups and menus, dialogs and page changes. Leaving uses the next one down. */
@@ -218,6 +218,6 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .theme-swap .nest *,.theme-swap .nest *::before,.theme-swap .nest *::after,.nest.rm *,.nest.rm *::before,.nest.rm *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}
 /* transition:none, not a 1 ms duration: a duration on its own turns on `transition: all` for every element. */
 @media (prefers-reduced-motion:reduce){.nest *,.nest *::before,.nest *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}}
-/* Icons (Gradeon Hue's set, packages/web-ui/src/Icon.tsx). */
+/* Icons (Tangent Hue's set, packages/web-ui/src/Icon.tsx). */
 .nest .ic{flex:none;display:block}
 .nest .itile{width:56px;height:56px;border-radius:16px;background:var(--brand-soft);color:var(--brand-ink);display:grid;place-items:center;flex:none}

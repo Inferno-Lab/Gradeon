@@ -1,4 +1,4 @@
-/* Gradeon Hue: tokens above this line are generated from each school's seed colour. */
+/* Tangent Hue: tokens above this line are generated from each school's seed colour. */
 .hue{--fd:'Bricolage Grotesque','Manrope','Noto Sans Devanagari',sans-serif;--ft:'Manrope','Noto Sans Devanagari',system-ui,sans-serif;
   font:400 15px/22px var(--ft);color:var(--t1);background:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;box-sizing:border-box}
 .hue *,.hue *::before,.hue *::after{box-sizing:border-box}

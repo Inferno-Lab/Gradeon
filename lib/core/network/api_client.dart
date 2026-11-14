@@ -4,11 +4,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/connectivity_service.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/connectivity_service.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 /// Talks to the school's API. Every call names the school, carries the signed-in person's token and, when the token
 /// has expired, asks for a new one once and repeats the call. Family routes live under `/v1/f`; the sign-in routes

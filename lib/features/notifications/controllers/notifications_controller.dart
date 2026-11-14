@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/live_stream.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/services/live_stream.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 
 /// Notification types that come from the school rather than a person.
 const schoolNoticeTypes = {'general', 'event', 'notice'};

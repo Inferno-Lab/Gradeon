@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Param, Post, type OnModuleInit } from '@nestjs/common';
-import { enqueue, newId, retryJob } from '@gradeon/db';
-import { LogoUpload, type JobRow } from '@gradeon/contracts';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { enqueue, newId, retryJob } from '@tangent/db';
+import { LogoUpload, type JobRow } from '@tangent/contracts';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { Actions } from './actions.js';
@@ -16,7 +16,7 @@ import { Provisioner } from './provisioning/provisioner.js';
 const Logo = LogoUpload;
 
 /**
- * The console's side of Phase 4 for one school: its logo (Gradeon sets it, schools configure nothing), leavers past the retention
+ * The console's side of Phase 4 for one school: its logo (Tangent sets it, schools configure nothing), leavers past the retention
  * period (erased only after a second person approves), and the background jobs every school runs, with Retry.
  */
 @Injectable()

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { StudentDetail } from '@gradeon/contracts';
-import { Field } from '@gradeon/web-ui';
+import type { StudentDetail } from '@tangent/contracts';
+import { Field } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { problem, stamp, useSchoolConfig } from '../../app/kit';
 
 /**
- * A student's own app account, when Gradeon has the school use the app for students: signed in with the student's own phone or
+ * A student's own app account, when Tangent has the school use the app for students: signed in with the student's own phone or
  * email by a code, seeing only themselves. Shown in the student's drawer.
  */
 export function StudentAccount({ s, say }: { s: StudentDetail; say: (m: string) => void }) {

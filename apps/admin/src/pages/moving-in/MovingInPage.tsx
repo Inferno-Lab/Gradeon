@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { IMPORT_KINDS } from '@gradeon/contracts';
-import { Field, FilePick, Select, EmptyState } from '@gradeon/web-ui';
+import { IMPORT_KINDS } from '@tangent/contracts';
+import { Field, FilePick, Select, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp, useSchoolConfig } from '../../app/kit';
 import { TypeRows } from './TypeRows';
 
-const STATUS = { new: { label: 'With Gradeon', tone: 'a' }, imported: { label: 'Imported', tone: 'g' }, set_aside: { label: 'Set aside', tone: '' } } as const;
+const STATUS = { new: { label: 'With Tangent', tone: 'a' }, imported: { label: 'Imported', tone: 'g' }, set_aside: { label: 'Set aside', tone: '' } } as const;
 const save = (blob: Blob, name: string) => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -18,7 +18,7 @@ const save = (blob: Blob, name: string) => {
 // Sheets go as text when they are text; anything else (Excel, PDF, a photo) as the file itself.
 const read = (f: File) => /\.(csv|txt)$/i.test(f.name) ? f.text() : new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(new Error(`${f.name} could not be read.`)); r.readAsDataURL(f); });
 
-/** Bringing the school's records in: files for Gradeon's team to import, blank sheets to fill, and what was imported. */
+/** Bringing the school's records in: files for Tangent's team to import, blank sheets to fill, and what was imported. */
 export function MovingInPage() {
   const app = useApp();
   const qc = useQueryClient();
@@ -42,7 +42,7 @@ export function MovingInPage() {
       for (const f of picked) next = await app.api.movingIn.upload({ fileName: f.name, note: note.trim(), content: await read(f) });
       return next!;
     },
-    onSuccess: (next) => { qc.setQueryData(['uploads'], next); const n = picked.length; setPicked([]); setNote(''); say(`Sent ${n === 1 ? 'it' : `${n} files`} to Gradeon. The team will import ${n === 1 ? 'it' : 'them'} and tell you.`); },
+    onSuccess: (next) => { qc.setQueryData(['uploads'], next); const n = picked.length; setPicked([]); setNote(''); say(`Sent ${n === 1 ? 'it' : `${n} files`} to Tangent. The team will import ${n === 1 ? 'it' : 'them'} and tell you.`); },
     onError: (e) => setErr(Object.values(problem(e))[0] ?? ''),
   });
   const [typing, setTyping] = useState(false);
@@ -51,19 +51,19 @@ export function MovingInPage() {
       const k = IMPORT_KINDS.find((x) => x.key === kind)!;
       return app.api.movingIn.upload({ fileName: `${k.label} (typed).csv`, note: `${count} ${count === 1 ? 'row' : 'rows'} typed in the admin`, content: csv });
     },
-    onSuccess: (next) => { qc.setQueryData(['uploads'], next); setTyping(false); say('Sent to Gradeon. The team will import it and tell you.'); },
+    onSuccess: (next) => { qc.setQueryData(['uploads'], next); setTyping(false); say('Sent to Tangent. The team will import it and tell you.'); },
     onError: fail,
   });
   // An .xlsx with the columns, an example row, dropdowns where the values are fixed, and a sheet that explains each column.
   const tpl = useMutation({ mutationFn: (k: string) => app.api.movingIn.template(k), onSuccess: (b, k) => save(b, `${k}-template.xlsx`), onError: fail });
   const template = () => tpl.mutate(kind);
   return (
-    <Page title="Moving in" sub="Bring your records into Gradeon. Inviting families is on Students, staff on Staff." toast={toast} loading={uploads.isLoading && !uploads.data}
+    <Page title="Moving in" sub="Bring your records into Tangent. Inviting families is on Students, staff on Staff." toast={toast} loading={uploads.isLoading && !uploads.data}
       error={uploads.isError && !uploads.data ? { message: (uploads.error as Error).message, retry: () => void uploads.refetch() } : null}>
       <div className="stack" style={{ gap: 16 }}>
         {uploads.data?.length === 0 && !batches.data?.length && <EmptyState scene="moving" onAction={() => document.querySelector<HTMLInputElement>('main input[type=file]')?.click()} onLink={template} />}
         <Card title="Send us your files" chip={<span className="chip">{uploads.data?.length ?? 0} sent</span>}>
-          <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Gradeon’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
+          <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Tangent’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
           <div className="stack">
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <FilePick multiple onPickAll={(f) => { setPicked(f); setErr(''); }}>{picked.length ? 'Choose other files' : 'Choose files'}</FilePick>
@@ -71,7 +71,7 @@ export function MovingInPage() {
             </div>
             <Field label="What is in it (optional)" value={note} onChange={setNote} maxLength={500} placeholder="For example: fees paid this year, up to October" />
             {err && <div className="emsg" role="alert">{err}</div>}
-            <div><button className="btn pri" disabled={!picked.length || send.isPending} onClick={() => send.mutate()}>{send.isPending ? 'Sending…' : 'Send to Gradeon'}</button></div>
+            <div><button className="btn pri" disabled={!picked.length || send.isPending} onClick={() => send.mutate()}>{send.isPending ? 'Sending…' : 'Send to Tangent'}</button></div>
           </div>
           {(uploads.data ?? []).length > 0 && (
             <div style={{ marginTop: 16 }}>
@@ -93,8 +93,8 @@ export function MovingInPage() {
         </Card>
 
         {(batches.data ?? []).length > 0 && (
-          <Card title="What Gradeon imported" chip={<span className="chip">{batches.data!.filter((b) => !b.undoneAt).length}</span>}>
-            <p className="help" style={{ marginTop: 0 }}>Each import with its totals. Check them against your old system’s reports; if something is off, tell Gradeon and the import can be undone.</p>
+          <Card title="What Tangent imported" chip={<span className="chip">{batches.data!.filter((b) => !b.undoneAt).length}</span>}>
+            <p className="help" style={{ marginTop: 0 }}>Each import with its totals. Check them against your old system’s reports; if something is off, tell Tangent and the import can be undone.</p>
             {batches.data!.map((b) => (
               <div key={b.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: 16, rowGap: 6, height: 'auto', padding: '12px 0', cursor: 'default' }}>
                 <span style={{ minWidth: 0, flex: '1 1 220px' }}>

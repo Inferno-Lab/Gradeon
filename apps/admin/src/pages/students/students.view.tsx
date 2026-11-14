@@ -1,7 +1,7 @@
 /* eslint-disable */
-// Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
+// Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState, EmptyNote } from "@gradeon/web-ui";
+import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState, EmptyNote } from "@tangent/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {

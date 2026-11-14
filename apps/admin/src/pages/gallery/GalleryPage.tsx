@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { uploadFile } from '@gradeon/api-client';
-import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
-import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { uploadFile } from '@tangent/api-client';
+import type { AlbumRow, GalleryReportRow, PhotoRow } from '@tangent/contracts';
+import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, StudentPick, problem, stamp } from '../../app/kit';

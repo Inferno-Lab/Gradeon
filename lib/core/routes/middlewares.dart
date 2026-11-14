@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/data/models/user.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/data/models/user.dart';
 
-/// A screen asked for from outside the app (a link like gradeon://open/fees, or a notification), opened once the app is ready.
+/// A screen asked for from outside the app (a link like tangent://open/fees, or a notification), opened once the app is ready.
 class DeepLinks {
   const DeepLinks._();
 

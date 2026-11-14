@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { CONSOLE_ROLE_INFO, type ConsoleRole } from '@gradeon/contracts';
-import { Dialog, Dock, Field, MoreSheet, Presence, SearchDialog, Sidebar, WorkspaceHeader, tintFor, useShake, useTheme, type DockTab, type PaletteHit, Icon } from '@gradeon/web-ui';
+import { CONSOLE_ROLE_INFO, type ConsoleRole } from '@tangent/contracts';
+import { Dialog, Dock, Field, MoreSheet, Presence, SearchDialog, Sidebar, WorkspaceHeader, tintFor, useShake, useTheme, type DockTab, type PaletteHit, Icon } from '@tangent/web-ui';
 import { PAGES, SCHOOL_TABS, activeNav, consoleNav, shortcutTargets } from './nav';
-import { HttpError } from '@gradeon/api-client';
+import { HttpError } from '@tangent/api-client';
 import { useApp } from './context';
 import { path } from './base';
 
-const COLLAPSE_KEY = 'gradeon.console.menu.collapsed';
+const COLLAPSE_KEY = 'tangent.console.menu.collapsed';
 
 /** What every console page shares: theme, menu, shortcuts and the search box. Called once, by the signed-in layout. */
 export function useChrome() {

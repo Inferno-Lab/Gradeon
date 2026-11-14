@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/glass_controls.dart';
-import 'package:gradeon/core/widgets/sheets.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/user.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/glass_controls.dart';
+import 'package:tangent/core/widgets/sheets.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/user.dart';
 
 /// The school's privacy notice and grievance officer (Settings → Privacy).
 Future<void> showPrivacy() => showSheet<void>(const PrivacySheet());

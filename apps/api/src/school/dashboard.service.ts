@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   DEFAULT_BRAND, addDays, dayLabel, hueOf, dayMonth, dayName, istMinutes, istNow, istToday, latestSchoolDay, schoolDaysEnding,
   type DashboardData, type FeeSummary, type SearchHit, type ShellData,
-} from '@gradeon/contracts';
+} from '@tangent/contracts';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';
 import { AttendanceService } from './attendance.service.js';
@@ -79,7 +79,7 @@ export class DashboardService {
     const days = schoolDaysEnding(last, count, OFF_DAYS);
     return {
       modules,
-      greetingName: me.rows[0]?.name ?? user.name, roleLabel: me.rows[0]?.role_name ?? (user.id.startsWith('support:') ? 'Gradeon support' : ''), schoolName: String(v['school.name'] ?? t.info.name),
+      greetingName: me.rows[0]?.name ?? user.name, roleLabel: me.rows[0]?.role_name ?? (user.id.startsWith('support:') ? 'Tangent support' : ''), schoolName: String(v['school.name'] ?? t.info.name),
       day: { date: last, label: dayLabel(last), isToday, clock },
       term,
       subtitle: { marked: Number(classCount.rows[0]!.n) - unmarked.length, classes: Number(classCount.rows[0]!.n) },

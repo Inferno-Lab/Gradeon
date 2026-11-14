@@ -50,7 +50,7 @@
 <script>
 renderVals() {
   const roles = [["--deep", "--on-deep", "deep"], ["--hero", "--on-deep", "hero"], ["--bright", "--on-bright", "bright"], ["--brand", "--on-brand", "brand"], ["--brand-soft", "--brand-ink", "soft"], ["--bg", "--t1", "ground"], ["--s1", "--t1", "panel"], ["--t1", "--bg", "ink"]].map(([bg, fg, n]) => ({ bg, fg, n }));
-  const S = [["emerald", "Emerald · hue 162 · Greenfield International School"], ["cobalt", "Cobalt · hue 262 · the Gradeon console"], ["saffron", "Saffron · hue 62 · Sunrise Public School"], ["maroon", "Maroon · hue 12 · St Mary's Convent"]];
+  const S = [["emerald", "Emerald · hue 162 · Greenfield International School"], ["cobalt", "Cobalt · hue 262 · the Tangent console"], ["saffron", "Saffron · hue 62 · Sunrise Public School"], ["maroon", "Maroon · hue 12 · St Mary's Convent"]];
   const P = [["rose", "Rose"], ["red", "Red"], ["orange", "Orange"], ["amber", "Amber"], ["lime", "Lime"], ["green", "Green"], ["teal", "Teal"], ["cyan", "Cyan"], ["blue", "Blue"], ["indigo", "Indigo"], ["violet", "Violet"], ["pink", "Pink"]];
   return {
     seeds: S.map(([s, n]) => ({ n, modes: [{ cls: "s-" + s + " scope", roles }, { cls: "s-" + s + " dark scope", roles }] })),

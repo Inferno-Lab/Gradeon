@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/live_stream.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/data/models/user.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/live_stream.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/data/models/user.dart';
 
 class AuthService extends GetxService {
   AuthService(this._storage);

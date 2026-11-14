@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { Clash, CoverRequest, PeriodDef, SlotCreate, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView, WeekOf } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import type { Clash, CoverRequest, PeriodDef, SlotCreate, SlotPatch, SlotRow, TeacherLoad, TeacherOption, TimetableView, WeekOf } from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
@@ -107,7 +107,7 @@ export class TimetableService {
   }
 
   private async editable(t: TenantCtx): Promise<void> {
-    if ((await this.settings.value<boolean>(t, 'timetable.schoolEdits', true)) === false) throw forbidden('Gradeon keeps your timetable. Ask Gradeon to change it.');
+    if ((await this.settings.value<boolean>(t, 'timetable.schoolEdits', true)) === false) throw forbidden('Tangent keeps your timetable. Ask Tangent to change it.');
   }
 
   /** Places a lesson in a free period. A teacher already teaching then is refused, so no clash is made here. */

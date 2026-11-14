@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/theme_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/translations/en_redesign.dart';
+import 'package:tangent/core/services/theme_service.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/translations/en_redesign.dart';
 
 extension AppContext on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;

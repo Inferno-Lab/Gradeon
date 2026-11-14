@@ -2,10 +2,10 @@ import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs
 import { REGISTRY } from '../tokens.js';
 import {
   STEP_KEYS, STEP_LABELS, stepOrderProblem, type BlueprintInput, type BlueprintRow, type DeployTarget, type ProvisionRunRow, type RunStepRow, type RoleTemplate, type StepKey, type WizardPayload,
-} from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, notFound } from '@gradeon/nest-kit';
-import type { Registry } from '@gradeon/tenancy';
+} from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, notFound } from '@tangent/nest-kit';
+import type { Registry } from '@tangent/tenancy';
 import { Db, type reg } from '../core.js';
 import { ENV, type Env } from '../env.js';
 import { Sandbox } from '../sandbox.js';

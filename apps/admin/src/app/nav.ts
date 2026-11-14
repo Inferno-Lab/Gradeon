@@ -1,6 +1,6 @@
-import { pageForPath } from '@gradeon/config-engine';
-import type { MenuGroup, ShellData } from '@gradeon/contracts';
-import { IC, type PageIcon, type NavGroup } from '@gradeon/web-ui';
+import { pageForPath } from '@tangent/config-engine';
+import type { MenuGroup, ShellData } from '@tangent/contracts';
+import { IC, type PageIcon, type NavGroup } from '@tangent/web-ui';
 
 /**
  * The menu comes from the server (`ShellData.menu`), built from the module definitions in config-engine: the modules the school

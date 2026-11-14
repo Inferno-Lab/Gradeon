@@ -1,5 +1,5 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
-import { pg } from '@gradeon/db';
+import { pg } from '@tangent/db';
 import type { TenantCtx } from '../tenancy/tenant.js';
 
 /** One live event for the app: what changed, for whom. The app refetches what it needs, so events stay small. */
@@ -9,7 +9,7 @@ export interface LiveEvent {
 }
 
 type Sub = { userId: string; send: (e: LiveEvent) => void };
-const CHANNEL = 'gradeon_live';
+const CHANNEL = 'tangent_live';
 
 /**
  * Live updates (chat, typing, read receipts, notifications, the bus) through Postgres LISTEN/NOTIFY on each school's own

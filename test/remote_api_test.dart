@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradeon/core/network/api_client.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:tangent/core/network/api_client.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
 
 /// A stand-in for the school's API that records what the app sends and answers with the shapes the real one does.
 class _Fake {

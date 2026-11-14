@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, Header, HttpCode, Inject, Injectable, Logger, Param, Post, Put, Query, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
 import { POOLS } from './tokens.js';
-import { MODULES, activeModules, closeModules, moduleByKey } from '@gradeon/config-engine';
-import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, DEPLOY_TARGET_LABELS, InvoicePaid, auditLabel, CONSOLE_ROLES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@gradeon/contracts';
-import { migrate, newId, pg, scheduleJob } from '@gradeon/db';
-import { topUpDemo } from '@gradeon/db/seed';
-import { ApiError, ZodPipe, alert, notFound } from '@gradeon/nest-kit';
-import { hashPassword, randomToken, sha256, signJwt, unseal } from '@gradeon/security';
-import type { PoolManager } from '@gradeon/tenancy';
+import { MODULES, activeModules, closeModules, moduleByKey } from '@tangent/config-engine';
+import { CellCreate, CellPatch, CONSOLE_PERMISSIONS, DEPLOY_TARGET_LABELS, InvoicePaid, auditLabel, CONSOLE_ROLES, WizardPayload, type AuditRow, type DeployTarget, type ConsoleRole, type FleetSummary, type ConsoleUserRow, type FlagRow, type EntitlementDoc, type EntitlementRow, type InvoiceRowC, type SupportSessionRow, type SupportToken } from '@tangent/contracts';
+import { migrate, newId, pg, scheduleJob } from '@tangent/db';
+import { topUpDemo } from '@tangent/db/seed';
+import { ApiError, ZodPipe, alert, notFound } from '@tangent/nest-kit';
+import { hashPassword, randomToken, sha256, signJwt, unseal } from '@tangent/security';
+import type { PoolManager } from '@tangent/tenancy';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
 import { ENV, demosAllowed, type Env } from './env.js';
 import { adminUrlFor } from './provisioning/drivers.js';
@@ -105,7 +105,7 @@ export class Support {
     await this.db.pool.query("insert into support_sessions (id, school_id, school_name, reason, status, expires_at, started_by) values ($1,$2,$3,$4,'active',$5,$6)", [id, school.id, school.name, reason.trim(), expires, user.email]);
     await this.db.audit(user.email, 'support.started', 'school', school.id, { reason: reason.trim() });
     const perms = ['students.read', 'attendance.read', 'fees.read', 'notices.read', 'approvals.read', 'timetable.read', 'settings.read', 'staff.read', 'reports.read'];
-    const token = signJwt({ sub: `support:${user.id}`, aud: school.slug, sid: id, name: `${user.name} (Gradeon support)`, perms, support: true }, this.env.JWT_SECRET, 30 * 60);
+    const token = signJwt({ sub: `support:${user.id}`, aud: school.slug, sid: id, name: `${user.name} (Tangent support)`, perms, support: true }, this.env.JWT_SECRET, 30 * 60);
     const row = (await this.db.query<typeof reg.supportSessions.$inferSelect>('select * from support_sessions where id = $1', [id])).rows[0]!;
     return { token, adminUrl: adminUrlFor(this.env, school.slug, school.addressing, school.customDomain), expiresAt: expires.toISOString(), session: this.row(row) };
   }
@@ -156,7 +156,7 @@ export class Admin {
     });
   }
 
-  /** Emails the invoice to the school's contact through Gradeon's email connection, and says when and to whom. */
+  /** Emails the invoice to the school's contact through Tangent's email connection, and says when and to whom. */
   async sendInvoice(user: string, id: string, hub: PlatformHub['hub']): Promise<string> {
     const r = (await this.db.pool.query<{ school_id: string; period: string; amount: number; lines: InvoiceRowC['lines']; status: string }>('select school_id, period, amount, lines, status from invoices where id = $1', [id])).rows[0];
     if (!r) throw notFound('That invoice');
@@ -164,8 +164,8 @@ export class Admin {
     const s = (await this.db.pool.query<{ name: string; contact: { name: string; email: string }; gstin: string }>('select name, contact, gstin from schools where id = $1', [r.school_id])).rows[0]!;
     if (!s.contact?.email) throw new ApiError('validation', `${s.name} has no contact email. Add one under its details first.`);
     const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
-    const body = [`Dear ${s.contact.name},`, '', `Gradeon invoice for ${s.name}, ${r.period}${s.gstin ? ` (GSTIN ${s.gstin})` : ''}:`, ...r.lines.map((l) => `  ${l.label}: ${inr(l.amount)}`), `Total: ${inr(r.amount)}`, `Due by ${dueFor(r.period)}.`, '', 'Thank you.'].join('\n');
-    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: s.contact.email, subject: `Gradeon invoice ${r.period} · ${s.name}`, body, now: true });
+    const body = [`Dear ${s.contact.name},`, '', `Tangent invoice for ${s.name}, ${r.period}${s.gstin ? ` (GSTIN ${s.gstin})` : ''}:`, ...r.lines.map((l) => `  ${l.label}: ${inr(l.amount)}`), `Total: ${inr(r.amount)}`, `Due by ${dueFor(r.period)}.`, '', 'Thank you.'].join('\n');
+    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: s.contact.email, subject: `Tangent invoice ${r.period} · ${s.name}`, body, now: true });
     await this.db.pool.query("update invoices set status = 'sent', sent_at = now(), sent_to = $2 where id = $1", [id, s.contact.email]);
     await this.db.audit(user, 'invoice.sent', 'invoice', id, { to: s.contact.email });
     return s.contact.email;
@@ -216,7 +216,7 @@ export class Admin {
     return rows.map((r) => ({ id: r.id, name: r.name, email: r.email, roles: r.roles, status: r.status, lastSeenAt: r.last_seen_at?.toISOString() ?? null, authenticator: r.authenticator }));
   }
 
-  /** Invites a person: a link by email (through Gradeon's email connection) where they choose their own password. */
+  /** Invites a person: a link by email (through Tangent's email connection) where they choose their own password. */
   async addMember(user: string, body: { name: string; email: string; roles: string[] }, hub: PlatformHub['hub'], consoleUrl: string): Promise<{ link: string }> {
     const roles = body.roles.filter((r): r is ConsoleRole => (CONSOLE_ROLES as readonly string[]).includes(r));
     if (!roles.length) throw new ApiError('validation', 'Choose at least one role.');
@@ -238,7 +238,7 @@ export class Admin {
     const token = randomToken(24);
     await this.db.pool.query("update console_users set invite_hash = $2, invite_expires = now() + interval '7 days' where id = $1", [id, sha256(token)]);
     const link = `${consoleUrl.replace(/\/$/, '')}/join?token=${token}`;
-    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: m.email, subject: 'You are invited to the Gradeon console', body: `Hello ${m.name.split(' ')[0]},\n\nYou have been added to the Gradeon console. Choose your password here (the link works for seven days):\n${link}\n\nAt your first sign-in you add the console to an authenticator app.`, now: true }).catch(() => undefined);
+    await hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: m.email, subject: 'You are invited to the Tangent console', body: `Hello ${m.name.split(' ')[0]},\n\nYou have been added to the Tangent console. Choose your password here (the link works for seven days):\n${link}\n\nAt your first sign-in you add the console to an authenticator app.`, now: true }).catch(() => undefined);
     return { link };
   }
 
@@ -381,7 +381,7 @@ export class Bootstrap implements OnApplicationBootstrap {
       data: { start: 'demo' },
     });
     this.log.log('creating the Greenfield demo school');
-    const system: ConsoleUser = { id: 'system', name: 'Gradeon', email: 'system@gradeon.app', roles: ['super_admin'], permissions: [...CONSOLE_PERMISSIONS], sid: 'system' };
+    const system: ConsoleUser = { id: 'system', name: 'Tangent', email: 'system@tangent.app', roles: ['super_admin'], permissions: [...CONSOLE_PERMISSIONS], sid: 'system' };
     await this.wizard.launch(system, payload, { dryRun: false });
   }
 }

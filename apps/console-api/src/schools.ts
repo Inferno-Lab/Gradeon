@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Inject, Injectable, Param, Patch, Query } from '@nestjs/common';
 import { POOLS } from './tokens.js';
-import { activeModules, closeModules } from '@gradeon/config-engine';
-import { SchoolDetailsPatch, type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@gradeon/contracts';
-import { notFound, ApiError, ZodPipe } from '@gradeon/nest-kit';
-import type { PoolManager } from '@gradeon/tenancy';
-import { unseal } from '@gradeon/security';
+import { activeModules, closeModules } from '@tangent/config-engine';
+import { SchoolDetailsPatch, type BuildRow, type DeployTarget, type FleetSummary, type SchoolDetail, type SchoolRow, type SchoolStatus } from '@tangent/contracts';
+import { notFound, ApiError, ZodPipe } from '@tangent/nest-kit';
+import type { PoolManager } from '@tangent/tenancy';
+import { unseal } from '@tangent/security';
 import { adminUrlFor } from './provisioning/drivers.js';
 import { Provisioner } from './provisioning/provisioner.js';
 import { Db, Needs, Me, type ConsoleUser, type reg } from './core.js';
@@ -14,7 +14,7 @@ type SchoolRecord = typeof reg.schools.$inferSelect;
 
 const CHECKLIST_LABELS: Record<string, string> = {
   apple_org: 'Apple: the school’s organisation account',
-  apple_key: 'Apple: Gradeon invited, API key received',
+  apple_key: 'Apple: Tangent invited, API key received',
   play_verify: 'Google Play: the school’s account is verified',
   first_build: 'First build to TestFlight and Play testing',
 };

@@ -27,13 +27,13 @@ function hits(files: string[], re: RegExp, keep: (line: string, file: string) =>
 }
 
 // Printed receipts and handouts are black on white paper whatever the theme; the logo keeps its own colours.
-const fixed = (f: string) => /InvoicesPage|MovingInPage|GradeonIcon|ColourPicker|\.test\./.test(f);
+const fixed = (f: string) => /InvoicesPage|MovingInPage|TangentIcon|ColourPicker|\.test\./.test(f);
 // The token blocks in nest.css define the colours; the picker paints the colour space itself; masks only use alpha.
 const definesColour = (line: string, f: string) => (/nest\.css$/.test(f) && /^(\.nest(\.dark)?\{)?--/.test(line.trim())) || /\bcpk/.test(line) || /mask/.test(line);
 const comment = (line: string) => /^\s*(\/\/|\/\*|\*)/.test(line);
 
 // The scales. Art numerals (the 404 page, illustrations) are drawings, not type; font-size 0 hides text.
-// Gradeon Hue's scales, as the approved boards use them (design/hue/base.css).
+// Tangent Hue's scales, as the approved boards use them (design/hue/base.css).
 const SIZES = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 34, 38, 40, 44, 52, 56, 64, 72];
 const WEIGHTS = [400, 500, 600, 650, 700, 800];
 const RADII = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 999];
@@ -44,8 +44,8 @@ const offScale = (line: string, re: RegExp, ok: (n: number) => boolean) => [...l
 
 describe('the design system', { timeout: 30_000 }, () => {
   it('has no browser widgets in the apps', () => {
-    expect(hits(tsx, /\btype=["'{]?\s*["']?(date|time|month|color|number|checkbox|file|datetime-local|week|range)\b/, (l) => !/querySelector/.test(l)), 'use DateField, TimeField, MonthField, NumberField, ColourField, Checkbox or FilePick from @gradeon/web-ui').toEqual([]);
-    expect(hits(tsx, /<select\b/), 'use Select from @gradeon/web-ui').toEqual([]);
+    expect(hits(tsx, /\btype=["'{]?\s*["']?(date|time|month|color|number|checkbox|file|datetime-local|week|range)\b/, (l) => !/querySelector/.test(l)), 'use DateField, TimeField, MonthField, NumberField, ColourField, Checkbox or FilePick from @tangent/web-ui').toEqual([]);
+    expect(hits(tsx, /<select\b/), 'use Select from @tangent/web-ui').toEqual([]);
   });
 
   it('shows tips with our tooltip, not the browser’s', () => {
@@ -57,8 +57,8 @@ describe('the design system', { timeout: 30_000 }, () => {
   });
 
   it('builds overlays from the shared parts', () => {
-    expect(hits(tsx, /className=\{?["'`](scrim|mod|toast|popm|sxp|pvr)\b/), 'use Dialog, SearchDialog, ToastSlot, Menu or Pop from @gradeon/web-ui').toEqual([]);
-    expect(hits(allTsx.filter((f) => !/Toast\.tsx$/.test(f)), /setToast\(/), 'time toasts with useToast() from @gradeon/web-ui').toEqual([]);
+    expect(hits(tsx, /className=\{?["'`](scrim|mod|toast|popm|sxp|pvr)\b/), 'use Dialog, SearchDialog, ToastSlot, Menu or Pop from @tangent/web-ui').toEqual([]);
+    expect(hits(allTsx.filter((f) => !/Toast\.tsx$/.test(f)), /setToast\(/), 'time toasts with useToast() from @tangent/web-ui').toEqual([]);
   });
 
   it('times every motion with the tokens', () => {

@@ -1,6 +1,6 @@
-import { pg } from '@gradeon/db';
-import { notFound } from '@gradeon/nest-kit';
-import { unseal } from '@gradeon/security';
+import { pg } from '@tangent/db';
+import { notFound } from '@tangent/nest-kit';
+import { unseal } from '@tangent/security';
 import type { Db } from './core.js';
 
 /** Opens one school's own database for the length of `fn`. */

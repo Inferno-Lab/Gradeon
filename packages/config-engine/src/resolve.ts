@@ -5,7 +5,7 @@ import {
   type EffectiveConfig,
   type EntitlementDoc,
   type SettingsDoc,
-} from '@gradeon/contracts';
+} from '@tangent/contracts';
 import { APP_CATALOG, APP_ROLES, activeFeatures, activeModules, adminMenu, hasKey, type AppRole } from './modules.js';
 
 /** Layer 1: platform defaults, taken from the schema so there is one source. */
@@ -120,7 +120,7 @@ export function validateSettingsChanges(
       continue;
     }
     if (locked.includes(key)) {
-      problems.push({ key, message: 'Gradeon has fixed this setting for your school.' });
+      problems.push({ key, message: 'Tangent has fixed this setting for your school.' });
       continue;
     }
     const res = field.safeParse(raw);

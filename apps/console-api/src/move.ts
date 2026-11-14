@@ -1,6 +1,6 @@
-import { backupDatabase, migrate, pg, restoreDatabase } from '@gradeon/db';
-import { randomToken, seal, unseal } from '@gradeon/security';
-import { TENANT_CACHE_MS } from '@gradeon/tenancy';
+import { backupDatabase, migrate, pg, restoreDatabase } from '@tangent/db';
+import { randomToken, seal, unseal } from '@tangent/security';
+import { TENANT_CACHE_MS } from '@tangent/tenancy';
 import type { Db } from './core.js';
 import type { Env } from './env.js';
 import type { PlatformHub } from './platform-hub.js';

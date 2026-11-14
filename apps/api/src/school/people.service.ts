@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { commitImport, exportRows, newId, previewImport, toCsv } from '@gradeon/db';
+import { commitImport, exportRows, newId, previewImport, toCsv } from '@tangent/db';
 import {
   PERMISSIONS, initials, type ImportResult,
   type EnquiryCreate, type EnquiryEnrol, type EnquiryPatch, type EnquiryRow, type EnquiryStage, type RoleRow, type StaffCreate, type StaffPatch, type StaffRow, type StudentDetail,
-} from '@gradeon/contracts';
-import { hashPassword, randomToken } from '@gradeon/security';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+} from '@tangent/contracts';
+import { hashPassword, randomToken } from '@tangent/security';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuthService } from '../auth/auth.service.js';
 import { StudentsService } from './students.service.js';
@@ -32,7 +32,7 @@ export class PeopleService {
     private readonly settings: SettingsService,
   ) {}
 
-  /** The console decides whether the school may put its own staff into roles (the roles themselves are always Gradeon's). */
+  /** The console decides whether the school may put its own staff into roles (the roles themselves are always Tangent's). */
   private async schoolAssignsRoles(t: TenantCtx): Promise<boolean> {
     return (await this.settings.value<boolean>(t, 'staff.schoolAssignsRoles', true)) !== false;
   }
@@ -63,13 +63,13 @@ export class PeopleService {
   }
 
   async createStaff(t: TenantCtx, user: User, body: StaffCreate): Promise<StaffRow> {
-    // When only Gradeon assigns roles, a new person starts with none (and sees nothing) until Gradeon gives them one.
+    // When only Tangent assigns roles, a new person starts with none (and sees nothing) until Tangent gives them one.
     const assigns = await this.schoolAssignsRoles(t);
     const role = assigns ? (await t.pool.query<{ id: string; name: string }>('select id, name from roles where id = $1', [body.roleId])).rows[0] : { id: '', name: 'none yet' };
     if (!role) throw new ApiError('validation', 'Choose a role from the list.', { fields: { roleId: 'Choose a role from the list.' } });
     const staffLimit = t.info.entitlement.limits.staff;
     if (staffLimit && Number((await t.pool.query<{ n: string }>("select count(*) n from users where kind = 'staff' and status = 'active'")).rows[0]!.n) >= staffLimit) {
-      throw new ApiError('locked', `Your plan allows ${staffLimit} staff accounts. Ask Gradeon to raise the limit.`);
+      throw new ApiError('locked', `Your plan allows ${staffLimit} staff accounts. Ask Tangent to raise the limit.`);
     }
     const dup = await t.pool.query('select 1 from users where lower(email) = $1', [body.email]);
     if (dup.rowCount) throw new ApiError('validation', 'Someone already uses that email.', { fields: { email: 'Someone already uses that email.' } });
@@ -101,7 +101,7 @@ export class PeopleService {
     if (me && (body.roleId || body.status === 'inactive')) throw forbidden('You cannot change your own role or switch yourself off. Ask another administrator.');
     const cur = (await t.pool.query<{ designation: string }>('select designation from staff where user_id = $1', [id])).rows[0];
     if (!cur) throw notFound('That person');
-    if (body.roleId && !(await this.schoolAssignsRoles(t))) throw forbidden('Gradeon assigns roles at your school. Ask Gradeon to change this person’s role.');
+    if (body.roleId && !(await this.schoolAssignsRoles(t))) throw forbidden('Tangent assigns roles at your school. Ask Tangent to change this person’s role.');
     const client = await t.pool.connect();
     try {
       await client.query('begin');
@@ -162,7 +162,7 @@ export class PeopleService {
     if (p.missing.length) throw new ApiError('validation', `The first row must name the columns. Nothing is matched to ${p.missing.join(', ')}.`);
     const limit = t.info.entitlement.limits.staff;
     const count = Number((await t.pool.query<{ n: string }>("select count(*) n from users where kind = 'staff' and status = 'active'")).rows[0]!.n);
-    if (limit && count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} staff accounts and this sheet would make ${count + p.counts.create}. Ask Gradeon to raise the limit.`);
+    if (limit && count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} staff accounts and this sheet would make ${count + p.counts.create}. Ask Tangent to raise the limit.`);
     const errors = p.rows.filter((r) => r.errors.length).map((r) => ({ line: r.line, message: r.errors.join(' ') }));
     if (p.counts.create + p.counts.update === 0) return { created: 0, updated: 0, skipped: errors.length, errors };
     const batch = await commitImport(t.pool, input, user.name);

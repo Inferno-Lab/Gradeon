@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/painting.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/theme/app_colors.dart';
 
 /// Reads the school's own name and tagline from its API at start-up, so the app follows what the school sets in its admin.
 /// Without a build profile (`SCHOOL` and `API_BASE_URL`) nothing happens and the demo values stay. A slow or failed call

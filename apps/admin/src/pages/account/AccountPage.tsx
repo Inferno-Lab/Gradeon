@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { dashboardPieces } from '@gradeon/config-engine';
-import { Field, useShake, useTheme, useToast } from '@gradeon/web-ui';
+import { dashboardPieces } from '@tangent/config-engine';
+import { Field, useShake, useTheme, useToast } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { problem } from '../../app/kit';
 import { useShellChrome } from '../../app/Layout';
@@ -36,7 +36,7 @@ export function AccountPage() {
           <div className="kv"><span>Name</span><b>{app.user.name}</b></div>
           <div className="kv"><span>Signs in with</span><b>{app.user.email || app.user.phone || '–'}</b></div>
           <div className="kv" style={{ alignItems: 'flex-start' }}><span>{app.user.roleNames.length === 1 ? 'Role' : 'Roles'}</span><b style={{ textAlign: 'right' }}>{app.user.roleNames.join(' · ') || 'Staff'}</b></div>
-          <p className="help" style={{ marginBottom: 0 }}>The office changes your name, email and phone under Staff. Roles are set up by Gradeon.</p>
+          <p className="help" style={{ marginBottom: 0 }}>The office changes your name, email and phone under Staff. Roles are set up by Tangent.</p>
           <div className="tgrow" style={{ marginTop: 12 }}>
             <button className="btn" onClick={theme.toggle}>{theme.theme === 'dark' ? 'Switch to light' : 'Switch to dark'}</button>
             <button className="btn" disabled={everywhere.isPending} onClick={() => everywhere.mutate()}>Sign out on every device</button>

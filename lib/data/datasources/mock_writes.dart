@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/student.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 extension MockWrites on MockJsonDataSource {
   void submitHomework({

@@ -2,28 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/page.dart';
-import 'package:gradeon/core/widgets/states.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:gradeon/features/dashboard/widgets/child_switcher.dart';
-import 'package:gradeon/features/dashboard/widgets/home_cards.dart';
-import 'package:gradeon/features/dashboard/widgets/home_welcome.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/formatters.dart';
+import 'package:tangent/core/utils/schedule.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/page.dart';
+import 'package:tangent/core/widgets/states.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tangent/features/dashboard/widgets/child_switcher.dart';
+import 'package:tangent/features/dashboard/widgets/home_cards.dart';
+import 'package:tangent/features/dashboard/widgets/home_welcome.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -241,7 +241,7 @@ String greeting(String first) => '${Formatters.greetingKey(Clock.now()).tr},\n$f
 
 String todayLine() => DateFormat('EEEE · d MMMM', Get.locale?.languageCode).format(Clock.now());
 
-/// Home sections follow what Gradeon set for the school (console → The app → Home screen cards) and its modules.
+/// Home sections follow what Tangent set for the school (console → The app → Home screen cards) and its modules.
 bool _show(String card, [String? module]) => SchoolConfig.home.contains(card) && (module == null || SchoolConfig.has(module));
 
 /// Home's cards in the order the console set, each once: what is due (fees, homework and events share one list),

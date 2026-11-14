@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/ui.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/ui.dart';
 
 /// The board's action bar (design/hue/src/RollCall.html): the school's deep colour along the bottom edge, a line of
 /// text and one action in its bright colour. Teacher tools put it on their PageFrame with `edgeBar: true`.

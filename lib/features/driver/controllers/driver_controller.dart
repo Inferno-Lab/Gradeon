@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/driver.dart';
-import 'package:gradeon/data/repositories/driver_repository.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/driver.dart';
+import 'package:tangent/data/repositories/driver_repository.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 /// The bus driver's day: start a trip, the phone shares where the bus is until it ends, each child is marked on and off.
 class DriverController extends GetxController with Loadable {

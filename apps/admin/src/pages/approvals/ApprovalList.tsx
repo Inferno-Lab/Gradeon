@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ApprovalKind, ApprovalRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, useShake, EmptyState } from '@gradeon/web-ui';
+import type { ApprovalKind, ApprovalRow } from '@tangent/contracts';
+import { Dialog, EmptyCard, useShake, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Avatar, problem } from '../../app/kit';
 

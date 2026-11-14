@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { CAPABILITIES, CAPABILITY_LABELS, INTEGRATION_PROVIDERS, providerDef, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Presence, useShake, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { CAPABILITIES, CAPABILITY_LABELS, INTEGRATION_PROVIDERS, providerDef, type SchoolDetail } from '@tangent/contracts';
+import { Dialog, EmptyCard, Presence, useShake, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 import { url } from '../../app/base';
@@ -37,7 +37,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
                 <div key={k} className="kv" style={{ alignItems: 'center' }}>
                   <span>{CAPABILITY_LABELS[k]}</span>
                   <b style={{ display: 'flex', gap: 6, alignItems: 'center', minWidth: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {r ? <><span className={`chip ${mine ? 'v' : ''}`}>{mine ? 'Its own' : 'Gradeon default'}</span><span style={{ minWidth: 0 }}>{name(r.connectionId)}{r.fallbackId ? ` → ${name(r.fallbackId)}` : ''}</span></>
+                    {r ? <><span className={`chip ${mine ? 'v' : ''}`}>{mine ? 'Its own' : 'Tangent default'}</span><span style={{ minWidth: 0 }}>{name(r.connectionId)}{r.fallbackId ? ` → ${name(r.fallbackId)}` : ''}</span></>
                       : <span style={{ color: 'var(--ink3)' }}>{v.mode === 'live' ? 'Not set up: fails' : 'Test inbox'}</span>}
                   </b>
                 </div>
@@ -48,7 +48,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         </div>
         <div className="card s5 rise">
           <div className="ch"><h2>Its own connections</h2><span className="chip">{own.length}</span></div>
-          {!own.length ? <EmptyNote icon="integrations" title="None of its own" body="This school sends through Gradeon’s connections." /> : own.map((c) => (
+          {!own.length ? <EmptyNote icon="integrations" title="None of its own" body="This school sends through Tangent’s connections." /> : own.map((c) => (
             <div key={c.id} className="kv" style={{ alignItems: 'center' }}><span style={{ minWidth: 0 }}>{c.name}</span><b style={{ display: 'flex', gap: 6 }}><span className="chip">{providerDef(c.provider)?.name}</span><span className={`chip ${c.state === 'live' ? 'g' : c.state === 'paused' ? 'c' : 'a'}`}>{c.state}</span></b></div>
           ))}
         </div>

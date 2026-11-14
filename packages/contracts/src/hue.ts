@@ -1,4 +1,4 @@
-// Gradeon Hue: one seed colour in, every colour of the admin, the console and the app out (design/hue/palette.mjs, approved
+// Tangent Hue: one seed colour in, every colour of the admin, the console and the app out (design/hue/palette.mjs, approved
 // 10 November 2026). OKLCH with gamut mapping by chroma reduction; hue.test.ts checks every integer hue against WCAG AA.
 
 export type HueMode = 'light' | 'dark' | 'amoled';
@@ -129,7 +129,7 @@ export const WEB_NEUTRALS: Record<HueMode, Record<string, string>> = {
 
 /**
  * The app's neutrals, which a school's seed never tints: the old Chalk & Glass app's chalk, paper and ink, an ink frame
- * (the dock and the headline card) and marigold for "you are here". Gradeon Hue's layouts, spectrum and status colours,
+ * (the dock and the headline card) and marigold for "you are here". Tangent Hue's layouts, spectrum and status colours,
  * and the school's brand colour for actions, stay.
  */
 export const APP_NEUTRALS: Record<HueMode, Record<string, string>> = {

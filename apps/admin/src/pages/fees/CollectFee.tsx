@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { inr, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { inr, type StudentDetail } from '@tangent/contracts';
+import { Dialog, Field, SelectField, useShake } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { DialogActions as Actions, fieldsOf, messageOf } from '../../app/kit';
 import { useShellChrome } from '../../app/Layout';
 
-/** Every way a desk can take money; the school offers those Gradeon set (fees.paymentMethods). */
+/** Every way a desk can take money; the school offers those Tangent set (fees.paymentMethods). */
 const METHODS = [{ value: 'cash', label: 'Cash' }, { value: 'upi', label: 'UPI' }, { value: 'card', label: 'Card' }, { value: 'netbanking', label: 'Net banking' }, { value: 'cheque', label: 'Cheque' }];
 
 /** Records a payment at the desk against one of a student's open invoices. */

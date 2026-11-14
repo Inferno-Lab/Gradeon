@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Inject, Injectable, Param, Post, type OnModuleInit } from '@nestjs/common';
-import type { BackupRow, RestoreDrillRow } from '@gradeon/contracts';
-import { backupDatabase, backupMigrations, bringForward, loadMigrations, migrate, newId, pg, restoreDatabase, scheduleJob } from '@gradeon/db';
-import { ApiError, alert, notFound } from '@gradeon/nest-kit';
+import type { BackupRow, RestoreDrillRow } from '@tangent/contracts';
+import { backupDatabase, backupMigrations, bringForward, loadMigrations, migrate, newId, pg, restoreDatabase, scheduleJob } from '@tangent/db';
+import { ApiError, alert, notFound } from '@tangent/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, type Env } from './env.js';
 import { withSchoolDb } from './school-db.js';
@@ -19,11 +19,11 @@ export class Backups implements OnModuleInit {
   ) {}
 
   /**
-   * Where backups are kept: Gradeon's File storage connection (Integrations), so losing the registry does not lose them. On the
+   * Where backups are kept: Tangent's File storage connection (Integrations), so losing the registry does not lose them. On the
    * test track without a bucket that is the registry's own sandbox store.
    */
   private async files() {
-    const r = await this.platform.hub.resolve('storage', null, 'gradeon');
+    const r = await this.platform.hub.resolve('storage', null, 'tangent');
     if (!r.adapter.storage) throw new Error('The File storage connection cannot keep files.');
     return { storage: r.adapter.storage, ctx: r.ctx };
   }
@@ -49,7 +49,7 @@ export class Backups implements OnModuleInit {
   /** An empty database on the schools' server, dropped afterwards. */
   private async scratch<T>(fn: (pool: pg.Pool) => Promise<T>): Promise<T> {
     const admin = this.env.REGISTRY_DATABASE_URL;
-    const name = `gradeon_scratch_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+    const name = `tangent_scratch_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
     const run = async (sql: string) => {
       const c = new pg.Client({ connectionString: admin });
       await c.connect();

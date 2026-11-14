@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { commitImport, newId, previewImport } from '@gradeon/db';
+import { commitImport, newId, previewImport } from '@tangent/db';
 import {
   addDays, dayLabel, initials, istToday, latestSchoolDay, schoolDaysEnding,
   type AssignFee, type AttendanceStatus, type ContactReveal, type FeeStatus, type ImportResult, type MessageRequest,
   type GuardianRow, type GuardiansPut, type Paged, type StudentCreate, type StudentDetail, type StudentPatch, type StudentQuery, type StudentRow, type StudentSummary, type StudentViews,
-} from '@gradeon/contracts';
-import { maskPhone } from '@gradeon/security';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+} from '@tangent/contracts';
+import { maskPhone } from '@tangent/security';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
@@ -280,7 +280,7 @@ export class StudentsService {
     if (!cls.rows[0]) throw new ApiError('validation', 'Choose a class from the list.', { fields: { classId: 'Choose a class from the list.' } });
     const limit = t.info.entitlement.limits.students;
     const count = Number((await t.pool.query<{ n: string }>('select count(*) n from students')).rows[0]!.n);
-    if (count >= limit) throw new ApiError('locked', `Your plan allows ${limit} students. Ask Gradeon to raise the limit.`);
+    if (count >= limit) throw new ApiError('locked', `Your plan allows ${limit} students. Ask Tangent to raise the limit.`);
     const year = new Date().getUTCFullYear();
     const seq = Number((await t.pool.query<{ n: string }>("select count(*) n from students where admission_no like $1", [`${year}/%`])).rows[0]!.n) + 501;
     const id = newId('stu');
@@ -398,7 +398,7 @@ export class StudentsService {
     if (p.missing.length) throw new ApiError('validation', `The first row must name the columns. Nothing is matched to ${p.missing.join(', ')}.`);
     const limit = t.info.entitlement.limits.students;
     const count = Number((await t.pool.query<{ n: string }>('select count(*) n from students')).rows[0]!.n);
-    if (count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} students and this sheet would make ${count + p.counts.create}. Ask Gradeon to raise the limit.`);
+    if (count + p.counts.create > limit) throw new ApiError('locked', `Your plan allows ${limit} students and this sheet would make ${count + p.counts.create}. Ask Tangent to raise the limit.`);
     const errors = p.rows.filter((r) => r.errors.length).map((r) => ({ line: r.line, message: r.errors.join(' ') }));
     if (p.counts.create + p.counts.update === 0) return { created: 0, updated: 0, skipped: errors.length, errors };
     const batch = await commitImport(t.pool, input, user.name);
@@ -431,7 +431,7 @@ export class StudentsService {
    */
   async studentAccount(t: TenantCtx, user: { id: string; name: string }, studentId: string, b: { phone?: string; email?: string }): Promise<{ sent: boolean }> {
     const roles = await this.settings.value<string[]>(t, 'app.roles', []);
-    if (!roles.includes('student')) throw new ApiError('conflict', 'Your school does not use the app for students. Ask Gradeon to switch it on.');
+    if (!roles.includes('student')) throw new ApiError('conflict', 'Your school does not use the app for students. Ask Tangent to switch it on.');
     const s = (await t.pool.query<{ name: string; user_id: string | null }>("select name, user_id from students where id = $1 and status = 'active'", [studentId])).rows[0];
     if (!s) throw notFound('That student');
     const phone = b.phone?.replace(/[^\d+]/g, '') || null;

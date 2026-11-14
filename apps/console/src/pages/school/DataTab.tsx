@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ImportInputIn } from '@gradeon/api-client';
-import { IMPORT_SOURCES, type ImportBatchRow, type ImportKind, type ImportPreview, type MigrationView, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, FilePick, Select, EmptyNote } from '@gradeon/web-ui';
+import type { ImportInputIn } from '@tangent/api-client';
+import { IMPORT_SOURCES, type ImportBatchRow, type ImportKind, type ImportPreview, type MigrationView, type SchoolDetail } from '@tangent/contracts';
+import { Dialog, EmptyCard, Field, FilePick, Select, EmptyNote } from '@tangent/web-ui';
 import { RecordsTab } from './IntegrationsTab';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
@@ -18,7 +18,7 @@ const readFile = (f: File) => (/\.(csv|txt)$/i.test(f.name) ? f.text() : new Pro
 const save = (blob: Blob, name: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
 
 /**
- * A school's data: Gradeon's onboarding team imports what the school sent, checks it adds up and undoes what was wrong; the
+ * A school's data: Tangent's onboarding team imports what the school sent, checks it adds up and undoes what was wrong; the
  * export of everything; leavers past retention; and, at the bottom, erasing the school.
  */
 export function DataTab({ d, say, danger }: { d: SchoolDetail; say: Say; danger: React.ReactNode }) {

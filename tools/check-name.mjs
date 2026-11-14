@@ -14,7 +14,7 @@ for (const f of files) {
   text.toString('utf8').split('\n').forEach((line, i) => { if (old.test(line)) bad.push(`${f}:${i + 1}`); });
 }
 if (bad.length) {
-  console.error(`The former product name appears ${bad.length} times; the product is Gradeon:\n${bad.slice(0, 50).join('\n')}`);
+  console.error(`The former product name appears ${bad.length} times; the product is Tangent:\n${bad.slice(0, 50).join('\n')}`);
   process.exit(1);
 }
 console.log(`Name check passed: ${files.length} files.`);

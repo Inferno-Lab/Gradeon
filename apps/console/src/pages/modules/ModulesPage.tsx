@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
-import { PlanSave, type EntitlementDoc, type EntitlementRow, type PlanRow } from '@gradeon/contracts';
-import { HttpError } from '@gradeon/api-client';
-import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, IC, Icon, NumberField, Select, SelectField, useShake, type PageIcon, EmptyNote, EmptyState } from '@gradeon/web-ui';
-import type { CatalogDoc } from '@gradeon/api-client';
+import { catalogueName, changeEntitlement, type EntitlementChange } from '@tangent/config-engine';
+import { PlanSave, type EntitlementDoc, type EntitlementRow, type PlanRow } from '@tangent/contracts';
+import { HttpError } from '@tangent/api-client';
+import { Checkbox, DateField, Dialog, EmptyCard, ErrorLine, Field, IC, Icon, NumberField, Select, SelectField, useShake, type PageIcon, EmptyNote, EmptyState } from '@tangent/web-ui';
+import type { CatalogDoc } from '@tangent/api-client';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -80,7 +80,7 @@ export function ReviewDialog({ list, onClose, onDone }: { list: Push[]; onClose:
 
 // A school's module or feature as the Modules board's tile (design/hue/src/Modules.html): on, on for a while, paused, or off.
 const dot = (on: boolean, until?: string, paused?: boolean) => {
-  const say = paused ? 'Paused by Gradeon' : on ? (until ? `On until ${until}` : 'On') : 'Off';
+  const say = paused ? 'Paused by Tangent' : on ? (until ? `On until ${until}` : 'On') : 'Off';
   return (
     <span className={`mx ${paused ? 'bad' : on ? (until ? 'wait' : 'on') : ''}`} role="img" aria-label={say} data-tip={say}>
       {(on || paused) && <Icon name={paused ? 'pause' : until ? 'waiting' : 'check'} size={16} className="i" />}

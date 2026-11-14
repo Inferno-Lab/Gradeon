@@ -11,6 +11,8 @@ export interface MigrationFile {
   kind: MigrationKind;
   sql: string;
   checksum: string;
+  /** The checksum it ran with, when the only change since is the product's rename to Tangent (migrations/renamed.json). */
+  ranAs?: string;
 }
 
 export interface AppliedMigration {
@@ -28,6 +30,7 @@ const DIRS: Record<MigrationSet, URL> = {
 export async function loadMigrations(set: MigrationSet): Promise<MigrationFile[]> {
   const dir = fileURLToPath(DIRS[set]);
   const names = (await readdir(dir)).filter((n) => n.endsWith('.sql')).sort();
+  const renamed = JSON.parse(await readFile(fileURLToPath(new URL('../migrations/renamed.json', import.meta.url)), 'utf8')) as Record<string, string>;
   const out: MigrationFile[] = [];
   for (const name of names) {
     const sql = await readFile(dir + name, 'utf8');
@@ -38,6 +41,7 @@ export async function loadMigrations(set: MigrationSet): Promise<MigrationFile[]
       kind: m[1] as MigrationKind,
       sql,
       checksum: createHash('sha256').update(sql).digest('hex').slice(0, 16),
+      ranAs: renamed[`${set}/${name.replace(/\.sql$/, '')}`],
     });
   }
   return out;
@@ -80,7 +84,7 @@ export async function migrate(pool: Pool, set: MigrationSet, opts: { upTo?: stri
         const was = (await client.query<{ checksum: string }>('select checksum from schema_migrations where tag = $1', [m.tag])).rows[0]?.checksum;
         if (was !== undefined) {
           await client.query('commit');
-          if (was !== m.checksum) throw new Error(`Migration ${m.tag} was changed after it ran. Add a new migration instead.`);
+          if (was !== m.checksum && was !== m.ranAs) throw new Error(`Migration ${m.tag} was changed after it ran. Add a new migration instead.`);
           if (opts.upTo === m.tag) break;
           continue;
         }

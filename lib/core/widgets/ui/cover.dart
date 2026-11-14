@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/app_icons.dart';
-import 'package:gradeon/core/widgets/ui/labels.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/app_icons.dart';
+import 'package:tangent/core/widgets/ui/labels.dart';
 
 /// A subject's mark: in a row, the Hue tile (spectrum soft fill, icon); large, the notebook cover (shelves, heroes).
 class Cover extends StatelessWidget {
@@ -27,7 +27,7 @@ class Cover extends StatelessWidget {
   Widget build(BuildContext context) {
     final pigment = AppColors.subject(subject);
     final tile = context.app.subjectFor(subject);
-    // In a list row a subject is Gradeon Hue's tile: its spectrum soft fill with the homework icon in its ink.
+    // In a list row a subject is Tangent Hue's tile: its spectrum soft fill with the homework icon in its ink.
     if (!large && width == null && height == null) {
       return Container(
         width: 40,

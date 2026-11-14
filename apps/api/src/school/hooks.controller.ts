@@ -1,7 +1,7 @@
 import { All, Body, Controller, Get, HttpCode, Inject, Param, Post, Put, Query, Req, Res } from '@nestjs/common';
-import { appIdFor } from '@gradeon/contracts';
-import { sandboxLink } from '@gradeon/integrations';
-import { ApiError, forbidden } from '@gradeon/nest-kit';
+import { appIdFor } from '@tangent/contracts';
+import { sandboxLink } from '@tangent/integrations';
+import { ApiError, forbidden } from '@tangent/nest-kit';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { Public } from '../auth/guards.js';
 import { ENV, type Env } from '../env.js';
@@ -69,7 +69,7 @@ export class HooksController {
     const d = sandboxLink<{ amount: number; desc: string }>(this.env.SECRETS_KEY, token);
     if (!d) { void reply.code(410).type('text/html').send(page('Link expired', '<h1>This payment link has expired</h1><p>Go back to the app and try again.</p>')); return; }
     void reply.type('text/html').send(page('Test payment', `<h1>Test payment</h1><p>${esc(d.desc)}</p><div class="amt">₹${(d.amount / 100).toLocaleString('en-IN')}</div>
-<div class="note">This is Gradeon's test checkout. No money moves: choose what the bank would say.</div>
+<div class="note">This is Tangent's test checkout. No money moves: choose what the bank would say.</div>
 <form method="post"><button name="outcome" value="failed">Payment fails</button><button class="go" name="outcome" value="paid">Pay</button></form>`));
   }
 
@@ -88,7 +88,7 @@ export class HooksController {
     const [title, text] = status === 'paid' ? ['Payment received', 'Thank you. The receipt is in the app.']
       : status === 'failed' ? ['Payment did not go through', 'No money was taken. Go back to the app to try again.']
       : ['Checking your payment', 'This takes a few seconds. The app shows the receipt as soon as the bank confirms.'];
-    void reply.type('text/html').send(page(title, `<h1>${title}</h1><p>${text}</p><form><a class="btn" href="gradeon://open/fees">Back to the app</a></form>`));
+    void reply.type('text/html').send(page(title, `<h1>${title}</h1><p>${text}</p><form><a class="btn" href="tangent://open/fees">Back to the app</a></form>`));
   }
 
   // ── The test track's file storage ──────────────────────────────────────────

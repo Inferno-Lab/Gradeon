@@ -1,5 +1,5 @@
 import { Catch, HttpException, Logger, type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
-import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
+import type { ApiErrorBody, ErrorCode } from '@tangent/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { errorSink } from './error-reports.js';
 

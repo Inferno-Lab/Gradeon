@@ -48,16 +48,16 @@ importers:
 
   apps/admin:
     dependencies:
-      '@gradeon/api-client':
+      '@tangent/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@gradeon/config-engine':
+      '@tangent/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@gradeon/web-ui':
+      '@tangent/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui
       '@tanstack/react-query':
@@ -94,25 +94,25 @@ importers:
       '@fastify/cors':
         specifier: ^11.0.0
         version: 11.3.1
-      '@gradeon/config-engine':
+      '@tangent/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@gradeon/db':
+      '@tangent/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@gradeon/integrations':
+      '@tangent/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
-      '@gradeon/nest-kit':
+      '@tangent/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@gradeon/tenancy':
+      '@tangent/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@nestjs/common':
@@ -176,16 +176,16 @@ importers:
 
   apps/console:
     dependencies:
-      '@gradeon/api-client':
+      '@tangent/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@gradeon/config-engine':
+      '@tangent/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@gradeon/web-ui':
+      '@tangent/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui
       '@tanstack/react-query':
@@ -222,25 +222,25 @@ importers:
       '@fastify/cors':
         specifier: ^11.0.0
         version: 11.3.1
-      '@gradeon/config-engine':
+      '@tangent/config-engine':
         specifier: workspace:*
         version: link:../../packages/config-engine
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@gradeon/db':
+      '@tangent/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@gradeon/integrations':
+      '@tangent/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
-      '@gradeon/nest-kit':
+      '@tangent/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@gradeon/tenancy':
+      '@tangent/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@nestjs/common':
@@ -268,7 +268,7 @@ importers:
         specifier: ^4.1.0
         version: 4.6.7
     devDependencies:
-      '@gradeon/api':
+      '@tangent/api':
         specifier: workspace:*
         version: link:../api
       '@swc/core':
@@ -301,16 +301,16 @@ importers:
       '@fastify/static':
         specifier: ^10.1.2
         version: 10.1.9
-      '@gradeon/api':
+      '@tangent/api':
         specifier: workspace:*
         version: link:../api
-      '@gradeon/console-api':
+      '@tangent/console-api':
         specifier: workspace:*
         version: link:../console-api
-      '@gradeon/nest-kit':
+      '@tangent/nest-kit':
         specifier: workspace:*
         version: link:../../packages/nest-kit
-      '@gradeon/tenancy':
+      '@tangent/tenancy':
         specifier: workspace:*
         version: link:../../packages/tenancy
       '@nestjs/common':
@@ -341,7 +341,7 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -354,7 +354,7 @@ importers:
 
   packages/config-engine:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:
@@ -383,10 +383,10 @@ importers:
 
   packages/db:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../security
       drizzle-orm:
@@ -420,10 +420,10 @@ importers:
 
   packages/integrations:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../security
       pg:
@@ -457,10 +457,10 @@ importers:
       '@fastify/rate-limit':
         specifier: ^10.3.0
         version: 10.3.0
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../security
       '@nestjs/common':
@@ -500,13 +500,13 @@ importers:
 
   packages/tenancy:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@gradeon/db':
+      '@tangent/db':
         specifier: workspace:*
         version: link:../db
-      '@gradeon/security':
+      '@tangent/security':
         specifier: workspace:*
         version: link:../security
       drizzle-orm:
@@ -531,7 +531,7 @@ importers:
 
   packages/web-ui:
     dependencies:
-      '@gradeon/contracts':
+      '@tangent/contracts':
         specifier: workspace:*
         version: link:../contracts
       react:

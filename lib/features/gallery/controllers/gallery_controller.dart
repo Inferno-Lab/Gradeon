@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 
 class GalleryController extends GetxController with Loadable {
   final onlyChild = false.obs;

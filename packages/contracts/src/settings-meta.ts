@@ -39,7 +39,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'school.language': { group: 'School identity', label: 'Default language', kind: 'language', options: LANGUAGES },
   'brand.logoText': { group: 'School identity', label: 'Logo letters', kind: 'text', help: 'One or two letters, until a logo image is uploaded.' },
   'brand.logoFileId': { group: 'School identity', label: 'Logo image', kind: 'logo', help: 'A square PNG or JPEG. Shown in the admin menu, on the sign-in pages, receipts and the app.' },
-  'brand.color': { group: 'Look', label: 'Brand colour', kind: 'color', help: 'Every colour of the school’s admin, sign-in pages and app is worked out from this colour’s hue (Gradeon Hue), in light, dark and AMOLED. Any colour reads well: the contrast is checked for every hue.' },
+  'brand.color': { group: 'Look', label: 'Brand colour', kind: 'color', help: 'Every colour of the school’s admin, sign-in pages and app is worked out from this colour’s hue (Tangent Hue), in light, dark and AMOLED. Any colour reads well: the contrast is checked for every hue.' },
   'app.roles': { group: 'The app', label: 'Who uses the app', kind: 'appRoles', help: 'A role that is off cannot sign in to the app and is told to ask the school. Staff always have the admin.' },
   'app.layout': { group: 'The app', label: 'What each role sees', kind: 'appLayout', help: 'For each role: up to four bottom tabs (Profile is always added last), the Home cards and the quick buttons, in order. Only what the school’s modules offer that role can be chosen.' },
   'app.languages': { group: 'The app', label: 'Languages offered', kind: 'multi', options: LANGUAGES, help: 'The app’s language choices. Someone who picked one taken away gets the school’s default.' },
@@ -60,10 +60,10 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'templates.messages': { group: 'Messaging', label: 'Wording of each message', kind: 'templates' },
 
   // School (the academic year)
-  'classes.schoolEdits': { group: 'school', label: 'The school may edit its classes, subjects and periods', kind: 'bool', help: 'Off: only Gradeon changes them (Data, or the school asks).' },
+  'classes.schoolEdits': { group: 'school', label: 'The school may edit its classes, subjects and periods', kind: 'bool', help: 'Off: only Tangent changes them (Data, or the school asks).' },
   'calendar.weeklyOff': { group: 'school', label: 'Closed every week on', kind: 'multi', options: [['sun', 'Sunday'], ['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday']], help: 'Attendance, the dashboard, fee charts and the app’s calendars skip these days. Holidays are added under Academic year.' },
   'calendar.weekStarts': { group: 'school', label: 'Weeks start on', kind: 'enum', options: [['mon', 'Monday'], ['sun', 'Sunday']], help: 'The first column of every week grid in the admin and the app.' },
-  'calendar.schoolEdits': { group: 'school', label: 'The school may edit its terms and holidays', kind: 'bool', help: 'Off: only Gradeon changes them.' },
+  'calendar.schoolEdits': { group: 'school', label: 'The school may edit its terms and holidays', kind: 'bool', help: 'Off: only Tangent changes them.' },
   'dashboard.rollClasses': { group: 'school', label: 'Classes on the dashboard’s roll-call card', kind: 'classes', max: 8 },
 
   // People
@@ -73,11 +73,11 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'vocab.classes': { group: 'people', label: '…and more than one', kind: 'text', help: 'Leave empty for the usual ending.' },
   'letters.family': { group: 'people', label: 'Letter to families about the app', kind: 'textarea', help: 'Printed for each family from Students → On the app, with a code that opens the app. Use {school}, {student}, {class}, {guardian}, {phoneEnd} and {link}.' },
   'letters.student': { group: 'people', label: 'Letter to students about the app', kind: 'textarea', help: 'Printed for each student when the school uses the app for students. Use {school}, {student}, {class} and {link}.' },
-  'students.required': { group: 'people', label: 'Fields the office must fill for a student', kind: 'multi', options: [['gender', 'Gender'], ['house', 'House'], ['admissionNo', 'Admission number (otherwise Gradeon numbers them)'], ['bloodGroup', 'Blood group'], ['address', 'Address']], help: 'Name, class, date of birth and a guardian are always needed. These become required too when adding or editing a student.' },
+  'students.required': { group: 'people', label: 'Fields the office must fill for a student', kind: 'multi', options: [['gender', 'Gender'], ['house', 'House'], ['admissionNo', 'Admission number (otherwise Tangent numbers them)'], ['bloodGroup', 'Blood group'], ['address', 'Address']], help: 'Name, class, date of birth and a guardian are always needed. These become required too when adding or editing a student.' },
   'people.houses': { group: 'people', label: 'Houses', kind: 'houses', max: 12, help: 'The school’s houses and their colours, if it has them: on student profiles, the roll-call grid and the app. Students are put in a house by import or on their profile.' },
   'admissions.sources': { group: 'people', label: 'Where enquiries come from', kind: 'strings', max: 16, help: 'The choices on a new enquiry, and how Admissions counts them.' },
   'admissions.stages': { group: 'people', label: 'Admission stages', kind: 'multi', options: [['applied', 'Applied (form received)'], ['test', 'Entrance test'], ['offer', 'Offer (the family is told)']], help: 'The steps between an enquiry and enrolment on the Admissions board. Enquiry and Enrolled are always there.' },
-  'staff.schoolAssignsRoles': { group: 'people', label: 'The school may put its staff into roles', kind: 'bool', help: 'Roles themselves are always made here. Off: only Gradeon assigns roles to people.' },
+  'staff.schoolAssignsRoles': { group: 'people', label: 'The school may put its staff into roles', kind: 'bool', help: 'Roles themselves are always made here. Off: only Tangent assigns roles to people.' },
 
   // Attendance
   'attendance.notifyParents': { group: 'attendance', label: 'Tell families when a child is absent or late', kind: 'bool' },
@@ -87,7 +87,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'leave.reasons': { group: 'attendance', label: 'Reasons families give for leave', kind: 'strings', max: 12 },
 
   // Timetable
-  'timetable.schoolEdits': { group: 'timetable', label: 'The school may edit its own timetable', kind: 'bool', help: 'Off: the timetable is locked and only Gradeon changes it. Covering an absent teacher for a day is always allowed.' },
+  'timetable.schoolEdits': { group: 'timetable', label: 'The school may edit its own timetable', kind: 'bool', help: 'Off: the timetable is locked and only Tangent changes it. Covering an absent teacher for a day is always allowed.' },
 
   // Homework
   'homework.goalPct': { group: 'homework', label: 'Homework on time goal (%)', kind: 'number', min: 50, max: 100 },
@@ -116,7 +116,7 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'fees.gstHeads': { group: 'fees', label: 'Fee heads that carry GST', kind: 'multi', help: 'From the school’s own fee heads. Fees are GST-inclusive; the receipt shows the tax inside them.' },
   'fees.refundApprovalAbove': { group: 'fees', label: 'Refunds above this need a second person (₹)', kind: 'number', min: 0, max: 10_000_000 },
   'fees.dailyTarget': { group: 'fees', label: 'Daily fee collection target (₹)', kind: 'number', min: 0, max: 100_000_000, help: 'The dashboard measures each day’s collection against it.' },
-  'feeStructures.schoolEdits': { group: 'fees', label: 'The school may edit its fee heads and fee structures', kind: 'bool', help: 'Off: only Gradeon changes what each grade pays. Who approves a fee waiver is whoever’s role may waive fees (Roles).' },
+  'feeStructures.schoolEdits': { group: 'fees', label: 'The school may edit its fee heads and fee structures', kind: 'bool', help: 'Off: only Tangent changes what each grade pays. Who approves a fee waiver is whoever’s role may waive fees (Roles).' },
 
   // Notices
   'approvals.notice': { group: 'notices', label: 'Notices need approval before they go out', kind: 'enum', options: [['required', 'Yes, unless written by someone allowed to publish'], ['off', 'No']] },

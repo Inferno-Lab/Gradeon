@@ -1,8 +1,8 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { CONSOLE_HUE, hueCss } from '@gradeon/contracts';
+import { CONSOLE_HUE, hueCss } from '@tangent/contracts';
 
 export type Theme = 'light' | 'dark';
-const KEY = 'gradeon.theme';
+const KEY = 'tangent.theme';
 const listeners = new Set<() => void>();
 
 function read(): Theme {
@@ -33,13 +33,13 @@ export function setTheme(t: Theme | null): void {
   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-swap')));
 }
 
-/** Puts a seed's colours (Gradeon Hue) on every `.nest` on the page, portals and sign-in pages included. hue.css holds the console's. */
+/** Puts a seed's colours (Tangent Hue) on every `.nest` on the page, portals and sign-in pages included. hue.css holds the console's. */
 export function useHue(hue: number | undefined): void {
   const css = hue === undefined || hue === CONSOLE_HUE ? '' : hueCss(hue, '.nest.nest');
   useEffect(() => {
-    let tag = document.getElementById('gradeon-theme');
+    let tag = document.getElementById('tangent-theme');
     if (!css) { tag?.remove(); return; }
-    if (!tag) { tag = document.createElement('style'); tag.id = 'gradeon-theme'; document.head.append(tag); }
+    if (!tag) { tag = document.createElement('style'); tag.id = 'tangent-theme'; document.head.append(tag); }
     tag.textContent = css;
   }, [css]);
 }

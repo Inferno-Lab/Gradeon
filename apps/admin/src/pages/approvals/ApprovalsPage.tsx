@@ -1,4 +1,4 @@
-import { useToast } from '@gradeon/web-ui';
+import { useToast } from '@tangent/web-ui';
 import { Page } from '../../app/Page';
 import { usePageTabs } from '../../app/tabs';
 import { useApprovalList, type ApprovalView } from './ApprovalList';

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import {
   addDays, dayName, istToday, latestSchoolDay, schoolDaysEnding,
   type AttendanceDay, type AttendanceDayPut, type AttendanceStatus, type AttendanceWeekPoint, type PeriodMarksPut, type PeriodRoll,
-} from '@gradeon/contracts';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+} from '@tangent/contracts';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 

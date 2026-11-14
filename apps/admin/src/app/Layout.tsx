@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import type { ShellData } from '@gradeon/contracts';
-import { Shell } from '@gradeon/web-ui';
+import type { ShellData } from '@tangent/contracts';
+import { Shell } from '@tangent/web-ui';
 import { useChrome } from './useChrome';
 
 interface ShellChrome { openSearch: () => void; shell: ShellData | undefined; themeCls: string }

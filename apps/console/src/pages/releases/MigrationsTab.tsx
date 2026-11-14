@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { EmptyState } from '@gradeon/web-ui';
-import type { MigrationRow } from '@gradeon/contracts';
+import { EmptyState } from '@tangent/web-ui';
+import type { MigrationRow } from '@tangent/contracts';
 import { Card, Page } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';

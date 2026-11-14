@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import { ATTENDANCE_MARKS, MESSAGE_EVENTS, addDays, istToday, type AttendanceStatus, type NoticeCreate, type PeriodMarksPut } from '@gradeon/contracts';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
-import type { Registry } from '@gradeon/tenancy';
+import { newId } from '@tangent/db';
+import { ATTENDANCE_MARKS, MESSAGE_EVENTS, addDays, istToday, type AttendanceStatus, type NoticeCreate, type PeriodMarksPut } from '@tangent/contracts';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
+import type { Registry } from '@tangent/tenancy';
 import { REGISTRY, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { AttendanceService } from './attendance.service.js';
 import { ApprovalsService } from './approvals.service.js';
@@ -564,7 +564,7 @@ export class FamilyService {
   /** Older app builds paid here directly; payments now go through the provider's checkout (POST fees/:id/order). */
   async pay(t: TenantCtx, user: AuthedUser, _invoiceId: string, b: { studentId: string; method: string }): Promise<never> {
     await this.mayStudent(await this.who(t, user), b.studentId, t);
-    throw new ApiError('conflict', 'Update the Gradeon app to pay fees online.');
+    throw new ApiError('conflict', 'Update the Tangent app to pay fees online.');
   }
 
   // Notices and events

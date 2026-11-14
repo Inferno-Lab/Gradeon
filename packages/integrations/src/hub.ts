@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
-import { CAPABILITY_LABELS, providerDef, type Capability, type DeliveryStatus } from '@gradeon/contracts';
-import { seal, unseal } from '@gradeon/security';
+import { CAPABILITY_LABELS, providerDef, type Capability, type DeliveryStatus } from '@tangent/contracts';
+import { seal, unseal } from '@tangent/security';
 import { ADAPTERS } from './providers/index.js';
 import { ProviderError, segments, fill, type Adapter, type Ctx, type InboundRequest, type InboundResult, type MessageCapability } from './types.js';
 
@@ -161,10 +161,10 @@ export class Hub {
     throw new ProviderError(`${CAPABILITY_LABELS[capability]} has no live connection for this school. Set one up in the console under Integrations.`, true);
   }
 
-  // ── The services Gradeon runs on ────────────────────────────────────────────
+  // ── The services Tangent runs on ────────────────────────────────────────────
 
   /**
-   * The connection Gradeon itself uses for a platform capability (alerts, builds, stores, databases, hosting, scanning): the
+   * The connection Tangent itself uses for a platform capability (alerts, builds, stores, databases, hosting, scanning): the
    * routed one, in test or live (these never reach families). Null when none is set up; the caller says what is missing.
    */
   async platform(capability: Capability): Promise<{ conn: Conn; adapter: Adapter; ctx: Ctx } | null> {
@@ -183,12 +183,12 @@ export class Hub {
     return { conn, adapter: this.adapter(conn), ctx: this.ctx(conn, '') };
   }
 
-  /** Tells the Gradeon team (console: Integrations → Alerts to the Gradeon team). Without a route, only the server log has it. */
+  /** Tells the Tangent team (console: Integrations → Alerts to the Tangent team). Without a route, only the server log has it. */
   async alert(title: string, text: string): Promise<boolean> {
     const p = await this.platform('alerts').catch(() => null);
     if (!p?.adapter.alert) return false;
     p.ctx.route.sendEmail = async (to: string, subject: string, body: string) => {
-      const r = await this.resolve('email', null, 'gradeon', to);
+      const r = await this.resolve('email', null, 'tangent', to);
       if (r.sandbox || !r.adapter.email) throw new ProviderError('The email connection is not live, so it cannot send alerts.', true);
       await r.adapter.email(r.ctx, { to, subject, text: body, vars: {}, messageKey: 'alert' });
     };
@@ -326,7 +326,7 @@ export class Hub {
     if (channel === 'push') {
       const tokens = r.sandbox ? [row.to_addr] : (await this.o.pushTokens?.(row.school_slug, row.to_addr)) ?? [];
       if (!tokens.length) throw new ProviderError('This person has no phone signed in to the app.', true);
-      const res = await r.adapter.push!(r.ctx, { tokens, title: row.subject ?? 'Gradeon', body: row.body, data: { key: row.message_key ?? '', route: vars.route ?? '' } });
+      const res = await r.adapter.push!(r.ctx, { tokens, title: row.subject ?? 'Tangent', body: row.body, data: { key: row.message_key ?? '', route: vars.route ?? '' } });
       if (res.failedTokens.length && !r.sandbox) await this.o.forgetTokens?.(row.school_slug, res.failedTokens);
       if (!res.sent) throw new ProviderError('No phone took the notification.', true);
       return { providerId: null, delivered: r.sandbox };

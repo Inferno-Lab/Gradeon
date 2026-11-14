@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Patch, Post, Put, Query, type OnModuleInit } from '@nestjs/common';
-import { activeFeatures, activeModules, diffSettings, resolveConfig, validateSettingsChanges } from '@gradeon/config-engine';
+import { activeFeatures, activeModules, diffSettings, resolveConfig, validateSettingsChanges } from '@tangent/config-engine';
 import {
   ConfigPatch, PERMISSIONS, RoleDefSave, SETTINGS_META,
   type ChangeRequestRow, type ConfigTemplateRow, type ConfigVersionRow, type EffectiveConfig, type EntitlementDoc, type RoleDef, type SchoolConfig,
-} from '@gradeon/contracts';
-import { newId, type pg } from '@gradeon/db';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+} from '@tangent/contracts';
+import { newId, type pg } from '@tangent/db';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
 import { z } from 'zod';
 import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
@@ -20,7 +20,7 @@ const KNOWN = new Set<string>(PERMISSIONS);
 type Q = pg.Pool | pg.PoolClient;
 
 /**
- * A school's configuration, as only Gradeon changes it: settings, roles and who holds them. Every change becomes a version
+ * A school's configuration, as only Tangent changes it: settings, roles and who holds them. Every change becomes a version
  * (who, what, why) that can be rolled back; a whole setup can be saved as a template and applied to other schools.
  */
 @Injectable()
@@ -99,14 +99,14 @@ export class ConfigService implements OnModuleInit {
         for (const [k, v] of Object.entries(checked.values)) {
           await client.query(
             'insert into settings (key, value, updated_by, updated_at) values ($1,$2,$3,now()) on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()',
-            [k, JSON.stringify(v), `gradeon:${by}`]);
+            [k, JSON.stringify(v), `tangent:${by}`]);
         }
         if (resets.length) await client.query('delete from settings where key = any($1)', [resets]);
         await client.query("insert into meta (key, value) values ('settings.version', '2') on conflict (key) do update set value = to_jsonb((meta.value)::int + 1)");
         const now = await this.values(client);
         const changes = diffSettings(before.values, now.values);
         await client.query('insert into audit_log (id, actor_id, actor_name, action, entity, detail) values ($1,null,$2,$3,$4,$5)',
-          [newId('aud'), `Gradeon · ${by}`, 'settings.changed', 'settings', JSON.stringify({ keys: changes.map((c) => c.key).join(', '), note: patch.note ?? '' })]);
+          [newId('aud'), `Tangent · ${by}`, 'settings.changed', 'settings', JSON.stringify({ keys: changes.map((c) => c.key).join(', '), note: patch.note ?? '' })]);
         await client.query('commit');
         return { ...now, changes };
       } catch (err) {
@@ -141,7 +141,7 @@ export class ConfigService implements OnModuleInit {
     return this.apply(schoolId, by, { changes, note: `Rolled back to version ${v.version}` });
   }
 
-  // Roles: only Gradeon makes and changes them.
+  // Roles: only Tangent makes and changes them.
 
   async saveRole(schoolId: string, by: string, id: string | null, body: RoleDefSave): Promise<RoleDef[]> {
     const bad = body.permissions.find((p) => !KNOWN.has(p));
@@ -161,7 +161,7 @@ export class ConfigService implements OnModuleInit {
       // People in the role get the change within about half a minute (their token version moves on).
       await p.query('update users set token_version = token_version + 1 where id in (select user_id from user_roles where role_id = $1)', [id]);
       await p.query('insert into audit_log (id, actor_id, actor_name, action, entity, entity_id, detail) values ($1,null,$2,$3,$4,$5,$6)',
-        [newId('aud'), `Gradeon · ${by}`, 'role.saved', 'role', id, JSON.stringify({ name: body.name, permissions: body.permissions.length })]);
+        [newId('aud'), `Tangent · ${by}`, 'role.saved', 'role', id, JSON.stringify({ name: body.name, permissions: body.permissions.length })]);
       await this.db.audit(by, 'role.saved', 'school', schoolId, { role: body.name });
       return this.roles(p);
     });

@@ -18,7 +18,7 @@ const chatHook: Adapter = {
   },
   async test(c) {
     try {
-      await chatHook.alert!(c, { title: 'Test from the Gradeon console', text: 'Alerts reach this channel.' });
+      await chatHook.alert!(c, { title: 'Test from the Tangent console', text: 'Alerts reach this channel.' });
       return { ok: true, detail: 'The channel accepted the test alert.' };
     } catch (e) { return fail(e); }
   },
@@ -31,11 +31,11 @@ export const emailAlerts: Adapter = {
   async alert(c, a) {
     const send = c.route.sendEmail as ((to: string, subject: string, text: string) => Promise<void>) | undefined;
     if (!send) throw new ProviderError('There is no live email connection to send alerts through. Set one up first.', true);
-    for (const to of String(c.settings.to).split(',').map((x) => x.trim()).filter(Boolean)) await send(to, `Gradeon alert: ${a.title}`, a.text);
+    for (const to of String(c.settings.to).split(',').map((x) => x.trim()).filter(Boolean)) await send(to, `Tangent alert: ${a.title}`, a.text);
   },
   async test(c) {
     try {
-      await emailAlerts.alert!(c, { title: 'Test from the Gradeon console', text: 'Alerts reach this address.' });
+      await emailAlerts.alert!(c, { title: 'Test from the Tangent console', text: 'Alerts reach this address.' });
       return { ok: true, detail: `Sent to ${String(c.settings.to)}.` };
     } catch (e) { return fail(e); }
   },
@@ -85,7 +85,7 @@ export const clamav: Adapter = {
 
 // ── App builds ─────────────────────────────────────────────────────────────────
 
-const gh = (c: Ctx) => ({ authorization: `Bearer ${c.secrets.token}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'gradeon-console' });
+const gh = (c: Ctx) => ({ authorization: `Bearer ${c.secrets.token}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'tangent-console' });
 
 export const github: Adapter = {
   builds: {
@@ -194,7 +194,7 @@ const neonHeaders = (c: Ctx) => ({ authorization: `Bearer ${c.secrets.apiKey}`, 
 export const neon: Adapter = {
   databases: {
     async create(c, name) {
-      const r = await call('https://console.neon.tech/api/v2/projects', { method: 'POST', headers: neonHeaders(c), retries: 0, body: JSON.stringify({ project: { name: `gradeon-${name}`, region_id: String(c.settings.region) } }) });
+      const r = await call('https://console.neon.tech/api/v2/projects', { method: 'POST', headers: neonHeaders(c), retries: 0, body: JSON.stringify({ project: { name: `tangent-${name}`, region_id: String(c.settings.region) } }) });
       const uri = r.json?.connection_uris?.[0]?.connection_uri as string | undefined;
       if (!uri) throw new ProviderError('Neon made the project but gave no connection address.');
       return { url: uri, dbName: `neon:${r.json.project.id}` };

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
 
 /// Fade-and-rise entrance with a 35ms stagger (first five items), skipped under Reduce motion.
 class Rise extends StatefulWidget {

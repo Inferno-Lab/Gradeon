@@ -1,9 +1,9 @@
 import type { PageIcon } from '../Icon';
 import { Icon } from '../Icon';
-import { readableOn } from '@gradeon/contracts';
+import { readableOn } from '@tangent/contracts';
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Menu } from '../Menu';
-import { GradeonIcon } from '../GradeonIcon';
+import { TangentIcon } from '../TangentIcon';
 
 export interface NavItem {
   id: string;
@@ -131,8 +131,8 @@ export function markStyle(color?: string): CSSProperties | undefined {
 export function WorkspaceHeader({ env, onToggle, collapsed, envClass }: { env: string; onToggle: () => void; collapsed: boolean; envClass?: string }) {
   return (
     <div className="wsw">
-      <span className="lg" style={{ background: 'none' }}><GradeonIcon /></span>
-      <div className="fade"><b>Gradeon</b><small><span className={`pdot ${envClass ?? ''}`}></span>{env}</small></div>
+      <span className="lg" style={{ background: 'none' }}><TangentIcon /></span>
+      <div className="fade"><b>Tangent</b><small><span className={`pdot ${envClass ?? ''}`}></span>{env}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <Icon name="sidebar" size={20} />
       </button>

@@ -1,4 +1,4 @@
-import { IMPORT_KINDS, MESSAGE_EVENTS, PERMISSIONS, PERMISSION_CATALOG, PERMISSION_NEEDS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, DEFAULT_APP_LAYOUT, APP_ROLE_KEYS } from '@gradeon/contracts';
+import { IMPORT_KINDS, MESSAGE_EVENTS, PERMISSIONS, PERMISSION_CATALOG, PERMISSION_NEEDS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, DEFAULT_APP_LAYOUT, APP_ROLE_KEYS } from '@tangent/contracts';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_PAGES, APP_CATALOG, APP_ROLES, MODULES, featureByKey, moduleByKey } from './index.js';
 

@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/AdminStudents.dc.html. Selectors are prefixed with .pg-students. */
+/* Selectors are prefixed with .pg-students. */
 
 
 .pg-students .fbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -73,5 +73,5 @@
   .pg-students .tcap{flex-wrap:wrap}
   .pg-students .tcap .srch{order:3;flex:1 1 100%;min-width:0!important}
 }
-/* From Gradeon Hue. */
+/* From Tangent Hue. */
 .pg-students .emic{width:56px;height:56px;border-radius:16px;background:var(--s2);color:var(--ink2);display:grid;place-items:center;margin-bottom:6px}

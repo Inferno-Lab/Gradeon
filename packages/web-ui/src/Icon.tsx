@@ -5,7 +5,7 @@ export type PageIcon = keyof typeof IC;
 export type IconName = PageIcon | keyof typeof UI | keyof typeof GLYPH;
 
 /**
- * Every icon in the admin and the console (Gradeon Hue, design/hue/icon-map.mjs): one meaning, one icon. A page icon is
+ * Every icon in the admin and the console (Tangent Hue, design/hue/icon-map.mjs): one meaning, one icon. A page icon is
  * filled when its page is the one open (`on`); everyday icons turn bold at 16 px and under; small symbols are always bold.
  */
 export function Icon({ name, size = ICON_SIZE.m, on, className, style }: { name: IconName; size?: number; on?: boolean; className?: string; style?: CSSProperties }) {

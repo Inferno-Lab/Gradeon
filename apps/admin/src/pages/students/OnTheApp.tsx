@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast, EmptyState } from '@gradeon/web-ui';
+import { useToast, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page } from '../../app/Page';
 import { useSchoolConfig } from '../../app/kit';

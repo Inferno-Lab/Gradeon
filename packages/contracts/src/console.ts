@@ -121,7 +121,7 @@ export type PlanSave = z.infer<typeof PlanSave>;
 /** The boards a school can follow: the one list the wizard and a school's details offer. */
 export const SCHOOL_BOARDS = ['CBSE', 'ICSE', 'State', 'IB', 'International', 'Other'] as const;
 
-/** What Gradeon keeps about a school beside its own settings: the contact for Gradeon, tax number and board. */
+/** What Tangent keeps about a school beside its own settings: the contact for Tangent, tax number and board. */
 export const SchoolDetailsPatch = z.object({
   contact: z.object({ name: z.string().trim().min(2, 'Enter the contact’s name').max(80), phone: z.string().trim().min(8, 'Enter a phone number').max(24), email: z.string().trim().email('Enter a valid email') }),
   gstin: z.string().trim().max(20).default(''),
@@ -260,7 +260,7 @@ export interface SchoolRow {
   lastIncident: string | null;
   adminUrl: string;
   createdAt: string;
-  /** When Gradeon pressed Go live; null while the school is still moving in. */
+  /** When Tangent pressed Go live; null while the school is still moving in. */
   wentLiveAt: string | null;
 }
 
@@ -561,7 +561,7 @@ export interface SubprocessorRow { name: string; purpose: string; serves: string
 
 /** The notice a school gets about a breach: shown to the person sending it first, then sent as is. */
 export const breachNotice = (school: string, title: string, note: string) =>
-  `Gradeon has recorded an incident that may affect ${school}: ${title}. ${note}\nYou can use this to meet your 72-hour notification duty.`;
+  `Tangent has recorded an incident that may affect ${school}: ${title}. ${note}\nYou can use this to meet your 72-hour notification duty.`;
 
 export const ComplianceCreate = z.object({
   schoolId: z.string().min(1, 'Choose a school'),
@@ -694,7 +694,7 @@ export type RoleDefSave = z.infer<typeof RoleDefSave>;
 
 export interface ConfigTemplateRow { id: string; name: string; keys: number; roles: number; createdBy: string; createdAt: string }
 
-/** What a school asks Gradeon to change (the admin's "Ask Gradeon to change this"). */
+/** What a school asks Tangent to change (the admin's "Ask Tangent to change this"). */
 export const ChangeRequestCreate = z.object({
   area: z.string().trim().min(2).max(60),
   message: z.string().trim().min(5, 'Say what you would like changed').max(1000),
@@ -707,7 +707,7 @@ export interface ChangeRequestRow {
 }
 
 /** The store ID a school's app is listed under: the same package name on Android and bundle ID on iPhone. */
-export const appIdFor = (slug: string, prefix = 'com.gradeon.') => `${prefix.endsWith('.') ? prefix : `${prefix}.`}${slug.replace(/[^a-z0-9]/g, '')}`;
+export const appIdFor = (slug: string, prefix = 'com.tangent.') => `${prefix.endsWith('.') ? prefix : `${prefix}.`}${slug.replace(/[^a-z0-9]/g, '')}`;
 
 /** Console history in words: each entry's action key as people read it (every console page shows these, never the key). */
 const AUDIT_WORDS: Record<string, string> = {
@@ -719,7 +719,7 @@ const AUDIT_WORDS: Record<string, string> = {
   'import.undone': 'Undid an import', 'integration.allowlist': 'Changed who gets real messages in test', 'integration.changed': 'Changed a connection',
   'integration.created': 'Added a connection', 'integration.deleted': 'Deleted a connection', 'integration.mode': 'Switched messages to live or test',
   'integration.retried': 'Sent a failed message again', 'integration.routed': 'Chose a school’s connection', 'integration.template': 'Saved an approved template',
-  'integration.template.deleted': 'Deleted an approved template', 'integration.tested': 'Tested a connection', 'integration.unrouted': 'Put a school back on Gradeon’s connection',
+  'integration.template.deleted': 'Deleted an approved template', 'integration.tested': 'Tested a connection', 'integration.unrouted': 'Put a school back on Tangent’s connection',
   'invoice.status': 'Changed an invoice', 'job.retried': 'Retried a background job', 'migration.readiness': 'Ticked a go-live item', 'plan.added': 'Added a plan',
   'plan.changed': 'Changed a plan', 'plan.removed': 'Removed a plan', 'policy.changed': 'Changed the rules for risky changes', 'provision.retried': 'Retried a set-up step',
   'provision.step_skipped': 'Skipped a set-up step', 'release.created': 'Created a release', 'release.done': 'Finished a release', 'release.halted': 'A release stopped by itself',

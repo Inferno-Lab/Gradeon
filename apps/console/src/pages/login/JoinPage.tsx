@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { HttpError } from '@gradeon/api-client';
-import { Field, useShake } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { Field, useShake } from '@tangent/web-ui';
 import { makeClient } from '../../app/client';
 
 const client = makeClient(() => undefined);
@@ -28,7 +28,7 @@ export function JoinPage() {
   return (
     <div className="nest" style={{ minHeight: '100dvh', padding: 16, display: 'grid', placeItems: 'center' }}>
       <div className={`card ${shake.cls}`} style={{ maxWidth: 440, width: '100%' }}>
-        <div className="ch"><h2>{done ? 'Your password is set' : 'Join the Gradeon console'}</h2></div>
+        <div className="ch"><h2>{done ? 'Your password is set' : 'Join the Tangent console'}</h2></div>
         {done ? (
           <>
             <p>Sign in with {done} and your new password. The first time, the console shows a code to add to your authenticator app.</p>

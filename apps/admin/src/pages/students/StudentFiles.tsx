@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { uploadFile } from '@gradeon/api-client';
-import type { FileRow } from '@gradeon/contracts';
-import { FilePick } from '@gradeon/web-ui';
+import { uploadFile } from '@tangent/api-client';
+import type { FileRow } from '@tangent/contracts';
+import { FilePick } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 
 const size = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);

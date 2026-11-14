@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { importKind, type ImportColumn, type SetupSection } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState, EmptyNote, type EmptyScene, type IconName } from '@gradeon/web-ui';
+import { importKind, type ImportColumn, type SetupSection } from '@tangent/contracts';
+import { DateField, Dialog, EmptyCard, Field, SelectField, TimeField, useShake, EmptyState, EmptyNote, type EmptyScene, type IconName } from '@tangent/web-ui';
 
 // The lists that have a scene of their own; the rest show an EmptyNote.
 const SCENE: Record<string, EmptyScene> = { classes: 'year', holidays: 'holidays', subjects: 'subjects', periods: 'bells' };
@@ -26,7 +26,7 @@ function shown(col: ImportColumn, v: string): string {
 
 /**
  * The school's own records of one part of its setup (years and terms, holidays, classes, subjects, bells, fee structures), as
- * lists to read and, where Gradeon lets the school change them (console switches like calendar.schoolEdits), to edit.
+ * lists to read and, where Tangent lets the school change them (console switches like calendar.schoolEdits), to edit.
  */
 export function useSetupSections(kinds: readonly string[], say: (text: string, tone?: 'bad') => void): { view: React.ReactNode; overlay: React.ReactNode } {
   const app = useApp();
@@ -58,12 +58,12 @@ function SectionCard({ section: s, canWrite, onOpen }: { section: SetupSection; 
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><h2>{s.label}</h2><span className="chip">{s.rows.length}</span></span>
         {edit && <span style={{ marginLeft: 'auto' }}><AddBtn onClick={() => onOpen(null)}>Add</AddBtn></span>}
       </div>
-      {s.locked && <div className="help" style={{ padding: '0 24px 16px' }}>Gradeon keeps these for your school. To change them, use “Ask Gradeon” on School setup.</div>}
+      {s.locked && <div className="help" style={{ padding: '0 24px 16px' }}>Tangent keeps these for your school. To change them, use “Ask Tangent” on School setup.</div>}
       {s.rows.length === 0 && SCENE[s.kind] ? (
         <div style={{ padding: '0 24px 24px' }}><EmptyState scene={SCENE[s.kind]!} label={s.kind === 'classes' ? 'Add the first class' : undefined} onAction={edit ? () => onOpen(null) : undefined} /></div>
       ) : s.rows.length === 0 ? (
         <div style={{ padding: '0 24px 24px' }}><EmptyNote icon={KIND_ICON[s.kind] ?? 'setup'} title={`No ${s.label.toLowerCase()} yet`}
-          body={`${importKind(s.kind)?.blurb ?? ''} ${edit ? 'Add the first, or send Gradeon your sheet from Moving in.' : 'Gradeon adds them for your school.'}`} /></div>
+          body={`${importKind(s.kind)?.blurb ?? ''} ${edit ? 'Add the first, or send Tangent your sheet from Moving in.' : 'Tangent adds them for your school.'}`} /></div>
       ) : (
         <div className="scroll-x lscroll">
           <div style={{ minWidth: 120 * cols.length }}>

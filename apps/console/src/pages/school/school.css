@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/ConsoleSchool.dc.html. Selectors are prefixed with .pg-school. */
+/* Selectors are prefixed with .pg-school. */
 
 
 .pg-school .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
@@ -57,7 +57,7 @@
 .pg-school .dlg input:focus{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
 .pg-school .dlg input.err{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 22%,var(--deep))}
 .pg-school .dlg label{display:block;font:700 13px var(--fb);margin-bottom:8px;color:color-mix(in srgb,var(--on-deep) 90%,transparent)}
-/* From Gradeon Hue. */
+/* From Tangent Hue. */
 .pg-school .sdeep{background:var(--hero);color:var(--on-deep);border-radius:24px;padding:24px 28px;align-items:center}
 .pg-school .sdeep p{color:var(--on-deep2)}
 .pg-school .sdeep .slogo{width:64px;height:64px;border-radius:20px;background:var(--bright);color:var(--on-bright)}

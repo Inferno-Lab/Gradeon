@@ -1,23 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/widgets/app_icons.dart';
+import 'package:tangent/core/widgets/app_icons.dart';
 import 'package:flutter/semantics.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/haptics.dart';
-import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/page.dart';
-import 'package:gradeon/core/widgets/states.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/features/notifications/controllers/notifications_controller.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/haptics.dart';
+import 'package:tangent/core/widgets/empty_kit.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/page.dart';
+import 'package:tangent/core/widgets/states.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/features/notifications/controllers/notifications_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 
 ({IconData? icon, String? glyph, Color fill, Color on, String label}) _kind(BuildContext context, String type) {

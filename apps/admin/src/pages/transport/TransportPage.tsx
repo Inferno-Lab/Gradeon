@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { BusRouteRow, RiderRow, StopInput } from '@tangent/contracts';
+import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -166,7 +166,7 @@ function RouteDialog({ route, onClose, onDone }: { route: BusRouteRow | null; on
             </div>
           ))}
           <button type="button" className="btn sm" onClick={() => setStops((l) => [...l, { name: '', pickup: '', dropTime: '', lat: '', lng: '' }])}>Add a stop</button>
-          <div className="help" style={{ marginTop: 6 }}>{maps ? 'With a stop’s place found on the map, families get “the bus is near” and an arrival time.' : 'Once Gradeon connects maps for your school, each stop can be found on the map, and families get “the bus is near”.'}</div>
+          <div className="help" style={{ marginTop: 6 }}>{maps ? 'With a stop’s place found on the map, families get “the bus is near” and an arrival time.' : 'Once Tangent connects maps for your school, each stop can be found on the map, and families get “the bus is near”.'}</div>
         </div>
         {err._ && <div className="emsg" role="alert">{err._}</div>}
       </div>

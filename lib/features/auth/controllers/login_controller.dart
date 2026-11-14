@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
 
 class LoginController extends GetxController {
   // Sample content starts filled in; a real school starts empty.
-  final email = TextEditingController(text: AppConfig.live ? '' : 'priya.sharma@gradeon.app');
+  final email = TextEditingController(text: AppConfig.live ? '' : 'priya.sharma@tangent.app');
   final password = TextEditingController(text: AppConfig.live ? '' : AppConfig.demoPassword);
   final otp = TextEditingController();
   final formKey = GlobalKey<FormState>();

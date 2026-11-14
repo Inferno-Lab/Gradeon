@@ -1,4 +1,4 @@
-import { addDays, istToday } from '@gradeon/contracts';
+import { addDays, istToday } from '@tangent/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -112,7 +112,7 @@ describe('staff and roles', () => {
     const off = await send('PATCH', `/v1/staff/${pooja.id}`, { status: 'inactive', designation: 'Maths teacher' });
     expect(off.json).toMatchObject({ status: 'inactive', designation: 'Maths teacher' });
   });
-  it('shows the roles Gradeon made, and lets the school put staff in them only while the console allows it', async () => {
+  it('shows the roles Tangent made, and lets the school put staff in them only while the console allows it', async () => {
     const roles = (await get('/v1/roles')).json;
     expect(roles.find((r: any) => r.key === 'principal')).toMatchObject({ locked: true });
     expect((await send('POST', '/v1/roles', { name: 'Exam cell', permissions: [] })).status).toBe(404);
@@ -140,7 +140,7 @@ describe('staff and roles', () => {
     await h.setSettings({ 'timetable.schoolEdits': false });
     const locked = await send('PATCH', '/v1/timetable/slots/' + slot.id, { room: 'R-13' });
     expect(locked.status).toBe(403);
-    expect(locked.json.message).toMatch(/Ask Gradeon/);
+    expect(locked.json.message).toMatch(/Ask Tangent/);
     await h.setSettings({ 'timetable.schoolEdits': true });
   }, 30_000);
 });

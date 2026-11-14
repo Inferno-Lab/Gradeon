@@ -1,11 +1,11 @@
 import { Inject, Injectable, SetMetadata, createParamDecorator, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { verifyJwt } from '@gradeon/security';
-import { featureByKey, moduleByKey } from '@gradeon/config-engine';
-import type { AccessClaims, Permission } from '@gradeon/contracts';
+import { verifyJwt } from '@tangent/security';
+import { featureByKey, moduleByKey } from '@tangent/config-engine';
+import type { AccessClaims, Permission } from '@tangent/contracts';
 import type { FastifyRequest } from 'fastify';
 import { ENV, type Env } from '../env.js';
-import { ApiError } from '@gradeon/nest-kit';
+import { ApiError } from '@tangent/nest-kit';
 import type { AuthedUser } from '../tenancy/tenant.js';
 import { SettingsService } from '../school/support.js';
 import { AuthService } from './auth.service.js';
@@ -48,7 +48,7 @@ export class AuthGuard implements CanActivate {
     }
     // Families use the app's routes only: the admin API (dashboard, search, reports...) is for staff.
     if (claims.kind && claims.kind !== 'staff' && !FAMILY_PATHS.test(req.url)) {
-      throw new ApiError('forbidden', 'This part of Gradeon is for school staff.');
+      throw new ApiError('forbidden', 'This part of Tangent is for school staff.');
     }
     if (!claims.support && req.tenant) {
       await this.auth.assertSession(req.tenant, claims.sid, claims.ver, claims.sub);
@@ -79,7 +79,7 @@ export class PermissionsGuard implements CanActivate {
       if (!feature && !moduleByKey(mod)) throw new Error(`Unknown module or feature ${mod}`);
       // The same resolved configuration the admin and the app read: plan, dates, the console's choice and kill switches.
       const cfg = await this.settings.effective(req.tenant);
-      if (req.tenant.info.flags[`kill.${module}`] === true) throw new ApiError('locked', 'Gradeon has paused this feature for now. It will be back shortly.');
+      if (req.tenant.info.flags[`kill.${module}`] === true) throw new ApiError('locked', 'Tangent has paused this feature for now. It will be back shortly.');
       if (!cfg.modules.includes(module) || (feature && !cfg.features.includes(mod))) throw new ApiError('locked', 'This feature is not part of your school’s plan.');
     }
     if (needed?.length) {

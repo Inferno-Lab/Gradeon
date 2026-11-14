@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { reportErrors } from '@gradeon/web-ui';
+import { reportErrors } from '@tangent/web-ui';
 import { Outlet, createRootRouteWithContext, createRoute, createRouter, redirect, useRouter, lazyRouteComponent } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { AppContext, type AppCtx } from './app/context';

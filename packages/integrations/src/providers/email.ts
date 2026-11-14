@@ -4,7 +4,7 @@ import { smtpSend } from '../smtp.js';
 import type { Adapter, Ctx, OutMessage } from '../types.js';
 
 const s = (c: Ctx, k: string) => String(c.route[k] ?? c.settings[k] ?? '');
-const testMail = (to: string): OutMessage => ({ to, subject: 'A test from Gradeon', text: 'This connection can send email.', vars: {}, messageKey: 'test' });
+const testMail = (to: string): OutMessage => ({ to, subject: 'A test from Tangent', text: 'This connection can send email.', vars: {}, messageKey: 'test' });
 
 /** Amazon SES v2, signed with SigV4 (no SDK). */
 export const ses: Adapter = {

@@ -14,10 +14,10 @@ export type Capability = (typeof CAPABILITIES)[number];
 export const CAPABILITY_LABELS: Record<Capability, string> = {
   sms: 'Text messages', whatsapp: 'WhatsApp', email: 'Email', push: 'Phone notifications', payments: 'Payments', storage: 'File storage',
   maps: 'Maps', tracking: 'Bus trackers', scanning: 'Virus scanning', webhook: 'Events to other systems',
-  alerts: 'Alerts to the Gradeon team', builds: 'App builds', stores: 'App stores', databases: 'School databases', hosting: 'Hosting and domains',
+  alerts: 'Alerts to the Tangent team', builds: 'App builds', stores: 'App stores', databases: 'School databases', hosting: 'Hosting and domains',
 };
 
-/** Capabilities Gradeon itself uses (never a school's own connection). */
+/** Capabilities Tangent itself uses (never a school's own connection). */
 export const PLATFORM_CAPABILITIES: Capability[] = ['alerts', 'builds', 'stores', 'databases', 'hosting', 'scanning'];
 
 /**
@@ -116,7 +116,7 @@ export const INTEGRATION_PROVIDERS: ProviderDef[] = [
       'In IAM, create a user allowed only ses:SendEmail and make an access key for it.', 'Fill in the form with the region where the domain is verified.'],
     fields: [f('region', 'Region', 'select', { options: [['ap-south-1', 'Mumbai (ap-south-1)'], ['ap-southeast-1', 'Singapore (ap-southeast-1)'], ['us-east-1', 'N. Virginia (us-east-1)'], ['eu-west-1', 'Ireland (eu-west-1)']], help: 'Where the domain is verified' }),
       f('accessKeyId', 'Access key ID', 'text', { help: 'IAM → Users → Security credentials', pattern: '^AKIA[0-9A-Z]{16}$', patternHint: 'Starts with AKIA, 20 characters.' }), f('secretAccessKey', 'Secret access key', 'secret', { help: 'Shown once when the key is made' }),
-      f('from', 'From address', 'text', { placeholder: 'Greenfield <no-reply@gradeon.app>', help: 'On the verified domain', pattern: '^(.+<)?[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+>?$', patternHint: 'An address, or a name with the address in <>.' })] },
+      f('from', 'From address', 'text', { placeholder: 'Greenfield <no-reply@tangent.app>', help: 'On the verified domain', pattern: '^(.+<)?[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+>?$', patternHint: 'An address, or a name with the address in <>.' })] },
   { key: 'smtp', name: 'SMTP server', capabilities: ['email'], testAction: MAIL_TEST, docs: 'https://datatracker.ietf.org/doc/html/rfc5321',
     steps: ['Set SPF and DKIM for the sending domain at its DNS host, or mail lands in spam.', 'Get the SMTP host, port, user and password from the mail provider.', 'Fill in the form and Test.'],
     fields: [f('host', 'Host', 'text', { placeholder: 'smtp.example.com', pattern: '^[a-z0-9.-]+\\.[a-z]{2,}$', patternHint: 'A host name like smtp.example.com.' }), f('port', 'Port', 'number', { placeholder: '465' }),
@@ -127,7 +127,7 @@ export const INTEGRATION_PROVIDERS: ProviderDef[] = [
     fields: [f('apiKey', 'API key', 'secret', { help: 'Resend → API keys', pattern: '^re_\\w+$', patternHint: 'Starts with re_.' }), f('from', 'From address', 'text', { help: 'On the verified domain', pattern: '^(.+<)?[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+>?$', patternHint: 'An address, or a name with the address in <>.' })] },
   // Phone notifications
   { key: 'fcm', name: 'Firebase Cloud Messaging', capabilities: ['push'], testAction: 'Checks the service account by asking Google for an access token.', docs: 'https://firebase.google.com/docs/cloud-messaging/send-message',
-    steps: ['Create a Firebase project (console.firebase.google.com) and add an Android app with the package name of the Gradeon app, and an iOS app with its bundle ID.',
+    steps: ['Create a Firebase project (console.firebase.google.com) and add an Android app with the package name of the Tangent app, and an iOS app with its bundle ID.',
       'Download google-services.json (Android) and GoogleService-Info.plist (iOS) and add both here: every app build takes them from this connection.',
       'Project settings → Service accounts → Generate new private key; add that JSON file too.', 'Save and Test; then route Phone notifications to this connection.'],
     fields: [f('projectId', 'Firebase project ID', 'text', { help: 'Project settings → General', pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$', patternHint: 'Lower-case letters, digits and dashes.' }),
@@ -175,11 +175,11 @@ export const INTEGRATION_PROVIDERS: ProviderDef[] = [
     fields: [f('url', 'Webhook address', 'secret', { pattern: '^https://(discord|discordapp)\\.com/api/webhooks/\\S+$', patternHint: 'Starts with https://discord.com/api/webhooks/.' })] },
   { key: 'email-alerts', name: 'Email to the team', capabilities: ['alerts'], testAction: 'Emails a test alert to the addresses, through the live email connection.', docs: '',
     steps: ['Set up an Email connection first (alerts are sent through it).', 'List the addresses that should receive alerts and Test.'],
-    fields: [f('to', 'Addresses (comma between)', 'text', { placeholder: 'ops@gradeon.app, kaushal@gradeon.app', pattern: '^[^@\\s,]+@[^@\\s,]+(\\s*,\\s*[^@\\s,]+@[^@\\s,]+)*$', patternHint: 'Email addresses, separated by commas.' })] },
+    fields: [f('to', 'Addresses (comma between)', 'text', { placeholder: 'ops@tangent.app, kaushal@tangent.app', pattern: '^[^@\\s,]+@[^@\\s,]+(\\s*,\\s*[^@\\s,]+@[^@\\s,]+)*$', patternHint: 'Email addresses, separated by commas.' })] },
   // App builds and stores
   { key: 'github', name: 'GitHub Actions', capabilities: ['builds'], testAction: 'Checks the token can see the repository and its mobile build workflow.', docs: 'https://docs.github.com/en/rest/actions/workflows',
-    steps: ['In GitHub → Settings → Developer settings → Fine-grained tokens, make a token for the Gradeon repository with Actions (read and write) and Contents (read and write).', 'Fill in the repository (owner/name), the branch builds start from, and the token. Test.', 'Every build gets its own short-lived code to fetch its signing files and report back; nothing else to paste into GitHub.'],
-    fields: [f('repo', 'Repository', 'text', { placeholder: 'Inferno-Lab/Gradeon', pattern: '^[\\w.-]+/[\\w.-]+$', patternHint: 'owner/name' }), f('branch', 'Branch', 'text', { placeholder: 'main' }), f('token', 'Token', 'secret', { help: 'A fine-grained token', pattern: '^(github_pat_|ghp_)\\w+$', patternHint: 'Starts with github_pat_ or ghp_.' })] },
+    steps: ['In GitHub → Settings → Developer settings → Fine-grained tokens, make a token for the Tangent repository with Actions (read and write) and Contents (read and write).', 'Fill in the repository (owner/name), the branch builds start from, and the token. Test.', 'Every build gets its own short-lived code to fetch its signing files and report back; nothing else to paste into GitHub.'],
+    fields: [f('repo', 'Repository', 'text', { placeholder: 'Inferno-Lab/Tangent', pattern: '^[\\w.-]+/[\\w.-]+$', patternHint: 'owner/name' }), f('branch', 'Branch', 'text', { placeholder: 'main' }), f('token', 'Token', 'secret', { help: 'A fine-grained token', pattern: '^(github_pat_|ghp_)\\w+$', patternHint: 'Starts with github_pat_ or ghp_.' })] },
   { key: 'google-play', name: 'Google Play', capabilities: ['stores'], testAction: 'Signs in to the Play Developer API with the service account and checks the upload key opens with its passwords.', docs: 'https://developers.google.com/android-publisher',
     steps: ['In Play Console, create each school’s app once (the package name the build gives it), and accept the terms.', 'In Google Cloud, create a service account, give it access in Play Console → Users and permissions (Release manager), and download its JSON key.',
       'Make an upload keystore once (keytool -genkey -keystore upload.jks …) and keep a copy safe: Play needs the same key for every update.', 'Add both files and the passwords here, choose the track builds go to, and Test.'],
@@ -220,8 +220,8 @@ export const INTEGRATION_PROVIDERS: ProviderDef[] = [
     ],
     webhooks: { events: 'Delivery reports, if switched on', verifies: 'The secret token in the webhook address' } },
   { key: 'webhook', name: 'Webhook', capabilities: ['webhook'], testAction: 'Posts a test event to the address.', docs: '',
-    steps: ['In the other system, make an address that accepts JSON posts.', 'Choose a signing secret and give it to that system: each event carries X-Gradeon-Signature: sha256=<HMAC of the body>.', 'Fill in the form and Test.'],
-    fields: [f('url', 'Address', 'url', { pattern: '^https://\\S+$', patternHint: 'An https:// address.' }), f('secret', 'Signing secret', 'secret', { help: 'Each event carries X-Gradeon-Signature: sha256 of the body with this secret.' })] },
+    steps: ['In the other system, make an address that accepts JSON posts.', 'Choose a signing secret and give it to that system: each event carries X-Tangent-Signature: sha256=<HMAC of the body>.', 'Fill in the form and Test.'],
+    fields: [f('url', 'Address', 'url', { pattern: '^https://\\S+$', patternHint: 'An https:// address.' }), f('secret', 'Signing secret', 'secret', { help: 'Each event carries X-Tangent-Signature: sha256 of the body with this secret.' })] },
 ];
 
 // What a message costs, for billing and the console's totals: set on every paid messaging connection.
@@ -244,8 +244,8 @@ export function fieldProblem(field: ProviderField, value: unknown): string | nul
 
 /** Messages the platform sends itself, besides the school's own (MESSAGE_EVENTS): they need DLT templates too. */
 export const SYSTEM_MESSAGES = [
-  { key: 'auth.code', label: 'Sign-in code', vars: ['code', 'school', 'minutes'], text: 'Your Gradeon sign-in code for {school} is {code}. It expires in {minutes} minutes.' },
-  { key: 'auth.reset', label: 'Code to set a new password', vars: ['code', 'school', 'minutes'], text: 'Your Gradeon code to set a new password for {school} is {code}. It expires in {minutes} minutes.' },
+  { key: 'auth.code', label: 'Sign-in code', vars: ['code', 'school', 'minutes'], text: 'Your Tangent sign-in code for {school} is {code}. It expires in {minutes} minutes.' },
+  { key: 'auth.reset', label: 'Code to set a new password', vars: ['code', 'school', 'minutes'], text: 'Your Tangent code to set a new password for {school} is {code}. It expires in {minutes} minutes.' },
 ] as const;
 
 export const providerDef = (key: string): ProviderDef | undefined => INTEGRATION_PROVIDERS.find((p) => p.key === key);

@@ -55,9 +55,9 @@ export async function startDevPostgres(opts: { dataDir: string; port?: number; f
   await mkdir(path.dirname(dataDir), { recursive: true });
   if (!fs.existsSync(path.join(dataDir, 'PG_VERSION'))) {
     const pwFile = path.join(path.dirname(dataDir), `${path.basename(dataDir)}.pw`);
-    fs.writeFileSync(pwFile, 'gradeon');
+    fs.writeFileSync(pwFile, 'tangent');
     try {
-      await run(exe('initdb'), ['-D', dataDir, '-U', 'gradeon', '--pwfile', pwFile, '-A', 'scram-sha-256', '-E', 'UTF8']);
+      await run(exe('initdb'), ['-D', dataDir, '-U', 'tangent', '--pwfile', pwFile, '-A', 'scram-sha-256', '-E', 'UTF8']);
     } finally {
       fs.rmSync(pwFile, { force: true });
     }
@@ -79,7 +79,7 @@ export async function startDevPostgres(opts: { dataDir: string; port?: number; f
 ${tail}`);
   }
   return {
-    url: `postgres://gradeon:gradeon@127.0.0.1:${port}/postgres`,
+    url: `postgres://tangent:tangent@127.0.0.1:${port}/postgres`,
     port,
     stop: async () => {
       await new Promise<void>((resolve) => {

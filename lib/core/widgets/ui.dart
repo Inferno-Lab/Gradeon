@@ -1,4 +1,4 @@
-/// Gradeon Hue building blocks. Import this one file; the pieces live in ui/.
+/// Tangent Hue building blocks. Import this one file; the pieces live in ui/.
 export 'ui/avatar.dart';
 export 'ui/controls.dart';
 export 'ui/cover.dart';

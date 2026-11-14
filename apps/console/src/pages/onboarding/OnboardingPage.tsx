@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { WIZARD_STEPS, type WizardDraftRow } from '@gradeon/contracts';
-import { Dialog, tintFor, Icon, EmptyState } from '@gradeon/web-ui';
+import { WIZARD_STEPS, type WizardDraftRow } from '@tangent/contracts';
+import { Dialog, tintFor, Icon, EmptyState } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';

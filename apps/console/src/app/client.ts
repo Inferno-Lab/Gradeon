@@ -1,8 +1,8 @@
-import { consoleApi, createHttp, type Tokens } from '@gradeon/api-client';
-import type { ConsoleTokens } from '@gradeon/contracts';
+import { consoleApi, createHttp, type Tokens } from '@tangent/api-client';
+import type { ConsoleTokens } from '@tangent/contracts';
 
 const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
-const KEY = 'gradeon.console';
+const KEY = 'tangent.console';
 
 export interface Stored {
   user: ConsoleTokens['user'];

@@ -19,8 +19,8 @@ async function launch(slug: string) {
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
-  second = await h.signIn('second@gradeon.app', 'another-long-pass');
+  await h.invite(t, { name: 'Second Admin', email: 'second@tangent.app', roles: ['super_admin'] }, 'another-long-pass');
+  second = await h.signIn('second@tangent.app', 'another-long-pass');
   expect((await launch('moveme')).status).toBe('succeeded');
 }, 240_000);
 afterAll(async () => {
@@ -47,8 +47,8 @@ describe('cells', () => {
     expect((await h.c('PUT', '/console/v1/cells/nope', { token: t, body: { maxSchools: 4 } })).status).toBe(404);
   });
   it('only people who may change policy can create cells', async () => {
-    await h.invite(t, { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'] }, 'long-enough-pass');
-    const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
+    await h.invite(t, { name: 'Sam Support', email: 'sam@tangent.app', roles: ['support'] }, 'long-enough-pass');
+    const sam = await h.signIn('sam@tangent.app', 'long-enough-pass');
     expect((await h.c('POST', '/console/v1/cells', { token: sam, body: { key: 'sneaky', target: 'local', region: 'x1', maxSchools: 3 } })).status).toBe(403);
   });
   it('moves a school to another cell of the same kind after a second person approves, and refuses closed or different cells', async () => {
@@ -114,8 +114,8 @@ describe('compliance desk', () => {
     expect(list.subprocessors).toHaveLength(live);
   });
   it('lets only the compliance and super admin roles write', async () => {
-    await h.invite(t, { name: 'Aud Itor', email: 'aud@gradeon.app', roles: ['auditor'] }, 'long-enough-pass');
-    const aud = await h.signIn('aud@gradeon.app', 'long-enough-pass');
+    await h.invite(t, { name: 'Aud Itor', email: 'aud@tangent.app', roles: ['auditor'] }, 'long-enough-pass');
+    const aud = await h.signIn('aud@tangent.app', 'long-enough-pass');
     expect((await h.c('GET', '/console/v1/compliance', { token: aud })).status).toBe(200);
     expect((await h.c('POST', '/console/v1/compliance', { token: aud, body: { schoolId: 'x', kind: 'breach', title: 'Not allowed' } })).status).toBe(403);
   });
@@ -200,7 +200,7 @@ describe('one pass: plans, go-live, starting roles, invoices, flags, errors, app
     expect(asked.status).toBe('pending_approval');
     expect((await h.c('POST', `/console/v1/actions/${asked.id}/reject`, { token: second, body: {} })).status).toBe(400);
     const no = (await h.c('POST', `/console/v1/actions/${asked.id}/reject`, { token: second, body: { note: 'Not during exams week' } })).json;
-    expect(no).toMatchObject({ status: 'rejected', decisionNote: 'Not during exams week', approvedBy: 'second@gradeon.app' });
+    expect(no).toMatchObject({ status: 'rejected', decisionNote: 'Not during exams week', approvedBy: 'second@tangent.app' });
     expect((await h.c('GET', `/console/v1/audit?school=${s.id}&action=action.`, { token: t })).json.every((a: any) => a.action.startsWith('action.'))).toBe(true);
   });
   it('signs an agreement only with its file, day and signer', async () => {

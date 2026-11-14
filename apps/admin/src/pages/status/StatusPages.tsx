@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { NotFoundTile } from '@gradeon/web-ui';
+import { NotFoundTile } from '@tangent/web-ui';
 import { AppContext } from '../../app/context';
 
 export function NotFoundPage() {

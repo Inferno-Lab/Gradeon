@@ -1,18 +1,18 @@
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/formatters.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/utils/schedule.dart';
+import 'package:tangent/core/utils/status.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/student.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 enum DueKind { fee, homework, event }
 

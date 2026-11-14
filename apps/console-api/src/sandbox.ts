@@ -1,6 +1,6 @@
 import { Controller, Get, Injectable, Query } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import type { SandboxMessage } from '@gradeon/contracts';
+import { newId } from '@tangent/db';
+import type { SandboxMessage } from '@tangent/contracts';
 import { Db, Needs } from './core.js';
 
 /** The message sandbox: SMS, email and WhatsApp land here instead of being sent. */

@@ -1,76 +1,24 @@
-# Design canvas
+# Design
 
-> **Next:** the owner approved a new design system, **Gradeon Hue**, for the app, the admin and the console (10 November 2026). Its spec, sources and canvas are in [`hue/`](hue/README.md), with the approved empty state for every page in [`hue/EMPTY-STATES.md`](hue/EMPTY-STATES.md). Both are built together, once the work in progress on `main` lands; until then the boards below describe what ships.
-
-`design/canvas/` is the approved design: every board the owner signed off, saved as the files they were drawn in. It is the **source of truth for how the admin and the console must look**. If a page and a board disagree, the board wins, except for the deliberate changes listed below.
-
-## Files
-
-| Board | What it shows | Built as |
-| --- | --- | --- |
-| `Main.dc.html` | School admin dashboard | `apps/admin/src/pages/dashboard` |
-| `AdminStudents.dc.html` | Students list, filters, student drawer | `apps/admin/src/pages/students` |
-| `AdminTimetable.dc.html` | Week grid, clash fix, publish | `apps/admin/src/pages/timetable` |
-| `AdminSettings.dc.html` | Settings: name, brand colour, toggles, plan (now the read-only School setup; changes are made in the console) | `apps/admin/src/pages/settings` |
-| `AdminPhone.dc.html` | Phone home with the dock | `apps/admin/src/pages/phone` |
-| `AdminLogin.dc.html`, `ConsoleLogin.dc.html` | Sign-in with the animated panel | `packages/web-ui/src/login` |
-| `AdminDark.dc.html` | The dashboard in dark | same page, dark theme |
-| `ConsoleFleet.dc.html`, `ConsoleFleetLight.dc.html` | Console fleet board, dark and light | `apps/console/src/pages/fleet` |
-| `ConsoleSchool.dc.html` | One school in the console: setup steps, ticket, usage, stores | `apps/console/src/pages/school` |
-| `Components.dc.html`, `Language.dc.html`, `Moments.dc.html`, `Empties.dc.html` | The design system: components, type and colour, motion, empty and error states | `packages/web-ui` and `apps/admin/src/design/DesignPage.tsx` (a living style guide built from the real components) |
-| `Cast.dc.html`, `Nesti.dc.html` | The retired mascot ("Nesti") | **not built**; kept only as history |
-| `nest.css` | The shared stylesheet of every board | copied verbatim to `packages/web-ui/src/nest.css` |
-| `preview.html` | A small shim that renders a board in any browser | see below |
-
-## Look at a board
-
-The boards use a design tool's component format. `preview.html` renders them without the tool:
-
-```bash
-cd design/canvas && python -m http.server 8099
-# then open http://127.0.0.1:8099/preview.html?f=ConsoleFleet&w=1440
-#   f = board name without .dc.html     w = width in px
-#   p = JSON props, e.g. p={"theme":"dark","reduceMotion":true}
-```
-
-`tools/shot.mjs` can screenshot that URL with `--anon`, which is how boards were compared with the built pages.
-
-## How the boards became React
-
-1. `tools/dc-to-tsx.mjs` converted each board into a React view (`*.view.tsx`), a scoped stylesheet (`*.css`, every selector prefixed `.pg-<page>`) and a copy of its script (`*.logic.txt`, a reference while porting; the copies were removed in 2026-11, the board itself is the reference). `tools/convert-all.sh` lists the boards it was run on. **It was a first import only.** The views were then edited by hand (small one-time Python scripts did the bulk edits; they were removed once applied) to take real data, work on phones and drop the retired elements. Never re-run the converter over an edited view.
-2. Each page has a hook component (`DashboardPage.tsx`, `StudentsPage.tsx`...) that fetches data with TanStack Query and passes one values object `v` into the view. The view keeps the board's markup and class names.
-3. Markup and class names are the board's. Colours and sizes come from `nest.css` variables, so a change to the design is a change to that file and the boards.
-
-## Deliberate differences from the boards
-
-The owner asked for the build to be identical to the canvas **except the childish elements**, which are replaced in the build (the boards were not changed):
-
-| Board element | In the build |
-| --- | --- |
-| "Nesti" the bird mascot (Cast, Nesti, and "wave", "book", "party" poses in several boards) | Flat object illustrations drawn from school objects (register, noticeboard, receipt, notebooks, padlock, envelope, calendar, plug, map pin, checklist, torn page, search paper): `packages/web-ui/src/illustrations`. No faces, characters or animals. |
-| Pencil-shaped chart columns | Rounded, chunky columns; roll bars are segmented filled bars |
-| Dot rows | Segmented tick bars |
-| Fee jars | Filled bars |
-
-Other differences, each because a board element did not work in the real product:
-
-- The console sign-in has a password field (the board had email only; the console needs a password).
-- "Single sign-on" and "Passkey" on the sign-in are shown disabled with "soon" (they were dead buttons).
-- The console menu's "On call · Hand over" card (invented, no feature behind it) became a "requests to approve" card. The "2 engineers on it" and "Join the call" parts of the incident card are gone for the same reason. The "Requests per minute" range switch is gone because only the last 24 hours are measured.
-- The theme follows the device; the menu's account block has a "Switch to dark / light" and "Sign out". The boards have no theme control.
-- Bars were made thicker after the owner said "bars are not thin": usage bars 14 px, chart columns wide.
-- Pages the boards do not cover (console wizard, releases, approvals, billing, team, attendance, fees, notices...) are composed only from the approved pieces (`packages/web-ui/src/blocks.css`, `apps/console/src/console.css`, `apps/admin/src/app/pages.css`). They have **not been design-reviewed by the owner**.
+The approved design of the app, the school admin and the console is **Tangent Hue**: its spec, its boards and the empty
+state of every page and tab are in [`hue/`](hue/README.md) (sources in `hue/src`, built with `node design/hue/build.mjs`;
+the canvas pages it writes to `hue/canvas` and `hue/preview` are generated and not kept in git). How a page looks in
+words: [`docs/DESIGN.md`](../docs/DESIGN.md) for the admin and the console, [`docs/design-system.md`](../docs/design-system.md)
+for the app.
 
 ## Rules the owner set for the design
 
-- Admin and console use Gradeon Hue's layouts and empty states ([`hue/`](hue/README.md)) in the **Nest** look of this folder (14 November 2026); the app uses Gradeon Hue.
+- Admin and console use Tangent Hue's layouts and empty states in the **Nest** look (14 November 2026): warm neutral
+  surfaces that never take the school's tint, pill controls, white cards with a hairline, ink main actions. The app uses
+  Tangent Hue's layouts in its old **Chalk & Glass** look.
 - Admin and console look like one consistent product (shared menu, tiles, chips, dialogs, motion).
 - Errors vibrate (the `shk1`/`shk2` classes, `useShake`); the sign-in does it too.
-- Every empty page has an illustration, an honest sentence and a next step (`EmptyCard`).
-- Motion is smooth everywhere, never slow (120, 200 or 300 ms: `--t1/2/3`), never bouncy, and stops under reduced motion. One special effect at most per screen; the dashboard menus are ordinary menus like every other.
-- No browser widgets or browser tooltips: dates, times, numbers, colours, ticks and files use the shared fields (enforced by `packages/web-ui/src/rules.test.ts`).
-- 2026-11: violet, amber and coral replaced by neutral, ink and one blue; contrast fixed (`tools/check-contrast.mjs`). The canvas copy of `nest.css` has the same tokens; the rest of it is not synced.
+- Every page and tab that can be empty has its own scene (`EmptyState`); a small list inside a page has an `EmptyNote`.
+- Motion is smooth everywhere, never slow (120, 200 or 300 ms: `--t1/2/3`), never bouncy, and stops under reduced motion.
+- No browser widgets or browser tooltips: dates, times, numbers, colours, ticks and files use the shared fields (enforced
+  by `packages/web-ui/src/rules.test.ts`).
 
 ## Logo
 
-`logo/` holds the working Gradeon logo the owner picked on 2026-11-05 (not final yet, so do not derive the product palette from its colours): a "fingerprint G", four whorl lines whose outer line closes into the G's bar (no two children are the same). Ink `#0B3B36`, accent `#16A08A` (`#5FE0C6` and mint `#EFF8F6` on dark). Use `gradeon-mark.svg` on light, `gradeon-mark-reversed.svg` on dark, `gradeon-favicon.svg` below 48 px (thicker lines), `gradeon-app-icon.svg` for app and store icons. The wordmark is Inter Tight 700, lower case on purpose (the symbol already plays the capital G), tracking −0.04em; in sentences, receipts and store listings the name is written "Gradeon"; `gradeon-lockup.png` and `gradeon-lockup-dark.png` show the mark and wordmark together. It is the app icon, browser icon, console mark and Gradeon's sign-in mark (affeb42); the admin and console colours are still the Nest violet.
+`logo/` holds the working logo the owner picked on 2026-11-05 (not final yet, so do not derive the product palette from its
+colours): a "fingerprint" mark, four whorl lines whose outer line closes into the letter's bar.

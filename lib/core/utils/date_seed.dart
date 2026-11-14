@@ -1,4 +1,4 @@
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 /// Turns `today-3` and `today+1T08:15` into ISO strings anchored on today.
 abstract final class DateSeed {

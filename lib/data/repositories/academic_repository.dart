@@ -1,10 +1,10 @@
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/datasources/mock_writes.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/status.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/datasources/mock_writes.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 abstract class AttendanceRepository {
   Future<List<AttendanceDay>> forStudent(String studentId);

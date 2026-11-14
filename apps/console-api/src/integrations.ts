@@ -2,11 +2,11 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Pos
 import {
   ActivityQuery, CAPABILITY_LABELS, ConnectionInput, ConnectionPatch, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, RouteInput, SYSTEM_MESSAGES, TemplateInput, fieldProblem, providerDef, type Capability, type ActionRow, type ActivityView, type ConnectionRow, type DeliveryRow, type HookEventRow,
   type IntegrationsView, type RouteRow, type TemplateRow,
-} from '@gradeon/contracts';
-import { newId, scheduleJob } from '@gradeon/db';
-import { Hub } from '@gradeon/integrations';
-import { ApiError, ZodPipe, alert, notFound } from '@gradeon/nest-kit';
-import { randomToken } from '@gradeon/security';
+} from '@tangent/contracts';
+import { newId, scheduleJob } from '@tangent/db';
+import { Hub } from '@tangent/integrations';
+import { ApiError, ZodPipe, alert, notFound } from '@tangent/nest-kit';
+import { randomToken } from '@tangent/security';
 import { z } from 'zod';
 import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
@@ -99,7 +99,7 @@ export class Integrations implements OnModuleInit {
   }
 
   async create(me: ConsoleUser, b: ConnectionInput): Promise<string> {
-    if (b.scope === 'school' && providerDef(b.provider)?.capabilities.every((c) => PLATFORM_CAPABILITIES.includes(c))) throw new ApiError('validation', 'This serves Gradeon itself, so it is a Gradeon-wide connection.', { fields: { scope: 'Gradeon-wide only.' } });
+    if (b.scope === 'school' && providerDef(b.provider)?.capabilities.every((c) => PLATFORM_CAPABILITIES.includes(c))) throw new ApiError('validation', 'This serves Tangent itself, so it is a Tangent-wide connection.', { fields: { scope: 'Tangent-wide only.' } });
     if (b.scope === 'school' && !b.schoolId) throw new ApiError('validation', 'Choose the school this connection belongs to.', { fields: { schoolId: 'Choose a school.' } });
     if (b.schoolId && !(await this.db.pool.query('select 1 from schools where id = $1 and deleted_at is null', [b.schoolId])).rowCount) throw notFound('That school');
     if (!b.draft) this.check(b.provider, b.settings, b.secrets ?? {});
@@ -249,7 +249,7 @@ export class Integrations implements OnModuleInit {
   }
 
   /**
-   * What stands between the test track and live messages: each family-facing capability needs a live Gradeon-wide route, SMS and
+   * What stands between the test track and live messages: each family-facing capability needs a live Tangent-wide route, SMS and
    * WhatsApp connections need every message's approved template, and uploads need a virus scanner. Empty when ready.
    */
   async liveGaps(): Promise<string[]> {
@@ -258,7 +258,7 @@ export class Integrations implements OnModuleInit {
       'select r.capability, c.state, c.provider, c.id connection_id, c.name from integration_routes r join integration_connections c on c.id = r.connection_id where r.school_id is null')).rows;
     for (const cap of ['sms', 'email', 'push', 'storage', 'payments', 'scanning'] as Capability[]) {
       const r = routes.find((x) => x.capability === cap);
-      if (!r) gaps.push(`${CAPABILITY_LABELS[cap]} has no Gradeon-wide connection.`);
+      if (!r) gaps.push(`${CAPABILITY_LABELS[cap]} has no Tangent-wide connection.`);
       else if (r.state !== 'live') gaps.push(`${r.name} (${CAPABILITY_LABELS[cap]}) is not live yet.`);
     }
     for (const r of routes.filter((x) => x.capability === 'sms' || x.capability === 'whatsapp')) {

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Injectable, Put } from '@nestjs/common';
-import { ACTIONS, ROLE_TEMPLATES, RoleTemplatesPut, type ConsoleRole, type PolicyDoc, type RoleTemplate } from '@gradeon/contracts';
-import { ZodPipe } from '@gradeon/nest-kit';
-import { ApiError } from '@gradeon/nest-kit';
+import { ACTIONS, ROLE_TEMPLATES, RoleTemplatesPut, type ConsoleRole, type PolicyDoc, type RoleTemplate } from '@tangent/contracts';
+import { ZodPipe } from '@tangent/nest-kit';
+import { ApiError } from '@tangent/nest-kit';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 
 export const DEFAULT_POLICY: PolicyDoc = {
@@ -14,7 +14,7 @@ export const DEFAULT_POLICY: PolicyDoc = {
   halt: { errorRatePct: 2, p95Ms: 1500 },
   freeze: false,
   freezeReason: '',
-  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'com.gradeon.' },
+  naming: { slugPattern: '^[a-z][a-z0-9-]{2,30}[a-z0-9]$', bundlePrefix: 'com.tangent.' },
   maintenanceWindow: 'Sun 01:00–03:00 IST',
 };
 

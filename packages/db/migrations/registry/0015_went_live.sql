@@ -1,6 +1,6 @@
 -- kind: expand
 -- A school runs ("live") as soon as it is provisioned, but it moves in first: Moving in, invites and imports belong to that time.
--- The day Gradeon presses Go live (console: Import and go-live) is kept apart from the running status.
+-- The day Tangent presses Go live (console: Import and go-live) is kept apart from the running status.
 
 ALTER TABLE "schools" ADD COLUMN IF NOT EXISTS "went_live_at" timestamp with time zone;
 --> statement-breakpoint

@@ -108,7 +108,7 @@ export interface ImportRowCheck {
 
 export interface ImportPreview {
   kind: string;
-  /** Which system the file looks like it came from (gradeon, fedena, entab, sheet). */
+  /** Which system the file looks like it came from (tangent, fedena, entab, sheet). */
   source: string;
   headers: string[];
   mapping: Record<string, string>;
@@ -166,7 +166,7 @@ export interface Activation {
   families: { total: number; invited: number; signedIn: number; consented: number };
   classes: ActivationClass[];
 }
-/** Gradeon's team ticks a go-live item that cannot be counted, or types the old system's total dues to reconcile against. */
+/** Tangent's team ticks a go-live item that cannot be counted, or types the old system's total dues to reconcile against. */
 export const ReadinessMark = z.union([
   z.object({ key: z.enum(['config_reviewed', 'staff_trained']), done: z.boolean() }),
   z.object({ key: z.literal('old_dues'), amount: z.number().int().min(0).max(10_000_000_000).nullable() }),
@@ -183,7 +183,7 @@ export interface MigrationView {
   kinds: ImportKind[];
   batches: ImportBatchRow[];
   uploads: UploadRow[];
-  /** Worked out from the school's data; `manual` items are ticked by Gradeon's team; `fees` compares with the old system's total. */
+  /** Worked out from the school's data; `manual` items are ticked by Tangent's team; `fees` compares with the old system's total. */
   readiness: { key: string; label: string; done: boolean; detail: string; manual?: boolean }[];
   /** The fee dues still open here, and the old system's total the team typed in to compare (null until then). */
   dues?: { outstanding: number; oldSystem: number | null };
@@ -194,4 +194,4 @@ export const SampleLoad = z.object({ students: z.number().int().min(10).max(3000
 export type SampleLoad = z.infer<typeof SampleLoad>;
 
 /** Where an imported file came from, as the import engine recognises it, in words. */
-export const IMPORT_SOURCES: Record<string, string> = { gradeon: 'Gradeon template', fedena: 'Fedena export', entab: 'Entab export', sheet: 'The school’s own sheet', typed: 'Typed or fixed here' };
+export const IMPORT_SOURCES: Record<string, string> = { tangent: 'Tangent template', fedena: 'Fedena export', entab: 'Entab export', sheet: 'The school’s own sheet', typed: 'Typed or fixed here' };

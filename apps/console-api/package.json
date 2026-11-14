@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/console-api",
+  "name": "@tangent/console-api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,13 +18,13 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@gradeon/config-engine": "workspace:*",
-    "@gradeon/contracts": "workspace:*",
-    "@gradeon/db": "workspace:*",
-    "@gradeon/integrations": "workspace:*",
-    "@gradeon/nest-kit": "workspace:*",
-    "@gradeon/security": "workspace:*",
-    "@gradeon/tenancy": "workspace:*",
+    "@tangent/config-engine": "workspace:*",
+    "@tangent/contracts": "workspace:*",
+    "@tangent/db": "workspace:*",
+    "@tangent/integrations": "workspace:*",
+    "@tangent/nest-kit": "workspace:*",
+    "@tangent/security": "workspace:*",
+    "@tangent/tenancy": "workspace:*",
     "@fastify/cors": "^11.0.0",
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
@@ -43,6 +43,6 @@
     "typescript": "~5.9.3",
     "unplugin-swc": "^1.5.0",
     "vitest": "^4.1.12",
-    "@gradeon/api": "workspace:*"
+    "@tangent/api": "workspace:*"
   }
 }

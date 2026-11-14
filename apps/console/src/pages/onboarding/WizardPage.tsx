@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { HttpError } from '@gradeon/api-client';
-import { closeModules } from '@gradeon/config-engine';
-import { DEFAULT_BRAND, DEPLOY_TARGET_LABELS, LANGUAGES, SCHOOL_BOARDS, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@gradeon/contracts';
-import { ColourField, Field, FilePick, NumberField, SelectField, useShake, Icon } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { closeModules } from '@tangent/config-engine';
+import { DEFAULT_BRAND, DEPLOY_TARGET_LABELS, LANGUAGES, SCHOOL_BOARDS, readableOn, WizardAdmin, WizardBasics, WizardBranding, WizardData, WizardPayload, WizardPlacement, WizardPlan, type ProvisionRunRow, type WizardReview } from '@tangent/contracts';
+import { ColourField, Field, FilePick, NumberField, SelectField, useShake, Icon } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees } from '../../app/format';
@@ -252,7 +252,7 @@ export function WizardPage() {
       );
       case 'data': return (
         <div style={{ display: 'grid', gap: 10 }} role="radiogroup" aria-label="Starting data">
-          {([...(about.data?.demos ? [['demo', 'The demo school', 'Classes, students, fees and a timetable, so everything can be tried straight away. Only on the test track.']] as const : []), ['empty', 'Empty', 'A brand-new school with nothing in it. Every page shows its empty state.'], ['import', 'Empty, then import', 'Starts empty; Gradeon’s team brings its records in from the Data tab.']] as const).map(([v, t, h]) => (
+          {([...(about.data?.demos ? [['demo', 'The demo school', 'Classes, students, fees and a timetable, so everything can be tried straight away. Only on the test track.']] as const : []), ['empty', 'Empty', 'A brand-new school with nothing in it. Every page shows its empty state.'], ['import', 'Empty, then import', 'Starts empty; Tangent’s team brings its records in from the Data tab.']] as const).map(([v, t, h]) => (
             <button key={v} type="button" role="radio" aria-checked={data.data.start === v} className={`opt ${data.data.start === v ? 'on' : ''}`} onClick={() => set('data', 'start', v)}>
               <span className="rd"><Icon name="check" /></span><span><b>{t}</b><small>{h}</small></span>
             </button>

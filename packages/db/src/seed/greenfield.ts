@@ -1,4 +1,4 @@
-import { PERMISSIONS, ROLE_TEMPLATES, addDays, type RoleTemplate, istToday, latestSchoolDay, schoolDaysEnding } from '@gradeon/contracts';
+import { PERMISSIONS, ROLE_TEMPLATES, addDays, type RoleTemplate, istToday, latestSchoolDay, schoolDaysEnding } from '@tangent/contracts';
 import type { Pool, PoolClient } from 'pg';
 import { newId } from '../ids.js';
 import { bulkInsert } from './bulk.js';

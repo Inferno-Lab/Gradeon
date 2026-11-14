@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Post, Req, Res, type OnModuleInit } from '@nestjs/common';
-import { LoginRequest, PasswordChange, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@gradeon/contracts';
-import { newId, scheduleJob } from '@gradeon/db';
-import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
-import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@gradeon/security';
+import { LoginRequest, PasswordChange, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, consolePermissions, initials, type ClientKind, type ConsoleLoginResponse, type ConsoleRole, type ConsoleTokens } from '@tangent/contracts';
+import { newId, scheduleJob } from '@tangent/db';
+import { ApiError, Limiter, ZodPipe } from '@tangent/nest-kit';
+import { constantTimeEqual, hashPassword, maskEmail, newTotpSecret, passwordNeedsRehash, randomToken, seal, sha256, signJwt, totpUri, unseal, verifyPassword, verifyTotp } from '@tangent/security';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@gradeon/nest-kit';
+import { checkCookieCsrf, clearConsoleRefreshCookie, consoleCookieToken, setConsoleRefreshCookie } from '@tangent/nest-kit';
 import { Db, Me, Public, type ConsoleUser } from './core.js';
 import { ENV, demosAllowed, type Env } from './env.js';
 import { Sandbox } from './sandbox.js';
@@ -76,7 +76,7 @@ export class ConsoleAuth implements OnModuleInit {
     if (this.env.DEMO_CODE) {
       const code = this.env.DEMO_CODE;
       await this.db.pool.query('insert into console_otp (id, user_id, code_hash, expires_at) values ($1,$2,$3,$4)', [id, u.id, sha256(`${id}:${code}`), expires]);
-      await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
+      await this.sandbox.put({ schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Tangent console code', body: `Your sign-in code is ${code}. It expires in 10 minutes.` });
       return { step: 'otp', challenge: { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, // The code is only handed back in development, so a hosted test track keeps it as a second step the password alone cannot skip.
         ...(this.env.NODE_ENV !== 'production' ? { demoCode: code } : {}) } };
     }
@@ -87,7 +87,7 @@ export class ConsoleAuth implements OnModuleInit {
   }
 
   /**
-   * "Forgot it?": a code to the person's email (through Gradeon's email connection; on the test track the fixed demo code)
+   * "Forgot it?": a code to the person's email (through Tangent's email connection; on the test track the fixed demo code)
    * lets them choose a new password. The authenticator is still asked at the next sign-in, so a mailbox alone opens nothing.
    */
   async resetStart(email: string): Promise<{ challengeId: string; channel: 'email'; maskedTo: string; expiresInSeconds: number; demoCode?: string }> {
@@ -98,7 +98,7 @@ export class ConsoleAuth implements OnModuleInit {
     const code = this.env.DEMO_CODE ?? String(randomInt(0, 1_000_000)).padStart(6, '0');
     await this.db.pool.query("insert into console_otp (id, user_id, code_hash, method, expires_at) values ($1,$2,$3,'reset',$4)", [id, u.id, sha256(`${id}:${code}`), new Date(Date.now() + 10 * 60_000)]);
     if (!this.env.DEMO_CODE) {
-      await this.platform.hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Gradeon console code', body: `Your code to choose a new console password is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`, now: true });
+      await this.platform.hub.send({ schoolId: null, schoolSlug: 'console', channel: 'email', to: u.email, subject: 'Your Tangent console code', body: `Your code to choose a new console password is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`, now: true });
     }
     return { challengeId: id, channel: 'email', maskedTo: maskEmail(u.email), expiresInSeconds: 600, ...(this.env.DEMO_CODE && !this.production ? { demoCode: code } : {}) };
   }

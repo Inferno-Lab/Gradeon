@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ACTIONS, ACTION_LABELS, CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleRole, type PolicyDoc } from '@gradeon/contracts';
-import { AreaField, Dialog, useShake } from '@gradeon/web-ui';
+import { ACTIONS, ACTION_LABELS, CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleRole, type PolicyDoc } from '@tangent/contracts';
+import { AreaField, Dialog, useShake } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { usePageTabs } from '../../app/tabs';
 
 type Say = (text: string, tone?: 'ok' | 'bad') => void;
 
-/** What configures the console itself: which changes need a second person (and the freeze). Its colours are Gradeon Hue's cobalt. */
+/** What configures the console itself: which changes need a second person (and the freeze). Its colours are Tangent Hue's cobalt. */
 export function SettingsPage() {
   const { tabs } = usePageTabs('/settings');
   const { toast, say } = useToast();

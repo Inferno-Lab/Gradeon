@@ -1,5 +1,5 @@
 -- kind: expand
--- The services Gradeon runs on come from the Integrations Hub instead of server variables (docs/product-fix-plan.md step 3):
+-- The services Tangent runs on come from the Integrations Hub instead of server variables (docs/product-fix-plan.md step 3):
 -- each build gets its own short-lived code to fetch its signing kit and report back; each cell names the connection that makes
 -- its schools' databases; a school's own address records what the host said about it.
 
@@ -11,7 +11,7 @@ ALTER TABLE "cells" ADD COLUMN IF NOT EXISTS "connection_id" text;
 --> statement-breakpoint
 ALTER TABLE "schools" ADD COLUMN IF NOT EXISTS "domain_state" jsonb NOT NULL DEFAULT '{}'::jsonb;
 --> statement-breakpoint
--- Backups move to Gradeon's File storage connection; the row keeps where the file is (older backups keep their data in the row).
+-- Backups move to Tangent's File storage connection; the row keeps where the file is (older backups keep their data in the row).
 ALTER TABLE "school_backups" ADD COLUMN IF NOT EXISTS "storage_key" text;
 --> statement-breakpoint
 ALTER TABLE "school_backups" ALTER COLUMN "data" DROP NOT NULL;

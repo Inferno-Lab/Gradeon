@@ -1,4 +1,4 @@
-import { addDays, istToday } from '@gradeon/contracts';
+import { addDays, istToday } from '@tangent/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -27,7 +27,7 @@ describe('who is signed in', () => {
     expect((await f(parent, '/me')).json).toMatchObject({ role: 'parent', name: 'Priya Sharma', childIds: expect.arrayContaining(['stu_aarav']) });
     expect((await f(parent, '/me')).json.childIds).toHaveLength(2);
     expect((await f(teacher, '/me')).json).toMatchObject({ role: 'teacher', name: 'Kavita Iyer' });
-    const blocked = await h.call('POST', '/v1/auth/login', { body: { identifier: 'aarav.sharma@gradeon.app', password: 'nest2026' } });
+    const blocked = await h.call('POST', '/v1/auth/login', { body: { identifier: 'aarav.sharma@tangent.app', password: 'nest2026' } });
     expect(blocked.status === 401 || blocked.status === 403).toBe(true);
     expect(blocked.json?.step).toBeUndefined();
     expect((await h.call('GET', '/v1/f/me')).status).toBe(401);
@@ -267,7 +267,7 @@ describe('the school’s app link', () => {
     await h.registry.query("insert into builds (id, school_id, platform, version, status, note, url) select 'bld_test', id, 'android', '1.0.0', 'done', '', null from schools where slug = 'greenfield'");
     const phone = await h.call('GET', '/hooks/app/greenfield', { headers: { 'user-agent': 'Mozilla/5.0 (Linux; Android 14)' } });
     expect(phone.status).toBe(302);
-    expect(phone.headers.location).toBe('https://play.google.com/store/apps/details?id=com.gradeon.greenfield');
+    expect(phone.headers.location).toBe('https://play.google.com/store/apps/details?id=com.tangent.greenfield');
     expect((await h.call('GET', '/hooks/app/nowhere')).status).toBe(404);
   });
 });

@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
+import type { ApiErrorBody, ErrorCode } from '@tangent/contracts';
 
 const STATUS: Record<ErrorCode, number> = {
   validation: 400,

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EVENT_KINDS, istToday, type Category, type EventKind, type EventRow, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { EVENT_KINDS, istToday, type Category, type EventKind, type EventRow, type ExamRow } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, Field, NumberField, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Ico, problem, useSetting } from '../../app/kit';

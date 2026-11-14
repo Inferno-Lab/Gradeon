@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { OnlinePaymentRow, ReconRow, RefundRow } from '@gradeon/contracts';
-import { Dialog, Field, NumberField, Segmented, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { OnlinePaymentRow, ReconRow, RefundRow } from '@tangent/contracts';
+import { Dialog, Field, NumberField, Segmented, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AreaField, dateLabel, openPdf, problem, stamp, useOpenParam } from '../../app/kit';

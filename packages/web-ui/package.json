@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/web-ui",
+  "name": "@tangent/web-ui",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,6 +7,6 @@
   "types": "./src/index.ts",
   "exports": { ".": "./src/index.ts", "./nest.css": "./src/nest.css" },
   "scripts": { "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run" },
-  "dependencies": { "@gradeon/contracts": "workspace:*", "react": "^19.1.0", "react-dom": "^19.1.0" },
+  "dependencies": { "@tangent/contracts": "workspace:*", "react": "^19.1.0", "react-dom": "^19.1.0" },
   "devDependencies": { "@types/node": "^24.0.0", "@types/react": "^19.1.0", "@types/react-dom": "^19.1.0", "typescript": "~5.9.3", "vitest": "^4.1.12" }
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { BookRow, LoanRow, ReservationRow } from '@tangent/contracts';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';

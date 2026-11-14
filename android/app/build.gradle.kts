@@ -13,7 +13,7 @@ if (file("google-services.json").exists()) apply(plugin = "com.google.gms.google
 val signing = Properties().apply { rootProject.file("key.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) } }
 
 android {
-    namespace = "com.gradeon.app"
+    namespace = "com.tangent.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,8 +27,8 @@ android {
     }
 
     defaultConfig {
-        // Each school's app is its own store listing: the build passes its package name (-PappId=com.gradeon.greenfield).
-        applicationId = (project.findProperty("appId") as String?) ?: "com.gradeon.app"
+        // Each school's app is its own store listing: the build passes its package name (-PappId=com.tangent.greenfield).
+        applicationId = (project.findProperty("appId") as String?) ?: "com.tangent.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

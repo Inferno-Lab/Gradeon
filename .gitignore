@@ -59,7 +59,7 @@ packages/*/dist/
 .env
 .env.*
 !.env.example
-.gradeon-data/
+.tangent-data/
 playwright-report/
 test-results/
 .shots/
@@ -70,3 +70,8 @@ android/key.properties
 android/*.jks
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Board pages design/hue/build.mjs writes for the canvas; rebuilt from design/hue/src on every build
+design/hue/canvas/
+design/hue/preview/
+design/hue/shots/

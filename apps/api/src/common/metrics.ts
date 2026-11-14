@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, type CallHandler, type ExecutionContext, type NestInterceptor, type OnApplicationShutdown } from '@nestjs/common';
-import type { Registry } from '@gradeon/tenancy';
+import type { Registry } from '@tangent/tenancy';
 import type { FastifyRequest } from 'fastify';
 import { Observable, tap } from 'rxjs';
 import { REGISTRY } from '../tenancy/tenant.js';

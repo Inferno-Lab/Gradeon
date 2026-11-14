@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Hub } from '@gradeon/integrations';
+import { Hub } from '@tangent/integrations';
 import { Db } from './core.js';
 import { ENV, type Env } from './env.js';
 

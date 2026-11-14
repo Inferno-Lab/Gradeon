@@ -1,5 +1,5 @@
-import { pg } from '@gradeon/db';
-import { ensureDatabase } from '@gradeon/db/dev';
+import { pg } from '@tangent/db';
+import { ensureDatabase } from '@tangent/db/dev';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -44,7 +44,7 @@ describe('classes and calendar', () => {
     await h.setSettings({ 'calendar.schoolEdits': false });
     const locked = await send('PUT', '/v1/setup/holidays', { row: { name: 'Founders day', starts_on: '2027-01-12', ends_on: '' } });
     expect(locked.status).toBe(403);
-    expect(locked.json.message).toMatch(/Ask Gradeon/);
+    expect(locked.json.message).toMatch(/Ask Tangent/);
     expect(section((await get('/v1/setup')).json, 'holidays').locked).toBe(true);
     await h.setSettings({ 'calendar.schoolEdits': true });
     expect((await send('PUT', '/v1/setup/holidays', { row: { name: 'Founders day', starts_on: '12/01/2027', ends_on: '' } })).status).toBe(200);

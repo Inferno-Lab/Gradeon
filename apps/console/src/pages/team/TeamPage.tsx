@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleUserRow } from '@gradeon/contracts';
-import { Dialog, Field, tintFor, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { CONSOLE_ROLES, CONSOLE_ROLE_INFO, type ConsoleUserRow } from '@tangent/contracts';
+import { Dialog, Field, tintFor, useShake, Icon, EmptyState } from '@tangent/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { initials, ago } from '../../app/format';

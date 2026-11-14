@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/services/theme_service.dart';
-import 'package:gradeon/core/theme/app_theme.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/status.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/services/theme_service.dart';
+import 'package:tangent/core/theme/app_theme.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/status.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 
 import 'support/harness.dart';
 
@@ -55,7 +55,7 @@ void main() {
   test('auth, fees, homework, notices, and chat repositories', () async {
     final auth = Get.find<AuthRepository>();
     final parent = await auth.login(
-      email: 'priya.sharma@gradeon.app',
+      email: 'priya.sharma@tangent.app',
       password: 'demo123', // the mock content's own; AppConfig.demoPassword follows the build's school
     );
     expect(parent.role, UserRole.parent);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
 
 /// Kept so existing call sites can still ask for a thicker control (a thumb).
 enum GlassKind { sheet, lens }
@@ -69,7 +69,7 @@ class Glass extends StatelessWidget {
   }
 }
 
-/// Round icon button (44px) for the top of a page, which is the school's deep colour in Gradeon Hue.
+/// Round icon button (44px) for the top of a page, which is the school's deep colour in Tangent Hue.
 class GlassIconButton extends StatelessWidget {
   const GlassIconButton({
     required this.icon,
@@ -94,7 +94,7 @@ class GlassIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    // Gradeon Hue's round button on the deep colour (`.pib.ond`): a solid deep2 disc, no shadow; the dot is bright.
+    // Tangent Hue's round button on the deep colour (`.pib.ond`): a solid deep2 disc, no shadow; the dot is bright.
     return GlassPress(
       onTap: onTap,
       label: label,

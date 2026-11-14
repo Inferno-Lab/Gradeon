@@ -1,6 +1,6 @@
 name: phosphor_flutter
 description: Vendored Phosphor icons (Regular, Bold, Fill) as plain IconData.
-version: 2.1.0+gradeon
+version: 2.1.0+tangent
 publish_to: none
 
 environment:
