@@ -71,10 +71,11 @@ export function IntegrationsPage() {
         {dlg?.kind === 'delete' && <DeleteDialog c={dlg.c} onClose={() => setDlg(null)} onDone={done} />}
       </>}>
       {v && <>
-        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: v.mode === 'live' ? 'var(--ok-s)' : 'var(--warn-s)', color: v.mode === 'live' ? 'var(--ok-i)' : 'var(--warn-i)' }}>
+        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className={`chip ${v.mode === 'live' ? 'g' : 'a'}`}>{v.mode === 'live' ? 'Live mode' : 'Sandbox mode'}</span>
-          <span style={{ flex: 1, minWidth: 220, font: '600 13px/1.45 var(--fb)' }}>
+          <span style={{ flex: 1, minWidth: 220, font: '600 13px/1.45 var(--fb)', color: 'var(--ink2)' }}>
             {v.mode === 'live' ? 'Real providers send to families. A capability without a live connection fails and says so; nothing falls back to the Test inbox.'
+              : v.allowList.length === 0 ? 'Every message goes to the Test inbox. Put a number or address on the allow-list to send it real messages through test or live connections.'
               : `Messages go to the Test inbox, except to the ${v.allowList.length} ${v.allowList.length === 1 ? 'number or address' : 'numbers and addresses'} on the allow-list, which get real messages through test or live connections.`}
           </span>
           {v.mode === 'sandbox' && write && <button className="btn sm" onClick={() => setDlg({ kind: 'allow' })}>Allow-list</button>}
