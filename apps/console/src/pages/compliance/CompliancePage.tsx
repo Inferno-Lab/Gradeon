@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { breachNotice, istToday, type ComplianceRow } from '@gradeon/contracts';
-import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState, Icon } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -40,7 +40,7 @@ export function CompliancePage() {
   return (
     <Page title="Compliance" sub="Agreements with each school, and what to do when something goes wrong" toast={toast} loading={q.isLoading}
       error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
-      tabs={tabs} actions={<>{canWrite && tab === 'agreements' && <button className="btn pri" onClick={() => setAdding('dpa')}>Add an agreement</button>}{canWrite && tab === 'breaches' && <button className="btn pri" onClick={() => setAdding('breach')}>Log a breach</button>}</>}
+      tabs={tabs} actions={<>{canWrite && tab === 'agreements' && <button className="btn pri" onClick={() => setAdding('dpa')}><Icon name="plus" />Add an agreement</button>}{canWrite && tab === 'breaches' && <button className="btn pri" onClick={() => setAdding('breach')}><Icon name="plus" />Log a breach</button>}</>}
       overlays={<>
         {adding && <Add kind={adding} onClose={() => setAdding(null)} onDone={(m) => { setAdding(null); refresh(); say(m); }} />}
         {signing && <Sign r={signing} onClose={() => setSigning(null)} onDone={() => { setSigning(null); refresh(); say('Agreement signed, with its file.'); }} />}

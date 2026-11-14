@@ -44,7 +44,7 @@ export function SchoolsPage() {
     <Page title="Schools" sub={all.length ? `${count(all.length)} in all` : 'Every school on the platform'} loading={schools.isLoading && !schools.data}
       error={schools.isError && !schools.data ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       back={{ label: 'Fleet', to: '/', go: app.go }}
-      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}>Onboard a school</button> : undefined}>
+      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><Icon name="plus" />Onboard a school</button> : undefined}>
       {all.length === 0 ? (
         <div><EmptyState scene="fleet" onAction={app.can('schools.write') ? () => app.go('/onboarding/new') : undefined} /></div>
       ) : (
