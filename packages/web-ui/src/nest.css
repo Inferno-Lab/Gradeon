@@ -76,8 +76,8 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .srch:hover{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
 .nest .srch svg{width:18px;height:18px;flex:none}
 .nest .kbd{margin-left:auto;font:700 11px var(--fb);border-radius:999px;padding:6px 10px;background:var(--s2);color:var(--ink3)}
-.nest .seg{position:relative;display:inline-flex;padding:4px;border-radius:999px;background:var(--s2)}
-.nest .seg button{position:relative;z-index:1;height:36px;padding:0 20px;border:0;background:none;border-radius:999px;font:700 13px var(--fb);color:var(--ink3);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:color var(--t2)}
+.nest .seg{position:relative;display:inline-flex;padding:4px;border-radius:999px;background:var(--s2);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.nest .seg button{position:relative;z-index:1;height:36px;padding:0 20px;border:0;background:none;border-radius:999px;font:700 13px var(--fb);color:var(--ink3);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none;transition:color var(--t2)}
 .nest .seg button.on{color:var(--ink)}
 .nest .seg button svg{width:16px;height:16px}
 .nest .seg .kn{position:absolute;top:4px;bottom:4px;left:0;border-radius:999px;background:var(--s1);box-shadow:var(--sh1),0 0 0 1px var(--line);transition:transform var(--t2) var(--e),width var(--t2) var(--e)}

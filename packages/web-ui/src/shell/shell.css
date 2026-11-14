@@ -42,8 +42,6 @@
   .nest .sheet .sl{margin:10px 6px 2px}
 }
 @media (max-width:900px){
-  .nest .seg{max-width:100%;overflow-x:auto;scrollbar-width:thin}
-  .nest .seg button{white-space:nowrap;flex:none}
   .nest .bulk{left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));width:auto;overflow-x:auto;border-radius:28px;transform:translateY(160%) scale(.96)}
   .nest .bulk.on{transform:none}
   .nest .bulk>*{flex:none}

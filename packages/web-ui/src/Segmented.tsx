@@ -18,7 +18,11 @@ export function Segmented<T extends string>({ value, onChange, options, label, c
   useLayoutEffect(() => {
     const measure = () => {
       const b = ref.current?.querySelector<HTMLElement>('button.on');
-      if (b) setKnob({ x: b.offsetLeft, w: b.offsetWidth });
+      if (!b) return;
+      setKnob({ x: b.offsetLeft, w: b.offsetWidth });
+      // A row of tabs wider than its space scrolls; keep the chosen one in view.
+      const s = ref.current!;
+      if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 4;
     };
     measure();
     const ro = new ResizeObserver(measure);
