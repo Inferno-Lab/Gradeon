@@ -726,9 +726,9 @@ await flow('console: go-live reconciles the dues with the old system, and a rest
 await flow('admin: the sign-in page shows the school’s mark and its privacy notice', {}, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/login`, { waitUntil: 'networkidle' });
   const mark = p.locator('.pnl .lg').first();
-  // Gradeon Hue: the crest is the school's bright colour, worked out from its brand colour (#6A4CF5, hue 284).
-  const [bg, bright] = await mark.evaluate((el) => [getComputedStyle(el).backgroundColor, (() => { const t = document.createElement('i'); t.style.background = 'var(--bright)'; el.parentElement.append(t); const c = getComputedStyle(t).backgroundColor; t.remove(); return c; })()]);
-  if (bg !== bright || /rgba\(0, 0, 0, 0\)/.test(bg)) throw new Error(`the mark should be in the school's bright colour, got ${bg}`);
+  // The crest wears the school's own colour (Greenfield's brand, #6A4CF5).
+  const bg = await mark.evaluate((el) => getComputedStyle(el).backgroundColor);
+  if (!/rgb\(106, 76, 245\)/.test(bg)) throw new Error(`the mark should be in the school's colour, got ${bg}`);
   await p.getByRole('button', { name: 'Privacy' }).click();
   await expectVisible(p.getByRole('region', { name: 'Privacy' }), 'the privacy notice');
   if (!(await p.getByRole('link', { name: 'Help' }).getAttribute('href'))?.startsWith('mailto:')) throw new Error('Help should write to support');
