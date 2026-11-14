@@ -79,10 +79,15 @@ class _ShellViewState extends State<ShellView> {
                   )
                 else
                   Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: GlassDock(items: items, index: index, onChanged: controller.go),
+                    left: 16,
+                    right: 16,
+                    bottom: 20 + MediaQuery.paddingOf(context).bottom,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 460),
+                        child: GlassDock(items: items, index: index, onChanged: controller.go),
+                      ),
+                    ),
                   ),
               ],
               if (_welcome)

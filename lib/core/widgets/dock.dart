@@ -5,14 +5,16 @@ import 'package:flutter/physics.dart';
 import 'package:get/get.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 import 'package:gradeon/core/theme/app_typography.dart';
+import 'package:gradeon/core/theme/tokens.dart';
 import 'package:gradeon/core/utils/extensions.dart';
 import 'package:gradeon/core/utils/haptics.dart';
+import 'package:gradeon/core/widgets/glass.dart';
 
 /// A short spring with a little settle, the same family as a flicked sheet.
 const _lensSpring = SpringDescription(mass: 1, stiffness: 340, damping: 32);
 
-/// Height of the tab bar above the system inset (Gradeon Hue: 84 with the inset on a phone).
-const kTabBarHeight = 68.0;
+/// Label colour on the ink selection pill. Paper in daylight, chalk at night.
+Color _onInk(AppColors c) => c.dark ? c.chalk : c.paper;
 
 class DockItem {
   const DockItem({required this.icon, required this.activeIcon, required this.label, this.badge = 0});
@@ -23,7 +25,7 @@ class DockItem {
   final int badge;
 }
 
-/// The tab bar: the school's deep colour along the bottom; the open tab is a bright block that glides to it.
+/// Floating dock. The bar is paper; the selected tab is an ink pill that slides.
 class GlassDock extends StatefulWidget {
   const GlassDock({required this.items, required this.index, required this.onChanged, super.key});
 
@@ -65,47 +67,55 @@ class _GlassDockState extends State<GlassDock> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final bottom = MediaQuery.paddingOf(context).bottom;
-    // Gradeon Hue's tab bar (design/hue/src/ParentHome.html): the school's deep colour, the open tab a bright block.
     return AnimatedBuilder(
       animation: _x,
       builder: (context, _) {
-        return Container(
-          height: kTabBarHeight + bottom,
-          padding: EdgeInsets.fromLTRB(10, 8, 10, 8 + bottom),
-          decoration: BoxDecoration(color: c.deep, boxShadow: [BoxShadow(color: c.shadow, blurRadius: 24, offset: const Offset(0, -4))]),
+        return SizedBox(
+          height: 64,
           child: LayoutBuilder(
             builder: (context, box) {
-              final slot = box.maxWidth / widget.items.length;
-              final left = _x.value * slot + 2;
-              return Stack(
-                children: [
-                  Positioned(
-                    left: left,
-                    top: 0,
-                    bottom: 0,
-                    width: slot - 4,
-                    child: IgnorePointer(
-                      child: DecoratedBox(decoration: BoxDecoration(color: c.bright, borderRadius: BorderRadius.circular(20))),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      for (var i = 0; i < widget.items.length; i++)
-                        Expanded(
-                          child: _DockButton(
-                            item: widget.items[i],
-                            on: i == widget.index,
-                            onTap: () {
-                              if (i == widget.index) return;
-                              Haptics.selection();
-                              widget.onChanged(i);
-                            },
-                          ),
+              const pad = 6.0;
+              final slot = (box.maxWidth - pad * 2) / widget.items.length;
+              const pillH = 52.0;
+              final pillW = slot - 4;
+              final left = pad + _x.value * slot + (slot - pillW) / 2;
+              return Glass(
+                height: 64,
+                radius: 999,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: left,
+                      top: (64 - pillH) / 2,
+                      width: pillW,
+                      height: pillH,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(24)),
                         ),
-                    ],
-                  ),
-                ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: pad),
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < widget.items.length; i++)
+                            Expanded(
+                              child: _DockButton(
+                                item: widget.items[i],
+                                on: i == widget.index,
+                                onTap: () {
+                                  if (i == widget.index) return;
+                                  Haptics.selection();
+                                  widget.onChanged(i);
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -125,7 +135,7 @@ class _DockButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.app;
-    final color = on ? c.onBright : c.onDeep2;
+    final color = on ? _onInk(c) : c.ink3;
     return Semantics(
       button: true,
       selected: on,
@@ -134,7 +144,7 @@ class _DockButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: SizedBox(
-          height: kTabBarHeight - 16,
+          height: 64,
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.center,
@@ -142,14 +152,14 @@ class _DockButton extends StatelessWidget {
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(on ? item.activeIcon : item.icon, size: 24, color: color),
-                  const SizedBox(height: 4),
+                  Icon(on ? item.activeIcon : item.icon, size: 22, color: color),
+                  const SizedBox(height: 2),
                   Text(
                     item.label.tr,
                     maxLines: 1,
                     overflow: TextOverflow.fade,
                     softWrap: false,
-                    style: hueText(12, 600, height: 1.15, color: color),
+                    style: hueText(11, on ? 720 : 560, width: 106, height: 1, color: color),
                   ),
                 ],
               ),
@@ -170,7 +180,7 @@ class _DockButton extends StatelessWidget {
   }
 }
 
-/// The tab bar on its side, from 840px wide (tablet): deep, the open tab a bright block.
+/// Vertical glass rail used from 840px wide (tablet).
 class GlassRail extends StatefulWidget {
   const GlassRail({required this.items, required this.index, required this.onChanged, super.key});
 
@@ -222,10 +232,10 @@ class _GlassRailState extends State<GlassRail> with SingleTickerProviderStateMix
         return SizedBox(
           width: 76,
           height: height,
-          child: Container(
+          child: Glass(
             width: 76,
             height: height,
-            decoration: BoxDecoration(color: c.deep, borderRadius: BorderRadius.circular(24)),
+            radius: 999,
             child: Stack(
               children: [
                 Positioned(
@@ -235,7 +245,7 @@ class _GlassRailState extends State<GlassRail> with SingleTickerProviderStateMix
                   height: pill,
                   child: IgnorePointer(
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: c.bright, borderRadius: BorderRadius.circular(20)),
+                      decoration: BoxDecoration(color: c.ink, borderRadius: BorderRadius.circular(AppRadius.sheet)),
                     ),
                   ),
                 ),
@@ -261,7 +271,7 @@ class _GlassRailState extends State<GlassRail> with SingleTickerProviderStateMix
                               child: Icon(
                                 i == widget.index ? widget.items[i].activeIcon : widget.items[i].icon,
                                 size: 24,
-                                color: i == widget.index ? c.onBright : c.onDeep2,
+                                color: i == widget.index ? _onInk(c) : c.ink3,
                               ),
                             ),
                           ),
@@ -290,7 +300,7 @@ class _Badge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.bad,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
         border: Border.all(color: context.app.paper, width: 1.5),
       ),
       child: SizedBox(

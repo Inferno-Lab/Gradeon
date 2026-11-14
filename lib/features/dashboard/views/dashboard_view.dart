@@ -53,13 +53,12 @@ class _DashboardViewState extends State<DashboardView> {
       final first = parent ? (user?.name ?? '').split(' ').first : (data?.student.name ?? '').split(' ').first;
       final hello = parent ? '${Formatters.greetingKey(Clock.now()).tr}, $first' : greeting(first);
       final side = wide ? 130.0 : 20.0;
-      // Home as the ParentHome and TeacherHome boards (design/hue/src): the greeting on the school's deep colour, then a
-      // sheet with today's lessons as a strip and the cards the console chose.
+      // Home as the ParentHome and TeacherHome boards (design/hue/src), on the chalk ground: the greeting, today's lessons
+      // as a strip and the cards the console chose.
       return Scaffold(
         backgroundColor: c.chalk,
         body: Stack(
           children: [
-            Positioned(left: 0, right: 0, top: 0, height: MediaQuery.sizeOf(context).height * .5, child: ColoredBox(color: c.deep)),
             NotificationListener<ScrollUpdateNotification>(
               // Pull down on Home opens search.
               onNotification: (n) {
@@ -74,70 +73,60 @@ class _DashboardViewState extends State<DashboardView> {
                 physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                 padding: EdgeInsets.zero,
                 children: [
-                  Theme(
-                    data: Theme.of(context).copyWith(extensions: [c.onDeepSide]),
-                    child: Builder(
-                      builder: (context) => Padding(
-                        padding: EdgeInsets.fromLTRB(side, top + 8, wide ? 40 : 16, 48),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(side, top + 8, wide ? 40 : 16, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                if (parent) const ChildCapsule() else _ProfileCapsule(data: data),
-                                const Spacer(),
-                                if (!parent) ...[
-                                  GlassIconButton(
-                                    icon: PhosphorIconsRegular.magnifyingGlass,
-                                    label: 'common.search'.tr,
-                                    onTap: () => Get.toNamed<void>(AppRoutes.search),
-                                  ),
-                                  const SizedBox(width: 10),
-                                ],
-                                GlassIconButton(
-                                  icon: PhosphorIconsRegular.bell,
-                                  label: 'notifications.title'.tr,
-                                  badge: true,
-                                  onTap: () => Get.toNamed<void>(AppRoutes.notifications),
-                                ),
-                              ],
+                            if (parent) const ChildCapsule() else _ProfileCapsule(data: data),
+                            const Spacer(),
+                            if (!parent) ...[
+                              GlassIconButton(
+                                icon: PhosphorIconsRegular.magnifyingGlass,
+                                label: 'common.search'.tr,
+                                onTap: () => Get.toNamed<void>(AppRoutes.search),
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                            GlassIconButton(
+                              icon: PhosphorIconsRegular.bell,
+                              label: 'notifications.title'.tr,
+                              badge: true,
+                              onTap: () => Get.toNamed<void>(AppRoutes.notifications),
                             ),
-                            const SizedBox(height: 16),
-                            Rise(child: Text(todayLine(), style: context.type.capB)),
-                            const SizedBox(height: 6),
-                            Rise(index: 1, child: Text(hello, style: context.type.h1)),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Rise(child: Text(todayLine(), style: context.type.capB)),
+                        const SizedBox(height: 6),
+                        Rise(index: 1, child: Text(hello, style: context.type.h1)),
+                      ],
                     ),
                   ),
-                  Transform.translate(
-                    offset: const Offset(0, -28),
-                    child: Container(
-                      constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height),
-                      decoration: BoxDecoration(color: c.chalk, borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
-                      padding: EdgeInsets.fromLTRB(side, 18, wide ? 40 : 20, wide ? 40 : kDockClearance + MediaQuery.paddingOf(context).bottom),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const OfflineCapsule(),
-                          if (hasDay) Padding(padding: const EdgeInsets.only(bottom: 16), child: PeriodStrip(periods: data.periods)),
-                          ViewStateView(
-                            state: controller.state.value,
-                            onRetry: controller.load,
-                            errorKey: controller.errorMessage.value,
-                            emptyTitle: 'home.empty_title',
-                            emptyBody: 'home.empty_body',
-                            child: data == null
-                                ? const SizedBox.shrink()
-                                : wide
-                                ? _WideBody(data: data, scrub: _scrub, parent: parent)
-                                : parent
-                                ? _ParentBody(data: data)
-                                : _StudentBody(data: data, scrub: _scrub),
-                          ),
-                        ],
-                      ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(side, 0, wide ? 40 : 20, wide ? 40 : kDockClearance + MediaQuery.paddingOf(context).bottom),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const OfflineCapsule(),
+                        if (hasDay) Padding(padding: const EdgeInsets.only(bottom: 16), child: PeriodStrip(periods: data.periods)),
+                        ViewStateView(
+                          state: controller.state.value,
+                          onRetry: controller.load,
+                          errorKey: controller.errorMessage.value,
+                          emptyTitle: 'home.empty_title',
+                          emptyBody: 'home.empty_body',
+                          child: data == null
+                              ? const SizedBox.shrink()
+                              : wide
+                              ? _WideBody(data: data, scrub: _scrub, parent: parent)
+                              : parent
+                              ? _ParentBody(data: data)
+                              : _StudentBody(data: data, scrub: _scrub),
+                        ),
+                      ],
                     ),
                   ),
                 ],
