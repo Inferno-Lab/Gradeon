@@ -2,85 +2,85 @@
 .nest .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
 .nest .s3{grid-column:span 3}.nest .s4{grid-column:span 4}.nest .s5{grid-column:span 5}.nest .s6{grid-column:span 6}.nest .s7{grid-column:span 7}.nest .s8{grid-column:span 8}.nest .s12{grid-column:span 12}
 @media (max-width:1100px){.nest .s3,.nest .s4,.nest .s5,.nest .s6,.nest .s7,.nest .s8{grid-column:span 12}}
-.nest .st{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:7px;font:600 12px var(--fb);width:fit-content;white-space:nowrap}
+.nest .st{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font:700 12px var(--fb);width:fit-content;white-space:nowrap}
 .nest .st i{width:7px;height:7px;border-radius:50%;background:currentColor}
-.nest .st.g{background:var(--ok-s);color:var(--ok-i)}.nest .st.a{background:var(--warn-s);color:var(--warn-i)}.nest .st.v{background:var(--brand-soft);color:var(--brand-ink)}.nest .st.c{background:var(--bad-s);color:var(--bad-i)}.nest .st.n{background:var(--s2);color:var(--ink3)}
-.nest .bar{height:10px;border-radius:5px;background:var(--s3);overflow:hidden}
-.nest .bar i{display:block;height:100%;border-radius:5px;background:var(--brand);transition:width var(--t3) var(--e)}
-.nest .bar.warn i{background:var(--warn)}
+.nest .st.g{background:var(--gS);color:var(--gD)}.nest .st.a{background:var(--aS);color:var(--aD)}.nest .st.v{background:var(--vS);color:var(--vD)}.nest .st.c{background:var(--cS);color:var(--cD)}.nest .st.n{background:var(--sunk);color:var(--ink3)}
+.nest .bar{height:14px;border-radius:6px;background:var(--sunk);overflow:hidden}
+.nest .bar i{display:block;height:100%;border-radius:6px;background:var(--v);transition:width var(--t3) var(--e)}
+.nest .bar.warn i{background:var(--a)}
 .nest .us{display:flex;flex-direction:column;gap:6px}
-.nest .us .r{display:flex;justify-content:space-between;font:400 13px var(--fb);color:var(--ink2)}
-.nest .us .r b{font:600 13px var(--fb);color:var(--ink)}
+.nest .us .r{display:flex;justify-content:space-between;font:600 13px var(--fb);color:var(--ink2)}
+.nest .us .r b{font:700 13px var(--fb);color:var(--ink)}
 .nest .tk3{display:flex;gap:2px;height:24px}
-.nest .tk3 i{flex:1;border-radius:5px;background:var(--s3);transition:background var(--t3)}
-.nest .tk3 i.on{background:var(--brand)}
+.nest .tk3 i{flex:1;border-radius:6px;background:var(--sunk);transition:background var(--t3)}
+.nest .tk3 i.on{background:var(--v)}
 .nest .tbl{overflow:hidden}
-.nest .tbl .grd.rw{min-height:56px;border-top:1px solid var(--line);transition:background var(--t2)}
-.nest .tbl .grd.rw:hover{background:var(--s2)}
-.nest .tbl .grd.th{height:44px;font:600 12px var(--fb);color:var(--ink3)}
+.nest .tbl .grd.rw{min-height:58px;border-top:1px solid var(--line);transition:background var(--t2)}
+.nest .tbl .grd.rw:hover{background:var(--sunk)}
+.nest .tbl .grd.th{height:40px;font:700 11px var(--fb);color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
 .nest .tbl .grd.rw>*{min-width:0}
 .nest .rowbtn{width:100%;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:0;display:block}
 .nest .scroll-x{overflow-x:auto}
-.nest .crumb{display:flex;align-items:center;gap:6px;font:600 13px var(--fb);color:var(--ink3)}
+.nest .crumb{display:flex;align-items:center;gap:8px;font:700 13px var(--fb);color:var(--ink3)}
 .nest .crumb a{color:var(--ink3);text-decoration:none;cursor:pointer}
 .nest .crumb a:hover{color:var(--ink)}
-.nest .lbl{font:600 13px/16px var(--fb);color:var(--ink2)}
+.nest .lbl{font:700 11px var(--fb);color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
 .nest .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:640px){.nest .two{grid-template-columns:minmax(0,1fr)}}
-.nest .kv{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line);font:400 14px var(--fb);color:var(--ink2)}
+.nest .kv{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line);font:600 14px var(--fb);color:var(--ink2)}
 .nest .kv:first-child{border-top:0}
-.nest .kv b{color:var(--ink);font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
-.nest .mono{font:400 12px/1.6 var(--fm)}
-.nest .tile.t-i .lbl{color:var(--on-deep2)}
+.nest .kv b{color:var(--ink);font-weight:700;text-align:right;min-width:0;overflow-wrap:anywhere}
+.nest .mono{font:600 12px/1.6 ui-monospace,Consolas,monospace}
+.nest .tile.t-i .lbl{color:color-mix(in srgb,var(--onCi) 70%,transparent)}
 /* Columns that EvenRows lines up keep their own heights; it trims the taller list instead of stretching anything. */
 .nest [data-even]{align-items:start!important}
 .nest .tgrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.nest .opt{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;border:0;box-shadow:inset 0 0 0 1px var(--line2);background:var(--s1);cursor:pointer;text-align:left;width:100%;transition:box-shadow var(--t2),background var(--t2)}
-.nest .opt:hover{background:var(--s2)}
-.nest .opt.on{box-shadow:inset 0 0 0 2px var(--brand);background:var(--brand-soft)}
-.nest .opt b{display:block;font:600 15px var(--fb)}
-.nest .opt small{display:block;font:400 13px/18px var(--fb);color:var(--ink2);margin-top:2px}
+.nest .opt{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:18px;border:1.5px solid var(--line2);background:var(--card);cursor:pointer;text-align:left;width:100%;transition:border-color var(--t2),background var(--t2),transform var(--t3) var(--e)}
+.nest .opt:hover{transform:translateY(-2px)}
+.nest .opt.on{border-color:var(--v);background:color-mix(in srgb,var(--v) 8%,var(--card))}
+.nest .opt b{display:block;font:700 15px var(--fb)}
+.nest .opt small{display:block;font:500 13px/1.45 var(--fb);color:var(--ink3);margin-top:2px}
 .nest .opt .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);flex:none;display:grid;place-items:center;margin-top:1px;transition:border-color var(--t2),background var(--t2)}
-.nest .opt.on .rd{border-color:var(--brand);background:var(--brand)}
-.nest .opt .rd svg{width:12px;height:12px;color:var(--on-brand);opacity:0;transition:opacity var(--t2)}
+.nest .opt.on .rd{border-color:var(--v);background:var(--v)}
+.nest .opt .rd svg{width:12px;height:12px;color:var(--onV);opacity:0;transition:opacity var(--t2)}
 .nest .opt.on .rd svg{opacity:1}
 .nest .stp{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start;padding:10px 0}
 .nest .stp::before{content:"";position:absolute;left:16px;top:44px;bottom:-10px;width:2px;background:var(--line2)}
 .nest .stp:last-child::before{display:none}
-.nest .stp.done::before{background:var(--brand)}
-.nest .stp .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line2);background:var(--s1);position:relative;z-index:1;font:700 13px var(--fb);color:var(--ink3);transition:background var(--t3),border-color var(--t3)}
-.nest .stp.done .dot{background:var(--brand);border-color:var(--brand);color:var(--on-brand);animation:nPop var(--t3) var(--e)}
-.nest .stp.run .dot{border-color:var(--brand);border-top-color:transparent;animation:nSpin .8s linear infinite;color:transparent}
-.nest .stp.fail .dot{background:var(--bad);border-color:var(--bad);color:var(--on-bad);animation:nPop var(--t3) var(--e)}
-.nest .stp.skip .dot{background:var(--s2);color:var(--ink3)}
-.nest .stp b{display:block;font:600 15px var(--fb)}
-.nest .stp small{display:block;font:400 13px/18px var(--fb);color:var(--ink2);margin-top:2px}
-.nest .stp.fail small{color:var(--bad-i);font-weight:600}
-.nest .stp .tm{font:600 12px var(--fb);color:var(--ink3);padding-top:8px;display:flex;gap:8px;align-items:center}
+.nest .stp.done::before{background:var(--v)}
+.nest .stp .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line2);background:var(--card);position:relative;z-index:1;font:700 13px var(--fb);color:var(--ink3);transition:background var(--t3),border-color var(--t3)}
+.nest .stp.done .dot{background:var(--v);border-color:var(--v);color:var(--onV);animation:nPop var(--t3) var(--e)}
+.nest .stp.run .dot{border-color:var(--v);border-top-color:transparent;animation:nSpin .8s linear infinite;color:transparent}
+.nest .stp.fail .dot{background:var(--cF);border-color:var(--c);color:var(--onCF);animation:nPop var(--t3) var(--e)}
+.nest .stp.skip .dot{background:var(--sunk);color:var(--ink3)}
+.nest .stp b{display:block;font:700 15px var(--fb)}
+.nest .stp small{display:block;font:500 13px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
+.nest .stp.fail small{color:var(--c);font-weight:700}
+.nest .stp .tm{font:700 12px var(--fb);color:var(--ink3);padding-top:8px;display:flex;gap:8px;align-items:center}
 .nest .fld + .fld,.nest .fld + .two,.nest .two + .fld,.nest .two + .two,.nest .stack > * + *{margin-top:16px}
 .nest .two .fld{margin-top:0}
 /* A card's title row wraps on a narrow screen instead of pushing its buttons out of the card. */
 .nest .card>.ch{flex-wrap:wrap;row-gap:10px}
 .nest .card>.ch h2{min-width:min(100%,max-content)}
 /* The red frame and pill that say a support person is looking inside a school, read-only. */
-.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:6px 6px 6px 16px;border-radius:16px;background:var(--bad);color:var(--on-bad);font:600 13px var(--fb);box-shadow:var(--sh3);animation:sbIn var(--t3) var(--e)}
+.nest .sbar{left:50%;top:18px;z-index:60;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--cF);color:var(--onCF);font:700 13px var(--fb);box-shadow:none;animation:sbIn var(--t3) var(--e);max-width:calc(100vw - 24px)}
 @keyframes sbIn{from{opacity:0;transform:translate(-50%,-24px)}to{opacity:1;transform:translateX(-50%)}}
-.nest .sbar .c{font:700 13px var(--fb);padding:6px 10px;border-radius:7px;background:color-mix(in srgb,var(--deep) 22%,transparent);white-space:nowrap}
-.nest .sbar button{height:32px;padding:0 16px;border:0;border-radius:10px;background:var(--on-bad);color:var(--bad);font:700 12px var(--fb);cursor:pointer;white-space:nowrap}
-.nest .glow{inset:0;z-index:55;pointer-events:none;box-shadow:inset 0 0 0 3px var(--bad);animation:nFade var(--t3)}
+.nest .sbar .c{font:700 13px var(--fb);padding:6px 10px;border-radius:999px;background:color-mix(in srgb,var(--ci) 22%,transparent);white-space:nowrap}
+.nest .sbar button{height:32px;padding:0 16px;border:0;border-radius:999px;background:var(--onCF);color:var(--cF);font:700 12px var(--fb);cursor:pointer;white-space:nowrap}
+.nest .glow{inset:0;z-index:55;pointer-events:none;box-shadow:inset 0 0 0 3px var(--c);animation:nFade var(--t3)}
 @media (max-width:560px){.nest .sbar{flex-wrap:wrap;justify-content:center;border-radius:24px;padding:10px 12px;gap:8px}}
 
 /* Small controls the admin pages share: a roll number, a tick with a label, a number box, a filter pill. */
-.nest .rn{font:600 13px var(--fb);color:var(--ink3)}
-.nest .hwc{display:inline-flex;align-items:center;gap:8px;font:400 14px var(--fb);color:var(--ink);cursor:pointer;white-space:nowrap}
-.nest .hws{width:64px;height:32px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1px var(--ink3);background:var(--s1);color:var(--ink);font:600 14px var(--fb);text-align:center;padding:0 6px;min-width:0}
-.nest .hws:focus{outline:0;box-shadow:inset 0 0 0 2px var(--brand)}
-.nest .hws:disabled{background:var(--s2);box-shadow:none;cursor:not-allowed}
-.nest .hws.bad{box-shadow:inset 0 0 0 2px var(--bad);background:var(--bad-s)}
+.nest .rn{font:700 13px var(--fb);color:var(--ink3)}
+.nest .hwc{display:inline-flex;align-items:center;gap:8px;font:700 13px var(--fb);color:var(--ink2);cursor:pointer;white-space:nowrap}
+.nest .hws{width:64px;height:36px;border-radius:14px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 14px var(--fb);text-align:center;padding:0 6px;min-width:0}
+.nest .hws:focus{outline:0;border-color:var(--v);box-shadow:0 0 0 1px var(--v)}
+.nest .hws:disabled{background:var(--sunk);border-color:transparent;cursor:not-allowed}
+.nest .hws.bad{border-color:var(--c);background:var(--cS)}
 .nest .hws.wide{width:150px}
-.nest .fp{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1px var(--line2);background:var(--s1);color:var(--ink);font:600 13px var(--fb);cursor:pointer;transition:background var(--t2),box-shadow var(--t2)}
-.nest .fp:hover:not(:disabled){background:var(--s2)}
-.nest .fp.on{background:var(--brand-soft);box-shadow:none;color:var(--brand-ink)}
+.nest .fp{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);font:700 13px var(--fb);cursor:pointer;transition:transform var(--t2) var(--e),border-color var(--t2),background var(--t2),color var(--t2)}
+.nest .fp:hover:not(:disabled){border-color:var(--v);transform:translateY(-1px)}
+.nest .fp.on{background:var(--vS);border-color:transparent;color:var(--vD)}
 .nest .fp:disabled{opacity:.45;cursor:not-allowed}
 /* A filter pill: a choice that can be on or off. */
 /* A list that EvenRows may cap keeps room for its scrollbar, so capping it never rewraps the text and moves the line again. */
@@ -90,20 +90,20 @@
 .nest .cpk-sv{position:relative;height:160px;border-radius:10px;background-image:linear-gradient(to top,black,transparent),linear-gradient(to right,white,transparent);cursor:crosshair;touch-action:none}
 .nest .cpk-sv i{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent);transform:translate(-50%,-50%);pointer-events:none}
 .nest .cpk-hue,.nest .cpk-alpha{appearance:none;-webkit-appearance:none;width:100%;height:12px;border-radius:999px;margin:0;cursor:pointer;background:linear-gradient(to right,red,yellow,lime,cyan,blue,magenta,red)}
-.nest .cpk-alpha{background:linear-gradient(to right,transparent,var(--cpk)),conic-gradient(var(--line2) 25%,var(--s1) 0 50%,var(--line2) 0 75%,var(--s1) 0) 0 0/10px 10px}
+.nest .cpk-alpha{background:linear-gradient(to right,transparent,var(--cpk)),conic-gradient(var(--line2) 25%,var(--card) 0 50%,var(--line2) 0 75%,var(--card) 0) 0 0/10px 10px}
 .nest .cpk-hue::-webkit-slider-thumb,.nest .cpk-alpha::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:white;border:0;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent),var(--sh1)}
 .nest .cpk-hue::-moz-range-thumb,.nest .cpk-alpha::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:white;border:0;box-shadow:0 0 0 1px color-mix(in srgb,black 35%,transparent)}
 .nest .cpk-hue:focus-visible,.nest .cpk-alpha:focus-visible,.nest .cpk-sv:focus-visible{outline:2.5px solid var(--ink);outline-offset:2px}
 .nest .cpk-row{display:flex;gap:8px;align-items:center}
 .nest .cpk-in{flex:1;width:auto;min-width:0}
 .nest .cpk-in input{font:600 13px var(--fb);font-variant-numeric:tabular-nums}
-.nest .cpk-chip{flex:none;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line2);background:linear-gradient(var(--cpk),var(--cpk)),conic-gradient(var(--line2) 25%,var(--s1) 0 50%,var(--line2) 0 75%,var(--s1) 0) 0 0/8px 8px}
+.nest .cpk-chip{flex:none;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line2);background:linear-gradient(var(--cpk),var(--cpk)),conic-gradient(var(--line2) 25%,var(--card) 0 50%,var(--line2) 0 75%,var(--card) 0) 0 0/8px 8px}
 .nest .cpk-out{display:flex;flex-wrap:wrap;gap:4px 12px;font:600 12px var(--fb);color:var(--ink3)}
-.nest .cpk-btn{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 8px;border-radius:10px;border:1.5px solid var(--line2);background:var(--s1);color:var(--ink);cursor:pointer;transition:background var(--t1),border-color var(--t1)}
-.nest .cpk-btn:hover:not(:disabled){background:var(--s2);border-color:var(--ink3)}
+.nest .cpk-btn{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 8px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);cursor:pointer;transition:background var(--t1),border-color var(--t1)}
+.nest .cpk-btn:hover:not(:disabled){background:var(--sunk);border-color:var(--ink3)}
 .nest .cpk-btn:disabled{opacity:.4;cursor:not-allowed}
 .nest .cpk-btn code{font:600 12px var(--fb);font-variant-numeric:tabular-nums;background:none;border:0;padding:0}
-.nest .lnk{border:0;background:none;padding:0;font:600 13px var(--fb);color:var(--brand-ink);cursor:pointer}
+.nest .lnk{border:0;background:none;padding:0;font:700 12px var(--fb);color:var(--vD);cursor:pointer}
 .nest .lnk:hover{text-decoration:underline}
 .nest .lnk:disabled{opacity:.4;cursor:not-allowed;text-decoration:none}
 
@@ -117,12 +117,9 @@
   .dlg { box-shadow: none !important; max-height: none !important; overflow: visible !important; width: auto !important; }
 }
 /* A list of choices down the side of a page (a report, a group of settings): one is open. */
-.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
-.nest .rpb:hover{background:var(--s2)}
-.nest .rpb.on{background:var(--brand-soft);color:var(--brand-ink)}
-.nest .rpb b{display:block;font:600 14px var(--fb)}
-.nest .rpb small{display:block;font:400 12px/16px var(--fb);color:var(--ink2);margin-top:2px}
+.nest .rpb{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:14px;background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
+.nest .rpb:hover{background:var(--sunk)}
+.nest .rpb.on{background:var(--vS);color:var(--vD)}
+.nest .rpb b{display:block;font:700 14px var(--fb)}
+.nest .rpb small{display:block;font:500 12px/1.4 var(--fb);color:var(--ink3);margin-top:2px}
 .nest .rpb.on small{color:inherit;opacity:.75}
-/* Boarded pages (.hb) on a phone: the board's grids stack (their columns are set inline, hence !important), the page
-   header wraps and its search box gives way to the dock's search. */
-@media (max-width:760px){.nest .hb .g{grid-template-columns:minmax(0,1fr)!important}.nest .hb .top{flex-wrap:wrap}.nest .hb .top .search{display:none}}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SETTINGS_META, type ChangeRequestRow } from '@gradeon/contracts';
-import { AreaField, Dialog, EmptyCard, Segmented, tintFor, useShake, EmptyState } from '@gradeon/web-ui';
+import { AreaField, Dialog, EmptyCard, Segmented, tintFor, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -21,8 +21,8 @@ export function RequestsPage() {
       loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
       actions={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
       overlays={answering && <AnswerDialog r={answering} onClose={() => setAnswering(null)} onDone={(m) => { setAnswering(null); say(m); }} />}>
-      {rows.length === 0 ? !(q.data?.length) ? <EmptyState scene="requests" label="Back to the fleet" onAction={() => app.go('/')} /> : (
-        <div><EmptyCard title="Requests" chip={{ text: show === 'open' ? '0 open' : '0', tone: 'v' }} icon="mail" heading={show === 'open' ? 'Nothing waiting' : 'No requests yet'} body="When a school asks for a change to its setup, it appears here with who asked and why." /></div>
+      {rows.length === 0 ? (
+        <div><EmptyCard title="Requests" chip={{ text: show === 'open' ? '0 open' : '0', tone: 'v' }} scene="envelope" heading={show === 'open' ? 'Nothing waiting' : 'No requests yet'} body="When a school asks for a change to its setup, it appears here with who asked and why." /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           {rows.map((r) => {
@@ -33,7 +33,7 @@ export function RequestsPage() {
                 <span style={{ flex: 1, minWidth: 220 }}>
                   <a href={url(`/schools/${r.schoolId}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}`); }} style={{ font: '700 14px var(--fb)', color: 'inherit' }}>{r.schoolName}</a>
                   <span className="chip" style={{ marginLeft: 8 }}>{r.area}</span>
-                  <p style={{ margin: '6px 0 0', font: '400 14px/1.5 var(--fb)' }}>{r.message}</p>
+                  <p style={{ margin: '6px 0 0', font: '500 14px/1.5 var(--fb)' }}>{r.message}</p>
                   <small style={{ color: 'var(--ink3)' }}>{r.requestedBy} · {ago(r.createdAt)}{r.answer ? ` · answered: ${r.answer}` : ''}</small>
                 </span>
                 {r.status === 'open'
@@ -66,7 +66,7 @@ function AnswerDialog({ r, onClose, onDone }: { r: ChangeRequestRow; onClose: ()
   const send = (status: 'done' | 'declined') => { if (answer.trim().length < 2) { setErr('Write a short answer for the school.'); shake.hit(); } else go.mutate(status); };
   return (
     <Dialog title={`Answer ${r.schoolName}`} tag={{ text: r.area, tone: 'v' }} onClose={onClose} width={540} shake={shake.cls}>
-      <p style={{ margin: '0 0 12px', font: '400 14px/1.5 var(--fb)' }}>{r.message}</p>
+      <p style={{ margin: '0 0 12px', font: '500 14px/1.5 var(--fb)' }}>{r.message}</p>
       {made.length > 0 && (
         <div className="help" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           Changed since they asked: {made.join(', ')}.

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
-import { EmptyCard, LoginPage, useHue } from '@gradeon/web-ui';
+import { EmptyCard, LoginPage, useThemeColors } from '@gradeon/web-ui';
 import { session } from '../../app/client';
 
 /** Signs in to the school named in the address: password first, then the code. */
@@ -13,7 +13,7 @@ export function LoginRoute() {
     queryKey: ['brand', slug], queryFn: client.api.brand, staleTime: 5 * 60_000,
     retry: (n, e) => !(e instanceof HttpError && e.status === 404) && n < 6, retryDelay: (n) => Math.min(1000 * 2 ** n, 8000),
   });
-  useHue(brand.data?.hue);
+  useThemeColors(brand.data?.theme);
   if (brand.isError) return <NoSchool error={brand.error} retry={() => void brand.refetch()} busy={brand.isFetching} />;
   const b = brand.data;
   return (
@@ -49,8 +49,8 @@ function NoSchool({ error, retry, busy }: { error: Error; retry: () => void; bus
     <div className="nest" style={{ minHeight: '100dvh', padding: 12, display: 'grid', placeItems: 'center' }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
         {missing
-          ? <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'c' }} icon="search" heading="We couldn’t find that school" body={error.message} actions={<a className="btn pri" href="/">Try another address</a>} />
-          : <EmptyCard error title="Sign in" chip={{ text: 'Not answering', tone: 'a' }} icon="warning" heading="The school isn’t answering yet" body={error instanceof HttpError ? error.message : 'Check your connection, then try again.'} actions={<button className="btn pri" disabled={busy} onClick={retry}>{busy ? 'Trying…' : 'Try again'}</button>} />}
+          ? <EmptyCard error title="Sign in" chip={{ text: 'Not found', tone: 'c' }} scene="search-paper" heading="We couldn’t find that school" body={error.message} actions={<a className="btn pri" href="/">Try another address</a>} />
+          : <EmptyCard error title="Sign in" chip={{ text: 'Not answering', tone: 'a' }} scene="plug" heading="The school isn’t answering yet" body={error instanceof HttpError ? error.message : 'Check your connection, then try again.'} actions={<button className="btn pri" disabled={busy} onClick={retry}>{busy ? 'Trying…' : 'Try again'}</button>} />}
       </div>
     </div>
   );

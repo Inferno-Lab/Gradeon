@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { CAPABILITY_LABELS, istToday, type Capability, type InvoiceRowC } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees, when } from '../../app/format';
@@ -31,7 +31,7 @@ export function BillingPage() {
   if (!app.can('billing.read')) {
     return (
       <Page title="Billing" sub="Invoices for every school">
-        <div><EmptyCard title="Billing" chip={{ text: 'Not for your role', tone: 'a' }} icon="lock" heading="Billing is for the finance team" body="Ask a super admin to add the Finance role if you need to see invoices." /></div>
+        <div><EmptyCard title="Billing" chip={{ text: 'Not for your role', tone: 'a' }} scene="padlock" heading="Billing is for the finance team" body="Ask a super admin to add the Finance role if you need to see invoices." /></div>
       </Page>
     );
   }
@@ -56,13 +56,13 @@ export function BillingPage() {
       overlays={open && <InvoiceDialog r={open} can={canWrite} onClose={() => setOpen(null)} onDone={(m) => { setOpen(null); refresh(); say(m); }} />}>
       {all.length > 0 && (
         <section className="grid">
-          <div className="tile t-v s4 rise"><span className="lbl">Invoiced · {shownMonth}</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(inMonth))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{inMonth.length} invoices · {rupees(sum(all))} all time</div></div>
-          <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Paid · {shownMonth}</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(paid(inMonth)))}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rupees(sum(paid(all)))} all time</div></div>
-          <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to collect</span><div className="fd" style={{ fontSize: 30, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(all) - sum(paid(all)))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{all.filter((r) => r.status === 'overdue').length} overdue, all time</div></div>
+          <div className="tile t-v s4 rise"><span className="lbl">Invoiced · {shownMonth}</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(inMonth))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{inMonth.length} invoices · {rupees(sum(all))} all time</div></div>
+          <div className="tile t-g s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Paid · {shownMonth}</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(paid(inMonth)))}</div><div style={{ opacity: .8, font: '600 13px var(--fb)' }}>{rupees(sum(paid(all)))} all time</div></div>
+          <div className="tile t-a s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to collect</span><div className="fd" style={{ fontSize: 34, letterSpacing: '-.04em', marginTop: 8 }}>{rupees(sum(all) - sum(paid(all)))}</div><div style={{ opacity: .75, font: '600 13px var(--fb)' }}>{all.filter((r) => r.status === 'overdue').length} overdue, all time</div></div>
         </section>
       )}
       {all.length === 0 ? (
-        <div><EmptyState scene="billing" label="Make this month’s invoices" onAction={canWrite ? () => gen.mutate() : undefined} /></div>
+        <div><EmptyCard title="Invoices" chip={{ text: '0 invoices', tone: 'v' }} scene="receipt" heading="No invoices yet" body="Create the month’s invoices above once a school is live. Running it twice never double-bills." /></div>
       ) : (
         <Card title="Invoices" chip={<span className="chip">{rows.length}</span>} style={{ padding: 0 }}>
           <div className="tgrow" style={{ padding: '0 20px 12px' }}>

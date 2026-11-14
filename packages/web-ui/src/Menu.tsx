@@ -1,5 +1,3 @@
-import type { IconName } from './Icon';
-import { Icon } from './Icon';
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { leavingProps, useExit } from './Presence';
@@ -13,9 +11,7 @@ interface Box { left?: number; right?: number; minWidth: number; top?: number; b
 /** Where a popup goes: under its button, over it when there is no room below, or beside it (`right`, for the collapsed menu). */
 export function placeBy(anchor: HTMLElement, side: 'auto' | 'right', min = 220): Box {
   const r = anchor.getBoundingClientRect();
-  // Beside the whole menu rail, not just the button, so the popup never sits over the rail.
-  const rail = anchor.closest('.sb')?.getBoundingClientRect().right ?? r.right;
-  if (side === 'right') return { left: Math.max(r.right, rail) + 12, minWidth: min, bottom: window.innerHeight - r.bottom, maxH: r.bottom - EDGE, origin: 'left bottom' };
+  if (side === 'right') return { left: r.right + 12, minWidth: min, bottom: window.innerHeight - r.bottom, maxH: r.bottom - EDGE, origin: 'left bottom' };
   const below = window.innerHeight - r.bottom - EDGE;
   const above = r.top - EDGE;
   const up = below < 240 && above > below;
@@ -111,15 +107,15 @@ export function Menu({ open, anchor, onClose, side = 'auto', label, children }: 
 
 /** A pill button that opens a menu under it: the same button and the same menu everywhere. */
 export function MenuButton({ label, icon, primary, chevron, open, onOpenChange, menuLabel, children }: {
-  label: ReactNode; icon?: IconName; primary?: boolean; chevron?: boolean; open: boolean; onOpenChange: (open: boolean) => void; menuLabel?: string; children: ReactNode;
+  label: ReactNode; icon?: string; primary?: boolean; chevron?: boolean; open: boolean; onOpenChange: (open: boolean) => void; menuLabel?: string; children: ReactNode;
 }) {
   const btn = useRef<HTMLButtonElement>(null);
   return (
     <>
       <button ref={btn} type="button" className={`btn ${primary ? 'pri' : ''}`} aria-haspopup="menu" aria-expanded={open} onClick={() => onOpenChange(!open)}>
-        {icon && <Icon name={icon} />}
+        {icon && <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>}
         {label}
-        {chevron && <Icon name="caretDown" className="cv" />}
+        {chevron && <svg className="cv" viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M6 9l6 6 6-6"></path></svg>}
       </button>
       <Menu open={open} anchor={btn} onClose={() => onOpenChange(false)} label={menuLabel}>{children}</Menu>
     </>

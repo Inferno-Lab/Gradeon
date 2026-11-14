@@ -31,9 +31,9 @@ export function PeriodGrid({ classId, date, say }: { classId: string; date: stri
     onError: (e) => say(Object.values(problem(e))[0] ?? 'Could not save. Try again.', 'bad'),
   });
 
-  if (roll.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 16 }} />;
-  if (roll.isError) return <EmptyCard error title="Every period" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(roll.error as Error).message} actions={<button className="btn pri" onClick={() => void roll.refetch()}>Try again</button>} />;
-  if (!p) return <EmptyCard title="Every period" chip={{ text: '0 periods', tone: 'v' }} icon="calendar" heading="No lessons that day" body="The class has no periods on the timetable for this day. Periods appear here once the timetable has them." />;
+  if (roll.isLoading) return <div className="skc" style={{ height: 320, borderRadius: 18 }} />;
+  if (roll.isError) return <EmptyCard error title="Every period" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(roll.error as Error).message} actions={<button className="btn pri" onClick={() => void roll.refetch()}>Try again</button>} />;
+  if (!p) return <EmptyCard title="Every period" chip={{ text: '0 periods', tone: 'v' }} scene="calendar" heading="No lessons that day" body="The class has no periods on the timetable for this day. Periods appear here once the timetable has them." />;
   const students = roll.data!.students;
   const changed = Object.keys(draft).length;
   return (

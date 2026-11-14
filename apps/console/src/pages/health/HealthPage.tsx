@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Checkbox, Segmented, Select, tintFor, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, EmptyCard, Segmented, Select, tintFor } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -27,10 +27,10 @@ export function HealthPage() {
     <Page title="Health" sub="Each school’s API answers a heartbeat every minute. Slow or silent ones float to the top." toast={toast} loading={schools.isLoading} error={schools.isError ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       actions={<button className="btn pri" onClick={() => probe.mutate()} disabled={probe.isPending}>{probe.isPending ? 'Checking…' : 'Check everything now'}</button>}>
       {inc && (
-        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 20, borderRadius: 24, background: inc.state === 'resolved' ? 'var(--ok-s)' : 'var(--deep)', color: inc.state === 'resolved' ? 'var(--ok-i)' : 'var(--on-deep)' }}>
+        <div className={`inc ${inc.state === 'resolved' ? 'ok' : ''} rise`} role="status" style={{ padding: 20, borderRadius: 24, background: inc.state === 'resolved' ? 'var(--gS)' : 'var(--ci)', color: inc.state === 'resolved' ? 'var(--gD)' : 'var(--onCi)' }}>
           <span className={`chip ${inc.state === 'resolved' ? 'g' : 'c'}`}>{inc.state === 'resolved' ? 'Resolved' : `Incident${inc.schoolName ? ` · ${inc.schoolName}` : ''}`}</span>
           <div className="fd" style={{ fontSize: 17, letterSpacing: '-.02em', marginTop: 10 }}>{inc.title}</div>
-          <p style={{ margin: '4px 0 0', font: '400 13px/1.45 var(--fb)', opacity: .75 }}>{inc.body}</p>
+          <p style={{ margin: '4px 0 0', font: '500 13px/1.45 var(--fb)', opacity: .75 }}>{inc.body}</p>
         </div>
       )}
       {rows.length > 0 && (() => {
@@ -44,7 +44,7 @@ export function HealthPage() {
         ]} />;
       })()}
       {rows.length === 0 ? (
-        <div><EmptyState scene="health" onAction={() => app.go('/onboarding/new')} /></div>
+        <div><EmptyCard title="Health" chip={{ text: '0 schools', tone: 'v' }} scene="plug" heading="Nothing to watch yet" body="Once a school is live its heartbeat shows here, with how fast its API answers." /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           <div className="tbl scroll-x"><div style={{ minWidth: 620 }}>
@@ -76,7 +76,7 @@ export function HealthPage() {
               </summary>
               <div className="help" style={{ marginTop: 8, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>{e.url ?? ''}{e.release ? ` · release ${e.release}` : ''} · first seen {ago(e.firstAt)}
                 {!e.handledBy && app.can('schools.write') && <button className="btn sm" disabled={done.isPending} onClick={() => done.mutate(e.fingerprint)}>Mark handled</button>}</div>
-              {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 12, background: 'var(--s2)', font: '400 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
+              {e.stack && <pre style={{ margin: '8px 0 0', padding: 12, borderRadius: 14, background: 'var(--sunk)', font: '500 12px/1.5 var(--fm, monospace)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto' }}>{e.stack}</pre>}
             </details>
           ))}
       </Card>
@@ -134,7 +134,7 @@ function Jobs({ say }: { say: (m: string, tone?: 'bad') => void }) {
                 <span className={`chip ${JOB_TONE[j.status]}`}>{JOB_WORDS[j.status]}</span>
                 <span style={{ minWidth: 0 }}><b style={{ font: '700 13px var(--fb)' }}>{JOB_LABELS[j.kind] ?? j.kind}</b><div className="help" style={{ margin: 0 }}>{ago(j.finishedAt ?? j.runAt)}{j.attempts > 1 ? ` · try ${j.attempts}` : ''}</div></span>
                 <span className="help" style={{ margin: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.schoolName ?? 'Every school'}</span>
-                <span style={{ minWidth: 0, font: '400 13px/1.4 var(--fb)', color: j.lastError ? 'var(--bad-i)' : 'var(--ink2)', overflowWrap: 'anywhere' }}>{j.lastError ?? j.result ?? ''}</span>
+                <span style={{ minWidth: 0, font: '500 13px/1.4 var(--fb)', color: j.lastError ? 'var(--cD)' : 'var(--ink2)', overflowWrap: 'anywhere' }}>{j.lastError ?? j.result ?? ''}</span>
                 <span>{app.can('schools.write') && j.status === 'failed' && <button className="btn sm" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}>Retry</button>}</span>
               </div>
             ))}

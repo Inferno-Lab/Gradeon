@@ -1,0 +1,26 @@
+/* Spot illustrations: flat shapes, one fine outline, theme-aware colours. */
+.il { display: block; width: 100%; height: auto; overflow: visible; }
+.il .il-shadow { fill: color-mix(in srgb, var(--ink) 9%, transparent); }
+.il .il-line, .il .il-line-v, .il .il-line-w, .il .il-faint, .il .il-faint-w { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.il .il-line { stroke: var(--ink); stroke-width: 2.4; }
+.il .il-line-v { stroke: var(--v); stroke-width: 5; }
+.il .il-line-w { stroke: var(--onCi); stroke-width: 3.2; }
+.il .il-faint { stroke: var(--line2); stroke-width: 3; }
+.il .il-faint-w { stroke: color-mix(in srgb,var(--onCi) 55%,transparent); stroke-width: 3; }
+.il .il-spark { fill: none; stroke: var(--a); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.il .il-fill-card { fill: var(--card); }
+.il .il-fill-sunk { fill: var(--sunk); }
+.il .il-fill-ink { fill: var(--ci); }
+.il .il-fill-v { fill: var(--v); }
+.il .il-fill-a { fill: var(--a); }
+.il .il-fill-c { fill: var(--c); }
+.il .il-fill-g { fill: var(--g); }
+.il .il-fill-glass { fill: color-mix(in srgb, var(--v) 14%, transparent); }
+.il .il-slot { fill: var(--ci); }
+/* Strokes draw in once, in order. Reduce Motion shows the finished picture. */
+.il .il-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation:ilDraw var(--t3) var(--e, cubic-bezier(.22, 1, .36, 1)) both; animation-delay: calc(var(--n, 0) * .14s + .1s); }
+@keyframes ilDraw { to { stroke-dashoffset: 0; } }
+.il > * { animation:ilRise var(--t3) var(--e, cubic-bezier(.22, 1, .36, 1)) both; }
+@keyframes ilRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.nest.rm .il .il-draw, .nest.rm .il > * { animation:none; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { .il .il-draw, .il > * { animation:none; stroke-dashoffset: 0; } }

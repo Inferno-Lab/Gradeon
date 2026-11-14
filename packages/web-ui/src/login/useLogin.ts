@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { rollDigits } from '../digits';
+import { markStyle } from '../shell/Sidebar';
 
-const EYE_ON = 'show';
-const EYE_OFF = 'hide';
+const EYE_ON = 'M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12zM9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0';
+const EYE_OFF = 'M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3 3.6M6.4 7.6A16.5 16.5 0 0 0 2.5 12s3.5 6.5 9.5 6.5a9.3 9.3 0 0 0 4.1-.9M9.9 9.9a3 3 0 0 0 4.2 4.2';
 const LANGS = [['English', 'en'], ['हिन्दी', 'hi'], ['मराठी', 'mr']] as const;
 
 /** The parts of a failed call the form reads. The API client's error has all of them. */
@@ -139,17 +141,20 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   return {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
-    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), logoUrl: c.logoUrl ?? null,
+    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color), logoUrl: c.logoUrl ?? null,
     privacyOpen, privacy: c.privacy, togglePrivacy: () => setPrivacyOpen((o) => !o),
     // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
     gradeon: c.product === 'console' || c.schoolName === 'Gradeon',
+    cardA: cons ? 'Schools live' : 'Attendance today', aD: rollDigits(cons ? '312' : '94.2'), aU: cons ? '' : '%',
+    cardB: cons ? 'Release 2026.10.3' : 'Fees this month', bN: cons ? 'Wave 3' : '₹18.4L', bU: cons ? 'of 6' : '', bChip: cons ? 'Healthy' : '+8.7%', bChip2: cons ? '141 updated' : '62% of due',
+    toastT: cons ? 'Wave 3 passed every check' : 'Attendance sent for 8 A',
     headline: cons ? 'Run every school from one calm board.' : 'Everything the school office needs, in one calm place.',
     subline: cons ? 'Releases, cells, support and billing for the whole Gradeon fleet.' : 'Attendance, fees, exams and every message to families.',
     langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('gradeon.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
     isCred: step === 'cred', isOtp: step === 'otp', isOk: step === 'ok',
     title: cons ? 'Console sign in' : 'Welcome back', sub: cons ? 'Gradeon team members only. Every sign-in is recorded.' : `Sign in to the ${c.shortName} staff room.`, cta: cons ? 'Continue' : 'Sign in',
     email, onEmail: (e: { target: { value: string } }) => { setEmail(e.target.value); setEmErr(''); },
-    emailPh: cons ? 'you@gradeon.app' : 'Your email or phone number',
+    emailPh: cons ? 'you@gradeon.app' : 'you@school.edu.in or 98765 43210',
     pw, onPw: (e: { target: { value: string } }) => { setPw(e.target.value); setPwErr(false); },
     pwType: show ? 'text' : 'password', eyeD: show ? EYE_OFF : EYE_ON, eyeLabel: show ? 'Hide password' : 'Show password', toggleEye: () => setShow((s) => !s),
     emCls: emErr ? 'err shake' : '', emInv: emErr ? 'true' : 'false', emErr: !!emErr, emMsg: emErr, pwCls: pwErr ? 'err shake' : '', pwInv: pwErr ? 'true' : 'false', pwErr, pwMsg,

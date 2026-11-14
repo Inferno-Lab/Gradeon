@@ -1,15 +1,8 @@
 /* eslint-disable */
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { DEFAULT_BRAND, hueOf, hueTokens } from '@gradeon/contracts';
-import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, markStyle } from "@gradeon/web-ui";
 import "./school.css";
-
-// The school's own deep colour, worked out from its brand colour, so its page header looks like its admin (the School board).
-const schoolColours = (colour: string) => {
-  const t = hueTokens(hueOf(/^#[0-9a-fA-F]{6}$/.test(colour ?? '') ? colour : DEFAULT_BRAND), 'light');
-  return Object.fromEntries(['hero', 'on-deep', 'on-deep2', 'bright', 'on-bright', 'deep2', 'deep3'].map((k) => [`--${k}`, t[k]]));
-};
 
 export function SchoolView({ v }: { v: any }) {
   return (
@@ -23,7 +16,9 @@ export function SchoolView({ v }: { v: any }) {
             <>
               <div className="glow" aria-hidden="true"></div>
               <div className="sbar" role="status">
-                <Icon name="shield" size={16} />
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+                  <path className="i" d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7z"></path>
+                </svg>
                 Inside {v.shortName} · read-only<span className="c num">{v.clock} left</span>
                 <button onClick={v.endSup}>End session</button>
               </div>
@@ -39,11 +34,13 @@ export function SchoolView({ v }: { v: any }) {
           <a href={v.fleetHref} onClick={v.toFleet}>
             Fleet
           </a>
-          <Icon name="caretRight" size={14} />
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path className="i" d="M9 6l6 6-6 6"></path>
+          </svg>
           <b style={{ color: "var(--ink)" } as CSSProperties}>{v.name}</b>
         </div>
-        <header className="hd sdeep rise" style={{ "--d": ".05s", gap: "16px", flexWrap: "wrap", ...schoolColours(v.color) } as CSSProperties}>
-          <span className="slogo">
+        <header className="hd rise" style={{ "--d": ".05s", gap: "16px", flexWrap: "wrap" } as CSSProperties}>
+          <span className="slogo" style={{ ...markStyle(v.color), boxShadow: `0 14px 28px -12px ${v.color}` } as CSSProperties}>
             {v.logoText}
           </span>
           <div style={{ minWidth: "0" } as CSSProperties}>
@@ -56,7 +53,9 @@ export function SchoolView({ v }: { v: any }) {
           <span className="grow"></span>
           {v.canSupport && (
             <button className="btn" onClick={v.openSupport}>
-              <Icon name="shield" />
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path className="i" d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7z"></path>
+              </svg>
               Support session
             </button>
           )}
@@ -90,7 +89,9 @@ export function SchoolView({ v }: { v: any }) {
                 )}
                 {v.canRetry && (
                   <button className="btn pri sm" onClick={v.retry} disabled={v.busy}>
-                    <Icon name="undo" />
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path className="i" d="M4 4v6h6M5.5 15a7 7 0 1 0 1-8.5L4 9"></path>
+                    </svg>
                     Retry step {v.failedNo}
                   </button>
                 )}
@@ -110,10 +111,14 @@ export function SchoolView({ v }: { v: any }) {
                     <div className={`stp ${s.cls ?? ""}`}>
                       <span className="dot">
                         {s.ok && (
-                          <Icon name="check" size={16} />
+                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                            <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "2.8" } as CSSProperties}></path>
+                          </svg>
                         )}
                         {s.bad && (
-                          <Icon name="close" size={16} />
+                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                            <path className="i" d="M7 7l10 10M17 7 7 17" style={{ strokeWidth: "2.6" } as CSSProperties}></path>
+                          </svg>
                         )}
                         {s.todo && <>{s.num}</>}
                       </span>
@@ -146,12 +151,16 @@ export function SchoolView({ v }: { v: any }) {
                   </div>
                   {v.invoiceLine && (
                   <div className="tl2">
-                    <Icon name="card" />
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path className="i" d="M3.5 6.5h17v13h-17zM3.5 10.5h17"></path>
+                    </svg>
                     {v.invoiceLine}
                   </div>
                   )}
                   <div className="tl2">
-                    <Icon name="fees" />
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
+                    </svg>
                     {v.contactLine}
                   </div>
                   {v.canBilling && (
@@ -217,10 +226,14 @@ export function SchoolView({ v }: { v: any }) {
                     <div key={c.key} className="ck" style={{ cursor: "default", alignItems: "center", flexWrap: "wrap" } as CSSProperties}>
                       <i className={c.cls}>
                         {c.cls === "d" && (
-                          <Icon name="check" />
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
+                          </svg>
                         )}
                         {c.cls === "w" && (
-                          <Icon name="time" />
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path className="i" d="M12 7v5l3 2" style={{ strokeWidth: "2.6" } as CSSProperties}></path>
+                          </svg>
                         )}
                       </i>
                       <span style={{ flex: "1 1 160px", minWidth: 0 } as CSSProperties}>

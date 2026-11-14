@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IMPORT_KINDS } from '@gradeon/contracts';
-import { Field, FilePick, Select, EmptyState } from '@gradeon/web-ui';
+import { Field, FilePick, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { problem, stamp, useSchoolConfig } from '../../app/kit';
@@ -61,7 +61,6 @@ export function MovingInPage() {
     <Page title="Moving in" sub="Bring your records into Gradeon. Inviting families is on Students, staff on Staff." toast={toast} loading={uploads.isLoading && !uploads.data}
       error={uploads.isError && !uploads.data ? { message: (uploads.error as Error).message, retry: () => void uploads.refetch() } : null}>
       <div className="stack" style={{ gap: 16 }}>
-        {uploads.data?.length === 0 && !batches.data?.length && <EmptyState scene="moving" onAction={() => document.querySelector<HTMLInputElement>('main input[type=file]')?.click()} onLink={template} />}
         <Card title="Send us your files" chip={<span className="chip">{uploads.data?.length ?? 0} sent</span>}>
           <p className="help" style={{ marginTop: 0 }}>Excel sheets, exports from your old system, or photos of paper registers. Gradeon’s team imports them, checks every total with you, and can undo an import for 30 days.</p>
           <div className="stack">
@@ -77,7 +76,7 @@ export function MovingInPage() {
             <div style={{ marginTop: 16 }}>
               {uploads.data!.map((u) => (
                 <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 6, height: 'auto', padding: '10px 0', cursor: 'default' }}>
-                  <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'A file to read')}</small>{u.status === 'set_aside' && u.setAsideReason && <small style={{ display: 'block', color: 'var(--warn)', font: '600 12px var(--fb)', marginTop: 4 }}>Set aside: {u.setAsideReason}</small>}</span>
+                  <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'A file to read')}</small>{u.status === 'set_aside' && u.setAsideReason && <small style={{ display: 'block', color: 'var(--a)', font: '600 12px var(--fb)', marginTop: 4 }}>Set aside: {u.setAsideReason}</small>}</span>
                   <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {stamp(u.at)}</span>
                   <span className={`st ${STATUS[u.status].tone}`}><i></i>{STATUS[u.status].label}</span>
                 </div>
@@ -100,7 +99,7 @@ export function MovingInPage() {
                 <span style={{ minWidth: 0, flex: '1 1 220px' }}>
                   <b style={{ font: '700 14px var(--fb)' }}>{IMPORT_KINDS.find((k) => k.key === b.kind)?.label ?? b.kind}</b>
                   <small style={{ display: 'block', color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{b.fileName || 'Typed in'} · {stamp(b.at)}</small>
-                  {b.notes.map((n) => <small key={n} style={{ display: 'block', color: 'var(--warn)', font: '600 12px var(--fb)', marginTop: 4 }}>{n}</small>)}
+                  {b.notes.map((n) => <small key={n} style={{ display: 'block', color: 'var(--a)', font: '600 12px var(--fb)', marginTop: 4 }}>{n}</small>)}
                 </span>
                 <span className="tgrow" style={{ gap: 6, flex: '1 1 260px' }}>
                   {b.undoneAt ? <span className="chip">Undone</span> : <><span className="chip g">{b.created} added</span><span className="chip">{b.updated} updated</span>{b.skipped > 0 && <span className="chip a">{b.skipped} left out</span>}</>}

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
-import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, Segmented, Select, useShake } from '@gradeon/web-ui';
 import { uploadFile } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, Ico, problem, stamp, useOpenParam } from '../../app/kit';
 
-const BACK = 'caretLeft';
-const SEND = 'send';
+const BACK = 'M15 5l-7 7 7 7';
+const SEND = 'M4 12l16-8-6 16-3-7z';
 const ago = (iso: string) => {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 1) return 'now';
@@ -42,7 +42,7 @@ export function MessagesPage() {
       actions={canWrite ? <AddBtn onClick={() => setStarting(true)}>New message</AddBtn> : undefined}
       overlays={starting && <Start onClose={() => setStarting(false)} onDone={(t) => { setStarting(false); refresh(qc); setFilter('open'); setSel(t.id); say('Message sent. The family gets a notification.'); }} />}>
       {all.length === 0 ? (
-        <div><EmptyState scene="messages" onAction={canWrite ? () => setStarting(true) : undefined} /></div>
+        <div><EmptyCard title="Messages" chip={{ text: '0 conversations', tone: 'v' }} scene="envelope" heading="No messages yet" body="When a family writes to the school it appears here, and your reply goes to their app. You can also start a conversation with any student’s family." actions={canWrite ? <AddBtn onClick={() => setStarting(true)}>New message</AddBtn> : undefined} /></div>
       ) : (
         <section className={`msg ${sel ? 'has' : ''}`}>
           <div className="card msl rise" style={{ padding: 0 }}>
@@ -74,7 +74,7 @@ function ThreadItem({ t, on, onOpen }: { t: ThreadRow; on: boolean; onOpen: () =
         <span className="mts" data-tip={t.subject}>{t.subject}</span>
         <span className="mtp">{t.lastFrom === 'staff' ? 'You: ' : ''}{t.lastBody}</span>
       </span>
-      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '700 11px var(--fb)', background: 'var(--brand)', color: 'var(--on-brand)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
+      {t.unread > 0 && <span className="ct" aria-label={`${t.unread} unread`} style={{ alignSelf: 'center', font: '700 11px var(--fb)', background: 'var(--v)', color: 'var(--onV)', borderRadius: 999, padding: '2px 8px' }}>{t.unread}</span>}
     </button>
   );
 }
@@ -120,7 +120,7 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
           <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ status: t.status === 'open' ? 'closed' : 'open' })}>{t.status === 'open' ? 'Close' : 'Reopen'}</button>
         </span>}
       </header>
-      <div className="mlist lscroll" style={{ ['--scbg' as string]: 'var(--s1)' }}>
+      <div className="mlist lscroll" style={{ ['--scbg' as string]: 'var(--card)' }}>
         {t.messages.map((m) => (
           <div key={m.id} className={`mb ${m.from}`}>
             <div className="mbb">{m.deleted ? <i>This message was deleted.</i> : m.body}{m.files.length > 0 && <span className="tgrow" style={{ marginTop: m.body ? 8 : 0 }}>{m.files.map((f) => <button key={f.id} type="button" className="chip" onClick={() => open(f.id)}>{f.name}</button>)}</span>}</div>

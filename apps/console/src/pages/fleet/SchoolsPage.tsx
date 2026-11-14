@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Select, tintFor, Icon, EmptyState } from '@gradeon/web-ui';
+import { EmptyCard, Select, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { Page } from '../../app/Page';
 import { useShellChrome } from '../../app/Layout';
 import { count, initials, statusOf } from '../../app/format';
 
-const SEARCH = 'search';
+const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
 const PAGE = 25;
 const COLS = 'minmax(0,2fr) 110px 70px 100px 90px 130px 80px';
 type Sort = 'name' | 'newest' | 'students' | 'p95';
@@ -46,12 +46,12 @@ export function SchoolsPage() {
       back={{ label: 'Fleet', to: '/', go: app.go }}
       actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}>Onboard a school</button> : undefined}>
       {all.length === 0 ? (
-        <div><EmptyState scene="fleet" onAction={app.can('schools.write') ? () => app.go('/onboarding/new') : undefined} /></div>
+        <div><EmptyCard title="Schools" chip={{ text: '0 schools', tone: 'v' }} scene="register" heading="No schools on this platform yet" body="Onboard the first school. The console creates its database, address, first admin and app settings in a few minutes." /></div>
       ) : (
         <section className="card tbl rise" style={{ padding: 0 }}>
           <div className="ch" style={{ padding: '20px 20px 12px', flexWrap: 'wrap', gap: 10 }}>
             <div className="srch" style={{ minWidth: 220, height: 38, flex: '1 1 220px', maxWidth: 360 }}>
-              <Icon name={SEARCH} />
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={SEARCH}></path></svg>
               <input value={q} onChange={(e) => reset(setQ)(e.target.value)} placeholder="Name or address" aria-label="Search schools" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} />
             </div>
             <Select compact aria-label="State" value={state} onChange={reset(setState)} options={[{ value: '', label: 'Every state' }, { value: 'onboarding', label: 'Setting up' }, { value: 'moving_in', label: 'Moving in' }, { value: 'live', label: 'Live' }, { value: 'suspended', label: 'Suspended' }, { value: 'moving', label: 'Moving cell' }]} />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { OnlinePaymentRow, ReconRow, RefundRow } from '@gradeon/contracts';
-import { Dialog, Field, NumberField, Segmented, useShake, EmptyState } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, NumberField, Segmented, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AreaField, dateLabel, openPdf, problem, stamp, useOpenParam } from '../../app/kit';
@@ -55,7 +55,7 @@ export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
       ]} />
       {tab === 'payments' && all.length > 0 && <div style={{ maxWidth: 360, margin: '12px 0' }}><Field label="Search payments" value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Receipt, student or fee" /></div>}
       {tab === 'payments' && (!all.length ? (
-        <div><EmptyState scene="payments" onAction={() => app.go('/fees/invoices')} /></div>
+        <div><EmptyCard title="Online payments" chip={{ text: '0 payments', tone: 'v' }} scene="receipt" heading="Nobody has paid online yet" body="When a family pays a fee in the app, the payment and its receipt appear here, ready to print or refund." /></div>
       ) : (
         <Card style={{ padding: 0 }}>
           <div className="tbl scroll-x"><div style={{ minWidth: 720 }} className="lscroll">

@@ -52,7 +52,7 @@ export function InvoiceSheet({ id, onClose, say, onCollect }: { id: string; onCl
   const d = q.data;
   return (
     <Dialog title={d ? d.title : 'Invoice'} tag={d ? { text: `${d.studentName} · Class ${d.className}`, tone: 'v' } : undefined} onClose={onClose} width={620} shake={shake.cls}>
-      {!d ? <div className="skc" style={{ height: 240, borderRadius: 16 }} /> : (
+      {!d ? <div className="skc" style={{ height: 240, borderRadius: 18 }} /> : (
         <div className="stack">
           <div>
             <div className="kv"><span>Kind of fee</span><b>{d.headName}</b></div>
@@ -60,14 +60,14 @@ export function InvoiceSheet({ id, onClose, say, onCollect }: { id: string; onCl
             <div className="kv"><span>Billed</span><b>₹{inr(d.amount)}</b></div>
             {d.waived > 0 && <div className="kv"><span>Waived</span><b>− ₹{inr(d.waived)}</b></div>}
             <div className="kv"><span>Paid</span><b>₹{inr(d.paid)}</b></div>
-            <div className="kv"><span>Still to pay</span><b style={{ color: d.outstanding ? 'var(--bad)' : undefined }}>₹{inr(d.outstanding)}</b></div>
+            <div className="kv"><span>Still to pay</span><b style={{ color: d.outstanding ? 'var(--c)' : undefined }}>₹{inr(d.outstanding)}</b></div>
           </div>
           <div>
             <div className="lbl" style={{ marginBottom: 6 }}>Payments</div>
             {!d.payments.length && <p className="help" style={{ margin: 0 }}>Nothing paid yet.</p>}
             {d.payments.map((p) => (
               <div key={p.id} className="kv" style={{ alignItems: 'center', gap: 8 }}>
-                <span style={{ minWidth: 0 }}>{p.receiptNo} · {dateLabel(p.paidOn)} · {p.method.toUpperCase()}{p.cancelled && <small style={{ display: 'block', color: 'var(--bad)' }}>Cancelled: {p.cancelReason}</small>}</span>
+                <span style={{ minWidth: 0 }}>{p.receiptNo} · {dateLabel(p.paidOn)} · {p.method.toUpperCase()}{p.cancelled && <small style={{ display: 'block', color: 'var(--c)' }}>Cancelled: {p.cancelReason}</small>}</span>
                 <b style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   ₹{inr(p.amount)}
                   <button className="btn sm" onClick={() => pdf(p.id)}>Receipt</button>

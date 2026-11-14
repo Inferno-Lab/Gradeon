@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DEFAULT_BRAND, addDays, dayLabel, hueOf, dayMonth, dayName, istMinutes, istNow, istToday, latestSchoolDay, schoolDaysEnding,
+  addDays, dayLabel, dayMonth, dayName, istMinutes, istNow, istToday, latestSchoolDay, schoolDaysEnding,
   type DashboardData, type FeeSummary, type SearchHit, type ShellData,
 } from '@gradeon/contracts';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -154,7 +154,7 @@ export class DashboardService {
       term,
       badges: { attendance: unmarked.length, admissions: counts.admissions, messages: counts.messages }, modules, features,
       menu: (await this.settings.effective(t, [...perms])).menu,
-      hue: hueOf(String(v['brand.color'] ?? '') || DEFAULT_BRAND),
+      theme: (v['theme.colors'] ?? {}) as ShellData['theme'],
     };
   }
 

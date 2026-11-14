@@ -95,7 +95,7 @@ export function WeekDialog({ days, onClose }: { days: number[]; onClose: () => v
           </div>
           {w && <button className="btn sm" onClick={() => window.print()}>Print</button>}
         </div>
-        {week.isLoading && pick && <div className="skc" style={{ height: 240, borderRadius: 16 }} />}
+        {week.isLoading && pick && <div className="skc" style={{ height: 240, borderRadius: 18 }} />}
         {w && (
           <div className="scroll-x">
             <div style={{ display: 'grid', gridTemplateColumns: `90px repeat(${days.length}, minmax(110px,1fr))`, gap: 4, minWidth: 90 + days.length * 114 }}>
@@ -107,7 +107,7 @@ export function WeekDialog({ days, onClose }: { days: number[]; onClose: () => v
                   {days.map((d) => {
                     const s = w.slots.find((x) => x.day === d && x.period === p.idx);
                     return (
-                      <span key={`${p.idx}-${d}`} style={{ padding: 8, borderRadius: 12, background: s ? 'var(--brand-soft)' : 'var(--s2)', minHeight: 44, font: '600 12px/1.3 var(--fb)' }}>
+                      <span key={`${p.idx}-${d}`} style={{ padding: 8, borderRadius: 14, background: s ? 'var(--vS)' : 'var(--sunk)', minHeight: 44, font: '600 12px/1.3 var(--fb)' }}>
                         {s ? <><b style={{ display: 'block' }}>{s.subjectName}</b>{s.className}{by === 'room' ? ` · ${s.substituteName ?? s.teacherName}` : s.room ? ` · ${s.room}` : ''}</> : ''}
                       </span>
                     );

@@ -1,5 +1,3 @@
-import type { IconName } from './Icon';
-import { Icon } from './Icon';
 import { useEffect, useRef, useState } from 'react';
 import { leavingProps, useLeaving, useReturnFocus } from './Presence';
 import './palette.css';
@@ -12,11 +10,11 @@ export interface PaletteHit {
   keys?: string;
 }
 
-const ICON: Record<string, IconName> = {
-  People: 'person',
-  'Go to': 'timetable',
-  Actions: 'bolt',
-  Schools: 'grid',
+const ICON: Record<string, string> = {
+  People: 'M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M4.5 20c.9-3.8 3.9-6 7.5-6s6.6 2.2 7.5 6',
+  'Go to': 'M3 6h18M3 12h18M3 18h18M9 3v18M15 3v18',
+  Actions: 'M13 3 5 13h6l-1 8 8-10h-6z',
+  Schools: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
 };
 
 export interface PaletteProps {
@@ -44,7 +42,7 @@ export function Palette({ hits, query, onQuery, onPick, onClose, placeholder = '
   return (
     <div className="pal" role="dialog" aria-modal="true" aria-label="Search and commands" onKeyDown={key}>
       <div className="pin">
-        <Icon name="search" />
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path></svg>
         <input ref={ref} value={query} onChange={(e) => onQuery(e.target.value)} placeholder={placeholder} aria-label="Search" />
         <span className="kbd">Esc</span>
       </div>
@@ -52,7 +50,7 @@ export function Palette({ hits, query, onQuery, onPick, onClose, placeholder = '
         <div key={`${p.group}-${p.href}-${i}`} style={{ display: 'contents' }}>
           {(i === 0 || hits[i - 1]!.group !== p.group) && <div className="pg">{p.group}</div>}
           <button className={`po ${i === at ? 'act' : ''}`} onMouseEnter={() => setAt(i)} onClick={() => onPick(p)}>
-            <span className="pic"><Icon name={ICON[p.group] ?? ICON.Actions} /></span>
+            <span className="pic"><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={ICON[p.group] ?? ICON.Actions}></path></svg></span>
             {p.title}
             <small>{p.keys ?? p.hint}</small>
           </button>

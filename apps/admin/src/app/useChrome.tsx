@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardPieces } from '@gradeon/config-engine';
 import { useRouterState } from '@tanstack/react-router';
-import { Dock, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useHue, type DockTab, type PaletteHit, Icon } from '@gradeon/web-ui';
+import { Dock, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useThemeColors, type DockTab, type PaletteHit } from '@gradeon/web-ui';
 import type { ShellData } from '@gradeon/contracts';
 import { activeNav, adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
@@ -36,7 +36,7 @@ export function useChrome() {
   const hits = useQuery({ queryKey: ['search', dq], queryFn: () => api.search(dq), enabled: open, placeholderData: (p) => p });
 
   const data = shell.data;
-  useHue(data?.hue);
+  useThemeColors(data?.theme);
   const groups = useMemo(() => adminNav(data?.menu ?? [], base, data?.badges), [data, base]);
   const targets = useMemo(() => shortcutTargets(groups), [groups]);
   // `N` then a letter starts something new (the dashboard's New menu shows the same keys), from the module definitions.
@@ -78,9 +78,9 @@ export function useChrome() {
   const DOCK_GROUPS = ['Teach', 'People', 'Money', 'Care', 'Reach', 'Campus'];
   const picks = DOCK_GROUPS.map((n) => groups.find((g) => g.name === n)).filter((g) => !!g && g.items.length).slice(0, 2).map((g) => ({ group: g!, item: g!.items[0]! }));
   const dockTabs: DockTab[] = [
-    { id: 'home', label: 'Dashboard', icon: 'home', onPress: () => goRef.current('/') },
+    { id: 'home', label: 'Dashboard', icon: 'M4 11l8-7 8 7v9H4zM9 20v-6h6v6', onPress: () => goRef.current('/') },
     ...picks.map(({ group, item }) => ({ id: group.name, label: item.label, icon: item.icon, onPress: () => goRef.current(item.href.replace(base, '') || '/') })),
-    { id: 'more', label: 'More', icon: 'more', onPress: () => setMore(true) },
+    { id: 'more', label: 'More', icon: 'M5 12h.01M12 12h.01M19 12h.01', onPress: () => setMore(true) },
   ];
   const dockActive = active === 'dash' ? 'home' : picks.find((p) => p.group.items.some((i) => i.id === active))?.group.name ?? 'more';
 
@@ -94,8 +94,8 @@ export function useChrome() {
         <div className="sbc">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--fb)', color: 'var(--ink2)' }}>{data.term.name && <span className="chip a">{data.term.name}</span>}{data.term.examsLabel}</div>
           <div className="fd" style={{ fontSize: 22, letterSpacing: '-.03em' }}>{data.term.daysToGo === 0 ? 'Starts today' : `${data.term.daysToGo} ${data.term.daysToGo === 1 ? 'day' : 'days'} to go`}</div>
-          <div style={{ height: 10, borderRadius: 7, background: 'var(--s2)' }}><div style={{ width: `${data.term.progress}%`, height: '100%', borderRadius: 7, background: 'var(--brand)' }} /></div>
-          {has('ex') && <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>See the exam schedule<Icon name="next" /></button>}
+          <div style={{ height: 10, borderRadius: 6, background: 'var(--sunk)' }}><div style={{ width: `${data.term.progress}%`, height: '100%', borderRadius: 6, background: 'var(--v)' }} /></div>
+          {has('ex') && <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => goRef.current('/exams')}>See the exam schedule<svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M5 12h14M13 6l6 6-6 6"></path></svg></button>}
         </div>
       )}
       me={{ initials: user.initials, name: user.name, role: user.roleNames.length > 1 ? `${user.roleNames[0]} and ${user.roleNames.length - 1} more` : user.roleNames[0] ?? 'Staff', bg: t.bg, fg: t.fg }}
@@ -115,7 +115,7 @@ export function useChrome() {
               <div className="sl">{g.name}</div>
               {g.items.map((n) => (
                 <a key={n.id} className={`nvm ${n.id === active ? 'on' : ''}`} href={n.href} onClick={(e) => { e.preventDefault(); setMore(false); goRef.current(base && n.href.startsWith(base) ? n.href.slice(base.length) || '/' : n.href); }}>
-                  <Icon name={n.icon} />{n.label}
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={n.icon}></path></svg>{n.label}
                 </a>
               ))}
             </div>

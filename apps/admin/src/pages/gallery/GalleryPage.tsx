@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { uploadFile } from '@gradeon/api-client';
 import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
-import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, FilePick, Panel, Presence, SelectField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, StudentPick, problem, stamp } from '../../app/kit';
@@ -11,8 +11,8 @@ import { AddBtn, StudentPick, problem, stamp } from '../../app/kit';
 function Photo({ id, alt }: { id: string; alt: string }) {
   const app = useApp();
   const q = useQuery({ queryKey: ['file-url', id], queryFn: () => app.api.files.url(id), staleTime: 4 * 60_000 });
-  return q.data ? <img src={q.data.url} alt={alt} loading="lazy" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 12, display: 'block', background: 'var(--s2)' }} />
-    : <div className="skc" style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 12 }} />;
+  return q.data ? <img src={q.data.url} alt={alt} loading="lazy" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 14, display: 'block', background: 'var(--sunk)' }} />
+    : <div className="skc" style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 14 }} />;
 }
 
 export function GalleryPage() {
@@ -34,12 +34,14 @@ export function GalleryPage() {
       </>}>
       <Reported say={say} />
       {!list.length ? (
-        <div><EmptyState scene="gallery" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
+        <div><EmptyCard title="Gallery" chip={{ text: '0 albums', tone: 'v' }} scene="noticeboard" heading="No albums yet"
+          body="Make an album for sports day or a class trip, add photos, tag the children in them, then share it. Families who agreed to photos see it in the app."
+          actions={canWrite ? <AddBtn onClick={() => setEdit('new')}>New album</AddBtn> : undefined} /></div>
       ) : (
         <section className="grid" data-even="">
           {list.map((a, i) => (
             <button key={a.id} className="card s4 rise" onClick={() => setOpen(a)} style={{ '--d': `${Math.min(i, 8) * 0.04}s`, textAlign: 'left', cursor: 'pointer', border: 0, font: 'inherit', color: 'inherit' } as React.CSSProperties} aria-label={`Open ${a.title}`}>
-              {a.coverFileId ? <Photo id={a.coverFileId} alt={a.title} /> : <div style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 12, background: 'var(--s2)', display: 'grid', placeItems: 'center' }} className="help">No photos yet</div>}
+              {a.coverFileId ? <Photo id={a.coverFileId} alt={a.title} /> : <div style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 14, background: 'var(--sunk)', display: 'grid', placeItems: 'center' }} className="help">No photos yet</div>}
               <div className="ch" style={{ marginTop: 12 }}><h2 style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</h2><span className={`chip ${a.published ? 'g' : ''}`}>{a.published ? 'Shared' : 'Draft'}</span></div>
               <div className="help" style={{ marginTop: 4 }}>{a.className ?? 'Whole school'} · {a.photos} {a.photos === 1 ? 'photo' : 'photos'} · {stamp(a.createdAt)}</div>
             </button>
@@ -77,10 +79,10 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
       <div className="dh">
         <div className="dtop">
           <div style={{ minWidth: 0 }}>
-            <div className="fd" style={{ fontSize: 30, letterSpacing: '-.03em', lineHeight: 1.1 }}>{album.title}</div>
+            <div className="fd" style={{ fontSize: 28, letterSpacing: '-.03em', lineHeight: 1.1 }}>{album.title}</div>
             <div className="help" style={{ marginTop: 4 }}>{album.className ?? 'Whole school'} · {list.length} {list.length === 1 ? 'photo' : 'photos'}</div>
           </div>
-          <button className="xbtn" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
+          <button className="xbtn" aria-label="Close" onClick={onClose}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path className="i" d="M6 6l12 12M18 6 6 18"></path></svg></button>
         </div>
         {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <FilePick accept="image/jpeg,image/png,image/webp" multiple className="btn sm pri" disabled={add.isPending} onPickAll={(files) => add.mutate(files)}>{add.isPending ? 'Uploading…' : 'Add photos'}</FilePick>
@@ -90,7 +92,7 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
       </div>
       <div className="db">
         {hidden > 0 && <div className="chip a" role="status" style={{ height: 'auto', padding: '8px 12px', whiteSpace: 'normal', lineHeight: 1.4 }}>{hidden} {hidden === 1 ? 'photo has' : 'photos have'} a child whose family has not agreed to photos: families will not see {hidden === 1 ? 'it' : 'them'}.</div>}
-        {photos.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} /> : !list.length ? <div className="help">No photos yet. Add the first one.</div> : (
+        {photos.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 18 }} /> : !list.length ? <div className="help">No photos yet. Add the first one.</div> : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 }}>
             {list.map((p) => (
               <div key={p.id}>

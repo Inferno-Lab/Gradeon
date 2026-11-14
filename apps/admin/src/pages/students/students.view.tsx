@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState } from "@gradeon/web-ui";
+import { Illustration, Roll, PageScope, Presence, Segmented, Panel } from "@gradeon/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {
@@ -16,15 +16,21 @@ export function StudentsView({ v }: { v: any }) {
           <span className="grow"></span>
           {v.tabs}
           <button className="btn" onClick={v.openImport}>
-            <Icon name="upload" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path className="i" d="M12 20V9M7 14l5-5 5 5M5 4h14"></path>
+            </svg>
             Import
           </button>
           <button className="btn" onClick={v.exportAll}>
-            <Icon name="download" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path className="i" d="M12 4v11M7 10l5 5 5-5M5 20h14"></path>
+            </svg>
             Export
           </button>
           <button className="btn pri" onClick={v.openAdd}>
-            <Icon name="plus" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path className="i" d="M12 5v14M5 12h14"></path>
+            </svg>
             Add student
           </button>
         </header>
@@ -79,7 +85,9 @@ export function StudentsView({ v }: { v: any }) {
           <div className="tcap">
             <h2>{v.title}</h2>
             <div className="srch" style={{ minWidth: "280px", height: "38px" } as CSSProperties}>
-              <Icon name="search" />
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path className="i" d="M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2"></path>
+              </svg>
               <input
                 value={v.q}
                 onChange={v.onQ}
@@ -105,11 +113,15 @@ export function StudentsView({ v }: { v: any }) {
               <div className="gmin">
               <div className="grd th" style={{ "--cols": v.cols } as CSSProperties} role="row">
                 <button className={`cb ${v.allOn ?? ""}`} role="checkbox" aria-checked={v.allSel} aria-label="Select all" onClick={v.toggleAll}>
-                  <Icon name="check" />
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
+                  </svg>
                 </button>
                 <button type="button" className="sortb" aria-sort={v.dir === "asc" ? "ascending" : "descending"} data-tip="Sort by name" onClick={v.flipSort} style={{ border: "0", background: "none", font: "inherit", color: "inherit", cursor: "pointer", padding: "0" } as CSSProperties}>
                   Student
-                  <Icon name={v.dir === "asc" ? 'caretDown' : 'caretUp'} />
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path className="i" d={v.dir === "asc" ? "M8 14l4 4 4-4" : "M8 10l4-4 4 4"}></path>
+                  </svg>
                 </button>
                 <span>Class</span>
                 <span>Guardian</span>
@@ -127,7 +139,9 @@ export function StudentsView({ v }: { v: any }) {
                     onKeyDown={r.key}
                   >
                     <button className={`cb ${r.cbOn ?? ""}`} role="checkbox" aria-checked={r.checked} aria-label={`Select ${r.n ?? ""}`} onClick={r.toggle}>
-                      <Icon name="check" />
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path className="i" d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeWidth: "3" } as CSSProperties}></path>
+                      </svg>
                     </button>
                     <div className="who">
                       <span className="av" style={{ background: r.bg, color: r.fg, boxShadow: "none" } as CSSProperties}>
@@ -152,7 +166,9 @@ export function StudentsView({ v }: { v: any }) {
                       ))}
                     </span>}
                     {v.has.fees && <span className={`fs ${r.fcls ?? ""} ${r.pp ?? ""}`}>
-                      <Icon name={r.fic} size={14} />
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path className="i" d={r.fic} style={{ strokeWidth: "2.2" } as CSSProperties}></path>
+                      </svg>
                       {r.fees}
                     </span>}
                   </div>
@@ -174,15 +190,16 @@ export function StudentsView({ v }: { v: any }) {
               </div>
             </>
           )}
-          {v.noRows && v.emptySchool && <EmptyState scene="students" onAction={v.empty.act} onLink={v.empty.act2} />}
-          {v.noRows && !v.emptySchool && (
+          {v.noRows && (
             <>
               <div className="empt">
-                <span className="emic"><Icon name="search" size={24} /></span>
+                <div style={{ width: "190px" } as CSSProperties}>
+                  <Illustration scene={v.empty.scene} />
+                </div>
                 <b className="fd" style={{ fontSize: "22px", letterSpacing: "-.025em" } as CSSProperties}>
                   {v.empty.title}
                 </b>
-                <span className="m2" style={{ font: "400 14px var(--fb)" } as CSSProperties}>
+                <span className="m2" style={{ font: "500 14px var(--fb)" } as CSSProperties}>
                   {v.empty.body}
                 </span>
                 <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap", justifyContent: "center" } as CSSProperties}>
@@ -208,25 +225,35 @@ export function StudentsView({ v }: { v: any }) {
           selected
         </span>
         <button className="bk" onClick={v.bulkMessage}>
-          <Icon name="messages" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M4 5h16v11H9l-5 4z"></path>
+          </svg>
           Message
         </button>
         <button className="bk" onClick={v.bulkInvite}>
-          <Icon name="mobile" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2"></path>
+          </svg>
           Invite to app
         </button>
         {v.has.fees && (
         <button className="bk" onClick={v.bulkFee}>
-          <Icon name="fees" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17V3.5M3 8.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5a2 2 0 0 0-2-2H3"></path>
+          </svg>
           Assign fee
         </button>
         )}
         <button className="bk" onClick={v.bulkExport}>
-          <Icon name="download" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M12 4v11M7 10l5 5 5-5M5 20h14"></path>
+          </svg>
           Export
         </button>
         <button className="bk" onClick={v.clear} aria-label="Clear selection">
-          <Icon name="close" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path className="i" d="M6 6l12 12M18 6 6 18"></path>
+          </svg>
         </button>
       </div>
       <Presence>{v.dialog}</Presence>
@@ -246,7 +273,9 @@ export function StudentsView({ v }: { v: any }) {
                   </div>
                 </div>
                 <button className="xbtn" aria-label="Close" onClick={v.close}>
-                  <Icon name="close" size={20} />
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path className="i" d="M6 6l12 12M18 6 6 18"></path>
+                  </svg>
                 </button>
               </div>
               {v.left && (
@@ -294,7 +323,7 @@ export function StudentsView({ v }: { v: any }) {
                 <h3 style={{ display: "flex", alignItems: "center", gap: "8px" } as CSSProperties}>Guardians{v.may.edit && <button className="btn sm" style={{ marginLeft: "auto" } as CSSProperties} onClick={v.editGuardians}>Change</button>}</h3>
                 {v.guardians.map((g: any, $i: number) => (
                 <div className="g" key={$i} style={{ marginTop: $i ? "8px" : "0" } as CSSProperties}>
-                  <span className="av" style={{ background: "var(--s1)", color: "var(--ink2)", boxShadow: "none" } as CSSProperties}>
+                  <span className="av" style={{ background: "var(--card)", color: "var(--ink2)", boxShadow: "none" } as CSSProperties}>
                     {g.ini}
                   </span>
                   <div style={{ flex: "1", minWidth: "0" } as CSSProperties}>

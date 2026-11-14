@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { EmptyState } from '@gradeon/web-ui';
+import { EmptyCard } from '@gradeon/web-ui';
 import type { MigrationRow } from '@gradeon/contracts';
 import { Card, Page } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -17,7 +17,7 @@ export function MigrationsTab({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Releases" sub="Database changes, and which schools have them. Each school’s database is changed on its own." actions={tabs} loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
       {rows.length === 0 ? (
-        <div><EmptyState scene="migrations" onAction={() => app.go('/releases')} /></div>
+        <div><EmptyCard title="Database changes" chip={{ text: 'None', tone: 'v' }} scene="notebooks" heading="No database changes recorded" body="Once a school’s database is created, the changes applied to it are listed here, newest first." /></div>
       ) : rows.map((m) => {
         const applied = m.schools.filter((s) => s.state === 'applied').length;
         const bad = m.schools.filter((s) => s.state === 'failed');
