@@ -64,8 +64,9 @@
 .nest .admo small{display:block;font:600 12px var(--fb);color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .nest .rpg{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px;align-items:start}
-.nest .rpl{padding:16px;display:flex;flex-direction:column;gap:12px;max-height:min(72dvh,720px);overflow-y:auto}
-@media (max-width:900px){.nest .rpg{grid-template-columns:minmax(0,1fr)}.nest .rpl{max-height:none;flex-direction:row;overflow-x:auto;overflow-y:hidden}.nest .rpl>div{display:flex;gap:8px;flex:none}.nest .rpl .lbl{display:none}.nest .rpb{width:220px;flex:none}}
+/* The report index keeps its own height whichever report is open, and stays in view while a long one scrolls. */
+.nest .rpl{padding:16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow-y:auto}
+@media (max-width:900px){.nest .rpg{grid-template-columns:minmax(0,1fr)}.nest .rpl{position:static;max-height:none;flex-direction:row;overflow-x:auto;overflow-y:hidden}.nest .rpl>div{display:flex;gap:8px;flex:none}.nest .rpl .lbl{display:none}.nest .rpb{width:220px;flex:none}}
 
 .nest .msg{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:16px;align-items:stretch}
 .nest .msl,.nest .mst{overflow:hidden}

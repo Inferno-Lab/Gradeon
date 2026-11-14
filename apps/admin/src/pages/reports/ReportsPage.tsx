@@ -59,8 +59,8 @@ export function ReportsPage() {
       {(list?.length ?? 0) === 0 ? (
         <div><EmptyState scene="reports" onAction={() => app.go('/attendance')} onLink={() => app.go('/fees')} /></div>
       ) : (
-        <section className="rpg" data-even="fill">
-          <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">
+        <section className="rpg">
+          <nav className="card rpl rise" aria-label="Reports">
             {list!.map((r) => (
               <button key={r.id} className={`rpb ${r.id === pick ? 'on' : ''}`} aria-current={r.id === pick} onClick={() => open(r.id)}><b>{r.title}</b><small>{r.blurb}</small></button>
             ))}
