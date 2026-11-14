@@ -152,7 +152,7 @@ font:400 15px/22px var(--fb);color:var(--ink);background:var(--deep);-webkit-fon
 /* motion helpers */
 /* Content arriving: a short rise, the stagger capped so a long page is never kept waiting. */
 .nest .rise{animation:nRise var(--t3) var(--e) both;animation-delay:min(calc(var(--d,0s) * .4),.1s)}
-@keyframes nRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes nRise{from{opacity:0}to{opacity:1}}
 @keyframes nFade{from{opacity:0}to{opacity:1}}
 @keyframes nFadeO{to{opacity:0}}
 /* A bar filling to its value (progress bars). */

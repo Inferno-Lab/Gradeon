@@ -1,0 +1,96 @@
+/* Gradeon Hue, finished (12 Nov). Precision over decoration, as premium panels do it (Linear, Vercel, Stripe):
+   - a neutral frame with the work in one light panel edged by a hairline,
+   - cards on a 12px radius with a hairline and at most a 1px shadow; no gradients, no glows, no floating,
+   - type at normal width and semibold, sized for reading, not shouting,
+   - the school's colour only where it means something: the main button, the chosen item, focus, data.
+   Loaded last, it retunes every page (boarded or not) without touching layout. Colours are tokens; motion uses --t1..3. */
+/* Declared on every scope that switches theme: a variable built from others is resolved where it is declared. */
+.nest,.nest .dark{
+  --r-card:12px;--r-ctl:8px;--r-pop:12px;
+  --hair:0 0 0 1px var(--line);
+  --sh-card:0 1px 2px color-mix(in srgb,var(--deep) 5%,transparent);
+  --sh-pop:0 1px 2px color-mix(in srgb,var(--deep) 6%,transparent),0 12px 32px -8px color-mix(in srgb,var(--deep) 18%,transparent);
+  /* Chart columns: the day that matters in the brand colour, the rest its quiet line colour (FeesPage). */
+  --bar-up:var(--brand);--bar-soft:var(--brand-line)
+}
+.nest.dark,.nest .dark{--hair:0 0 0 1px var(--line2);--sh-card:0 0 0 0 transparent;--sh-pop:0 0 0 1px var(--line2),0 16px 40px -8px color-mix(in srgb,var(--bg) 90%,transparent)}
+
+/* ── Type: normal width, semibold, smaller display sizes. ─────────────────────────────────────────────────────────────── */
+.nest .fd,.nest h1,.nest h2,.nest h3,.nest .hb .d,.nest .hb .fig,.nest .hb .top h1,.nest .hb .ch h2,.nest .hb .ph2,.nest .ws b,.nest .hb .ws b{font-stretch:100%}
+.nest .hd h1,.nest .hb .top h1{font:600 24px/32px var(--fd);letter-spacing:-.02em}
+.nest .hd p,.nest .hb .top p{font-size:14px;color:var(--ink3)}
+.nest .hb .ch h2,.nest .ch h2,.nest .card h2{font-weight:600;font-size:15px;line-height:22px;letter-spacing:-.005em}
+.nest .hb .ph2{font-weight:600;font-size:16px}
+.nest .hb .fig{font-weight:600;font-size:40px!important;line-height:1.1;letter-spacing:-.03em}
+.nest .hb .d{font-weight:600;letter-spacing:-.025em}
+.nest .hb .card b.d[style*="font-size: 40"],.nest .hb .card b.d[style*="font-size:40"]{font-size:30px!important;line-height:36px!important}
+.nest .hb .lbl,.nest .lbl{font-weight:500;color:var(--ink3)}
+.nest .ws b{font-weight:600;font-size:14px}
+
+/* ── Frame: a neutral rail, the work in one light panel edged by a hairline. ─────────────────────────────────────────── */
+.nest .fr{background:var(--bg)}
+.nest .sb{background:transparent;color:var(--ink);padding:8px 8px 4px 4px}
+.nest .ws small,.nest .sl{color:var(--ink3)}
+.nest .sl{font-weight:500;font-size:12px}
+.nest .wsw{background:var(--s1);color:var(--ink);box-shadow:var(--hair),var(--sh-card);border-radius:10px}
+.nest .colb{color:var(--ink3);border-radius:var(--r-ctl)}
+.nest .colb:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}
+.nest .lg{border-radius:9px;font-stretch:100%}
+.nest .nv{height:32px;border-radius:var(--r-ctl);color:var(--ink2);font-size:14px;transition:background var(--t1),color var(--t1)}
+.nest .nv>svg{width:18px;height:18px;color:var(--ink3)}
+.nest .nv:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}
+.nest .nv:active{transform:none}
+.nest .nv.on{background:var(--s1);color:var(--ink);font-weight:500;box-shadow:var(--hair),var(--sh-card)}
+.nest .nv.on>svg{color:var(--brand)}
+.nest .nv .ct{background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink2);border-radius:6px;height:20px;font-weight:500}
+.nest .nv.on .ct{background:var(--brand-soft);color:var(--brand-ink)}
+.nest .nv .kb{color:var(--ink3)}
+.nest .sbc{background:var(--s1);color:var(--ink);box-shadow:var(--hair);border-radius:var(--r-card)}
+.nest .me{color:var(--ink)}
+.nest .mebtn{background:transparent;border-radius:10px}
+.nest .mebtn:hover,.nest .mebtn[aria-expanded=true]{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.nest .sb.col .nv .ct{box-shadow:0 0 0 2px var(--bg)}
+.nest .mn{background:var(--s1);border-radius:var(--r-card);box-shadow:var(--hair),var(--sh-card)}
+.nest:has(>.fr),.nest>.fr{background:var(--bg)}
+/* The account row stays pinned at the foot of a long menu, on the rail's own colour with a hairline above. */
+.nest .app>.sb .me{background:var(--bg)!important;box-shadow:0 -1px 0 var(--line)!important}
+.nest .me .av{box-shadow:var(--hair)}
+.nest .hb .main{background:transparent}
+
+/* ── Surfaces: a hairline and a whisper of shadow; nothing floats. ────────────────────────────────────────────────────── */
+.nest .card,.nest .hb .card,.nest .hb .pcard,.nest .es,.nest .tcard,.nest .pan,.nest .sxl{border-radius:var(--r-card);box-shadow:var(--hair),var(--sh-card)}
+.nest .hb .card{padding:20px;gap:14px}
+.nest .card .card,.nest .card .es{box-shadow:none}
+.nest .hb .mcard{background:var(--s1);border-radius:10px;box-shadow:var(--hair)}
+.nest .hb .card.deep,.nest .hb .pcard.deep{border-radius:var(--r-card);box-shadow:none}
+.nest .dlg,.nest .drw,.nest .popm,.nest .pvr,.nest .sxp{border-radius:var(--r-pop);box-shadow:var(--hair),var(--sh-pop)}
+.nest .toast,.nest .bulk,.nest .save{border-radius:10px}
+/* A tinted card is a plain card whose label carries the colour's dot (the class names it: tint sp-rose…). */
+.nest .tint .lbl::before,.nest .hb .tint .lbl::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:8px;vertical-align:1px}
+
+/* ── Controls: 36px, 8px corners, hairline outlines; the brand colour only on the main action. ───────────────────────── */
+.nest .btn,.nest .hb .btn{height:36px;border-radius:var(--r-ctl);font-weight:500;padding:0 14px;box-shadow:inset 0 0 0 1px var(--line2),var(--sh-card);transition:background var(--t1),box-shadow var(--t1),color var(--t1)}
+.nest .btn svg,.nest .hb .btn svg{width:16px;height:16px}
+.nest .btn.pri,.nest .hb .btn.pri{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 80%,var(--ink)),var(--sh-card)}
+.nest .btn.pri:hover,.nest .hb .btn.pri:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand-h) 80%,var(--ink)),var(--sh-card)}
+.nest .btn.ghost,.nest .btn.quiet,.nest .hb .btn.quiet,.nest .btn.ton,.nest .hb .btn.ton,.nest .btn.dng,.nest .btn.bri,.nest .hb .btn.bri,.nest .hb .btn.ond{box-shadow:none}
+.nest .btn.sm,.nest .hb .btn.sm{height:30px;padding:0 10px;font-size:13px}
+.nest .hb .btn.lg,.nest .hb .btn.xl{height:40px;border-radius:var(--r-ctl);font-size:14px}
+.nest .inp,.nest .srch,.nest .hb .search,.nest .sel{border-radius:var(--r-ctl)}
+.nest .inp{height:36px}
+.nest .srch,.nest .hb .search{height:36px;box-shadow:inset 0 0 0 1px var(--line2);background:var(--s1)}
+.nest .inp:focus-within,.nest .srch:focus-within{box-shadow:inset 0 0 0 1px var(--brand),0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
+.nest :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.nest .seg,.nest .hb .seg{border-radius:10px;background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.nest .hb .seg button,.nest .hb .seg span,.nest .seg button{height:28px;border-radius:7px;font-weight:500}
+.nest .hb .seg [aria-pressed=true],.nest .hb .seg .on,.nest .seg .kn{box-shadow:var(--hair),var(--sh-card)}
+.nest .tag,.nest .hb .tag,.nest .chip{border-radius:6px;font-weight:500}
+
+/* ── Tables: quiet header, 48px rows, a faint hover. ──────────────────────────────────────────────────────────────────── */
+.nest .hb .trow{min-height:48px}
+.nest .hb .trow.h{min-height:36px;font-weight:500;color:var(--ink3);background:color-mix(in srgb,var(--ink) 2.5%,transparent)}
+.nest .rw:hover,.nest .tbl .grd.rw:hover,.nest .hb .trow:not(.h):hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+
+/* ── Motion: short fades only; nothing lifts, bounces or staggers across the page. ─────────────────────────────────────── */
+.nest .btn:not([disabled]):active,.nest .ibtn:active,.nest .mini:active{transform:none}
+.nest .rise{animation-duration:var(--t2)}
