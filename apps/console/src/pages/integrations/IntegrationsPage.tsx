@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -601,12 +601,13 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
   const [school, setSchool] = useState('');
   const msgs = useQuery({ queryKey: ['sandbox', school], queryFn: () => app.api.sandbox(school || undefined), refetchInterval: 6000 });
   const rows = msgs.data ?? [];
+  const [shown, more] = useMore(rows);
   return (
     <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
       {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} />
         : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
-          : rows.map((m) => (
-            <div key={m.id} className="kv" style={{ alignItems: 'flex-start' }}>
+          : <>{shown.map((m) => (
+            <div key={m.id} className="kv" style={{ alignItems: 'flex-start', height: 'auto', padding: '12px 0' }}>
               <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>
                 <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--brand-soft)', color: 'var(--brand-ink)' }}>
                   <Icon name={ICON[m.channel] ?? ICON.sms} size={16} />
@@ -619,7 +620,7 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
               </span>
               <b style={{ whiteSpace: 'nowrap', color: 'var(--ink3)' }}>{ago(m.createdAt)}</b>
             </div>
-          ))}
+          ))}{more}</>}
     </Card>
   );
 }
