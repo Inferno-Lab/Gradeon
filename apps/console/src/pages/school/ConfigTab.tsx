@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
 import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueContrast, hueOf, hueTokens } from '@gradeon/contracts';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon } from '@gradeon/web-ui';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
@@ -112,7 +112,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
 
       <div className={`card s9 rise ${shake.cls}`}>
         <div className="ch"><h2>{needle ? `Settings matching “${find.trim()}”` : groupLabel(group)}</h2></div>
-        {keys.length === 0 && <div className="help">{needle ? 'No setting matches.' : 'No settings here.'}</div>}
+        {keys.length === 0 && <div style={{ marginTop: 12 }}><EmptyNote icon={needle ? 'search' : 'setup'} title={needle ? `No setting matches “${find.trim()}”` : 'No settings here'} body={needle ? 'Search by what the setting does, like “late fee” or “holidays”.' : 'This group has nothing to set for this school.'} /></div>}
         {keys.map((k) => (
           <div key={k}>
             {needle && <div className="lbl" style={{ marginTop: 12 }}>{groupLabel(SETTINGS_META[k].group)}</div>}

@@ -216,6 +216,7 @@ function Schools({ say }: { say: Say }) {
             ))}
           </div>
         </div>
+        {!rows.length && <div style={{ padding: '4px 20px 20px' }}><EmptyNote icon="search" title={find.trim() ? `No school matches “${find.trim()}”` : 'No school on this plan'} body={find.trim() ? 'Search by the school’s name.' : 'Choose another plan, or every plan.'} /></div>}
       </Card>
     </>
   );
