@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { PublicStatus } from '@gradeon/contracts';
-import { useTheme, Icon } from '@gradeon/web-ui';
+import { useTheme, Icon, EmptyNote } from '@gradeon/web-ui';
 
 const TEXT = { ok: 'Everything is working', degraded: 'Some things are slow', down: 'Something is down' } as const;
 const TONE = { ok: 'g', degraded: 'a', down: 'c' } as const;
@@ -29,7 +29,7 @@ export function StatusBoard() {
             <section className="card">
               <div className="ch"><h2>Schools</h2><span className={`chip ${TONE[s.state]}`}>{s.schools.length}</span></div>
               <div className="lscroll" style={{ maxHeight: 360, marginTop: 8 }}>
-                {s.schools.length === 0 && <div className="help">No schools are set up yet.</div>}
+                {s.schools.length === 0 && <EmptyNote icon="fleet" title="No schools are set up yet" body="Each school shows here with whether it is answering." />}
                 {s.schools.map((x) => <div className="kv" key={x.name}><span>{x.name}</span><b><span className={`st ${TONE[x.state]}`}><i></i>{WORD[x.state]}</span></b></div>)}
               </div>
             </section>
