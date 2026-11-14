@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useToast, EmptyState, useMore } from '@gradeon/web-ui';
+import { useToast, EmptyState, useMore } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page } from '../../app/Page';
 

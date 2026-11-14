@@ -2,27 +2,27 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/dock.dart';
-import 'package:gradeon/core/widgets/lazy_stack.dart';
-import 'package:gradeon/features/auth/views/welcome_overlay.dart';
-import 'package:gradeon/features/chat/controllers/chat_controller.dart';
-import 'package:gradeon/features/chat/views/chat_list_view.dart';
-import 'package:gradeon/features/dashboard/views/academics_view.dart';
-import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
-import 'package:gradeon/features/driver/views/driver_view.dart';
-import 'package:gradeon/features/events/views/events_view.dart';
-import 'package:gradeon/features/fees/views/fees_view.dart';
-import 'package:gradeon/features/gallery/views/gallery_view.dart';
-import 'package:gradeon/features/homework/views/homework_view.dart';
-import 'package:gradeon/features/library/views/library_view.dart';
-import 'package:gradeon/features/notices/views/notices_view.dart';
-import 'package:gradeon/features/profile/views/profile_view.dart';
-import 'package:gradeon/features/shell/shell_controller.dart';
-import 'package:gradeon/features/teacher_tools/views/teacher_home_view.dart';
-import 'package:gradeon/features/timetable/views/timetable_view.dart';
-import 'package:gradeon/features/transport/views/transport_view.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/dock.dart';
+import 'package:tangent/core/widgets/lazy_stack.dart';
+import 'package:tangent/features/auth/views/welcome_overlay.dart';
+import 'package:tangent/features/chat/controllers/chat_controller.dart';
+import 'package:tangent/features/chat/views/chat_list_view.dart';
+import 'package:tangent/features/dashboard/views/academics_view.dart';
+import 'package:tangent/features/dashboard/views/dashboard_view.dart';
+import 'package:tangent/features/driver/views/driver_view.dart';
+import 'package:tangent/features/events/views/events_view.dart';
+import 'package:tangent/features/fees/views/fees_view.dart';
+import 'package:tangent/features/gallery/views/gallery_view.dart';
+import 'package:tangent/features/homework/views/homework_view.dart';
+import 'package:tangent/features/library/views/library_view.dart';
+import 'package:tangent/features/notices/views/notices_view.dart';
+import 'package:tangent/features/profile/views/profile_view.dart';
+import 'package:tangent/features/shell/shell_controller.dart';
+import 'package:tangent/features/teacher_tools/views/teacher_home_view.dart';
+import 'package:tangent/features/timetable/views/timetable_view.dart';
+import 'package:tangent/features/transport/views/transport_view.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ShellView extends StatefulWidget {
@@ -42,7 +42,7 @@ class _ShellViewState extends State<ShellView> {
     return Obx(() {
       final unread = chat.unread.value;
       final tabs = _tabsFor(controller.isTeacher, driver: controller.isDriver);
-      // Each role gets the tabs Gradeon set for it at this school (console → The app → What each role sees), Profile always last.
+      // Each role gets the tabs Tangent set for it at this school (console → The app → What each role sees), Profile always last.
       final keys = [...SchoolConfig.dock.where((k) => k != 'profile' && tabs.containsKey(k)), 'profile'];
       controller.tabs = keys;
       final items = [

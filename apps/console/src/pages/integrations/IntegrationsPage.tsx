@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
+import { HttpError } from '@tangent/api-client';
 import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
-} from '@gradeon/contracts';
-import { Checkbox, Dialog, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@gradeon/web-ui';
+} from '@tangent/contracts';
+import { Checkbox, Dialog, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@tangent/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -20,7 +20,7 @@ const DELIVERY: Record<DeliveryRow['status'], string> = { queued: 'a', held: 'v'
 const ROUTE_FIELDS: Partial<Record<Capability, { key: string; label: string; placeholder: string }[]>> = {
   sms: [{ key: 'senderId', label: 'Sender ID for this route', placeholder: 'GRNFLD' }],
   email: [{ key: 'from', label: 'From address for this route', placeholder: 'Your School <office@yourschool.org>' }],
-  storage: [{ key: 'prefix', label: 'Folder prefix in the bucket', placeholder: 'gradeon/' }],
+  storage: [{ key: 'prefix', label: 'Folder prefix in the bucket', placeholder: 'tangent/' }],
 };
 const MESSAGE_KEYS = [...SYSTEM_MESSAGES.map((m) => ({ key: m.key, label: m.label, text: m.text })), ...MESSAGE_EVENTS.map((m) => ({ key: m.key, label: m.label, text: m.text }))];
 
@@ -122,7 +122,7 @@ function Connections({ v, write, busy, onEdit, onTest, onDelete, onAct, onAdd }:
             return (
               <Card key={c.id} span="s6" title={c.name} chip={<><span className="chip v">{CAPABILITY_LABELS[g.cap]}</span><span className={`chip ${st.tone}`}>{st.text}</span></>}>
                 <div className="kv">Provider<b>{def?.name ?? c.provider}</b></div>
-                <div className="kv">Serves<b style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={c.schoolName ?? 'Every school without its own'}>{c.scope === 'platform' ? 'Gradeon-wide' : c.schoolName}</b></div>
+                <div className="kv">Serves<b style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={c.schoolName ?? 'Every school without its own'}>{c.scope === 'platform' ? 'Tangent-wide' : c.schoolName}</b></div>
                 <div className="kv">Health<b className={`st ${c.health.ok === null ? '' : c.health.ok ? 'g' : 'c'}`} data-tip={c.health.error ?? undefined} style={{ minWidth: 0 }}>
                   <i></i>{c.health.ok === null ? 'Not tested yet' : c.health.ok ? `Healthy · ${ago(c.health.checkedAt)}` : `Failing · ${ago(c.health.checkedAt)}`}</b></div>
                 {c.health.ok === false && c.health.error && <div className="help" style={{ padding: '0 0 8px', overflowWrap: 'anywhere' }}>{c.health.error}</div>}
@@ -262,10 +262,10 @@ function ConnectionDialog({ c: initial, schools, onClose, onDone }: { c?: Connec
           </div>
           <Field label="Name" value={name} onChange={(x) => { setName(x); setErr((e) => ({ ...e, name: '' })); }} error={err.name} placeholder={def ? `${def.name} for every school` : ''} />
           {!platformOnly && <>
-            <Segmented label="Who it serves" value={scope} onChange={setScope} options={[{ value: 'platform', label: 'Every school (Gradeon-wide)' }, { value: 'school', label: 'One school' }]} />
+            <Segmented label="Who it serves" value={scope} onChange={setScope} options={[{ value: 'platform', label: 'Every school (Tangent-wide)' }, { value: 'school', label: 'One school' }]} />
             {scope === 'school' && <SelectField label="School" value={schoolId} onChange={setSchoolId} error={err.schoolId} options={schools.map((s) => ({ value: s.id, label: s.name }))} />}
           </>}
-          {platformOnly && <div className="help">Gradeon itself uses this, so it serves every school.</div>}
+          {platformOnly && <div className="help">Tangent itself uses this, so it serves every school.</div>}
           {def && <div className="help">Next: the {def.steps.length} steps to get each value from {def.name}, beside the form.</div>}
           {err._ && <div className="emsg" role="alert">{err._}</div>}
         </div>
@@ -355,10 +355,10 @@ function Routing({ v, schools, write, onEdit }: { v: IntegrationsView; schools: 
   const [school, setSchool] = useState('');
   return (
     <Card title="Which connection serves what" style={{ padding: 0 }}>
-      <div className="help" style={{ padding: '0 20px 8px' }}>A school’s own route wins; otherwise the Gradeon default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
+      <div className="help" style={{ padding: '0 20px 8px' }}>A school’s own route wins; otherwise the Tangent default serves it; with neither, the Test inbox stands in (sandbox mode only). When the connection fails, its fallback is tried.</div>
       {write && <div style={{ padding: '0 20px 12px', maxWidth: 380 }}><SelectField label="Give a school its own route" value={school} onChange={setSchool} options={[{ value: '', label: 'Choose a school…' }, ...schools.map((s) => ({ value: s.id, label: s.name }))]} /></div>}
       <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
-        <div className="grd th" style={{ '--cols': '160px minmax(0,1fr) minmax(0,1.4fr)' } as React.CSSProperties}><span>Capability</span><span>Gradeon default</span><span>Schools with their own</span></div>
+        <div className="grd th" style={{ '--cols': '160px minmax(0,1fr) minmax(0,1.4fr)' } as React.CSSProperties}><span>Capability</span><span>Tangent default</span><span>Schools with their own</span></div>
         {caps.map((k) => {
           const def = v.routes.find((r) => r.capability === k && !r.schoolId);
           const own = v.routes.filter((r) => r.capability === k && r.schoolId);
@@ -390,7 +390,7 @@ function RouteDialog({ view, schools, capability, schoolId, route, onClose, onDo
   const [fallback, setFallback] = useState(route?.fallbackId ?? '');
   const [settings, setSettings] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(route?.settings ?? {}).map(([k, x]) => [k, String(x)])));
   const [err, setErr] = useState<Record<string, string>>({});
-  const who = schoolId ? schools.find((s) => s.id === schoolId)?.name ?? 'This school' : 'Gradeon default';
+  const who = schoolId ? schools.find((s) => s.id === schoolId)?.name ?? 'This school' : 'Tangent default';
   const save = useMutation({
     mutationFn: () => app.api.integrations.route({ capability, schoolId, connectionId: conn, fallbackId: fallback || null, settings: Object.fromEntries(Object.entries(settings).filter(([, x]) => x.trim())) }),
     onSuccess: () => onDone(`${CAPABILITY_LABELS[capability]} for ${who} now goes through ${fit.find((c) => c.id === conn)?.name}.`), onError: (e) => { setErr(fields(e)); shake.hit(); },
@@ -407,7 +407,7 @@ function RouteDialog({ view, schools, capability, schoolId, route, onClose, onDo
         </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-        {route && <button className="btn" style={{ marginRight: 'auto' }} disabled={unroute.isPending} onClick={() => unroute.mutate()}>{schoolId ? 'Use the Gradeon default' : 'Remove route'}</button>}
+        {route && <button className="btn" style={{ marginRight: 'auto' }} disabled={unroute.isPending} onClick={() => unroute.mutate()}>{schoolId ? 'Use the Tangent default' : 'Remove route'}</button>}
         <button className="btn" onClick={onClose}>Cancel</button>
         {fit.length > 0 && <button className="btn pri" disabled={save.isPending || !conn} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save route'}</button>}
       </div>
@@ -446,7 +446,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
                   <div key={m.key} className="grd rw" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 200px', height: 'auto', minHeight: 52, padding: '10px 20px' } as React.CSSProperties}>
                     <b style={{ font: '700 13px/1.35 var(--fb)' }}>{m.label}</b>
                     <span style={{ minWidth: 0, font: '400 13px/1.45 var(--fb)', color: t ? 'var(--ink2)' : 'var(--ink3)', overflowWrap: 'anywhere' }}>{t ? <><span className="chip">{t.providerTemplateId}{t.dltTemplateId ? ` · DLT ${t.dltTemplateId}` : ''}</span> {t.approvedText}</> : 'Not mapped: this message cannot go by this connection.'}</span>
-                    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
+                    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
                   </div>
                 );
               })}
@@ -553,7 +553,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
             <div className="help" style={{ marginTop: 4 }}>Checked by: {def?.webhooks?.verifies}</div>
             {open === c.id && (
               <div style={{ marginTop: 10 }}>
-                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <EmptyNote icon="link" title="Nothing received yet" body="Calls the provider makes to this address show here with what Gradeon did with them." />
+                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <EmptyNote icon="link" title="Nothing received yet" body="Calls the provider makes to this address show here with what Tangent did with them." />
                   : (events.data ?? []).slice(0, 10).map((e) => (
                     <div key={e.id} className="kv" style={{ alignItems: 'center' }}>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0 }}><span className={`chip ${e.ok ? 'g' : 'c'}`}>{e.ok ? 'Accepted' : 'Refused'}</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.summary}>{e.summary}</span></span>
@@ -578,7 +578,7 @@ function AllowDialog({ list, onClose, onDone }: { list: string[]; onClose: () =>
       <div className="fld">
         <label htmlFor="allow">Phone numbers and email addresses that get real messages, one per line</label>
         <div className="inp" style={{ height: 'auto' }}>
-          <textarea id="allow" className="mono" rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder={'9822011002\nyou@gradeon.app'} style={{ width: '100%', border: 0, outline: 0, background: 'none', padding: '12px 0', color: 'var(--ink)', resize: 'vertical' }} />
+          <textarea id="allow" className="mono" rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder={'9822011002\nyou@tangent.app'} style={{ width: '100%', border: 0, outline: 0, background: 'none', padding: '12px 0', color: 'var(--ink)', resize: 'vertical' }} />
         </div>
         <div className="help" style={{ marginTop: 6 }}>For trying real providers on the test track: only these people are reached, through connections in test or live.</div>
       </div>

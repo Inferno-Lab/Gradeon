@@ -2,20 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/network/api_client.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/connectivity_service.dart';
-import 'package:gradeon/core/services/live_stream.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/assistant_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
-import 'package:gradeon/data/repositories/driver_repository.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/network/api_client.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/connectivity_service.dart';
+import 'package:tangent/core/services/live_stream.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/assistant_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
+import 'package:tangent/data/repositories/driver_repository.dart';
 
 class InitialBinding extends Bindings {
   @override

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { notFound } from '@gradeon/nest-kit';
+import { notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { FilesService } from './files.service.js';
 import { LearningService } from './learning.service.js';
@@ -54,7 +54,7 @@ export class DocumentsService {
     if (p.cancelled_at) lines.push({ text: `Cancelled on ${date(p.cancelled_at.toISOString().slice(0, 10))}: ${p.cancel_reason}`, bold: true, size: 10 });
     else if (p.refunded) lines.push({ text: 'Refunded', right: `- ${rupees(p.refunded)}`, size: 10 });
     lines.push({ text: '', rule: true, gap: 18 }, { text: 'Paid by', right: `${p.method.toUpperCase()}${p.reference ? ` · ${p.reference}` : ''}`, size: 10 },
-      { text: 'This receipt was made by Gradeon and needs no signature.', size: 9, gap: 40 });
+      { text: 'This receipt was made by Tangent and needs no signature.', size: 9, gap: 40 });
     return { name: `${p.receipt_no}.pdf`, data: await pdf(lines, { logo: await this.files.logoBytes(t) }) };
   }
 

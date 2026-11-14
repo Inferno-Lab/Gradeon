@@ -51,20 +51,20 @@ export async function smtpSend(cfg: SmtpConfig, from: string, to: string, subjec
   };
   try {
     await say(null, 220);
-    await say('EHLO gradeon.app', 250);
+    await say('EHLO tangent.app', 250);
     if (cfg.security === 'starttls') {
       await say('STARTTLS', 220);
       r.off();
       sock = await new Promise<TLSSocket>((ok, no) => { const t = tlsConnect({ socket: sock, servername: cfg.host }, () => ok(t)); t.once('error', no); });
       r = reader(sock);
-      await say('EHLO gradeon.app', 250);
+      await say('EHLO tangent.app', 250);
     }
     await say(`AUTH PLAIN ${Buffer.from(`\0${cfg.user}\0${cfg.password}`).toString('base64')}`, 235);
     const address = (s: string) => /<([^>]+)>/.exec(s)?.[1] ?? s.trim();
     await say(`MAIL FROM:<${address(from)}>`, 250);
     await say(`RCPT TO:<${address(to)}>`, 250);
     await say('DATA', 354);
-    const id = `${randomBytes(12).toString('hex')}@gradeon.app`;
+    const id = `${randomBytes(12).toString('hex')}@tangent.app`;
     const boundary = `b${randomBytes(8).toString('hex')}`;
     const word = (s: string) => (/^[\x20-\x7E]*$/.test(s) ? s : `=?UTF-8?B?${Buffer.from(s).toString('base64')}?=`);
     const b64 = (s: string) => Buffer.from(s).toString('base64').replace(/.{76}/g, '$&\r\n');

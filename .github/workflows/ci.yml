@@ -50,8 +50,8 @@ jobs:
         run: for u in / /s/greenfield /console/ /console/schools; do curl -sf -o /dev/null http://127.0.0.1:4000$u || { echo "GET $u failed"; tail -20 /tmp/server.log; exit 1; }; done
       - name: Start the admin and the console
         run: |
-          nohup pnpm --filter @gradeon/admin dev --host 127.0.0.1 > /tmp/admin.log 2>&1 &
-          nohup pnpm --filter @gradeon/console dev --host 127.0.0.1 > /tmp/console.log 2>&1 &
+          nohup pnpm --filter @tangent/admin dev --host 127.0.0.1 > /tmp/admin.log 2>&1 &
+          nohup pnpm --filter @tangent/console dev --host 127.0.0.1 > /tmp/console.log 2>&1 &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:5173/ >/dev/null && curl -sf http://127.0.0.1:5174/ >/dev/null && exit 0; sleep 2; done; exit 1
       - run: node tools/e2e-flows.mjs /tmp/e2e
       - name: Page audit on fresh data

@@ -1,7 +1,7 @@
 <div class="hue s-emerald doc">
   <div class="g" style="grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:64px;flex:1">
     <div class="col" style="gap:28px">
-      <span class="tag br" style="align-self:flex-start">Gradeon Hue · one system for the app, the school admin and the console</span>
+      <span class="tag br" style="align-self:flex-start">Tangent Hue · one system for the app, the school admin and the console</span>
       <h1 class="dh">One colour in.<br>A whole school out.</h1>
       <p class="lead">The console holds a single hue for each school. From it the system works out every surface, every text colour and every state, in light and in dark. The school gets a product that is plainly its own, and nobody picks a hex code.</p>
       <div class="col" style="margin-top:auto">
@@ -38,7 +38,7 @@
 <script>
 renderVals() {
   const dark = !!(this.state && this.state.dark);
-  const S = [["emerald", "Greenfield International School", "Emerald, hue 162"], ["cobalt", "Gradeon console", "Cobalt, hue 262"], ["saffron", "Sunrise Public School", "Saffron, hue 62"], ["maroon", "St Mary's Convent", "Maroon, hue 12"]];
+  const S = [["emerald", "Greenfield International School", "Emerald, hue 162"], ["cobalt", "Tangent console", "Cobalt, hue 262"], ["saffron", "Sunrise Public School", "Saffron, hue 62"], ["maroon", "St Mary's Convent", "Maroon, hue 12"]];
   return {
     modes: [{ t: "Light", on: !dark, go: () => this.setState({ dark: false }) }, { t: "Dark", on: dark, go: () => this.setState({ dark: true }) }],
     mocks: S.map(([s, n, h]) => ({ cls: "s-" + s + (dark ? " dark" : "") + " scope", n, h })),

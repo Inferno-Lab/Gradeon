@@ -2,15 +2,15 @@
 // Needs the demo school running (`bash tools/dev-reset.sh`). Usage (the app must be built for that school):
 //   flutter test test/tool/live_probe_test.dart --dart-define=LIVE_API=http://localhost:4000 --dart-define=SCHOOL=greenfield --dart-define=API_BASE_URL=http://localhost:4000
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradeon/core/network/api_client.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/auth_repository.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/network/api_client.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/auth_repository.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 
 const _api = String.fromEnvironment('LIVE_API');
 

@@ -3,15 +3,15 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/session_bus.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/date_seed.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/session_bus.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/date_seed.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/student.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 class MockJsonDataSource {
   final _random = Random();

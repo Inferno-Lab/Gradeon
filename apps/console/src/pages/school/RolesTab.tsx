@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@tangent/contracts';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@tangent/web-ui';
 import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 
@@ -92,9 +92,9 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
             {!readOnly && (
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
                 {cur && !cur.people ? (sure
-                  ? <span style={{ display: 'flex', gap: 8 }}><button className="btn sm dng" onClick={() => remove.mutate()}>Yes, delete</button><button className="btn sm" onClick={() => setSure(false)}>Keep</button></span>
+                  ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm dng" onClick={() => remove.mutate()}>Yes, delete</button><button className="btn sm" onClick={() => setSure(false)}>Keep</button></span>
                   : <button className="btn dng" onClick={() => setSure(true)}>Delete role</button>) : <span className="help">{cur?.people ? `${cur.people} ${cur.people === 1 ? 'person has' : 'people have'} this role.` : ''}</span>}
-                <span style={{ display: 'flex', gap: 10 }}>
+                <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   {sel === 'new' && <button className="btn" onClick={() => setSel(roles[0]?.id ?? '')}>Cancel</button>}
                   <button className="btn pri" disabled={save.isPending} onClick={() => { if (name.trim().length < 2) { setErr({ name: 'Name the role.' }); shake.hit(); } else save.mutate(); }}>{save.isPending ? 'Saving…' : 'Save role'}</button>
                 </span>

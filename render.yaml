@@ -2,7 +2,7 @@
 # Connect this repository in Render (New > Blueprint) and fill in the values marked "sync: false" when asked. Steps: docs/deploy-free-test.md
 services:
   - type: web
-    name: gradeon
+    name: tangent
     runtime: node
     plan: free
     region: singapore
@@ -27,7 +27,7 @@ services:
         generateValue: true
       # How you sign in to the console. The password is generated; read it under Environment once the service exists.
       - key: BOOTSTRAP_EMAIL
-        value: kaushal@gradeon.app
+        value: kaushal@tangent.app
       - key: BOOTSTRAP_PASSWORD
         generateValue: true
       # The six-digit code the console asks for after the password. There is no email service on the test track, so you choose it.

@@ -19,13 +19,13 @@ async function adminKey() {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  return [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
+  return [`tangent.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
 }
 async function consoleKey() {
-  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
+  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@tangent.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
   const list = await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${t.accessToken}` } })).json();
-  return { key: ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
+  return { key: ['tangent.console', JSON.stringify({ user: t.user }), t.accessToken], school: list.find((s) => s.slug === slug)?.id };
 }
 
 const jobs = [];

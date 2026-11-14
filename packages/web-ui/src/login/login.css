@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/AdminLogin.dc.html. Selectors are prefixed with .pg-login. */
+/* Selectors are prefixed with .pg-login. */
 
 
 .pg-login .lgrid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);min-height:calc(100dvh - 24px)}

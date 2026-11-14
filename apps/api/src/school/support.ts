@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import { resolveConfig } from '@gradeon/config-engine';
-import { MESSAGE_EVENTS, SchoolSettingsSchema, gradeFor, istMinutes, type AuditRow, type EffectiveConfig, type GradingScale, type SettingsDoc } from '@gradeon/contracts';
+import { newId } from '@tangent/db';
+import { resolveConfig } from '@tangent/config-engine';
+import { MESSAGE_EVENTS, SchoolSettingsSchema, gradeFor, istMinutes, type AuditRow, type EffectiveConfig, type GradingScale, type SettingsDoc } from '@tangent/contracts';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { HubService } from './hub.service.js';
 
@@ -85,7 +85,7 @@ export function emailHtml(school: string, color: string, body: string): string {
 <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
 <tr><td style="background:${c};color:#ffffff;padding:16px 24px;font-size:18px;font-weight:600">${esc(school)}</td></tr>
 <tr><td style="padding:24px;color:#1d1d22;font-size:15px;line-height:1.55">${esc(body).replace(/\n/g, '<br>')}</td></tr>
-<tr><td style="padding:0 24px 20px;color:#6b6b76;font-size:12px">Sent by ${esc(school)} with Gradeon.</td></tr>
+<tr><td style="padding:0 24px 20px;color:#6b6b76;font-size:12px">Sent by ${esc(school)} with Tangent.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -118,7 +118,7 @@ export class Messenger {
     let used = list.some(counted) ? await this.hubs.hub.smsThisMonth(t.info.slug) : 0;
     const doc = list.some((m) => m.channel === 'email') ? (await this.settings.doc(t)).values : {};
     const out = list.map((m) => {
-      const refuse = counted(m) && used++ >= limit ? `This month's ${limit} texts are used up. Gradeon can raise the limit in the console.` : undefined;
+      const refuse = counted(m) && used++ >= limit ? `This month's ${limit} texts are used up. Tangent can raise the limit in the console.` : undefined;
       const html = m.channel === 'email' ? emailHtml(String(doc['school.name'] ?? t.info.name), String(doc['brand.color'] ?? ''), m.body) : undefined;
       return {
         schoolId: t.info.id, schoolSlug: t.info.slug, channel: m.channel, to: m.to, body: m.body, subject: m.subject, html, messageKey: m.key,

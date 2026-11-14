@@ -42,4 +42,4 @@ export interface ApiErrorBody {
 }
 
 export const SLUG_RE = /^[a-z][a-z0-9-]{2,30}[a-z0-9]$/;
-export const RESERVED_SLUGS = ['admin', 'console', 'api', 'www', 'app', 'status', 'gradeon', 'test', 'demo-fleet'] as const;
+export const RESERVED_SLUGS = ['admin', 'console', 'api', 'www', 'app', 'status', 'tangent', 'test', 'demo-fleet'] as const;

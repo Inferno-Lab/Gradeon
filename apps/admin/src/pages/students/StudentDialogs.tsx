@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { istToday, type ClassInfo } from '@gradeon/contracts';
-import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
+import { istToday, type ClassInfo } from '@tangent/contracts';
+import { DateField, Dialog, ErrorLine, Field, FilePick, SelectField, useShake } from '@tangent/web-ui';
 import { DialogActions as Actions, fieldsOf, messageOf, useFeeHeads } from '../../app/kit';
 import { useApp } from '../../app/context';
 import { RecordFields, emptyRec } from './StudentRecord';
@@ -136,7 +136,7 @@ export function MessageDialog({ ids, label, onClose, onDone }: { ids: string[]; 
     <Dialog title="Message guardians" onClose={onClose} shake={shake.cls}>
       <p>To the primary guardian of {label}.</p>
       <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div className="help" style={{ marginTop: 0 }}>It reaches them the way Gradeon set for your school’s messages (the app, a text, WhatsApp or email).</div>
+        <div className="help" style={{ marginTop: 0 }}>It reaches them the way Tangent set for your school’s messages (the app, a text, WhatsApp or email).</div>
         <div className="fld">
           <label htmlFor="msg">Message</label>
           <div className={`inp ${err ? 'err shake' : ''}`} style={{ height: 'auto', padding: 12, alignItems: 'stretch' }}>

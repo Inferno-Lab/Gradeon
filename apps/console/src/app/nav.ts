@@ -1,5 +1,5 @@
-import type { NavGroup, PageIcon } from '@gradeon/web-ui';
-import type { ConsolePermission } from '@gradeon/contracts';
+import type { NavGroup, PageIcon } from '@tangent/web-ui';
+import type { ConsolePermission } from '@tangent/contracts';
 import { url } from './base';
 
 export interface Tab { key: string; label: string; needs?: ConsolePermission }

@@ -49,10 +49,10 @@ export const SchoolSettingsSchema = z.object({
   'security.passwordMinLength': z.number().int().min(8).max(64).default(8),
   'security.webSessionDays': z.number().int().min(1).max(30).default(7),
   'security.appSessionDays': z.number().int().min(1).max(90).default(30),
-  // Whether the school may put its own staff into the roles Gradeon made for it. Roles themselves are set from the console only.
+  // Whether the school may put its own staff into the roles Tangent made for it. Roles themselves are set from the console only.
   'staff.schoolAssignsRoles': z.boolean().default(true),
   // The school's own data (its timetable today; classes, terms, holidays and fee structures as their screens arrive) stays with the
-  // school, inside limits set here: each area has a switch that can lock it so only Gradeon changes it.
+  // school, inside limits set here: each area has a switch that can lock it so only Tangent changes it.
   'timetable.schoolEdits': z.boolean().default(true),
   'classes.schoolEdits': z.boolean().default(true),
   'calendar.schoolEdits': z.boolean().default(true),

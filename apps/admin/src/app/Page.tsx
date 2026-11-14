@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps } from '@tangent/web-ui';
 import './pages.css';
 
 interface PageProps {
@@ -51,4 +51,4 @@ export function Card({ title, chip, children, span, style, id }: { title?: strin
 }
 
 /** Messages that vanish after a few seconds, for the result of a button press. */
-export { useToast } from '@gradeon/web-ui';
+export { useToast } from '@tangent/web-ui';

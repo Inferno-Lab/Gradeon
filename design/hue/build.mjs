@@ -10,7 +10,7 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..
 // name, page, x, y, w, h, title, { dark: [name, x, y, title], live }
 const W = 1440, G = 1520, P = 470, EW = 2190, EG = 2270;
 export const BOARDS = [
-  ['Main', 'system', 0, 0, W, 960, 'Gradeon Hue · the idea', { live: 1 }],
+  ['Main', 'system', 0, 0, W, 960, 'Tangent Hue · the idea', { live: 1 }],
   ['Colour', 'system', G, 0, W, 960, 'Colour · one seed, every token'],
   ['Type', 'system', 2 * G, 0, W, 960, 'Type · one family, two voices'],
   ['Components', 'system', 0, 1300, W, 1500, 'Web components', { live: 1, dark: ['ComponentsDark', G, 1300, 'Web components · dark'] }],
@@ -53,9 +53,9 @@ export const BOARDS = [
 const NOTES = {
   t_found: [0, -260, 'Foundations', 4480, 'system'], t_parts: [0, 1040, 'Parts', 4480, 'system'],
   t_admin: [0, -260, 'School admin', 4480, 'admin'], t_admin2: [0, 1040, 'Money, roll call, timetable', 4480, 'admin'], t_admin3: [0, 2340, 'Sign in and the menu', 4480, 'admin'],
-  t_console: [0, -260, 'Gradeon console', 4480, 'console'], t_console2: [0, 1040, 'Modules', 4480, 'console'],
+  t_console: [0, -260, 'Tangent console', 4480, 'console'], t_console2: [0, 1040, 'Modules', 4480, 'console'],
   t_parents: [0, -260, 'Parents', 1800, 'app'], t_teachers: [0, 924, 'Teachers, and a brand-new school', 1800, 'app'],
-  t_ea: [0, -260, 'Empty states · school admin', 9000, 'empty-admin'], t_ec: [0, -260, 'Empty states · Gradeon console', 7000, 'empty-console'],
+  t_ea: [0, -260, 'Empty states · school admin', 9000, 'empty-admin'], t_ec: [0, -260, 'Empty states · Tangent console', 7000, 'empty-console'],
   t_ep: [0, -260, 'Empty states · parent and teacher app', 11000, 'empty-app'],
 };
 
@@ -137,13 +137,14 @@ for (const [name, page, x, y, w, h0, title, o = {}] of BOARDS) {
 }
 files['hue.css'] = tokensCss() + fs.readFileSync(`${HERE}base.css`, 'utf8') + fs.readFileSync(`${HERE}base2.css`, 'utf8') + fs.readFileSync(`${HERE}empty.css`, 'utf8');
 files['canvas.json'] = JSON.stringify({
-  v: 3, createdOnFiles: { v: 1, at: '2026-11-09T19:30:00Z' }, title: 'Gradeon design system', launch: { view: 'canvas', page: 'system' },
-  pages: [{ id: 'system', name: 'The system' }, { id: 'admin', name: 'School admin' }, { id: 'console', name: 'Gradeon console' }, { id: 'app', name: 'Parent and teacher app' }, { id: 'empty-admin', name: 'Empty states · admin' }, { id: 'empty-console', name: 'Empty states · console' }, { id: 'empty-app', name: 'Empty states · app' }],
+  v: 3, createdOnFiles: { v: 1, at: '2026-11-09T19:30:00Z' }, title: 'Tangent design system', launch: { view: 'canvas', page: 'system' },
+  pages: [{ id: 'system', name: 'The system' }, { id: 'admin', name: 'School admin' }, { id: 'console', name: 'Tangent console' }, { id: 'app', name: 'Parent and teacher app' }, { id: 'empty-admin', name: 'Empty states · admin' }, { id: 'empty-console', name: 'Empty states · console' }, { id: 'empty-app', name: 'Empty states · app' }],
   boards: cv.boards, order: cv.order,
   notes: Object.fromEntries(Object.entries(NOTES).map(([k, [x, y, text, maxW, page]]) => [k, { x, y, text, kind: 'title1', maxW, page }])),
   designSystems: [],
 }, null, 1);
 for (const out of OUTS) {
+  fs.mkdirSync(out, { recursive: true });
   for (const f of fs.readdirSync(out)) if (/\.dc\.html$|^ink\.css$/.test(f)) fs.rmSync(out + f);
   for (const [f, t] of Object.entries(files)) if (!(out.endsWith('gprev/') && f === 'canvas.json')) fs.writeFileSync(out + f, t);
 }

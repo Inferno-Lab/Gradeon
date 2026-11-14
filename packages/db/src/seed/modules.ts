@@ -1,4 +1,4 @@
-import { addDays, istToday, latestSchoolDay } from '@gradeon/contracts';
+import { addDays, istToday, latestSchoolDay } from '@tangent/contracts';
 import type { Pool, PoolClient } from 'pg';
 import { newId } from '../ids.js';
 import { bulkInsert } from './bulk.js';

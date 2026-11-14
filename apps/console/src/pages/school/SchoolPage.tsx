@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { HttpError } from '@gradeon/api-client';
-import { SCHOOL_BOARDS, SchoolDetailsPatch, STEP_LABELS, auditLabel, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, PageScope, Select, SelectField, useShake, useToast, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { SCHOOL_BOARDS, SchoolDetailsPatch, STEP_LABELS, auditLabel, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@tangent/contracts';
+import { DateField, Dialog, EmptyCard, Field, NumberField, PageScope, Select, SelectField, useShake, useToast, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
@@ -302,7 +302,7 @@ function Audit({ id }: { id: string }) {
 const clean = (f: Record<string, string>) => Object.fromEntries(Object.entries(f).filter(([, v]) => v));
 
 /**
- * Ready to go live: worked out from the school's own data, plus what only Gradeon can tick. Go live ends moving in (the
+ * Ready to go live: worked out from the school's own data, plus what only Tangent can tick. Go live ends moving in (the
  * school's Moving in page closes); it is pressed once every item is green.
  */
 function GoLive({ d, say, onDone }: { d: SchoolDetail; say: (m: string, tone?: 'ok' | 'bad') => void; onDone: () => void }) {
@@ -353,7 +353,7 @@ function GoLive({ d, say, onDone }: { d: SchoolDetail; say: (m: string, tone?: '
       )}
       {confirm && (
         <Dialog title={`Take ${d.name} live?`} tag={{ text: 'Moving in ends', tone: 'v' }} onClose={() => setConfirm(false)} width={460}>
-          <p style={{ marginTop: 0 }}>The school’s Moving in page closes and its people add records from each page from now on. Gradeon can still import a file for it from the Data tab.</p>
+          <p style={{ marginTop: 0 }}>The school’s Moving in page closes and its people add records from each page from now on. Tangent can still import a file for it from the Data tab.</p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button className="btn" onClick={() => setConfirm(false)}>Not yet</button>
             <button className="btn pri" disabled={go.isPending} onClick={() => go.mutate()}>Go live</button>
@@ -364,7 +364,7 @@ function GoLive({ d, say, onDone }: { d: SchoolDetail; say: (m: string, tone?: '
   );
 }
 
-/** What Gradeon keeps about the school beside its own settings. Its name, colours and address are in Configuration → School identity. */
+/** What Tangent keeps about the school beside its own settings. Its name, colours and address are in Configuration → School identity. */
 function DetailsDialog({ d, onClose, onDone }: { d: SchoolDetail; onClose: () => void; onDone: () => void }) {
   const app = useApp();
   const shake = useShake();
@@ -383,7 +383,7 @@ function DetailsDialog({ d, onClose, onDone }: { d: SchoolDetail; onClose: () =>
   return (
     <Dialog title="School details" tag={{ text: d.shortName, tone: 'v' }} onClose={onClose} width={520} shake={shake.cls}>
       <div className="stack">
-        <div className="help" style={{ marginTop: 0 }}>Gradeon’s contact at the school, for invoices and incidents. The school’s own name, address and colours are in its Configuration.</div>
+        <div className="help" style={{ marginTop: 0 }}>Tangent’s contact at the school, for invoices and incidents. The school’s own name, address and colours are in its Configuration.</div>
         <Field label="Contact name" value={f.name} onChange={set('name')} error={err.name} maxLength={80} />
         <div className="two">
           <Field label="Phone" type="tel" value={f.phone} onChange={set('phone')} error={err.phone} />

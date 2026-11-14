@@ -19,13 +19,13 @@ if (only !== 'console') {
   const h = { 'x-school': slug };
   const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
   const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-  const key = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
+  const key = [`tangent.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
   for (const p of adminPaths) jobs.push({ name: `admin${p || '/'}`, url: `${ADMIN}/s/${slug}${p}`, key });
 }
 if (only !== 'admin') {
-  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
+  const a = await post('/console/v1/auth/login', { identifier: 'kaushal@tangent.app', password: 'nest2026' });
   const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
-  const key = ['gradeon.console', JSON.stringify({ user: t.user }), t.accessToken];
+  const key = ['tangent.console', JSON.stringify({ user: t.user }), t.accessToken];
   for (const p of consolePaths('').filter((p) => !p.startsWith('/schools/'))) jobs.push({ name: `console${p}`, url: `${CONSOLE}${p}`, key });
 }
 

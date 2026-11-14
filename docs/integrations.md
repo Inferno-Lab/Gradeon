@@ -10,8 +10,8 @@ Code: `packages/integrations` (the adapters and the `Hub`), `apps/console-api/sr
 |---|---|
 | **Capability** | What a connection does: `sms`, `whatsapp`, `email`, `push`, `payments`, `storage`, `maps`, `webhook` (and `video`, `accounting`, `ai`, kept for later). |
 | **Provider** | A kind of third party with a built adapter (`INTEGRATION_PROVIDERS` in `packages/contracts/src/integrations.ts`). The console builds each provider's form from its `fields`, so a new provider needs no new screen. |
-| **Connection** | One account at a provider: its settings, and its **secrets sealed** with `SECRETS_KEY` (never returned by the API; the console shows only which keys are set and their last four characters). Scope: Gradeon-wide, or one school (a school's own Razorpay account, its own sender ID). |
-| **Route** | Which connection serves a capability: a school's own route wins, then the Gradeon default; each route can name a **fallback** tried when the connection fails, and route settings (sender ID, from-address, bucket prefix). |
+| **Connection** | One account at a provider: its settings, and its **secrets sealed** with `SECRETS_KEY` (never returned by the API; the console shows only which keys are set and their last four characters). Scope: Tangent-wide, or one school (a school's own Razorpay account, its own sender ID). |
+| **Route** | Which connection serves a capability: a school's own route wins, then the Tangent default; each route can name a **fallback** tried when the connection fails, and route settings (sender ID, from-address, bucket prefix). |
 | **Template** | For SMS and WhatsApp: our message key (`auth.code`, `attendance.absent`…) mapped to the provider's approved template ID, the DLT template ID and the approved wording. When a message is mapped, the approved wording is what goes out, filled with the message's values, so DLT never rejects it. |
 | **message_log** | Every message's fate: queued, held (quiet hours), sent, delivered, read, failed (with the provider's reason) or refused (the plan's text limit). The console's Activity tab and billing totals read it. |
 
@@ -77,7 +77,7 @@ The app does not include Firebase yet: it needs the project's `google-services.j
 
 ### Payments
 
-The family pays on the provider's own page (no SDK in the app): `POST /v1/f/fees/:id/order` makes a payment link for what is owed, the app opens it, and the provider's signed webhook marks it paid; the app sees the receipt appear (it asks every 3 seconds) and the page after paying links back to `gradeon://open/fees`. A school's own account (its money settles to it) is a school-scoped connection routed for that school.
+The family pays on the provider's own page (no SDK in the app): `POST /v1/f/fees/:id/order` makes a payment link for what is owed, the app opens it, and the provider's signed webhook marks it paid; the app sees the receipt appear (it asks every 3 seconds) and the page after paying links back to `tangent://open/fees`. A school's own account (its money settles to it) is a school-scoped connection routed for that school.
 
 | Provider | Fields | Webhook |
 |---|---|---|
@@ -97,7 +97,7 @@ Any **S3-compatible** bucket (AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces)
 ### Anything else
 
 - **Custom HTTP** sends texts, WhatsApp or email through any provider with an HTTP API: an address, a method, headers (`{secret.apiKey}` reads a sealed secret), a body template with `{to}`, `{text}`, `{subject}`, `{templateId}`, `{vars.name}`, where the reply's message ID is, and how its delivery reports read.
-- **Webhook** posts events to another system (an ERP), each signed: `X-Gradeon-Signature: sha256=<hmac of the body with the secret>`.
+- **Webhook** posts events to another system (an ERP), each signed: `X-Tangent-Signature: sha256=<hmac of the body with the secret>`.
 
 ## Adding a provider
 

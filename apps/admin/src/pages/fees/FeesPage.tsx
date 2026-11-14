@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, EmptyState, Icon, Roll, Select, rollDigits } from '@gradeon/web-ui';
+import { inr, lakhs, type StudentDetail } from '@tangent/contracts';
+import { Dialog, EmptyState, Icon, Roll, Select, rollDigits } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { StudentPick } from '../../app/kit';

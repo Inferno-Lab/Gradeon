@@ -5,10 +5,10 @@ import {
   ThreadCreate, ThreadPatch, ThreadReply, ReportQuery, StudentImport, istToday,
   type DataRequestRow, type EnquiryRow, type EventReply, type EventRow, type ExamMarksView, type ImportResult, type ExamResults, type ExamRow, type HomeworkDetail, type HomeworkRow, type InvoiceListRow, type InvoiceListSummary, type Paged,
   type ReceiptRow, type ReportData, type ReportInfo, type RoleRow, type StaffRow, type StudentDetail, type ThreadDetail, type ThreadRow,
-} from '@gradeon/contracts';
+} from '@tangent/contracts';
 import { z } from 'zod';
-import { ZodPipe } from '@gradeon/nest-kit';
-import { templateXlsx } from '@gradeon/db';
+import { ZodPipe } from '@tangent/nest-kit';
+import { templateXlsx } from '@tangent/db';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { LearningService } from './learning.service.js';
@@ -171,7 +171,7 @@ export class PeopleController {
     return this.people.roles(t);
   }
 
-  // Roles are made and changed only from the console (Gradeon); the school sees them and, if allowed, puts its staff into them.
+  // Roles are made and changed only from the console (Tangent); the school sees them and, if allowed, puts its staff into them.
 }
 
 @Controller('v1')

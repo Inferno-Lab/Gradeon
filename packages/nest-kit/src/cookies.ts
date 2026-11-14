@@ -1,4 +1,4 @@
-import { constantTimeEqual, randomToken } from '@gradeon/security';
+import { constantTimeEqual, randomToken } from '@tangent/security';
 import { ApiError } from './errors.js';
 
 export const CSRF_COOKIE = 'gd_csrf';

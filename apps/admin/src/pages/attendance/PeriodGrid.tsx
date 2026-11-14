@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PeriodRoll } from '@gradeon/contracts';
-import { EmptyCard, Select } from '@gradeon/web-ui';
+import type { PeriodRoll } from '@tangent/contracts';
+import { EmptyCard, Select } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { problem } from '../../app/kit';
 

@@ -1,7 +1,7 @@
 // Writes assets/mock/config.json: what `/v1/config` answers for the sample school, resolved by the same config engine and the
 // same setting defaults the server uses, so the app on sample content behaves exactly like a real school with every module.
 // Run after changing modules, settings or their defaults:
-//   pnpm --filter @gradeon/contracts --filter @gradeon/config-engine build && node tools/gen-app-config.mjs
+//   pnpm --filter @tangent/contracts --filter @tangent/config-engine build && node tools/gen-app-config.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { MODULES, resolveConfig } from '../packages/config-engine/dist/index.js';
 

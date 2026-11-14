@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SETTINGS_META, type ChangeRequestRow } from '@gradeon/contracts';
-import { AreaField, Dialog, Segmented, tintFor, useShake, EmptyState } from '@gradeon/web-ui';
+import { SETTINGS_META, type ChangeRequestRow } from '@tangent/contracts';
+import { AreaField, Dialog, Segmented, tintFor, useShake, EmptyState } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { ago, initials } from '../../app/format';
 
-/** What schools ask Gradeon to change ("Ask Gradeon to change this" on their School profile). */
+/** What schools ask Tangent to change ("Ask Tangent to change this" on their School profile). */
 const tabFor = (area: string) => (/role/i.test(area) ? 'roles' : /plan|module/i.test(area) ? 'plan' : /data|import/i.test(area) ? 'data' : 'configuration');
 export function RequestsPage() {
   const app = useApp();

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
-import { uploadFile } from '@gradeon/api-client';
+import { uploadFile } from '@tangent/api-client';
 
 const refresh = (qc: ReturnType<typeof useQueryClient>) => void qc.invalidateQueries({ predicate: (q) => ['homework', 'dashboard'].includes(String(q.queryKey[0])) });
 
@@ -207,8 +207,8 @@ function HomeworkSheet({ id, canWrite, onChange, onClose, onSaved, onRemoved }: 
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             {canWrite ? (confirm
               ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this homework?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
-              : <span style={{ display: 'flex', gap: 8 }}><button className="btn dng" onClick={() => setConfirm(true)}>Remove homework</button>{d && <button className="btn" onClick={() => onChange(d)}>Change</button>}</span>) : <span />}
-            <span style={{ display: 'flex', gap: 10 }}>
+              : <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn dng" onClick={() => setConfirm(true)}>Remove homework</button>{d && <button className="btn" onClick={() => onChange(d)}>Change</button>}</span>) : <span />}
+            <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button className="btn" onClick={onClose}>Close</button>
               {canWrite && <button className="btn pri" disabled={nothing} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save hand-ins'}</button>}
             </span>

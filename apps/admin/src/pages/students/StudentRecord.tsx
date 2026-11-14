@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { GENDERS, istToday, type ClassInfo, type GuardianRow, type StudentDetail } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, ErrorLine, Field, SelectField, useShake } from '@gradeon/web-ui';
+import { GENDERS, istToday, type ClassInfo, type GuardianRow, type StudentDetail } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, ErrorLine, Field, SelectField, useShake } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, problem, useSetting } from '../../app/kit';
 
@@ -23,7 +23,7 @@ export function RecordFields({ f, set, err, adding }: { f: Rec; set: (k: keyof R
         {houses.length > 0 && <SelectField label={opt('house', 'House')} value={f.house} onChange={set('house')} error={err.house} options={[{ value: '', label: 'No house' }, ...houses.map((h) => ({ value: h.name, label: h.name }))]} />}
       </div>
       <div className="two">
-        <Field label={adding && !need.includes('admissionNo') ? 'Admission number (blank: Gradeon numbers it)' : opt('admissionNo', 'Admission number')} value={f.admissionNo} onChange={set('admissionNo')} error={err.admissionNo} maxLength={30} />
+        <Field label={adding && !need.includes('admissionNo') ? 'Admission number (blank: Tangent numbers it)' : opt('admissionNo', 'Admission number')} value={f.admissionNo} onChange={set('admissionNo')} error={err.admissionNo} maxLength={30} />
         <Field label={opt('bloodGroup', 'Blood group')} value={f.bloodGroup} onChange={set('bloodGroup')} error={err.bloodGroup} maxLength={4} placeholder="B+" />
       </div>
       <Field label={opt('address', 'Address')} value={f.address} onChange={set('address')} error={err.address} maxLength={200} />

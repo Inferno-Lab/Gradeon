@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/db",
+  "name": "@tangent/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -39,8 +39,8 @@
   "dependencies": {
     "drizzle-orm": "^0.45.0",
     "pg": "^8.16.0",
-    "@gradeon/contracts": "workspace:*",
-    "@gradeon/security": "workspace:*"
+    "@tangent/contracts": "workspace:*",
+    "@tangent/security": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

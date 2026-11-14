@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ApprovalKind, ApprovalRow } from '@gradeon/contracts';
-import { Dialog, EmptyCard, useShake, EmptyState } from '@gradeon/web-ui';
+import type { ApprovalKind, ApprovalRow } from '@tangent/contracts';
+import { Dialog, EmptyCard, useShake, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, Avatar, problem } from '../../app/kit';
 
@@ -54,16 +54,17 @@ export function useApprovalList(view: ApprovalView, kind: ApprovalKind | undefin
             <small style={{ display: 'block' }}>{r.requesterName ? `Asked by ${r.requesterName} · ` : ''}{when(r.createdAt)}</small>
             {r.decidedAt && <small style={{ display: 'block' }}>{STATUS[r.status].text}{r.decidedByName ? ` by ${r.decidedByName}` : ''} · {when(r.decidedAt)}{r.decisionNote ? ` · “${r.decisionNote}”` : ''}</small>}
           </div>
-          <span className={`chip ${STATUS[r.status].tone}`}>{STATUS[r.status].text}</span>
-          {may && r.status === 'pending' && view === 'waiting' && (
-            <span className="tgrow">
+          {/* The status and the buttons centre on one line, beside the first line of the text. */}
+          <span className="tgrow">
+            <span className={`chip ${STATUS[r.status].tone}`}>{STATUS[r.status].text}</span>
+            {may && r.status === 'pending' && view === 'waiting' && <>
               <button className="btn sm pri" disabled={decide.isPending} onClick={() => decide.mutate({ row: r, decision: 'approve' })}>{r.action || 'Approve'}</button>
               <button className="btn sm" disabled={decide.isPending} onClick={() => setDeclining(r)}>Decline</button>
-            </span>
-          )}
-          {may && view === 'decided' && (r.status === 'approved' || r.status === 'rejected') && (
-            <button className="btn sm" disabled={decide.isPending} data-tip="Put it back in the waiting list" onClick={() => decide.mutate({ row: r, decision: 'undo' })}>Undo</button>
-          )}
+            </>}
+            {may && view === 'decided' && (r.status === 'approved' || r.status === 'rejected') && (
+              <button className="btn sm" disabled={decide.isPending} data-tip="Put it back in the waiting list" onClick={() => decide.mutate({ row: r, decision: 'undo' })}>Undo</button>
+            )}
+          </span>
         </div>
       ))}
     </div>

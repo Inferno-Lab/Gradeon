@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
-import 'package:gradeon/features/settings/views/settings_view.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tangent/features/dashboard/views/dashboard_view.dart';
+import 'package:tangent/features/settings/views/settings_view.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'support/harness.dart';
@@ -28,7 +28,7 @@ class _MockClient extends Mock implements HttpClient {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = _OfflineHttp();
-  setUpAll(() => registerFallbackValue(Uri.parse('https://gradeon.app')));
+  setUpAll(() => registerFallbackValue(Uri.parse('https://tangent.app')));
 
   setUp(() async {
     await bootMock();

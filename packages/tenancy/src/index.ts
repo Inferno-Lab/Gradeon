@@ -1,9 +1,9 @@
-import type { EntitlementDoc } from '@gradeon/contracts';
-import { pg } from '@gradeon/db';
-import { schools } from '@gradeon/db/registry';
+import type { EntitlementDoc } from '@tangent/contracts';
+import { pg } from '@tangent/db';
+import { schools } from '@tangent/db/registry';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { and, eq, isNull } from 'drizzle-orm';
-import { unseal } from '@gradeon/security';
+import { unseal } from '@tangent/security';
 
 export interface TenantInfo {
   id: string;
@@ -22,7 +22,7 @@ export interface TenantInfo {
   flags: Record<string, boolean>;
   /** A demo school: demo sign-in cards and the demo code work. */
   demo: boolean;
-  /** Gradeon pressed Go live: the school has moved in. */
+  /** Tangent pressed Go live: the school has moved in. */
   wentLive: boolean;
 }
 
@@ -51,7 +51,7 @@ export class Registry {
       max: opts.max ?? 8,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
-      application_name: 'gradeon-registry',
+      application_name: 'tangent-registry',
     });
     this.db = drizzle(this.pool);
   }
@@ -137,7 +137,7 @@ export class PoolManager {
       max: this.opts.perPool ?? 3,
       idleTimeoutMillis: 20_000,
       connectionTimeoutMillis: 15_000,
-      application_name: `gradeon-${slug}`.slice(0, 63),
+      application_name: `tangent-${slug}`.slice(0, 63),
     });
     pool.on('error', () => undefined); // a dropped idle connection must not crash the process
     this.pools.set(slug, { pool, lastUsed: Date.now(), url });

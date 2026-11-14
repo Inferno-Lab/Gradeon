@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { PERMISSION_CATALOG, ROLE_TEMPLATES, STEP_LABELS, type BlueprintRow, type RoleTemplate, DEPLOY_TARGET_LABELS } from '@gradeon/contracts';
-import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { PERMISSION_CATALOG, ROLE_TEMPLATES, STEP_LABELS, type BlueprintRow, type RoleTemplate, DEPLOY_TARGET_LABELS } from '@tangent/contracts';
+import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

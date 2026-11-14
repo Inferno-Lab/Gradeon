@@ -7,7 +7,7 @@
     "time": "09:00",
     "venue": "Classrooms",
     "category": "academic",
-    "imageUrl": "https://picsum.photos/seed/gradeon-ptm/1200/800",
+    "imageUrl": "https://picsum.photos/seed/tangent-ptm/1200/800",
     "rsvps": [
       {
         "userId": "usr_priya",
@@ -23,7 +23,7 @@
     "time": "17:00",
     "venue": "School auditorium",
     "category": "cultural",
-    "imageUrl": "https://picsum.photos/seed/gradeon-annual/1200/800",
+    "imageUrl": "https://picsum.photos/seed/tangent-annual/1200/800",
     "rsvps": []
   },
   {
@@ -34,7 +34,7 @@
     "time": "11:00",
     "venue": "Science block lawn",
     "category": "academic",
-    "imageUrl": "https://picsum.photos/seed/gradeon-science/1200/800",
+    "imageUrl": "https://picsum.photos/seed/tangent-science/1200/800",
     "rsvps": [
       {
         "userId": "usr_aarav",
@@ -50,7 +50,7 @@
     "time": "15:30",
     "venue": "Main ground",
     "category": "sports",
-    "imageUrl": "https://picsum.photos/seed/gradeon-football/1200/800",
+    "imageUrl": "https://picsum.photos/seed/tangent-football/1200/800",
     "rsvps": []
   },
   {
@@ -61,7 +61,7 @@
     "time": "09:30",
     "venue": "Library foyer",
     "category": "general",
-    "imageUrl": "https://picsum.photos/seed/gradeon-books/1200/800",
+    "imageUrl": "https://picsum.photos/seed/tangent-books/1200/800",
     "rsvps": []
   }
 ]

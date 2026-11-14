@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Headers, HttpCode, Inject, Injectable, Param, Post } from '@nestjs/common';
 import { POOLS, REGISTRY } from './tokens.js';
-import { catalogueName, changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
-import { ActionRequest, appIdFor, type ActionRow, type BuildRow, type ConsoleRole, type EntitlementDoc } from '@gradeon/contracts';
-import { migrate, newId, pg, pendingMigrations } from '@gradeon/db';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
-import { constantTimeEqual, randomToken, sha256, unseal } from '@gradeon/security';
+import { catalogueName, changeEntitlement, type EntitlementChange } from '@tangent/config-engine';
+import { ActionRequest, appIdFor, type ActionRow, type BuildRow, type ConsoleRole, type EntitlementDoc } from '@tangent/contracts';
+import { migrate, newId, pg, pendingMigrations } from '@tangent/db';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
+import { constantTimeEqual, randomToken, sha256, unseal } from '@tangent/security';
 import { PlatformHub } from './platform-hub.js';
-import type { PoolManager, Registry } from '@gradeon/tenancy';
+import type { PoolManager, Registry } from '@tangent/tenancy';
 import dns from 'node:dns/promises';
 import { Backups } from './backups.js';
 import { Db, Me, Needs, Public, type ConsoleUser, type reg } from './core.js';

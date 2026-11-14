@@ -1,8 +1,8 @@
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/user.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/user.dart';
 
 abstract class AuthRepository {
   Future<AppUser> login({required String email, required String password});

@@ -58,15 +58,15 @@ jobs:
         run: |
           sed -i.bak '\#- assets/mock/#d' pubspec.yaml && rm -f pubspec.yaml.bak && rm -rf assets/mock && ! grep -q 'assets/mock' pubspec.yaml
       - name: The school's name and logo on the phone
-        # From the school's brand (set in the console): its short name under the icon, its logo as the icon. Without a logo the Gradeon icon stays.
+        # From the school's brand (set in the console): its short name under the icon, its logo as the icon. Without a logo the Tangent icon stays.
         run: |
           BRAND=$(curl -fsS -H "x-school: ${{ inputs.school }}" "${SCHOOL_API%/}/v1/brand")
           LOGO=$(echo "$BRAND" | jq -r '.logoUrl // empty')
           if [ "${{ inputs.platform }}" = "android" ]; then
-            sed -i "s#android:label=\"Gradeon\"#android:label=\"${APP_NAME}\"#" android/app/src/main/AndroidManifest.xml
+            sed -i "s#android:label=\"Tangent\"#android:label=\"${APP_NAME}\"#" android/app/src/main/AndroidManifest.xml
             if [ -n "$LOGO" ]; then
               curl -fsSL "$LOGO" -o /tmp/logo
-              rm -rf android/app/src/main/res/mipmap-anydpi-v26  # the adaptive Gradeon icon would win over the school's
+              rm -rf android/app/src/main/res/mipmap-anydpi-v26  # the adaptive Tangent icon would win over the school's
               for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
                 convert /tmp/logo -resize "${d#*:}x${d#*:}^" -gravity center -extent "${d#*:}x${d#*:}" "android/app/src/main/res/mipmap-${d%%:*}/ic_launcher.png"
               done
@@ -142,7 +142,7 @@ jobs:
       - name: Build and send it to TestFlight
         if: inputs.platform == 'ios'
         run: |
-          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.gradeon.app;/PRODUCT_BUNDLE_IDENTIFIER = ${APP_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.tangent.app;/PRODUCT_BUNDLE_IDENTIFIER = ${APP_ID};/g" ios/Runner.xcodeproj/project.pbxproj
           flutter build ios --release --no-codesign --build-number=${{ github.run_number }} --dart-define=SCHOOL=${{ inputs.school }} --dart-define=API_BASE_URL=${SCHOOL_API}
           xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID" \

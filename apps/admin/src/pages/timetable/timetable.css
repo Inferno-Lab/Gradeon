@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/AdminTimetable.dc.html. Selectors are prefixed with .pg-timetable. */
+/* Selectors are prefixed with .pg-timetable. */
 
 
 .pg-timetable .bd{display:grid;grid-template-columns:minmax(0,1fr) 308px;gap:20px;align-items:start}

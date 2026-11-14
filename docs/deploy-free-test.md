@@ -7,7 +7,7 @@ You make two accounts (Neon and Render). Everything else is in this repository.
 ## 1. Neon: the database
 
 1. Go to **neon.tech** and sign up (GitHub or Google works).
-2. Create a project called `gradeon`. Region: **Singapore** (closest to India). Postgres version: the newest offered.
+2. Create a project called `tangent`. Region: **Singapore** (closest to India). Postgres version: the newest offered.
 3. On the project page press **Connect**. Under *Connection string*:
    - switch **Connection pooling** to **off** (the console needs the *direct* connection),
    - copy the string. It starts with `postgresql://` and ends with `?sslmode=require`.
@@ -17,25 +17,25 @@ Free limits: 0.5 GB storage per project. The demo school with 1,498 students use
 
 ## 2. GitHub: the code
 
-The repository already exists at `Inferno-Lab/Gradeon`. Render builds from `main` (the owner's service tracks it), so a change goes live only once it is on `main`.
+The repository already exists at `Inferno-Lab/Tangent`. Render builds from `main` (the owner's service tracks it), so a change goes live only once it is on `main`.
 
 ## 3. Render: the service
 
-1. Go to **render.com** and sign up with GitHub. Allow it to read `Gradeon`.
-2. **New +** → **Blueprint** → pick `Gradeon` → branch `main` → **Connect**.
-3. Render reads `render.yaml` and shows one service, `gradeon`. It asks for three values:
+1. Go to **render.com** and sign up with GitHub. Allow it to read `Tangent`.
+2. **New +** → **Blueprint** → pick `Tangent` → branch `main` → **Connect**.
+3. Render reads `render.yaml` and shows one service, `tangent`. It asks for three values:
    - `REGISTRY_DATABASE_URL`: paste the Neon string.
    - `DEMO_CODE`: six digits you choose, for example `482915`. The console asks for it after your password.
 4. Press **Apply**. The first build takes 6 to 10 minutes.
 5. When the service says **Live**, open `https://<your-service>.onrender.com`.
 
-If `gradeon` is already taken as a name, Render proposes another one. That is fine: nothing else depends on the name.
+If `tangent` is already taken as a name, Render proposes another one. That is fine: nothing else depends on the name.
 
 ## 4. Sign in
 
 | Where | Address | Sign in with |
 | --- | --- | --- |
-| Console | `https://<service>.onrender.com/console/` | `kaushal@gradeon.app`, the password from Render → your service → **Environment** → `BOOTSTRAP_PASSWORD`, then your `DEMO_CODE` |
+| Console | `https://<service>.onrender.com/console/` | `kaushal@tangent.app`, the password from Render → your service → **Environment** → `BOOTSTRAP_PASSWORD`, then your `DEMO_CODE` |
 | Demo school admin | `https://<service>.onrender.com/s/greenfield` | `neha.menon@greenfield.edu.in`, password `nest2026`, then press *Type the demo code* |
 | Phone app (a build for `greenfield`) | the app | parent `priya.sharma@example.com`, teacher `kavita.iyer@greenfield.edu.in`; password `nest2026`, code `424242` |
 
@@ -51,7 +51,7 @@ Messages, files and payments: the test track starts in test mode (the switch at 
 
 The console's **Build the app** (a school's page → App) starts the GitHub Actions workflow (`.github/workflows/mobile-build.yml`). Each build gets a one-time code to fetch its signing kit from the console and to report back, so no signing secret sits in GitHub. Everything is a connection under the console's **Integrations**; each template says where to find every value:
 
-1. **App builds → GitHub**: the repository (`Inferno-Lab/Gradeon`), the branch (`main`) and a fine-grained token with **Actions: read and write** on it. Test lists the workflow.
+1. **App builds → GitHub**: the repository (`Inferno-Lab/Tangent`), the branch (`main`) and a fine-grained token with **Actions: read and write** on it. Test lists the workflow.
 2. **Phone notifications → Firebase**: the service account and the app files (`google-services.json`, `GoogleService-Info.plist`). Test checks the files belong to the project.
 3. **App stores → Google Play** (the upload key store, its passwords and a service account with release rights; the track) and/or **App Store Connect** (team ID, issuer ID, key ID and the `.p8` key).
 

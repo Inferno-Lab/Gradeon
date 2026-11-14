@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/theme/app_theme.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/theme/app_theme.dart';
 
 class ThemeService extends GetxService {
   ThemeService(this._storage);

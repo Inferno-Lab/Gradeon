@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import { addDays, dayName, dayMonth, inr, istToday, latestSchoolDay, schoolDaysEnding, type FeeHead, type FeeHeadsPut, type FeeSummary, type InvoiceDetail, type InvoiceRow, type PaymentCreate, type ReceiptCancel, type WaiverRequest } from '@gradeon/contracts';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+import { newId } from '@tangent/db';
+import { addDays, dayName, dayMonth, inr, istToday, latestSchoolDay, schoolDaysEnding, type FeeHead, type FeeHeadsPut, type FeeSummary, type InvoiceDetail, type InvoiceRow, type PaymentCreate, type ReceiptCancel, type WaiverRequest } from '@tangent/contracts';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 
@@ -130,11 +130,11 @@ export class FeesService {
   }
 
   /**
-   * Replaces the list (Gradeon's console, or the school when `feeStructures.schoolEdits` is on). A head that invoices or fee
+   * Replaces the list (Tangent's console, or the school when `feeStructures.schoolEdits` is on). A head that invoices or fee
    * structures use cannot be removed, only renamed, so no money loses its kind.
    */
   async setHeads(t: TenantCtx, body: FeeHeadsPut, by: { id: string; name: string }): Promise<FeeHead[]> {
-    if (!(await this.settings.value<boolean>(t, 'feeStructures.schoolEdits', true))) throw new ApiError('forbidden', 'Gradeon keeps this school’s fee heads. Ask Gradeon to change them.');
+    if (!(await this.settings.value<boolean>(t, 'feeStructures.schoolEdits', true))) throw new ApiError('forbidden', 'Tangent keeps this school’s fee heads. Ask Tangent to change them.');
     const slug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'fee';
     const next = body.heads.map((h, i) => ({ key: h.key ?? slug(h.name), name: h.name, sort: i + 1, concession: h.concession }));
     if (new Set(next.map((h) => h.key)).size !== next.length) throw new ApiError('validation', 'Two fee heads have the same name.');

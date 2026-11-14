@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router';
-import { Segmented } from '@gradeon/web-ui';
+import { Segmented } from '@tangent/web-ui';
 import { useApp } from './context';
 import { tabsOf } from './nav';
 

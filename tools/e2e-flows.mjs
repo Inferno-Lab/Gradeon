@@ -48,10 +48,10 @@ const expectVisible = async (loc, what, timeout = 8000) => { await loc.first().w
 const h = { 'x-school': slug };
 const a = await post('/v1/auth/login', { identifier: 'neha.menon@greenfield.edu.in', password: 'nest2026' }, h);
 const t = await post('/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' }, h);
-const adminStore = [`gradeon.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
-const ca = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
+const adminStore = [`tangent.admin.${slug}`, JSON.stringify({ user: t.user }), t.accessToken];
+const ca = await post('/console/v1/auth/login', { identifier: 'kaushal@tangent.app', password: 'nest2026' });
 const ct = await post('/console/v1/auth/verify', { challengeId: ca.challenge.challengeId, code: '424242' });
-const consoleStore = ['gradeon.console', JSON.stringify({ user: ct.user }), ct.accessToken];
+const consoleStore = ['tangent.console', JSON.stringify({ user: ct.user }), ct.accessToken];
 const school = (await (await fetch(`${API}/console/v1/schools`, { headers: { authorization: `Bearer ${ct.accessToken}` } })).json()).find((s) => s.slug === slug);
 
 // ── admin ────────────────────────────────────────────────────────────────
@@ -160,17 +160,17 @@ await flow('admin: fees page lists overdue families and opens a payment', { stor
   await p.keyboard.press('Escape');
 });
 
-await flow('admin: school setup is read-only, and a change is asked of Gradeon', { storage: adminStore }, async (p) => {
+await flow('admin: school setup is read-only, and a change is asked of Tangent', { storage: adminStore }, async (p) => {
   await p.goto(`${ADMIN}/s/${slug}/profile`, { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'School profile' }), 'the School profile page');
   if (await p.getByRole('button', { name: 'Save changes' }).count()) throw new Error('the school can still save settings');
   if (await p.locator('main input:not([type=search])').count()) throw new Error('the profile has fields the school can edit');
-  await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
-  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
+  await p.getByRole('button', { name: 'Ask Tangent to change this' }).click();
+  await p.getByRole('button', { name: 'Send to Tangent' }).click();
   await expectVisible(p.getByText('Say what you would like changed.'), 'the empty-request error');
   await p.getByLabel('What would you like changed?').fill('Please put Events in the app’s bottom tabs.');
-  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
-  await expectVisible(p.getByText(/Sent to Gradeon/), 'the sent toast');
+  await p.getByRole('button', { name: 'Send to Tangent' }).click();
+  await expectVisible(p.getByText(/Sent to Tangent/), 'the sent toast');
   await p.getByRole('tab', { name: 'Plan and modules' }).click();
   await expectVisible(p.getByText(/ plan$/).first(), 'the plan and modules');
 });
@@ -221,7 +221,7 @@ await flow('admin: phone dock navigates', { storage: adminStore, context: { view
 // ── console ──────────────────────────────────────────────────────────────
 await flow('console: wrong password shakes, right password and code sign in', {}, async (p) => {
   await p.goto(`${CONSOLE}/login`, { waitUntil: 'networkidle' });
-  await p.getByLabel('Gradeon email').fill('kaushal@gradeon.app');
+  await p.getByLabel('Tangent email').fill('kaushal@tangent.app');
   await p.locator('#lg-pw').fill('nope');
   await p.getByRole('button', { name: /^Continue/ }).click();
   await expectVisible(p.getByRole('alert'), 'the wrong-password message');
@@ -274,7 +274,7 @@ await flow('console: team invite validates, then invites with a link the person 
   await p.getByRole('button', { name: 'Send the invitation' }).click();
   await expectVisible(p.getByText('Enter their name.'), 'the name error');
   await p.getByLabel('Name', { exact: true }).fill('Test Person');
-  await p.getByLabel('Work email').fill(`tp${Date.now() % 100000}@gradeon.app`);
+  await p.getByLabel('Work email').fill(`tp${Date.now() % 100000}@tangent.app`);
   await p.getByRole('button', { name: 'Send the invitation' }).click();
   const dialog = p.getByRole('dialog');
   await expectVisible(dialog.getByText('Test Person is invited'), 'the invitation');
@@ -444,7 +444,7 @@ await flow('admin: an event is added, shown on the calendar and removed', { stor
   await expectVisible(p.getByText(/E2E open house was removed/), 'the removed toast');
 });
 
-await flow('admin: the school profile is read-only with a way to ask Gradeon, and data requests are answered', { storage: adminStore }, async (p) => {
+await flow('admin: the school profile is read-only with a way to ask Tangent, and data requests are answered', { storage: adminStore }, async (p) => {
   await p.goto(A('/profile/roles'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('tab', { name: /Office staff/ }), 'the role list');
   for (const name of ['New role', 'Save role', 'Delete role']) if (await p.getByRole('button', { name }).count()) throw new Error(`the school still has "${name}"`);
@@ -453,8 +453,8 @@ await flow('admin: the school profile is read-only with a way to ask Gradeon, an
   await expectVisible(p.getByText('Child marked absent or late'), 'the messages');
   await p.goto(A('/profile/app'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByText('Tabs along the bottom').first(), 'the layout');
-  await p.getByRole('button', { name: 'Ask Gradeon to change this' }).click();
-  await p.getByRole('dialog').getByRole('button', { name: 'Send to Gradeon' }).click();
+  await p.getByRole('button', { name: 'Ask Tangent to change this' }).click();
+  await p.getByRole('dialog').getByRole('button', { name: 'Send to Tangent' }).click();
   await expectVisible(p.getByText('Say what you would like changed.'), 'the ask error');
   await p.keyboard.press('Escape');
   await p.goto(A('/privacy'), { waitUntil: 'networkidle' });
@@ -667,13 +667,13 @@ await flow('admin: academic year adds a holiday, refuses a bad one, and fees bil
   await expectVisible(p.getByText(/E2E science fair was added to \d+ students’ fees/), 'the billed toast');
 });
 
-await flow('admin: moving in sends a file to Gradeon; Students → On the app invites a class and prints its letters', { storage: adminStore }, async (p) => {
+await flow('admin: moving in sends a file to Tangent; Students → On the app invites a class and prints its letters', { storage: adminStore }, async (p) => {
   await p.goto(A('/moving-in'), { waitUntil: 'networkidle' });
   await expectVisible(p.getByRole('heading', { name: 'Send us your files' }), 'the files card');
   await p.locator('input[type=file]').setInputFiles({ name: 'e2e-subjects.csv', mimeType: 'text/csv', buffer: Buffer.from('Subject,Periods a week\nE2E Robotics,2\nE2E Dance,x\n') });
   await p.getByLabel('What is in it (optional)').fill('Two new subjects');
-  await p.getByRole('button', { name: 'Send to Gradeon' }).click();
-  await expectVisible(p.getByText('Sent it to Gradeon. The team will import it and tell you.'), 'the sent toast');
+  await p.getByRole('button', { name: 'Send to Tangent' }).click();
+  await expectVisible(p.getByText('Sent it to Tangent. The team will import it and tell you.'), 'the sent toast');
   await expectVisible(p.getByText('e2e-subjects.csv'), 'the file in the list');
   await p.goto(A('/students/app'), { waitUntil: 'networkidle' });
   const row = p.locator('.rw', { hasText: '8 A' });

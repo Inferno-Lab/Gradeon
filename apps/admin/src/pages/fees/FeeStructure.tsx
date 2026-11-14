@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FeeHead } from '@gradeon/contracts';
-import { Checkbox, Field, useToast } from '@gradeon/web-ui';
+import type { FeeHead } from '@tangent/contracts';
+import { Checkbox, Field, useToast } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Ico, problem, useSetting } from '../../app/kit';
 import { useShellChrome } from '../../app/Layout';
@@ -29,7 +29,7 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
   const app = useApp();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['fee-heads'], queryFn: app.api.fees.heads });
-  // The school edits its own fee heads unless Gradeon keeps them (console: Fees → the school edits its fee structures).
+  // The school edits its own fee heads unless Tangent keeps them (console: Fees → the school edits its fee structures).
   const open = useSetting<boolean>('feeStructures.schoolEdits', true);
   const may = open && app.user.permissions.includes('setup.write');
   const [draft, setDraft] = useState<Draft[]>([]);
@@ -49,7 +49,7 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
     <Card title="Fee heads" chip={<span className="chip">{draft.length}</span>}>
       <p className="help" style={{ margin: '0 0 12px' }}>{may
         ? 'The kinds of fee on invoices and receipts, in this order. A head already used can be renamed but not removed. Concessions apply only to heads marked for them.'
-        : 'The kinds of fee on invoices and receipts. Gradeon keeps them for your school; ask Gradeon from School profile to change them.'}</p>
+        : 'The kinds of fee on invoices and receipts. Tangent keeps them for your school; ask Tangent from School profile to change them.'}</p>
       {draft.map((d, i) => (
         <div key={d.key ?? `new-${i}`} className="exr" style={{ padding: '8px 0', gap: 12 }}>
           <span className="rn num">{i + 1}</span>
@@ -78,7 +78,7 @@ function Heads({ say }: { say: (text: string, tone?: 'bad') => void }) {
   );
 }
 
-/** The rules Gradeon set for the school's fees, so the office sees what families are charged and why. */
+/** The rules Tangent set for the school's fees, so the office sees what families are charged and why. */
 function Rules() {
   const { shell } = useShellChrome();
   const late = useSetting<number>('fees.lateFeePct', 0);
@@ -89,7 +89,7 @@ function Rules() {
     <Card title="Rules">
       <div className="kv"><span>Late fine</span><b>{fines && late > 0 ? `${late}% each month on an overdue invoice` : 'None'}</b></div>
       <div className="kv"><span>Reminders</span><b>{reminders ? `${remind} ${remind === 1 ? 'day' : 'days'} before the due date` : 'Not sent'}</b></div>
-      <p className="help" style={{ marginBottom: 0 }}>Gradeon sets these for your school. To change them, ask Gradeon from School profile.</p>
+      <p className="help" style={{ marginBottom: 0 }}>Tangent sets these for your school. To change them, ask Tangent from School profile.</p>
     </Card>
   );
 }

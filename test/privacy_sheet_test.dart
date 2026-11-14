@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/widgets/sheets.dart';
-import 'package:gradeon/features/settings/views/privacy_sheet.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/widgets/sheets.dart';
+import 'package:tangent/features/settings/views/privacy_sheet.dart';
 
 import 'support/harness.dart';
 

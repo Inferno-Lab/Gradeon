@@ -1,8 +1,8 @@
 /* eslint-disable */
-// Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
+// One school's markup: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
-import { DEFAULT_BRAND, hueOf, hueTokens } from '@gradeon/contracts';
-import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon, EmptyNote } from "@gradeon/web-ui";
+import { DEFAULT_BRAND, hueOf, hueTokens } from '@tangent/contracts';
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon, EmptyNote } from "@tangent/web-ui";
 import "./school.css";
 
 // The school's own deep colour, worked out from its brand colour, so its page header looks like its admin (the School board).
@@ -145,7 +145,7 @@ export function SchoolView({ v }: { v: any }) {
               <div className="tkt rise" style={{ "--d": ".2s" } as CSSProperties}>
                 <div className="l">
                   <div className="fd" style={{ fontSize: "22px", letterSpacing: "-.03em" } as CSSProperties}>
-                    Gradeon {v.planName}
+                    Tangent {v.planName}
                   </div>
                   {v.invoiceLine && (
                   <div className="tl2">

@@ -1,4 +1,4 @@
-import type { Capability, DeliveryStatus } from '@gradeon/contracts';
+import type { Capability, DeliveryStatus } from '@tangent/contracts';
 
 type Q = { query: (sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number | null }> };
 

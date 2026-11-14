@@ -1,4 +1,4 @@
-# Building Gradeon Hue into the product
+# Building Tangent Hue into the product
 
 The working checklist for the one-pass build of Hue, the icon system and the empty states into the admin, the console and the app (started 12 November 2026 on `design/system-v2`, after `main` @ 863abf3). Every row is ticked only after it is checked in the running product.
 
@@ -31,7 +31,7 @@ The working checklist for the one-pass build of Hue, the icon system and the emp
 ## The owner's standard (12 November)
 
 "The design system must be the same caliber as the canvas; nothing else, because the canvas is what I approved." So:
-- A page with a board is rebuilt from the board's composition (its markup and classes), bound to real data, then compared side by side with the board shot (`design/hue/shots/<Board>.png`) at 1440 and checked at phone width and in dark.
+- A page with a board is rebuilt from the board's composition (its markup and classes), bound to real data, then compared side by side with the board shot at 1440 and checked at phone width and in dark.
 - Boarded web pages: dashboard ← Today, students ← Students, fees ← Fees, attendance ← Attendance, timetable ← Timetable, menu ← Sidebar, sign-in ← SignIn; console fleet ← Fleet, school ← School, modules ← Modules. App: parent home ← ParentHome, fees ← ParentFees, results ← ParentResults, teacher home ← TeacherHome, roll call ← RollCall, empty home ← EmptyHome, the kit ← AppKit.
 - Every other page is built only from the canvas's parts (Components, AppKit).
 - Hue's component CSS (`design/hue/base.css`, `base2.css`) is ported into web-ui as `hue-parts.css` under `.nest`; class names that already meant something else in Nest are renamed in the port: Hue `.rw` → `.fx`, `.tr` → `.trow`, `.tile` → `.ht`, `.mini` → `.mcard`, `.st` → `.stb`, `.float` → `.flt`, `.sheet` → `.psheet`, `.col` → `.vc`.

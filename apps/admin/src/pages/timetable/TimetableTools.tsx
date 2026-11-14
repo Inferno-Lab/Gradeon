@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { SlotRow, WeekOf } from '@gradeon/contracts';
-import { Dialog, ErrorLine, Field, Segmented, SelectField, useShake } from '@gradeon/web-ui';
+import type { SlotRow, WeekOf } from '@tangent/contracts';
+import { Dialog, ErrorLine, Field, Segmented, SelectField, useShake } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { problem } from '../../app/kit';
 

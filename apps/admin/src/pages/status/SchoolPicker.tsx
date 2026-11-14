@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon, Illustration } from '@gradeon/web-ui';
+import { Icon, Illustration } from '@tangent/web-ui';
 
 /** No school in the address: ask for it, as an empty card with the noticeboard. */
 export function SchoolPicker() {
@@ -13,7 +13,7 @@ export function SchoolPicker() {
           <div className="eb">
             <div className="art"><Illustration scene="noticeboard" /></div>
             <h3>Which school?</h3>
-            <p>Type your school's Gradeon address, like greenfield. You can find it in the invite email.</p>
+            <p>Type your school's Tangent address, like greenfield. You can find it in the invite email.</p>
             <label className="in3" style={{ marginTop: 10 }}>
               <Icon name="home" size={18} />
               <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="greenfield" aria-label="School address" autoFocus autoCapitalize="none" spellCheck={false} />

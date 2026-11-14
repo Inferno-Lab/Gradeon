@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { createHash } from 'node:crypto';
-import { ADMISSION_STAGES, PAY_METHODS, PERIOD_KINDS, WEEKDAYS } from '@gradeon/contracts';
+import { ADMISSION_STAGES, PAY_METHODS, PERIOD_KINDS, WEEKDAYS } from '@tangent/contracts';
 import { newId } from '../ids.js';
 
 type Q = pg.Pool | pg.PoolClient;
@@ -229,7 +229,7 @@ const staff = kind<StaffLookups>({
       ...(was && was.kind !== 'staff' ? ['This email belongs to a family’s account.'] : []),
       ...(r.phone && digits(r.phone).length < 10 ? ['Use a 10-digit phone number.'] : []),
       ...(phoneOwner && phoneOwner !== was?.id ? ['Someone else already has this phone number.'] : []),
-      ...(r.role && !l.roles.has(lc(r.role)) ? [`There is no role “${r.role}”: Gradeon makes roles in the console.`] : []),
+      ...(r.role && !l.roles.has(lc(r.role)) ? [`There is no role “${r.role}”: Tangent makes roles in the console.`] : []),
       ...(unknown.length ? [`Subjects not set up yet: ${unknown.join(', ')}. Import subjects first.`] : []),
       ...(r.joined_on && !isoDay(r.joined_on) ? ['Write the joining date as 2019-06-10 or 10/06/2019.'] : []),
     ];
@@ -294,7 +294,7 @@ const students = kind<StudentLookups>({
       ...(r.status && !STATUS[norm(r.status)] ? ['Status is active or inactive (left, TC and transferred count as inactive).'] : []),
       ...(r.gender && !['female', 'male', 'other'].includes(norm(r.gender)) ? ['Gender is female, male or other.'] : []),
     ];
-    // No admission number (a sheet of new children): the same child is the same name and date of birth, and Gradeon numbers new ones.
+    // No admission number (a sheet of new children): the same child is the same name and date of birth, and Tangent numbers new ones.
     if (!r.admission_no) return ok(`new|${person(r.name!, isoDay(r.dob!) ?? '')}`, errors, l.people.has(person(r.name!, isoDay(r.dob!) ?? '')));
     return ok(lc(r.admission_no), errors, l.students.has(lc(r.admission_no)));
   },

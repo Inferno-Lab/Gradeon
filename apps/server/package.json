@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/server",
+  "name": "@tangent/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,10 +11,10 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@gradeon/api": "workspace:*",
-    "@gradeon/console-api": "workspace:*",
-    "@gradeon/nest-kit": "workspace:*",
-    "@gradeon/tenancy": "workspace:*",
+    "@tangent/api": "workspace:*",
+    "@tangent/console-api": "workspace:*",
+    "@tangent/nest-kit": "workspace:*",
+    "@tangent/tenancy": "workspace:*",
     "@fastify/cors": "^11.0.0",
     "@fastify/static": "^10.1.2",
     "@nestjs/common": "^11.1.0",

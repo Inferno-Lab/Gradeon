@@ -29,7 +29,7 @@ renderVals() {
   const con = app === 'console';
   return {
     cls: `hue s-${seed} ${dark ? 'dark ' : ''}side`,
-    crest: 'G', wsName: con ? 'Gradeon' : 'Greenfield International', wsSub: con ? 'Console · Mumbai cell' : 'Pune · 2026–27',
+    crest: 'G', wsName: con ? 'Tangent' : 'Greenfield International', wsSub: con ? 'Console · Mumbai cell' : 'Pune · 2026–27',
     meI: con ? 'KB' : 'NM', meName: con ? 'Kaushal Bhatt' : 'Neha Menon', meRole: con ? 'Super admin' : 'Principal',
     groups: (con ? C : A).map(([t, items]) => ({ t, items: items.map(([t, o, f, n]) => ({ t, n: n ?? '', d: t === active ? f : o, k: t === active ? 'f' : 'r', cls: t === active ? 'nv on' : 'nv' })) })),
   };

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/ui/controls.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/ui/controls.dart';
 
 /// Short labels printed on notebook covers.
 const subjectAbbr = {
@@ -37,7 +37,7 @@ class Overline extends StatelessWidget {
   );
 }
 
-/// A status tag (Gradeon Hue `.tag`): the status colour's soft fill with its ink, sentence case.
+/// A status tag (Tangent Hue `.tag`): the status colour's soft fill with its ink, sentence case.
 class Stamp extends StatelessWidget {
   const Stamp(this.text, {required this.color, this.size = 12, super.key});
 

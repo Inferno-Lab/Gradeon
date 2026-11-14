@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@gradeon/config-engine';
-import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueContrast, hueOf, hueTokens } from '@gradeon/contracts';
-import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon, EmptyNote } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { APP_CATALOG, APP_ROLES, APP_ROLE_LABELS, MODULES, hasKey, type AppRole } from '@tangent/config-engine';
+import { CATEGORY_TONES, CATEGORY_TONE_LABELS, DEFAULT_BRAND, MESSAGE_EVENTS, SETTING_GROUPS, SETTINGS_META, SchoolSettingsSchema, type AppLayout, type Category, type SchoolConfig, type SettingKey, type SettingMeta, hueContrast, hueOf, hueTokens } from '@tangent/contracts';
+import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, NumberField, Select, SelectField, TimeField, useShake, Icon, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 
@@ -20,7 +20,7 @@ const ta = { width: '100%', minHeight: 90, resize: 'vertical', border: 0, outlin
 const groupLabel = (g: string) => (MODULES.find((m) => m.key === g) ? (g === 'school' ? 'Academic year' : MODULES.find((m) => m.key === g)!.name) : g);
 
 /**
- * Everything Gradeon sets for one school, built from SETTINGS_META: a new setting appears here without a new screen. Groups sit
+ * Everything Tangent sets for one school, built from SETTINGS_META: a new setting appears here without a new screen. Groups sit
  * in a side list with their own address (?group=…), a search finds any setting, and changes in several groups go in one save.
  */
 export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
@@ -89,7 +89,7 @@ export function ConfigTab({ schoolId, say }: { schoolId: string; say: Say }) {
           <h2>Configuration</h2><span className="chip">Version {cfg.version}</span><span className="grow"></span>
           <div className="srch" style={{ minWidth: 220, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting" aria-label="Find a setting" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
-        <div className="help">Only Gradeon changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).{off.length ? ` Not in its plan, so not shown: ${off.map((m) => m.name).join(', ')}.` : ''}</div>
+        <div className="help">Only Tangent changes a school’s setup. The school sees it, read-only, under School profile, and can ask for changes (Requests).{off.length ? ` Not in its plan, so not shown: ${off.map((m) => m.name).join(', ')}.` : ''}</div>
         {dirtyGroups.length > 0 && (
           <div className="tgrow" style={{ marginTop: 10, alignItems: 'center' }}>
             <span className="chip a">{dirtyGroups.length === 1 ? '1 group has' : `${dirtyGroups.length} groups have`} unsaved changes</span>
@@ -198,7 +198,7 @@ function SettingRow({ meta, value, error, disabled, cfg, logo, onLogo, onChange 
         const r = rules[e.key] ?? e.defaults;
         return (
           <div key={e.key} className="kv" style={{ flexWrap: 'wrap', gap: 8 }}>{e.label}{e.urgent ? ' · sent in quiet hours' : ''}
-            <b style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{CHANNELS.map(([ch, label]) => (
+            <b style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>{CHANNELS.map(([ch, label]) => (
               <Checkbox key={ch} checked={!!(r as Record<string, boolean | undefined>)[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={label} />
             ))}</b>
           </div>
@@ -260,7 +260,7 @@ function History({ cfg, schoolId, can, say }: { cfg: SchoolConfig; schoolId: str
             <small style={{ display: 'block', color: 'var(--ink3)' }}>{v.by} · {ago(v.at)}{v.note ? ` · ${v.note}` : ''}</small>
           </span>
           {can && v.id !== cfg.versions[0]?.id && (sure === v.id
-            ? <span style={{ display: 'flex', gap: 8 }}><button className="btn sm dng" disabled={back.isPending} onClick={() => back.mutate(v.id)}>Roll back to v{v.version}</button><button className="btn sm" onClick={() => setSure(null)}>Keep</button></span>
+            ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm dng" disabled={back.isPending} onClick={() => back.mutate(v.id)}>Roll back to v{v.version}</button><button className="btn sm" onClick={() => setSure(null)}>Keep</button></span>
             : <button className="btn sm" onClick={() => setSure(v.id)}>Roll back…</button>)}
         </div>
       ))}

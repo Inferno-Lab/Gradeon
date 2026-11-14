@@ -11,7 +11,7 @@ import { runIfDue } from './jobs.js';
 
 let server: DevPostgres;
 beforeAll(async () => {
-  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'gradeon-pg-')), 'data'), fresh: true });
+  server = await startDevPostgres({ dataDir: path.join(mkdtempSync(path.join(tmpdir(), 'tangent-pg-')), 'data'), fresh: true });
 }, 120_000);
 afterAll(async () => { await server?.stop(); });
 
@@ -22,6 +22,11 @@ describe('migrations', () => {
       expect(files.length).toBeGreaterThan(0);
       for (const f of files) expect(['expand', 'backfill', 'contract']).toContain(f.kind);
     }
+  });
+
+  it('names only real migrations among those changed by the rename', async () => {
+    const tags = new Set((await Promise.all((['school', 'registry'] as const).map(async (set) => (await loadMigrations(set)).filter((m) => m.ranAs).map((m) => `${set}/${m.tag}`)))).flat());
+    expect(tags.size).toBe(6);
   });
 
   it('applies the school set once and is a no-op the second time', async () => {

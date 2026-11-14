@@ -2,12 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/app_icons.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/app_icons.dart';
 
-/// The scene above an empty screen (Gradeon Hue, design/hue/EMPTY-STATES.md, boards EmptyApp1–4): what will appear,
+/// The scene above an empty screen (Tangent Hue, design/hue/EMPTY-STATES.md, boards EmptyApp1–4): what will appear,
 /// built from the app's own parts (cards, rows, tags, bars) and moving in one 10 s loop of up to six beats; still on
 /// its last frame when the device asks for less motion. Hidden from screen readers: the words carry the meaning.
 /// [search] is not a scene: a search or a filter with no match is not an empty screen, so it gets a plain icon tile.

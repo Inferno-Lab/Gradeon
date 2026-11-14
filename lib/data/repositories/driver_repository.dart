@@ -1,7 +1,7 @@
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/driver.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/driver.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 /// A bus driver's trips: start, share where the bus is, mark each child, say it is running late, end.
 abstract class DriverRepository {

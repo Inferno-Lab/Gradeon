@@ -1,8 +1,8 @@
 import { Body, Controller, Get, HttpCode, Inject, Injectable, Param, Post, Put, Res } from '@nestjs/common';
 import type { FastifyReply } from 'fastify';
-import { CAPABILITY_LABELS, ComplianceCreate, ComplianceUpdate, breachNotice, providerDef, type ComplianceRow, type DataRequestAcross, type PublicStatus, type SubprocessorRow } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { CAPABILITY_LABELS, ComplianceCreate, ComplianceUpdate, breachNotice, providerDef, type ComplianceRow, type DataRequestAcross, type PublicStatus, type SubprocessorRow } from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
 import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';
 import { Integrations } from './integrations.js';
 import { ENV, type Env } from './env.js';

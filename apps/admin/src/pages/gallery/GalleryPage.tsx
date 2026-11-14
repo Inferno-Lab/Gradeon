@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { uploadFile } from '@gradeon/api-client';
-import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
-import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { uploadFile } from '@tangent/api-client';
+import type { AlbumRow, GalleryReportRow, PhotoRow } from '@tangent/contracts';
+import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, StudentPick, problem, stamp } from '../../app/kit';
@@ -82,7 +82,7 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
           </div>
           <button className="xbtn" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
-        {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <FilePick accept="image/jpeg,image/png,image/webp" multiple className="btn sm pri" disabled={add.isPending} onPickAll={(files) => add.mutate(files)}>{add.isPending ? 'Uploading…' : 'Add photos'}</FilePick>
           <button className="btn sm" disabled={share.isPending} onClick={() => share.mutate()}>{album.published ? 'Hide from families' : 'Share with families'}</button>
           <button className="btn sm" onClick={onEdit}>Edit album</button>

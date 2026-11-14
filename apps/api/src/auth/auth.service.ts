@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import { initials, type AppRoleKey, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@gradeon/contracts';
-import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@gradeon/security';
+import { newId } from '@tangent/db';
+import { initials, type AppRoleKey, type ClientKind, type LoginChallenge, type LoginRequest, type LoginResponse, type Permission, type SessionUser, type TokenPair } from '@tangent/contracts';
+import { hashPassword, maskEmail, maskPhone, passwordNeedsRehash, randomCode, randomToken, sha256, signJwt, verifyPassword, constantTimeEqual } from '@tangent/security';
 import { ENV, type Env } from '../env.js';
-import { ApiError } from '@gradeon/nest-kit';
+import { ApiError } from '@tangent/nest-kit';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { AuditService, Messenger, SettingsService } from '../school/support.js';
 import type { TenantCtx } from '../tenancy/tenant.js';
@@ -193,8 +193,8 @@ export class AuthService {
     try {
       // Sent now (never queued or held): the person is waiting on the sign-in screen.
       await this.messenger.send(t, {
-        channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Gradeon ${what}` : undefined,
-        body: `Your Gradeon ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
+        channel, to: (channel === 'sms' ? user.phone : user.email) ?? '', subject: channel === 'email' ? `Your Tangent ${what}` : undefined,
+        body: `Your Tangent ${what} for ${t.info.shortName} is ${code}. It expires in ${OTP_MINUTES} minutes.`,
         key: purpose === 'reset' ? 'auth.reset' : 'auth.code', vars: { code, school: t.info.shortName, minutes: String(OTP_MINUTES) }, now: true,
       });
     } catch {

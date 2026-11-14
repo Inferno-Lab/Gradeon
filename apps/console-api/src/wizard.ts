@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Param, Post, Put, Query } from '@nestjs/common';
-import { CORE_MODULES, DEFAULT_PLANS, closeModules, moduleByKey } from '@gradeon/config-engine';
-import { BlueprintInput, PlanSave, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { CORE_MODULES, DEFAULT_PLANS, closeModules, moduleByKey } from '@tangent/config-engine';
+import { BlueprintInput, PlanSave, STEP_LABELS, WIZARD_STEPS, WizardPayload, type BlueprintRow, type PlanRow, type ProvisionRunRow, type WizardDraftRow, type WizardReview } from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
 import { Db, Me, Needs, type ConsoleUser, type reg } from './core.js';
 import { ENV, demosAllowed, type Env } from './env.js';
 import { driversFor } from './provisioning/drivers.js';

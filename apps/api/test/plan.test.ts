@@ -1,6 +1,6 @@
 import { RequestMethod } from '@nestjs/common';
-import { featureByKey, moduleByKey } from '@gradeon/config-engine';
-import { istToday } from '@gradeon/contracts';
+import { featureByKey, moduleByKey } from '@tangent/config-engine';
+import { istToday } from '@tangent/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { startHarness, type Harness } from './harness.js';

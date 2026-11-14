@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Injectable, Param, Post, Query, Req, type OnModuleInit } from '@nestjs/common';
-import { ClientError, type ErrorGroup } from '@gradeon/contracts';
-import { Limiter, ZodPipe, alerts, errorSink, recordError } from '@gradeon/nest-kit';
+import { ClientError, type ErrorGroup } from '@tangent/contracts';
+import { Limiter, ZodPipe, alerts, errorSink, recordError } from '@tangent/nest-kit';
 import { PlatformHub } from './platform-hub.js';
 import type { FastifyRequest } from 'fastify';
 import { Db, Me, Needs, Public, type ConsoleUser } from './core.js';

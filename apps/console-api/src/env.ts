@@ -16,8 +16,8 @@ const Env = z.object({
   /** Where the console is served: invitation links point here. */
   CONSOLE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL}/console` : 'http://localhost:5174'),
   API_BASE_URL: z.string().default(process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:4000'),
-  BASE_DOMAIN: z.string().default('gradeon.app'),
-  BOOTSTRAP_EMAIL: z.string().default('kaushal@gradeon.app'),
+  BASE_DOMAIN: z.string().default('tangent.app'),
+  BOOTSTRAP_EMAIL: z.string().default('kaushal@tangent.app'),
   BOOTSTRAP_NAME: z.string().default('Kaushal Bhatt'),
   BOOTSTRAP_PASSWORD: z.string().default('nest2026'),
   /** Fixed sign-in code for the demo console. Never set in a real deployment. */

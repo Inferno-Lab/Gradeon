@@ -1,6 +1,6 @@
-# Gradeon features plan
+# Tangent features plan
 
-Every feature Gradeon has or will have, in one place: what is left from the work done so far, what readiness for real schools takes, and every module a school ERP covers, each with what it is for, its features, where Gradeon is today and when it is planned. It says **what**, not **how**: how each piece is built is decided when work on it starts.
+Every feature Tangent has or will have, in one place: what is left from the work done so far, what readiness for real schools takes, and every module a school ERP covers, each with what it is for, its features, where Tangent is today and when it is planned. It says **what**, not **how**: how each piece is built is decided when work on it starts.
 
 This replaces the earlier production plan and platform design. What exists and how it is built is in `docs/HANDOFF.md`; the Integrations Hub is in `docs/integrations.md`.
 
@@ -11,9 +11,9 @@ This replaces the earlier production plan and platform design. What exists and h
 | Mark | Meaning |
 |---|---|
 | **Now** | Left over from the work done so far (section 1): finish before new modules |
-| **Wave A** | Needed before a school can switch to Gradeon |
+| **Wave A** | Needed before a school can switch to Tangent |
 | **Wave B** | Grows the product's value; chosen by what pilot schools ask for |
-| **Wave C** | Sets Gradeon apart (AI, hardware) once there is real data |
+| **Wave C** | Sets Tangent apart (AI, hardware) once there is real data |
 | **Later** | Worth having, after the waves |
 | **Not planned** | Rare for Indian schools; revisit if the market changes |
 | **Readiness** | Part of getting ready for real schools (section 2) |
@@ -34,7 +34,7 @@ A module counts as done when it works end to end for a real school: its screens 
 | Razorpay or Cashfree accounts (test, then live), and per-school settlement where a school wants its own | Families paying fees online with real money |
 | Firebase project files for Android and iPhone | Notifications pushed to phones (the server side is ready) |
 | A storage bucket (S3-compatible) and a virus scanner host (ClamAV) | Files kept in real storage and scanned (the test track keeps them in the database) |
-| A domain for app links (for example `gradeon.app`) | Web links, such as invites and the page after paying, that open the app |
+| A domain for app links (for example `tangent.app`) | Web links, such as invites and the page after paying, that open the app |
 | India hosting with point-in-time recovery, and a separate staging service | Production, and a place to rehearse moves and releases |
 | The alert webhook (Slack or Discord) | Someone hears about errors, a school not answering, failed backups |
 | An Apple account, a Mac build runner and the iPhone app's icon per school | iPhone builds per school (Android builds already take the school's name and logo) |
@@ -106,7 +106,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Capture prospective families, run the application-to-enrolment funnel, and convert admitted applicants into student records without re-keying data.
 
-**Gradeon today:** Admissions pipeline from enquiry to enrolled, with lead source, notes, entrance tests and one-step enrolment. Not yet: online application forms on the school’s website, the application fee online, follow-up reminders (CRM), seat and capacity management, marketing.
+**Tangent today:** Admissions pipeline from enquiry to enrolled, with lead source, notes, entrance tests and one-step enrolment. Not yet: online application forms on the school’s website, the application fee online, follow-up reminders (CRM), seat and capacity management, marketing.
 
 **Features:**
 
@@ -129,7 +129,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** The single source of truth for each learner, from admission through alumni.
 
-**Gradeon today:** Student records with guardians and families, search, filters, saved views, import and export, student photo and documents in storage. Not yet: custom fields, photo history, subject combinations and electives.
+**Tangent today:** Student records with guardians and families, search, filters, saved views, import and export, student photo and documents in storage. Not yet: custom fields, photo history, subject combinations and electives.
 
 **Features:**
 
@@ -149,7 +149,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Record presence accurately, alert families quickly, and feed compliance, payroll and analytics.
 
-**Gradeon today:** Student attendance on the web and in the teacher app (also offline), absence alerts, leave notes from parents. Not yet: staff attendance, biometric, RFID or face capture.
+**Tangent today:** Student attendance on the web and in the teacher app (also offline), absence alerts, leave notes from parents. Not yet: staff attendance, biometric, RFID or face capture.
 
 **Features:**
 
@@ -180,11 +180,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Plan teaching, map curriculum and monitor syllabus coverage.
 
-**Gradeon today:** Not yet: syllabus, lesson plans, coverage tracking.
+**Tangent today:** Not yet: syllabus, lesson plans, coverage tracking.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Annual planners, weekly trackers and curriculum coverage views.
 - Subject-wise syllabus management.
 - Lesson plans created and approved on mobile.
@@ -202,7 +202,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Build conflict-free schedules and manage daily changes.
 
-**Gradeon today:** Weekly timetable with clash help, cover for absent teachers, teacher load and publishing. Not yet: automatic generation.
+**Tangent today:** Weekly timetable with clash help, cover for absent teachers, teacher load and publishing. Not yet: automatic generation.
 
 **Features:**
 
@@ -224,7 +224,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Configure assessment schemes, capture marks and publish board-compliant reports.
 
-**Gradeon today:** Exams, marks grid and teacher-app marks entry, totals and rank, published results, a report card as PDF. Not yet: report-card designer, board formats (CBSE, state boards), the NEP Holistic Progress Card, grading scales as settings.
+**Tangent today:** Exams, marks grid and teacher-app marks entry, totals and rank, published results, a report card as PDF. Not yet: report-card designer, board formats (CBSE, state boards), the NEP Holistic Progress Card, grading scales as settings.
 
 **Features:**
 
@@ -269,7 +269,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A (diary)
 
-**Gradeon today:** Homework with attachments, hand-in from the app with a photo kept in storage, grading with marks and feedback. Not yet: digital diary and classwork, opening attachments in the app.
+**Tangent today:** Homework with attachments, hand-in from the app with a photo kept in storage, grading with marks and feedback. Not yet: digital diary and classwork, opening attachments in the app.
 
 **Features:**
 
@@ -285,11 +285,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Course management with video lectures and quizzes.
 - Offline downloads in the app, course progress tracking, and Q&A threads with instructors and classmates.
 - Rule-based auto-enrollment into courses.
@@ -306,11 +306,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Online examination with MCQ and descriptive questions and auto-grading of objective items.
 - Question banks and offline assessment tools.
 - Quick formative assessments and standards progress monitoring.
@@ -322,7 +322,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **What it is for:** Model any fee structure, collect through every channel, and chase dues automatically.
 
-**Gradeon today:** Invoices, payments and receipts (PDF, with GST lines), concessions with approval, reminders by due date, late fines, online payment through payment links, refunds with a second person, daily reconciliation. Not yet: fee heads and structures by class and category, concession and fine rules, bulk invoices per term, scholarships, receipts in the app as PDF.
+**Tangent today:** Invoices, payments and receipts (PDF, with GST lines), concessions with approval, reminders by due date, late fines, online payment through payment links, refunds with a second person, daily reconciliation. Not yet: fee heads and structures by class and category, concession and fine rules, bulk invoices per term, scholarships, receipts in the app as PDF.
 
 **Features:**
 
@@ -373,11 +373,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave A (Tally export), Later (full accounting)
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - General ledger/accounts.
 - Vendor and purchase management.
 - Expense requests, approvals and reimbursement.
@@ -392,7 +392,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave B
 
-**Gradeon today:** Staff list with roles and subjects, invitations, staff leave approvals. Not yet: payroll, recruitment, appraisal.
+**Tangent today:** Staff list with roles and subjects, invitations, staff leave approvals. Not yet: payroll, recruitment, appraisal.
 
 **Features:**
 
@@ -422,7 +422,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Done in Phase 4
 
-**Gradeon today:** Catalogue with copies, issue and return with due dates and fines, reservations with a message when ready, the family app’s shelf, catalogue import. Not yet: barcode scanning, digital library.
+**Tangent today:** Catalogue with copies, issue and return with due dates and fines, reservations with a message when ready, the family app’s shelf, catalogue import. Not yet: barcode scanning, digital library.
 
 **Features:**
 
@@ -439,7 +439,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Wave C (GPS hardware)
 
-**Gradeon today:** Routes, stops with times and places, vehicles and drivers, riders per stop, route fees, the live bus from the driver’s phone (the driver’s Trips tab in the app: start and end a trip, mark pick-ups and drop-offs, report a delay) or from a GPS device read by the tracking provider, with arrival times and a “bus is near” message. Not yet: fleet maintenance.
+**Tangent today:** Routes, stops with times and places, vehicles and drivers, riders per stop, route fees, the live bus from the driver’s phone (the driver’s Trips tab in the app: start and end a trip, mark pick-ups and drop-offs, report a delay) or from a GPS device read by the tracking provider, with arrival times and a “bus is near” message. Not yet: fleet maintenance.
 
 **Features:**
 
@@ -457,11 +457,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Hostel/dormitory and room allocation and room transfers.
 - In/out timing logs with parent notifications.
 - Meals/mess management and hostel mess fees.
@@ -472,11 +472,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Asset tagging, stock-in/stock-out, vendor master and depreciation.
 - Inventory module.
 - Inventory and purchasing.
@@ -489,11 +489,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave C
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Cashless canteen with parent-loaded RFID/QR wallets, real-time spend alerts and a POS terminal for canteen staff.
 - Online canteen ordering, order tracking and point-of-sale kiosks.
 - Canteen ordering with payments.
@@ -508,11 +508,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Medical records: allergies, immunizations, medications and insurance.
 - Sick-bay/infirmary visit logs with treatments recorded and parents notified.
 - Medical centre module.
@@ -526,11 +526,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Positive and negative behaviour records with school-defined descriptors and severities.
 - Customizable reward/conduct types with unlimited categories and house points.
 - Point awards.
@@ -549,11 +549,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Not planned
 
-**Gradeon today:** Not yet. Rare in Indian schools; revisit for international or inclusive schools.
+**Tangent today:** Not yet. Rare in Indian schools; revisit for international or inclusive schools.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - IEP and 504-plan management with compliance tracking.
 - Special-ed IEPs inside the SIS. Special education with Medicaid billing. IEP tracking reports.
 - Individual Needs designation and IEP archive for longitudinal progress, with differentiation hints surfaced in lesson planning.
@@ -567,7 +567,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Now (providers), Later (voice)
 
-**Gradeon today:** Notices, chat, the app’s notification inbox, rules per message, templates, quiet hours that hold messages, delivery records, SMS, WhatsApp, email and push through the Integrations Hub. Waiting on: real provider accounts (DLT for SMS) and Firebase files for push. Not yet: attachments in chat threads, voice calls and voice notes.
+**Tangent today:** Notices, chat, the app’s notification inbox, rules per message, templates, quiet hours that hold messages, delivery records, SMS, WhatsApp, email and push through the Integrations Hub. Waiting on: real provider accounts (DLT for SMS) and Firebase files for push. Not yet: attachments in chat threads, voice calls and voice notes.
 
 **Features:**
 
@@ -591,7 +591,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Done in the one-pass repair
 
-**Gradeon today:** Parent, teacher, student and bus-driver app (Android and iPhone), each role switched on per school from the console, live chat, notifications and bus, offline Home, deep links, a branded app per school, a phone-friendly admin. Not yet: push notifications on the phone (needs the owner's Firebase project).
+**Tangent today:** Parent, teacher, student and bus-driver app (Android and iPhone), each role switched on per school from the console, live chat, notifications and bus, offline Home, deep links, a branded app per school, a phone-friendly admin. Not yet: push notifications on the phone (needs the owner's Firebase project).
 
 **Features:**
 
@@ -628,11 +628,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave A
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Visitor logbook.
 - Visitor approvals from mobile.
 - Gate management.
@@ -646,7 +646,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A
 
-**Gradeon today:** Digital ID cards in the app. Not yet: certificates (transfer, bonafide, character, study) with number series, printed ID cards.
+**Tangent today:** Digital ID cards in the app. Not yet: certificates (transfer, bonafide, character, study) with number series, printed ID cards.
 
 **Features:**
 
@@ -660,7 +660,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A (trips and consent)
 
-**Gradeon today:** Events calendar with RSVP. Not yet: activities, trips, consent forms, trip fees.
+**Tangent today:** Events calendar with RSVP. Not yet: activities, trips, consent forms, trip fees.
 
 **Features:**
 
@@ -679,11 +679,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave A (house points)
 
-**Gradeon today:** Students carry a house, used as a filter. Not yet: house points, sports results, co-curricular tracking.
+**Tangent today:** Students carry a house, used as a filter. Not yet: house points, sports results, co-curricular tracking.
 
 **Features:**
 
-- **Gradeon – Not yet** Students carry a house, used as a filter; no house points or co-curricular tracking.
+- **Tangent – Not yet** Students carry a house, used as a filter; no house points or co-curricular tracking.
 - House points systems.
 - Badges/awards.
 - "Off Games" registers.
@@ -696,11 +696,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Alumni registration linked to existing user accounts.
 - Seamless student-to-alumni profile transition with ongoing communication. Alumni and development/fundraising.
 - Alumni data within lifecycle records.
@@ -709,7 +709,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Now (scheduled reports), Wave B (report builder)
 
-**Gradeon today:** Dashboard with charts against goals and ready-made reports as CSV. Not yet: scheduled reports, a custom report builder, BI feeds.
+**Tangent today:** Dashboard with charts against goals and ready-made reports as CSV. Not yet: scheduled reports, a custom report builder, BI feeds.
 
 **Features:**
 
@@ -731,11 +731,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Gradeon’s own console runs every school, but a trust or group has no view of its schools. Not yet.
+**Tangent today:** Tangent’s own console runs every school, but a trust or group has no view of its schools. Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Gradeon's own console runs every school (fleet view, pushing plan and module settings, read-only support sessions), but a school group or trust has no view of its schools.
+- **Tangent – Not yet** Tangent's own console runs every school (fleet view, pushing plan and module settings, read-only support sessions), but a school group or trust has no view of its schools.
 - Single dashboard to manage and track all institutions.
 - Multi-school group dashboards.
 - Trust-wide reporting, central communications, school clusters, remote log-in to a school, and central configuration pushdown.
@@ -748,7 +748,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Later (single sign-on)
 
-**Gradeon today:** Roles and permissions, staff accounts, modules on or off per school, profile, branding and colours, approval rules, light and dark, everything configured from the console. Not yet: single sign-on and passkeys, the admin in other languages.
+**Tangent today:** Roles and permissions, staff accounts, modules on or off per school, profile, branding and colours, approval rules, light and dark, everything configured from the console. Not yet: single sign-on and passkeys, the admin in other languages.
 
 **Features:**
 
@@ -768,11 +768,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Built · **When:** Later (open API)
 
-**Gradeon today:** The Integrations Hub: connections, routes, templates, webhooks and delivery records for every outside service, payments through Razorpay or Cashfree, outgoing webhooks. Not yet: an open API for partners, live accounting and LMS sync.
+**Tangent today:** The Integrations Hub: connections, routes, templates, webhooks and delivery records for every outside service, payments through Razorpay or Cashfree, outgoing webhooks. Not yet: an open API for partners, live accounting and LMS sync.
 
 **Features:**
 
-- **Gradeon – Not yet** Gradeon's API serves only its own app and admin. No open API, accounting or LMS integrations; the payment gateway (Razorpay) is not connected.
+- **Tangent – Not yet** Tangent's API serves only its own app and admin. No open API, accounting or LMS integrations; the payment gateway (Razorpay) is not connected.
 - **Payments:** payment gateways.
 - **Accounting:** Tally, QuickBooks, Paybooks; Tally.
 - **Productivity:** Google Workspace; Microsoft.
@@ -787,11 +787,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave A
 
-**Gradeon today:** Not yet: UDISE+ export, APAAR IDs, RTE quota reporting.
+**Tangent today:** Not yet: UDISE+ export, APAAR IDs, RTE quota reporting.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - **India:**
 - UDISE+ data export.
 - UDISE+ auto-sync, bulk APAAR ID creation and real-time validation. NEP 2020 HPC, competency assessment and CPD hours.
@@ -818,7 +818,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Readiness
 
-**Gradeon today:** Audit log, privacy notice and consent, data-rights requests, breach records, separate database per school, daily backups with restore drills, retention erasure with two people, files scanned for viruses when a scanner is set. Not yet: security certification, a penetration test.
+**Tangent today:** Audit log, privacy notice and consent, data-rights requests, breach records, separate database per school, daily backups with restore drills, retention erasure with two people, files scanned for viruses when a scanner is set. Not yet: security certification, a penetration test.
 
 **Features:**
 
@@ -835,11 +835,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave C
 
-**Gradeon today:** A switch for the assistant exists. Not yet.
+**Tangent today:** A switch for the assistant exists. Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** An assistant is planned behind a switch but not built.
+- **Tangent – Not yet** An assistant is planned behind a switch but not built.
 - **Operational insight:** AI surfaces overdue fees, attendance dips, admission bottlenecks and exam outliers, and times fee reminders.
 - **Predictive analytics:** student-performance and attendance predictions; at-risk indicators; "AI-powered analytics" (Academia).
 - **Natural-language assistants and reporting:** ask questions of the school’s data in plain words, and smart reports.
@@ -853,11 +853,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A (form builder)
 
-**Gradeon today:** Files in storage for students, homework, notices and the gallery. Not yet: a form builder, document workflows, e-signatures.
+**Tangent today:** Files in storage for students, homework, notices and the gallery. Not yet: a form builder, document workflows, e-signatures.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Doc Manager.
 - Document attachments on records.
 - Form Builder, integrated online form builder, and dynamic forms.
@@ -870,7 +870,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave B
 
-**Gradeon today:** Family messages land in the school’s inbox with open and closed views and an owner. Not yet: complaints and grievance tracking.
+**Tangent today:** Family messages land in the school’s inbox with open and closed views and an owner. Not yet: complaints and grievance tracking.
 
 **Features:**
 
@@ -884,11 +884,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Wave B
 
-**Gradeon today:** Not yet.
+**Tangent today:** Not yet.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Polls.
 - School surveys. service
 - Feedback mechanisms.
@@ -898,7 +898,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A (with gate pass)
 
-**Gradeon today:** Enquiry register in Admissions. Not yet: visitor log, gate pass, postal and call registers.
+**Tangent today:** Enquiry register in Admissions. Not yet: visitor log, gate pass, postal and call registers.
 
 **Features:**
 
@@ -912,7 +912,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Wave A
 
-**Gradeon today:** Fee concessions and waivers with approval. Not yet: scholarships, financial aid, RTE free seats and their reimbursement claim.
+**Tangent today:** Fee concessions and waivers with approval. Not yet: scholarships, financial aid, RTE free seats and their reimbursement claim.
 
 **Features:**
 
@@ -924,7 +924,7 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Partly · **When:** Later
 
-**Gradeon today:** Photo gallery with albums, consent and tags (Phase 4). Not yet: tasks, discussions, blogs.
+**Tangent today:** Photo gallery with albums, consent and tags (Phase 4). Not yet: tasks, discussions, blogs.
 
 **Features:**
 
@@ -936,11 +936,11 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Not planned
 
-**Gradeon today:** Not yet. Niche; worth a small careers page with alumni for senior secondary schools.
+**Tangent today:** Not yet. Niche; worth a small careers page with alumni for senior secondary schools.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Placement module.
 - Higher-education application support and collaborative reference writing.
 - College and career readiness.
@@ -950,10 +950,10 @@ A module counts as done when it works end to end for a real school: its screens 
 
 **Status:** Not built · **When:** Not planned
 
-**Gradeon today:** Not yet. Donation receipts under section 80G would fit inside fees if a school needs them.
+**Tangent today:** Not yet. Donation receipts under section 80G would fit inside fees if a school needs them.
 
 **Features:**
 
-- **Gradeon – Not yet** Not in Gradeon.
+- **Tangent – Not yet** Not in Tangent.
 - Development/fundraising tied to the same household record.
 - Donations and fundraising.

@@ -1,8 +1,8 @@
-# Gradeon product map
+# Tangent product map
 
-**Status: decisions taken (2026-11-10); waiting for approval of the fix plan. Nothing in the code follows this yet.** Inside every page: [`product-audit.md`](product-audit.md). The fix: [`product-fix-plan.md`](product-fix-plan.md).
+**Status: decisions taken (2026-11-10) and carried out by the one-pass fix (PR #35).**
 
-This page says where every thing in Gradeon lives and why. It is the missing rulebook: `docs/DESIGN.md` says how a page looks, this says where a page, a tab, a setting or a button belongs. Once approved, every existing page is moved to match it in one pass, and every new module in `docs/features-plan.md` is placed by it before any code is written.
+This page says where every thing in Tangent lives and why. It is the missing rulebook: `docs/DESIGN.md` says how a page looks, this says where a page, a tab, a setting or a button belongs. Once approved, every existing page is moved to match it in one pass, and every new module in `docs/features-plan.md` is placed by it before any code is written.
 
 Lines marked **D1, D2…** were decisions for the owner; section 9 lists them, all taken as proposed.
 
@@ -14,9 +14,9 @@ Every choice below follows from these. When a new thing does not fit, the rule i
 2. **One grouping idea per menu.** The admin menu is grouped by the job being done. The console menu is grouped by what is being worked on. No group is a place for leftovers.
 3. **A menu item is a thing people work with** (Students, Fees, Library). Different views of the same thing are tabs on its page, not more menu items.
 4. **Every tab has its own address**, so it can be linked, bookmarked and reached with Back.
-5. **Gradeon decides how a school works; the school does its work.** Settings, roles, modules, colours, wording and app layout are changed only in the console. The admin holds the school's own data and daily work.
+5. **Tangent decides how a school works; the school does its work.** Settings, roles, modules, colours, wording and app layout are changed only in the console. The admin holds the school's own data and daily work.
 6. **A setting lives with the thing it changes.** Settings are grouped by module. Only settings that belong to no module sit in a short fixed list of school-wide groups (section 5).
-7. **The school sees a rule where it applies**, read-only, on the page it affects ("Attendance can be changed for 2 days. Set by Gradeon."), not on a separate page of settings it cannot change.
+7. **The school sees a rule where it applies**, read-only, on the page it affects ("Attendance can be changed for 2 days. Set by Tangent."), not on a separate page of settings it cannot change.
 8. **Shared services have one home and every module plugs into them:** approvals, reports, audit log, import, messages to families, search, dashboard cards. A module never builds its own.
 9. **Nothing that is a school's data is written in code.** Fee types, roles, menu labels, class names, payment methods and message wording come from data the console or the school keeps.
 10. **One name, one meaning.** A word used in a menu or heading names one thing across admin, console and app. One-time things (setting a school up) leave the menu when they are finished. A person's own preference is not a school setting.
@@ -32,10 +32,10 @@ Every choice below follows from these. When a new thing does not fit, the rule i
 | Parent | App | Follow their child, pay, read, reply, apply for leave |
 | Student | App | See their own timetable, homework, results and notices; hand in homework |
 | Bus driver | App | Run the day's trips: share the bus's position, mark who boarded and got off, report delays |
-| Gradeon implementation | Console | Set a school up, import its data, configure it, take it live |
-| Gradeon support | Console | Answer schools' requests, look inside a school, fix |
-| Gradeon release and operations | Console | Ship code and apps, watch health, keep servers and third parties working |
-| Gradeon finance and compliance | Console | Bill schools, agreements, breaches, data requests |
+| Tangent implementation | Console | Set a school up, import its data, configure it, take it live |
+| Tangent support | Console | Answer schools' requests, look inside a school, fix |
+| Tangent release and operations | Console | Ship code and apps, watch health, keep servers and third parties working |
+| Tangent finance and compliance | Console | Bill schools, agreements, breaches, data requests |
 
 The app has four roles: student, parent, teacher and bus driver (the driver is added so the live bus is real, not painted). The console switches each role on or off per school (owner, 2026-11-10); a role that is off cannot sign in to the app. Today only teachers have such a switch (`app.teachers`) and students cannot sign in against a real school at all.
 
@@ -65,7 +65,7 @@ Grouped by the job being done (rule 2). A school only sees the items its modules
 | **Campus** | Library | Books, Loans, Waiting | Same |
 | | Transport | Routes, Riders, Live bus | Same |
 | **School** | Academic year | Years and terms, Holidays, Classes, Subjects, Bell times, Year-end | Two items: "Classes and calendar" and "Year-end" |
-| | School profile | Identity, Plan and modules, The app, Roles, Messages, Privacy notice (all read-only, each with "Ask Gradeon to change this") | "School setup", 8 tabs |
+| | School profile | Identity, Plan and modules, The app, Roles, Messages, Privacy notice (all read-only, each with "Ask Tangent to change this") | "School setup", 8 tabs |
 | | Privacy requests | | A panel inside School setup → Privacy |
 | | Audit log | | A tab inside School setup |
 | | Moving in | | Stays in the menu for ever |
@@ -76,7 +76,7 @@ What changes and why:
 - **Fees becomes one item with tabs** (rule 3). Fee structure moves to it from the academic setup page because it is money, and it is what invoices are made from.
 - **Gallery moves to Reach**: it is something the school shares with families, like notices and events. Campus is for the school's physical services. **D1**
 - **Academic year** takes Year-end as a tab: promoting and starting a year is done to the same list of years, terms and classes.
-- **School setup is split** (rules 1 and 7). What Gradeon has set becomes "School profile", read-only. The two pieces of real work hidden in it (privacy requests, audit log) become their own items. Each module's rules also show on that module's page.
+- **School setup is split** (rules 1 and 7). What Tangent has set becomes "School profile", read-only. The two pieces of real work hidden in it (privacy requests, audit log) become their own items. Each module's rules also show on that module's page.
 - **Moving in** shows until the school is live, then leaves the menu (rule 10). Its "Everything, to take with you" export moves to School profile.
 - **Approvals gets a page.** Fee waivers, refunds, notices and leave all wait in one queue (rule 8); the dashboard keeps a count that links to it.
 

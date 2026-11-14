@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_colors.dart';
 
-/// Anek Latin + Anek Devanagari (one family, three languages), the type the app had before Gradeon Hue: the width axis
+/// Anek Latin + Anek Devanagari (one family, three languages), the type the app had before Tangent Hue: the width axis
 /// carries the hierarchy, wide and heavy for numbers and headings. Hue's roles and sizes stay.
 const kSans = 'AnekLatin';
 const kDeva = 'AnekDevanagari';

@@ -1,4 +1,4 @@
-import { istToday } from '@gradeon/contracts';
+import { istToday } from '@tangent/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, type Harness } from './harness.js';
 
@@ -391,7 +391,7 @@ describe('settings', () => {
       await h.entitle({ modules: was });
     }
   }, 30_000);
-  it('lets the school ask Gradeon for a change', async () => {
+  it('lets the school ask Tangent for a change', async () => {
     const r = await h.call('POST', '/v1/change-requests', { token, body: { area: 'App layout', message: 'Please put Fees in the bottom tabs.' } });
     expect(r.status).toBe(201);
     expect(r.json[0]).toMatchObject({ area: 'App layout', status: 'open', requestedBy: 'Neha Menon' });

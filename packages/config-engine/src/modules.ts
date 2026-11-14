@@ -1,4 +1,4 @@
-import { istToday, type ApprovalKind, type EntitlementDoc, type Permission } from '@gradeon/contracts';
+import { istToday, type ApprovalKind, type EntitlementDoc, type Permission } from '@tangent/contracts';
 
 /** The admin menu's groups, in order (docs/product-map.md §3). A group shows once a page in it does. */
 export const ADMIN_GROUPS = ['Home', 'People', 'Teach', 'Care', 'Money', 'Reach', 'Campus', 'School'] as const;
@@ -16,7 +16,7 @@ export interface AdminTab {
 export interface AdminPage {
   id: string;
   label: string;
-  /** The page's icon meaning (design/hue/icon-map.mjs, `@gradeon/web-ui`'s IC). */
+  /** The page's icon meaning (design/hue/icon-map.mjs, `@tangent/web-ui`'s IC). */
   icon: string;
   /** `G` then a letter. */
   keys: string;

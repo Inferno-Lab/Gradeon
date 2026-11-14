@@ -1,4 +1,4 @@
-import { PageScope } from '@gradeon/web-ui';
+import { PageScope } from '@tangent/web-ui';
 import './dashboard.css';
 
 /** The page's own shape in grey, shown while the first numbers load. */

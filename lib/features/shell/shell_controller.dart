@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/routes/middlewares.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/live_stream.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/widgets/sheets.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/features/settings/views/privacy_sheet.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/routes/middlewares.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/live_stream.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/widgets/sheets.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/features/settings/views/privacy_sheet.dart';
 
 class ShellController extends GetxController {
   final index = 0.obs;

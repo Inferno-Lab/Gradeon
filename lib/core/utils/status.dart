@@ -1,6 +1,6 @@
-import 'package:gradeon/core/utils/formatters.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/campus.dart';
+import 'package:tangent/core/utils/formatters.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/campus.dart';
 
 enum MoneyStatus { paid, due, overdue, upcoming }
 

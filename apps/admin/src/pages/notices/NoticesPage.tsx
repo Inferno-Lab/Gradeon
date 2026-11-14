@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError, uploadFile } from '@gradeon/api-client';
-import type { Category, NoticeRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, SelectField, TimeField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { HttpError, uploadFile } from '@tangent/api-client';
+import type { Category, NoticeRow } from '@tangent/contracts';
+import { Checkbox, DateField, Dialog, Field, SelectField, TimeField, useShake, Icon, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Attach, useSetting } from '../../app/kit';
@@ -133,7 +133,7 @@ function Compose({ n, onClose, onDone }: { n?: NoticeRow; onClose: () => void; o
         </div>
         {!canPublish && <div className="help">You write to the classes you teach. A notice for the whole school comes from the office.</div>}
         <SelectField label="Category" value={f.category} onChange={set('category')} error={err.category} options={cats.map((c) => ({ value: c.key, label: c.name }))} />
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           {canPin && <Checkbox checked={f.pinned} onChange={set('pinned')} label="Pin to the top" />}
           <Checkbox checked={f.needsAck} onChange={set('needsAck')} label="Ask families to acknowledge it" />
           {!published && <Checkbox checked={f.later} onChange={set('later')} label="Send it later" />}

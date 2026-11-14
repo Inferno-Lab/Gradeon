@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addDays, istToday, type EnquiryPatch, type EnquiryRow, type EnquiryStage } from '@gradeon/contracts';
-import { DateField, Dialog, Field, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { addDays, istToday, type EnquiryPatch, type EnquiryRow, type EnquiryStage } from '@tangent/contracts';
+import { DateField, Dialog, Field, SelectField, useShake, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Avatar, dateLabel, problem, useGrades, useSetting } from '../../app/kit';
@@ -259,11 +259,11 @@ function Details({ row, canWrite, back, onClose, onMove, onSaved }: { row: Enqui
         </>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-        <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {!locked && (row.stage === 'declined' ? <button className="btn" onClick={() => onMove('enquiry')}>Reopen</button> : <button className="btn dng" onClick={() => onMove('declined')}>Decline</button>)}
           {!locked && back && <button className="btn" onClick={() => onMove(back)}>Back to {label(back).toLowerCase()}</button>}
         </span>
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onClose}>{locked ? 'Close' : 'Cancel'}</button>
           {!locked && <button className="btn pri" disabled={!dirty || save.isPending} onClick={go}>{save.isPending ? 'Saving…' : 'Save'}</button>}
         </span>

@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import { IMPORT_KINDS, importKind, type ImportBatchRow, type ImportInput, type ImportKind, type ImportPreview, type ImportRowCheck } from '@gradeon/contracts';
+import { IMPORT_KINDS, importKind, type ImportBatchRow, type ImportInput, type ImportKind, type ImportPreview, type ImportRowCheck } from '@tangent/contracts';
 import { ImportError, readTable, toCsv, xlsx, zip } from './files.js';
 import { KINDS, type Impl, type Row, type Write } from './kinds.js';
 
@@ -32,7 +32,7 @@ function readInput(kind: ImportKind, input: Pick<ImportInput, 'csv' | 'rows'>): 
 
 function detectSource(kind: ImportKind, headers: string[]): string {
   const hs = new Set(headers.map(norm));
-  if (kind.columns.filter((c) => c.required).every((c) => hs.has(norm(c.key)))) return 'gradeon';
+  if (kind.columns.filter((c) => c.required).every((c) => hs.has(norm(c.key)))) return 'tangent';
   return SOURCES.find((s) => s.marks.filter((m) => hs.has(m)).length >= 2)?.key ?? 'sheet';
 }
 

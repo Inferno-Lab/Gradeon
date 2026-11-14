@@ -1,14 +1,14 @@
 import dns from 'node:dns/promises';
-import { closeModules } from '@gradeon/config-engine';
-import type { DeployTarget, RoleTemplate, StepKey, WizardPayload } from '@gradeon/contracts';
-import { migrate, pg } from '@gradeon/db';
-import { seedSchool } from '@gradeon/db/seed';
-import { hashPassword, randomToken, seal, unseal } from '@gradeon/security';
-import type { Registry } from '@gradeon/tenancy';
+import { closeModules } from '@tangent/config-engine';
+import type { DeployTarget, RoleTemplate, StepKey, WizardPayload } from '@tangent/contracts';
+import { migrate, pg } from '@tangent/db';
+import { seedSchool } from '@tangent/db/seed';
+import { hashPassword, randomToken, seal, unseal } from '@tangent/security';
+import type { Registry } from '@tangent/tenancy';
 import type { Db, reg } from '../core.js';
 import type { Env } from '../env.js';
 import type { Sandbox } from '../sandbox.js';
-import type { Hub } from '@gradeon/integrations';
+import type { Hub } from '@tangent/integrations';
 
 type SchoolRecord = typeof reg.schools.$inferSelect;
 
@@ -214,9 +214,9 @@ const admin: Driver = {
       await pool.query('update users set password_hash = $2, invited_at = now() where lower(email) = lower($1)', [p.admin.email, await hashPassword(password)]);
       const url = adminUrlFor(c.env, school.slug, school.addressing, school.customDomain);
       const text = demo
-        ? `Welcome to ${p.basics.shortName} on Gradeon. Sign in at ${url} with ${p.admin.email} and the password ${password}. The demo sign-in code is 424242.`
-        : `Welcome to ${p.basics.shortName} on Gradeon. Sign in at ${url} with ${p.admin.email} and the temporary password ${password}. Change it after you sign in.`;
-      if (p.admin.invite !== 'sms') await c.sandbox.put({ schoolSlug: school.slug, channel: 'email', to: p.admin.email, subject: `Your ${p.basics.shortName} admin on Gradeon`, body: text });
+        ? `Welcome to ${p.basics.shortName} on Tangent. Sign in at ${url} with ${p.admin.email} and the password ${password}. The demo sign-in code is 424242.`
+        : `Welcome to ${p.basics.shortName} on Tangent. Sign in at ${url} with ${p.admin.email} and the temporary password ${password}. Change it after you sign in.`;
+      if (p.admin.invite !== 'sms') await c.sandbox.put({ schoolSlug: school.slug, channel: 'email', to: p.admin.email, subject: `Your ${p.basics.shortName} admin on Tangent`, body: text });
       if (p.admin.invite !== 'email') await c.sandbox.put({ schoolSlug: school.slug, channel: 'sms', to: p.admin.phone, body: text });
     } finally {
       await pool.end();
@@ -227,7 +227,7 @@ const admin: Driver = {
 };
 
 export function profileYaml(env: Env, school: SchoolRecord, payload: WizardPayload): string {
-  const bundle = `in.gradeon.${school.slug.replace(/-/g, '')}`;
+  const bundle = `in.tangent.${school.slug.replace(/-/g, '')}`;
   return [
     `slug: ${school.slug}`,
     `name: "${payload.basics.name}"`,

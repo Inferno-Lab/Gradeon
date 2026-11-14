@@ -2,7 +2,7 @@
   {
     "role": "student",
     "name": "Aarav Sharma",
-    "email": "aarav.sharma@gradeon.app",
+    "email": "aarav.sharma@tangent.app",
     "password": "demo123",
     "otp": "123456",
     "userId": "usr_aarav"
@@ -10,7 +10,7 @@
   {
     "role": "parent",
     "name": "Priya Sharma",
-    "email": "priya.sharma@gradeon.app",
+    "email": "priya.sharma@tangent.app",
     "password": "demo123",
     "otp": "123456",
     "userId": "usr_priya"
@@ -18,7 +18,7 @@
   {
     "role": "teacher",
     "name": "Kavita Iyer",
-    "email": "kavita.iyer@gradeon.app",
+    "email": "kavita.iyer@tangent.app",
     "password": "demo123",
     "otp": "123456",
     "userId": "usr_kavita"

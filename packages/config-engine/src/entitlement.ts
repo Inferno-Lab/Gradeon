@@ -1,4 +1,4 @@
-import type { EntitlementDoc, Limits, ModuleDates } from '@gradeon/contracts';
+import type { EntitlementDoc, Limits, ModuleDates } from '@tangent/contracts';
 import { activeFeatures, activeModules, closeModules, featureByKey, moduleByKey, CORE_MODULES } from './modules.js';
 
 /** What the console may change in one push. Fields left out keep their current value. */

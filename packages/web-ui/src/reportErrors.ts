@@ -1,4 +1,4 @@
-/** Sends what broke in this tab to Gradeon's error list: uncaught errors, failed promises, and route render errors (pass them to `report`). */
+/** Sends what broke in this tab to Tangent's error list: uncaught errors, failed promises, and route render errors (pass them to `report`). */
 export function reportErrors(endpoint: string, source: 'admin' | 'console', headers: () => Record<string, string> = () => ({}), release = ''): (err: unknown) => void {
   const seen = new Set<string>();
   const report = (err: unknown) => {

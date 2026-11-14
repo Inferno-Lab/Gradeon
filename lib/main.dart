@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/app.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/connectivity_service.dart';
-import 'package:gradeon/core/services/error_reporter.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/services/school_profile_service.dart';
-import 'package:gradeon/core/services/session_bus.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/services/theme_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
+import 'package:tangent/app.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/connectivity_service.dart';
+import 'package:tangent/core/services/error_reporter.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/services/school_profile_service.dart';
+import 'package:tangent/core/services/session_bus.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/services/theme_service.dart';
+import 'package:tangent/core/theme/app_colors.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
@@ -30,5 +30,5 @@ Future<void> main() async {
   await SchoolConfig.restore();
   Get.put(ConnectivityService(), permanent: true);
   Get.put(SessionBus(), permanent: true);
-  runApp(const GradeonApp());
+  runApp(const TangentApp());
 }

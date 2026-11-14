@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { initials, type ApprovalDecision, type ApprovalKind, type ApprovalRow, type Permission } from '@gradeon/contracts';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { initials, type ApprovalDecision, type ApprovalKind, type ApprovalRow, type Permission } from '@tangent/contracts';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AttendanceService } from './attendance.service.js';
 import { NoticesService } from './notices.service.js';

@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/translations/app_translations.dart';
-import 'package:gradeon/core/utils/extensions.dart';
+import 'package:tangent/core/translations/app_translations.dart';
+import 'package:tangent/core/utils/extensions.dart';
 
 void main() {
   test('a count of one reads in the singular, others in the plural', () {

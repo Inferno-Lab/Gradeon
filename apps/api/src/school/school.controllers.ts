@@ -3,11 +3,11 @@ import {
   ApprovalDecision, AssignFee, FeeHeadsPut, AttendanceDayPut, PeriodMarksPut, CoverRequest, SlotCreate, WaiverRequest, ReceiptCancel, IsoDate, MessageRequest, NoticeCreate, PaymentCreate, SlotPatch, StudentCreate, StudentImport, StudentPatch, GuardiansPut, StudentQuery,
   type ApprovalRow, type AttendanceDay, type AttendanceWeekPoint, type PeriodRoll, type AuditRow, type ClassInfo, type ContactReveal, type DashboardData, type FeeHead, type FeeSummary, type ImportResult, type InvoiceRow, type InvoiceDetail,
   type NoticeRow, type SearchHit, type SettingsResponse, type ShellData, type GuardianRow, type StudentDetail, type StudentRow, type StudentSummary, type StudentViews, type TeacherLoad, type TeacherOption, type TimetableView, type WeekOf, type Paged,
-} from '@gradeon/contracts';
-import { MODULES, activeModules } from '@gradeon/config-engine';
-import { templateXlsx } from '@gradeon/db';
+} from '@tangent/contracts';
+import { MODULES, activeModules } from '@tangent/config-engine';
+import { templateXlsx } from '@tangent/db';
 import { z } from 'zod';
-import { ZodPipe } from '@gradeon/nest-kit';
+import { ZodPipe } from '@tangent/nest-kit';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { NoTenant, Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { ApprovalsService } from './approvals.service.js';
@@ -368,7 +368,7 @@ export class SettingsController {
     return { ...doc, usage, modules: MODULES.map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, requires: m.requires, core: !!m.core, backend: m.backend, entitled: entitled.includes(m.key) })) };
   }
 
-  // No write route: a school's configuration changes only from the console (Gradeon staff). See ConfigService in the console API.
+  // No write route: a school's configuration changes only from the console (Tangent staff). See ConfigService in the console API.
 
   @Get('audit') @Require('audit.read')
   auditLog(@Tenant() t: TenantCtx): Promise<AuditRow[]> {

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
+import { newId } from '@tangent/db';
 import {
   addDays, dayMonth, inr, istToday, latestSchoolDay, type DataRequestCreate, type DataRequestDecision, type DataRequestRow, type EventReply, type EventRow, type EventSave, type FeeStatus, type InvoiceListQuery,
   type InvoiceListRow, type InvoiceListSummary, type Paged, type ReceiptRow, type ReportData, type ReportInfo, type ReportQuery, type ThreadCreate, type ThreadDetail, type ThreadPatch, type ThreadReply, type ThreadRow,
-} from '@gradeon/contracts';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+} from '@tangent/contracts';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 import { ChatService } from './chat.service.js';

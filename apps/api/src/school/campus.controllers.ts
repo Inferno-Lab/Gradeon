@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Res }
 import {
   AlbumInput, BookInput, BusPosition, TripDelay, TripMark, TripStart, BusRouteInput, FILE_KINDS, FileStart, IssueInput, LeaverInput, NewYearInput, PhotoTags, PromotionInput, RefundRequest, RiderInput,
   type AlbumRow, type BookRow, type BusRouteRow, type FileRow, type FileUpload, type LibraryView, type LoanRow, type OnlinePaymentRow, type PhotoRow, type PromotionPreview,
-  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS, GiveBack, CancelReservation } from '@gradeon/contracts';
-import { ApiError, ZodPipe, forbidden } from '@gradeon/nest-kit';
+  type ReconRow, type RefundRow, type ReservationRow, type SchoolChannels, type TransportView, type YearView, CAPABILITY_LABELS, GiveBack, CancelReservation } from '@tangent/contracts';
+import { ApiError, ZodPipe, forbidden } from '@tangent/nest-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { Core, CurrentUser, Public, Require, RequireModule } from '../auth/guards.js';
@@ -76,7 +76,7 @@ export class SchoolLogoController {
 export class ChannelsController {
   constructor(private readonly hubs: HubService) {}
 
-  /** Which channels reach the school's families and through what: read-only (Gradeon sets them up in the console). */
+  /** Which channels reach the school's families and through what: read-only (Tangent sets them up in the console). */
   @Get() @Require('settings.read')
   async channels(@Tenant() t: TenantCtx): Promise<SchoolChannels> {
     const caps = ['sms', 'whatsapp', 'email', 'push', 'payments', 'storage', 'maps'] as const;

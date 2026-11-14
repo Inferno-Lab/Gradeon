@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { addDays, dayLabel, type AttendanceStatus } from '@gradeon/contracts';
-import { DateField, EmptyCard, EmptyState, Icon, Segmented, Select } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { addDays, dayLabel, type AttendanceStatus } from '@tangent/contracts';
+import { DateField, EmptyCard, EmptyState, Icon, Segmented, Select } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { useSetting } from '../../app/kit';
 import { Page, useToast } from '../../app/Page';
@@ -10,7 +10,7 @@ import { usePageTabs } from '../../app/tabs';
 import { useApprovalList } from '../approvals/ApprovalList';
 import { PeriodGrid } from './PeriodGrid';
 
-/** Every mark there is; the school uses the ones Gradeon chose for it (console: Attendance → marks). */
+/** Every mark there is; the school uses the ones Tangent chose for it (console: Attendance → marks). */
 // The roll call's letters and their status colour, as the Attendance board (design/hue/src/Attendance.html).
 const MARKS: Record<AttendanceStatus, { label: string; cls: string; key: string }> = {
   present: { label: 'Present', cls: 'ok', key: 'P' }, late: { label: 'Late', cls: 'warn', key: 'L' }, half_day: { label: 'Half day', cls: 'warn', key: 'H' }, leave: { label: 'On leave', cls: 'info', key: 'V' }, absent: { label: 'Absent', cls: 'bad', key: 'A' },

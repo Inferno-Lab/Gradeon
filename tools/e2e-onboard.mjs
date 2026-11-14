@@ -14,13 +14,13 @@ const ADMIN = process.env.ADMIN ?? 'http://127.0.0.1:5173';
 const slug = `brs${String(Date.now()).slice(-6)}`;
 const post = async (path, body) => (await fetch(`${API}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json();
 
-const a = await post('/console/v1/auth/login', { identifier: 'kaushal@gradeon.app', password: 'nest2026' });
+const a = await post('/console/v1/auth/login', { identifier: 'kaushal@tangent.app', password: 'nest2026' });
 const t = await post('/console/v1/auth/verify', { challengeId: a.challenge.challengeId, code: '424242' });
 const stored = JSON.stringify({ user: t.user });
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
-await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['gradeon.console', stored]);
+await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch {} }, ['tangent.console', stored]);
 await ctx.route(/\/auth\/refresh$/, (r) => r.fulfill({ json: { accessToken: t.accessToken, expiresInSeconds: 900 } }));
 const page = await ctx.newPage();
 const errors = [];
@@ -54,7 +54,7 @@ await page.screenshot({ path: `${out}/01-review.png` });
 await page.getByRole('button', { name: 'Launch', exact: true }).click();
 await page.waitForURL(/\/schools\//, { timeout: 30000 });
 step('watch provisioning');
-// Set up and running: it is moving in until Gradeon presses Go live.
+// Set up and running: it is moving in until Tangent presses Go live.
 await page.getByText('Moving in', { exact: true }).first().waitFor({ timeout: 90000 });
 await page.screenshot({ path: `${out}/02-school-live.png` });
 

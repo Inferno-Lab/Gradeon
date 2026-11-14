@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps, Icon } from '@gradeon/web-ui';
+import { EmptyCard, PageScope, Presence, ToastSlot, type ToastProps, Icon } from '@tangent/web-ui';
 import { url } from './base';
 
 interface PageProps {
@@ -75,4 +75,4 @@ export function Tiles({ items }: { items: { label: string; value: ReactNode; not
 }
 
 /** Messages that vanish after a few seconds, for the result of a button press. */
-export { useToast } from '@gradeon/web-ui';
+export { useToast } from '@tangent/web-ui';

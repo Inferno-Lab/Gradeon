@@ -12,7 +12,7 @@ export * from './Icon';
 export * from './digits';
 export * from './shell/Shell';
 export * from './shell/Sidebar';
-export * from './GradeonIcon';
+export * from './TangentIcon';
 export * from './login/LoginPage';
 export * from './tints';
 export * from './Palette';

@@ -3,18 +3,18 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/page.dart';
-import 'package:gradeon/core/widgets/sheets.dart';
-import 'package:gradeon/core/widgets/states.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/features/exams_results/controllers/results_controller.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/empty_kit.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/page.dart';
+import 'package:tangent/core/widgets/sheets.dart';
+import 'package:tangent/core/widgets/states.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/features/exams_results/controllers/results_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ResultsView extends GetView<ResultsController> {

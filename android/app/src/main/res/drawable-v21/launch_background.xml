@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Chalk ground with the Gradeon books, matching the Flutter splash. -->
+<!-- Chalk ground with the Tangent books, matching the Flutter splash. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/gradeon_chalk" />
+    <item android:drawable="@color/tangent_chalk" />
     <item>
         <bitmap android:gravity="center" android:src="@drawable/launch_mark" />
     </item>

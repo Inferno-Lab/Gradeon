@@ -3,12 +3,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/ui.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Progress of one beat. Spring curves overshoot; clamp so Opacity stays valid.

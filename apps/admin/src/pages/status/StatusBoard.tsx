@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PublicStatus } from '@gradeon/contracts';
-import { useTheme, Icon, EmptyNote } from '@gradeon/web-ui';
+import type { PublicStatus } from '@tangent/contracts';
+import { useTheme, Icon, EmptyNote } from '@tangent/web-ui';
 
 const TEXT = { ok: 'Everything is working', degraded: 'Some things are slow', down: 'Something is down' } as const;
 const TONE = { ok: 'g', degraded: 'a', down: 'c' } as const;
 const WORD = { ok: 'Working', degraded: 'Slow', down: 'Down' } as const;
 
-/** What anyone can open to see whether Gradeon is up: no sign-in, no school data, just names and states. */
+/** What anyone can open to see whether Tangent is up: no sign-in, no school data, just names and states. */
 export function StatusBoard() {
   const theme = useTheme();
   const q = useQuery({
@@ -19,7 +19,7 @@ export function StatusBoard() {
     <div className={`nest ${theme.cls}`} style={{ minHeight: '100dvh', padding: 12 }}>
       <main className="fr" style={{ maxWidth: 820, margin: '0 auto', padding: '32px 32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <header>
-          <div className="lbl">Gradeon status</div>
+          <div className="lbl">Tangent status</div>
           <h1 className="fd" style={{ margin: '6px 0 4px', font: '700 30px/1.1 var(--fd)', letterSpacing: '-.035em' }}>{s ? TEXT[s.state] : q.isError ? 'We could not check' : 'Checking…'}</h1>
           <p style={{ margin: 0, color: 'var(--ink3)', font: '600 14px var(--fb)' }}>{s ? `Updated ${new Date(s.updatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}. This page refreshes by itself.` : q.isError ? 'Try again in a minute.' : ' '}</p>
         </header>

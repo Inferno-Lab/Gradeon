@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/api-client",
+  "name": "@tangent/api-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,6 +7,6 @@
   "types": "./src/index.ts",
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run" },
-  "dependencies": { "@gradeon/contracts": "workspace:*" },
+  "dependencies": { "@tangent/contracts": "workspace:*" },
   "devDependencies": { "typescript": "~5.9.3", "vitest": "^4.1.12" }
 }

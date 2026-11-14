@@ -1,8 +1,8 @@
 /* eslint-disable */
-// Markup from design/canvas/AdminPhone.dc.html: classes and structure are the design's. The mascot and pencil columns are replaced
+// The phone home's markup: classes and structure are the design's. The mascot and pencil columns are replaced
 // by an object illustration and filled bars. Values come from PhoneDashboard.
 import { Fragment, type CSSProperties } from "react";
-import { PageScope, ToastSlot, Icon } from "@gradeon/web-ui";
+import { PageScope, ToastSlot, Icon } from "@tangent/web-ui";
 import "./phone.css";
 
 export function PhoneView({ v }: { v: any }) {

@@ -1,6 +1,6 @@
 import { Icon } from './Icon';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { addDays, istToday } from '@gradeon/contracts';
+import { addDays, istToday } from '@tangent/contracts';
 import { ErrorLine } from './forms';
 import { Pop } from './Menu';
 import { Select } from './Select';

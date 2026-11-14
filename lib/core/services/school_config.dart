@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/services/storage_service.dart';
-import 'package:gradeon/core/services/theme_service.dart';
-import 'package:gradeon/core/utils/schedule.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/services/storage_service.dart';
+import 'package:tangent/core/services/theme_service.dart';
+import 'package:tangent/core/utils/schedule.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
 
 /// A notice or event category the school keeps (console: Notices / Events → categories), drawn in one of four tones.
 class SchoolCategory {
@@ -28,7 +28,7 @@ class SchoolHouse {
   final Color color;
 }
 
-/// What Gradeon set up for this school in the console (`/v1/config`): who may use the app, what each role sees, the modules,
+/// What Tangent set up for this school in the console (`/v1/config`): who may use the app, what each role sees, the modules,
 /// and the school's own lists and rules. On sample content it reads `assets/mock/config.json`, which `tools/gen-app-config.mjs`
 /// writes from the same module definitions and defaults the server uses. The last copy is kept on the phone, so the app opens
 /// offline with the school's own setup; [stale] says when it could not be refreshed.

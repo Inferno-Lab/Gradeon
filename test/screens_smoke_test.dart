@@ -3,16 +3,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_pages.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_theme.dart';
-import 'package:gradeon/core/translations/app_translations.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/features/shell/shell_controller.dart';
+import 'package:tangent/core/routes/app_pages.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_theme.dart';
+import 'package:tangent/core/translations/app_translations.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/features/shell/shell_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'support/harness.dart';
@@ -77,7 +77,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = _OfflineHttp();
   setUpAll(() async {
-    registerFallbackValue(Uri.parse('https://gradeon.app'));
+    registerFallbackValue(Uri.parse('https://tangent.app'));
     await loadAppFonts();
   });
 

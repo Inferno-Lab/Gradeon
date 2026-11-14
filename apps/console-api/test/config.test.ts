@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startHarness, wizardPayload, type Harness } from './harness.js';
 
-// Configuration belongs to Gradeon: changed in the console, followed by the school's own API, never changed by the school.
+// Configuration belongs to Tangent: changed in the console, followed by the school's own API, never changed by the school.
 let h: Harness;
 let t: string;
 let second: string;
@@ -25,8 +25,8 @@ const wait = () => new Promise((r) => setTimeout(r, 5_100)); // the school API c
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
-  second = await h.signIn('second@gradeon.app', 'another-long-pass');
+  await h.invite(t, { name: 'Second Admin', email: 'second@tangent.app', roles: ['super_admin'] }, 'another-long-pass');
+  second = await h.signIn('second@tangent.app', 'another-long-pass');
   expect((await launch('cfgschool')).status).toBe('succeeded');
   id = (await h.c('GET', '/console/v1/schools', { token: t })).json.find((s: { slug: string }) => s.slug === 'cfgschool').id;
   const a = await h.s('POST', '/v1/auth/login', { school: 'cfgschool', body: { identifier: 'asha@cfgschool.test', password: 'nest2026' } });
@@ -42,7 +42,7 @@ describe('configuration from the console', () => {
     const r = await patch({ expectedVersion: before.version, changes: { 'brand.color': '#0E7490', 'app.layout': { parent: { dock: ['home', 'fees'], home: [], quick: [] }, student: { dock: [], home: [], quick: [] }, teacher: { dock: [], home: [], quick: [] }, driver: { dock: [], home: [], quick: [] } }, 'fees.receiptPrefix': 'GF/{year}/' }, note: 'Brand refresh' });
     expect(r.status).toBe(200);
     expect(r.json.version).toBe(before.version + 1);
-    expect(r.json.versions[0]).toMatchObject({ note: 'Brand refresh', by: 'kaushal@gradeon.app' });
+    expect(r.json.versions[0]).toMatchObject({ note: 'Brand refresh', by: 'kaushal@tangent.app' });
     expect((await patch({ expectedVersion: before.version, changes: { 'brand.color': '#1F2937' } })).status).toBe(409);
     // Any colour is allowed (text on it is white or ink, whichever reads); something that is not a colour is not.
     expect((await patch({ expectedVersion: r.json.version, changes: { 'brand.color': 'teal' } })).status).toBe(400);
@@ -111,11 +111,11 @@ describe('configuration from the console', () => {
     expect(req).toMatchObject({ area: 'App layout', status: 'open' });
     expect((await h.c('POST', `/console/v1/change-requests/${req.id}/answer`, { token: t, body: { status: 'done', answer: 'Added Events to the tabs.' } })).status).toBe(204);
     expect((await h.s('GET', '/v1/change-requests', { school: 'cfgschool', token: school })).json[0]).toMatchObject({ status: 'done', answer: 'Added Events to the tabs.' });
-    await h.invite(t, { name: 'Sam Support', email: 'sam@gradeon.app', roles: ['support'] }, 'long-enough-pass');
-    const sam = await h.signIn('sam@gradeon.app', 'long-enough-pass');
+    await h.invite(t, { name: 'Sam Support', email: 'sam@tangent.app', roles: ['support'] }, 'long-enough-pass');
+    const sam = await h.signIn('sam@tangent.app', 'long-enough-pass');
     expect((await patch({ expectedVersion: 1, changes: { 'school.tagline': 'x' } }, sam)).status).toBe(403);
-    await h.invite(t, { name: 'Ira Implement', email: 'ira@gradeon.app', roles: ['implementation'] }, 'long-enough-pass');
-    const ira = await h.signIn('ira@gradeon.app', 'long-enough-pass');
+    await h.invite(t, { name: 'Ira Implement', email: 'ira@tangent.app', roles: ['implementation'] }, 'long-enough-pass');
+    const ira = await h.signIn('ira@tangent.app', 'long-enough-pass');
     expect((await patch({ expectedVersion: (await cfg()).json.version, changes: { 'school.tagline': 'Set by implementation' } }, ira)).status).toBe(200);
     expect((await h.s('PATCH', '/v1/settings', { school: 'cfgschool', token: school, body: { changes: { 'school.tagline': 'x' } } })).status).toBe(404);
   });

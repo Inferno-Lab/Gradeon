@@ -1,8 +1,8 @@
 import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
-import { istToday } from '@gradeon/contracts';
-import { enqueue, scheduleJob, work, type Job } from '@gradeon/db';
-import { Hub } from '@gradeon/integrations';
-import type { PoolManager, Registry } from '@gradeon/tenancy';
+import { istToday } from '@tangent/contracts';
+import { enqueue, scheduleJob, work, type Job } from '@tangent/db';
+import { Hub } from '@tangent/integrations';
+import type { PoolManager, Registry } from '@tangent/tenancy';
 import type { Pool } from 'pg';
 import { ENV, type Env } from '../env.js';
 import { POOLS, REGISTRY } from '../tenancy/tenant.js';

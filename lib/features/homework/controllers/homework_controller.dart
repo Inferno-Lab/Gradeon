@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/data/models/student.dart';
-import 'package:gradeon/data/repositories/academic_repository.dart';
-import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/data/models/student.dart';
+import 'package:tangent/data/repositories/academic_repository.dart';
+import 'package:tangent/data/repositories/directory_repository.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HomeworkController extends GetxController with Loadable {

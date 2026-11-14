@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { dashboardPieces } from '@gradeon/config-engine';
+import { dashboardPieces } from '@tangent/config-engine';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type ApprovalRow, type DashboardData } from '@gradeon/contracts';
-import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast, EmptyState } from '@gradeon/web-ui';
+import { inr, lakhs, type ApprovalRow, type DashboardData } from '@tangent/contracts';
+import { Dialog, EmptyCard, IC, type PageIcon, PageScope, TONES, rollDigits, tintFor, useIsPhone, useToast, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { TodayView } from './TodayView';

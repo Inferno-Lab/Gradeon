@@ -1,4 +1,4 @@
-import type { PlanRow } from '@gradeon/contracts';
+import type { PlanRow } from '@tangent/contracts';
 
 /** Platform plans (section 12.3). The console stores a copy in the registry so prices can change without a release. */
 export const DEFAULT_PLANS: PlanRow[] = [

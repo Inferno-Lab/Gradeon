@@ -6,7 +6,7 @@ const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number, op
 export const SCRYPT = { N: 32768, r: 8, p: 1 } as const;
 const SCRYPT_MEM = 64 * 1024 * 1024;
 
-export const JWT_ISSUER = 'gradeon';
+export const JWT_ISSUER = 'tangent';
 
 /** scrypt hash in the form `scrypt$N$r$p$salt$hash` (all base64url). */
 export async function hashPassword(password: string): Promise<string> {
@@ -164,6 +164,6 @@ export function verifyTotp(secret: string, code: string, at = Date.now()): boole
   return [-30_000, 0, 30_000].some((d) => constantTimeEqual(totp(secret, at + d), code));
 }
 
-export function totpUri(secret: string, account: string, issuer = 'Gradeon'): string {
+export function totpUri(secret: string, account: string, issuer = 'Tangent'): string {
   return `otpauth://totp/${encodeURIComponent(`${issuer}:${account}`)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
 }

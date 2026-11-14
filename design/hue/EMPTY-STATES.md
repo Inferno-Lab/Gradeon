@@ -1,6 +1,6 @@
 # Empty states
 
-Approved by the owner on 10 November 2026, together with Gradeon Hue ([README](README.md)). Not built yet: they are implemented with Hue, after the work in progress on `main` lands.
+Approved by the owner on 10 November 2026, together with Tangent Hue ([README](README.md)). Not built yet: they are implemented with Hue, after the work in progress on `main` lands.
 
 The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAdmin1-5.html`, `src/EmptyConsole1-4.html` and `src/EmptyApp1-4.html`, with `empty.css` for the kit's CSS. They are on the canvas pages **Empty states · admin / console / app**. Build with `node build.mjs`; check the final frames with `node qa.mjs @e EmptyAdmin1` (it renders with reduced motion on) and the motion with `node anim.mjs EmptyAdmin3 760 800 640 460`.
 
@@ -8,7 +8,7 @@ The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAd
 
 1. **No shared layout.** Each page has its own composition, drawn from what the page does (its grid, its receipt, its shelf, its route). The owner rejected one shared two-column frame: "every empty state has the same structure and the same layout".
 2. What *is* shared is the kit: the words block, the scene parts and the motion beats.
-3. **Words:** a heading that says what the page is for (never "Nothing here yet"); one or two sentences on why it is empty and what will appear; one main button that fixes it; a second link only when truly needed; never a dead end. Where a school cannot fix it itself, the button asks Gradeon (schools configure nothing).
+3. **Words:** a heading that says what the page is for (never "Nothing here yet"); one or two sentences on why it is empty and what will appear; one main button that fixes it; a second link only when truly needed; never a dead end. Where a school cannot fix it itself, the button asks Tangent (schools configure nothing).
 4. **Scene:** one story of up to six beats in a 10 s loop (enter at 0.6, 1.8, 3.0, 4.2, 5.4, 6.6 s; hold to 9.2 s; fade; loop), built only from the product's own parts (cards, rows, tags, bars, tiles). No images, illustrations or icons inside the scene. `aria-hidden`, nothing clickable.
 5. **Examples** are made up, neutral and international (Maya Torres, Leo Martin, Ada Novak, Sam Okafor, Ms Ortiz; Northfield School, Harbor Academy, Cedar Hill School). Amounts have no currency symbol in the design; the real page uses the school's currency. A caption says they are examples.
 6. **Tokens only**, so light, dark and every school colour work.
@@ -39,7 +39,7 @@ The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAd
 | admissions | A board; the words are its first column, families move along it | Enquiries, from first call to first day | Share the admission form · Add an enquiry |
 | fees | A statement: header row, one huge figure, the fee lines, a full-width bar | What every family owes, and what has come in | Set up fees · Import dues |
 | invoices | A till receipt prints and gets a PAID stamp | Invoices and receipts, numbered and kept | Create invoices |
-| fees (online payments) | A live ticker of payments across the top; settled figure beside the words | Payments families make online | Ask Gradeon to turn it on |
+| fees (online payments) | A live ticker of payments across the top; settled figure beside the words | Payments families make online | Ask Tangent to turn it on |
 | reports | The bar chart is the whole panel; the words sit in its corner | Numbers you can hand to the board | Start with attendance · Set up fees |
 | notices | The words are the draft notice; delivery squares fill beside it | Tell every family at once | Write a notice |
 | messages | The words arrive as the first chat bubbles; a reply bar holds the button | Conversations with families, in one inbox | Write to a parent |
@@ -50,7 +50,7 @@ The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAd
 | library | A shelf of book spines across the top; one goes out on loan | Books, and who has them | Add books · Import the register |
 | transport | A bus route runs around the words | Routes, stops and who rides | Add a route |
 
-### Gradeon console (`apps/console/src/pages/…`)
+### Tangent console (`apps/console/src/pages/…`)
 
 | Page | Composition | Heading | Button · link |
 | --- | --- | --- | --- |
@@ -67,9 +67,9 @@ The source of truth is the boards: `src/EmptyFrame.html` (the kit), `src/EmptyAd
 | approvals | Good-empty: a green clear desk; a request is stamped and filed | Nothing is waiting for your approval | See past approvals |
 | requests | A wall of sticky notes; the words are the first note | Everything schools have asked for | Log a request |
 | support | Two-pane inbox; the words sit where the thread will be | Help for schools, in one inbox | Set up the support address |
-| billing | A year of monthly bills, paid one by one | What each school pays Gradeon | Set up billing |
+| billing | A year of monthly bills, paid one by one | What each school pays Tangent | Set up billing |
 | compliance | Deep ledger that writes itself | Consent, data requests and who saw what | Review the consent wording |
-| team | Empty seats fill with invited colleagues | The people who run Gradeon | Invite someone |
+| team | Empty seats fill with invited colleagues | The people who run Tangent | Invite someone |
 
 ### Parent and teacher app (`lib/features/…`)
 

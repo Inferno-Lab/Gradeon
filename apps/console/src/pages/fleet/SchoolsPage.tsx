@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Select, tintFor, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { Select, tintFor, Icon, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { Page } from '../../app/Page';

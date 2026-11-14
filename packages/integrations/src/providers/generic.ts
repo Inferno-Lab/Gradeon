@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { call } from '../http.js';
-import type { DeliveryStatus } from '@gradeon/contracts';
+import type { DeliveryStatus } from '@tangent/contracts';
 import { ProviderError, at, fill, type Adapter, type Ctx, type InboundRequest, type OutMessage, type SendResult } from '../types.js';
 
 const s = (c: Ctx, k: string) => String(c.route[k] ?? c.settings[k] ?? '');
@@ -39,7 +39,7 @@ export const customHttp: Adapter = {
   async test(c, input) {
     if (!input.to) return { ok: false, detail: 'Type a number or address to send the test to.' };
     try {
-      const r = await send(c, { to: input.to, text: 'A test from Gradeon: this connection can send.', subject: 'A test from Gradeon', vars: {}, messageKey: 'test' });
+      const r = await send(c, { to: input.to, text: 'A test from Tangent: this connection can send.', subject: 'A test from Tangent', vars: {}, messageKey: 'test' });
       return { ok: true, detail: `The provider accepted it${r.providerId ? ` (ID ${r.providerId})` : ''}.` };
     } catch (e) {
       return { ok: false, detail: (e as Error).message };
@@ -67,12 +67,12 @@ export const webhook: Adapter = {
   async webhook(c, e) {
     const body = JSON.stringify(e);
     const sig = createHmac('sha256', c.secrets.secret ?? '').update(body).digest('hex');
-    const r = await call(String(c.settings.url), { method: 'POST', headers: { 'content-type': 'application/json', 'x-gradeon-event': e.type, 'x-gradeon-signature': `sha256=${sig}` }, body });
+    const r = await call(String(c.settings.url), { method: 'POST', headers: { 'content-type': 'application/json', 'x-tangent-event': e.type, 'x-tangent-signature': `sha256=${sig}` }, body });
     return { providerId: `${r.status}` };
   },
   async test(c) {
     try {
-      await webhook.webhook!(c, { type: 'test', school: c.schoolSlug, at: new Date().toISOString(), data: { hello: 'from Gradeon' } });
+      await webhook.webhook!(c, { type: 'test', school: c.schoolSlug, at: new Date().toISOString(), data: { hello: 'from Tangent' } });
       return { ok: true, detail: 'The address accepted a test event.' };
     } catch (e) {
       return { ok: false, detail: (e as Error).message };

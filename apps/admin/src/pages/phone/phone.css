@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/AdminPhone.dc.html. Selectors are prefixed with .pg-phone. */
+/* Selectors are prefixed with .pg-phone. */
 
 
 .pg-phone .ph{position:relative;width:100%;min-height:100dvh;display:flex;flex-direction:column}

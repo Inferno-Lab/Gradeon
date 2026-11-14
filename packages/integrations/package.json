@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/integrations",
+  "name": "@tangent/integrations",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,8 +17,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@gradeon/contracts": "workspace:*",
-    "@gradeon/security": "workspace:*",
+    "@tangent/contracts": "workspace:*",
+    "@tangent/security": "workspace:*",
     "pg": "^8.16.0"
   },
   "devDependencies": {

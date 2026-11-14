@@ -1,9 +1,9 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { changeEntitlement, type EntitlementChange } from '@gradeon/config-engine';
-import type { SchoolDetail } from '@gradeon/contracts';
-import { DateField, Dialog, NumberField, SelectField } from '@gradeon/web-ui';
-import type { CatalogDoc } from '@gradeon/api-client';
+import { changeEntitlement, type EntitlementChange } from '@tangent/config-engine';
+import type { SchoolDetail } from '@tangent/contracts';
+import { DateField, Dialog, NumberField, SelectField } from '@tangent/web-ui';
+import type { CatalogDoc } from '@tangent/api-client';
 import { Card } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ReviewDialog, docOf, sig } from '../modules/ModulesPage';

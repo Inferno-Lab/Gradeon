@@ -1,4 +1,4 @@
-package com.gradeon.app
+package com.tangent.app
 
 import io.flutter.embedding.android.FlutterActivity
 

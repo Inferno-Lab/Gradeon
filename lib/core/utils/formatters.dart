@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 abstract final class Formatters {
   static String inr(num amount) => NumberFormat.currency(

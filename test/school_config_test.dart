@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/school_config.dart';
+import 'package:tangent/core/services/school_config.dart';
 
 void main() {
   setUp(() => Get.testMode = true);

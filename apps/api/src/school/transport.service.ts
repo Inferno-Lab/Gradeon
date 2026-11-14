@@ -1,7 +1,7 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { istToday, type BusPosition, type BusRouteInput, type BusRouteRow, type RiderInput, type RiderRow, type TransportView } from '@gradeon/contracts';
-import { enqueue, newId, type Job } from '@gradeon/db';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { istToday, type BusPosition, type BusRouteInput, type BusRouteRow, type RiderInput, type RiderRow, type TransportView } from '@tangent/contracts';
+import { enqueue, newId, type Job } from '@tangent/db';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import { TenantService, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { HubService } from './hub.service.js';
 import { StreamService } from './stream.service.js';

@@ -8,10 +8,10 @@ import type {
   Activation, ImportBatchRow, SetupSection, UploadCreate, UploadRow,
   AlbumInput, AlbumRow, BookInput, BookRow, BusRouteInput, BusRouteRow, FileKind, FileRow, FileStart, FileUpload, GiveBack, IssueInput, LeaverInput, LibraryView, LoanRow, NewYearInput, OnlinePaymentRow, PhotoRow,
   PromotionInput, PromotionPreview, ReconRow, RefundRequest, RefundRow, RiderInput, SchoolChannels, TransportView, YearView,
-} from '@gradeon/contracts';
+} from '@tangent/contracts';
 import type { Http, Query } from './http';
 
-import type { SchoolBrand } from '@gradeon/contracts';
+import type { SchoolBrand } from '@tangent/contracts';
 export type BrandInfo = SchoolBrand;
 
 export type StudentListQuery = {
@@ -187,7 +187,7 @@ export function schoolApi(h: Http) {
       create: (b: DataRequestCreate) => h.post<DataRequestRow>('/v1/privacy/requests', b),
       decide: (id: string, b: DataRequestDecision) => h.post<DataRequestRow>(`/v1/privacy/requests/${id}/decision`, b),
     },
-    /** The school asks Gradeon to change its setup. */
+    /** The school asks Tangent to change its setup. */
     changeRequests: {
       list: () => h.get<ChangeRequestRow[]>('/v1/change-requests'),
       create: (b: ChangeRequestCreate) => h.post<ChangeRequestRow[]>('/v1/change-requests', b),

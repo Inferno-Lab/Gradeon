@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { Shell } from '@gradeon/web-ui';
+import { Shell } from '@tangent/web-ui';
 import { useChrome } from './useChrome';
 
 type ShellChrome = Omit<ReturnType<typeof useChrome>, 'aside' | 'overlays'>;

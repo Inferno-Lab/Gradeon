@@ -41,7 +41,7 @@ export const razorpay: Adapter = {
   async test(c) {
     try {
       const r = await call('https://api.razorpay.com/v1/payment_links', { method: 'POST', headers: { authorization: rzpAuth(c), 'content-type': 'application/json' },
-        body: JSON.stringify({ amount: 100, currency: 'INR', description: 'Gradeon connection test', notify: { sms: false, email: false } }) });
+        body: JSON.stringify({ amount: 100, currency: 'INR', description: 'Tangent connection test', notify: { sms: false, email: false } }) });
       await call(`https://api.razorpay.com/v1/payment_links/${r.json.id}/cancel`, { method: 'POST', headers: { authorization: rzpAuth(c) } });
       return { ok: true, detail: `Razorpay (${s(c, 'keyId').startsWith('rzp_live') ? 'live' : 'test'} keys) made a ₹1 link and cancelled it.` };
     } catch (e) {
@@ -87,8 +87,8 @@ export const cashfree: Adapter = {
   },
   async test(c) {
     try {
-      const id = `gradeon_test_${Date.now()}`;
-      await call(`${cfBase(c)}/links`, { method: 'POST', headers: cfHeaders(c), body: JSON.stringify({ link_id: id, link_amount: 1, link_currency: 'INR', link_purpose: 'Gradeon connection test',
+      const id = `tangent_test_${Date.now()}`;
+      await call(`${cfBase(c)}/links`, { method: 'POST', headers: cfHeaders(c), body: JSON.stringify({ link_id: id, link_amount: 1, link_currency: 'INR', link_purpose: 'Tangent connection test',
         customer_details: { customer_phone: '9999999999' }, link_notify: { send_sms: false, send_email: false } }) });
       await call(`${cfBase(c)}/links/${id}/cancel`, { method: 'POST', headers: cfHeaders(c) });
       return { ok: true, detail: `Cashfree (${s(c, 'environment') === 'production' ? 'live' : 'test'}) made a ₹1 link and cancelled it.` };

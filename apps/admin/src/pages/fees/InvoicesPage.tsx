@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, EmptyNote, Segmented, Select, EmptyState } from '@gradeon/web-ui';
+import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@tangent/contracts';
+import { EmptyCard, EmptyNote, Segmented, Select, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel, useFeeHeads, useOpenParam } from '../../app/kit';
@@ -87,7 +87,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 24px 20px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
                   <span className="help">Page {page} of {pages} · {inv.data!.total.toLocaleString('en-IN')} invoices</span>
-                  <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next</button></span>
+                  <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next</button></span>
                 </div>
               </>
             )
@@ -113,7 +113,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
               {rec.data!.total > 25 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 24px 20px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
                   <span className="help">{(rpage - 1) * 25 + 1}–{(rpage - 1) * 25 + rec.data!.items.length} of {rec.data!.total.toLocaleString('en-IN')} receipts</span>
-                  <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={rpage <= 1} onClick={() => setRpage(rpage - 1)}>Previous</button><button className="btn sm" disabled={rpage * 25 >= rec.data!.total} onClick={() => setRpage(rpage + 1)}>Next</button></span>
+                  <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm" disabled={rpage <= 1} onClick={() => setRpage(rpage - 1)}>Previous</button><button className="btn sm" disabled={rpage * 25 >= rec.data!.total} onClick={() => setRpage(rpage + 1)}>Next</button></span>
                 </div>
               )}
             </div>

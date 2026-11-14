@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardPieces } from '@gradeon/config-engine';
+import { dashboardPieces } from '@tangent/config-engine';
 import { useRouterState } from '@tanstack/react-router';
-import { Dock, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useHue, type DockTab, type PaletteHit, Icon } from '@gradeon/web-ui';
-import type { ShellData } from '@gradeon/contracts';
+import { Dock, MoreSheet, Presence, SchoolHeader, SearchDialog, Sidebar, tintFor, useTheme, useHue, type DockTab, type PaletteHit, Icon } from '@tangent/web-ui';
+import type { ShellData } from '@tangent/contracts';
 import { activeNav, adminNav, shortcutTargets } from './nav';
 import { useApp } from './context';
 
-const COLLAPSE_KEY = 'gradeon.admin.menu.collapsed';
+const COLLAPSE_KEY = 'tangent.admin.menu.collapsed';
 
 /** What every page shares: the theme, the menu, the shortcuts and the search box. Called once, by the signed-in layout. */
 export function useChrome() {
@@ -16,7 +16,7 @@ export function useChrome() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const active = activeNav(base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname);
   // The last menu this browser saw for the school stands in while the real one loads, so the menu does not jump on arrival.
-  const shellKey = `gradeon.admin.${slug}.shell`;
+  const shellKey = `tangent.admin.${slug}.shell`;
   const shell = useQuery({ queryKey: ['shell'], queryFn: api.shell, staleTime: 30_000, placeholderData: () => { try { return (JSON.parse(localStorage.getItem(shellKey) ?? 'null') as ShellData | null) ?? undefined; } catch { return undefined; } } });
   useEffect(() => { if (shell.data && !shell.isPlaceholderData) try { localStorage.setItem(shellKey, JSON.stringify(shell.data)); } catch { /* storage can be blocked */ } }, [shell.data, shell.isPlaceholderData, shellKey]);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } });
@@ -68,7 +68,7 @@ export function useChrome() {
   const close = () => { setOpen(false); setQ(''); };
   const pick = (h: PaletteHit) => {
     close();
-    if (h.href.startsWith('action:')) { window.dispatchEvent(new CustomEvent('gradeon:action', { detail: h.href.slice(7) })); return; }
+    if (h.href.startsWith('action:')) { window.dispatchEvent(new CustomEvent('tangent:action', { detail: h.href.slice(7) })); return; }
     goRef.current(h.href);
   };
 

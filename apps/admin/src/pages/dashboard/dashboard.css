@@ -1,4 +1,4 @@
-/* Scoped from design/canvas/Main.dc.html. Selectors are prefixed with .pg-dashboard. */
+/* Selectors are prefixed with .pg-dashboard. */
 
 
 .pg-dashboard .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}

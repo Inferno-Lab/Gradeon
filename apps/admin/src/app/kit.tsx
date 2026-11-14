@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Field, FilePick, tintFor, Icon, type IconName } from '@gradeon/web-ui';
+import { Field, FilePick, tintFor, Icon, type IconName } from '@tangent/web-ui';
 import { useApp } from './context';
-import { HttpError } from '@gradeon/api-client';
+import { HttpError } from '@tangent/api-client';
 
 export const Ico = ({ d }: { d: IconName }) => <Icon name={d} />;
 export const PLUS = 'plus';
@@ -18,7 +18,7 @@ export function Avatar({ name, size = 34 }: { name: string; size?: number }) {
 }
 
 /** The shared multi-line field (web-ui), kept importable from here. */
-export { AreaField } from '@gradeon/web-ui';
+export { AreaField } from '@tangent/web-ui';
 
 /** What a failed call says, split into field messages when the server named fields. */
 export function problem(e: unknown): Record<string, string> {

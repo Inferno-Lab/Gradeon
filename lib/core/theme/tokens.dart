@@ -59,7 +59,7 @@ abstract final class AppBreakpoints {
   static const tablet = 840.0;
 }
 
-/// Corner radii, Gradeon Hue's app scale: tags 7, small controls 10, controls 12, buttons and fields 16, panels 20,
+/// Corner radii, Tangent Hue's app scale: tags 7, small controls 10, controls 12, buttons and fields 16, panels 20,
 /// cards and the hero 24, the sheet 28. A pill is [pill]; nothing else is rounder than [sheet].
 abstract final class AppRadius {
   static const hair = 2.0;

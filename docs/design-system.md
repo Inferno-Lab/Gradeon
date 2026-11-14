@@ -1,8 +1,8 @@
-> This is the **mobile app's** side of **Gradeon Hue**, the one design system of the app, the school admin and the
+> This is the **mobile app's** side of **Tangent Hue**, the one design system of the app, the school admin and the
 > console. The approved boards and the full spec are in [`design/hue/`](../design/hue/README.md); admin and console are
 > in [`docs/DESIGN.md`](DESIGN.md).
 
-# Gradeon Hue in the app
+# Tangent Hue in the app
 
 Source of truth in code: `lib/core/theme/` (`app_colors.dart`, `app_typography.dart`, `tokens.dart`,
 `app_palette_defaults.dart`) and `lib/core/widgets/`. Live catalogue: Settings → About → long-press the version row.
@@ -10,7 +10,7 @@ Source of truth in code: `lib/core/theme/` (`app_colors.dart`, `app_typography.d
 
 ## Idea
 
-Hybrid, like the admin and the console (owner's call, 14 Nov 2026): Gradeon Hue's layouts, parts, icons and empty
+Hybrid, like the admin and the console (owner's call, 14 Nov 2026): Tangent Hue's layouts, parts, icons and empty
 scenes, worn in the old **Chalk & Glass** look. Every screen sits on the chalk ground (no coloured header band); the
 dock floats as a paper pill with an ink tab that slides; type is Anek on its width axis. The neutrals never take the
 school's tint (`APP_NEUTRALS` in `packages/contracts/src/hue.ts`): chalk, paper and ink from the old app, an ink

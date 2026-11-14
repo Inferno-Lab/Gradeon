@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/core/utils/loadable.dart';
-import 'package:gradeon/core/widgets/toast.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/repositories/campus_repository.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/core/utils/loadable.dart';
+import 'package:tangent/core/widgets/toast.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/repositories/campus_repository.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 class LibraryController extends GetxController with Loadable {
   /// Books a student may hold at once.

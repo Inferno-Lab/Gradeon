@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Checkbox, Segmented, Select, tintFor, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { Checkbox, Segmented, Select, tintFor, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';

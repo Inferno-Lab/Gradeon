@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:gradeon/core/config/app_config.dart';
+import 'package:tangent/core/config/app_config.dart';
 
-/// Sends crashes to Gradeon's error list (the console's Health page). Only builds for a real school report; debug runs print.
+/// Sends crashes to Tangent's error list (the console's Health page). Only builds for a real school report; debug runs print.
 abstract final class ErrorReporter {
   static final _seen = <String>{};
 

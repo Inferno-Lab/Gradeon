@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
 
 /// One event from the school, by its type (chat.message, chat.typing, chat.read, notification, bus.position, bus.trip).
 class LiveEvent {

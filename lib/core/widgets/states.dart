@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/services/connectivity_service.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/ui.dart';
+import 'package:tangent/core/services/connectivity_service.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/view_state.dart';
+import 'package:tangent/core/widgets/empty_kit.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ViewStateView extends StatelessWidget {

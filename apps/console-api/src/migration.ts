@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Header, HttpCode, Inject, Injectable, Param, Patch, Post, type OnModuleInit } from '@nestjs/common';
-import { activeFeatures, activeModules } from '@gradeon/config-engine';
-import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@gradeon/contracts';
-import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateXlsx, undoBatch } from '@gradeon/db';
-import { ApiError, ZodPipe, notFound } from '@gradeon/nest-kit';
+import { activeFeatures, activeModules } from '@tangent/config-engine';
+import { IMPORT_KINDS, ImportInput, ReadinessMark, SampleLoad, importKind, inr, type EntitlementDoc, type ImportBatchRow, type ImportPreview, type MigrationView, type UploadRow } from '@tangent/contracts';
+import { commitImport, exportAll, listBatches, pg, previewImport, sampleSchool, templateXlsx, undoBatch } from '@tangent/db';
+import { ApiError, ZodPipe, notFound } from '@tangent/nest-kit';
 import { z } from 'zod';
-import type { Registry } from '@gradeon/tenancy';
+import type { Registry } from '@tangent/tenancy';
 import { Actions } from './actions.js';
 import { Db, Me, Needs, type ConsoleUser } from './core.js';
 import { ENV, demosAllowed, type Env } from './env.js';
@@ -13,7 +13,7 @@ import { REGISTRY } from './tokens.js';
 
 const n = async (pool: pg.Pool, sql: string) => Number((await pool.query<{ n: string }>(sql)).rows[0]!.n);
 
-/** Gradeon's onboarding team moves a school in: files in, checked, imported as batches that add up, and undone if wrong. */
+/** Tangent's onboarding team moves a school in: files in, checked, imported as batches that add up, and undone if wrong. */
 @Injectable()
 export class Migration implements OnModuleInit {
   constructor(private readonly db: Db, private readonly actions: Actions, @Inject(ENV) private readonly env: Env, @Inject(REGISTRY) private readonly registry: Registry) {}
@@ -91,7 +91,7 @@ export class Migration implements OnModuleInit {
         ...(fees ? [{ key: 'fees', label: 'Opening fee dues are in and match the old system', done: dues > 0 && oldDues !== null && outstanding === oldDues,
           detail: oldDues === null ? `₹${inr(outstanding)} owed here; type the old system’s total to compare` : outstanding === oldDues ? `₹${inr(outstanding)}, the same as the old system` : `₹${inr(outstanding)} here, ₹${inr(oldDues)} in the old system` }] : []),
         ...(s.modules.has('timetable') ? [{ key: 'timetable', label: 'The timetable is in', done: slots > 0, detail: `${slots} lessons a week` }] : []),
-        { key: 'config_reviewed', label: 'Gradeon has reviewed the school’s configuration', done: ticked('config_reviewed'), detail: ticked('config_reviewed') ? 'Done' : 'Not yet', manual: true },
+        { key: 'config_reviewed', label: 'Tangent has reviewed the school’s configuration', done: ticked('config_reviewed'), detail: ticked('config_reviewed') ? 'Done' : 'Not yet', manual: true },
         { key: 'staff_trained', label: 'The school’s staff are trained', done: ticked('staff_trained'), detail: ticked('staff_trained') ? 'Done' : 'Not yet', manual: true },
         { key: 'staff_invited', label: 'Staff have their invites', done: staff > 0 && staffInvited === staff, detail: `${staffInvited} of ${staff}` },
         { key: 'families_invited', label: 'Families are invited', done: families > 0 && invited === families, detail: `${invited} of ${families}` },

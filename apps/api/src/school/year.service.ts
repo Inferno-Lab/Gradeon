@@ -1,7 +1,7 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { istToday, type LeaverInput, type NewYearInput, type PromotionInput, type PromotionPreview, type YearView } from '@gradeon/contracts';
-import { newId, type Job } from '@gradeon/db';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+import { istToday, type LeaverInput, type NewYearInput, type PromotionInput, type PromotionPreview, type YearView } from '@tangent/contracts';
+import { newId, type Job } from '@tangent/db';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { HubService } from './hub.service.js';
 import { AuditService, SettingsService } from './support.js';
@@ -198,7 +198,7 @@ export class YearService implements OnModuleInit {
     await s.pool.query('delete from guardians g where not exists (select 1 from student_guardians sg where sg.guardian_id = g.id)');
     await s.pool.query(
       "update students set name = 'Erased student', dob = '2000-01-01', blood_group = null, house = null, avatar_url = null, address = null, user_id = null, erased_at = now() where id = any($1)", [ids]);
-    await s.pool.query("insert into audit_log (id, actor_name, action, entity, detail) values ($1, 'Gradeon', 'retention.erased', 'student', $2)", [newId('aud'), JSON.stringify({ count: ids.length, months })]);
+    await s.pool.query("insert into audit_log (id, actor_name, action, entity, detail) values ($1, 'Tangent', 'retention.erased', 'student', $2)", [newId('aud'), JSON.stringify({ count: ids.length, months })]);
     return `Erased ${ids.length} leavers past ${months} months.`;
   }
 }

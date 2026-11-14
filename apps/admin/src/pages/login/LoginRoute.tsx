@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
-import { HttpError } from '@gradeon/api-client';
-import { EmptyCard, LoginPage, useHue } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { EmptyCard, LoginPage, useHue } from '@tangent/web-ui';
 import { session } from '../../app/client';
 
 /** Signs in to the school named in the address: password first, then the code. */
@@ -19,11 +19,11 @@ export function LoginRoute() {
   return (
     <LoginPage
       controller={{
-        product: 'admin', schoolName: b?.name ?? 'Gradeon', shortName: b?.shortName ?? 'school', color: b?.color, logoText: b?.logoText, logoUrl: b?.logoUrl, privacy: b?.privacy, demoMode: !!b?.demoMode, goName: 'the dashboard',
-        initialEmail: (() => { try { return localStorage.getItem(`gradeon.admin.${slug}.email`) ?? ''; } catch { return ''; } })(),
+        product: 'admin', schoolName: b?.name ?? 'Tangent', shortName: b?.shortName ?? 'school', color: b?.color, logoText: b?.logoText, logoUrl: b?.logoUrl, privacy: b?.privacy, demoMode: !!b?.demoMode, goName: 'the dashboard',
+        initialEmail: (() => { try { return localStorage.getItem(`tangent.admin.${slug}.email`) ?? ''; } catch { return ''; } })(),
         submitCredentials: async (email, password) => {
           const res = await client.api.login({ identifier: email, password });
-          try { localStorage.setItem(`gradeon.admin.${slug}.email`, email); } catch { /* ignore */ }
+          try { localStorage.setItem(`tangent.admin.${slug}.email`, email); } catch { /* ignore */ }
           if (res.step === 'otp') return res.challenge;
           session.write(slug, { user: res.tokens.user });
           session.setAccess(slug, res.tokens.accessToken);

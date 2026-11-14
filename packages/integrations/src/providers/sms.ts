@@ -8,7 +8,7 @@ const params = (r: InboundRequest): Record<string, string> => {
   return { ...r.query, ...(t && !t.trimStart().startsWith('{') && !t.trimStart().startsWith('[') ? Object.fromEntries(new URLSearchParams(t)) : {}) };
 };
 const json = (r: InboundRequest): any => { try { return JSON.parse(text(r)); } catch { return null; } };
-const testMessage = (to: string): OutMessage => ({ to, text: 'A test from Gradeon: this connection can send texts.', vars: {}, messageKey: 'test' });
+const testMessage = (to: string): OutMessage => ({ to, text: 'A test from Tangent: this connection can send texts.', vars: {}, messageKey: 'test' });
 const needsTemplate = (m: OutMessage, who: string) => {
   if (!m.templateId) throw new ProviderError(`${who} sends only DLT-approved templates: map “${m.messageKey ?? 'this message'}” under Integrations → Templates.`, true);
 };

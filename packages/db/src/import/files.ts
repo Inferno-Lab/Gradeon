@@ -112,7 +112,7 @@ export function zip(files: { name: string; content: string }[]): Buffer {
 function unzip(buf: Buffer): Map<string, Buffer> {
   const out = new Map<string, Buffer>();
   const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
-  if (eocd < 0) throw new ImportError('This file is not a spreadsheet Gradeon can read. Save it as .xlsx or .csv.');
+  if (eocd < 0) throw new ImportError('This file is not a spreadsheet Tangent can read. Save it as .xlsx or .csv.');
   let p = buf.readUInt32LE(eocd + 16);
   for (let i = buf.readUInt16LE(eocd + 10); i > 0; i--) {
     const method = buf.readUInt16LE(p + 10), size = buf.readUInt32LE(p + 20), n = buf.readUInt16LE(p + 28), off = buf.readUInt32LE(p + 42);
@@ -181,5 +181,5 @@ export function readTable(content: string): string[][] {
   if (!m) return parseCsv(content);
   const buf = Buffer.from(content.slice(m[0].length), 'base64');
   if (buf.subarray(0, 2).toString('latin1') !== 'PK') return parseCsv(buf.toString('utf8'));
-  try { return readXlsx(buf); } catch { throw new ImportError('This file is not a spreadsheet Gradeon can read. Save it as .xlsx or .csv.'); }
+  try { return readXlsx(buf); } catch { throw new ImportError('This file is not a spreadsheet Tangent can read. Save it as .xlsx or .csv.'); }
 }

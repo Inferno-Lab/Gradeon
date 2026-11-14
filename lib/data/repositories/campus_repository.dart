@@ -1,9 +1,9 @@
-import 'package:gradeon/core/utils/app_exception.dart';
-import 'package:gradeon/data/datasources/mock_json_datasource.dart';
-import 'package:gradeon/data/datasources/mock_writes.dart';
-import 'package:gradeon/data/datasources/remote_datasource.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/data/models/student.dart';
+import 'package:tangent/core/utils/app_exception.dart';
+import 'package:tangent/data/datasources/mock_json_datasource.dart';
+import 'package:tangent/data/datasources/mock_writes.dart';
+import 'package:tangent/data/datasources/remote_datasource.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/data/models/student.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 abstract class FeeRepository {
@@ -66,7 +66,7 @@ class RemoteFeeRepository implements FeeRepository {
     final order = Map<String, dynamic>.from(await _remote.post('/fees/$installmentId/order', {'studentId': studentId}) as Map);
     final opened = await launchUrl(Uri.parse(order['url'] as String), mode: LaunchMode.externalApplication);
     if (!opened) throw const AppException('fees.pay_open_failed');
-    // ponytail: polls every 3 s for 5 minutes; the checkout's page links back with gradeon://open/fees.
+    // ponytail: polls every 3 s for 5 minutes; the checkout's page links back with tangent://open/fees.
     for (var i = 0; i < 100; i++) {
       await Future<void>.delayed(const Duration(seconds: 3));
       final status = Map<String, dynamic>.from(await _remote.get('/orders/${order['orderId']}') as Map);

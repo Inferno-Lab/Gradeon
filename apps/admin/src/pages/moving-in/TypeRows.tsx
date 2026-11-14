@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import type { ImportKind } from '@gradeon/contracts';
-import { Select } from '@gradeon/web-ui';
+import type { ImportKind } from '@tangent/contracts';
+import { Select } from '@tangent/web-ui';
 
 const csvCell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 
 /**
- * For a school on paper: type a register straight in, and it goes to Gradeon's team like a file they sent (the same checks run when
+ * For a school on paper: type a register straight in, and it goes to Tangent's team like a file they sent (the same checks run when
  * the team imports it). Columns that take fixed values are dropdowns.
  */
 export function TypeRows({ kind, busy, onSend, onCancel }: { kind: ImportKind; busy: boolean; onSend: (csv: string, count: number) => void; onCancel: () => void }) {
@@ -36,9 +36,9 @@ export function TypeRows({ kind, busy, onSend, onCancel }: { kind: ImportKind; b
       {short.length > 0 && <div className="emsg" role="alert" style={{ marginTop: 10 }}>Fill in {short.map((c) => c.label).join(', ')} on every row you typed.</div>}
       <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap' }}>
         <button className="btn sm" onClick={() => setRows([...rows, ...Array.from({ length: 5 }, blank)])}>Add 5 rows</button>
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onCancel}>Cancel</button>
-          <button className="btn pri" disabled={busy || !filled.length || short.length > 0} onClick={send}>{busy ? 'Sending…' : `Send ${filled.length} ${filled.length === 1 ? 'row' : 'rows'} to Gradeon`}</button>
+          <button className="btn pri" disabled={busy || !filled.length || short.length > 0} onClick={send}>{busy ? 'Sending…' : `Send ${filled.length} ${filled.length === 1 ? 'row' : 'rows'} to Tangent`}</button>
         </span>
       </div>
     </div>

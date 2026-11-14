@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gradeon/core/theme/app_palette_defaults.dart';
+import 'package:tangent/core/theme/app_palette_defaults.dart';
 
 /// A subject's spectrum colour: the solid, the text on it, its soft fill, and the ink that reads on the fill.
 class SubjectColor {
@@ -11,7 +11,7 @@ class SubjectColor {
   final Color ink;
 }
 
-/// The palette in use: Gradeon Hue's colours for the default seed, or the school's from the server (`/v1/brand` →
+/// The palette in use: Tangent Hue's colours for the default seed, or the school's from the server (`/v1/brand` →
 /// `palette`, worked out from its brand colour by `packages/contracts/src/hue.ts`).
 abstract final class AppPalette {
   static Map<String, Map<String, Color>> _modes = appPaletteDefaults;
@@ -48,7 +48,7 @@ abstract final class AppPalette {
   static Color on(Color ground) => ground.computeLuminance() > 0.36 ? of('light', 't1') : const Color(0xFFFFFFFF);
 }
 
-/// Gradeon Hue's colours for one theme (light, dark, AMOLED), all from [AppPalette], so a school's colour reaches every
+/// Tangent Hue's colours for one theme (light, dark, AMOLED), all from [AppPalette], so a school's colour reaches every
 /// screen. The frame (header, tab bar) is [deep]; "you are here" is [bright]; actions are [brand]; panels are [paper] on
 /// [chalk]; status is ok, warn ([late]), bad and info; things are named by the spectrum ([subject]).
 @immutable

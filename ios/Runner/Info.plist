@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Gradeon</string>
+	<string>Tangent</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>gradeon</string>
+	<string>tangent</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -27,11 +27,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Gradeon uses the camera when you attach homework or update your profile photo.</string>
+	<string>Tangent uses the camera when you attach homework or update your profile photo.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>While you drive a school bus trip, families see where the bus is.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Gradeon uses your photo library when you attach homework or update your profile photo.</string>
+	<string>Tangent uses your photo library when you attach homework or update your profile photo.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>
@@ -84,10 +84,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>app.gradeon.open</string>
+			<string>app.tangent.open</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>gradeon</string>
+				<string>tangent</string>
 			</array>
 		</dict>
 	</array>

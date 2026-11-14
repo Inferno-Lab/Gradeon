@@ -3,19 +3,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/utils/view_state.dart';
-import 'package:gradeon/core/widgets/empty_kit.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/page.dart';
-import 'package:gradeon/core/widgets/states.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/models/campus.dart';
-import 'package:gradeon/features/transport/controllers/transport_controller.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/utils/view_state.dart';
+import 'package:tangent/core/widgets/empty_kit.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/page.dart';
+import 'package:tangent/core/widgets/states.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/models/campus.dart';
+import 'package:tangent/features/transport/controllers/transport_controller.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Bus: painted map with the bus as a glass bubble, then the stops sheet.

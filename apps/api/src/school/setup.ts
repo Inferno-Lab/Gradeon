@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Injectable, Param, Post, Put } from '@nestjs/common';
-import { SETUP_KINDS, SetupSave, importKind, type SetupSection } from '@gradeon/contracts';
-import { commitImport, exportRows, newId, previewImport } from '@gradeon/db';
-import { ApiError, ZodPipe, forbidden, notFound } from '@gradeon/nest-kit';
+import { SETUP_KINDS, SetupSave, importKind, type SetupSection } from '@tangent/contracts';
+import { commitImport, exportRows, newId, previewImport } from '@tangent/db';
+import { ApiError, ZodPipe, forbidden, notFound } from '@tangent/nest-kit';
 import { Core, CurrentUser, Require, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, SettingsService } from './support.js';
@@ -16,9 +16,9 @@ const REMOVE: Record<string, { sql: string; inUse: string }> = {
   fee_structures: { sql: 'delete from fee_structures where id = $1', inUse: 'Something still uses this fee.' },
 };
 const LOCKED: Record<string, string> = {
-  'calendar.schoolEdits': 'Gradeon keeps your years, terms and holidays. Ask Gradeon to change them.',
-  'classes.schoolEdits': 'Gradeon keeps your classes, subjects and periods. Ask Gradeon to change them.',
-  'feeStructures.schoolEdits': 'Gradeon keeps your fee structures. Ask Gradeon to change them.',
+  'calendar.schoolEdits': 'Tangent keeps your years, terms and holidays. Ask Tangent to change them.',
+  'classes.schoolEdits': 'Tangent keeps your classes, subjects and periods. Ask Tangent to change them.',
+  'feeStructures.schoolEdits': 'Tangent keeps your fee structures. Ask Tangent to change them.',
 };
 
 /** Classes and calendar: the school edits its own structure through the import engine, so a typed row gets the same checks (and undo) as a file. */

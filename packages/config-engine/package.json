@@ -1,5 +1,5 @@
 {
-  "name": "@gradeon/config-engine",
+  "name": "@tangent/config-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
-  "dependencies": { "@gradeon/contracts": "workspace:*", "zod": "^4.1.0" },
+  "dependencies": { "@tangent/contracts": "workspace:*", "zod": "^4.1.0" },
   "devDependencies": { "typescript": "~5.9.3", "vitest": "^4.1.12" }
 }

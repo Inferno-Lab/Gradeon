@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradeon/data/repositories/assistant_repository.dart';
+import 'package:tangent/data/repositories/assistant_repository.dart';
 
 void main() {
   test('mock assistant routes fee questions to the Fees screen', () async {

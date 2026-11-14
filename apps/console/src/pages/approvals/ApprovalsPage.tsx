@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { ACTION_LABELS, SETTINGS_META, type ActionRow } from '@gradeon/contracts';
-import { AreaField, Dialog, Select, useShake, EmptyState } from '@gradeon/web-ui';
+import { HttpError } from '@tangent/api-client';
+import { ACTION_LABELS, SETTINGS_META, type ActionRow } from '@tangent/contracts';
+import { AreaField, Dialog, Select, useShake, EmptyState } from '@tangent/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';

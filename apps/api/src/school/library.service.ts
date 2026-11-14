@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { addDays, istToday, type BookInput, type BookRow, type GiveBack, type IssueInput, type LibraryView, type LoanRow, type ReservationRow } from '@gradeon/contracts';
-import { newId } from '@gradeon/db';
-import { ApiError, notFound } from '@gradeon/nest-kit';
+import { addDays, istToday, type BookInput, type BookRow, type GiveBack, type IssueInput, type LibraryView, type LoanRow, type ReservationRow } from '@tangent/contracts';
+import { newId } from '@tangent/db';
+import { ApiError, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { AuditService, Messenger, SettingsService } from './support.js';
 

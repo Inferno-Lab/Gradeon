@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import type { BookRow, LoanRow, ReservationRow } from '@tangent/contracts';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -86,7 +86,7 @@ export function LibraryPage() {
             {books.length > 50 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 20px 16px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
                 <span className="help">{(page - 1) * 50 + 1}–{Math.min(page * 50, books.length)} of {books.length} titles</span>
-                <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 50 >= books.length} onClick={() => setPage(page + 1)}>Next</button></span>
+                <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 50 >= books.length} onClick={() => setPage(page + 1)}>Next</button></span>
               </div>
             )}
           </Card>

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { newId } from '@gradeon/db';
-import { ApiError, forbidden, notFound } from '@gradeon/nest-kit';
+import { newId } from '@tangent/db';
+import { ApiError, forbidden, notFound } from '@tangent/nest-kit';
 import type { TenantCtx } from '../tenancy/tenant.js';
 import { StreamService } from './stream.service.js';
 import { Messenger } from './support.js';

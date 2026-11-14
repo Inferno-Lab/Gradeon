@@ -8,8 +8,8 @@ let second: string;
 beforeAll(async () => {
   h = await startHarness();
   t = await h.signIn();
-  await h.invite(t, { name: 'Second Admin', email: 'second@gradeon.app', roles: ['super_admin'] }, 'another-long-pass');
-  second = await h.signIn('second@gradeon.app', 'another-long-pass');
+  await h.invite(t, { name: 'Second Admin', email: 'second@tangent.app', roles: ['super_admin'] }, 'another-long-pass');
+  second = await h.signIn('second@tangent.app', 'another-long-pass');
 }, 240_000);
 afterAll(async () => {
   await h?.close();
@@ -75,7 +75,7 @@ describe('connections', () => {
   });
 
   it('keeps the allow-list and shows Activity to readers only', async () => {
-    expect((await h.c('PUT', '/console/v1/integrations/allow-list', { token: t, body: { allowList: [' 9822011002 ', 'you@gradeon.app', '9822011002'] } })).json.allowList).toEqual(['9822011002', 'you@gradeon.app']);
+    expect((await h.c('PUT', '/console/v1/integrations/allow-list', { token: t, body: { allowList: [' 9822011002 ', 'you@tangent.app', '9822011002'] } })).json.allowList).toEqual(['9822011002', 'you@tangent.app']);
     const act = await h.c('GET', '/console/v1/integrations/activity?status=delivered', { token: t });
     expect(act.json.rows.some((r: any) => r.id === 'msg_t1')).toBe(true);
     expect((await h.c('GET', '/console/v1/integrations', {})).status).toBe(401);

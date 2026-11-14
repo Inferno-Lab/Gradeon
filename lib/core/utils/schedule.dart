@@ -1,5 +1,5 @@
-import 'package:gradeon/data/models/academics.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/data/models/academics.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 /// Minutes since midnight for "HH:mm".
 int minutesOf(String hhmm) {

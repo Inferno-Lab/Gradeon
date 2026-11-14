@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@gradeon/api-client';
-import { Dialog, Field, NumberField, NumberInput, Select, useShake, Icon, EmptyState } from '@gradeon/web-ui';
-import type { PolicyDoc, ReleaseRow } from '@gradeon/contracts';
+import { HttpError } from '@tangent/api-client';
+import { Dialog, Field, NumberField, NumberInput, Select, useShake, Icon, EmptyState } from '@tangent/web-ui';
+import type { PolicyDoc, ReleaseRow } from '@tangent/contracts';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';

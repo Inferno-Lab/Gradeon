@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { DATA_REQUEST_KINDS, type DataRequestRow } from '@gradeon/contracts';
-import { Dialog, Field, SelectField, useShake, useToast, EmptyState } from '@gradeon/web-ui';
+import { DATA_REQUEST_KINDS, type DataRequestRow } from '@tangent/contracts';
+import { Dialog, Field, SelectField, useShake, useToast, EmptyState } from '@tangent/web-ui';
 import { useApp } from '../../app/context';
 import { AddBtn, AreaField, problem } from '../../app/kit';
 import { Page } from '../../app/Page';

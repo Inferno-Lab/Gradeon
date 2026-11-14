@@ -1,4 +1,4 @@
-import type { ApiErrorBody, ErrorCode } from '@gradeon/contracts';
+import type { ApiErrorBody, ErrorCode } from '@tangent/contracts';
 
 /** A failed call, with what the server said. `message` is always safe to show a person. */
 export class HttpError extends Error {

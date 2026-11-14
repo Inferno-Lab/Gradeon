@@ -2,17 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/theme/tokens.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/states.dart';
+import 'package:tangent/core/theme/tokens.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/states.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Space a tab page leaves for the floating dock.
 const kDockClearance = 112.0;
 
 /// Phone page: the title and content on the chalk ground, floating controls at the top and an optional action bar at the
-/// bottom (the old Chalk & Glass frame, with Gradeon Hue's parts inside).
+/// bottom (the old Chalk & Glass frame, with Tangent Hue's parts inside).
 class PageFrame extends StatelessWidget {
   const PageFrame({
     required this.children,

@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Req, Res } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { ZodPipe } from '@gradeon/nest-kit';
-import { NoticeCreate, PeriodMarksPut } from '@gradeon/contracts';
+import { ZodPipe } from '@tangent/nest-kit';
+import { NoticeCreate, PeriodMarksPut } from '@tangent/contracts';
 import { CurrentUser, Core, RequireModule } from '../auth/guards.js';
 import { Tenant, type AuthedUser, type TenantCtx } from '../tenancy/tenant.js';
 import { FamilyService } from './family.service.js';

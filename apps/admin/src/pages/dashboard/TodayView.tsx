@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { DashboardData } from '@gradeon/contracts';
-import { EmptyNote, Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
+import type { DashboardData } from '@tangent/contracts';
+import { EmptyNote, Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@tangent/web-ui';
 
 // The dashboard as the Today board (design/hue/src/Today.html): the day on the deep colour, what needs the person, fees and the
 // day ahead. `v` is what DashboardPage works out from the data; `d` is the data itself.

@@ -3,22 +3,22 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gradeon/core/config/app_config.dart';
-import 'package:gradeon/core/routes/app_routes.dart';
-import 'package:gradeon/core/services/auth_service.dart';
-import 'package:gradeon/core/services/school_config.dart';
-import 'package:gradeon/core/theme/app_colors.dart';
-import 'package:gradeon/core/theme/app_typography.dart';
-import 'package:gradeon/core/utils/extensions.dart';
-import 'package:gradeon/core/widgets/glass.dart';
-import 'package:gradeon/core/widgets/page.dart';
-import 'package:gradeon/core/widgets/states.dart';
-import 'package:gradeon/core/widgets/ui.dart';
-import 'package:gradeon/data/models/user.dart';
-import 'package:gradeon/features/profile/controllers/profile_controller.dart';
+import 'package:tangent/core/config/app_config.dart';
+import 'package:tangent/core/routes/app_routes.dart';
+import 'package:tangent/core/services/auth_service.dart';
+import 'package:tangent/core/services/school_config.dart';
+import 'package:tangent/core/theme/app_colors.dart';
+import 'package:tangent/core/theme/app_typography.dart';
+import 'package:tangent/core/utils/extensions.dart';
+import 'package:tangent/core/widgets/glass.dart';
+import 'package:tangent/core/widgets/page.dart';
+import 'package:tangent/core/widgets/states.dart';
+import 'package:tangent/core/widgets/ui.dart';
+import 'package:tangent/data/models/user.dart';
+import 'package:tangent/features/profile/controllers/profile_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:gradeon/core/utils/clock.dart';
+import 'package:tangent/core/utils/clock.dart';
 
 final _houseColors = {
   'Emerald': AppColors.ok,
