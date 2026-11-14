@@ -65,6 +65,3 @@
 }
 /* Subject colours, as in the app: a 12% tint of the subject behind its name in light (22% in dark, name in ink). Art and PE are too light for text, so their names are ink. */
 .pg-timetable .sub{background:var(--cs);color:var(--ci)}
-/* From Gradeon Hue. */
-.pg-timetable .dh.today b{background:none;color:inherit}
-.pg-timetable .dh.today{background:var(--bright);color:var(--on-bright)}
