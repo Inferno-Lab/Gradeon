@@ -92,6 +92,7 @@ export function TimetableView({ v }: { v: any }) {
                               className={`cl ${c.k ?? ""} ${c.sel ?? ""} ${c.bad ?? ""} ${c.now ?? ""}`}
                               style={{ "--d": `${c.d ?? ""}s`, "--pg": `${c.pg ?? ""}%` } as CSSProperties}
                               onClick={c.pick}
+                              data-tip={c.tip}
                               aria-pressed={c.pressed}
                             >
                               {c.isBad && (
@@ -149,8 +150,8 @@ export function TimetableView({ v }: { v: any }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" } as CSSProperties}>
-                <span className="chip">{v.sel.t}</span>
-                <span className="chip">Room {v.sel.r}</span>
+                {v.sel.t && <span className="chip">{v.sel.t}</span>}
+                {v.sel.r && <span className="chip">Room {v.sel.r}</span>}
                 <span className="chip">{v.sel.len}</span>
               </div>
               {v.sel.bad && (
@@ -220,7 +221,7 @@ export function TimetableView({ v }: { v: any }) {
                     </span>
                   </div>
                   <div className="help" style={{ marginTop: "4px" } as CSSProperties}>
-                    {v.loadName}, periods
+                    {v.loadName ? `${v.loadName}, periods` : "Pick a lesson to see its teacher's week"}
                   </div>
                 </div>
               </div>
