@@ -235,8 +235,13 @@ describe('the teacher’s class', () => {
 
 describe('attendance every period', () => {
   it('lets the period’s teacher mark it, and no one else but someone who approves', async () => {
-    const day = istToday();
-    const roll = await f(teacher, `/attendance/periods?classId=cls_8a&date=${day}`);
+    // The most recent day the class has lessons: a test run on a Sunday (or a day off) would otherwise find none.
+    let day = istToday();
+    let roll = await f(teacher, `/attendance/periods?classId=cls_8a&date=${day}`);
+    for (let back = 1; back < 7 && roll.status === 200 && !roll.json.periods.length; back++) {
+      day = addDays(istToday(), -back);
+      roll = await f(teacher, `/attendance/periods?classId=cls_8a&date=${day}`);
+    }
     expect(roll.status).toBe(200);
     const mine = roll.json.periods.find((p: any) => p.mine);
     const other = roll.json.periods.find((p: any) => !p.mine);
