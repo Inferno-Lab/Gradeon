@@ -34,7 +34,7 @@ export function LibraryPage() {
   return (
     <Page title="Library" sub="The catalogue, who has which book, and who is waiting" toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{canWrite && <AddBtn onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</AddBtn>}</>}
+      tabs={tabs} actions={<>{canWrite && <AddBtn onClick={() => setDlg({ kind: 'book', book: null })}>Add a book</AddBtn>}</>}
       overlays={<>
         {dlg?.kind === 'book' && <BookDialog book={dlg.book} categories={[...new Set((v?.books ?? []).map((b) => b.category).filter(Boolean))].sort()} onClose={() => setDlg(null)} onDone={done} />}
         {dlg?.kind === 'issue' && <IssueDialog book={dlg.book} loanDays={v?.rules.loanDays ?? 14} onClose={() => setDlg(null)} onDone={done} />}

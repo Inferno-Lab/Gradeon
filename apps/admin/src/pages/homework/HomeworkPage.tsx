@@ -37,10 +37,8 @@ export function HomeworkPage() {
   return (
     <Page title="Homework" sub={classId ? `Class ${classes.data?.find((c) => c.id === classId)?.name ?? ''}` : 'What has been set, and what has come back'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={<>
-        <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
-        {canWrite && <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn>}
-      </>}
+      filters={<Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+      actions={canWrite && <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn>}
       overlays={<>
         {setting && <SetHomework defaultClass={classId} onClose={() => setSetting(false)} onDone={(d, failed) => { setSetting(false); refresh(qc); say(failed.length ? `Homework set, but ${failed.join(', ')} could not be attached.` : 'Homework set. Families are told.', failed.length ? 'bad' : undefined); setOpen(d.id); }} />}
         {changing && <SetHomework hw={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={(_d, failed) => { setChanging(null); refresh(qc); say(failed.length ? `Saved, but ${failed.join(', ')} could not be attached.` : 'Homework changed.'); }} />}

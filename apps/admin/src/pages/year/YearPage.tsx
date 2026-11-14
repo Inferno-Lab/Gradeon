@@ -25,7 +25,7 @@ export function YearPage() {
   const { toast, say } = useToast();
   const setup = useSetupSections(KINDS[tab] ?? [], say);
   if (tab === 'year-end') return <YearEnd tabs={tabs} />;
-  return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} actions={tabs} overlays={setup.overlay}>{setup.view}</Page>;
+  return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} tabs={tabs} overlays={setup.overlay}>{setup.view}</Page>;
 }
 
 /** Drafting the next year, promoting students into it, and starting it. */
@@ -55,7 +55,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Academic year" sub="Promote students, start the new year and record who leaves. Dues carry forward on their own." toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{can && <button className="btn pri" disabled={!draft} data-tip={draft ? undefined : 'Draft the next year first'} onClick={() => setDlg('promote')}>Promote students</button>}</>}
+      tabs={tabs} actions={<>{can && <button className="btn pri" disabled={!draft} data-tip={draft ? undefined : 'Draft the next year first'} onClick={() => setDlg('promote')}>Promote students</button>}</>}
       overlays={v && <>
         {dlg === 'year' && <NewYear years={v.years} onClose={() => setDlg(null)} onDone={done} />}
         {dlg === 'promote' && <Promote years={v.years} onClose={() => setDlg(null)} onDone={done} />}

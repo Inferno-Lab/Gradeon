@@ -32,7 +32,7 @@ export function TransportPage() {
   return (
     <Page title="Transport" sub="Routes, stops and times, who rides which bus, and today’s trips" toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{canWrite && <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn>}</>}
+      tabs={tabs} actions={<>{canWrite && <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn>}</>}
       overlays={<>
         {edit && <RouteDialog route={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onDone={done} />}
         {billing && <BillDialog route={billing} onClose={() => setBilling(null)} onDone={(m) => { setBilling(null); say(m); }} />}

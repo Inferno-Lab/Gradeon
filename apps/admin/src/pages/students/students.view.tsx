@@ -9,12 +9,11 @@ export function StudentsView({ v }: { v: any }) {
     <PageScope page="students">
       <main className="mn">
         <header className="hd rise">
-          <div>
+          <div className="ht">
             <h1>{v.heading}</h1>
             <p>{v.subtitle}</p>
           </div>
-          <span className="grow"></span>
-          {v.tabs}
+          <div className="ha">
           <button className="btn" onClick={v.openImport}>
             <Icon name="upload" />
             Import
@@ -27,7 +26,9 @@ export function StudentsView({ v }: { v: any }) {
             <Icon name="plus" />
             Add student
           </button>
+          </div>
         </header>
+        {v.tabs && <div className="pbar rise">{v.tabs}</div>}
         <div className="fbar rise" style={{ "--d": ".05s" } as CSSProperties}>
           <Segmented label="Students view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n, count: x.c, countTone: x.cc }))} />
           <span className="grow"></span>

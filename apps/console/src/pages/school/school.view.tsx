@@ -46,14 +46,16 @@ export function SchoolView({ v }: { v: any }) {
           <span className="slogo">
             {v.logoText}
           </span>
-          <div style={{ minWidth: "0" } as CSSProperties}>
-            <h1>{v.name}</h1>
+          <div className="ht" style={{ flexBasis: "280px" } as CSSProperties}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" } as CSSProperties}>
+              <h1>{v.name}</h1>
+              <span className={`chip ${v.stChip ?? ""}`} style={{ height: "30px" } as CSSProperties}>
+                {v.stText}
+              </span>
+            </div>
             <p>{v.subtitle}</p>
           </div>
-          <span className={`chip ${v.stChip ?? ""}`} style={{ height: "30px" } as CSSProperties}>
-            {v.stText}
-          </span>
-          <span className="grow"></span>
+          <div className="ha">
           {v.canSupport && (
             <button className="btn" onClick={v.openSupport}>
               <Icon name="shield" />
@@ -69,6 +71,7 @@ export function SchoolView({ v }: { v: any }) {
               ))}
             </MenuButton>
           )}
+          </div>
         </header>
         <Segmented label="School" className="rise" value={v.tab} onChange={v.pickTab} options={v.tabs.map((t: any) => ({ value: t.key, label: t.n }))} style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} />
         {v.tab !== "overview" && v.extra}

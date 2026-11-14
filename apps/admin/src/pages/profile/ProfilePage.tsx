@@ -66,7 +66,7 @@ export function ProfilePage() {
   return (
     <Page title="School profile" sub="How Gradeon has set up your school. To change anything, ask Gradeon." toast={toast} loading={doc.isLoading || cfg.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
-      actions={<>{tabs}<button className="btn pri" onClick={() => setAsking(true)}>Ask Gradeon to change this</button></>}
+      tabs={tabs} actions={<><button className="btn pri" onClick={() => setAsking(true)}>Ask Gradeon to change this</button></>}
       overlays={asking && <AskGradeon area={AREA[tab] ?? 'School profile'} onClose={() => setAsking(false)} onDone={() => { setAsking(false); say('Sent to Gradeon. The answer shows when you ask again.'); }} />}>
       {d && c && (
         <div className="stack" style={{ gap: 16 }}>

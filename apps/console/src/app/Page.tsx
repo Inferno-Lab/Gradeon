@@ -5,7 +5,12 @@ import { url } from './base';
 interface PageProps {
   title: string;
   sub?: ReactNode;
+  /** The page's verbs (Add, Export…), top right. */
   actions?: ReactNode;
+  /** The page's tabs, in the bar under the title. */
+  tabs?: ReactNode;
+  /** What narrows the page (a class, a day, a period), in the same bar: after the tabs, or on its own. */
+  filters?: ReactNode;
   children: ReactNode;
   overlays?: ReactNode;
   toast?: ToastProps | null;
@@ -17,7 +22,7 @@ interface PageProps {
 }
 
 /** The frame every console page without its own board shares: title row, error and loading states, its dialogs and toast. */
-export function Page({ title, sub, actions, children, overlays, toast, error, loading, back }: PageProps) {
+export function Page({ title, sub, actions, tabs, filters, children, overlays, toast, error, loading, back }: PageProps) {
   return (
     <PageScope page="c" overlays={<><Presence>{overlays}</Presence><ToastSlot toast={toast} /></>}>
       <main className="mn" aria-busy={loading || undefined}>
@@ -28,11 +33,11 @@ export function Page({ title, sub, actions, children, overlays, toast, error, lo
             <b style={{ color: 'var(--ink)' }}>{title}</b>
           </div>
         )}
-        <header className="hd rise" style={{ flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ minWidth: 0 }}><h1>{title}</h1>{sub != null && <p>{sub}</p>}</div>
-          <span className="grow"></span>
-          {actions}
+        <header className="hd rise">
+          <div className="ht"><h1>{title}</h1>{sub != null && <p>{sub}</p>}</div>
+          {actions && <div className="ha">{actions}</div>}
         </header>
+        {(tabs || filters) && <div className="pbar rise">{tabs}{tabs && filters && <span className="grow"></span>}{filters}</div>}
         {error ? (
           <div>
             <EmptyCard error title={title} chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={error.message} actions={<button className="btn pri" onClick={error.retry}>Try again</button>} />

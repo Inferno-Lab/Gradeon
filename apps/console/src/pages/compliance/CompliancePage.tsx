@@ -40,7 +40,7 @@ export function CompliancePage() {
   return (
     <Page title="Compliance" sub="Agreements with each school, and what to do when something goes wrong" toast={toast} loading={q.isLoading}
       error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
-      actions={<>{tabs}{canWrite && tab === 'agreements' && <button className="btn pri" onClick={() => setAdding('dpa')}>Add an agreement</button>}{canWrite && tab === 'breaches' && <button className="btn pri" onClick={() => setAdding('breach')}>Log a breach</button>}</>}
+      tabs={tabs} actions={<>{canWrite && tab === 'agreements' && <button className="btn pri" onClick={() => setAdding('dpa')}>Add an agreement</button>}{canWrite && tab === 'breaches' && <button className="btn pri" onClick={() => setAdding('breach')}>Log a breach</button>}</>}
       overlays={<>
         {adding && <Add kind={adding} onClose={() => setAdding(null)} onDone={(m) => { setAdding(null); refresh(); say(m); }} />}
         {signing && <Sign r={signing} onClose={() => setSigning(null)} onDone={() => { setSigning(null); refresh(); say('Agreement signed, with its file.'); }} />}

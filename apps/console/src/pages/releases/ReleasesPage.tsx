@@ -21,7 +21,7 @@ export function ReleasesPage() {
   const { tab, tabs } = usePageTabs('/releases');
   const { toast, say } = useToast();
   if (tab === 'database') return <MigrationsTab tabs={tabs} />;
-  if (tab === 'rules') return <Page title="Releases" sub="How a release rolls out" toast={toast} actions={tabs}><RolloutRules say={say} /></Page>;
+  if (tab === 'rules') return <Page title="Releases" sub="How a release rolls out" toast={toast} tabs={tabs}><RolloutRules say={say} /></Page>;
   return <ReleasesList tabs={tabs} toast={toast} say={say} />;
 }
 
@@ -39,7 +39,7 @@ function ReleasesList({ tabs, toast, say }: { tabs: React.ReactNode; toast: Retu
   const canWrite = app.can('releases.write');
   return (
     <Page title="Releases" sub="A release signs schools off on the deployed code, wave by wave" toast={toast} loading={list.isLoading} error={list.isError ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={<>{tabs}{canWrite && <button className="btn pri" onClick={() => setCreating(true)}><Icon name="plus" />New release</button>}</>}
+      tabs={tabs} actions={<>{canWrite && <button className="btn pri" onClick={() => setCreating(true)}><Icon name="plus" />New release</button>}</>}
       overlays={<>
         {creating && <CreateDialog onClose={() => setCreating(false)} onDone={() => { setCreating(false); refresh(); say('Release created. Start it when you are ready.'); }} />}
         {back && (

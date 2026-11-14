@@ -95,7 +95,7 @@ export function ModulesPage() {
   const { tab, tabs } = usePageTabs('/modules');
   const { toast, say } = useToast();
   return (
-    <Page title="Plans and modules" sub={tab === 'plans' ? 'What a school starts from, and its price' : tab === 'planned' ? 'Modules on the way' : 'Which school has which module and feature'} toast={toast} actions={tabs}>
+    <Page title="Plans and modules" sub={tab === 'plans' ? 'What a school starts from, and its price' : tab === 'planned' ? 'Modules on the way' : 'Which school has which module and feature'} toast={toast} tabs={tabs}>
       {tab === 'plans' ? <Plans say={say} /> : tab === 'planned' ? <Planned /> : <Schools say={say} />}
     </Page>
   );

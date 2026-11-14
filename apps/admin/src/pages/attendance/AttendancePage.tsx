@@ -66,8 +66,8 @@ export function AttendancePage() {
   return (
     <Page title="Attendance" sub={date ? `${dayLabel(date)} · ${cls ? `Class ${cls.name}` : ''}` : 'Roll call'} toast={toast} loading={loading} overlays={leave.overlay}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
-      actions={<>
-        {tabs}
+      tabs={tabs}
+      filters={<>
         {tab !== 'leave' && !!classes.data?.length && (
           <>
             {latest && <DateField compact label="Day" value={date} onChange={(d) => setPicked(d && d !== latest ? d : null)} max={latest} min={mayOld ? undefined : addDays(latest, -lockDays)} />}

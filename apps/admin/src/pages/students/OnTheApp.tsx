@@ -30,7 +30,7 @@ export function OnTheApp({ tabs }: { tabs: React.ReactNode }) {
   const students = !!cfg?.app.roles.includes('student');
   const a = act.data;
   return (
-    <Page title="Students" sub="Families on the school’s app" toast={toast} actions={tabs} loading={act.isLoading && !a}
+    <Page title="Students" sub="Families on the school’s app" toast={toast} tabs={tabs} loading={act.isLoading && !a}
       error={act.isError && !a ? { message: (act.error as Error).message, retry: () => void act.refetch() } : null}>
       {a && (a.classes.length === 0 ? (
         <EmptyState scene="students" onAction={() => app.go('/students?import=1')} onLink={() => app.go('/students?add=1')} />

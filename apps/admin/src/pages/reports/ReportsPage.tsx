@@ -52,7 +52,7 @@ export function ReportsPage() {
   return (
     <Page title="Reports" sub="Numbers you can read, download or print for a meeting" toast={toast} loading={all.isLoading && !all.data}
       error={all.isError && !all.data ? { message: (all.error as Error).message, retry: () => void all.refetch() } : null}
-      actions={<>{tabs}{d && <>
+      tabs={tabs} actions={<>{d && <>
         <button className="btn" onClick={() => window.print()}><Ico d={PRINT} />Print</button>
         <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>
       </>}</>}>

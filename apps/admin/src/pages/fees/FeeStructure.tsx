@@ -15,7 +15,7 @@ export function FeeStructure({ tabs }: { tabs: React.ReactNode }) {
   const { toast, say } = useToast();
   const setup = useSetupSections(['fee_structures'], say);
   return (
-    <Page title="Fees" sub="The kinds of fee the school charges, and what each class pays" toast={toast} actions={tabs} overlays={setup.overlay}>
+    <Page title="Fees" sub="The kinds of fee the school charges, and what each class pays" toast={toast} tabs={tabs} overlays={setup.overlay}>
       <div className="stack" style={{ gap: 16 }}>
         <Rules />
         <Heads say={say} />

@@ -14,16 +14,14 @@ export function TimetableView({ v }: { v: any }) {
     >
       <main className="mn">
         <header className="hd rise">
-          <div>
+          <div className="ht">
             <h1>Timetable</h1>
             <p>
               Class {v.className} · {v.term} · version {v.version},{" "}
               <span style={{ color: v.isDraft ? "var(--warn-i)" : "var(--ok-i)", fontWeight: "700" } as CSSProperties}>{v.isDraft ? "draft" : "published"}</span>
             </p>
           </div>
-          <span className="grow"></span>
-          <Select compact aria-label="Class" value={String(Math.max(0, v.classes.findIndex((c: any) => c.on)))} onChange={(i) => v.classes[Number(i)]?.pick()} options={v.classes.map((c: any, i: number) => ({ value: String(i), label: c.n }))} />
-          <Segmented label="Timetable view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n }))} />
+          <div className="ha">
           <button className="btn" onClick={v.openWeek}>A teacher’s or room’s week</button>
           <button className="btn" onClick={v.print}>Print</button>
           {v.canPublish && (
@@ -32,8 +30,11 @@ export function TimetableView({ v }: { v: any }) {
             Publish
           </button>
           )}
+          </div>
         </header>
         <div className="wk rise" style={{ "--d": ".05s" } as CSSProperties}>
+          <Select compact aria-label="Class" value={String(Math.max(0, v.classes.findIndex((c: any) => c.on)))} onChange={(i) => v.classes[Number(i)]?.pick()} options={v.classes.map((c: any, i: number) => ({ value: String(i), label: c.n }))} />
+          <Segmented label="Timetable view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n }))} />
           <div className="wkp">
             <span>
               <Icon name="calendar" size={16} />

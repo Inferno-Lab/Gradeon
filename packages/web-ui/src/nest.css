@@ -44,7 +44,13 @@ font-family:var(--fb);color:var(--ink);background:var(--bd);-webkit-font-smoothi
 .nest .me{display:flex;align-items:center;gap:12px;padding:12px 6px 0;white-space:nowrap}
 .nest .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--fb);flex:none;box-shadow:0 0 0 2.5px var(--s1)}
 .nest .mn{min-width:0;padding:24px 32px 48px;display:flex;flex-direction:column;gap:20px}
-.nest .hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* Every page's title row: the title on the left, the page's verbs as one block at the top right (below it only when they
+   do not fit). Tabs and filters are not verbs: they sit in the bar under the title row. */
+.nest .hd{display:flex;align-items:flex-start;gap:12px 24px;flex-wrap:wrap}
+.nest .hd>.ht{flex:1 1 280px;min-width:0}
+.nest .hd>.ha{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;max-width:100%;margin-left:auto}
+.nest .pbar{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+@media (max-width:700px){.nest .hd>.ha{margin-left:0;justify-content:flex-start}}
 .nest .hd h1{margin:0;font:700 34px/1.1 var(--fd);letter-spacing:-.035em}
 .nest .hd p{margin:6px 0 0;color:var(--ink2);font:500 15px var(--fb)}
 .nest .grow{flex:1}

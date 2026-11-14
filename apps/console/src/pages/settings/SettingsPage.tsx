@@ -13,7 +13,7 @@ export function SettingsPage() {
   const { tabs } = usePageTabs('/settings');
   const { toast, say } = useToast();
   return (
-    <Page title="Console settings" sub="Which changes need a second person" toast={toast} actions={tabs}>
+    <Page title="Console settings" sub="Which changes need a second person" toast={toast} tabs={tabs}>
       <Rules say={say} />
     </Page>
   );

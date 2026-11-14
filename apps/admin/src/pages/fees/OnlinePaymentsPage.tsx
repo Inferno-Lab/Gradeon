@@ -39,7 +39,7 @@ export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
   const open = (recon.data ?? []).filter((r) => !r.resolved);
   const waiting = (refunds.data ?? []).filter((r) => r.status === 'requested');
   return (
-    <Page title="Fees" sub="What families paid in the app, refunds, and the daily check against what the provider settled" toast={toast} actions={tabs}
+    <Page title="Fees" sub="What families paid in the app, refunds, and the daily check against what the provider settled" toast={toast} tabs={tabs}
       loading={payments.isLoading && !payments.data} error={payments.isError && !payments.data ? { message: (payments.error as Error).message, retry: () => void payments.refetch() } : null}
       overlays={<>
         {refund && <RefundDialog p={refund} onClose={() => setRefund(null)} onDone={(m) => { setRefund(null); refresh(); say(m); }} />}

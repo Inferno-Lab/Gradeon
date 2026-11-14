@@ -60,6 +60,7 @@ export function IntegrationsPage() {
   return (
     <Page title="Integrations" sub="Every third party the platform talks to: messages, payments, files and maps. Added, tested, routed and taken live from here, with no deploy." toast={toast}
       loading={view.isLoading} error={view.isError ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
+      tabs={v && <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />}
       actions={write ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><Icon name="plus" />Add a connection</button> : undefined}
       overlays={v && <>
         {dlg?.kind === 'add' && <ConnectionDialog schools={live} onClose={() => setDlg(null)} onDone={done} />}
@@ -91,7 +92,6 @@ export function IntegrationsPage() {
           { label: 'Sent this month', value: count(v.connections.reduce((n, c) => n + c.usage.count, 0)), note: 'through real providers', tone: 'a' },
           { label: 'Cost this month', value: rupees(v.connections.reduce((n, c) => n + c.usage.costPaise, 0) / 100), note: 'from each connection’s price', tone: 'i' },
         ]} />
-        <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />
         {tab === 'connections' && <Connections v={v} write={write} busy={act.isPending} onEdit={(c) => setDlg({ kind: 'edit', c })} onTest={(c) => setDlg({ kind: 'test', c })} onDelete={(c) => setDlg({ kind: 'delete', c })}
           onAct={(c, what) => act.mutate({ c, what })} onAdd={() => setDlg({ kind: 'add' })} />}
         {tab === 'routing' && <Routing v={v} schools={live} write={write} onEdit={(capability, schoolId, route) => setDlg({ kind: 'route', capability, schoolId, route })} />}

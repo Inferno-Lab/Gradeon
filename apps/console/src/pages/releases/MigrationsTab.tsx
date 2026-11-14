@@ -15,7 +15,7 @@ export function MigrationsTab({ tabs }: { tabs: React.ReactNode }) {
   const q = useQuery({ queryKey: ['migrations'], queryFn: app.api.releases.migrations, refetchInterval: 15_000 });
   const rows = q.data ?? [];
   return (
-    <Page title="Releases" sub="Database changes, and which schools have them. Each school’s database is changed on its own." actions={tabs} loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
+    <Page title="Releases" sub="Database changes, and which schools have them. Each school’s database is changed on its own." tabs={tabs} loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
       {rows.length === 0 ? (
         <div><EmptyState scene="migrations" onAction={() => app.go('/releases')} /></div>
       ) : rows.map((m) => {

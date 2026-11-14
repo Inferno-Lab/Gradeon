@@ -9,7 +9,7 @@ export function ApprovalsPage() {
   const { tab, tabs } = usePageTabs('/approvals');
   const { list, overlay } = useApprovalList((tab || 'waiting') as ApprovalView, undefined, say);
   return (
-    <Page title="Approvals" sub="Requests that need a yes or a no, and the answers given." toast={toast} actions={tabs} overlays={overlay}>
+    <Page title="Approvals" sub="Requests that need a yes or a no, and the answers given." toast={toast} tabs={tabs} overlays={overlay}>
       {list}
     </Page>
   );
