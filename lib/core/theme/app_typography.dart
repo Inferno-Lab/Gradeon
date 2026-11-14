@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gradeon/core/theme/app_colors.dart';
 
-/// Gradeon Hue's type: Mona Sans in two voices, wide (112%) and heavy for numbers, names and titles, normal width for
-/// reading; Noto Sans Devanagari for Hindi and Marathi at the same sizes.
-const kSans = 'MonaSans';
-const kDeva = 'NotoSansDevanagari';
+/// Anek Latin + Anek Devanagari (one family, three languages), the type the app had before Gradeon Hue: the width axis
+/// carries the hierarchy, wide and heavy for numbers and headings. Hue's roles and sizes stay.
+const kSans = 'AnekLatin';
+const kDeva = 'AnekDevanagari';
 const kMono = 'IBMPlexMono';
 
-/// The one way to make a Hue style. Screens never call it: they use a role from [AppText] or `context.type`
+/// The one way to make a text style. Screens never call it: they use a role from [AppText] or `context.type`
 /// (`test/design_rules_test.dart` fails otherwise). Shared widgets may, to size text to their own geometry.
-/// A role asks for a width above 100 to get the display voice; weights settle on Hue's three (400, 600, 700).
 TextStyle hueText(
   double size,
   double weight, {
@@ -19,13 +18,12 @@ TextStyle hueText(
   Color? color,
   bool tabular = false,
 }) {
-  final w = weight >= 700 ? 700.0 : weight >= 600 ? 600.0 : 400.0;
   return TextStyle(
     fontFamily: kSans,
     fontFamilyFallback: const [kDeva],
     fontSize: size,
-    fontWeight: FontWeight.values[(w / 100).round() - 1],
-    fontVariations: [FontVariation('wght', w), FontVariation('wdth', width > 100 ? 112 : 100)],
+    fontWeight: FontWeight.values[((weight / 100).round() - 1).clamp(0, 8)],
+    fontVariations: [FontVariation('wght', weight), FontVariation('wdth', width)],
     height: height,
     letterSpacing: em * size,
     color: color,
