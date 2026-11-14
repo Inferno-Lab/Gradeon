@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -61,7 +61,7 @@ export function LibraryPage() {
         {tab === 'loans' && <div className="rise" style={{ maxWidth: 360 }}><Field label="Search loans" value={lq} onChange={setLq} icon={SEARCH} placeholder="Book or borrower" /></div>}
         {tab === 'books' && (
           <Card style={{ padding: 0 }}>
-            {!books.length ? <div className="help" style={{ padding: 20 }}>No book matches “{q}”.</div> : (
+            {!books.length ? <div style={{ padding: 20 }}><EmptyNote icon="search" title={`No book matches “${q}”`} body="Search by title, author or ISBN, or add the book to the catalogue." /></div> : (
               <div className="tbl scroll-x"><div style={{ minWidth: 680 }} className="lscroll">
                 <div className="grd th" style={{ '--cols': 'minmax(0,2.4fr) minmax(0,1fr) 90px 110px 170px' } as React.CSSProperties}><span>Book</span><span>Category</span><span>Shelf</span><span>On the shelf</span><span></span></div>
                 {books.slice((page - 1) * 50, page * 50).map((b) => (
@@ -88,7 +88,7 @@ export function LibraryPage() {
         )}
         {tab === 'loans' && (
           <Card style={{ padding: 0 }}>
-            {!v.loans.length ? <div className="help" style={{ padding: 20 }}>No book is out. Issue one from the catalogue.</div> : (
+            {!v.loans.length ? <div style={{ padding: 20 }}><EmptyNote icon="library" title="No book is out" body="Books issued from the catalogue show here with who has them and when they are due back." /></div> : (
               <div className="tbl scroll-x"><div style={{ minWidth: 660 }} className="lscroll">
                 <div className="grd th" style={{ '--cols': 'minmax(0,2fr) minmax(0,1.4fr) 110px 150px 190px' } as React.CSSProperties}><span>Book</span><span>Borrower</span><span>Due</span><span>Status</span><span></span></div>
                 {v.loans.filter((l) => !lq.trim() || `${l.title} ${l.student} ${l.className}`.toLowerCase().includes(lq.trim().toLowerCase())).map((l) => (

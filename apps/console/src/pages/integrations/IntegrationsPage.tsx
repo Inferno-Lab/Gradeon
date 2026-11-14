@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -511,7 +511,7 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
       </div>
       <Card title="Every message’s fate" chip={<span className="chip">{rows.length} shown</span>} style={{ padding: 0 }}>
         {q.isError ? <div className="help" style={{ padding: 20 }}>{(q.error as Error).message}</div>
-          : !rows.length ? <div className="help" style={{ padding: 20 }}>{q.isLoading ? 'Loading…' : 'No messages match. Messages appear here the moment a school sends one.'}</div> : (
+          : !rows.length ? <div style={{ padding: 20 }}>{q.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 16 }} /> : <EmptyNote icon="send" title="No messages match" body="Messages appear here the moment a school sends one." />}</div> : (
             <div className="tbl scroll-x"><div style={{ minWidth: 760 }} className="lscroll">
               <div className="grd th" style={{ '--cols': '96px 110px minmax(0,1fr) minmax(0,2fr) 120px 90px' } as React.CSSProperties}><span>Status</span><span>School</span><span>To</span><span>Message</span><span>Through</span><span></span></div>
               {rows.map((m) => (
@@ -553,7 +553,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
             <div className="help" style={{ marginTop: 4 }}>Checked by: {def?.webhooks?.verifies}</div>
             {open === c.id && (
               <div style={{ marginTop: 10 }}>
-                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <div className="help">Nothing received yet.</div>
+                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <EmptyNote icon="link" title="Nothing received yet" body="Calls the provider makes to this address show here with what Gradeon did with them." />
                   : (events.data ?? []).slice(0, 10).map((e) => (
                     <div key={e.id} className="kv" style={{ alignItems: 'center' }}>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0 }}><span className={`chip ${e.ok ? 'g' : 'c'}`}>{e.ok ? 'Accepted' : 'Refused'}</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.summary}>{e.summary}</span></span>
@@ -605,7 +605,7 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
   return (
     <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
       {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} />
-        : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
+        : rows.length === 0 ? <EmptyNote icon="inbox" title="Nothing in the test inbox yet" body="Sign-in codes, receipts and notices land here as they are triggered." />
           : <>{shown.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'flex-start', height: 'auto', padding: '12px 0' }}>
               <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ThreadDetail, ThreadRow } from '@gradeon/contracts';
-import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, Field, FilePick, Segmented, Select, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { uploadFile } from '@gradeon/api-client';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
@@ -52,7 +52,8 @@ export function MessagesPage() {
               <Checkbox checked={mine} onChange={setMine} label="Only the ones with me" />
             </div>
             <div className="lscroll" style={{ maxHeight: 'min(68dvh,640px)' }}>
-              {rows.length === 0 && <div className="help" style={{ padding: '10px 20px 20px' }}>{term || mine ? 'Nothing matches.' : filter === 'unread' ? 'Nothing unread.' : filter === 'closed' ? 'No closed conversations.' : 'No open conversations.'}</div>}
+              {rows.length === 0 && <div style={{ padding: '4px 16px 16px' }}><EmptyNote icon={term ? 'search' : 'messages'} title={term || mine ? 'Nothing matches' : filter === 'unread' ? 'Nothing unread' : filter === 'closed' ? 'No closed conversations' : 'No open conversations'}
+                body={term || mine ? 'Try another name, or clear the search.' : filter === 'unread' ? 'You have read every message.' : filter === 'closed' ? 'A conversation you close moves here.' : 'A family’s message starts one here.'} /></div>}
               {rows.map((t) => <ThreadItem key={t.id} t={t} on={t.id === sel} onOpen={() => setSel(t.id)} />)}
             </div>
           </div>

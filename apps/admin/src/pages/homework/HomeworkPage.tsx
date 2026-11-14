@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
@@ -63,7 +63,7 @@ export function HomeworkPage() {
               <div className="hwlw" style={{ minWidth: 640 }}>
                 <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>Homework</span><span>Class</span><span>Due</span><span>Handed in</span><span style={{ textAlign: 'right' }}>Count</span></div>
                 {rows.map((r) => <Row key={r.id} r={r} today={today} onOpen={() => setOpen(r.id)} />)}
-                {rows.length === 0 && <div className="help" style={{ padding: '16px 24px' }}>Nothing here with these filters.</div>}
+                {rows.length === 0 && <div style={{ padding: '4px 20px 20px' }}><EmptyNote icon="filter" title="Nothing fits these filters" body="Try another class or status, or clear the filters." /></div>}
               </div>
             </div>
           </div>

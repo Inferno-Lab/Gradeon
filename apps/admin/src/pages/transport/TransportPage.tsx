@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -63,7 +63,7 @@ export function TransportPage() {
                 <div className="kv">Riders<b>{r.riders}</b></div>
                 <div className="lbl" style={{ margin: '12px 0 4px' }}>Stops</div>
                 <div className="lscroll" data-even-scroll="" style={{ maxHeight: 240 }}>
-                  {!r.stops.length && <div className="help">No stops yet.</div>}
+                  {!r.stops.length && <EmptyNote icon="route" title="No stops yet" body="Add the stops in the order the bus reaches them." />}
                   {r.stops.map((s) => (
                     <div key={s.id} className="kv" style={{ alignItems: 'center' }}>
                       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={s.lat == null ? 'Not on the map: no “bus is near” for this stop' : 'On the map'}>{s.position}. {s.name}</span>
@@ -222,7 +222,7 @@ function PlaceFind({ placed, onPick }: { placed: boolean; onPick: (p: { lat: num
       {!chosen && (found.data?.length ?? 0) > 0 && (
         <div className="pks">{found.data!.map((p) => <button key={`${p.lat},${p.lng}`} type="button" className="pk" onClick={() => { onPick(p); setChosen(`Placed at ${p.label}`); }}><span><b>{p.label}</b></span></button>)}</div>
       )}
-      {!chosen && term.length >= 3 && found.data?.length === 0 && <div className="help">Nothing found. Try the address.</div>}
+      {!chosen && term.length >= 3 && found.data?.length === 0 && <EmptyNote icon="map" title="Nothing found" body="Try the street address, or a landmark near the stop." />}
     </div>
   );
 }

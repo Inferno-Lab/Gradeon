@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PromotionPreview, YearRow } from '@gradeon/contracts';
 import { istToday } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, Select, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, Select, useShake, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -72,7 +72,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
       {v && <>
         <section className="grid" data-even="">
           <Card span="s6" title="Academic years" chip={can && !draft ? <button className="btn sm" onClick={() => setDlg('year')}>Draft next year</button> : undefined}>
-            {!v.years.length && <div className="help">No year is set up. Gradeon adds the first one with the school.</div>}
+            {!v.years.length && <EmptyNote icon="year" title="No year is set up" body="Gradeon adds the first one with the school." />}
             {v.years.map((y) => (
               <div key={y.id} className="kv" style={{ alignItems: 'center' }}>
                 <span style={{ minWidth: 0 }}><b style={{ color: 'var(--ink)' }}>{y.label}</b><br /><small className="help">{dateLabel(y.startsOn)} {y.startsOn.slice(0, 4)} to {dateLabel(y.endsOn)} {y.endsOn.slice(0, 4)}{y.status === 'current' ? ` · ${y.classes} classes, ${y.students} students` : ''}</small></span>
@@ -85,7 +85,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
             <div className="help" style={{ marginTop: 10 }}>Order of things: draft the next year, promote students, then start the year. An archived year stays readable but cannot be changed.</div>
           </Card>
           <Card span="s6" title="Promotions" chip={latestRun && !latestRun.undoneAt && can ? <button className="btn sm" disabled={act.isPending} onClick={() => setSure({ what: 'undo', id: latestRun.id, text: `Undo the latest promotion? ${latestRun.students} students go back to the class they were in before.` })}>Undo the latest</button> : undefined}>
-            {!v.runs.length ? <div className="help">No promotion has run yet. “Promote students” shows where each class goes before anything moves.</div>
+            {!v.runs.length ? <EmptyNote icon="up" title="No promotion has run yet" body="“Promote students” shows where each class goes before anything moves." />
               : v.runs.map((r) => (
                 <div key={r.id} className="kv" style={{ alignItems: 'center' }}>
                   <span>{r.students} students · to {r.toYear}<br /><small className="help">{stamp(r.createdAt)}</small></span>

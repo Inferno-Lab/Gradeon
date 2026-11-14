@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { CAPABILITY_LABELS, istToday, type Capability, type InvoiceRowC } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, MonthField, Select, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { count, rupees, when } from '../../app/format';
@@ -70,7 +70,7 @@ export function BillingPage() {
             <Select compact aria-label="Month" value={month} onChange={setMonth} options={[{ value: '', label: 'Every month' }, ...months.map((m) => ({ value: m, label: m }))]} />
             <Select compact aria-label="Status" value={status} onChange={setStatus} options={[{ value: '', label: 'Every status' }, ...Object.entries(WORDS).map(([value, label]) => ({ value, label }))]} />
           </div>
-          {rows.length === 0 ? <div className="help" style={{ padding: '0 20px 20px' }}>No invoice matches.</div> : (
+          {rows.length === 0 ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon="search" title="No invoice matches" body="Try another month or school, or clear the filters." /></div> : (
             <div className="scroll-x tbl">
               <div style={{ minWidth: 620 }}>
                 <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>School</span><span>Month</span><span>Amount</span><span>Status</span><span></span></div>
@@ -87,7 +87,7 @@ export function BillingPage() {
         </Card>
       )}
       <Card title="Messages per school" chip={<span className="chip">Last 12 months</span>} style={{ padding: 0 }}>
-        {!(usage.data ?? []).length ? <div className="help" style={{ padding: '0 20px 20px' }}>No messages sent yet.</div> : (
+        {!(usage.data ?? []).length ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon="send" title="No messages sent yet" body="Texts, WhatsApp and email each school sends are counted here for its invoice." /></div> : (
           <div className="tbl scroll-x"><div style={{ minWidth: 480 }}>
             <div className="grd th" style={{ '--cols': 'minmax(0,1fr) 120px 100px 100px 110px' } as React.CSSProperties}><span>School</span><span>Channel</span><span>Month</span><span>Messages</span><span>Cost</span></div>
             {(usage.data ?? []).filter((t) => !school || t.schoolSlug === slug).map((t) => (

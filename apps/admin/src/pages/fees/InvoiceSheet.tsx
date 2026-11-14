@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, type InvoiceDetail } from '@gradeon/contracts';
-import { Dialog, ErrorLine, NumberField, Segmented, useShake } from '@gradeon/web-ui';
+import { Dialog, ErrorLine, NumberField, Segmented, useShake, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { AreaField, dateLabel, problem } from '../../app/kit';
 
@@ -64,7 +64,7 @@ export function InvoiceSheet({ id, onClose, say, onCollect }: { id: string; onCl
           </div>
           <div>
             <div className="lbl" style={{ marginBottom: 6 }}>Payments</div>
-            {!d.payments.length && <p className="help" style={{ margin: 0 }}>Nothing paid yet.</p>}
+            {!d.payments.length && <EmptyNote icon="payments" title="Nothing paid yet" body="Each payment against this invoice shows here with its receipt number." />}
             {d.payments.map((p) => (
               <div key={p.id} className="kv" style={{ alignItems: 'center', gap: 8 }}>
                 <span style={{ minWidth: 0 }}>{p.receiptNo} · {dateLabel(p.paidOn)} · {p.method.toUpperCase()}{p.cancelled && <small style={{ display: 'block', color: 'var(--bad)' }}>Cancelled: {p.cancelReason}</small>}</span>

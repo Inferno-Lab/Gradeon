@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@gradeon/web-ui';
 import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 
@@ -109,7 +109,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
           <div className="srch" style={{ minWidth: 200, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
         <div className="help">Whether the school may also do this itself is under Configuration → Staff.</div>
-        {people.length === 0 && <div className="help">No one matches.</div>}
+        {people.length === 0 && <EmptyNote icon={find.trim() ? 'search' : 'people'} title={find.trim() ? 'No one matches' : 'No staff yet'} body={find.trim() ? 'Search by name or designation.' : 'Staff the school adds show here, each with a role.'} />}
         {shownPeople.map((s) => (
           <div key={s.id} className="kv" style={{ gap: 12 }}>
             <span style={{ minWidth: 0 }}>{s.name}<small style={{ display: 'block', color: 'var(--ink3)' }}>{s.designation}</small></span>

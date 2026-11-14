@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, ROLE_TEMPLATES, STEP_LABELS, type BlueprintRow, type RoleTemplate, DEPLOY_TARGET_LABELS } from '@gradeon/contracts';
-import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, ErrorLine, Field, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
@@ -99,7 +99,7 @@ function SetupTemplates({ say }: { say: (m: string, tone?: 'ok' | 'bad') => void
   return (
     <Card title="Setup templates" chip={<span className="chip">{rows.length}</span>} span="s12">
       <div className="help" style={{ marginTop: 0 }}>Saved from a school’s Configuration. Applying one gives each school chosen a new configuration version, which can be rolled back.</div>
-      {rows.length === 0 && <div className="help">None yet. Save one from a school’s Configuration tab.</div>}
+      {rows.length === 0 && <EmptyNote icon="blueprints" title="No blueprints yet" body="Save one from a school’s Configuration tab, then start new schools from it." />}
       {rows.map((t) => <div key={t.id} className="kv">{t.name}<b>{t.keys} settings · {t.roles} roles · {ago(t.createdAt)}</b></div>)}
       {app.can('schools.configure') && rows.length > 0 && <button className="btn pri" style={{ marginTop: 12 }} onClick={() => setApplying(true)}>Apply to schools…</button>}
       {applying && <ApplyDialog onClose={() => setApplying(false)} onDone={(n) => { setApplying(false); void qc.invalidateQueries({ queryKey: ['config'] }); say(`Applied to ${n} ${n === 1 ? 'school' : 'schools'}.`); }} />}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { uploadFile } from '@gradeon/api-client';
 import type { AlbumRow, GalleryReportRow, PhotoRow } from '@gradeon/contracts';
-import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState } from '@gradeon/web-ui';
+import { Dialog, Field, FilePick, Panel, Presence, SelectField, useShake, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, StudentPick, problem, stamp } from '../../app/kit';
@@ -39,7 +39,7 @@ export function GalleryPage() {
         <section className="grid" data-even="">
           {list.map((a, i) => (
             <button key={a.id} className="card s4 rise" onClick={() => setOpen(a)} style={{ '--d': `${Math.min(i, 8) * 0.04}s`, textAlign: 'left', cursor: 'pointer', border: 0, font: 'inherit', color: 'inherit' } as React.CSSProperties} aria-label={`Open ${a.title}`}>
-              {a.coverFileId ? <Photo id={a.coverFileId} alt={a.title} /> : <div style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 12, background: 'var(--s2)', display: 'grid', placeItems: 'center' }} className="help">No photos yet</div>}
+              {a.coverFileId ? <Photo id={a.coverFileId} alt={a.title} /> : <div style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 12, background: 'var(--s2)', display: 'grid', placeItems: 'center', alignContent: 'center', gap: 6, color: 'var(--ink3)', font: '600 13px var(--fb)' }}><Icon name="image" size={28} />No photos yet</div>}
               <div className="ch" style={{ marginTop: 12 }}><h2 style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</h2><span className={`chip ${a.published ? 'g' : ''}`}>{a.published ? 'Shared' : 'Draft'}</span></div>
               <div className="help" style={{ marginTop: 4 }}>{a.className ?? 'Whole school'} · {a.photos} {a.photos === 1 ? 'photo' : 'photos'} · {stamp(a.createdAt)}</div>
             </button>
@@ -90,7 +90,7 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
       </div>
       <div className="db">
         {hidden > 0 && <div className="chip a" role="status" style={{ height: 'auto', padding: '8px 12px', whiteSpace: 'normal', lineHeight: 1.4 }}>{hidden} {hidden === 1 ? 'photo has' : 'photos have'} a child whose family has not agreed to photos: families will not see {hidden === 1 ? 'it' : 'them'}.</div>}
-        {photos.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} /> : !list.length ? <div className="help">No photos yet. Add the first one.</div> : (
+        {photos.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} /> : !list.length ? <EmptyNote icon="camera" title="No photos in this album yet" body="Add the first ones. Families see them in the app once the album is shared." /> : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 }}>
             {list.map((p) => (
               <div key={p.id}>

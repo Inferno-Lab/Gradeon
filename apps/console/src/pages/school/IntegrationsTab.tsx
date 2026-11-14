@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { CAPABILITIES, CAPABILITY_LABELS, INTEGRATION_PROVIDERS, providerDef, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Presence, useShake } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Presence, useShake, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { ago } from '../../app/format';
 import { url } from '../../app/base';
@@ -48,7 +48,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         </div>
         <div className="card s5 rise">
           <div className="ch"><h2>Its own connections</h2><span className="chip">{own.length}</span></div>
-          {!own.length ? <div className="help">None: it uses Gradeon’s.</div> : own.map((c) => (
+          {!own.length ? <EmptyNote icon="integrations" title="None of its own" body="This school sends through Gradeon’s connections." /> : own.map((c) => (
             <div key={c.id} className="kv" style={{ alignItems: 'center' }}><span style={{ minWidth: 0 }}>{c.name}</span><b style={{ display: 'flex', gap: 6 }}><span className="chip">{providerDef(c.provider)?.name}</span><span className={`chip ${c.state === 'live' ? 'g' : c.state === 'paused' ? 'c' : 'a'}`}>{c.state}</span></b></div>
           ))}
         </div>
@@ -56,7 +56,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
       <section className="card rise">
         <div className="ch"><h2>Recent failures</h2><span className="chip">{fails.data?.rows.length ?? 0}</span></div>
         <div style={{ marginTop: 8 }}>
-          {!(fails.data?.rows ?? []).length ? <div className="help">No message to this school’s families has failed lately.</div> : fails.data!.rows.map((m) => (
+          {!(fails.data?.rows ?? []).length ? <EmptyNote icon="checkCircle" title="Nothing has failed lately" body="A message to this school’s families that fails shows here with why." /> : fails.data!.rows.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'center' }}>
               <span style={{ minWidth: 0 }}><b className="num">{shown.has(m.id) ? m.to : mask(m.to)}</b>{!shown.has(m.id) && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setShown(new Set(shown).add(m.id))}>Show</button>} · {CAPABILITY_LABELS[m.channel as keyof typeof CAPABILITY_LABELS] ?? m.channel}<br /><small style={{ color: 'var(--bad-i)', overflowWrap: 'anywhere' }}>{m.error}</small></span>
               <b style={{ whiteSpace: 'nowrap' }}>{ago(m.createdAt)}</b>

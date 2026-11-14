@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, EmptyCard, PageScope, tintFor } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, PageScope, tintFor, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
@@ -140,7 +140,7 @@ export function FleetPage() {
           {incident?.state === 'open' && <div className="kv" style={{ alignItems: 'flex-start' }}><span><b style={{ color: 'var(--ink)' }}>{incident.title}</b><br /><small style={{ color: 'var(--ink3)' }}>{incident.body}</small></span><b><button className="btn sm" onClick={() => { setAlerts(false); app.go(incident.schoolId ? `/schools/${incident.schoolId}/technical` : '/health'); }}>Open</button></b></div>}
           {chrome.pending > 0 && <div className="kv"><span>{chrome.pending} {chrome.pending === 1 ? 'request is' : 'requests are'} waiting for a second person</span><b><button className="btn sm" onClick={() => { setAlerts(false); app.go('/approvals'); }}>Review</button></b></div>}
           {f.degraded > 0 && <div className="kv"><span>{f.degraded} {f.degraded === 1 ? 'school is' : 'schools are'} answering slowly</span><b><button className="btn sm" onClick={() => { setAlerts(false); app.go('/health'); }}>Open health</button></b></div>}
-          {!chrome.pending && !f.degraded && incident?.state !== 'open' && <div className="help">Nothing needs you right now. Approvals, incidents and slow schools appear here.</div>}
+          {!chrome.pending && !f.degraded && incident?.state !== 'open' && <EmptyNote icon="checkCircle" title="Nothing needs you right now" body="Approvals, incidents and slow schools appear here." />}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn pri" onClick={() => setAlerts(false)}>Done</button></div>
       </Dialog>

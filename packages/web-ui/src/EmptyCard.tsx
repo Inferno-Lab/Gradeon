@@ -62,3 +62,17 @@ export function NotFoundTile({ home, onHome, onSearch }: { home: string; onHome:
     </article>
   );
 }
+
+/**
+ * The empty state of a small piece inside a page that has data: a tab's list, a card's list, a search or filter with no
+ * match. A dashed slot with an icon, what will appear here, and the next step when there is one. Never a bare grey line.
+ */
+export function EmptyNote({ icon = 'info', title, body, action }: { icon?: IconName; title: string; body?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="en" role="status">
+      <span className="eni"><Icon name={icon} size={20} /></span>
+      <span className="ent"><b>{title}</b>{body && <small>{body}</small>}</span>
+      {action && <span className="ena">{action}</span>}
+    </div>
+  );
+}

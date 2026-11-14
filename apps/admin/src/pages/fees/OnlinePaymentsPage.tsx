@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { OnlinePaymentRow, ReconRow, RefundRow } from '@gradeon/contracts';
-import { Dialog, Field, NumberField, Segmented, useShake, EmptyState } from '@gradeon/web-ui';
+import { Dialog, Field, NumberField, Segmented, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AreaField, dateLabel, openPdf, problem, stamp, useOpenParam } from '../../app/kit';
@@ -80,13 +80,13 @@ export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
               <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 25 >= found.length} onClick={() => setPage(page + 1)}>Next</button></span>
             </div>
           )}
-          {term && !found.length && <div className="help" style={{ padding: 20 }}>No payment matches “{q}”.</div>}
+          {term && !found.length && <EmptyNote icon="search" title={`No payment matches “${q}”`} body="Search by the family’s name, the student or the payment reference." />}
         </Card>
       ))}
       {tab === 'refunds' && (
         <Card style={{ padding: 0 }}>
           {refunds.isError ? <div className="help" style={{ padding: 20 }}>{(refunds.error as Error).message}</div>
-            : !(refunds.data ?? []).length ? <div className="help" style={{ padding: 20 }}>No refunds yet. Refund a payment from the Payments list; above the school’s limit a second person approves it here.</div>
+            : !(refunds.data ?? []).length ? <EmptyNote icon="undo" title="No refunds yet" body="Refund a payment from the Payments list. Above the school’s limit a second person approves it here." />
             : refunds.data!.map((r) => (
               <div key={r.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 56, padding: '10px 20px', flexWrap: 'wrap' }}>
                 <span className={`chip ${REFUND[r.status].tone}`} data-tip={r.error ?? undefined}>{REFUND[r.status].text}</span>

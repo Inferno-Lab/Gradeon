@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DashboardData } from '@gradeon/contracts';
-import { Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
+import { EmptyNote, Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
 
 // The dashboard as the Today board (design/hue/src/Today.html): the day on the deep colour, what needs the person, fees and the
 // day ahead. `v` is what DashboardPage works out from the data; `d` is the data itself.
@@ -95,7 +95,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
                   </div>
                 ))}
               </div>
-            ) : <p className="t2" style={{ fontSize: 14 }}>Nothing is waiting for you. Requests and reminders appear here.</p>}
+            ) : <EmptyNote icon="checkCircle" title="Nothing is waiting for you" body="Requests to decide and reminders appear here." />}
             {v.allClear.length > 0 && (
               <div className="clr">
                 {v.allClear.map((c: V) => <span key={c.kind}><Icon name="check" size={16} className="i" />{c.t}</span>)}

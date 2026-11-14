@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { breachNotice, istToday, type ComplianceRow } from '@gradeon/contracts';
-import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState, Icon } from '@gradeon/web-ui';
+import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState, Icon, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -61,7 +61,7 @@ export function CompliancePage() {
       {tab === 'processors' && (
         <Card title="Who else handles the data" chip={<span className="chip">{q.data?.subprocessors.length ?? 0}</span>}>
           <div className="help" style={{ marginTop: 0 }}>Every provider with a live connection under Integrations, and what it does. This is the list a school’s agreement names.</div>
-          {(q.data?.subprocessors ?? []).length === 0 && <div className="help">No connection is live yet.</div>}
+          {(q.data?.subprocessors ?? []).length === 0 && <EmptyNote icon="integrations" title="No connection is live yet" body="Each provider that handles families’ data is listed here once its connection goes live." />}
           {(q.data?.subprocessors ?? []).map((x, i) => <div className="kv" key={`${x.name}${i}`}><span><b style={{ color: 'var(--ink)', textAlign: 'left' }}>{x.name}</b><br /><small style={{ color: 'var(--ink3)' }}>{x.purpose} · {x.serves}</small></span><b style={{ whiteSpace: 'nowrap' }}>{x.region}</b></div>)}
         </Card>
       )}
@@ -70,7 +70,7 @@ export function CompliancePage() {
           <div className="help" style={{ marginTop: 0 }}>Asked for by families and staff in the app or at the office. Each school answers its own under Privacy; erasure past retention is on the school’s Data tab.</div>
           {!app.can('audit.read') ? <div className="help">Your role does not include data requests.</div>
             : requests.isLoading ? <div className="skc" style={{ height: 160, borderRadius: 16 }} />
-              : !(requests.data ?? []).length ? <div className="help">Nothing open.</div>
+              : !(requests.data ?? []).length ? <EmptyNote icon="privacy" title="Nothing open" body="A family’s request to see, correct or delete its data shows here until it is answered." />
                 : requests.data!.map((r) => (
                   <div key={`${r.schoolId}${r.id}`} className="kv" style={{ alignItems: 'flex-start' }}>
                     <span><b style={{ color: 'var(--ink)' }}>{r.subjectName}</b> · {r.kind}<br /><small style={{ color: 'var(--ink3)' }}><a href={url(`/schools/${r.schoolId}/data`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}/data`); }} style={{ color: 'inherit', fontWeight: 700 }}>{r.schoolName}</a> · {r.requestedBy || 'the office'} · {ago(r.createdAt)}</small></span>

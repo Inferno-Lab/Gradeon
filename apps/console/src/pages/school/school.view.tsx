@@ -2,7 +2,7 @@
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
 import { DEFAULT_BRAND, hueOf, hueTokens } from '@gradeon/contracts';
-import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon, EmptyNote } from "@gradeon/web-ui";
 import "./school.css";
 
 // The school's own deep colour, worked out from its brand colour, so its page header looks like its admin (the School board).
@@ -104,7 +104,7 @@ export function SchoolView({ v }: { v: any }) {
                 )}
               </div>
               {v.folded && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>{v.setupLine}. Every step finished.</div>}
-              {!v.folded && v.steps.length === 0 && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
+              {!v.folded && v.steps.length === 0 && <div style={{ marginTop: "12px" } as CSSProperties}><EmptyNote icon="setup" title="No setup run recorded" body="Schools onboarded through the console keep each setup step here." /></div>}
               {!v.folded && (
               <>
               <div className="steps">
