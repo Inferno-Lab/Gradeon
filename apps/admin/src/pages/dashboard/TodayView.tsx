@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DashboardData } from '@gradeon/contracts';
-import { Icon, MenuButton, PageScope, Segmented, ToastSlot, type IconName, type PageIcon } from '@gradeon/web-ui';
+import { Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
 
 // The dashboard as the Today board (design/hue/src/Today.html): the day on the deep colour, what needs the person, fees and the
 // day ahead. `v` is what DashboardPage works out from the data; `d` is the data itself.
@@ -41,7 +41,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
             <div className="vc" style={{ flex: '1 1 380px', gap: 22 }}>
               <div className="vc" style={{ gap: 10 }}>
                 <span className="lbl">{d.day.isToday ? 'In school today' : `In school, ${d.day.label}`}</span>
-                <div className="fig" style={{ fontSize: 72 }}>{pct}%<small>{marked.toLocaleString()} of {total.toLocaleString()} marked</small></div>
+                <div className="fig" style={{ fontSize: 72 }}><Roll digits={rollDigits(`${pct}%`)} /><small>{marked.toLocaleString()} of {total.toLocaleString()} marked</small></div>
               </div>
               <div className="vc" style={{ gap: 12 }}>
                 <div className="bar" style={{ height: 14, borderRadius: 7 }} aria-hidden="true">
@@ -61,7 +61,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
             </div>
             {rolls.length > 0 && (
               <div className="vc" style={{ gap: 12, flex: 'none', maxWidth: '100%', overflowX: 'auto' }}>
-                <div className="fx" style={{ gap: 8 }}><span className="lbl" style={{ color: 'var(--on-deep)' }}>Absent by class</span><span className="sp" /><span className="lbl" style={{ fontWeight: 400 }}>fewer</span><span className="fx" style={{ gap: 3 }} aria-hidden="true">{[1, 2, 3, 4, 5].map((h) => <i key={h} className={`hk h${h}`} />)}</span><span className="lbl" style={{ fontWeight: 400 }}>more</span></div>
+                <div className="fx" style={{ gap: 8 }}><span className="lbl" style={{ color: 'var(--on-deep)' }}>Absent by class</span><span className="sp" /><span className="note">fewer</span><span className="fx" style={{ gap: 3 }} aria-hidden="true">{[1, 2, 3, 4, 5].map((h) => <i key={h} className={`hk h${h}`} />)}</span><span className="note">more</span></div>
                 <div className="heat" role="table" aria-label="Children absent in each class" style={{ gridTemplateColumns: `18px repeat(${grades.length},40px)`, gap: 4 }}>
                   <span className="hl" />{grades.map((g) => <span key={g} className="hl">{g}</span>)}
                   {sections.map((s) => [<span key={`l${s}`} className="hl">{s}</span>, ...grades.map((g) => {
@@ -71,7 +71,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
                     return <span key={g + s} className={heatCls(r.absent, none)} data-tip={none ? `${r.name}: roll not taken` : `${r.name}: ${r.absent} absent`}>{none ? '?' : r.absent}</span>;
                   })])}
                 </div>
-                <span className="lbl" style={{ fontWeight: 400 }}>{notTaken.length ? `${notTaken.length === 1 ? 'One class has' : `${notTaken.length} classes have`} not taken the roll.` : 'Every class has taken the roll.'}</span>
+                <span className="note">{notTaken.length ? `${notTaken.length === 1 ? 'One class has' : `${notTaken.length} classes have`} not taken the roll.` : 'Every class has taken the roll.'}</span>
               </div>
             )}
           </section>
@@ -95,11 +95,11 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
           {v.has.fees && shown('fees') && (
             <section className="card">
               <div className="ch"><h2>Fees in {d.fees.monthLabel}</h2><a href="#" onClick={(e) => { e.preventDefault(); v.goto('/fees'); }}>Open fees<Icon name="next" size={14} className="i" /></a></div>
-              <div className="fig" style={{ fontSize: 44 }}>{v.money(d.fees.collected)}<small>of {v.money(d.fees.due)} due</small></div>
+              <div className="fig" style={{ fontSize: 44 }}><Roll digits={rollDigits(v.money(d.fees.collected))} /><small>of {v.money(d.fees.due)} due</small></div>
               <div className="vc" style={{ gap: 8 }}><div className="bar"><i style={{ width: `${d.fees.pct}%` }} /></div><span className="cap">{d.fees.pct}% collected</span></div>
               <div className="fx" style={{ gap: 10, marginTop: 'auto' }}>
-                <div className="mcard grow tint sp-amber"><span className="lbl">Still to come</span><b className="d">{v.money(Math.max(0, d.fees.due - d.fees.collected))}</b><small>this month</small></div>
-                <div className="mcard grow tint sp-rose"><span className="lbl">Overdue</span><b className="d" style={{ color: 'var(--bad-i)' }}>{d.fees.overdueFamilies}</b><small>{d.fees.overdueFamilies === 1 ? 'family' : 'families'}</small></div>
+                <div className="mcard grow"><span className="lbl">Still to come</span><b className="d">{v.money(Math.max(0, d.fees.due - d.fees.collected))}</b><small>this month</small></div>
+                <div className="mcard grow"><span className="lbl">Overdue</span><b className="d" style={{ color: 'var(--bad-i)' }}>{d.fees.overdueFamilies}</b><small>{d.fees.overdueFamilies === 1 ? 'family' : 'families'}</small></div>
               </div>
             </section>
           )}

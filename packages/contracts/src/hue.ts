@@ -103,12 +103,36 @@ export const HUE_PAIRS: [string, string, number][] = [
 // On the web --t1/--t2/--t3 are the three motion timings, so the text colours are --ink, --ink2 and --ink3 there.
 const WEB_NAME: Record<string, string> = { t1: 'ink', t2: 'ink2', t3: 'ink3' };
 
+/**
+ * The web's surfaces and ink: the warm neutrals of the Nest design (the owner's choice for admin and console, 14 November
+ * 2026), the same for every school, so no page or card takes a tint from the school's colour. The school's colour stays in
+ * the accents (brand, bright, heat). Dark cards ("deep") are ink, as Nest's ink tiles were. `bd` is the canvas around the
+ * frame, `field` the outline of an input. The app keeps the seeded surfaces (hueTokens).
+ */
+export const WEB_NEUTRALS: Record<HueMode, Record<string, string>> = {
+  light: {
+    bd: '#E9E9E6', bg: '#F3F3F1', s1: '#FFFFFF', s2: '#F6F6F4', s3: '#EDEDEA', line: '#E5E5E1', line2: '#D6D6D1', field: '#8A8A84',
+    t1: '#1A1A1C', t2: '#4D4D53', t3: '#6A6A70', deep: '#1A1A1C', deep2: '#2A2A2E', deep3: '#3A3A40', hero: '#1A1A1C', hero2: '#2A2A2E',
+    'on-deep': '#FFFFFF', 'on-deep2': '#C2C2C7', scrim: '#1111136B',
+  },
+  dark: {
+    bd: '#0A0A0B', bg: '#111113', s1: '#19191C', s2: '#1E1E22', s3: '#26262A', line: '#2A2A2E', line2: '#34343A', field: '#6B6B72',
+    t1: '#F2F2F3', t2: '#B8B8BE', t3: '#8E8E96', deep: '#26262A', deep2: '#303035', deep3: '#3C3C42', hero: '#26262A', hero2: '#303035',
+    'on-deep': '#FFFFFF', 'on-deep2': '#B8B8BE', scrim: '#0000009E',
+  },
+  amoled: {
+    bd: '#000000', bg: '#000000', s1: '#121214', s2: '#18181B', s3: '#222226', line: '#26262A', line2: '#34343A', field: '#6B6B72',
+    t1: '#F2F2F3', t2: '#B8B8BE', t3: '#8E8E96', deep: '#222226', deep2: '#2C2C31', deep3: '#38383E', hero: '#222226', hero2: '#2C2C31',
+    'on-deep': '#FFFFFF', 'on-deep2': '#B8B8BE', scrim: '#000000B3',
+  },
+};
+
 /** The CSS for a seed: light on `.nest`, dark on `.nest.dark`, spectrum on `.sp-<colour>`. */
 export function hueCss(h: number, scope = '.nest'): string {
   const decl = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `--${WEB_NAME[k] ?? k}:${v}`).join(';');
   // Each spectrum colour also as page-wide variables (--sp-rose-cs, --sp-rose-ci…), for things coloured by data such as avatars.
   const spread = (mode: HueMode) => Object.fromEntries(SPECTRUM_COLOURS.flatMap((c) => { const t = spectrumTokens(c, mode); return [[`sp-${c}-cs`, t.cs], [`sp-${c}-ci`, t.ci]]; }));
-  const flat = (mode: HueMode) => ({ ...seedTokens(h, mode), ...fixedTokens(mode), ...spread(mode) });
+  const flat = (mode: HueMode) => ({ ...seedTokens(h, mode), ...WEB_NEUTRALS[mode], ...fixedTokens(mode), ...spread(mode) });
   let css = `${scope}{${decl(flat('light'))}}${scope}.dark,${scope} .dark{${decl(flat('dark'))}}`;
   for (const c of SPECTRUM_COLOURS) css += `${scope} .sp-${c}{${decl(spectrumTokens(c, 'light'))}}${scope}.dark .sp-${c},${scope} .dark .sp-${c}{${decl(spectrumTokens(c, 'dark'))}}`;
   return css;

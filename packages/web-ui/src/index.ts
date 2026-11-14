@@ -5,7 +5,6 @@ import './shell/shell.css';
 import './blocks.css';
 import './controls.css';
 import './polish.css';
-import './finish.css';
 
 export * from './theme';
 export * from './icons';
@@ -18,6 +17,7 @@ export * from './login/LoginPage';
 export * from './tints';
 export * from './Palette';
 export * from './EmptyCard';
+export * from './illustrations/Illustration';
 export * from './Roll';
 export * from './forms';
 export * from './fields';

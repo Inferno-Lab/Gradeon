@@ -76,7 +76,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
             {v.years.map((y) => (
               <div key={y.id} className="kv" style={{ alignItems: 'center' }}>
                 <span style={{ minWidth: 0 }}><b style={{ color: 'var(--ink)' }}>{y.label}</b><br /><small className="help">{dateLabel(y.startsOn)} {y.startsOn.slice(0, 4)} to {dateLabel(y.endsOn)} {y.endsOn.slice(0, 4)}{y.status === 'current' ? ` · ${y.classes} classes, ${y.students} students` : ''}</small></span>
-                <b style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <b style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', minWidth: 0 }}>
                   <span className={`chip ${STATUS[y.status].tone}`}>{STATUS[y.status].text}</span>
                   {can && y.status === 'draft' && <><button className="btn sm pri" disabled={act.isPending || !v.runs.some((r) => r.toYear === y.id && !r.undoneAt)} data-tip={v.runs.some((r) => r.toYear === y.id && !r.undoneAt) ? undefined : 'Promote students into it first'} onClick={() => setSure({ what: 'start', id: y.id, text: `Start ${y.label}? The year now running is archived: it stays readable but cannot be changed.` })}>Start</button><button className="btn sm" disabled={act.isPending} onClick={() => setSure({ what: 'remove', id: y.id, text: `Remove the draft ${y.label}?` })}>Remove</button></>}
                 </b>

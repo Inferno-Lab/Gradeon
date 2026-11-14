@@ -11,9 +11,9 @@ const SPECTRUM = SPECTRUM_COLOURS.map((c) => {
   const decl = (m: 'light' | 'dark') => Object.entries(spectrumTokens(c, m)).map(([k, v]) => `--${k}:${v}`).join(';');
   return `.sp-${c}{${decl('light')}}.dark .sp-${c}{${decl('dark')}}`;
 }).join('');
-// The scene speaks in the page's finish (finish.css): normal-width type, 8px controls, no lift.
-const FINISH = 'h1,h2,h3,.d,.fig{font-stretch:100%!important;font-weight:600!important}.btn{border-radius:8px;font-weight:500;transition:background var(--t1)}.btn.lg,.btn.xl{height:40px;font-size:14px}';
-const HOST = SPECTRUM + FINISH + '[style*="background:var(--s2)"]{background:none!important}' + ':host{display:block;--t1:var(--ink);--t2:var(--ink2);--t3:var(--ink3);--shadow:var(--sh2)}.hue{background:none;font-family:var(--fb)}.nolink .lk,.noact .acts .btn{display:none!important}';
+// The scene card in the Nest look: a hairline and the old 28px corners; it rises and lifts from the host (empty.css).
+const CARD = '.es{border-radius:28px;box-shadow:inset 0 0 0 1px var(--line)}';
+const HOST = SPECTRUM + CARD + '[style*="background:var(--s2)"]:not(.ring){background:none!important}' + ':host{display:block;--t1:var(--ink);--t2:var(--ink2);--t3:var(--ink3);--shadow:var(--sh2)}.hue{background:none;font-family:var(--fb)}.nolink .lk,.noact .acts .btn{display:none!important}';
 
 /**
  * A page with nothing in it yet (Gradeon Hue, design/hue/EMPTY-STATES.md): the approved composition for that page, its words

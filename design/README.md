@@ -63,7 +63,7 @@ Other differences, each because a board element did not work in the real product
 
 ## Rules the owner set for the design
 
-- Admin, console and the app now use **Gradeon Hue** ([`hue/`](hue/README.md)); the Nest boards in this folder are history.
+- Admin and console use Gradeon Hue's layouts and empty states ([`hue/`](hue/README.md)) in the **Nest** look of this folder (14 November 2026); the app uses Gradeon Hue.
 - Admin and console look like one consistent product (shared menu, tiles, chips, dialogs, motion).
 - Errors vibrate (the `shk1`/`shk2` classes, `useShake`); the sign-in does it too.
 - Every empty page has an illustration, an honest sentence and a next step (`EmptyCard`).

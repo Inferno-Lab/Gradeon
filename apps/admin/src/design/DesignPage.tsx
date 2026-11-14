@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { Checkbox, ColourField, DateField, Dialog, EmptyCard, ErrorLine, Field, FilePick, MenuButton, NumberField, PageScope, Presence, Segmented, ColourPicker, SelectField, TimeField, ToastSlot, tintFor, useToast, useShake, EmptyState, IC, Icon, UI, type PageIcon } from '@gradeon/web-ui';
 import { useShellChrome } from '../app/Layout';
 
-// Every colour comes from the school's seed (Gradeon Hue): the frame, you-are-here, actions, surfaces, text and status.
-const SWATCHES: [string, string][] = [['Deep (the frame)', '--deep'], ['Bright (you are here)', '--bright'], ['Brand (actions)', '--brand'], ['Brand soft', '--brand-soft'], ['Ground', '--bg'], ['Panel', '--s1'], ['Well', '--s2'], ['Text', '--ink'], ['Secondary text', '--ink2'], ['Captions', '--ink3'], ['Good', '--ok'], ['Watch', '--warn'], ['Act', '--bad'], ['Note', '--info']];
+// Surfaces and text are the fixed Nest neutrals; the school's seed (Gradeon Hue) gives the accents, and status has its own colours.
+const SWATCHES: [string, string][] = [['Ink (main action, dark cards)', '--deep'], ['Bright (on dark cards)', '--bright'], ['Brand (accent)', '--brand'], ['Brand soft', '--brand-soft'], ['Canvas', '--bd'], ['Ground', '--bg'], ['Card', '--s1'], ['Well', '--s2'], ['Text', '--ink'], ['Secondary text', '--ink2'], ['Captions', '--ink3'], ['Good', '--ok'], ['Watch', '--warn'], ['Act', '--bad'], ['Note', '--info']];
 const CHIPS = ['', 'v', 'c', 'a', 'g'] as const;
 
-/** A living style guide of Gradeon Hue built from the real components, so it can never drift from what the pages use. Open it at /design. */
+/** A living style guide (Gradeon Hue's parts in the Nest look) built from the real components, so it can never drift from what the pages use. Open it at /design. */
 export function DesignPage() {
   const chrome = useShellChrome();
   const [on, setOn] = useState(true);
@@ -26,7 +26,7 @@ export function DesignPage() {
   return (
     <PageScope page="design" overlays={<><ToastSlot toast={toast} /><Presence>{dlg && <Dialog title="Erase this draft?" tag={{ text: 'Cannot be undone', tone: 'c' }} onClose={() => setDlg(false)} width={440}><p>The draft and everything typed into it are removed.</p><div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}><button className="btn" onClick={() => setDlg(false)}>Keep it</button><button className="btn dngf" onClick={() => setDlg(false)}>Erase</button></div></Dialog>}</Presence></>}>
       <main className="mn">
-        <header className="hd rise"><div><h1>Gradeon Hue</h1><p>The pieces every admin and console page is made of, in this school’s colours.</p></div><span className="grow"></span><button className="btn" onClick={chrome.openSearch}>Search</button></header>
+        <header className="hd rise"><div><h1>Design system</h1><p>The pieces every admin and console page is made of: Gradeon Hue’s parts in the Nest look, with this school’s colour in the accents.</p></div><span className="grow"></span><button className="btn" onClick={chrome.openSearch}>Search</button></header>
 
         <Section title="Colour">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
@@ -42,9 +42,9 @@ export function DesignPage() {
         </Section>
 
         <Section title="Type">
-          <div className="fd" style={{ font: '700 semi-expanded 40px/44px var(--fd)', letterSpacing: '-.03em' }}>Mona Sans, wide and heavy, for numbers, names and titles</div>
-          <p style={{ font: '400 15px/22px var(--fb)', color: 'var(--ink2)', maxWidth: 640 }}>The same family at normal width carries every label, row and paragraph. Hindi and Marathi use Noto Sans Devanagari at the same sizes.</p>
-          <div className="num" style={{ font: '700 semi-expanded 30px var(--fd)' }}>1,498 · 18,400 · 94.2%</div>
+          <div className="fd" style={{ font: '700 40px/44px var(--fd)', letterSpacing: '-.035em' }}>Bricolage Grotesque, for headings and numbers</div>
+          <p style={{ font: '400 15px/22px var(--fb)', color: 'var(--ink2)', maxWidth: 640 }}>Manrope carries every label, row and paragraph. Hindi and Marathi use Noto Sans Devanagari at the same sizes.</p>
+          <div className="num" style={{ font: '700 30px var(--fd)' }}>1,498 · 18,400 · 94.2%</div>
         </Section>
 
         <Section title="Icons">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HUE_PAIRS, SPECTRUM_COLOURS, hueContrast, hueCss, hueOf, hueTokens, spectrumTokens, type HueMode } from './hue.js';
+import { HUE_PAIRS, SPECTRUM_COLOURS, WEB_NEUTRALS, hueContrast, hueCss, hueOf, hueTokens, spectrumTokens, type HueMode } from './hue.js';
 
 describe('Gradeon Hue', () => {
   it('gives the approved colours for a seed', () => {
@@ -28,5 +28,16 @@ describe('Gradeon Hue', () => {
     expect(css).toContain('.nest{--bg:');
     expect(css).toContain('.nest.dark,.nest .dark{');
     expect(css).toContain('.nest .sp-blue{--c:');
+  });
+
+  it('never tints the web pages and cards with the school colour, and keeps their text readable', () => {
+    for (const h of [0, 60, 90, 150, 284]) {
+      const css = hueCss(h);
+      for (const k of ['bd', 'bg', 's1', 's2', 'line', 'ink'] as const) expect(css).toContain(`--${k}:${WEB_NEUTRALS.light[k === 'ink' ? 't1' : k]}`);
+    }
+    for (const mode of ['light', 'dark', 'amoled'] as HueMode[]) {
+      const n = WEB_NEUTRALS[mode];
+      for (const [t, g] of [['t1', 'bg'], ['t1', 's1'], ['t2', 's1'], ['on-deep', 'deep']]) expect(hueContrast(n[t]!, n[g]!)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

@@ -1,6 +1,6 @@
 import type { PageIcon } from '../Icon';
 import { Icon } from '../Icon';
-import { hueOf, hueTokens } from '@gradeon/contracts';
+import { readableOn } from '@gradeon/contracts';
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Menu } from '../Menu';
 import { GradeonIcon } from '../GradeonIcon';
@@ -108,10 +108,10 @@ export function Sidebar({ label, collapsed, groups, active, onNavigate, header, 
 }
 
 /** The school block at the top of the admin menu, and the button that collapses the menu. */
-export function SchoolHeader({ logo, logoUrl, name, place, onToggle, collapsed }: { logo: string; logoUrl?: string | null; name: string; place: string; color?: string; onToggle: () => void; collapsed: boolean }) {
+export function SchoolHeader({ logo, logoUrl, name, place, color, onToggle, collapsed }: { logo: string; logoUrl?: string | null; name: string; place: string; color?: string; onToggle: () => void; collapsed: boolean }) {
   return (
     <div className="ws">
-      <span className="lg">{logoUrl ? <img className="lgi" src={logoUrl} alt="" /> : logo}</span>
+      <span className="lg" style={logoUrl ? undefined : markStyle(color)}>{logoUrl ? <img className="lgi" src={logoUrl} alt="" /> : logo}</span>
       <div className="fade"><b>{name}</b><small>{place}</small></div>
       <button className="colb" onClick={onToggle} aria-label={collapsed ? 'Expand the menu' : 'Collapse the menu'}>
         <Icon name="sidebar" size={20} />
@@ -124,8 +124,7 @@ export function SchoolHeader({ logo, logoUrl, name, place, onToggle, collapsed }
 /** Another school's crest in its own colours (its brand colour's hue), where a page shows many schools. */
 export function markStyle(color?: string): CSSProperties | undefined {
   if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return undefined;
-  const t = hueTokens(hueOf(color), 'light');
-  return { background: t.bright, color: t['on-bright'] };
+  return { background: color, color: readableOn(color) };
 }
 
 /** The workspace block at the top of the console menu, with the environment marked. */

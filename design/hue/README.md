@@ -1,5 +1,7 @@
 # Gradeon Hue
 
+> **Web (admin and console), 14 November 2026:** Hue's layouts and empty states in the Nest look. The board stylesheets here (`base.css`, `base2.css`, `empty.css`) carry it: Manrope and Bricolage, pill controls, 24px cards, uppercase labels, and no tinted panels in the scenes. Web surfaces are the fixed neutrals of `WEB_NEUTRALS` (`packages/contracts/src/hue.ts`); the app keeps the seeded surfaces.
+
 The approved design system for the Flutter app, the school admin and the console (approved by the owner on 10 November 2026; built on `design/system-v2`, November 2026). It replaced Chalk & Glass in the app and Nest in admin and console. The empty states for every page ([EMPTY-STATES.md](EMPTY-STATES.md)) were built with it. `build.mjs` writes the product files straight from the boards: `packages/web-ui/src/hue-parts.css`, `icons.ts`, `empty/scenes.ts` and `lib/core/widgets/app_icons.dart`. Canvas: https://claude.ai/artifact/4RCDhHVgQxkny97QSknsd8 (private to the owner).
 
 ## Files

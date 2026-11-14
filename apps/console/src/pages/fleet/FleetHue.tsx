@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { ActionRow, FleetSummary, SchoolRow } from '@gradeon/contracts';
-import { EmptyState, Icon, PageScope, Presence, markStyle } from '@gradeon/web-ui';
+import { EmptyState, Icon, PageScope, Presence, Roll, markStyle, rollDigits } from '@gradeon/web-ui';
 
 // The console's front page as the Fleet board (design/hue/src/Fleet.html): the fleet on the deep colour, the schools by health,
 // what waits for approval and the app rolling out. `v` is what FleetPage works out; the rest is its data.
@@ -39,7 +39,7 @@ export function FleetHue({ v, f, schools, actions }: { v: V; f: FleetSummary; sc
             <section className="card deep" style={{ gap: 20 }}>
               <div className="g" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 24 }}>
                 <div className="vc" style={{ gap: 6 }}><span className="lbl">Schools live</span><div className="fig" style={{ fontSize: 56 }}>{f.live}{f.onboarding > 0 && <small>+ {f.onboarding} onboarding</small>}</div></div>
-                <div className="vc" style={{ gap: 6 }}><span className="lbl">Students</span><div className="fig" style={{ fontSize: 56 }}>{students.toLocaleString()}</div></div>
+                <div className="vc" style={{ gap: 6 }}><span className="lbl">Students</span><div className="fig" style={{ fontSize: 56 }}><Roll digits={rollDigits(students.toLocaleString())} /></div></div>
                 <div className="vc" style={{ gap: 6 }}><span className="lbl">Healthy now</span><div className="fig" style={{ fontSize: 56 }}>{f.live ? Math.round((f.healthy / f.live) * 100) : 0}%</div></div>
                 <div className="vc" style={{ gap: 6 }}><span className="lbl">Slowest answers</span><div className="fig" style={{ fontSize: 56 }}>{f.p95Ms ? <>{f.p95Ms}<small>ms, p95</small></> : '–'}</div></div>
               </div>

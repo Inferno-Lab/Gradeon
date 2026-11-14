@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { rollDigits } from '../digits';
+import { markStyle } from '../shell/Sidebar';
 
 const EYE_ON = 'show';
 const EYE_OFF = 'hide';
@@ -139,10 +141,13 @@ export function useLogin(c: LoginController, themeCls: string) {
 
   return {
     themeCls, rmCls: '', isAdmin: !cons, showPw: true, panelCls: cons ? 'cons' : '', shk: shake ? `shk${shake}` : '', nope: '',
-    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), logoUrl: c.logoUrl ?? null,
+    brand: c.schoolName, mark: (c.logoText || c.schoolName.slice(0, 1)).toUpperCase(), markStyle: markStyle(c.color), logoUrl: c.logoUrl ?? null,
     privacyOpen, privacy: c.privacy, togglePrivacy: () => setPrivacyOpen((o) => !o),
     // Gradeon's own sign-in (the console, or the admin before a school is known) shows the Gradeon icon; a school's shows its initial.
     gradeon: c.product === 'console' || c.schoolName === 'Gradeon',
+    cardA: cons ? 'Schools live' : 'Attendance today', aD: rollDigits(cons ? '312' : '94.2'), aU: cons ? '' : '%',
+    cardB: cons ? 'Release 2026.10.3' : 'Fees this month', bN: cons ? 'Wave 3' : '18.4k', bU: cons ? 'of 6' : '', bChip: cons ? 'Healthy' : '+8.7%', bChip2: cons ? '141 updated' : '62% of due',
+    toastT: cons ? 'Wave 3 passed every check' : 'Attendance sent for 8 A',
     headline: cons ? 'Run every school from one calm board.' : 'Everything the school office needs, in one calm place.',
     subline: cons ? 'Releases, cells, support and billing for the whole Gradeon fleet.' : 'Attendance, fees, exams and every message to families.',
     langs: LANGS.map((l, i) => ({ n: l[0], code: l[1], on: i === lang ? 'on' : '', pick: () => { setLang(i); try { localStorage.setItem('gradeon.lang', l[1]); document.documentElement.lang = l[1]; } catch { /* ignore */ } } })),
