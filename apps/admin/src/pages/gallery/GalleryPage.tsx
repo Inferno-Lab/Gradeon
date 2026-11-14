@@ -82,7 +82,7 @@ function AlbumPanel({ album, canWrite, say, onEdit, onClose }: { album: AlbumRow
           </div>
           <button className="xbtn" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
-        {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {canWrite && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <FilePick accept="image/jpeg,image/png,image/webp" multiple className="btn sm pri" disabled={add.isPending} onPickAll={(files) => add.mutate(files)}>{add.isPending ? 'Uploading…' : 'Add photos'}</FilePick>
           <button className="btn sm" disabled={share.isPending} onClick={() => share.mutate()}>{album.published ? 'Hide from families' : 'Share with families'}</button>
           <button className="btn sm" onClick={onEdit}>Edit album</button>

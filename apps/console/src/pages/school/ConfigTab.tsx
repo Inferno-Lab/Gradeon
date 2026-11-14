@@ -198,7 +198,7 @@ function SettingRow({ meta, value, error, disabled, cfg, logo, onLogo, onChange 
         const r = rules[e.key] ?? e.defaults;
         return (
           <div key={e.key} className="kv" style={{ flexWrap: 'wrap', gap: 8 }}>{e.label}{e.urgent ? ' · sent in quiet hours' : ''}
-            <b style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{CHANNELS.map(([ch, label]) => (
+            <b style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>{CHANNELS.map(([ch, label]) => (
               <Checkbox key={ch} checked={!!(r as Record<string, boolean | undefined>)[ch]} disabled={disabled} onChange={(c) => set(e.key, ch, c)} label={label} />
             ))}</b>
           </div>
@@ -260,7 +260,7 @@ function History({ cfg, schoolId, can, say }: { cfg: SchoolConfig; schoolId: str
             <small style={{ display: 'block', color: 'var(--ink3)' }}>{v.by} · {ago(v.at)}{v.note ? ` · ${v.note}` : ''}</small>
           </span>
           {can && v.id !== cfg.versions[0]?.id && (sure === v.id
-            ? <span style={{ display: 'flex', gap: 8 }}><button className="btn sm dng" disabled={back.isPending} onClick={() => back.mutate(v.id)}>Roll back to v{v.version}</button><button className="btn sm" onClick={() => setSure(null)}>Keep</button></span>
+            ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm dng" disabled={back.isPending} onClick={() => back.mutate(v.id)}>Roll back to v{v.version}</button><button className="btn sm" onClick={() => setSure(null)}>Keep</button></span>
             : <button className="btn sm" onClick={() => setSure(v.id)}>Roll back…</button>)}
         </div>
       ))}

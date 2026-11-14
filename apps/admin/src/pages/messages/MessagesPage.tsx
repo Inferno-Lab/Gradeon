@@ -115,7 +115,7 @@ function Conversation({ id, canWrite, onBack, onChanged }: { id: string; canWrit
           <b className="fd" data-tip={t.subject} style={{ display: 'block', fontSize: 17, letterSpacing: '-.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</b>
           <small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{t.guardianName}{t.studentName ? ` · ${t.studentName}, Class ${t.className}` : ''}{t.assignedToName ? ` · with ${t.assignedToName}` : ''}</small>
         </div>
-        {canWrite && <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {canWrite && <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {t.assignedToId !== app.user.id && <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ assignToMe: true })}>Take it</button>}
           {(staff.data?.length ?? 0) > 1 && <Select compact aria-label="Hand to" value="" onChange={(to) => to && patch.mutate({ assignTo: to })} options={[{ value: '', label: 'Hand to…' }, ...(staff.data ?? []).filter((s) => s.id !== t.assignedToId).map((s) => ({ value: s.id, label: s.name }))]} />}
           <button className="btn sm" disabled={patch.isPending} onClick={() => patch.mutate({ status: t.status === 'open' ? 'closed' : 'open' })}>{t.status === 'open' ? 'Close' : 'Reopen'}</button>

@@ -77,7 +77,7 @@ export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
           {found.length > 25 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 20px 16px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
               <span className="help">{(page - 1) * 25 + 1}–{(page - 1) * 25 + list.length} of {found.length}</span>
-              <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 25 >= found.length} onClick={() => setPage(page + 1)}>Next</button></span>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 25 >= found.length} onClick={() => setPage(page + 1)}>Next</button></span>
             </div>
           )}
           {term && !found.length && <EmptyNote icon="search" title={`No payment matches “${q}”`} body="Search by the family’s name, the student or the payment reference." />}
@@ -92,7 +92,7 @@ export function OnlinePaymentsPage({ tabs }: { tabs?: React.ReactNode }) {
                 <span className={`chip ${REFUND[r.status].tone}`} data-tip={r.error ?? undefined}>{REFUND[r.status].text}</span>
                 <b className="num" style={{ font: '700 13px var(--fb)' }}>{rupees(r.amount)}</b>
                 <span style={{ flex: 1, minWidth: 180 }}>{r.student} · {r.receiptNo}<small className="help" style={{ display: 'block' }}>{r.reason} · asked by {r.requestedBy ?? 'someone'} {stamp(r.createdAt)}{r.approvedBy ? ` · ${r.status === 'rejected' ? 'declined' : 'approved'} by ${r.approvedBy}` : ''}{r.decisionNote ? ` · “${r.decisionNote}”` : ''}</small></span>
-                {canRefund && r.status === 'requested' && <span style={{ display: 'flex', gap: 6 }}>
+                {canRefund && r.status === 'requested' && <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <button className="btn sm" disabled={decide.isPending} onClick={() => setDeciding({ r, yes: false })}>Decline</button>
                   <button className="btn sm pri" disabled={decide.isPending} onClick={() => setDeciding({ r, yes: true })}>Approve</button>
                 </span>}

@@ -207,7 +207,7 @@ function EventDialog({ event, defaultDay, onClose, onDone }: { event: EventRow |
         {event && canWrite ? (confirm
           ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this event?</span><button className="btn dngf sm" onClick={() => del.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(false)}>Keep</button></span>
           : <button className="btn dng" onClick={() => setConfirm(true)}>Remove</button>) : <span />}
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onClose}>{canWrite ? 'Cancel' : 'Close'}</button>
           {canWrite && <button className="btn pri" disabled={save.isPending} onClick={go}>{save.isPending ? 'Saving…' : event ? 'Save' : 'Add event'}</button>}
         </span>

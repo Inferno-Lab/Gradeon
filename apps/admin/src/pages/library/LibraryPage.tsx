@@ -86,7 +86,7 @@ export function LibraryPage() {
             {books.length > 50 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 20px 16px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
                 <span className="help">{(page - 1) * 50 + 1}–{Math.min(page * 50, books.length)} of {books.length} titles</span>
-                <span style={{ display: 'flex', gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 50 >= books.length} onClick={() => setPage(page + 1)}>Next</button></span>
+                <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 50 >= books.length} onClick={() => setPage(page + 1)}>Next</button></span>
               </div>
             )}
           </Card>

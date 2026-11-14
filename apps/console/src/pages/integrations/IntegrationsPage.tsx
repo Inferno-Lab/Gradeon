@@ -446,7 +446,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
                   <div key={m.key} className="grd rw" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 200px', height: 'auto', minHeight: 52, padding: '10px 20px' } as React.CSSProperties}>
                     <b style={{ font: '700 13px/1.35 var(--fb)' }}>{m.label}</b>
                     <span style={{ minWidth: 0, font: '400 13px/1.45 var(--fb)', color: t ? 'var(--ink2)' : 'var(--ink3)', overflowWrap: 'anywhere' }}>{t ? <><span className="chip">{t.providerTemplateId}{t.dltTemplateId ? ` · DLT ${t.dltTemplateId}` : ''}</span> {t.approvedText}</> : 'Not mapped: this message cannot go by this connection.'}</span>
-                    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
+                    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
                   </div>
                 );
               })}

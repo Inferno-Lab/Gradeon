@@ -49,7 +49,7 @@ export function IntegrationsTab({ d }: { d: SchoolDetail }) {
         <div className="card s5 rise">
           <div className="ch"><h2>Its own connections</h2><span className="chip">{own.length}</span></div>
           {!own.length ? <EmptyNote icon="integrations" title="None of its own" body="This school sends through Tangent’s connections." /> : own.map((c) => (
-            <div key={c.id} className="kv" style={{ alignItems: 'center' }}><span style={{ minWidth: 0 }}>{c.name}</span><b style={{ display: 'flex', gap: 6 }}><span className="chip">{providerDef(c.provider)?.name}</span><span className={`chip ${c.state === 'live' ? 'g' : c.state === 'paused' ? 'c' : 'a'}`}>{c.state}</span></b></div>
+            <div key={c.id} className="kv" style={{ alignItems: 'center' }}><span style={{ minWidth: 0 }}>{c.name}</span><b style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span className="chip">{providerDef(c.provider)?.name}</span><span className={`chip ${c.state === 'live' ? 'g' : c.state === 'paused' ? 'c' : 'a'}`}>{c.state}</span></b></div>
           ))}
         </div>
       </section>

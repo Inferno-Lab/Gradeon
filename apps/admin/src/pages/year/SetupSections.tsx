@@ -119,11 +119,11 @@ function RowDialog({ section: s, row, all, onClose, onDone }: { section: SetupSe
         {err && <div className="emsg" role="alert">{err}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-        <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {row && <button className="btn dng" disabled={busy} onClick={() => remove.mutate()}>Remove</button>}
           {row && s.kind === 'fee_structures' && app.user.permissions.includes('fees.collect') && <button className="btn" disabled={busy} onClick={() => bill.mutate()}>{bill.isPending ? 'Adding…' : 'Add to students’ fees'}</button>}
         </span>
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn pri" disabled={busy} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save'}</button>
         </span>

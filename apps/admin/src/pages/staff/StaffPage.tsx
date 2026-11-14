@@ -198,7 +198,7 @@ function StaffDialog({ person, onClose, onDone }: { person: StaffRow | null; onC
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
         {person && !me ? <button className={`btn ${person.status === 'active' ? 'dng' : ''}`} disabled={toggle.isPending} onClick={() => toggle.mutate()}>{person.status === 'active' ? 'Switch off' : 'Switch on'}</button> : <span />}
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn pri" disabled={save.isPending} onClick={go}>{save.isPending ? 'Saving…' : person ? 'Save' : 'Add and send invite'}</button>
         </span>

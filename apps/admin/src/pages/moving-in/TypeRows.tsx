@@ -36,7 +36,7 @@ export function TypeRows({ kind, busy, onSend, onCancel }: { kind: ImportKind; b
       {short.length > 0 && <div className="emsg" role="alert" style={{ marginTop: 10 }}>Fill in {short.map((c) => c.label).join(', ')} on every row you typed.</div>}
       <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap' }}>
         <button className="btn sm" onClick={() => setRows([...rows, ...Array.from({ length: 5 }, blank)])}>Add 5 rows</button>
-        <span style={{ display: 'flex', gap: 10 }}>
+        <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" onClick={onCancel}>Cancel</button>
           <button className="btn pri" disabled={busy || !filled.length || short.length > 0} onClick={send}>{busy ? 'Sending…' : `Send ${filled.length} ${filled.length === 1 ? 'row' : 'rows'} to Tangent`}</button>
         </span>

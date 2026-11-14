@@ -258,7 +258,7 @@ function ExamSheet({ id, onClose, onChange, onChanged, onRemoved }: { id: string
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {editable ? (confirm === 'remove'
               ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="help">Remove this exam and its marks?</span><button className="btn dngf sm" onClick={() => remove.mutate()}>Yes, remove</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep</button></span>
-              : <span style={{ display: 'flex', gap: 8 }}><button className="btn dng" onClick={() => setConfirm('remove')}>Remove exam</button><button className="btn" onClick={() => onChange(ex)}>Change exam</button></span>)
+              : <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><button className="btn dng" onClick={() => setConfirm('remove')}>Remove exam</button><button className="btn" onClick={() => onChange(ex)}>Change exam</button></span>)
               : canPublish && ex.status === 'published' ? (confirm === 'reopen'
                 ? <span style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}><div style={{ minWidth: 260 }}><Field label="What is being corrected (families are told)" value={note} onChange={setNote} maxLength={200} placeholder="Science marks for 8 A were entered wrongly" /></div>
                   <button className="btn sm pri" disabled={note.trim().length < 5 || reopen.isPending} onClick={() => reopen.mutate()}>Reopen</button><button className="btn sm" onClick={() => setConfirm(null)}>Keep locked</button></span>
