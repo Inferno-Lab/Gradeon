@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@gradeon/web-ui';
+import { Checkbox, Dialog, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -429,7 +429,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
     onError: (e) => say((e as Error).message, 'bad'),
   });
   const conns = v.connections.filter((c) => providerDef(c.provider)?.capabilities.some((k) => k === 'sms' || k === 'whatsapp'));
-  if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} icon="mail" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
+  if (!conns.length) return <div><EmptyState scene="templates" onAction={write ? () => app.go('/integrations') : undefined} /></div>;
   return (
     <>
       <div className="help rise">When a message is mapped, its approved wording is what goes out, filled with the message’s values, so DLT never rejects it. A text or WhatsApp connection goes live only when every message is mapped. “Copy for DLT” gives the wording with {'{#var#}'} where the values go, ready to register.</div>
@@ -511,7 +511,7 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
       </div>
       <Card title="Every message’s fate" chip={<span className="chip">{rows.length} shown</span>} style={{ padding: 0 }}>
         {q.isError ? <div className="help" style={{ padding: 20 }}>{(q.error as Error).message}</div>
-          : !rows.length ? <div style={{ padding: 20 }}>{q.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 16 }} /> : <EmptyNote icon="send" title="No messages match" body="Messages appear here the moment a school sends one." />}</div> : (
+          : !rows.length ? <div style={{ padding: 20 }}>{q.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 16 }} /> : school || channel || status ? <EmptyNote icon="search" title="No messages match" body="Try another school, channel or status." /> : <EmptyState scene="activity" onAction={() => app.go('/integrations/inbox')} />}</div> : (
             <div className="tbl scroll-x"><div style={{ minWidth: 760 }} className="lscroll">
               <div className="grd th" style={{ '--cols': '96px 110px minmax(0,1fr) minmax(0,2fr) 120px 90px' } as React.CSSProperties}><span>Status</span><span>School</span><span>To</span><span>Message</span><span>Through</span><span></span></div>
               {rows.map((m) => (
@@ -536,7 +536,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
   const hooked = v.connections.filter((c) => c.webhookUrl);
   const [open, setOpen] = useState<string | null>(null);
   const events = useQuery({ queryKey: ['integrations', 'events', open], queryFn: () => app.api.integrations.events(open!), enabled: !!open });
-  if (!hooked.length) return <div><EmptyCard title="Webhooks" chip={{ text: '0 addresses', tone: 'v' }} icon="mail" heading="No provider sends us anything yet" body="Delivery reports and payment confirmations come back to an address made for each connection. Add an SMS, WhatsApp or payments connection to get one." /></div>;
+  if (!hooked.length) return <div><EmptyState scene="webhooks" onAction={() => app.go('/integrations')} /></div>;
   return (
     <Card title="Addresses to paste into each provider’s dashboard" style={{ padding: 0 }}>
       {hooked.map((c) => {
@@ -605,7 +605,7 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
   return (
     <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
       {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} />
-        : rows.length === 0 ? <EmptyNote icon="inbox" title="Nothing in the test inbox yet" body="Sign-in codes, receipts and notices land here as they are triggered." />
+        : rows.length === 0 ? school ? <EmptyNote icon="inbox" title="Nothing for this school yet" body="Its sign-in codes, receipts and notices land here as they are triggered." /> : <EmptyState scene="inbox" onAction={() => app.go('/integrations')} />
           : <>{shown.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'flex-start', height: 'auto', padding: '12px 0' }}>
               <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>

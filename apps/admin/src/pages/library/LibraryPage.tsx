@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookRow, LoanRow, ReservationRow } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
+import { DateField, Dialog, Field, NumberField, Segmented, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, SEARCH, StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -43,10 +43,7 @@ export function LibraryPage() {
         {cancelling && <CancelDialog title={cancelling.title} busy={cancel.isPending} onClose={() => setCancelling(null)} onSend={(reason) => cancel.mutate({ id: cancelling.id, reason })} />}
       </>}>
       {v && (v.books.length === 0 && v.loans.length === 0 ? (
-        tab === 'loans' ? <EmptyCard title="Loans" art="notebooks" heading="No book is out yet" body="Once the catalogue has books, each one you issue shows here with who has it and when it is due back. Families see the date in the app."
-            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
-        : tab === 'waiting' ? <EmptyCard title="Waiting" art="checklist" heading="No one is waiting for a book" body="When a book is out, a family can reserve it from the app. The first in line is told the moment a copy comes back."
-            actions={canWrite ? <button className="btn pri" onClick={() => setDlg({ kind: 'book', book: null })}>Add books</button> : undefined} />
+        tab === 'loans' || tab === 'waiting' ? <div><EmptyState scene={tab} onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
         : <div><EmptyState scene="library" onAction={canWrite ? () => setDlg({ kind: 'book', book: null }) : undefined} /></div>
       ) : <>
         <section className="grid">
