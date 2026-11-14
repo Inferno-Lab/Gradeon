@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, EmptyState, Icon, Segmented } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Segmented, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { StudentPick } from '../../app/kit';
@@ -21,9 +21,6 @@ export function FeesPage() {
   if (tab === 'structure') return <FeeStructure tabs={tabs} />;
   return <Overview tabs={tabs} />;
 }
-
-// Kinds of fee take spectrum colours in order, as the board's payment methods do.
-const HEAD_COLOURS = ['blue', 'pink', 'lime', 'orange', 'teal', 'violet'] as const;
 
 function Overview({ tabs }: { tabs: React.ReactNode }) {
   const app = useApp();
@@ -66,92 +63,61 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
           </Dialog>
         )}
       </>}>
-      {s && s.due === 0 && s.collected === 0 && !s.byHead.length ? <EmptyState scene="fees" onAction={() => app.go('/fees/structure')} /> : s && (
-        // As the Fees board (design/hue/src/Fees.html): the month on the deep colour, what is due and overdue, each day, each kind of fee, who is late.
-        <div className="hb" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="g" style={{ gridTemplateColumns: 'minmax(0,1.5fr) repeat(2,minmax(0,1fr))' }}>
-            <section className="card deep">
-              <span className="lbl">Collected in {s.monthLabel}</span>
-              <div className="fig" style={{ fontSize: 64 }}>{money(s.collected)}</div>
-              <div className="bar" style={{ height: 10, background: 'var(--deep3)' }}><i style={{ width: `${s.pct}%`, background: 'var(--bright)' }} /></div>
-              <span className="lbl" style={{ fontWeight: 400 }}>{s.pct}% of {money(s.due)} · {money(Math.max(0, s.due - s.collected))} still to come</span>
-            </section>
-            <section className="card tint sp-blue">
-              <span className="lbl">Not yet due</span>
-              <b className="d" style={{ fontSize: 40, lineHeight: '44px' }}>{money(s.pending)}</b>
-              <small className="t2" style={{ fontSize: 14 }}>falls due later {period === 'month' ? 'this month' : period === 'term' ? 'this term' : 'this year'}</small>
-              {s.collectedDelta !== 0 && <span className={`tag ${s.collectedDelta > 0 ? 'ok' : 'bad'}`} style={{ alignSelf: 'flex-start', marginTop: 'auto' }}><Icon name={s.collectedDelta > 0 ? 'upRight' : 'downRight'} size={14} className="i" />{Math.abs(s.collectedDelta)}% on last {period}</span>}
-            </section>
-            <section className="card tint sp-rose">
-              <span className="lbl">Overdue</span>
-              <b className="d" style={{ fontSize: 40, lineHeight: '44px', color: 'var(--bad-i)' }}>{money(s.overdue)}</b>
-              <small className="t2" style={{ fontSize: 14 }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</small>
-              {s.overdueFamilies > 0 && app.user.permissions.includes('fees.read') && (confirmRemind
-                ? <span className="fx" style={{ gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}><button className="btn pri sm" disabled={remind.isPending} onClick={() => remind.mutate()}>Remind all {s.overdueFamilies}</button><button className="btn sm" onClick={() => setConfirmRemind(false)}>Not now</button></span>
-                : <button className="btn ton sm" style={{ alignSelf: 'flex-start', marginTop: 'auto' }} onClick={() => setConfirmRemind(true)}>Send reminders</button>)}
-            </section>
-          </div>
-          <div className="g" style={{ gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)' }}>
-            <section className="card">
-              <div className="ch"><h2>Collected each day</h2><small>{s.dailyTarget ? `target ${money(s.dailyTarget)} a day` : 'this period'}</small></div>
-              {s.daily.some((x) => x.amount > 0) ? (
-                <div className="fx" role="img" aria-label="Fees collected each day" style={{ alignItems: 'flex-end', gap: 8, height: 180 }}>
-                  {s.daily.slice(-14).map((x) => {
-                    const top = Math.max(...s.daily.map((y) => y.amount), 1);
-                    return (
-                      <div key={x.date} className="vc" style={{ flex: 1, alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }} data-tip={`${x.full}: ${money(x.amount)}`}>
-                        {x.amount > 0 && <b className="num" style={{ fontSize: 12 }}>{money(x.amount)}</b>}
-                        <i style={{ display: 'block', width: '100%', height: `${Math.max(4, (x.amount / top) * 120)}px`, borderRadius: 7, background: x.isToday ? 'var(--bar-up)' : 'var(--bar-soft)' }} />
-                        <small className="t3" style={{ fontSize: 12 }}>{x.label}</small>
-                      </div>
-                    );
-                  })}
+      {s && (
+        <section className="grid">
+          <div className="tile t-v s4 rise"><span className="lbl">Collected in {s.monthLabel}</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: .8 }}>of {money(s.due)} due</div></div>
+          <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Not yet due</span><div className="big" style={{ marginTop: 8 }}>{money(s.pending)}</div><div style={{ font: '600 13px var(--fb)', opacity: .75 }}>not yet due</div></div>
+          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Overdue</span><div className="big" style={{ marginTop: 8, color: 'var(--c)' }}>{money(s.overdue)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>{s.overdueFamilies} {s.overdueFamilies === 1 ? 'family' : 'families'}</div></div>
+          <div className="card s12 rise" style={{ '--d': '.14s' } as React.CSSProperties}>
+            <div className="ch"><h2>Collected by type</h2></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(220px,100%),1fr))', gap: '16px 24px', marginTop: 16, alignContent: 'start' }}>
+              {s.byHead.map((h) => (
+                <div className="us" key={h.head} data-tip={`${h.label}\n${h.pct}% collected\n${money(h.collected)} of ${money(h.due)}`}>
+                  <div className="r">{h.label}<b>{money(h.collected)} of {money(h.due)}</b></div>
+                  <div className="bar" style={{ height: 18 }}><i style={{ width: `${h.pct}%` }}></i></div>
                 </div>
-              ) : <p className="t2" style={{ fontSize: 14 }}>Payments appear here, day by day, as fees are collected.</p>}
-            </section>
-            <section className="card">
-              <div className="ch"><h2>By kind of fee</h2><small>{s.monthLabel}</small></div>
-              {s.byHead.length ? (
-                <>
-                  <div className="bar" style={{ height: 14, borderRadius: 7, gap: 3 }} aria-hidden="true">
-                    {s.byHead.map((h, i) => <i key={h.head} className={`sp-${HEAD_COLOURS[i % HEAD_COLOURS.length]}`} style={{ flex: Math.max(h.collected, 1), background: 'var(--c)' }} />)}
-                  </div>
-                  <div className="vc" style={{ gap: 2 }}>
-                    {s.byHead.map((h, i) => (
-                      <div key={h.head} className="kv"><span className="fx" style={{ gap: 8 }}><i className={`dot sp-${HEAD_COLOURS[i % HEAD_COLOURS.length]}`} />{h.label}</span><b>{h.pct}%</b><span className="t2 num" style={{ minWidth: 92, textAlign: 'right' }}>{money(h.collected)}</span></div>
-                    ))}
-                  </div>
-                </>
-              ) : <p className="t2" style={{ fontSize: 14 }}>Fees by kind appear once fees are assigned to students.</p>}
-            </section>
+              ))}
+              {s.byHead.length === 0 && <div className="help">Fees by type appear once fees are assigned to students.</div>}
+            </div>
           </div>
-          <section className="card flush">
-            <div className="ch" style={{ padding: '20px 20px 8px' }}><h2>Overdue</h2><small>{overdue.data?.total ?? 0} {overdue.data?.total === 1 ? 'family' : 'families'} · largest first</small></div>
-            {rows.length === 0 && !overdue.isLoading ? <p className="t2" style={{ fontSize: 14, padding: '0 20px 20px' }}>Nobody is overdue. Families with an unpaid fee past its due date appear here, largest first.</p> : (
-              <div className="scroll-x" data-fill="">
-                <div style={{ minWidth: 620 }}>
-                  <div className="trow h" style={{ '--cols': 'minmax(0,1.6fr) 70px minmax(0,1.2fr) 110px 110px' } as React.CSSProperties}><span>Student</span><span>Class</span><span>Parent</span><span className="r">Amount</span><span /></div>
-                  {rows.map((r) => (
-                    <div key={r.id} className="trow" role="button" tabIndex={0} style={{ '--cols': 'minmax(0,1.6fr) 70px minmax(0,1.2fr) 110px 110px', cursor: 'pointer' } as React.CSSProperties}
+          <div className="card tbl s12 rise" style={{ '--d': '.18s', padding: 0 } as React.CSSProperties}>
+            <div className="ch" style={{ padding: '24px 24px 16px' }}>
+              <h2>Overdue families</h2>
+              <span className="chip c">{overdue.data?.total ?? 0}</span>
+              {rows.length > 0 && app.user.permissions.includes('fees.read') && (confirmRemind
+                ? <span className="tgrow"><span className="help">Remind all {overdue.data?.total ?? 0} overdue families?</span><button className="btn sm pri" disabled={remind.isPending} onClick={() => remind.mutate()}>Yes, remind them</button><button className="btn sm" onClick={() => setConfirmRemind(false)}>Not now</button></span>
+                : <button className="btn sm" onClick={() => setConfirmRemind(true)}>Remind every overdue family</button>)}
+            </div>
+            {rows.length === 0 && !overdue.isLoading && (
+              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Overdue" chip={{ text: 'None', tone: 'g' }} scene="receipt" heading="Nobody is overdue" body="Families with an unpaid fee past its due date are listed here, largest first." /></div>
+            )}
+            <div className="scroll-x" data-fill="">
+              <div style={{ minWidth: 520 }}>
+                {rows.map((r) => {
+                  const t = tintFor(r.name);
+                  return (
+                    <div className="grd rw" key={r.id} role="button" tabIndex={0} style={{ '--cols': 'minmax(0,1.6fr) 70px 110px 110px', cursor: 'pointer' } as React.CSSProperties}
                       onClick={() => app.go(`/students?open=${r.id}`)} onKeyDown={(e) => { if (e.key === 'Enter') app.go(`/students?open=${r.id}`); }} aria-label={`Open ${r.name}`}>
-                      <span className="fx" style={{ gap: 12, minWidth: 0 }}><span className="av sm">{r.initials}</span><b className="cut">{r.name}</b></span>
-                      <span>{r.className}</span>
-                      <span className="t2 cut">{r.guardianName}</span>
-                      <b className="num r">₹{inr(r.amountDue)}</b>
-                      <span className="r">{canPay && <button className="btn ton sm" disabled={open.isPending} onClick={(e) => { e.stopPropagation(); open.mutate(r.id); }}>Collect</button>}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                        <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{r.initials}</span>
+                        <span style={{ minWidth: 0 }}><b data-tip={r.name} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', font: '700 14px/1.25 var(--fb)' }}>{r.name}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{r.guardianName}</small></span>
+                      </span>
+                      <span className="chip">{r.className}</span>
+                      <b className="num" style={{ font: '700 14px var(--fb)', color: 'var(--c)' }}>₹{inr(r.amountDue)}</b>
+                      <span>{canPay && <button className="btn sm" disabled={open.isPending} onClick={(e) => { e.stopPropagation(); open.mutate(r.id); }}>Collect</button>}</span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
             {(overdue.data?.total ?? 0) > 25 && (
-              <div className="fx" style={{ justifyContent: 'space-between', padding: '12px 20px 20px', gap: 10 }}>
-                <span className="t2" style={{ fontSize: 13 }}>{(page - 1) * 25 + 1}–{(page - 1) * 25 + rows.length} of {overdue.data!.total}</span>
-                <span className="fx" style={{ gap: 8 }}><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 25 >= overdue.data!.total} onClick={() => setPage(page + 1)}>Next</button></span>
+              <div className="tfoot" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px 20px' }}>
+                <span className="help">{(page - 1) * 25 + 1}–{(page - 1) * 25 + rows.length} of {overdue.data!.total}</span>
+                <span className="tgrow"><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><button className="btn sm" disabled={page * 25 >= overdue.data!.total} onClick={() => setPage(page + 1)}>Next</button></span>
               </div>
             )}
-          </section>
-        </div>
+          </div>
+        </section>
       )}
     </Page>
   );

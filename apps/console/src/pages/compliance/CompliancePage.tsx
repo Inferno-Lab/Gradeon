@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { breachNotice, istToday, type ComplianceRow } from '@gradeon/contracts';
-import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { AreaField, DateField, Dialog, EmptyCard, Field, FilePick, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, when } from '../../app/format';
@@ -48,13 +48,13 @@ export function CompliancePage() {
       </>}>
       {tab === 'breaches' && (
         <Card title="Breaches" chip={<span className={`chip ${breaches.some((b) => b.status !== 'closed') ? 'c' : 'g'}`}>{breaches.filter((b) => b.status !== 'closed').length} open</span>}>
-          {breaches.length === 0 ? <EmptyCard title="Breaches" chip={{ text: 'None', tone: 'g' }} icon="lock" heading="No breaches logged" body="If personal data may have reached the wrong person, log it here. The school must be told within 72 hours so it can meet its own duty." />
+          {breaches.length === 0 ? <EmptyCard title="Breaches" chip={{ text: 'None', tone: 'g' }} scene="padlock" heading="No breaches logged" body="If personal data may have reached the wrong person, log it here. The school must be told within 72 hours so it can meet its own duty." />
             : breaches.map((b) => <Row key={b.id} r={b} canWrite={canWrite} busy={close.isPending} onTell={() => setTelling(b)} onClose={() => close.mutate(b.id)} />)}
         </Card>
       )}
       {tab === 'agreements' && (
         <Card title="Agreements" chip={<span className="chip">{agreements.filter((x) => x.status === 'open').length} to sign</span>}>
-          {agreements.length === 0 ? <EmptyState scene="compliance" label="Add an agreement" onAction={canWrite ? () => setAdding('dpa') : undefined} />
+          {agreements.length === 0 ? <div className="help">Add the data processing agreement each school has to sign. It stays here until it is signed, with the signed file.</div>
             : agreements.map((x) => <Row key={x.id} r={x} canWrite={canWrite} busy={false} onSign={() => setSigning(x)} onFile={() => download(x)} />)}
         </Card>
       )}
@@ -69,7 +69,7 @@ export function CompliancePage() {
         <Card title="Data requests at every school" chip={<span className="chip">{requests.data?.length ?? 0} open</span>}>
           <div className="help" style={{ marginTop: 0 }}>Asked for by families and staff in the app or at the office. Each school answers its own under Privacy; erasure past retention is on the school’s Data tab.</div>
           {!app.can('audit.read') ? <div className="help">Your role does not include data requests.</div>
-            : requests.isLoading ? <div className="skc" style={{ height: 160, borderRadius: 16 }} />
+            : requests.isLoading ? <div className="skc" style={{ height: 160, borderRadius: 18 }} />
               : !(requests.data ?? []).length ? <div className="help">Nothing open.</div>
                 : requests.data!.map((r) => (
                   <div key={`${r.schoolId}${r.id}`} className="kv" style={{ alignItems: 'flex-start' }}>
@@ -151,7 +151,7 @@ function Tell({ r, onClose, onDone }: { r: ComplianceRow; onClose: () => void; o
     <Dialog title={`Tell ${r.schoolName}`} tag={{ text: 'Sent by email to its contact', tone: 'a' }} onClose={onClose} width={540}>
       <AreaField label="What happened, in words for the school" value={note} onChange={setNote} rows={3} maxLength={600} />
       <div className="lbl" style={{ margin: '12px 0 6px' }}>The school receives</div>
-      <div className="card" style={{ padding: 16, whiteSpace: 'pre-wrap', font: '400 14px/1.5 var(--fb)', background: 'var(--s2)', boxShadow: 'none' }}>{breachNotice(r.schoolName, r.title, note.trim())}</div>
+      <div className="card" style={{ padding: 16, whiteSpace: 'pre-wrap', font: '500 14px/1.5 var(--fb)', background: 'var(--sunk)', boxShadow: 'none' }}>{breachNotice(r.schoolName, r.title, note.trim())}</div>
       {go.isError && <div className="emsg" role="alert" style={{ marginTop: 10 }}>{(go.error as Error).message}</div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
         <button className="btn" onClick={onClose}>Cancel</button>

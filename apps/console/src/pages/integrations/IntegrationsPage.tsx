@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -60,7 +60,7 @@ export function IntegrationsPage() {
   return (
     <Page title="Integrations" sub="Every third party the platform talks to: messages, payments, files and maps. Added, tested, routed and taken live from here, with no deploy." toast={toast}
       loading={view.isLoading} error={view.isError ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={write ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><Icon name="plus" />Add a connection</button> : undefined}
+      actions={write ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M12 5v14M5 12h14"></path></svg>Add a connection</button> : undefined}
       overlays={v && <>
         {dlg?.kind === 'add' && <ConnectionDialog schools={live} onClose={() => setDlg(null)} onDone={done} />}
         {dlg?.kind === 'edit' && <ConnectionDialog schools={live} c={dlg.c} onClose={() => setDlg(null)} onDone={done} />}
@@ -71,7 +71,7 @@ export function IntegrationsPage() {
         {dlg?.kind === 'delete' && <DeleteDialog c={dlg.c} onClose={() => setDlg(null)} onDone={done} />}
       </>}>
       {v && <>
-        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: v.mode === 'live' ? 'var(--ok-s)' : 'var(--warn-s)', color: v.mode === 'live' ? 'var(--ok-i)' : 'var(--warn-i)' }}>
+        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: v.mode === 'live' ? 'var(--gS)' : 'var(--aS)', color: v.mode === 'live' ? 'var(--gD)' : 'var(--aD)' }}>
           <span className={`chip ${v.mode === 'live' ? 'g' : 'a'}`}>{v.mode === 'live' ? 'Live mode' : 'Sandbox mode'}</span>
           <span style={{ flex: 1, minWidth: 220, font: '600 13px/1.45 var(--fb)' }}>
             {v.mode === 'live' ? 'Real providers send to families. A capability without a live connection fails and says so; nothing falls back to the Test inbox.'
@@ -82,7 +82,7 @@ export function IntegrationsPage() {
         </div>
         {v.mode === 'sandbox' && !!gaps.data?.gaps.length && (
           <Card title="Before live messages" chip={<span className="chip a">{gaps.data.gaps.length} to do</span>}>
-            {gaps.data.gaps.map((g) => <div key={g} className="kv" style={{ height: 'auto', padding: '6px 0' }}><span style={{ font: '400 13px/1.45 var(--fb)' }}>{g}</span></div>)}
+            {gaps.data.gaps.map((g) => <div key={g} className="kv" style={{ height: 'auto', padding: '6px 0' }}><span style={{ font: '500 13px/1.45 var(--fb)' }}>{g}</span></div>)}
           </Card>
         )}
         <Tiles items={[
@@ -108,7 +108,9 @@ function Connections({ v, write, busy, onEdit, onTest, onDelete, onAct, onAdd }:
   onAct: (c: ConnectionRow, what: 'live' | 'pause' | 'resume') => void; onAdd: () => void;
 }) {
   if (!v.connections.length) {
-    return <div><EmptyState scene="integrations" onAction={write ? onAdd : undefined} /></div>;
+    return <div><EmptyCard title="Connections" chip={{ text: '0 connections', tone: 'v' }} scene="plug" heading="Everything goes to the Test inbox"
+      body="Until a connection is added, texts, emails and WhatsApp messages land in the Test inbox, files are kept in the registry, and payments open a test checkout. Add a provider to reach real families."
+      actions={write ? <button className="btn pri" onClick={onAdd}>Add a connection</button> : undefined} /></div>;
   }
   const groups = CAPABILITIES.map((cap) => ({ cap, list: v.connections.filter((c) => providerDef(c.provider)?.capabilities[0] === cap) })).filter((g) => g.list.length);
   return (
@@ -282,7 +284,7 @@ function ConnectionDialog({ c: initial, schools, onClose, onDone }: { c?: Connec
       <div className="grid" style={{ gap: 20 }}>
         <div className="s5" style={{ minWidth: 0 }}>
           <div className="lbl">How to get these from {def?.name}</div>
-          <ol style={{ margin: '8px 0 0', paddingLeft: 20, display: 'grid', gap: 8, font: '400 13px/1.5 var(--fb)', color: 'var(--ink2)' }}>
+          <ol style={{ margin: '8px 0 0', paddingLeft: 20, display: 'grid', gap: 8, font: '500 13px/1.5 var(--fb)', color: 'var(--ink2)' }}>
             {def?.steps.map((s, i) => <li key={i}>{s}</li>)}
           </ol>
           {def?.docs && <div className="help" style={{ marginTop: 10 }}><a href={def.docs} target="_blank" rel="noreferrer">{def.name} documentation</a></div>}
@@ -290,7 +292,7 @@ function ConnectionDialog({ c: initial, schools, onClose, onDone }: { c?: Connec
             <div style={{ marginTop: 16 }}>
               <div className="lbl">Webhook address to paste at {def.name}</div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
-                <code className="mono" style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', font: '400 12px/1.4 var(--fm)' }}>{c.webhookUrl}</code>
+                <code className="mono" style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', font: '500 12px/1.4 var(--fm)' }}>{c.webhookUrl}</code>
                 <CopyButton text={c.webhookUrl} />
               </div>
               <div className="help" style={{ marginTop: 6 }}>Events: {def.webhooks.events}. Checked by: {def.webhooks.verifies}.</div>
@@ -428,7 +430,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
     onError: (e) => say((e as Error).message, 'bad'),
   });
   const conns = v.connections.filter((c) => providerDef(c.provider)?.capabilities.some((k) => k === 'sms' || k === 'whatsapp'));
-  if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} icon="mail" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
+  if (!conns.length) return <div><EmptyCard title="Templates" chip={{ text: 'No SMS or WhatsApp', tone: 'v' }} scene="envelope" heading="Nothing to map yet" body="Indian SMS and WhatsApp send only approved templates. Add an SMS or WhatsApp connection, then map each message to its approved template here." /></div>;
   return (
     <>
       <div className="help rise">When a message is mapped, its approved wording is what goes out, filled with the message’s values, so DLT never rejects it. A text or WhatsApp connection goes live only when every message is mapped. “Copy for DLT” gives the wording with {'{#var#}'} where the values go, ready to register.</div>
@@ -444,7 +446,7 @@ function Templates({ v, write, say, onEdit }: { v: IntegrationsView; write: bool
                 return (
                   <div key={m.key} className="grd rw" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,2fr) 200px', height: 'auto', minHeight: 52, padding: '10px 20px' } as React.CSSProperties}>
                     <b style={{ font: '700 13px/1.35 var(--fb)' }}>{m.label}</b>
-                    <span style={{ minWidth: 0, font: '400 13px/1.45 var(--fb)', color: t ? 'var(--ink2)' : 'var(--ink3)', overflowWrap: 'anywhere' }}>{t ? <><span className="chip">{t.providerTemplateId}{t.dltTemplateId ? ` · DLT ${t.dltTemplateId}` : ''}</span> {t.approvedText}</> : 'Not mapped: this message cannot go by this connection.'}</span>
+                    <span style={{ minWidth: 0, font: '500 13px/1.45 var(--fb)', color: t ? 'var(--ink2)' : 'var(--ink3)', overflowWrap: 'anywhere' }}>{t ? <><span className="chip">{t.providerTemplateId}{t.dltTemplateId ? ` · DLT ${t.dltTemplateId}` : ''}</span> {t.approvedText}</> : 'Not mapped: this message cannot go by this connection.'}</span>
                     <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{!t && <CopyButton text={forDlt(m.text)} label="Copy for DLT" />}{write && <button className="btn sm" onClick={() => onEdit(c.id, m.key, t)}>{t ? 'Change' : 'Map'}</button>}</span>
                   </div>
                 );
@@ -518,7 +520,7 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
                   <span className={`chip ${DELIVERY[m.status]}`} data-tip={m.error ?? (m.sendAfter ? `Held until ${when(m.sendAfter)}` : undefined)}>{m.status}</span>
                   <span className="help" style={{ margin: 0 }}>{m.schoolSlug}</span>
                   <span style={{ minWidth: 0 }}><b className="num" style={{ font: '700 13px var(--fb)' }}>{m.to}</b><div className="help" style={{ margin: 0 }}>{CAPABILITY_LABELS[m.channel as Capability] ?? m.channel} · {ago(m.createdAt)}</div></span>
-                  <span style={{ minWidth: 0, font: '400 13px/1.4 var(--fb)', color: 'var(--ink2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={m.error ?? m.body}>{m.error ? <span style={{ color: 'var(--bad-i)' }}>{m.error}</span> : m.body}</span>
+                  <span style={{ minWidth: 0, font: '500 13px/1.4 var(--fb)', color: 'var(--ink2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} data-tip={m.error ?? m.body}>{m.error ? <span style={{ color: 'var(--cD)' }}>{m.error}</span> : m.body}</span>
                   <span className="help" style={{ margin: 0 }}>{m.connectionName ?? '–'}{m.costPaise ? ` · ${rupees(m.costPaise / 100)}` : ''}</span>
                   <span>{write && m.status === 'failed' && <button className="btn sm" disabled={retry.isPending} onClick={() => retry.mutate(m.id)}>Retry</button>}</span>
                 </div>
@@ -535,7 +537,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
   const hooked = v.connections.filter((c) => c.webhookUrl);
   const [open, setOpen] = useState<string | null>(null);
   const events = useQuery({ queryKey: ['integrations', 'events', open], queryFn: () => app.api.integrations.events(open!), enabled: !!open });
-  if (!hooked.length) return <div><EmptyCard title="Webhooks" chip={{ text: '0 addresses', tone: 'v' }} icon="mail" heading="No provider sends us anything yet" body="Delivery reports and payment confirmations come back to an address made for each connection. Add an SMS, WhatsApp or payments connection to get one." /></div>;
+  if (!hooked.length) return <div><EmptyCard title="Webhooks" chip={{ text: '0 addresses', tone: 'v' }} scene="envelope" heading="No provider sends us anything yet" body="Delivery reports and payment confirmations come back to an address made for each connection. Add an SMS, WhatsApp or payments connection to get one." /></div>;
   return (
     <Card title="Addresses to paste into each provider’s dashboard" style={{ padding: 0 }}>
       {hooked.map((c) => {
@@ -590,8 +592,8 @@ function AllowDialog({ list, onClose, onDone }: { list: string[]; onClose: () =>
   );
 }
 
-const ICON: Record<string, IconName> = {
-  sms: 'messages', email: 'mail', whatsapp: 'messages', push: 'notifications',
+const ICON: Record<string, string> = {
+  sms: 'M4 5h16v11H9l-5 4z', email: 'M4 6h16v12H4zM4 7l8 6 8-6', whatsapp: 'M4 5h16v11H9l-5 4z', push: 'M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0',
 };
 
 /** Texts and emails that would have gone out while messages are in sandbox: where a tester reads the codes and receipts. */
@@ -602,13 +604,13 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
   const rows = msgs.data ?? [];
   return (
     <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
-      {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} />
+      {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 18 }} />
         : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
           : rows.map((m) => (
             <div key={m.id} className="kv" style={{ alignItems: 'flex-start' }}>
               <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>
-                <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--brand-soft)', color: 'var(--brand-ink)' }}>
-                  <Icon name={ICON[m.channel] ?? ICON.sms} size={16} />
+                <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--vS)', color: 'var(--vD)' }}>
+                  <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path className="i" d={ICON[m.channel] ?? ICON.sms}></path></svg>
                 </span>
                 <span style={{ minWidth: 0 }}>
                   <b style={{ display: 'block', textAlign: 'left' }}>{m.subject ?? m.to}</b>

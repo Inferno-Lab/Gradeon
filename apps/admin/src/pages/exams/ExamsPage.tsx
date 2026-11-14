@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, Segmented, Select, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, EmptyCard, Field, Segmented, Select, SelectField, TimeField, useShake } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
@@ -36,7 +36,7 @@ export function ExamsPage() {
         {open && !changing && <ExamSheet id={open} onClose={() => setOpen(null)} onChange={(e) => setChanging(e)} onChanged={(m) => { refresh(qc); if (m) say(m); }} onRemoved={() => { setOpen(null); refresh(qc); say('Exam removed.'); }} />}
       </>}>
       {rows.length === 0 ? (
-        <div><EmptyState scene="exams" onAction={canWrite ? () => setCreating(true) : undefined} /></div>
+        <div><EmptyCard title="Exams" chip={{ text: '0 exams', tone: 'v' }} scene="checklist" heading="No exams yet" body="Add an exam for a class with its subjects and dates. Teachers enter marks here, and you publish the results to families." actions={canWrite ? <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn> : undefined} /></div>
       ) : (
         <div className="exb">
           {groups.map((g) => (
@@ -203,14 +203,14 @@ function ExamSheet({ id, onClose, onChange, onChanged, onRemoved }: { id: string
   const editable = canWrite && ex?.status !== 'published';
   return (
     <Dialog title={ex ? ex.name : 'Exam'} tag={ex ? { text: `Class ${ex.className} · ${LABEL[ex.status]}`, tone: ex.status === 'published' ? 'g' : 'v' } : undefined} onClose={onClose} width={860} shake={shake.cls}>
-      {!m || !ex ? <div className="skc" style={{ height: 280, borderRadius: 16 }} /> : (
+      {!m || !ex ? <div className="skc" style={{ height: 280, borderRadius: 18 }} /> : (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '4px 0 12px' }}>
             <Segmented value={tab} onChange={setTab} label="Exam view" options={[{ value: 'marks', label: 'Marks' }, { value: 'results', label: 'Results' }]} />
             <span className="chip">{ex.entered} of {ex.expected} marks entered</span>
           </div>
           {tab === 'marks' ? (
-            <div className="lscroll" ref={grid} style={{ maxHeight: 'min(50dvh,440px)', border: '1px solid var(--line)', borderRadius: 16 }}>
+            <div className="lscroll" ref={grid} style={{ maxHeight: 'min(50dvh,440px)', border: '1px solid var(--line)', borderRadius: 18 }}>
               <div style={{ minWidth: 120 + ex.subjects.length * 96 + 220 }}>
                 <div className="mkh" style={{ '--n': ex.subjects.length } as React.CSSProperties}>
                   <span>Roll</span><span>Student</span>
@@ -237,14 +237,14 @@ function ExamSheet({ id, onClose, onChange, onChanged, onRemoved }: { id: string
               </div>
             </div>
           ) : (
-            !results.data ? <div className="skc" style={{ height: 240, borderRadius: 16 }} /> : results.data.rows.length === 0 ? <div className="help" style={{ padding: 16 }}>Results appear here as marks are entered.</div> : (
+            !results.data ? <div className="skc" style={{ height: 240, borderRadius: 18 }} /> : results.data.rows.length === 0 ? <div className="help" style={{ padding: 16 }}>Results appear here as marks are entered.</div> : (
               <>
                 <div className="tgrow" style={{ marginBottom: 10 }}><span className="chip v">Average {results.data.average}%</span><span className="chip g">{results.data.passPct}% passed</span><span className="chip">{results.data.rows.length} students</span></div>
-                <div className="lscroll" style={{ maxHeight: 'min(46dvh,400px)', border: '1px solid var(--line)', borderRadius: 16 }}>
+                <div className="lscroll" style={{ maxHeight: 'min(46dvh,400px)', border: '1px solid var(--line)', borderRadius: 18 }}>
                   <div style={{ minWidth: 520 }}>
                     {results.data.rows.map((r) => (
                       <div className="grd rw" key={r.studentId} style={{ '--cols': '44px minmax(0,1.6fr) 90px 70px 60px' } as React.CSSProperties}>
-                        <b className="num" style={{ font: '700 14px var(--fb)', color: r.rank <= 3 ? 'var(--brand)' : 'var(--ink3)' }}>#{r.rank}</b>
+                        <b className="num" style={{ font: '700 14px var(--fb)', color: r.rank <= 3 ? 'var(--v)' : 'var(--ink3)' }}>#{r.rank}</b>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}><Avatar name={r.name} size={28} /><b data-tip={r.name} style={{ font: '700 14px var(--fb)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.name}</b></span>
                         <span className="num" style={{ font: '600 13px var(--fb)' }}>{r.total} / {r.max}</span>
                         <b className="num" style={{ font: '700 14px var(--fb)' }}>{r.pct}%</b>

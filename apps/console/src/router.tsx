@@ -1,5 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { reportErrors } from '@gradeon/web-ui';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { reportErrors, useThemeColors } from '@gradeon/web-ui';
 import { Outlet, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useRouter } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { AppContext, type AppCtx } from './app/context';
@@ -11,8 +11,14 @@ import { BASE } from './app/base';
 import { AppLayout } from './app/Layout';
 import { PAGES } from './app/nav';
 
-// Every console page, sign-in included, wears the console's seed (cobalt), which hue.css carries.
-const root = createRootRoute({ component: Outlet, notFoundComponent: NotFoundPage });
+/** Every console page, sign-in included, wears the console's own colours (set under Team → Colours). */
+function Root() {
+  const theme = useQuery({ queryKey: ['console-theme'], queryFn: () => client.api.theme.get(), staleTime: 5 * 60_000, retry: false });
+  useThemeColors(theme.data);
+  return <Outlet />;
+}
+
+const root = createRootRoute({ component: Root, notFoundComponent: NotFoundPage });
 const login = createRoute({ getParentRoute: () => root, path: '/login', component: LoginRoute });
 const join = createRoute({ getParentRoute: () => root, path: '/join', component: JoinPage });
 

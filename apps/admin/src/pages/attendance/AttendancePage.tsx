@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { addDays, dayLabel, type AttendanceStatus } from '@gradeon/contracts';
-import { DateField, EmptyCard, EmptyState, Icon, Segmented, Select } from '@gradeon/web-ui';
+import { DateField, EmptyCard, Segmented, Select, tintFor } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useSetting } from '../../app/kit';
 import { Page, useToast } from '../../app/Page';
@@ -11,9 +11,8 @@ import { useApprovalList } from '../approvals/ApprovalList';
 import { PeriodGrid } from './PeriodGrid';
 
 /** Every mark there is; the school uses the ones Gradeon chose for it (console: Attendance → marks). */
-// The roll call's letters and their status colour, as the Attendance board (design/hue/src/Attendance.html).
-const MARKS: Record<AttendanceStatus, { label: string; cls: string; key: string }> = {
-  present: { label: 'Present', cls: 'ok', key: 'P' }, late: { label: 'Late', cls: 'warn', key: 'L' }, half_day: { label: 'Half day', cls: 'warn', key: 'H' }, leave: { label: 'On leave', cls: 'info', key: 'V' }, absent: { label: 'Absent', cls: 'bad', key: 'A' },
+const MARKS: Record<AttendanceStatus, { label: string; cls: string }> = {
+  present: { label: 'Present', cls: 'p' }, late: { label: 'Late', cls: 'l' }, half_day: { label: 'Half day', cls: 'h' }, leave: { label: 'On leave', cls: 'v' }, absent: { label: 'Absent', cls: 'a' },
 };
 const ORDER: AttendanceStatus[] = ['present', 'late', 'half_day', 'leave', 'absent'];
 
@@ -81,52 +80,71 @@ export function AttendancePage() {
           {leave.list}
         </div>
       ) : classes.data?.length === 0 ? (
-        <div><EmptyState scene="attendance" onAction={() => app.go('/year/classes')} onLink={() => app.go('/students')} /></div>
+        <div><EmptyCard title="Attendance" chip={{ text: '0 classes', tone: 'v' }} scene="calendar" heading="No classes to mark yet" body="Add students to a class first. The roll call for each class appears here every school day." actions={<button className="btn pri" onClick={() => app.go('/students')}>Add students</button>} /></div>
       ) : tab === 'periods' ? (
         classId && date ? <PeriodGrid classId={classId} date={date} say={say} /> : null
       ) : (
-        <div className="hb" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <section className="card deep" style={{ flexDirection: 'row', alignItems: 'center', gap: 40, flexWrap: 'wrap' }}>
-            <div className="vc" style={{ gap: 4 }}><span className="lbl">Present</span><span className="fig" style={{ fontSize: 44 }}>{counts.present}<small>of {marks.length}</small></span></div>
-            <div className="vc" style={{ gap: 4 }}><span className="lbl">Late</span><span className="fig" style={{ fontSize: 44, color: 'var(--warn-d)' }}>{counts.late}</span></div>
-            <div className="vc" style={{ gap: 4 }}><span className="lbl">Away</span><span className="fig" style={{ fontSize: 44, color: 'var(--bad-d)' }}>{counts.absent}</span></div>
-            <div className="vc" style={{ gap: 4 }}><span className="lbl">Not marked</span><span className="fig" style={{ fontSize: 44, color: 'var(--on-deep)' }}>{counts.none}</span></div>
-            <div className="vc grow" style={{ gap: 10, minWidth: 240 }}>
-              <div className="bar" style={{ height: 14, borderRadius: 7 }} aria-hidden="true">
-                <i style={{ flex: counts.present, minWidth: 0, background: 'var(--bright)' }} /><i style={{ flex: counts.late, minWidth: 0, background: 'var(--warn-d)' }} />
-                <i style={{ flex: counts.absent, minWidth: 0, background: 'var(--bad-d)' }} /><i style={{ flex: counts.none, minWidth: 0, background: 'var(--deep3)' }} />
-              </div>
-              <span style={{ fontSize: 14, lineHeight: '20px', color: 'var(--on-deep2)' }}>{!canMark ? 'You can look at attendance but not change it. Ask the school office for the roll-call permission.' : changed ? `${changed} ${changed === 1 ? 'change' : 'changes'} not saved yet.` : day.data?.submitted ? 'Submitted. Tap a letter to correct it, then save.' : counts.none ? `${counts.none} still to mark before you save.` : 'Everyone is marked. Save to send it.'}</span>
+        <section className="grid">
+          <div className="card tbl rcall s12 rise" style={{ padding: 0 }}>
+            <div className="ch" style={{ padding: '24px 24px 16px' }}>
+              <h2>Roll call</h2>
+              <span className={`chip ${day.data?.submitted ? 'g' : 'a'}`}>{day.data?.submitted ? 'Submitted' : 'Not submitted yet'}</span>
+              {canMark && marks.length > 0 && <button className="btn sm" onClick={() => setDraft(Object.fromEntries(marks.filter((m) => !m.onLeave && statusOf(m.studentId, m.status) !== 'present').map((m) => [m.studentId, 'present' as const])))}>Mark everyone present</button>}
             </div>
-            {canMark && (
-              <div className="fx" style={{ gap: 8, flexWrap: 'wrap' }}>
-                {marks.length > 0 && <button className="btn ond" onClick={() => setDraft(Object.fromEntries(marks.filter((m) => !m.onLeave && statusOf(m.studentId, m.status) !== 'present').map((m) => [m.studentId, 'present' as const])))}><Icon name="check" className="i" />Mark all present</button>}
-                {changed > 0 && <button className="btn ond" onClick={() => setDraft({})}>Discard</button>}
-                <button className="btn bri" disabled={!changed || save.isPending} onClick={() => save.mutate()}><Icon name="check" className="i" />{save.isPending ? 'Saving…' : 'Save roll'}</button>
+            {day.isLoading && <div className="skc" style={{ height: 320, margin: '0 20px 20px', borderRadius: 18 }} />}
+            {!day.isLoading && marks.length === 0 && <div style={{ padding: '0 24px 24px' }}><EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} scene="register" heading="No students in this class" body="Students appear here once they are added to the class." /></div>}
+            {marks.length > 0 && (
+              <div className="scroll-x" data-fill="">
+                {marks.map((m) => {
+                  const t = tintFor(m.name);
+                  const s = statusOf(m.studentId, m.status);
+                  return (
+                    <div className="grd rw" key={m.studentId} style={{ '--cols': '36px minmax(0,1fr) auto' } as React.CSSProperties}>
+                      <span className="rn num">{m.rollNo || '–'}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                        <span className="av" style={{ width: 34, height: 34, fontSize: 11, background: t.bg, color: t.fg, boxShadow: 'none', flex: 'none' }}>{m.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>
+                        <b style={{ font: '700 14px var(--fb)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</b>
+                        {m.onLeave && <span className="chip v" data-tip="The office approved leave for this day">On leave</span>}
+                      </span>
+                      <span className="mk" role="group" aria-label={`Attendance for ${m.name}`}>
+                        {options.map((o) => (
+                          <button key={o.value} className={o.cls} aria-pressed={s === o.value} disabled={!canMark} onClick={() => setDraft({ ...draft, [m.studentId]: o.value })}>{o.label}</button>
+                        ))}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </section>
-          {day.isLoading && <div className="skc" style={{ height: 320, borderRadius: 16 }} />}
-          {!day.isLoading && marks.length === 0 && <EmptyCard title={`Class ${cls?.name ?? ''}`} chip={{ text: '0 students', tone: 'v' }} icon="people" heading="No students in this class" body="Students appear here once they are added to the class." />}
-          {marks.length > 0 && (
-            <div className="g" style={{ gridTemplateColumns: `repeat(auto-fill,minmax(min(${options.length > 3 ? 300 : 260}px,100%),1fr))`, gap: 8 }}>
-              {marks.map((m) => {
-                const s = statusOf(m.studentId, m.status);
-                return (
-                  <div className="cell" key={m.studentId}>
-                    <b className="grow cut" style={{ fontSize: 14, fontWeight: 600 }} data-tip={m.onLeave ? `${m.name}\nOn leave: the office approved it` : undefined}>{m.name}</b>
-                    <span className="fx" role="group" aria-label={`Attendance for ${m.name}`} style={{ gap: 4 }}>
-                      {options.map((o) => (
-                        <button key={o.value} className={`pk ${s === o.value ? o.cls : ''}`} aria-label={o.label} aria-pressed={s === o.value} data-tip={o.label} disabled={!canMark} onClick={() => setDraft({ ...draft, [m.studentId]: o.value })}>{o.key}</button>
-                      ))}
-                    </span>
-                  </div>
-                );
-              })}
+          </div>
+          {/* The count and the save button share one tile, so the row above the roll call is one even block. */}
+          <div className="tile t-v s12 rise" style={{ '--d': '.08s', order: -1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: '16px 32px', alignItems: 'center' } as React.CSSProperties}>
+            <div style={{ minWidth: 0 }}>
+              <span className="lbl">Present or late</span>
+              <div className="big" style={{ marginTop: 8 }}>{counts.present + counts.late}<small style={{ fontSize: 17, opacity: .6 }}> / {marks.length}</small></div>
+              <div className="meter" aria-hidden="true">
+                <i style={{ flex: counts.present || 0.001, background: 'var(--present)' }}></i>
+                <i style={{ flex: counts.late || 0.001, background: 'var(--a)' }}></i>
+                <i style={{ flex: counts.absent || 0.001, background: 'var(--c)' }}></i>
+                <i style={{ flex: counts.none || 0.001, background: 'var(--sunk)' }}></i>
+              </div>
+              <div className="tgrow" style={{ marginTop: 12, font: '700 13px var(--fb)' }}>
+                <span>{counts.present} present</span><span>{counts.late} late</span><span>{counts.absent} away</span>{counts.none > 0 && <span>{counts.none} not marked</span>}
+              </div>
             </div>
-          )}
-          <div className="fx t2" style={{ gap: 8, fontSize: 14 }}><Icon name="messages" className="i" />Families of absent students are told when you save. A late mark does not send a message.</div>
-        </div>
+            {canMark ? (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ font: '600 14px var(--fb)', opacity: .85, marginBottom: 12 }}>{changed ? `${changed} ${changed === 1 ? 'change' : 'changes'} not saved yet.` : 'Tap a name’s status to change it, then save.'}</div>
+                <div className="tgrow">
+                  <button className="btn pri" disabled={!changed || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save roll call'}</button>
+                  {changed > 0 && <button className="btn" onClick={() => setDraft({})}>Discard changes</button>}
+                </div>
+              </div>
+            ) : (
+              <div style={{ font: '600 14px/1.5 var(--fb)', opacity: .85 }}>You can look at attendance but not change it. Ask the school office for the roll-call permission.</div>
+            )}
+          </div>
+        </section>
       )}
     </Page>
   );

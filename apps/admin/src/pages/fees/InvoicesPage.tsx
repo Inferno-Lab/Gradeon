@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type InvoiceListQuery, type StudentDetail } from '@gradeon/contracts';
-import { EmptyCard, Segmented, Select, EmptyState } from '@gradeon/web-ui';
+import { EmptyCard, Segmented, Select } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Avatar, Ico, dateLabel, useFeeHeads, useOpenParam } from '../../app/kit';
@@ -10,7 +10,7 @@ import { InvoiceSheet } from './InvoiceSheet';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : `₹${inr(Math.round(n))}`);
 const STATUS: Record<string, { tone: string; label: string }> = { paid: { tone: 'g', label: 'Paid' }, partial: { tone: 'v', label: 'Part paid' }, due: { tone: 'a', label: 'Due' }, overdue: { tone: 'c', label: 'Overdue' } };
-const SEARCH = 'search';
+const SEARCH = 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0M20 20l-4.2-4.2';
 type Filter = 'all' | 'overdue' | 'due' | 'partial' | 'paid';
 
 export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; tabs?: React.ReactNode }) {
@@ -50,7 +50,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
         {view === 'invoices' && s && <>
           <div className="tile t-v s4 rise"><span className="lbl">Billed</span><div className="big" style={{ marginTop: 8 }}>{money(s.billed)}</div><div style={{ font: '600 13px var(--fb)', opacity: 0.8 }}>{s.count.toLocaleString('en-IN')} {s.count === 1 ? 'invoice' : 'invoices'} in view</div></div>
           <div className="tile t-a s4 rise" style={{ '--d': '.05s' } as React.CSSProperties}><span className="lbl">Collected</span><div className="big" style={{ marginTop: 8 }}>{money(s.collected)}</div><div style={{ font: '600 13px var(--fb)', opacity: 0.75 }}>{s.billed ? Math.round((s.collected / s.billed) * 100) : 0}% of what was billed</div></div>
-          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to pay</span><div className="big" style={{ marginTop: 8, color: s.outstanding ? 'var(--bad)' : undefined }}>{money(s.outstanding)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>across the invoices in view</div></div>
+          <div className="tile t-p s4 rise" style={{ '--d': '.1s' } as React.CSSProperties}><span className="lbl">Still to pay</span><div className="big" style={{ marginTop: 8, color: s.outstanding ? 'var(--c)' : undefined }}>{money(s.outstanding)}</div><div style={{ font: '600 13px var(--fb)', color: 'var(--ink3)' }}>across the invoices in view</div></div>
         </>}
         <div className="card tbl s12 rise" style={{ '--d': '.14s', padding: 0 } as React.CSSProperties}>
           <div className="ch" style={{ padding: '24px 24px 6px', flexWrap: 'wrap', rowGap: 12 }}>
@@ -65,7 +65,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
           )}
           {view === 'invoices' ? (
             (inv.data?.items.length ?? 0) === 0 ? (
-              !(term || status !== 'all' || head) ? <div style={{ padding: '0 24px 24px' }}><EmptyState scene="invoices" label="Set up the fee structure" onAction={() => app.go('/fees/structure')} /></div> : <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Invoices" chip={{ text: '0', tone: 'v' }} icon="search" heading={term || status !== 'all' || head ? 'No invoice matches' : 'Nothing has been billed yet'} body={term || status !== 'all' || head ? 'Try another word or clear the filters.' : 'Assign a fee from the Students page and the invoices appear here.'} actions={term || status !== 'all' || head ? <button className="btn" onClick={() => { setQ(''); setStatus('all'); setHead(''); }}>Clear filters</button> : undefined} /></div>
+              <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Invoices" chip={{ text: '0', tone: 'v' }} scene={term || status !== 'all' || head ? 'search-paper' : 'receipt'} heading={term || status !== 'all' || head ? 'No invoice matches' : 'Nothing has been billed yet'} body={term || status !== 'all' || head ? 'Try another word or clear the filters.' : 'Assign a fee from the Students page and the invoices appear here.'} actions={term || status !== 'all' || head ? <button className="btn" onClick={() => { setQ(''); setStatus('all'); setHead(''); }}>Clear filters</button> : undefined} /></div>
             ) : (
               <>
                 <div className="scroll-x lscroll" data-fill="">
@@ -92,7 +92,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
               </>
             )
           ) : (rec.data?.items.length ?? 0) === 0 ? (
-            <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Receipts" chip={{ text: '0', tone: 'v' }} icon="invoices" heading={term ? 'No receipt matches' : 'No payments yet'} body={term ? 'Check the spelling or the receipt number.' : 'Every payment gets a numbered receipt. They are listed here, newest first.'} /></div>
+            <div style={{ padding: '0 24px 24px' }}><EmptyCard title="Receipts" chip={{ text: '0', tone: 'v' }} scene="receipt" heading={term ? 'No receipt matches' : 'No payments yet'} body={term ? 'Check the spelling or the receipt number.' : 'Every payment gets a numbered receipt. They are listed here, newest first.'} /></div>
           ) : (
             <div className="scroll-x lscroll" data-fill="">
               <div style={{ minWidth: 720 }}>

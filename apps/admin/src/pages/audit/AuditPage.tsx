@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { useToast, EmptyState } from '@gradeon/web-ui';
+import { EmptyCard, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page } from '../../app/Page';
 
 /** Who changed what at the school, newest first. */
 export function AuditPage() {
-  const app = useApp();
-  const { api } = app;
+  const { api } = useApp();
   const { toast } = useToast();
   const q = useQuery({ queryKey: ['settings-audit'], queryFn: api.settings.audit });
   const rows = q.data ?? [];
@@ -14,7 +13,8 @@ export function AuditPage() {
     <Page title="Audit log" sub="The latest changes made by people at your school" toast={toast} loading={q.isLoading}
       error={q.isError && !q.data ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}>
       {!rows.length ? (
-        <EmptyState scene="audit" onAction={() => app.go('/')} />
+        <EmptyCard title="Audit log" chip={{ text: '0 entries', tone: 'v' }} scene="checklist" heading="Nothing has been changed yet"
+          body="Every change to students, fees, attendance, notices and approvals is written here, with who made it and when." />
       ) : (
         <div className="card" style={{ padding: 0 }}>
           {rows.map((r) => (

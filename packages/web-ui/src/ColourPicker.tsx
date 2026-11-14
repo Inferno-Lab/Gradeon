@@ -1,4 +1,3 @@
-import { Icon } from './Icon';
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { Pop } from './Menu';
 
@@ -118,7 +117,7 @@ export function ColourPicker({ value, onChange, label, alpha = true }: { value: 
         {Dropper && (
           <button type="button" className="mini" aria-label="Pick a colour from the screen" data-tip="Pick from the screen"
             onClick={() => void new Dropper().open().then((res) => put(fromHex(parseColour(res.sRGBHex) ?? toHex(c), c.h))).catch(() => undefined)}>
-            <Icon name="edit" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d="M14.5 5.5l4 4M17 3l4 4-3 3-4-4zM14 7l-9 9-1 4 4-1 9-9" /></svg>
           </button>
         )}
       </div>

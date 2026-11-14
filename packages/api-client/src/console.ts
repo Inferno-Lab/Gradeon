@@ -1,6 +1,6 @@
 import type {
   ActionRequest, ActionRow, LoginChallenge, AuditRow, BackupRow, RestoreDrillRow, ChangeRequestRow, ConfigPatch, ConfigTemplateRow, EffectiveConfig, RoleDef, RoleDefSave, SchoolConfig, BlueprintInput, BlueprintRow, BuildRow, ConsoleLoginResponse, ConsoleTokens, ConsoleUserRow, ErrorGroup, FleetSummary, FlagRow, InvoiceRowC, LoginRequest,
-  CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, DataRequestAcross, MigrationRow, PlanRow, PlanSave, SubprocessorRow, RoleTemplate, SchoolDetailsPatch, PolicyDoc, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
+  CellCreate, CellPatch, ComplianceCreate, ComplianceRow, ComplianceUpdate, DataRequestAcross, MigrationRow, PlanRow, PlanSave, SubprocessorRow, RoleTemplate, SchoolDetailsPatch, PolicyDoc, ThemeColors, ProvisionRunRow, ReleaseRow, SandboxMessage, SchoolDetail, SchoolRow, StepKey, SupportSessionRow, SupportToken, VerifyRequest, WizardDraftRow,
   WizardPayload, WizardReview, EntitlementRow, ImportBatchRow, ImportInput, ImportPreview, MigrationView, ReadinessMark, UploadRow,
   ActivityQuery, ActivityView, ConnectionInput, ConnectionPatch, HookEventRow, IntegrationsView, JobRow, RouteInput as IntRouteInput, TemplateInput } from '@gradeon/contracts';
 import type { Http } from './http';
@@ -107,6 +107,7 @@ export function consoleApi(h: Http) {
       activate: (id: string) => h.post<void>(`${base}/blueprints/${id}/activate`),
     },
     policy: { get: () => h.get<PolicyDoc>(`${base}/policy`), set: (b: PolicyDoc) => h.put<PolicyDoc>(`${base}/policy`, b) },
+    theme: { get: () => h.get<ThemeColors>(`${base}/theme`), set: (b: ThemeColors) => h.put<ThemeColors>(`${base}/theme`, b) },
     roleTemplates: { get: () => h.get<RoleTemplate[]>(`${base}/role-templates`), set: (b: RoleTemplate[]) => h.put<RoleTemplate[]>(`${base}/role-templates`, b) },
     actions: {
       list: () => h.get<ActionRow[]>(`${base}/actions`),

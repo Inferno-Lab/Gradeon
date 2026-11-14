@@ -135,9 +135,11 @@ export class MeController {
   @Public() @Get('brand')
   async brand(@Tenant() t: TenantCtx): Promise<SchoolBrand> {
     const cfg = await this.settings.effective(t);
+    // The web admin wears the school's chosen colours (theme); the app works out its Hue palette from the brand colour.
+    const theme = (cfg.settings['theme.colors'] ?? {}) as SchoolBrand['theme'];
     const hue = hueOf(cfg.school.color || DEFAULT_BRAND);
     return {
-      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, hue, palette: { light: hueTokens(hue, 'light'), dark: hueTokens(hue, 'dark'), amoled: hueTokens(hue, 'amoled') },
+      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, theme, hue, palette: { light: hueTokens(hue, 'light'), dark: hueTokens(hue, 'dark'), amoled: hueTokens(hue, 'amoled') },
       privacy: cfg.privacy,
     };
   }

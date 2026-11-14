@@ -1,5 +1,3 @@
-import type { IconName } from './Icon';
-import { Icon } from './Icon';
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { Select } from './Select';
 
@@ -9,12 +7,12 @@ export function useShake(): { cls: string; hit: () => void } {
   return { cls: n ? `shk${n}` : '', hit: () => setN((x) => (x === 1 ? 2 : 1)) };
 }
 
-const WARN = 'warning';
+const WARN = 'M12 3.5l9 15.5H3zM12 10v4M12 16.5h.01';
 
 export function ErrorLine({ children }: { children: ReactNode }) {
   return (
     <div className="emsg" role="alert">
-      <Icon name={WARN} />
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={WARN}></path></svg>
       {children}
     </div>
   );
@@ -28,7 +26,7 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChan
   onChange: (v: string) => void;
   error?: string;
   hint?: string;
-  icon?: IconName;
+  icon?: string;
 }
 
 /** A labelled input. The error turns it red, makes it vibrate, and says what to do. */
@@ -38,7 +36,7 @@ export function Field({ label, value, onChange, error, hint, icon, ...rest }: Fi
     <div className="fld">
       <label htmlFor={id}>{label}</label>
       <div className={`inp ${error ? 'err shake' : ''}`}>
-        {icon && <Icon name={icon} />}
+        {icon && <svg viewBox="0 0 24 24" aria-hidden="true"><path className="i" d={icon}></path></svg>}
         <input id={id} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} aria-describedby={error || hint ? `${id}-m` : undefined} {...rest} />
       </div>
       {error ? <div id={`${id}-m`}><ErrorLine>{error}</ErrorLine></div> : hint ? <div id={`${id}-m`} className="help">{hint}</div> : null}
@@ -73,7 +71,7 @@ export function AreaField({ label, value, onChange, error, hint, rows = 4, ...re
     <div className="fld">
       <label htmlFor={id}>{label}</label>
       <div className={`inp ${error ? 'err shake' : ''}`} style={{ height: 'auto', alignItems: 'stretch' }}>
-        <textarea id={id} className="ta" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} style={{ padding: '12px 0', resize: 'vertical', width: '100%', font: '400 15px/1.5 var(--fb)' }} {...rest} />
+        <textarea id={id} className="ta" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={!!error} style={{ padding: '12px 0', resize: 'vertical', width: '100%', font: '500 15px/1.5 var(--fb)' }} {...rest} />
       </div>
       {error ? <div className="emsg" role="alert">{error}</div> : hint ? <div className="help">{hint}</div> : null}
     </div>

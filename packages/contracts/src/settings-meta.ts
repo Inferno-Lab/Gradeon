@@ -3,7 +3,7 @@ import type { SettingKey } from './config.js';
 /** How the console edits a setting. The console builds its Configuration forms from this list, so a new setting needs no new screen. */
 export type SettingKind =
   | 'text' | 'textarea' | 'number' | 'bool' | 'enum' | 'color' | 'time' | 'date' | 'language'
-  | 'multi' | 'appRoles' | 'appLayout' | 'notifyRules' | 'templates' | 'classes' | 'logo'
+  | 'multi' | 'appRoles' | 'appLayout' | 'notifyRules' | 'templates' | 'classes' | 'theme' | 'logo'
   | 'houses' | 'categories' | 'strings' | 'gradingScale';
 
 export interface SettingMeta {
@@ -39,7 +39,8 @@ export const SETTINGS_META: Record<SettingKey, SettingMeta> = {
   'school.language': { group: 'School identity', label: 'Default language', kind: 'language', options: LANGUAGES },
   'brand.logoText': { group: 'School identity', label: 'Logo letters', kind: 'text', help: 'One or two letters, until a logo image is uploaded.' },
   'brand.logoFileId': { group: 'School identity', label: 'Logo image', kind: 'logo', help: 'A square PNG or JPEG. Shown in the admin menu, on the sign-in pages, receipts and the app.' },
-  'brand.color': { group: 'Look', label: 'Brand colour', kind: 'color', help: 'Every colour of the school’s admin, sign-in pages and app is worked out from this colour’s hue (Gradeon Hue), in light, dark and AMOLED. Any colour reads well: the contrast is checked for every hue.' },
+  'brand.color': { group: 'Look', label: 'Brand colour', kind: 'color', help: 'The school’s mark in the admin menu, on its sign-in pages and in the app.' },
+  'theme.colors': { group: 'Look', label: 'Colours', kind: 'theme', help: 'Every colour of the school’s admin and app, in light and dark. A colour left alone keeps the design’s default; a changed base colour carries its fills and text along unless those are changed too.' },
   'app.roles': { group: 'The app', label: 'Who uses the app', kind: 'appRoles', help: 'A role that is off cannot sign in to the app and is told to ask the school. Staff always have the admin.' },
   'app.layout': { group: 'The app', label: 'What each role sees', kind: 'appLayout', help: 'For each role: up to four bottom tabs (Profile is always added last), the Home cards and the quick buttons, in order. Only what the school’s modules offer that role can be chosen.' },
   'app.languages': { group: 'The app', label: 'Languages offered', kind: 'multi', options: LANGUAGES, help: 'The app’s language choices. Someone who picked one taken away gets the school’s default.' },

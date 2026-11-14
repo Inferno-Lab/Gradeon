@@ -5,7 +5,7 @@ import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
 import { curve, initials, statusOf } from '../../app/format';
-import { FleetHue } from './FleetHue';
+import { FleetView } from './fleet.view';
 
 const TICKS = 60;
 const STATE: Record<string, string> = { draft: 'Ready to start', rolling: 'Rolling out', paused: 'Paused', halted: 'Halted', done: 'Finished', rolled_back: 'Rolled back' };
@@ -35,7 +35,7 @@ export function FleetPage() {
     return (
       <PageScope page="fleet">
         <main className="mn"><header className="hd"><div><h1>Fleet</h1></div></header>
-          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="warning" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
+          <div><EmptyCard error title="Fleet" chip={{ text: 'Couldn’t load', tone: 'c' }} scene="plug" heading="That didn’t load" body={(fleet.error as Error).message} actions={<button className="btn pri" onClick={() => void fleet.refetch()}>Try again</button>} /></div>
         </main>
       </PageScope>
     );
@@ -81,7 +81,7 @@ export function FleetPage() {
     const pct = c.max ? Math.round((c.schools / c.max) * 100) : 0;
     const bad = here.some((s) => s.health === 'degraded' || s.health === 'down');
     const upd = here.some((s) => prevOf.get(s.id)?.state === 'rolling');
-    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--warn)' } : upd ? { t: 'Updating', c: 'v', col: 'var(--brand)' } : { t: 'Healthy', c: 'g', col: 'var(--ok)' };
+    const st = bad ? { t: 'Elevated', c: 'a', col: 'var(--a)' } : upd ? { t: 'Updating', c: 'v', col: 'var(--v)' } : { t: 'Healthy', c: 'g', col: 'var(--g)' };
     return { n: `Cell ${c.key}`, s: c.schools, p: pct, st: st.t, cc: st.c, col: st.col, off: (138 * (1 - Math.min(100, pct) / 100)).toFixed(1), href: url('/cells'), open: (e: React.MouseEvent) => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); app.go('/cells'); } };
   });
   // The newest few; the whole list, with search and filters, is the Schools page.
@@ -113,7 +113,7 @@ export function FleetPage() {
     hasRelease: !!rel, done, total, ticks: Array.from({ length: TICKS }, (_, k) => ({ c: k < on - 1 ? 'on' : k === on - 1 && rolling ? 'now' : k < on ? 'on' : '' })),
     waves: (rel?.waves ?? []).map((w) => ({ c: w.status === 'done' ? 'd' : w.status === 'rolling' || w.status === 'halted' ? 'c' : '' })),
     canPause: !!live && rel?.status !== 'halted', canRollback: !!live, relCta: rel ? 'Open releases' : 'Create a release', busy: pause.isPending || rollback.isPending,
-    pauseLabel: paused ? 'Resume wave' : 'Pause wave', pauseIc: paused ? 'play' : 'pause',
+    pauseLabel: paused ? 'Resume wave' : 'Pause wave', pauseIc: paused ? 'M7 4l12 8-12 8z' : 'M7 5h4v14H7zM13 5h4v14h-4z',
     pause: () => rel && pause.mutate({ id: rel.id, paused: !paused }), rollback: () => setConfirm(true),
     live: f.live, newThisMonth: (schools.data ?? []).filter((s) => s.createdAt.startsWith(month)).length,
     soon: f.onboarding ? `${f.onboarding} ${f.onboarding === 1 ? 'is' : 'are'} still being set up` : 'None waiting to start',
@@ -156,5 +156,5 @@ export function FleetPage() {
       </Dialog>
     ) : null,
   };
-  return <FleetHue v={{ ...v, openApprovals: () => app.go('/approvals'), schoolHref: (id: string) => url(`/schools/${id}`), goSchool: (id: string) => app.go(`/schools/${id}`) }} f={f} schools={schools.data ?? []} actions={chrome.actions?.data ?? []} />;
+  return <FleetView v={v} />;
 }

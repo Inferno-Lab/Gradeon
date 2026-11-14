@@ -1,6 +1,6 @@
 import { pageForPath } from '@gradeon/config-engine';
 import type { MenuGroup, ShellData } from '@gradeon/contracts';
-import { IC, type PageIcon, type NavGroup } from '@gradeon/web-ui';
+import { IC, type NavGroup } from '@gradeon/web-ui';
 
 /**
  * The menu comes from the server (`ShellData.menu`), built from the module definitions in config-engine: the modules the school
@@ -13,7 +13,7 @@ export function adminNav(menu: MenuGroup[], base: string, badges?: ShellData['ba
   };
   return menu.map((g) => ({
     name: g.group,
-    items: g.pages.map((p) => ({ id: p.id, label: p.label, icon: (p.icon in IC ? p.icon : 'dashboard') as PageIcon, keys: p.keys, href: `${base}${p.href === '/' ? '' : p.href}` || '/', count: count(p.id) })),
+    items: g.pages.map((p) => ({ id: p.id, label: p.label, icon: IC[p.icon as keyof typeof IC] ?? IC.dash, keys: p.keys, href: `${base}${p.href === '/' ? '' : p.href}` || '/', count: count(p.id) })),
   }));
 }
 

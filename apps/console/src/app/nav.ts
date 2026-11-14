@@ -1,27 +1,27 @@
-import type { NavGroup, PageIcon } from '@gradeon/web-ui';
+import { IC, type NavGroup } from '@gradeon/web-ui';
 import type { ConsolePermission } from '@gradeon/contracts';
 import { url } from './base';
 
 export interface Tab { key: string; label: string; needs?: ConsolePermission }
-interface Def { id: string; label: string; icon: PageIcon; keys: string; to: string; needs?: ConsolePermission; tabs?: Tab[] }
+interface Def { id: string; label: string; icon: keyof typeof IC; keys: string; to: string; needs?: ConsolePermission; tabs?: Tab[] }
 
 /** The console menu, grouped by what is being worked on (docs/product-map.md §4.1). A page's tabs each have an address. */
 export const DEFS: { name: string; items: Def[] }[] = [
   { name: 'Schools', items: [
     { id: 'fleet', label: 'Fleet', icon: 'fleet', keys: 'G F', to: '/' },
-    { id: 'onb', label: 'Onboarding', icon: 'onboarding', keys: 'G O', to: '/onboarding' },
-    { id: 'req', label: 'Requests', icon: 'requests', keys: 'G Q', to: '/requests' },
-    { id: 'sup', label: 'Support sessions', icon: 'support', keys: 'G S', to: '/support', needs: 'support.access' },
+    { id: 'onb', label: 'Onboarding', icon: 'onb', keys: 'G O', to: '/onboarding' },
+    { id: 'req', label: 'Requests', icon: 'inbox', keys: 'G Q', to: '/requests' },
+    { id: 'sup', label: 'Support sessions', icon: 'sup', keys: 'G S', to: '/support', needs: 'support.access' },
   ] },
   { name: 'Product', items: [
-    { id: 'mod', label: 'Plans and modules', icon: 'modules', keys: 'G M', to: '/modules', tabs: [{ key: 'schools', label: 'Schools' }, { key: 'plans', label: 'Plans' }, { key: 'planned', label: 'Planned' }] },
-    { id: 'bp', label: 'Blueprints', icon: 'blueprints', keys: 'G P', to: '/blueprints' },
-    { id: 'flag', label: 'Flags', icon: 'flags', keys: 'G L', to: '/flags' },
+    { id: 'mod', label: 'Plans and modules', icon: 'mod', keys: 'G M', to: '/modules', tabs: [{ key: 'schools', label: 'Schools' }, { key: 'plans', label: 'Plans' }, { key: 'planned', label: 'Planned' }] },
+    { id: 'bp', label: 'Blueprints', icon: 'bp', keys: 'G P', to: '/blueprints' },
+    { id: 'flag', label: 'Flags', icon: 'flag', keys: 'G L', to: '/flags' },
   ] },
   { name: 'Platform', items: [
-    { id: 'rel', label: 'Releases', icon: 'releases', keys: 'G R', to: '/releases', tabs: [{ key: 'releases', label: 'Releases' }, { key: 'rules', label: 'Rollout rules' }, { key: 'database', label: 'Database changes' }] },
-    { id: 'app', label: 'Mobile builds', icon: 'builds', keys: 'G B', to: '/builds' },
-    { id: 'int', label: 'Integrations', icon: 'integrations', keys: 'G I', to: '/integrations', needs: 'integrations.read', tabs: [
+    { id: 'rel', label: 'Releases', icon: 'rel', keys: 'G R', to: '/releases', tabs: [{ key: 'releases', label: 'Releases' }, { key: 'rules', label: 'Rollout rules' }, { key: 'database', label: 'Database changes' }] },
+    { id: 'app', label: 'Mobile builds', icon: 'app', keys: 'G B', to: '/builds' },
+    { id: 'int', label: 'Integrations', icon: 'plug', keys: 'G I', to: '/integrations', needs: 'integrations.read', tabs: [
       { key: 'connections', label: 'Connections' }, { key: 'routing', label: 'Routing' }, { key: 'templates', label: 'Approved templates' },
       { key: 'activity', label: 'Activity' }, { key: 'webhooks', label: 'Webhooks' }, { key: 'inbox', label: 'Test inbox', needs: 'sandbox.read' },
     ] },
@@ -29,13 +29,13 @@ export const DEFS: { name: string; items: Def[] }[] = [
     { id: 'health', label: 'Health', icon: 'health', keys: 'G H', to: '/health' },
   ] },
   { name: 'Business', items: [
-    { id: 'bill', label: 'Billing', icon: 'billing', keys: 'G $', to: '/billing', needs: 'billing.read' },
-    { id: 'comp', label: 'Compliance', icon: 'compliance', keys: 'G Y', to: '/compliance', tabs: [{ key: 'agreements', label: 'Agreements' }, { key: 'breaches', label: 'Breaches' }, { key: 'processors', label: 'Sub-processors' }, { key: 'requests', label: 'Data requests' }] },
+    { id: 'bill', label: 'Billing', icon: 'bill', keys: 'G $', to: '/billing', needs: 'billing.read' },
+    { id: 'comp', label: 'Compliance', icon: 'book', keys: 'G Y', to: '/compliance', tabs: [{ key: 'agreements', label: 'Agreements' }, { key: 'breaches', label: 'Breaches' }, { key: 'processors', label: 'Sub-processors' }, { key: 'requests', label: 'Data requests' }] },
   ] },
   { name: 'Console', items: [
-    { id: 'appr', label: 'Approvals', icon: 'approvals', keys: 'G A', to: '/approvals' },
+    { id: 'appr', label: 'Approvals', icon: 'appr', keys: 'G A', to: '/approvals' },
     { id: 'team', label: 'Team', icon: 'team', keys: 'G T', to: '/team' },
-    { id: 'set', label: 'Console settings', icon: 'setup', keys: 'G ,', to: '/settings', tabs: [{ key: 'rules', label: 'Rules for risky changes' }] },
+    { id: 'set', label: 'Console settings', icon: 'set', keys: 'G ,', to: '/settings', tabs: [{ key: 'colours', label: 'Colours' }, { key: 'rules', label: 'Rules for risky changes' }] },
   ] },
 ];
 
@@ -59,7 +59,7 @@ export function consoleNav(can: (p: string) => boolean, counts?: { onboarding?: 
   return DEFS.map((g) => ({
     name: g.name,
     items: g.items.filter((i) => !i.needs || can(i.needs)).map((i) => ({
-      id: i.id, label: i.label, icon: i.icon, keys: i.keys, href: url(i.to),
+      id: i.id, label: i.label, icon: IC[i.icon], keys: i.keys, href: url(i.to),
       count: i.id === 'onb' && counts?.onboarding ? String(counts.onboarding) : i.id === 'appr' && counts?.approvals ? String(counts.approvals) : i.id === 'req' && counts?.requests ? String(counts.requests) : undefined,
     })),
   })).filter((g) => g.items.length);
