@@ -55,6 +55,8 @@
 .nest .admc header b{font:700 15px var(--fd);letter-spacing:-.02em}
 .nest .admc>small{padding:0 4px 6px;color:var(--ink3);font:600 12px var(--fb)}
 .nest .admcl{display:flex;flex-direction:column;gap:10px;max-height:min(64dvh,620px);padding:2px;--scbg:var(--s2)}
+/* The column's cards sit straight on the page: no square scroll backing behind them. */
+.nest .lscroll.admcl{background:none}
 .nest .admn{padding:24px 8px;text-align:center;color:var(--ink3);font:600 13px var(--fb);border:2px dashed var(--line2);border-radius:14px}
 .nest .admk{background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--sh1);transition:transform var(--t3) var(--e),box-shadow var(--t3)}
 .nest .admk:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
@@ -71,8 +73,11 @@
 .nest .msg{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:16px;align-items:stretch}
 .nest .msl,.nest .mst{overflow:hidden}
 .nest .mti{display:flex;gap:12px;width:100%;text-align:left;padding:16px 16px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;transition:background var(--t2)}
-.nest .mti:hover{background:var(--s2)}
-.nest .mti.on{background:var(--brand-soft)}
+/* Hover and the open conversation are a rounded block inset from the list's edges, never a square band. */
+.nest .mti{position:relative;isolation:isolate}
+.nest .mti::before{content:'';position:absolute;inset:4px 8px;border-radius:16px;z-index:-1;transition:background var(--t1)}
+.nest .mti:hover::before{background:var(--s2)}
+.nest .mti.on::before{background:var(--brand-soft)}
 .nest .mti b{font:700 14px var(--fb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nest .mti small{font:600 11px var(--fb);color:var(--ink3);flex:none}
 .nest .mts{display:block;font:700 13px var(--fb);color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
