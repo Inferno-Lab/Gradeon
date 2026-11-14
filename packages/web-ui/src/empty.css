@@ -56,6 +56,7 @@
 .nest .en .ent b{font:700 14px/20px var(--fb);color:var(--ink)}
 .nest .en .ent small{font:500 13px/18px var(--fb);color:var(--ink2)}
 .nest .en .ena{flex:none;display:flex;gap:8px;flex-wrap:wrap}
+.nest * + .en{margin-top:12px}
 .nest .card[style*="padding: 0"]>.en,.nest .card[style*="padding:0"]>.en{margin:0 20px 20px}
 @media (max-width:640px){.nest .en{flex-wrap:wrap}.nest .en .ena{width:100%}}
 @media (prefers-reduced-motion:reduce){.nest .en{animation:none}}
