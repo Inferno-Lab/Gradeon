@@ -1,6 +1,7 @@
 import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 import 'package:gradeon/data/models/driver.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// A bus driver's trips: start, share where the bus is, mark each child, say it is running late, end.
 abstract class DriverRepository {
@@ -54,14 +55,14 @@ class MockDriverRepository implements DriverRepository {
   @override
   Future<String> start({required String routeId, required String kind}) => _ds.guard(() {
     final id = 'trip_${_trips.length + 1}';
-    _trips.add(BusTrip(id: id, kind: kind, startedAt: DateTime.now()));
+    _trips.add(BusTrip(id: id, kind: kind, startedAt: Clock.now()));
     return id;
   });
 
   @override
   Future<void> end(String tripId) => _ds.guard(() {
     final i = _trips.indexWhere((t) => t.id == tripId);
-    if (i >= 0) _trips[i] = BusTrip(id: tripId, kind: _trips[i].kind, startedAt: _trips[i].startedAt, endedAt: DateTime.now(), lateMinutes: _trips[i].lateMinutes);
+    if (i >= 0) _trips[i] = BusTrip(id: tripId, kind: _trips[i].kind, startedAt: _trips[i].startedAt, endedAt: Clock.now(), lateMinutes: _trips[i].lateMinutes);
   });
 
   @override

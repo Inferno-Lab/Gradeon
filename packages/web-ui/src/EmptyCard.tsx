@@ -9,6 +9,8 @@ export interface EmptyCardProps {
   chip?: { text: string; tone: 'v' | 'c' | 'a' | 'g' };
   /** The icon in the tile; an error shows the warning sign. */
   icon?: IconName;
+  /** A spot illustration of its own, when the icon's picture is not the right one. */
+  art?: Scene;
   heading: string;
   body: string;
   actions?: ReactNode;
@@ -26,14 +28,14 @@ const ART: Partial<Record<IconName, Scene>> = {
   homework: 'notebooks', checkCircle: 'checklist', calendar: 'calendar',
 };
 
-export function EmptyCard({ title, chip, icon, heading, body, actions, error, children }: EmptyCardProps) {
+export function EmptyCard({ title, chip, icon, art, heading, body, actions, error, children }: EmptyCardProps) {
   return (
     <article className={`es ${error ? 'es-err' : ''}`}>
       <div className="eh"><b>{title}</b>{chip && <span className={`chip ${chip.tone}`}>{chip.text}</span>}</div>
       <div className="eb">
         {(() => {
           const name = error ? 'warning' : icon ?? 'info';
-          const scene = ART[name];
+          const scene = error ? ART.warning : art ?? ART[name];
           return scene ? <div className="art"><Illustration scene={scene} /></div> : <span className="eic"><Icon name={name} size={24} /></span>;
         })()}
         <h3>{heading}</h3>
@@ -60,5 +62,19 @@ export function NotFoundTile({ home, onHome, onSearch }: { home: string; onHome:
       </div>
       <div style={{ position: 'relative' }}><Illustration scene="torn-page" /></div>
     </article>
+  );
+}
+
+/**
+ * The empty state of a small piece inside a page that has data: a tab's list, a card's list, a search or filter with no
+ * match. A dashed slot with an icon, what will appear here, and the next step when there is one. Never a bare grey line.
+ */
+export function EmptyNote({ icon = 'info', title, body, action }: { icon?: IconName; title: string; body?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="en" role="status">
+      <span className="eni"><Icon name={icon} size={20} /></span>
+      <span className="ent"><b>{title}</b>{body && <small>{body}</small>}</span>
+      {action && <span className="ena">{action}</span>}
+    </div>
   );
 }

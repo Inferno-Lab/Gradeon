@@ -16,6 +16,7 @@ import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// "8 A" from a class.
 String classLabel(SchoolClass c) => '${c.name.replaceAll(RegExp('[^0-9]'), '')} ${c.section}';
@@ -69,7 +70,7 @@ class TeacherHomeController extends GetxController with Loadable {
       teacher = await directory.teacher(teacherId);
       classes = await directory.classesForTeacher(teacherId);
       own = classes.where((c) => c.classTeacherId == teacherId).firstOrNull;
-      final key = weekdayKey(DateTime.now());
+      final key = weekdayKey(Clock.now());
       final periods = <TeacherPeriod>[];
       grading = [];
       leave = [];
@@ -307,7 +308,7 @@ class AssignHomeworkController extends GetxController {
   /// The next five school days, starting tomorrow.
   List<DateTime> get days {
     final out = <DateTime>[];
-    var d = DateUtils.dateOnly(DateTime.now());
+    var d = DateUtils.dateOnly(Clock.now());
     while (out.length < 5) {
       d = DateTime(d.year, d.month, d.day + 1);
       if (!isWeeklyOff(d)) out.add(d);
@@ -352,12 +353,12 @@ class AssignHomeworkController extends GetxController {
       final students = await Get.find<DirectoryRepository>().studentsIn(id);
       await Get.find<HomeworkRepository>().assign(
         Homework(
-          id: 'hw_${DateTime.now().microsecondsSinceEpoch}',
+          id: 'hw_${Clock.now().microsecondsSinceEpoch}',
           classId: id,
           subject: subject,
           title: title.text.trim(),
           description: body.text.trim(),
-          assignedOn: DateTime.now(),
+          assignedOn: Clock.now(),
           dueOn: DateTime(date.year, date.month, date.day, 20),
           teacherId: teacherId,
           maxMarks: marks.value,
@@ -648,13 +649,13 @@ class PostNoticeController extends GetxController {
       final cls = own == null ? '' : classLabel(own!);
       await Get.find<NoticeRepository>().post(
         Notice(
-          id: 'nt_${DateTime.now().microsecondsSinceEpoch}',
+          id: 'nt_${Clock.now().microsecondsSinceEpoch}',
           title: title.text.trim(),
           body: body.text.trim(),
           category: category.value,
           audience: audience.value == 'school' ? 'all' : '${audience.value}:$cls',
           pinned: pinned.value,
-          date: DateTime.now(),
+          date: Clock.now(),
           author: Get.find<AuthService>().user.value?.name ?? '',
           attachments: const [],
         ),

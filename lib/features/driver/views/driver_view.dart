@@ -12,6 +12,7 @@ import 'package:gradeon/data/models/driver.dart';
 import 'package:gradeon/features/driver/controllers/driver_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// The driver's Home and Trips: today's routes, start a trip, mark each child at their stop, say the bus is late, end the trip.
 class DriverView extends GetView<DriverController> {
@@ -25,7 +26,7 @@ class DriverView extends GetView<DriverController> {
         dockPage: true,
         onRefresh: controller.load,
         children: [
-          Rise(child: PageTitle('driver.title', subtitle: DateFormat('EEEE d MMMM').format(DateTime.now()))),
+          Rise(child: PageTitle('driver.title', subtitle: DateFormat('EEEE d MMMM').format(Clock.now()))),
           ViewStateView(
             state: controller.state.value,
             onRetry: controller.load,

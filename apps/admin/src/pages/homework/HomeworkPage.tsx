@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, istToday, type HomeworkDetail, type HomeworkFile, type HomeworkRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, NumberField, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Attach, Avatar, dateLabel, problem, useOpenParam, useSetting } from '../../app/kit';
@@ -37,10 +37,8 @@ export function HomeworkPage() {
   return (
     <Page title="Homework" sub={classId ? `Class ${classes.data?.find((c) => c.id === classId)?.name ?? ''}` : 'What has been set, and what has come back'} toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={<>
-        <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
-        {canWrite && <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn>}
-      </>}
+      filters={<Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+      actions={canWrite && <AddBtn onClick={() => setSetting(true)}>Set homework</AddBtn>}
       overlays={<>
         {setting && <SetHomework defaultClass={classId} onClose={() => setSetting(false)} onDone={(d, failed) => { setSetting(false); refresh(qc); say(failed.length ? `Homework set, but ${failed.join(', ')} could not be attached.` : 'Homework set. Families are told.', failed.length ? 'bad' : undefined); setOpen(d.id); }} />}
         {changing && <SetHomework hw={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={(_d, failed) => { setChanging(null); refresh(qc); say(failed.length ? `Saved, but ${failed.join(', ')} could not be attached.` : 'Homework changed.'); }} />}
@@ -65,7 +63,7 @@ export function HomeworkPage() {
               <div className="hwlw" style={{ minWidth: 640 }}>
                 <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>Homework</span><span>Class</span><span>Due</span><span>Handed in</span><span style={{ textAlign: 'right' }}>Count</span></div>
                 {rows.map((r) => <Row key={r.id} r={r} today={today} onOpen={() => setOpen(r.id)} />)}
-                {rows.length === 0 && <div className="help" style={{ padding: '16px 24px' }}>Nothing here with these filters.</div>}
+                {rows.length === 0 && <div style={{ padding: '4px 20px 20px' }}><EmptyNote icon="filter" title="Nothing fits these filters" body="Try another class or status, or clear the filters." /></div>}
               </div>
             </div>
           </div>

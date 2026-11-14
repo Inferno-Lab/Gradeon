@@ -9,6 +9,7 @@ import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class LibraryController extends GetxController with Loadable {
   /// Books a student may hold at once.
@@ -44,7 +45,7 @@ class LibraryController extends GetxController with Loadable {
   @override
   Future<void> load() => run(() async {
     books = await Get.find<LibraryRepository>().all();
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(Clock.now());
     final events = await Get.find<EventRepository>().all();
     // A library event coming up gets a chip in the header.
     fair =

@@ -96,9 +96,9 @@ export function TimetablePage() {
     const live = dateOf(day) === today && now >= toMin(p.starts) && now < toMin(p.ends);
     const on = at.day === day && at.period === p.idx;
     const base = { sel: on ? 'sel' : '', pressed: on ? 'true' : 'false', d: (ri * 0.04 + day * 0.03).toFixed(2), pg: live ? Math.round(((now - toMin(p.starts)) / (toMin(p.ends) - toMin(p.starts))) * 100) : 0, now: live ? 'now' : '', pick: () => setSel({ day, period: p.idx }) };
-    if (!s) return { ...base, k: 'n', n: 'Free', t: 'Not placed', r: '', bad: '', isBad: false, isFixed: false };
+    if (!s) return { ...base, k: 'n', n: 'Free', t: 'Not placed', r: '', tip: undefined, bad: '', isBad: false, isFixed: false };
     const bad = badIds.has(s.id) && !s.substituteId;
-    return { ...base, k: bad ? '' : subjectKey(s), n: s.subjectName, t: s.substituteName ?? s.teacherName, r: s.room ?? '', bad: bad ? 'bad' : '', isBad: bad, isFixed: !!s.substituteId };
+    return { ...base, k: bad ? '' : subjectKey(s), n: s.subjectName, t: s.substituteName ?? s.teacherName, r: s.room ?? '', tip: [s.subjectName, s.substituteName ?? s.teacherName, s.room].filter(Boolean).join('\n'), bad: bad ? 'bad' : '', isBad: bad, isFixed: !!s.substituteId };
   };
   const rows = data.periods.map((p, ri) => (p.kind === 'period'
     ? { brk: false, per: true, l: p.label, t: p.starts, cells: shownDays.map((d) => cellOf(d, p, ri)) }
@@ -138,7 +138,7 @@ export function TimetablePage() {
       k: badIds.has(s.id) && !s.substituteId ? 'bad' : subjectKey(s), pick: () => { setSel({ day: s.day, period: s.period }); setMode(1); },
     })),
     sel: {
-      k: selBad ? 'c' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Not placed', t: cur?.substituteName ?? cur?.teacherName ?? '–', r: cur?.room ?? '–',
+      k: selBad ? 'c' : cur ? subjectKey(cur) : 'n', ab: (cur?.subjectName ?? 'Free').slice(0, 2), n: cur?.subjectName ?? 'Free period', t: cur ? cur.substituteName ?? cur.teacherName : '', r: cur?.room ?? '',
       day: `${dayLabel(dateOf(at.day))}`, time: curDef ? `${curDef.starts} to ${curDef.ends}` : '', len: curDef ? `${toMin(curDef.ends) - toMin(curDef.starts)} min` : '',
       bad: selBad, fixedNow, fine: !!cur && !selBad && !fixedNow, other: clash ? clash.classNames.filter((n) => n !== data.className).join(', ') || 'another class' : '',
       suggest: clash?.suggestion ? clash.suggestion.teacherName.split(' ')[0] : null,
@@ -150,7 +150,7 @@ export function TimetablePage() {
     ) : null,
     fix: () => { if (cur && clash?.suggestion) cover.mutate({ slotId: cur.id, teacherId: clash.suggestion.teacherId }, { onSuccess: () => say(`Clash fixed · ${clash.suggestion!.teacherName} covers ${dayName(dateOf(at.day), true)} ${periodDef(at.period)?.label}`) }); },
     change: () => setChooser(true),
-    ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--bad)' : 'var(--brand)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '–',
+    ringOff: (226 * (1 - Math.min(1, loadNow / loadMax))).toFixed(1), ringC: loadNow > loadMax * 0.9 ? 'var(--bad)' : 'var(--brand)', kLoad: loadNow, loadMax, loadName: myLoad?.name ?? cur?.teacherName ?? '',
     loads: top.map((l) => { const c = tintFor(l.name); return { n: l.name, s: l.subjects[0] ?? 'Teacher', ini: l.name.split(' ').map((w) => w[0]).slice(0, 2).join(''), bg: c.bg, fg: c.fg, v: l.periodsPerWeek, p: Math.round((l.periodsPerWeek / l.max) * 100), hot: l.periodsPerWeek > l.max * 0.9 ? 'hot' : '' }; }),
     unplaced: data.unplaced,
     toast,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReportQuery } from '@gradeon/contracts';
-import { DateField, Select, EmptyState } from '@gradeon/web-ui';
+import { DateField, Select, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { Ico, useOpenParam } from '../../app/kit';
@@ -52,15 +52,15 @@ export function ReportsPage() {
   return (
     <Page title="Reports" sub="Numbers you can read, download or print for a meeting" toast={toast} loading={all.isLoading && !all.data}
       error={all.isError && !all.data ? { message: (all.error as Error).message, retry: () => void all.refetch() } : null}
-      actions={<>{tabs}{d && <>
+      tabs={tabs} actions={<>{d && <>
         <button className="btn" onClick={() => window.print()}><Ico d={PRINT} />Print</button>
         <button className="btn" disabled={busy} onClick={() => void download()}><Ico d={DOWNLOAD} />{busy ? 'Preparing…' : 'Download CSV'}</button>
       </>}</>}>
       {(list?.length ?? 0) === 0 ? (
         <div><EmptyState scene="reports" onAction={() => app.go('/attendance')} onLink={() => app.go('/fees')} /></div>
       ) : (
-        <section className="rpg" data-even="fill">
-          <nav className="card rpl rise" data-even-scroll="" aria-label="Reports">
+        <section className="rpg">
+          <nav className="card rpl rise" aria-label="Reports">
             {list!.map((r) => (
               <button key={r.id} className={`rpb ${r.id === pick ? 'on' : ''}`} aria-current={r.id === pick} onClick={() => open(r.id)}><b>{r.title}</b><small>{r.blurb}</small></button>
             ))}
@@ -69,7 +69,7 @@ export function ReportsPage() {
             {!d ? <div className="skc" style={{ height: 320, borderRadius: 24 }} /> : (
               <>
                 <div className="ch" style={{ padding: '24px 24px 6px', flexWrap: 'wrap', gap: 10 }}>
-                  <h2>{d.title}</h2><span className="chip v">{d.scope}</span>
+                  <h2 style={{ whiteSpace: 'nowrap' }}>{d.title}</h2><span className="chip v">{d.scope}</span>
                   <span className="grow"></span>
                   {info?.filters.includes('class') && <Select compact aria-label="Class" value={q.classId ?? ''} onChange={(v) => setQ({ ...q, classId: v || undefined })} options={[{ value: '', label: 'Whole school' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
                   {info?.filters.includes('dates') && <>
@@ -78,7 +78,7 @@ export function ReportsPage() {
                   </>}
                 </div>
                 <div className="tgrow" style={{ padding: '10px 24px 16px', gap: 8 }}>{d.summary.map((s) => <span className="chip" key={s.label}>{s.label}: <b style={{ color: 'var(--ink)' }}>{s.value}</b></span>)}</div>
-                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><div className="help">Nothing to report for this. It fills in as the school uses Gradeon.</div></div> : (
+                {d.rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><EmptyNote icon="reports" title="Nothing to report for this yet" body="It fills in as the school uses Gradeon. Try a wider date range or the whole school." /></div> : (
                   <div className="scroll-x">
                     <div style={{ minWidth: Math.max(480, d.columns.length * 96) }}>
                       <div className="grd th" style={{ '--cols': cols } as React.CSSProperties}>

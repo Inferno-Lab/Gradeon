@@ -2,7 +2,7 @@
 // Markup from design/canvas/ConsoleSchool.dc.html: classes and structure are the design's. Values come from SchoolPage.
 import { Fragment, type CSSProperties } from "react";
 import { DEFAULT_BRAND, hueOf, hueTokens } from '@gradeon/contracts';
-import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon } from "@gradeon/web-ui";
+import { MenuButton, PageScope, Presence, Select, ToastSlot, Segmented, Icon, EmptyNote } from "@gradeon/web-ui";
 import "./school.css";
 
 // The school's own deep colour, worked out from its brand colour, so its page header looks like its admin (the School board).
@@ -46,14 +46,16 @@ export function SchoolView({ v }: { v: any }) {
           <span className="slogo">
             {v.logoText}
           </span>
-          <div style={{ minWidth: "0" } as CSSProperties}>
-            <h1>{v.name}</h1>
+          <div className="ht" style={{ flexBasis: "280px" } as CSSProperties}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" } as CSSProperties}>
+              <h1>{v.name}</h1>
+              <span className={`chip ${v.stChip ?? ""}`} style={{ height: "30px" } as CSSProperties}>
+                {v.stText}
+              </span>
+            </div>
             <p>{v.subtitle}</p>
           </div>
-          <span className={`chip ${v.stChip ?? ""}`} style={{ height: "30px" } as CSSProperties}>
-            {v.stText}
-          </span>
-          <span className="grow"></span>
+          <div className="ha">
           {v.canSupport && (
             <button className="btn" onClick={v.openSupport}>
               <Icon name="shield" />
@@ -69,6 +71,7 @@ export function SchoolView({ v }: { v: any }) {
               ))}
             </MenuButton>
           )}
+          </div>
         </header>
         <Segmented label="School" className="rise" value={v.tab} onChange={v.pickTab} options={v.tabs.map((t: any) => ({ value: t.key, label: t.n }))} style={{ "--d": ".1s", alignSelf: "flex-start", maxWidth: "100%", overflowX: "auto" } as CSSProperties} />
         {v.tab !== "overview" && v.extra}
@@ -101,7 +104,7 @@ export function SchoolView({ v }: { v: any }) {
                 )}
               </div>
               {v.folded && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>{v.setupLine}. Every step finished.</div>}
-              {!v.folded && v.steps.length === 0 && <div className="help" style={{ marginTop: "12px" } as CSSProperties}>No setup run has been recorded for this school.</div>}
+              {!v.folded && v.steps.length === 0 && <div style={{ marginTop: "12px" } as CSSProperties}><EmptyNote icon="setup" title="No setup run recorded" body="Schools onboarded through the console keep each setup step here." /></div>}
               {!v.folded && (
               <>
               <div className="steps">

@@ -26,10 +26,8 @@ export function ExamsPage() {
   return (
     <Page title="Exams" sub="Schedules, marks and results" toast={toast} loading={list.isLoading && !list.data}
       error={list.isError && !list.data ? { message: (list.error as Error).message, retry: () => void list.refetch() } : null}
-      actions={<>
-        <Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />
-        {canWrite && <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn>}
-      </>}
+      filters={<Select compact aria-label="Class" value={classId} onChange={setClassId} options={[{ value: '', label: 'All classes' }, ...(classes.data ?? []).map((c) => ({ value: c.id, label: `Class ${c.name}` }))]} />}
+      actions={canWrite && <AddBtn onClick={() => setCreating(true)}>New exam</AddBtn>}
       overlays={<>
         {creating && <ExamDialog defaultClass={classId} onClose={() => setCreating(false)} onDone={(e) => { setCreating(false); refresh(qc); say('Exam added to the schedule.'); setOpen(e.id); }} />}
         {changing && <ExamDialog exam={changing} defaultClass={classId} onClose={() => setChanging(null)} onDone={() => { setChanging(null); refresh(qc); say('Exam changed. The timetable in the app follows.'); }} />}

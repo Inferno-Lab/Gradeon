@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inr, lakhs, type StudentDetail } from '@gradeon/contracts';
-import { Dialog, EmptyState, Icon, Roll, Segmented, rollDigits } from '@gradeon/web-ui';
+import { Dialog, EmptyState, Icon, Roll, Select, rollDigits } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { StudentPick } from '../../app/kit';
@@ -57,7 +57,7 @@ function Overview({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Fees" sub={s ? `${s.monthLabel} · ${s.pct}% of what is due has been collected` : 'Collections and dues'} toast={toast} loading={summary.isLoading}
       error={err ? { message: (err.error as Error).message, retry: () => void err.refetch() } : null}
-      actions={<>{tabs}<Segmented label="Period" value={period} onChange={setPeriod} options={[{ value: 'month', label: 'This month' }, { value: 'term', label: 'This term' }, { value: 'year', label: 'This year' }]} />{canPay && <button className="btn pri" onClick={() => setPicking(true)}>Collect a fee</button>}</>}
+      tabs={tabs} filters={<Select compact aria-label="Period" value={period} onChange={(v) => setPeriod(v as typeof period)} options={[{ value: 'month', label: 'This month' }, { value: 'term', label: 'This term' }, { value: 'year', label: 'This year' }]} />} actions={<>{canPay && <button className="btn pri" onClick={() => setPicking(true)}>Collect a fee</button>}</>}
       overlays={<>
         {paying && <CollectFeeDialog student={paying} onClose={() => setPaying(null)} onDone={(m) => { setPaying(null); refresh(); say(m); }} />}
         {picking && canPay && !paying && (

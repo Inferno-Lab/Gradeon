@@ -112,3 +112,7 @@
 .pg-dashboard .goal b{top:-34px}
 @container (max-width:230px){.nest .tile .big{font-size:34px}}
 .pg-dashboard .grid{align-items:stretch}
+/* Needs you: the kinds of request with nothing waiting, quietly, under the ones that are */
+.pg-dashboard .clr{display:flex;flex-direction:column;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.pg-dashboard .clr span{display:flex;align-items:center;gap:10px;font:500 14px/20px var(--fb);color:var(--ink2)}
+.pg-dashboard .clr .i{color:var(--ok);flex:none}

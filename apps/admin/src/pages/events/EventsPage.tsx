@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { EVENT_KINDS, istToday, type Category, type EventKind, type EventRow, type ExamRow } from '@gradeon/contracts';
-import { Checkbox, DateField, Dialog, Field, NumberField, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, DateField, Dialog, Field, NumberField, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Page, useToast } from '../../app/Page';
 import { AddBtn, AreaField, Ico, problem, useSetting } from '../../app/kit';
@@ -89,7 +89,7 @@ export function EventsPage() {
           <div className="card rise evl" style={{ '--d': '.06s' } as React.CSSProperties}>
             <div className="ch"><h2>{day ? new Date(`${day}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Coming up'}</h2>{day && <button className="btn sm" onClick={() => setDay(null)}>Show all</button>}</div>
             <div className="lscroll" data-even-scroll="" style={{ maxHeight: 'min(62dvh,620px)', marginTop: 8 }}>
-              {shown.length === 0 && <div className="help" style={{ padding: '12px 0' }}>{day ? 'Nothing on this day.' : 'Nothing coming up. Add an event to get started.'}</div>}
+              {shown.length === 0 && <EmptyNote icon="calendar" title={day ? 'Nothing on this day' : 'Nothing coming up'} body={day ? 'Pick another day, or add an event for this one.' : 'Add an event and it shows here and in the families’ app.'} />}
               {shown.map((e) => <EventItem key={e.id} e={e} canWrite={canWrite} onOpen={() => (e.id.startsWith('exam:') ? app.go(`/exams?open=${e.id.slice(5)}`) : setEditing(e))} />)}
               {past.length > 0 && <><div className="lbl" style={{ padding: '16px 0 6px' }}>Earlier</div>{past.map((e) => <EventItem key={e.id} e={e} canWrite={canWrite} onOpen={() => (e.id.startsWith('exam:') ? app.go(`/exams?open=${e.id.slice(5)}`) : setEditing(e))} dim />)}</>}
             </div>

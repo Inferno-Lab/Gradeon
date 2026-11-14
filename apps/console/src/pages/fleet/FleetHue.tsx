@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { ActionRow, FleetSummary, SchoolRow } from '@gradeon/contracts';
-import { EmptyState, Icon, PageScope, Presence, Roll, markStyle, rollDigits } from '@gradeon/web-ui';
+import { EmptyNote, EmptyState, Icon, PageScope, Presence, Roll, markStyle, rollDigits } from '@gradeon/web-ui';
 
 // The console's front page as the Fleet board (design/hue/src/Fleet.html): the fleet on the deep colour, the schools by health,
 // what waits for approval and the app rolling out. `v` is what FleetPage works out; the rest is its data.
@@ -77,7 +77,7 @@ export function FleetHue({ v, f, schools, actions }: { v: V; f: FleetSummary; sc
                   <div className="ch"><h2>Approvals</h2>{waiting.length > 0 && <span className="tag warn">{waiting.length} waiting</span>}</div>
                   {waiting.length ? waiting.slice(0, 3).map((a) => (
                     <div key={a.id} className="row"><span className="av sm">{(a.schoolName ?? 'G')[0]}</span><span className="grow"><b>{a.summary}</b><small>{a.schoolName ?? 'Every school'} · asked by {a.requestedBy}</small></span></div>
-                  )) : <p className="t2" style={{ fontSize: 14 }}>Nothing waits for a second person.</p>}
+                  )) : <EmptyNote icon="approvals" title="Nothing waits for a second person" body="A change that needs another person’s yes shows here until it is decided." />}
                   {waiting.length > 0 && <button className="btn ton" onClick={v.openApprovals}>Review {waiting.length === 1 ? 'it' : waiting.length === 2 ? 'both' : `all ${waiting.length}`}</button>}
                 </section>
                 <section className="card">

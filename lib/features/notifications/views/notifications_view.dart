@@ -17,6 +17,7 @@ import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/features/notifications/controllers/notifications_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 
 ({IconData? icon, String? glyph, Color fill, Color on, String label}) _kind(BuildContext context, String type) {
@@ -70,7 +71,7 @@ class NotificationsView extends GetView<NotificationsController> {
       controller.filter.value;
       controller.gone.length;
       final list = controller.visible;
-      final today = DateUtils.dateOnly(DateTime.now());
+      final today = DateUtils.dateOnly(Clock.now());
       final weekAgo = today.subtract(const Duration(days: 6));
       final groups = <(String, List<AppNotification>)>[
         ('notifications.today', list.where((n) => !n.date.isBefore(today)).toList()),

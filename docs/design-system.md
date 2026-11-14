@@ -10,11 +10,14 @@ Source of truth in code: `lib/core/theme/` (`app_colors.dart`, `app_typography.d
 
 ## Idea
 
-One hue per school. The frame of every screen (its header and the tab bar) is the school's **deep** colour; the work sits
-on a light **sheet** that rises over it (radius 28). The one thing that matters now (the period on now, the Pay button
-on the fees header, the chosen tab) is the school's **bright** colour. Actions are **brand**; state is ok, warn, bad and
-info; subjects take one of twelve **spectrum** colours. The boards each screen is built from are in `design/hue/src`
-(ParentHome, TeacherHome, ParentFees, ParentResults, RollCall, AppKit, EmptyApp1–4).
+Hybrid, like the admin and the console (owner's call, 14 Nov 2026): Gradeon Hue's layouts, parts, icons and empty
+scenes, worn in the old **Chalk & Glass** look. Every screen sits on the chalk ground (no coloured header band); the
+dock floats as a paper pill with an ink tab that slides; type is Anek on its width axis. The neutrals never take the
+school's tint (`APP_NEUTRALS` in `packages/contracts/src/hue.ts`): chalk, paper and ink from the old app, an ink
+**deep** for the dock and headline cards, and marigold **bright** for the one thing that matters now (the period on
+now, the chosen tab, the Pay button). Actions are the school's **brand**; state is ok, warn, bad and info; subjects take
+one of twelve **spectrum** colours. The boards each screen is built from are in `design/hue/src` (ParentHome,
+TeacherHome, ParentFees, ParentResults, RollCall, AppKit, EmptyApp1–4).
 
 ## Colour
 
@@ -25,14 +28,13 @@ info; subjects take one of twelve **spectrum** colours. The boards each screen i
 - `c.subjectFor(id)` and `c.spectrumFor('blue')`: a subject's or spectrum colour (fill, on, soft, ink) in the theme.
   The static `AppColors.subject(id)` / `spectrum()` / `houses` follow the app's theme too (`AppColors.activeDark`, set by
   `AppTheme.resolve`).
-- `c.onDeepSide`: the theme as it reads on the deep header. `PageFrame` puts its first child there under this theme, so
-  a header built in a `Builder` gets light text automatically.
-- Defaults are generated from the hue engine (`packages/contracts/src/hue.ts`) by `node tools/gen-hue.mjs`; at run time
-  the school's hue from the console replaces them (`AppPalette`). Text on any fill: `AppPalette.on(fill)`.
+- `c.onDeepSide`: the theme as it reads on the deep colour, for anything drawn on an ink card.
+- Defaults are generated from the hue engine (`appTokens` in `packages/contracts/src/hue.ts`) by `node tools/gen-hue.mjs`;
+  at run time the school's palette from `/v1/brand` (the same `appTokens`) replaces them (`AppPalette`). Text on any fill: `AppPalette.on(fill)`.
 
 ## Type
 
-`context.type.<role>` or `AppText.<role>(color:)`, set in Mona Sans (Noto Sans Devanagari for Hindi and Marathi) through
+`context.type.<role>` or `AppText.<role>(color:)`, set in Anek Latin (Anek Devanagari for Hindi and Marathi) through
 `hueText()`. Display roles (`dx`, `dl`, `h1`–`h3`) use the wide cut. A screen sets only colour, tabular figures and line
 height; it never changes size or weight.
 

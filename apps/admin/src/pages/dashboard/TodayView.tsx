@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DashboardData } from '@gradeon/contracts';
-import { Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
+import { EmptyNote, Icon, MenuButton, PageScope, Roll, Segmented, ToastSlot, rollDigits, type IconName, type PageIcon } from '@gradeon/web-ui';
 
 // The dashboard as the Today board (design/hue/src/Today.html): the day on the deep colour, what needs the person, fees and the
 // day ahead. `v` is what DashboardPage works out from the data; `d` is the data itself.
@@ -16,6 +16,11 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
   const marked = onTime + late + absent, total = marked + unmarked;
   const pct = marked ? Math.round(((onTime + late) / marked) * 1000) / 10 : 0;
   const notTaken = rolls.filter((r) => r.unmarked === r.size && r.size > 0).map((r) => r.name);
+  // The grid shows the classes chosen for it; the reminder goes to every class in the school that has not marked.
+  const allNot = d.needsYou.find((n) => n.kind === 'attendance')?.subtitle.split(' · ') ?? notTaken;
+  const rest = allNot.length - notTaken.length;
+  const note = (notTaken.length ? `${notTaken.length === 1 ? 'One class here has' : `${notTaken.length} classes here have`} not taken the roll` : 'Every class here has taken the roll')
+    + (rest > 0 ? `; ${rest === 1 ? 'one more' : `${rest} more`} across the school.` : '.');
   // Classes by grade (columns) and section (rows), as on the board; a name that is not "8 A" goes in its own row.
   const parse = (n: string) => /^(\S+)\s+(\S+)$/.exec(n.trim());
   const grades = [...new Set(rolls.map((r) => parse(r.name)?.[1] ?? r.name))];
@@ -55,7 +60,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
                 </div>
               </div>
               <div className="fx" style={{ gap: 10, marginTop: 'auto', flexWrap: 'wrap' }}>
-                {notTaken.length > 0 && <button className="btn bri" onClick={v.remind}><Icon name="notifications" className="i" />Remind {notTaken.slice(0, 2).join(' and ')}{notTaken.length > 2 ? ` and ${notTaken.length - 2} more` : ''}</button>}
+                {allNot.length > 0 && <button className="btn bri" onClick={v.remind}><Icon name="notifications" className="i" />Remind {allNot.slice(0, 2).join(' and ')}{allNot.length > 2 ? ` and ${allNot.length - 2} more` : ''}</button>}
                 <button className="btn ond" onClick={() => v.goto('/attendance')}>Open attendance</button>
               </div>
             </div>
@@ -71,7 +76,7 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
                     return <span key={g + s} className={heatCls(r.absent, none)} data-tip={none ? `${r.name}: roll not taken` : `${r.name}: ${r.absent} absent`}>{none ? '?' : r.absent}</span>;
                   })])}
                 </div>
-                <span className="note">{notTaken.length ? `${notTaken.length === 1 ? 'One class has' : `${notTaken.length} classes have`} not taken the roll.` : 'Every class has taken the roll.'}</span>
+                <span className="note">{note}</span>
               </div>
             )}
           </section>
@@ -85,12 +90,17 @@ export function TodayView({ v, d }: { v: V; d: DashboardData }) {
                 {v.needs.map((n: V, i: number) => (
                   <div key={i} className="row" style={{ opacity: n.open ? 1 : 0.55 }}>
                     <span className={`ht ${d.needsYou[i]?.kind === 'attendance' ? 'warn' : ''}`}><Icon name={NEED_ICON[d.needsYou[i]?.kind ?? ''] ?? 'approvals'} className="i" /></span>
-                    <button className="grow" style={{ textAlign: 'left' }} onClick={n.view}><b>{n.t}</b><small>{n.s}</small></button>
+                    <button className="grow" style={{ textAlign: 'left', minWidth: 0 }} onClick={n.view} data-tip={n.tip}><b>{n.t}</b><small>{n.s}</small></button>
                     {n.open ? <button className="btn ton sm" onClick={n.act}>{n.a}</button> : <span className="tag ok"><Icon name="check" size={14} className="i" />Done</span>}
                   </div>
                 ))}
               </div>
-            ) : <p className="t2" style={{ fontSize: 14 }}>Nothing is waiting for you. Requests and reminders appear here.</p>}
+            ) : <EmptyNote icon="checkCircle" title="Nothing is waiting for you" body="Requests to decide and reminders appear here." />}
+            {v.allClear.length > 0 && (
+              <div className="clr">
+                {v.allClear.map((c: V) => <span key={c.kind}><Icon name="check" size={16} className="i" />{c.t}</span>)}
+              </div>
+            )}
           </section>
           {v.has.fees && shown('fees') && (
             <section className="card">

@@ -21,6 +21,7 @@ import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/features/notices/controllers/notices_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Category tile: an icon on the category's soft colour, as the boards' row tiles.
 ({IconData icon, Color fill, Color on}) _category(BuildContext context, String category) {
@@ -45,7 +46,7 @@ Color _stampTone(BuildContext context, String category) => switch (category) {
 };
 
 String _when(DateTime d) {
-  final today = DateUtils.dateOnly(DateTime.now());
+  final today = DateUtils.dateOnly(Clock.now());
   final day = DateUtils.dateOnly(d);
   if (day == today) return 'common.today'.tr;
   if (day == today.subtract(const Duration(days: 1))) return 'common.yesterday'.tr;
@@ -55,7 +56,7 @@ String _when(DateTime d) {
 /// Same as [_when] but reads inside a sentence: "today", "yesterday".
 String _whenInline(DateTime d) {
   final w = _when(d);
-  final ago = DateUtils.dateOnly(DateTime.now()).difference(DateUtils.dateOnly(d)).inDays;
+  final ago = DateUtils.dateOnly(Clock.now()).difference(DateUtils.dateOnly(d)).inDays;
   return ago == 0 || ago == 1 ? w.toLowerCase() : w;
 }
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ImportInputIn } from '@gradeon/api-client';
 import { IMPORT_SOURCES, type ImportBatchRow, type ImportKind, type ImportPreview, type MigrationView, type SchoolDetail } from '@gradeon/contracts';
-import { Dialog, EmptyCard, Field, FilePick, Select } from '@gradeon/web-ui';
+import { Dialog, EmptyCard, Field, FilePick, Select, EmptyNote } from '@gradeon/web-ui';
 import { RecordsTab } from './IntegrationsTab';
 import { useApp } from '../../app/context';
 import { when } from '../../app/format';
@@ -88,7 +88,7 @@ export function DataTab({ d, say, danger }: { d: SchoolDetail; say: Say; danger:
       <div className="card s12 rise">
         <div className="ch"><h2>Imports</h2><span className="chip">{v.batches.length}</span></div>
         <div className="help">Each import is one batch. The newest can be undone for 30 days; undo the newer ones first to go further back.</div>
-        {v.batches.length === 0 ? <div className="help" style={{ marginTop: 10 }}>Nothing imported yet.</div> : v.batches.map((b) => <BatchRow key={b.id} b={b} kinds={v.kinds} canUndo={can && b.canUndo} busy={undo.isPending} onUndo={() => setUndoing(b)} />)}
+        {v.batches.length === 0 ? <div style={{ marginTop: 10 }}><EmptyNote icon="upload" title="Nothing imported yet" body="Each import shows here with what it added, and can be undone." /></div> : v.batches.map((b) => <BatchRow key={b.id} b={b} kinds={v.kinds} canUndo={can && b.canUndo} busy={undo.isPending} onUndo={() => setUndoing(b)} />)}
         {undoing && (
           <Dialog title="Undo this import?" tag={{ text: v.kinds.find((k) => k.key === undoing.kind)?.label ?? undoing.kind, tone: 'a' }} onClose={() => setUndoing(null)} width={460}>
             <p style={{ marginTop: 0 }}>The {undoing.created} {undoing.created === 1 ? 'record it added is' : 'records it added are'} removed and the {undoing.updated} it updated go back to how they were. Anything added since that depends on them is refused first.</p>
@@ -103,7 +103,7 @@ export function DataTab({ d, say, danger }: { d: SchoolDetail; say: Say; danger:
       <div className="card s12 rise">
         <div className="ch"><h2>Files from the school</h2><span className="chip">{v.uploads.filter((u) => u.status === 'new').length} waiting</span></div>
         <div className="help">What the school sent from its admin (Moving in). Open one to import it; set aside what is not for importing.</div>
-        {v.uploads.length === 0 ? <div className="help" style={{ marginTop: 10 }}>No files yet.</div> : v.uploads.map((u) => (
+        {v.uploads.length === 0 ? <div style={{ marginTop: 10 }}><EmptyNote icon="file" title="No files yet" body="Spreadsheets the school sends for import are kept here." /></div> : v.uploads.map((u) => (
           <div key={u.id} className="rw" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, height: 'auto', padding: '10px 0', cursor: 'default' }}>
             <span style={{ minWidth: 0, flex: '1 1 220px' }}><b style={{ font: '700 14px var(--fb)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={u.fileName}>{u.fileName}</b><small style={{ color: 'var(--ink3)', font: '600 12px var(--fb)' }}>{u.note || (u.rows ? `${u.rows} rows` : 'Read by eye')}</small></span>
             <span style={{ color: 'var(--ink2)', font: '600 13px var(--fb)' }}>{u.uploadedBy} · {when(u.at)}{u.status === 'set_aside' && u.setAsideReason ? ` · set aside: ${u.setAsideReason}` : ''}</span>

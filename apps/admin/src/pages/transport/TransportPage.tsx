@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BusRouteRow, RiderRow, StopInput } from '@gradeon/contracts';
-import { DateField, Dialog, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, NumberField, Select, SelectField, TimeField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Ico, problem, stamp } from '../../app/kit';
@@ -32,13 +32,17 @@ export function TransportPage() {
   return (
     <Page title="Transport" sub="Routes, stops and times, who rides which bus, and today’s trips" toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{canWrite && <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn>}</>}
+      tabs={tabs} actions={<>{canWrite && <AddBtn onClick={() => setEdit('new')}>Add a route</AddBtn>}</>}
       overlays={<>
         {edit && <RouteDialog route={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onDone={done} />}
         {billing && <BillDialog route={billing} onClose={() => setBilling(null)} onDone={(m) => { setBilling(null); say(m); }} />}
       </>}>
       {v && (!v.routes.length ? (
-        <div><EmptyState scene="transport" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
+        tab === 'riders' ? <EmptyCard title="Riders" icon="people" heading="No riders yet" body="Add a route first, then put students on it with their stop. Families see the bus, the stop and the pick-up time in the app."
+            actions={canWrite ? <button className="btn pri" onClick={() => setEdit('new')}>Add a route</button> : undefined} />
+        : tab === 'live' ? <EmptyCard title="Live bus" art="map-pin" heading="No bus on the road" body="When a route has a driver, the bus shows here live during each trip, and families at the next stop are told it is near."
+            actions={canWrite ? <button className="btn pri" onClick={() => setEdit('new')}>Add a route</button> : undefined} />
+        : <div><EmptyState scene="transport" onAction={canWrite ? () => setEdit('new') : undefined} /></div>
       ) : <>
         <section className="grid">
           {[
@@ -63,7 +67,7 @@ export function TransportPage() {
                 <div className="kv">Riders<b>{r.riders}</b></div>
                 <div className="lbl" style={{ margin: '12px 0 4px' }}>Stops</div>
                 <div className="lscroll" data-even-scroll="" style={{ maxHeight: 240 }}>
-                  {!r.stops.length && <div className="help">No stops yet.</div>}
+                  {!r.stops.length && <EmptyNote icon="route" title="No stops yet" body="Add the stops in the order the bus reaches them." />}
                   {r.stops.map((s) => (
                     <div key={s.id} className="kv" style={{ alignItems: 'center' }}>
                       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={s.lat == null ? 'Not on the map: no “bus is near” for this stop' : 'On the map'}>{s.position}. {s.name}</span>
@@ -222,7 +226,7 @@ function PlaceFind({ placed, onPick }: { placed: boolean; onPick: (p: { lat: num
       {!chosen && (found.data?.length ?? 0) > 0 && (
         <div className="pks">{found.data!.map((p) => <button key={`${p.lat},${p.lng}`} type="button" className="pk" onClick={() => { onPick(p); setChosen(`Placed at ${p.label}`); }}><span><b>{p.label}</b></span></button>)}</div>
       )}
-      {!chosen && term.length >= 3 && found.data?.length === 0 && <div className="help">Nothing found. Try the address.</div>}
+      {!chosen && term.length >= 3 && found.data?.length === 0 && <EmptyNote icon="map" title="Nothing found" body="Try the street address, or a landmark near the stop." />}
     </div>
   );
 }

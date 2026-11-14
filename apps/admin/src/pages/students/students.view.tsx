@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Markup converted from design/canvas/AdminStudents.dc.html. Keep the markup and class names as designed.
 import { Fragment, type CSSProperties } from "react";
-import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState } from "@gradeon/web-ui";
+import { Roll, PageScope, Presence, Segmented, Panel, Icon, EmptyState, EmptyNote } from "@gradeon/web-ui";
 import "./students.css";
 
 export function StudentsView({ v }: { v: any }) {
@@ -9,12 +9,11 @@ export function StudentsView({ v }: { v: any }) {
     <PageScope page="students">
       <main className="mn">
         <header className="hd rise">
-          <div>
+          <div className="ht">
             <h1>{v.heading}</h1>
             <p>{v.subtitle}</p>
           </div>
-          <span className="grow"></span>
-          {v.tabs}
+          <div className="ha">
           <button className="btn" onClick={v.openImport}>
             <Icon name="upload" />
             Import
@@ -27,7 +26,9 @@ export function StudentsView({ v }: { v: any }) {
             <Icon name="plus" />
             Add student
           </button>
+          </div>
         </header>
+        {v.tabs && <div className="pbar rise">{v.tabs}</div>}
         <div className="fbar rise" style={{ "--d": ".05s" } as CSSProperties}>
           <Segmented label="Students view" value={String(v.views.findIndex((x: any) => x.on))} onChange={(i: string) => v.views[Number(i)].pick()} options={v.views.map((x: any, i: number) => ({ value: String(i), label: x.n, count: x.c, countTone: x.cc }))} />
           <span className="grow"></span>
@@ -315,7 +316,7 @@ export function StudentsView({ v }: { v: any }) {
               {v.files}
               <div>
                 <h3>Activity</h3>
-                {v.d.activity.length === 0 && <div className="help">Nothing yet. Payments, homework and attendance notes appear here.</div>}
+                {v.d.activity.length === 0 && <EmptyNote icon="pulse" title="Nothing yet" body="Payments, homework and attendance notes appear here." />}
                 {v.d.activity.map((e: any, $i: number) => (
                   <div className="ev" key={$i}>
                     <i style={{ background: e.color } as CSSProperties}></i>

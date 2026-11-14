@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HUE_PAIRS, SPECTRUM_COLOURS, WEB_NEUTRALS, hueContrast, hueCss, hueOf, hueTokens, spectrumTokens, type HueMode } from './hue.js';
+import { APP_NEUTRALS, HUE_PAIRS, SPECTRUM_COLOURS, WEB_NEUTRALS, appTokens, hueContrast, hueCss, hueOf, hueTokens, spectrumTokens, type HueMode } from './hue.js';
 
 describe('Gradeon Hue', () => {
   it('gives the approved colours for a seed', () => {
@@ -13,6 +13,14 @@ describe('Gradeon Hue', () => {
       const t = hueTokens(h, mode);
       for (const [a, b, min] of HUE_PAIRS) expect(hueContrast(t[a]!, t[b]!), `${h} ${mode} ${a}/${b}`).toBeGreaterThanOrEqual(min);
       for (const c of SPECTRUM_COLOURS) { const s = spectrumTokens(c, mode); expect(hueContrast(s.ci, s.cs)).toBeGreaterThanOrEqual(4.5); }
+    }
+  });
+
+  it('keeps the app on its own neutrals and readable for every hue in every mode', { timeout: 60_000 }, () => {
+    for (let h = 0; h < 360; h += 3) for (const mode of ['light', 'dark', 'amoled'] as HueMode[]) {
+      const t = appTokens(h, mode);
+      expect(t.bg).toBe(APP_NEUTRALS[mode].bg);
+      for (const [a, b, min] of HUE_PAIRS) expect(hueContrast(t[a]!, t[b]!), `${h} ${mode} ${a}/${b}`).toBeGreaterThanOrEqual(min);
     }
   });
 

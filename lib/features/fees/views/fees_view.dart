@@ -22,6 +22,7 @@ import 'package:gradeon/features/fees/views/pay_sheet.dart';
 import 'package:gradeon/features/fees/views/receipt_view.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 export 'package:gradeon/features/fees/views/pay_sheet.dart';
 export 'package:gradeon/features/fees/views/receipt_view.dart';
@@ -220,8 +221,8 @@ class _Body extends StatelessWidget {
                             theme.notifyFees.value && next != null
                                 ? 'fees.next_reminder'.trp({
                                     'date': DateFormat('EEE d MMM').format(
-                                      next.dueDate.subtract(const Duration(days: 3)).isBefore(DateTime.now())
-                                          ? DateTime.now().add(const Duration(days: 1))
+                                      next.dueDate.subtract(const Duration(days: 3)).isBefore(Clock.now())
+                                          ? Clock.now().add(const Duration(days: 1))
                                           : next.dueDate.subtract(const Duration(days: 3)),
                                     ),
                                   })

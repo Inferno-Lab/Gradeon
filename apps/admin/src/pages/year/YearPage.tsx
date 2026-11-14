@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PromotionPreview, YearRow } from '@gradeon/contracts';
 import { istToday } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, Select, useShake } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, Select, useShake, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { StudentPick, dateLabel, problem, stamp } from '../../app/kit';
@@ -25,7 +25,7 @@ export function YearPage() {
   const { toast, say } = useToast();
   const setup = useSetupSections(KINDS[tab] ?? [], say);
   if (tab === 'year-end') return <YearEnd tabs={tabs} />;
-  return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} actions={tabs} overlays={setup.overlay}>{setup.view}</Page>;
+  return <Page title="Academic year" sub={SUBS[tab] ?? ''} toast={toast} tabs={tabs} overlays={setup.overlay}>{setup.view}</Page>;
 }
 
 /** Drafting the next year, promoting students into it, and starting it. */
@@ -55,7 +55,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
   return (
     <Page title="Academic year" sub="Promote students, start the new year and record who leaves. Dues carry forward on their own." toast={toast} loading={view.isLoading && !v}
       error={view.isError && !v ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
-      actions={<>{tabs}{can && <button className="btn pri" disabled={!draft} data-tip={draft ? undefined : 'Draft the next year first'} onClick={() => setDlg('promote')}>Promote students</button>}</>}
+      tabs={tabs} actions={<>{can && <button className="btn pri" disabled={!draft} data-tip={draft ? undefined : 'Draft the next year first'} onClick={() => setDlg('promote')}>Promote students</button>}</>}
       overlays={v && <>
         {dlg === 'year' && <NewYear years={v.years} onClose={() => setDlg(null)} onDone={done} />}
         {dlg === 'promote' && <Promote years={v.years} onClose={() => setDlg(null)} onDone={done} />}
@@ -72,7 +72,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
       {v && <>
         <section className="grid" data-even="">
           <Card span="s6" title="Academic years" chip={can && !draft ? <button className="btn sm" onClick={() => setDlg('year')}>Draft next year</button> : undefined}>
-            {!v.years.length && <div className="help">No year is set up. Gradeon adds the first one with the school.</div>}
+            {!v.years.length && <EmptyNote icon="year" title="No year is set up" body="Gradeon adds the first one with the school." />}
             {v.years.map((y) => (
               <div key={y.id} className="kv" style={{ alignItems: 'center' }}>
                 <span style={{ minWidth: 0 }}><b style={{ color: 'var(--ink)' }}>{y.label}</b><br /><small className="help">{dateLabel(y.startsOn)} {y.startsOn.slice(0, 4)} to {dateLabel(y.endsOn)} {y.endsOn.slice(0, 4)}{y.status === 'current' ? ` · ${y.classes} classes, ${y.students} students` : ''}</small></span>
@@ -85,7 +85,7 @@ function YearEnd({ tabs }: { tabs: React.ReactNode }) {
             <div className="help" style={{ marginTop: 10 }}>Order of things: draft the next year, promote students, then start the year. An archived year stays readable but cannot be changed.</div>
           </Card>
           <Card span="s6" title="Promotions" chip={latestRun && !latestRun.undoneAt && can ? <button className="btn sm" disabled={act.isPending} onClick={() => setSure({ what: 'undo', id: latestRun.id, text: `Undo the latest promotion? ${latestRun.students} students go back to the class they were in before.` })}>Undo the latest</button> : undefined}>
-            {!v.runs.length ? <div className="help">No promotion has run yet. “Promote students” shows where each class goes before anything moves.</div>
+            {!v.runs.length ? <EmptyNote icon="up" title="No promotion has run yet" body="“Promote students” shows where each class goes before anything moves." />
               : v.runs.map((r) => (
                 <div key={r.id} className="kv" style={{ alignItems: 'center' }}>
                   <span>{r.students} students · to {r.toYear}<br /><small className="help">{stamp(r.createdAt)}</small></span>

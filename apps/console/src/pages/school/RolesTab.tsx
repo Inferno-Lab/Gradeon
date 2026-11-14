@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@gradeon/api-client';
 import { PERMISSION_CATALOG, permissionAvailable, type RoleDef } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, ErrorLine, Field, Select, useShake, Icon, useMore, EmptyNote } from '@gradeon/web-ui';
 import { url } from '../../app/base';
 import { useApp } from '../../app/context';
 
@@ -46,6 +46,9 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
     onError: (e) => say((e as Error).message, 'bad'),
   });
 
+  const people = (q.data?.staff ?? []).filter((s) => !find.trim() || `${s.name} ${s.designation}`.toLowerCase().includes(find.trim().toLowerCase()));
+  const [shownPeople, morePeople] = useMore(people);
+
   if (q.isLoading) return <div className="skc" style={{ height: 420, borderRadius: 24 }} />;
   if (q.isError || !q.data) return <EmptyCard error title="Roles" chip={{ text: 'Couldn’t load', tone: 'c' }} icon="lock" heading="Roles didn’t load" body={(q.error as Error)?.message ?? ''} actions={<button className="btn pri" onClick={() => void q.refetch()}>Try again</button>} />;
   const readOnly = !can || !!cur?.locked;
@@ -54,7 +57,6 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
     const t = templates.data?.find((x) => x.key === from);
     setSel('new'); setName(t ? `${t.name} (copy)` : ''); setDesc(t?.description ?? ''); setPerms(new Set(t?.permissions ?? [])); setErr({});
   };
-  const people = q.data.staff.filter((s) => !find.trim() || `${s.name} ${s.designation}`.toLowerCase().includes(find.trim().toLowerCase()));
   const options = roles.map((r) => ({ value: r.id, label: r.name }));
   return (
     <section className="grid">
@@ -107,8 +109,8 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
           <div className="srch" style={{ minWidth: 200, height: 38 }}><Icon name="search" /><input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
         </div>
         <div className="help">Whether the school may also do this itself is under Configuration → Staff.</div>
-        {people.length === 0 && <div className="help">No one matches.</div>}
-        {people.map((s) => (
+        {people.length === 0 && <EmptyNote icon={find.trim() ? 'search' : 'people'} title={find.trim() ? 'No one matches' : 'No staff yet'} body={find.trim() ? 'Search by name or designation.' : 'Staff the school adds show here, each with a role.'} />}
+        {shownPeople.map((s) => (
           <div key={s.id} className="kv" style={{ gap: 12 }}>
             <span style={{ minWidth: 0 }}>{s.name}<small style={{ display: 'block', color: 'var(--ink3)' }}>{s.designation}</small></span>
             <b style={{ minWidth: 200 }}>
@@ -117,6 +119,7 @@ export function RolesTab({ schoolId, say }: { schoolId: string; say: Say }) {
             </b>
           </div>
         ))}
+        {morePeople}
       </div>
       {moving && (
         <Dialog title={`Put ${moving.name} in ${roles.find((r) => r.id === moving.roleId)?.name ?? 'this role'}?`} tag={{ text: 'Takes effect within a minute', tone: 'v' }} onClose={() => setMoving(null)} width={460}>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast, EmptyState } from '@gradeon/web-ui';
+import { useToast, EmptyCard } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page } from '../../app/Page';
 import { useSchoolConfig } from '../../app/kit';
@@ -30,10 +30,11 @@ export function OnTheApp({ tabs }: { tabs: React.ReactNode }) {
   const students = !!cfg?.app.roles.includes('student');
   const a = act.data;
   return (
-    <Page title="Students" sub="Families on the school’s app" toast={toast} actions={tabs} loading={act.isLoading && !a}
+    <Page title="Students" sub="Families on the school’s app" toast={toast} tabs={tabs} loading={act.isLoading && !a}
       error={act.isError && !a ? { message: (act.error as Error).message, retry: () => void act.refetch() } : null}>
       {a && (a.classes.length === 0 ? (
-        <EmptyState scene="students" onAction={() => app.go('/students?import=1')} onLink={() => app.go('/students?add=1')} />
+        <EmptyCard title="On the app" art="envelope" heading="No family to invite yet" body="Add students with a parent’s phone or email. Then invite a class at a time from here, and see who has signed in and who needs a reminder."
+          actions={<><button className="btn pri" onClick={() => app.go('/students?import=1')}>Import students</button><button className="btn" onClick={() => app.go('/students?add=1')}>Add one student</button></>} />
       ) : (
         <Card title="Families on the app" chip={<span className="chip g">{a.families.signedIn} of {a.families.total} signed in</span>}>
           <p className="help" style={{ marginTop: 0 }}>Invite a class at a time; the letters to send home say the same. Families sign in with their phone and a code: there is no password. Remind those who were invited but have not signed in yet.</p>

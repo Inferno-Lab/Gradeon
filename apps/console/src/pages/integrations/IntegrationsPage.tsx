@@ -6,7 +6,7 @@ import {
   CAPABILITIES, CAPABILITY_LABELS, DELIVERY_STATUSES, INTEGRATION_PROVIDERS, LANGUAGES, MESSAGE_EVENTS, PLATFORM_CAPABILITIES, SYSTEM_MESSAGES, fieldProblem, providerDef,
   type Capability, type ConnectionRow, type DeliveryRow, type IntegrationsView, type ProviderField, type RouteRow, type SchoolRow, type TemplateRow,
 } from '@gradeon/contracts';
-import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Dialog, EmptyCard, Field, FilePick, NumberField, Segmented, Select, SelectField, useShake, Icon, type IconName, EmptyState, useMore, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { ago, count, rupees, when } from '../../app/format';
@@ -60,6 +60,7 @@ export function IntegrationsPage() {
   return (
     <Page title="Integrations" sub="Every third party the platform talks to: messages, payments, files and maps. Added, tested, routed and taken live from here, with no deploy." toast={toast}
       loading={view.isLoading} error={view.isError ? { message: (view.error as Error).message, retry: () => void view.refetch() } : null}
+      tabs={v && <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />}
       actions={write ? <button className="btn pri" onClick={() => setDlg({ kind: 'add' })}><Icon name="plus" />Add a connection</button> : undefined}
       overlays={v && <>
         {dlg?.kind === 'add' && <ConnectionDialog schools={live} onClose={() => setDlg(null)} onDone={done} />}
@@ -71,10 +72,11 @@ export function IntegrationsPage() {
         {dlg?.kind === 'delete' && <DeleteDialog c={dlg.c} onClose={() => setDlg(null)} onDone={done} />}
       </>}>
       {v && <>
-        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: v.mode === 'live' ? 'var(--ok-s)' : 'var(--warn-s)', color: v.mode === 'live' ? 'var(--ok-i)' : 'var(--warn-i)' }}>
+        <div className="card rise" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className={`chip ${v.mode === 'live' ? 'g' : 'a'}`}>{v.mode === 'live' ? 'Live mode' : 'Sandbox mode'}</span>
-          <span style={{ flex: 1, minWidth: 220, font: '600 13px/1.45 var(--fb)' }}>
+          <span style={{ flex: 1, minWidth: 220, font: '600 13px/1.45 var(--fb)', color: 'var(--ink2)' }}>
             {v.mode === 'live' ? 'Real providers send to families. A capability without a live connection fails and says so; nothing falls back to the Test inbox.'
+              : v.allowList.length === 0 ? 'Every message goes to the Test inbox. Put a number or address on the allow-list to send it real messages through test or live connections.'
               : `Messages go to the Test inbox, except to the ${v.allowList.length} ${v.allowList.length === 1 ? 'number or address' : 'numbers and addresses'} on the allow-list, which get real messages through test or live connections.`}
           </span>
           {v.mode === 'sandbox' && write && <button className="btn sm" onClick={() => setDlg({ kind: 'allow' })}>Allow-list</button>}
@@ -90,7 +92,6 @@ export function IntegrationsPage() {
           { label: 'Sent this month', value: count(v.connections.reduce((n, c) => n + c.usage.count, 0)), note: 'through real providers', tone: 'a' },
           { label: 'Cost this month', value: rupees(v.connections.reduce((n, c) => n + c.usage.costPaise, 0) / 100), note: 'from each connection’s price', tone: 'i' },
         ]} />
-        <Segmented label="Integrations" value={tab} onChange={(k) => app.go(k === 'connections' ? '/integrations' : `/integrations/${k}`)} options={tabList.map((t) => ({ value: t.key, label: t.label, count: counts[t.key] }))} />
         {tab === 'connections' && <Connections v={v} write={write} busy={act.isPending} onEdit={(c) => setDlg({ kind: 'edit', c })} onTest={(c) => setDlg({ kind: 'test', c })} onDelete={(c) => setDlg({ kind: 'delete', c })}
           onAct={(c, what) => act.mutate({ c, what })} onAdd={() => setDlg({ kind: 'add' })} />}
         {tab === 'routing' && <Routing v={v} schools={live} write={write} onEdit={(capability, schoolId, route) => setDlg({ kind: 'route', capability, schoolId, route })} />}
@@ -510,7 +511,7 @@ function Activity({ schools, write, say }: { schools: SchoolRow[]; write: boolea
       </div>
       <Card title="Every message’s fate" chip={<span className="chip">{rows.length} shown</span>} style={{ padding: 0 }}>
         {q.isError ? <div className="help" style={{ padding: 20 }}>{(q.error as Error).message}</div>
-          : !rows.length ? <div className="help" style={{ padding: 20 }}>{q.isLoading ? 'Loading…' : 'No messages match. Messages appear here the moment a school sends one.'}</div> : (
+          : !rows.length ? <div style={{ padding: 20 }}>{q.isLoading ? <div className="skc" style={{ height: 120, borderRadius: 16 }} /> : <EmptyNote icon="send" title="No messages match" body="Messages appear here the moment a school sends one." />}</div> : (
             <div className="tbl scroll-x"><div style={{ minWidth: 760 }} className="lscroll">
               <div className="grd th" style={{ '--cols': '96px 110px minmax(0,1fr) minmax(0,2fr) 120px 90px' } as React.CSSProperties}><span>Status</span><span>School</span><span>To</span><span>Message</span><span>Through</span><span></span></div>
               {rows.map((m) => (
@@ -552,7 +553,7 @@ function Webhooks({ v, say }: { v: IntegrationsView; say: (m: string, tone?: 'ba
             <div className="help" style={{ marginTop: 4 }}>Checked by: {def?.webhooks?.verifies}</div>
             {open === c.id && (
               <div style={{ marginTop: 10 }}>
-                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <div className="help">Nothing received yet.</div>
+                {events.isLoading ? <div className="help">Loading…</div> : !(events.data ?? []).length ? <EmptyNote icon="link" title="Nothing received yet" body="Calls the provider makes to this address show here with what Gradeon did with them." />
                   : (events.data ?? []).slice(0, 10).map((e) => (
                     <div key={e.id} className="kv" style={{ alignItems: 'center' }}>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0 }}><span className={`chip ${e.ok ? 'g' : 'c'}`}>{e.ok ? 'Accepted' : 'Refused'}</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} data-tip={e.summary}>{e.summary}</span></span>
@@ -600,12 +601,13 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
   const [school, setSchool] = useState('');
   const msgs = useQuery({ queryKey: ['sandbox', school], queryFn: () => app.api.sandbox(school || undefined), refetchInterval: 6000 });
   const rows = msgs.data ?? [];
+  const [shown, more] = useMore(rows);
   return (
     <Card title="Test inbox" chip={<Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'All schools' }, ...schools.map((s) => ({ value: s.slug, label: s.name }))]} />}>
       {msgs.isLoading ? <div className="skc" style={{ height: 200, borderRadius: 16 }} />
-        : rows.length === 0 ? <div className="help">Nothing yet. Sign-in codes, receipts and notices land here as they are triggered.</div>
-          : rows.map((m) => (
-            <div key={m.id} className="kv" style={{ alignItems: 'flex-start' }}>
+        : rows.length === 0 ? <EmptyNote icon="inbox" title="Nothing in the test inbox yet" body="Sign-in codes, receipts and notices land here as they are triggered." />
+          : <>{shown.map((m) => (
+            <div key={m.id} className="kv" style={{ alignItems: 'flex-start', height: 'auto', padding: '12px 0' }}>
               <span style={{ display: 'flex', gap: 12, minWidth: 0 }}>
                 <span className="av" style={{ width: 34, height: 34, flex: 'none', background: 'var(--brand-soft)', color: 'var(--brand-ink)' }}>
                   <Icon name={ICON[m.channel] ?? ICON.sms} size={16} />
@@ -618,7 +620,7 @@ function TestInbox({ schools }: { schools: SchoolRow[] }) {
               </span>
               <b style={{ whiteSpace: 'nowrap', color: 'var(--ink3)' }}>{ago(m.createdAt)}</b>
             </div>
-          ))}
+          ))}{more}</>}
     </Card>
   );
 }

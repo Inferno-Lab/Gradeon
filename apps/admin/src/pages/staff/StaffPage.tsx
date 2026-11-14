@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { StaffRow } from '@gradeon/contracts';
-import { Dialog, Field, Segmented, Select, SelectField, useShake, EmptyState } from '@gradeon/web-ui';
+import { Dialog, Field, Segmented, Select, SelectField, useShake, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { Card, Page, useToast } from '../../app/Page';
 import { AddBtn, Avatar, Ico, problem, useSchoolConfig } from '../../app/kit';
@@ -91,7 +91,7 @@ export function StaffPage() {
               {roles.length > 1 && <Select compact aria-label="Role" value={role} onChange={setRole} options={[{ value: '', label: 'Every role' }, ...roles.map(([id, name]) => ({ value: id, label: name }))]} />}
               <div className="srch" style={{ minWidth: 220, height: 38 }}><Ico d={SEARCH} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, email, subject or role" aria-label="Search staff" style={{ border: 0, outline: 0, background: 'none', font: '600 13px var(--fb)', color: 'var(--ink)', flex: 1, minWidth: 0 }} /></div>
             </div>
-            {rows.length === 0 ? <div className="help" style={{ padding: '0 24px 24px' }}>{q ? `No one matches “${q}”.` : 'No one here.'}</div> : (
+            {rows.length === 0 ? <div style={{ padding: '0 24px 24px' }}><EmptyNote icon={q ? 'search' : 'people'} title={q ? `No one matches “${q}”` : 'No one here'} body={q ? 'Search by name, subject or phone.' : 'People in this group show here once they are added.'} /></div> : (
               <div className="scroll-x lscroll" data-fill="">
                 <div className="stfw" style={{ minWidth: periods ? 780 : 660 }}>
                   <div className="grd th stf" style={{ '--cols': cols } as React.CSSProperties}><span>Person</span><span className="hs">Teaches</span><span>Role</span>{periods && <span className="hs">Periods a week</span>}<span className="hs">Status</span></div>

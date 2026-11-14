@@ -18,13 +18,28 @@ export function Segmented<T extends string>({ value, onChange, options, label, c
   useLayoutEffect(() => {
     const measure = () => {
       const b = ref.current?.querySelector<HTMLElement>('button.on');
-      if (b) setKnob({ x: b.offsetLeft, w: b.offsetWidth });
+      if (!b) return;
+      setKnob({ x: b.offsetLeft, w: b.offsetWidth });
+      // A row of tabs wider than its space scrolls; keep the chosen one in view.
+      const s = ref.current!;
+      if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 4;
+      edges();
+    };
+    // The cut edge fades, so a row that scrolls says there is more.
+    const edges = () => {
+      const s = ref.current;
+      if (!s) return;
+      s.toggleAttribute('data-more-r', s.scrollLeft + s.clientWidth < s.scrollWidth - 1);
+      s.toggleAttribute('data-more-l', s.scrollLeft > 1);
     };
     measure();
     const ro = new ResizeObserver(measure);
+    ro.observe(ref.current!);
     ref.current?.querySelectorAll('button').forEach((b) => ro.observe(b));
+    ref.current?.addEventListener('scroll', edges, { passive: true });
     void document.fonts?.ready.then(measure);
-    return () => ro.disconnect();
+    const el = ref.current;
+    return () => { ro.disconnect(); el?.removeEventListener('scroll', edges); };
   }, [value, options.length]);
   return (
     <div className={`seg ${className ?? ''}`} style={style} ref={ref} role="tablist" aria-label={label}>

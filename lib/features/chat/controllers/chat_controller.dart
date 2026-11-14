@@ -16,6 +16,7 @@ import 'package:gradeon/data/models/user.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Threads are stored from the family's side ("Kavita Iyer, class teacher").
 /// For the person that title names, show the other side instead.
@@ -135,8 +136,8 @@ class ChatThreadController extends GetxController with Loadable, LiveListen {
     text.addListener(() {
       draft.value = text.text;
       final id = thread?.id;
-      if (id != null && text.text.isNotEmpty && DateTime.now().difference(_saidTyping) > const Duration(seconds: 5)) {
-        _saidTyping = DateTime.now();
+      if (id != null && text.text.isNotEmpty && Clock.now().difference(_saidTyping) > const Duration(seconds: 5)) {
+        _saidTyping = Clock.now();
         unawaited(Get.find<ChatRepository>().typing(id).catchError((Object _) {}));
       }
     });

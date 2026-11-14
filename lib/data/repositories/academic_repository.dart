@@ -4,6 +4,7 @@ import 'package:gradeon/data/datasources/mock_json_datasource.dart';
 import 'package:gradeon/data/datasources/mock_writes.dart';
 import 'package:gradeon/data/datasources/remote_datasource.dart';
 import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 abstract class AttendanceRepository {
   Future<List<AttendanceDay>> forStudent(String studentId);
@@ -40,7 +41,7 @@ class MockAttendanceRepository implements AttendanceRepository {
   @override
   Future<Map<String, AttendanceStatus>> todayForClass(List<String> studentIds) {
     return _ds.guard(() {
-      final today = DateTime.now().dateOnly;
+      final today = Clock.now().dateOnly;
       final map = <String, AttendanceStatus>{};
       for (final day in _ds.attendance) {
         if (!studentIds.contains(day.studentId)) continue;

@@ -21,6 +21,7 @@ import 'package:gradeon/features/homework/controllers/homework_controller.dart';
 import 'package:gradeon/features/shell/shell_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class HomeworkView extends GetView<HomeworkController> {
   const HomeworkView({super.key});
@@ -155,9 +156,9 @@ class HomeworkView extends GetView<HomeworkController> {
           ? 'time.today_cap'
           : d == 1
           ? 'homework.tomorrow'
-          : d <= 7 - DateTime.now().weekday
+          : d <= 7 - Clock.now().weekday
           ? 'homework.this_week'
-          : d <= 14 - DateTime.now().weekday
+          : d <= 14 - Clock.now().weekday
           ? 'homework.next_week'
           : 'homework.later';
       buckets.putIfAbsent(key.tr, () => []).add(hw);
@@ -396,7 +397,7 @@ class _DetailBody extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'homework.sent_meta'.trp({
-                      'date': DateFormat('d MMM').format(mine!.submittedAt ?? DateTime.now()),
+                      'date': DateFormat('d MMM').format(mine!.submittedAt ?? Clock.now()),
                       'file': mine!.fileName ?? '',
                     }),
                     style: context.type.t,

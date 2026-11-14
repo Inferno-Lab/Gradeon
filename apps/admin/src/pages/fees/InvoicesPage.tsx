@@ -39,7 +39,7 @@ export function InvoicesPage({ view, tabs }: { view: 'invoices' | 'receipts'; ta
   return (
     <Page title="Fees" sub={view === 'invoices' ? 'Every fee billed' : 'Every receipt given'} toast={toast} loading={cur.isLoading && !cur.data}
       error={cur.isError && !cur.data ? { message: (cur.error as Error).message, retry: () => void cur.refetch() } : null}
-      actions={<>{tabs}{view === 'invoices' && <button className="btn" onClick={() => void app.api.invoices.exportCsv({ ...query, page: undefined, limit: undefined }).then((csv) => {
+      tabs={tabs} actions={<>{view === 'invoices' && <button className="btn" onClick={() => void app.api.invoices.exportCsv({ ...query, page: undefined, limit: undefined }).then((csv) => {
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' })); a.download = 'invoices.csv'; a.click(); URL.revokeObjectURL(a.href);
       }).catch((e: Error) => say(e.message, 'bad'))}>Export</button>}</>}
       overlays={<>

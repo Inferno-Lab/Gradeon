@@ -16,6 +16,7 @@ import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/features/teacher_tools/controllers/teacher_controller.dart';
 import 'package:gradeon/features/teacher_tools/views/teacher_action_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// The avatar colours of the RollCall board: a spectrum colour per name, steady between visits.
 const _avatar = ['blue', 'pink', 'amber', 'lime', 'teal', 'violet', 'cyan', 'orange'];
@@ -59,7 +60,7 @@ class MarkAttendanceView extends GetView<MarkAttendanceController> {
                   cls == null ? 'teacher.attendance'.tr : 'teacher.class_n'.trp({'class': classLabel(cls)}),
                   style: context.type.h2,
                 ),
-                Text(DateFormat('EEEE d MMMM').format(DateTime.now()), style: context.type.s),
+                Text(DateFormat('EEEE d MMMM').format(Clock.now()), style: context.type.s),
                 if (n > 0) ...[
                   const SizedBox(height: 16),
                   Row(

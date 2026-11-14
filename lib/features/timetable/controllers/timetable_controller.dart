@@ -8,9 +8,10 @@ import 'package:gradeon/data/models/academics.dart';
 import 'package:gradeon/data/models/student.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class TimetableController extends GetxController with Loadable {
-  final dayIndex = (DateTime.now().weekday - 1).clamp(0, 6).obs;
+  final dayIndex = (Clock.now().weekday - 1).clamp(0, 6).obs;
   List<TimetableDay> days = [];
   SchoolClass? schoolClass;
   final teachers = <String, String>{}.obs;
@@ -28,11 +29,11 @@ class TimetableController extends GetxController with Loadable {
     return null;
   }
 
-  bool get isToday => weekdayKey(DateTime.now()) == keys[dayIndex.value];
+  bool get isToday => weekdayKey(Clock.now()) == keys[dayIndex.value];
 
   /// The date of the selected weekday in the current week.
   DateTime dateOf(int index) {
-    final now = DateTime.now();
+    final now = Clock.now();
     final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
     return monday.add(Duration(days: index));
   }

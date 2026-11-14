@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmptyCard, Select, EmptyState } from '@gradeon/web-ui';
+import { EmptyCard, Select, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -40,7 +40,7 @@ export function SupportPage() {
           </div>
         )}
         {all.length === 0 && <EmptyState scene="support" onAction={() => app.go('/')} />}
-        {all.length > 0 && rows.length === 0 && <div className="help">No session matches.</div>}
+        {all.length > 0 && rows.length === 0 && <EmptyNote icon="search" title="No session matches" body="Try another school or person, or clear the filters." />}
         {rows.map((r) => (
           <div key={r.id} className="kv" style={{ alignItems: 'flex-start' }}>
             <span><a href={url(`/schools/${r.schoolId}`)} onClick={(e) => { e.preventDefault(); app.go(`/schools/${r.schoolId}`); }} style={{ color: 'inherit', fontWeight: 700 }}>{r.schoolName}</a><br /><small style={{ color: 'var(--ink3)' }}>{r.reason} · {r.startedBy}{r.expiresAt ? ` · until ${when(r.expiresAt)}` : ''}</small></span>

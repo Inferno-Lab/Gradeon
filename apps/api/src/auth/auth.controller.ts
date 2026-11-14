@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Put, Req, Res } from '@nestjs/common';
-import { CodeRequest, DEFAULT_BRAND, hueOf, hueTokens, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
+import { CodeRequest, DEFAULT_BRAND, appTokens, hueOf, LoginRequest, PasswordChange, USER_PREFS, UserPrefPut, RefreshRequest, ResetFinish, ResetStart, VerifyRequest, type EffectiveConfig, type LoginChallenge, type SchoolBrand, type LoginResponse, type SessionUser, type TokenPair } from '@gradeon/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiError, Limiter, ZodPipe } from '@gradeon/nest-kit';
 import type { z } from 'zod';
@@ -137,7 +137,7 @@ export class MeController {
     const cfg = await this.settings.effective(t);
     const hue = hueOf(cfg.school.color || DEFAULT_BRAND);
     return {
-      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, hue, palette: { light: hueTokens(hue, 'light'), dark: hueTokens(hue, 'dark'), amoled: hueTokens(hue, 'amoled') },
+      ...cfg.school, logoUrl: await this.files.logoUrl(t), demoMode: t.info.demo, hue, palette: { light: appTokens(hue, 'light'), dark: appTokens(hue, 'dark'), amoled: appTokens(hue, 'amoled') },
       privacy: cfg.privacy,
     };
   }

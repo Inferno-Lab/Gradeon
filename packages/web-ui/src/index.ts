@@ -30,6 +30,7 @@ export * from './Select';
 export * from './Menu';
 export * from './Tip';
 export * from './EvenRows';
+export * from './More';
 export * from './shell/Dock';
 export * from './useMedia';
 export * from './reportErrors';

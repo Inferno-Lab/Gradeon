@@ -13,6 +13,7 @@ import 'package:gradeon/data/models/campus.dart';
 import 'package:gradeon/data/repositories/academic_repository.dart';
 import 'package:gradeon/data/repositories/campus_repository.dart';
 import 'package:gradeon/data/repositories/directory_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Filter tabs and the categories each one shows.
 const noticeFilters = {
@@ -54,7 +55,7 @@ class NoticesController extends GetxController with Loadable {
     return _filtered.where((n) => !board.contains(n.id)).toList();
   }
 
-  DateTime get _weekAgo => DateUtils.dateOnly(DateTime.now()).subtract(const Duration(days: 6));
+  DateTime get _weekAgo => DateUtils.dateOnly(Clock.now()).subtract(const Duration(days: 6));
 
   List<Notice> get thisWeek => _rest.where((n) => !n.date.isBefore(_weekAgo)).toList();
 

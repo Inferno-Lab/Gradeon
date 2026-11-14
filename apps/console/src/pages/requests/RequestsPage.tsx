@@ -19,7 +19,7 @@ export function RequestsPage() {
   return (
     <Page title="Requests" sub="Changes schools have asked for. Open the setting, make the change, then answer: the school sees it." toast={toast}
       loading={q.isLoading} error={q.isError ? { message: (q.error as Error).message, retry: () => void q.refetch() } : null}
-      actions={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
+      filters={<Segmented options={[{ value: 'open', label: 'Open' }, { value: 'all', label: 'All' }]} value={show} onChange={(v) => setShow(v as 'open' | 'all')} label="Which requests" />}
       overlays={answering && <AnswerDialog r={answering} onClose={() => setAnswering(null)} onDone={(m) => { setAnswering(null); say(m); }} />}>
       {rows.length === 0 ? !(q.data?.length) ? <EmptyState scene="requests" label="Back to the fleet" onAction={() => app.go('/')} /> : (
         <div><EmptyCard title="Requests" chip={{ text: show === 'open' ? '0 open' : '0', tone: 'v' }} icon="mail" heading={show === 'open' ? 'Nothing waiting' : 'No requests yet'} body="When a school asks for a change to its setup, it appears here with who asked and why." /></div>

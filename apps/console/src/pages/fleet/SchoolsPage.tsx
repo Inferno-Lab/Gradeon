@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Select, tintFor, Icon, EmptyState } from '@gradeon/web-ui';
+import { Select, tintFor, Icon, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { Page } from '../../app/Page';
@@ -44,7 +44,7 @@ export function SchoolsPage() {
     <Page title="Schools" sub={all.length ? `${count(all.length)} in all` : 'Every school on the platform'} loading={schools.isLoading && !schools.data}
       error={schools.isError && !schools.data ? { message: (schools.error as Error).message, retry: () => void schools.refetch() } : null}
       back={{ label: 'Fleet', to: '/', go: app.go }}
-      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}>Onboard a school</button> : undefined}>
+      actions={app.can('schools.write') ? <button className="btn pri" onClick={() => app.go('/onboarding/new')}><Icon name="plus" />Onboard a school</button> : undefined}>
       {all.length === 0 ? (
         <div><EmptyState scene="fleet" onAction={app.can('schools.write') ? () => app.go('/onboarding/new') : undefined} /></div>
       ) : (
@@ -60,7 +60,7 @@ export function SchoolsPage() {
             <span className="grow"></span>
             <Select compact aria-label="Sort" value={sort} onChange={(v) => setSort(v as Sort)} options={[{ value: 'name', label: 'By name' }, { value: 'newest', label: 'Newest first' }, { value: 'students', label: 'Most students' }, { value: 'p95', label: 'Slowest first' }]} />
           </div>
-          {rows.length === 0 ? <div className="help" style={{ padding: '0 20px 20px' }}>No school matches. Clear a filter or the search.</div> : (
+          {rows.length === 0 ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon="search" title="No school matches" body="Clear a filter or the search." /></div> : (
             <div className="scroll-x">
               <div style={{ minWidth: 760 }}>
                 <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>School</span><span>Plan</span><span>Cell</span><span>Students</span><span>Version</span><span>State</span><span>p95</span></div>

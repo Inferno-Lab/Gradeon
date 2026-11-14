@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Checkbox, Segmented, Select, tintFor, EmptyState } from '@gradeon/web-ui';
+import { Checkbox, Segmented, Select, tintFor, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import { Card, Page, Tiles, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
@@ -63,7 +63,7 @@ export function HealthPage() {
       )}
       <Card title="Errors" chip={<span className="tgrow" style={{ alignItems: 'center' }}><Segmented label="Range" value={days} onChange={setDays} options={[{ value: '1', label: 'Day' }, { value: '7', label: 'Week' }, { value: '30', label: 'Month' }]} /><Checkbox checked={handled} onChange={setHandled} label="Show handled" /></span>} style={{ padding: 0 }}>
         {errors.isError ? <div className="help" style={{ padding: 20 }}>{(errors.error as Error).message}</div>
-          : !(errors.data ?? []).length ? <div className="help" style={{ padding: 20 }}>Nothing {handled ? '' : 'unhandled '}has gone wrong in the APIs, the admin, the console or the app in that time.</div>
+          : !(errors.data ?? []).length ? <div style={{ padding: 20 }}><EmptyNote icon="checkCircle" title={`No ${handled ? '' : 'unhandled '}errors`} body="Nothing has gone wrong in the APIs, the admin, the console or the app in that time." /></div>
           : (errors.data ?? []).map((e) => (
             <details key={e.fingerprint} className="rw" style={{ display: 'block', height: 'auto', padding: '12px 20px' }}>
               <summary style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', listStyle: 'none', minWidth: 0 }}>
@@ -83,7 +83,7 @@ export function HealthPage() {
       <Jobs say={say} />
       <Card title="Restore drills" chip={<button className="btn sm" onClick={() => drill.mutate()} disabled={drill.isPending}>{drill.isPending ? 'Restoring…' : 'Run a drill now'}</button>} style={{ padding: 0 }}>
         <div className="help" style={{ padding: '0 20px 12px' }}>Once a week a fresh backup of one live school is put back into a scratch database and counted, so we know backups restore. The school is never touched.</div>
-        {!(drills.data ?? []).length ? <div className="help" style={{ padding: '0 20px 20px' }}>No drill has run yet.</div>
+        {!(drills.data ?? []).length ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon="refresh" title="No drill has run yet" body="A restore drill brings a backup back in a scratch database and checks it. Its result shows here." /></div>
           : (drills.data ?? []).map((d) => (
             <div key={d.id} className="rw" style={{ display: 'flex', gap: 10, alignItems: 'center', height: 'auto', minHeight: 52, padding: '10px 20px', flexWrap: 'wrap' }}>
               <span className={`chip ${d.ok ? 'g' : 'c'}`}>{d.ok ? 'Restored' : 'Failed'}</span>
@@ -126,7 +126,7 @@ function Jobs({ say }: { say: (m: string, tone?: 'bad') => void }) {
         </div>
       )}
       {jobs.isError ? <div className="help" style={{ padding: '0 20px 20px' }}>{(jobs.error as Error).message}</div>
-        : !rows.length ? <div className="help" style={{ padding: '0 20px 20px' }}>{all.length ? 'No job matches.' : 'No job has run in the last day.'}</div> : (
+        : !rows.length ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon={all.length ? 'search' : 'time'} title={all.length ? 'No job matches' : 'No job has run in the last day'} body={all.length ? 'Try another kind or school.' : 'Background work for each school (messages, imports, builds) shows here as it runs.'} /></div> : (
           <div className="tbl scroll-x"><div style={{ minWidth: 640 }} className="lscroll">
             <div className="grd th" style={{ '--cols': '100px minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr) 90px' } as React.CSSProperties}><span>Status</span><span>Job</span><span>School</span><span>Result</span><span></span></div>
             {rows.map((j) => (

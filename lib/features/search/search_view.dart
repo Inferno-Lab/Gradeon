@@ -162,7 +162,7 @@ class _SearchViewState extends State<SearchView> {
     final side = (MediaQuery.sizeOf(context).width - 720) / 2;
     final gutter = side > 16 ? side : 16.0;
     return Scaffold(
-      backgroundColor: app.deep,
+      backgroundColor: app.chalk,
       body: Stack(
         children: [
           Positioned.fill(

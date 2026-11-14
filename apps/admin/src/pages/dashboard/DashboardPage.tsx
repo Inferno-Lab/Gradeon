@@ -14,6 +14,18 @@ const RANGES: [string, number][] = [['Today', 1], ['This week', 6]];
 // Each chart needs its module and the person's right to see it (a teacher does not see fee totals).
 const TABS: [string, 'attendance' | 'fees' | 'homework', string][] = [['Attendance', 'attendance', 'attendance.read'], ['Fees', 'fees', 'fees.read'], ['Homework', 'homework', 'homework.read']];
 const KIND_WORD: Record<string, [string, string]> = { leave: ['leave request', 'leave requests'], fee_waiver: ['fee waiver', 'fee waivers'], notice: ['notice', 'notices'], admission: ['admission', 'admissions'], photo: ['new photo', 'new photos'], receipt_cancel: ['receipt to cancel', 'receipts to cancel'] };
+// What "Needs you" can hold. A kind with nothing waiting shows as a clear line, so a quiet day says so instead of leaving a gap.
+const CLEAR: { kind: string; module?: string; perms: string[]; t: string }[] = [
+  { kind: 'leave', perms: ['approvals.decide'], t: 'No leave requests waiting' },
+  { kind: 'fee_waiver', module: 'fees', perms: ['approvals.decide', 'fees.waive'], t: 'No fee waivers to decide' },
+  { kind: 'notice', module: 'notices', perms: ['approvals.decide', 'notices.publish'], t: 'No notices waiting to go out' },
+  { kind: 'attendance', module: 'attendance', perms: ['attendance.read'], t: 'Every class has taken the roll' },
+];
+/** A long list of classes ("6 A · 7 C · …") names the first five and counts the rest. */
+export const fewNames = (list: string) => {
+  const names = list.split(' · ');
+  return names.length > 6 ? `${names.slice(0, 5).join(' · ')} and ${names.length - 5} more` : list;
+};
 const H = 236;
 const UP = 'upRight';
 const DOWN = 'downRight';
@@ -100,7 +112,7 @@ function DashboardDesktop() {
       const tone = TONES[n.tone] ?? TONES.violet!;
       const isDone = !!done[n.id];
       return {
-        t: n.title, s: n.kind === 'attendance' ? `Reminder · ${n.subtitle}` : n.subtitle, ini: n.initials, bg: tone.bg, fg: tone.fg, a: n.action, open: !isDone, done: isDone ? 'done' : '',
+        t: n.title, s: n.kind === 'attendance' ? `Reminder · ${fewNames(n.subtitle)}` : n.subtitle, tip: fewNames(n.subtitle) !== n.subtitle ? n.subtitle.split(' · ').join(', ') : undefined, ini: n.initials, bg: tone.bg, fg: tone.fg, a: n.action, open: !isDone, done: isDone ? 'done' : '',
         view: n.kind === 'attendance' ? () => app.go('/attendance') : () => app.go('/approvals'),
         act: () => {
           setDone((s) => ({ ...s, [n.id]: true }));
@@ -113,10 +125,11 @@ function DashboardDesktop() {
       };
     });
     const left = needs.filter((n) => n.open).length;
+    const allClear = CLEAR.filter((c) => (!c.module || has(c.module)) && c.perms.every(may) && !d.needsYou.some((n) => n.kind === c.kind));
     const me = tintFor(app.user.name);
     const t = d.timeline;
     return {
-      ...chrome, goto: app.go, money,
+      ...chrome, goto: app.go, money, allClear,
       remind: () => void app.api.attendance.remind().then(() => say('Reminders sent to the class teachers.')).catch((e: Error) => say(e.message, 'bad')),
       hidden: [...hidden, ...off], openWidgets: () => setWidgets(true),
       has: { attendance: has('attendance') && may('attendance.read'), fees: has('fees') && may('fees.read'), chat: has('chat') && may('messages.read') }, showChart: tabsOn.length > 0,

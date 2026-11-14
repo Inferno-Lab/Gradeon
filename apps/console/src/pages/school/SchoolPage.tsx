@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { HttpError } from '@gradeon/api-client';
 import { SCHOOL_BOARDS, SchoolDetailsPatch, STEP_LABELS, auditLabel, type ActionKey, type ProvisionRunRow, type SchoolDetail } from '@gradeon/contracts';
-import { DateField, Dialog, EmptyCard, Field, NumberField, PageScope, Select, SelectField, useShake, useToast } from '@gradeon/web-ui';
+import { DateField, Dialog, EmptyCard, Field, NumberField, PageScope, Select, SelectField, useShake, useToast, EmptyNote } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { url } from '../../app/base';
 import { useShellChrome } from '../../app/Layout';
@@ -231,7 +231,7 @@ function Technical({ d, onAct, busy }: { d: SchoolDetail; onAct: (a: ActionKey, 
         </div>
       </Card>
       <Card title="App builds" span="s12" chip={app.can('builds.write') ? <span className="tgrow"><button className="btn sm" onClick={() => setBuild('android')} disabled={busy}>Build Android</button><button className="btn sm" onClick={() => setBuild('ios')} disabled={busy}>Build iPhone</button></span> : undefined}>
-        {d.builds.length === 0 && <div className="help">No builds yet. A build packages this school’s name, colours and address into its own app, signed and sent to the store.</div>}
+        {d.builds.length === 0 && <EmptyNote icon="builds" title="No builds yet" body="A build packages this school’s name, colours and address into its own app, signed and sent to the store." />}
         {d.builds.map((b) => (
           <div key={b.id} className="kv">
             <span>{b.platform === 'android' ? 'Android' : 'iPhone'} · {b.version} · {when(b.createdAt)}<br /><small style={{ color: b.status === 'failed' ? 'var(--bad)' : 'var(--ink3)' }}>{b.note}</small></span>
@@ -289,7 +289,7 @@ function Audit({ id }: { id: string }) {
         <button className="btn sm" onClick={download}>Export</button>
       </div>
       {q.isLoading ? <div className="skc" style={{ height: 240, margin: 20, borderRadius: 24 }} />
-        : !rows.length ? <div className="help" style={{ padding: '0 20px 20px' }}>{pages.length || Object.values(f).some(Boolean) ? 'Nothing matches.' : 'Nothing has happened to this school yet. Every change made from the console is written here.'}</div>
+        : !rows.length ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon={pages.length || Object.values(f).some(Boolean) ? 'search' : 'audit'} title={pages.length || Object.values(f).some(Boolean) ? 'Nothing matches' : 'Nothing has happened yet'} body={pages.length || Object.values(f).some(Boolean) ? 'Clear a filter to see more.' : 'Every change made from the console is written here.'} /></div>
           : <div style={{ padding: '0 20px' }}>{rows.map((r) => <div key={r.id} className="kv"><span>{auditLabel(r.action)}<br /><small style={{ color: 'var(--ink3)' }}>{r.actor}{r.detail ? ` · ${r.detail}` : ''}</small></span><b>{when(r.at)}</b></div>)}</div>}
       <div className="tgrow" style={{ padding: '12px 20px 20px' }}>
         <button className="btn sm" disabled={!pages.length} onClick={() => setPages(pages.slice(0, -1))}>Newer</button>

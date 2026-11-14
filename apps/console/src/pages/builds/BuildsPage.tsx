@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Field, Select, EmptyState } from '@gradeon/web-ui';
+import { Field, Select, EmptyState, EmptyNote } from '@gradeon/web-ui';
 import type { BuildRow } from '@gradeon/contracts';
 import { Card, Page, useToast } from '../../app/Page';
 import { useApp } from '../../app/context';
@@ -33,7 +33,7 @@ export function BuildsPage() {
             <Select compact aria-label="School" value={school} onChange={setSchool} options={[{ value: '', label: 'Every school' }, ...(schools.data ?? []).map((s) => ({ value: s.id, label: s.name }))]} />
             <Select compact aria-label="Status" value={status} onChange={setStatus} options={[{ value: '', label: 'Every status' }, ...Object.entries(LABEL).map(([value, label]) => ({ value, label }))]} />
           </div>
-          {rows.length === 0 ? <div className="help" style={{ padding: '0 20px 20px' }}>No build matches.</div> : (
+          {rows.length === 0 ? <div style={{ padding: '0 20px 20px' }}><EmptyNote icon="search" title="No build matches" body="Try another school or state, or clear the filters." /></div> : (
             <div className="tbl scroll-x"><div style={{ minWidth: 640 }}>
               <div className="grd th" style={{ '--cols': COLS } as React.CSSProperties}><span>School</span><span>Phone</span><span>Version</span><span>Status</span><span></span></div>
               {rows.map((b) => (

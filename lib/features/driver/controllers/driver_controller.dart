@@ -9,6 +9,7 @@ import 'package:gradeon/core/utils/loadable.dart';
 import 'package:gradeon/core/widgets/toast.dart';
 import 'package:gradeon/data/models/driver.dart';
 import 'package:gradeon/data/repositories/driver_repository.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// The bus driver's day: start a trip, the phone shares where the bus is until it ends, each child is marked on and off.
 class DriverController extends GetxController with Loadable {
@@ -41,7 +42,7 @@ class DriverController extends GetxController with Loadable {
   }, isEmpty: () => routes.isEmpty);
 
   /// Morning before noon, afternoon after.
-  String get kindNow => DateTime.now().hour < 12 ? 'morning' : 'afternoon';
+  String get kindNow => Clock.now().hour < 12 ? 'morning' : 'afternoon';
 
   String? markOf(DriverRoute route, String tripId, String studentId) =>
       route.marks.where((m) => m.tripId == tripId && m.studentId == studentId).firstOrNull?.event;
@@ -80,8 +81,8 @@ class DriverController extends GetxController with Loadable {
       return;
     }
     _gps = Geolocator.getPositionStream(locationSettings: const LocationSettings(distanceFilter: 25)).listen((p) {
-      if (DateTime.now().difference(_sent) < const Duration(seconds: 20)) return;
-      _sent = DateTime.now();
+      if (Clock.now().difference(_sent) < const Duration(seconds: 20)) return;
+      _sent = Clock.now();
       unawaited(_repo.position(tripId, lat: p.latitude, lng: p.longitude).catchError((Object _) {}));
     });
   }

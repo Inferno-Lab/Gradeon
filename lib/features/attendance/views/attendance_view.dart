@@ -19,6 +19,7 @@ import 'package:gradeon/features/attendance/controllers/attendance_controller.da
 import 'package:gradeon/features/dashboard/views/dashboard_view.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 class AttendanceView extends GetView<AttendanceController> {
   const AttendanceView({super.key});
@@ -107,7 +108,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.app;
     final s = controller.summary;
-    final now = DateTime.now();
+    final now = Clock.now();
     final thisMonth = controller.focused.value.month == now.month && controller.focused.value.year == now.year;
     final marked = controller.monthDays;
     final problems =
@@ -323,7 +324,7 @@ class _Calendar extends StatelessWidget {
     final first = DateTime(month.year, month.month);
     final daysIn = DateTime(month.year, month.month + 1, 0).day;
     final lead = first.weekday - 1;
-    final today = DateTime.now().dateOnly;
+    final today = Clock.now().dateOnly;
     final cells = lead + daysIn;
     final rows = (cells / 7).ceil();
     final picked = controller.picked.value;

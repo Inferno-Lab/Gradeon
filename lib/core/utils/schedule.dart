@@ -1,4 +1,5 @@
 import 'package:gradeon/data/models/academics.dart';
+import 'package:gradeon/core/utils/clock.dart';
 
 /// Minutes since midnight for "HH:mm".
 int minutesOf(String hhmm) {
@@ -7,7 +8,7 @@ int minutesOf(String hhmm) {
 }
 
 int nowMinutes([DateTime? at]) {
-  final now = at ?? DateTime.now();
+  final now = at ?? Clock.now();
   return now.hour * 60 + now.minute;
 }
 
