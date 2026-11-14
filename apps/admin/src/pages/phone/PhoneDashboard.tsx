@@ -5,6 +5,7 @@ import { EmptyCard, PageScope, TONES, useToast } from '@gradeon/web-ui';
 import { useApp } from '../../app/context';
 import { useShellChrome } from '../../app/Layout';
 import { PhoneView } from './phone.view';
+import { fewNames } from '../dashboard/DashboardPage';
 
 const money = (n: number) => (n >= 100000 ? `₹${lakhs(n)}` : n >= 1000 ? `₹${Math.round(n / 1000)}k` : `₹${n}`);
 const hello = () => { const h = ((new Date().getUTCHours() * 60 + new Date().getUTCMinutes() + 330) / 60) % 24; return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; };
@@ -40,7 +41,7 @@ export function PhoneDashboard() {
     const tone = TONES[n.tone] ?? TONES.violet!;
     const isDone = !!done[n.id];
     return {
-      id: n.id, i: n.initials, t: n.title, s: n.subtitle, bg: tone.bg, fg: tone.fg, cls: isDone ? 'gone' : '', l: isDone ? 'Undo' : n.action,
+      id: n.id, i: n.initials, t: n.title, s: n.kind === 'attendance' ? fewNames(n.subtitle) : n.subtitle, bg: tone.bg, fg: tone.fg, cls: isDone ? 'gone' : '', l: isDone ? 'Undo' : n.action,
       go: () => {
         const next = !isDone;
         setDone((s) => ({ ...s, [n.id]: next }));
